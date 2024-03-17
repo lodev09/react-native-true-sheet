@@ -1,17 +1,23 @@
 {
-  "name": "react-native-modal-sheet-example",
+  "name": "modal-sheet-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "start": "expo start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "setup": "npx expo prebuild",
+    "clean": "yarn setup --clean",
+    "doctor": "npx expo-doctor",
+    "typecheck": "tsc --noEmit -p . --pretty",
+    "tidy": "prettier --write \"**/*.{js,json,ts,tsx}\"",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
     "build:ios": "cd ios && xcodebuild -workspace ModalSheetExample.xcworkspace -scheme ModalSheetExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
   "dependencies": {
+    "expo": "^50.0.13",
     "react": "18.2.0",
-    "react-native": "0.73.6"
+    "react-native": "0.73.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -20,7 +26,15 @@
     "@react-native/babel-preset": "0.73.21",
     "@react-native/metro-config": "0.73.5",
     "@react-native/typescript-config": "0.73.1",
-    "babel-plugin-module-resolver": "^5.0.0"
+    "babel-plugin-module-resolver": "^5.0.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.1.3"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   },
   "engines": {
     "node": ">=18"
