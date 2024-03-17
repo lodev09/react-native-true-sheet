@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 import { StyleSheet, View } from 'react-native'
-import { ModalSheetView } from 'react-native-modal-sheet'
+import { ModalSheetView } from '@lodev09/react-native-modal-sheet'
 
 export default function App() {
   return (
