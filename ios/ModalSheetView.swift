@@ -27,7 +27,7 @@ class ModalSheetView : UIView {
         
         if #available(iOS 16.0, *) {
           sheet.detents.append(.custom() { context in
-            contentView.frame.height
+            min(contentView.frame.height, 0.5 * context.maximumDetentValue)
           })
         }
 
