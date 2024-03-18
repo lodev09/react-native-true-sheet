@@ -10,10 +10,10 @@ class ModalSheetViewManager: RCTViewManager {
     return true
   }
 
-  override func view() -> (ModalSheetView) {
-    return ModalSheetView()
-  }
-  
+ override func view() -> (ModalSheetView) {
+   return ModalSheetView()
+ }
+
   // MARK: - Private
   private func getSheetView(withTag tag: NSNumber) -> ModalSheetView {
     return bridge.uiManager.view(forReactTag: tag) as! ModalSheetView

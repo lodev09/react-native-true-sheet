@@ -1,5 +1,5 @@
 import React, { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
-import { requireNativeComponent, Platform, findNodeHandle, type NativeMethods } from 'react-native'
+import { StyleSheet, requireNativeComponent, Platform, findNodeHandle, type NativeMethods, View, type ViewStyle, type StyleProp } from 'react-native'
 
 import type { ModalSheetViewProps } from './types'
 import { ModalSheetModule } from './ModalSheetModule'
@@ -10,7 +10,10 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-interface NativeModalSheetViewProps {}
+interface NativeModalSheetViewProps {
+  style: StyleProp<ViewStyle>
+  children?: ReactNode
+}
 
 type RefType = Component<NativeModalSheetViewProps> & Readonly<NativeMethods>
 
@@ -22,10 +25,7 @@ if (!NativeModalSheetView) {
 }
 
 export class ModalSheet extends PureComponent<ModalSheetViewProps> {
-  /** @internal */
-  static displayName = 'ModalSheet'
-  /** @internal */
-  displayName = ModalSheet.displayName
+  displayName = 'ModalSheet'
 
   private readonly ref: RefObject<RefType>
 
@@ -52,6 +52,26 @@ export class ModalSheet extends PureComponent<ModalSheetViewProps> {
   }
 
   render(): ReactNode {
-    return <NativeModalSheetView {...this.props} ref={this.ref} />
+    return (
+      <NativeModalSheetView
+        style={$nativeView}
+        ref={this.ref}
+      >
+        <View style={[$wrapper, this.props.style]}>
+          <View style={this.props.contentContainerStyle}>
+            {this.props.children}
+          </View>
+        </View>
+      </NativeModalSheetView>
+    )
   }
+}
+
+const $nativeView: ViewStyle = {
+  ...StyleSheet.absoluteFillObject,
+  zIndex: -1000,
+}
+
+const $wrapper: ViewStyle = {
+  backgroundColor: 'white',
 }

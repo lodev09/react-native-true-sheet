@@ -1,3 +1,5 @@
-import type { ViewProps } from 'react-native'
+import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
 
-export interface ModalSheetViewProps extends ViewProps {}
+export interface ModalSheetViewProps extends ViewProps {
+  contentContainerStyle?: StyleProp<ViewStyle>
+}
