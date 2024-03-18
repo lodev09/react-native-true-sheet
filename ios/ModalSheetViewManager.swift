@@ -1,36 +1,29 @@
 @objc(ModalSheetViewManager)
 class ModalSheetViewManager: RCTViewManager {
+  // MARK: - Properties
+  
+  override var methodQueue: DispatchQueue! {
+    return DispatchQueue.main
+  }
+
+  override static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
 
   override func view() -> (ModalSheetView) {
     return ModalSheetView()
   }
-
-  @objc override static func requiresMainQueueSetup() -> Bool {
-    return false
+  
+  // MARK: - Private
+  private func getSheetView(withTag tag: NSNumber) -> ModalSheetView {
+    return bridge.uiManager.view(forReactTag: tag) as! ModalSheetView
   }
-}
+  
+  // MARK: - React Functions
 
-class ModalSheetView : UIView {
-
-  @objc var color: String = "" {
-    didSet {
-      self.backgroundColor = hexStringToUIColor(hexColor: color)
-    }
-  }
-
-  func hexStringToUIColor(hexColor: String) -> UIColor {
-    let stringScanner = Scanner(string: hexColor)
-
-    if(hexColor.hasPrefix("#")) {
-      stringScanner.scanLocation = 1
-    }
-    var color: UInt32 = 0
-    stringScanner.scanHexInt32(&color)
-
-    let r = CGFloat(Int(color >> 16) & 0x000000FF)
-    let g = CGFloat(Int(color >> 8) & 0x000000FF)
-    let b = CGFloat(Int(color) & 0x000000FF)
-
-    return UIColor(red: r / 255.0, green: g / 255.0, blue: b / 255.0, alpha: 1)
+  @objc
+  func present(_ node: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    let component = getSheetView(withTag: node)
+    component.present(promise: Promise(resolver: resolve, rejecter: reject))
   }
 }
