@@ -1,5 +1,14 @@
 import React, { useRef } from 'react'
-import { Text, TouchableHighlight, View, type TouchableHighlightProps, type ViewStyle, type TextStyle, ScrollView, type ViewProps } from 'react-native'
+import {
+  Text,
+  TouchableHighlight,
+  View,
+  type TouchableHighlightProps,
+  type ViewStyle,
+  type TextStyle,
+  ScrollView,
+  type ViewProps,
+} from 'react-native'
 import { ModalSheet } from '@lodev09/react-native-modal-sheet'
 
 import { times } from './utils'
@@ -11,9 +20,7 @@ interface ButtonProps extends TouchableHighlightProps {
   text: string
 }
 
-interface BlockProps extends ViewProps {
-
-}
+interface BlockProps extends ViewProps {}
 
 export default function App() {
   const sheet1 = useRef<ModalSheet>(null)
@@ -30,8 +37,8 @@ export default function App() {
   return (
     <View style={$container}>
       <View>
-        <Button text='Open Sheet' onPress={openSheet1} />
-        <Button text='Open ScrollView Sheet' onPress={openSheet2} />
+        <Button text="Open Sheet" onPress={openSheet1} />
+        <Button text="Open ScrollView Sheet" onPress={openSheet2} />
       </View>
 
       <ModalSheet ref={sheet1} contentContainerStyle={$content}>
@@ -40,10 +47,7 @@ export default function App() {
       </ModalSheet>
 
       <ModalSheet ref={sheet2}>
-        <ScrollView
-          indicatorStyle="black"
-          contentContainerStyle={$content}
-        >
+        <ScrollView indicatorStyle="black" contentContainerStyle={$content}>
           {times(25, (i) => (
             <Block key={i} />
           ))}

@@ -1,5 +1,14 @@
 import React, { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
-import { StyleSheet, requireNativeComponent, Platform, findNodeHandle, type NativeMethods, View, type ViewStyle, type StyleProp } from 'react-native'
+import {
+  StyleSheet,
+  requireNativeComponent,
+  Platform,
+  findNodeHandle,
+  type NativeMethods,
+  View,
+  type ViewStyle,
+  type StyleProp,
+} from 'react-native'
 
 import type { ModalSheetViewProps } from './types'
 import { ModalSheetModule } from './ModalSheetModule'
@@ -53,14 +62,9 @@ export class ModalSheet extends PureComponent<ModalSheetViewProps> {
 
   render(): ReactNode {
     return (
-      <NativeModalSheetView
-        style={$nativeView}
-        ref={this.ref}
-      >
+      <NativeModalSheetView style={$nativeView} ref={this.ref}>
         <View style={[$wrapper, this.props.style]}>
-          <View style={this.props.contentContainerStyle}>
-            {this.props.children}
-          </View>
+          <View style={this.props.contentContainerStyle}>{this.props.children}</View>
         </View>
       </NativeModalSheetView>
     )
