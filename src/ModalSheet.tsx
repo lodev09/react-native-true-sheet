@@ -10,9 +10,7 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-interface NativeModalSheetViewProps {
-
-}
+interface NativeModalSheetViewProps {}
 
 type RefType = Component<NativeModalSheetViewProps> & Readonly<NativeMethods>
 
