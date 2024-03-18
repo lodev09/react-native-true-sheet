@@ -1,17 +1,17 @@
-# react-native-sheetify
+# React Native Sheetify
 
-Just another bottom sheet modal
+Just another bottom sheet... but less shitty 💩
 
 ## Installation
 
 ```sh
-npm install react-native-sheetify
+yarn add @lodev09/react-native-sheetify
 ```
 
 ## Usage
 
 ```js
-import { SheetifyView } from "react-native-sheetify";
+import { SheetifyView } from "@lodev09/react-native-sheetify";
 
 // ...
 
