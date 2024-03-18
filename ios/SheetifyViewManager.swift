@@ -1,5 +1,5 @@
-@objc(ModalSheetViewManager)
-class ModalSheetViewManager: RCTViewManager {
+@objc(SheetifyViewManager)
+class SheetifyViewManager: RCTViewManager {
   // MARK: - Properties
   
   override var methodQueue: DispatchQueue! {
@@ -10,13 +10,13 @@ class ModalSheetViewManager: RCTViewManager {
     return true
   }
 
- override func view() -> (ModalSheetView) {
-   return ModalSheetView()
+ override func view() -> (SheetifyView) {
+   return SheetifyView()
  }
 
   // MARK: - Private
-  private func getSheetView(withTag tag: NSNumber) -> ModalSheetView {
-    return bridge.uiManager.view(forReactTag: tag) as! ModalSheetView
+  private func getSheetView(withTag tag: NSNumber) -> SheetifyView {
+    return bridge.uiManager.view(forReactTag: tag) as! SheetifyView
   }
   
   // MARK: - React Functions

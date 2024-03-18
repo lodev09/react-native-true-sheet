@@ -1,4 +1,4 @@
-package com.modalsheet
+package com.sheetify
 
 import android.graphics.Color
 import android.view.View
@@ -6,8 +6,8 @@ import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 
-class ModalSheetViewManager : SimpleViewManager<View>() {
-  override fun getName() = "ModalSheetView"
+class SheetifyViewManager : SimpleViewManager<View>() {
+  override fun getName() = "SheetifyView"
 
   override fun createViewInstance(reactContext: ThemedReactContext): View {
     return View(reactContext)

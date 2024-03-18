@@ -1,21 +1,36 @@
-# react-native-modal-sheet
+# react-native-sheetify
 
 Just another bottom sheet modal
 
 ## Installation
 
 ```sh
-npm install react-native-modal-sheet
+npm install react-native-sheetify
 ```
 
 ## Usage
 
 ```js
-import { ModalSheetView } from "react-native-modal-sheet";
+import { SheetifyView } from "react-native-sheetify";
 
 // ...
 
-<ModalSheetView color="tomato" />
+const sheetify = useRef<SheetifyView>(null)
+
+const openSheet = () => {
+  sheetify.current?.present()
+}
+
+return (
+  <View>
+    <Button onPress={openSheet} title="Open Sheet" />
+    <SheetifyView ref={sheetify}>
+      <ScrollView>
+        <View />
+      </ScrollView>
+    </SheetifyView>
+  </View>
+)
 ```
 
 ## Contributing

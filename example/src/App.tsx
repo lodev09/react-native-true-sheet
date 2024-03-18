@@ -9,7 +9,7 @@ import {
   ScrollView,
   type ViewProps,
 } from 'react-native'
-import { ModalSheet } from '@lodev09/react-native-modal-sheet'
+import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
@@ -23,8 +23,8 @@ interface ButtonProps extends TouchableHighlightProps {
 interface BlockProps extends ViewProps {}
 
 export default function App() {
-  const sheet1 = useRef<ModalSheet>(null)
-  const sheet2 = useRef<ModalSheet>(null)
+  const sheet1 = useRef<SheetifyView>(null)
+  const sheet2 = useRef<SheetifyView>(null)
 
   const openSheet1 = async () => {
     await sheet1.current?.present()
@@ -41,18 +41,18 @@ export default function App() {
         <Button text="Open ScrollView Sheet" onPress={openSheet2} />
       </View>
 
-      <ModalSheet ref={sheet1} contentContainerStyle={$content}>
+      <SheetifyView ref={sheet1} contentContainerStyle={$content}>
         <Block />
         <Block />
-      </ModalSheet>
+      </SheetifyView>
 
-      <ModalSheet ref={sheet2}>
+      <SheetifyView ref={sheet2}>
         <ScrollView indicatorStyle="black" contentContainerStyle={$content}>
           {times(25, (i) => (
             <Block key={i} />
           ))}
         </ScrollView>
-      </ModalSheet>
+      </SheetifyView>
     </View>
   )
 }

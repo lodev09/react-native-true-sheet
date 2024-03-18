@@ -1,3 +1,0 @@
-class ModalSheetViewController: UIViewController {
-  
-}

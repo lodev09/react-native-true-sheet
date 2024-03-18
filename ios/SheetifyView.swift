@@ -1,10 +1,10 @@
-@objc(ModalSheetView)
-class ModalSheetView : UIView {
-  var controller: ModalSheetViewController?
+@objc(SheetifyView)
+class SheetifyView : UIView {
+  var controller: SheetifyViewController?
   
   override public init(frame: CGRect) {
     super.init(frame: frame)
-    controller = ModalSheetViewController()
+    controller = SheetifyViewController()
   }
   
   required init?(coder: NSCoder) {

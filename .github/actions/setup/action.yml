@@ -9,6 +9,10 @@ runs:
       with:
         node-version-file: .nvmrc
 
+    - name: Enable Corepack
+      run: corepack enable
+      shell: bash
+
     - name: Cache dependencies
       id: yarn-cache
       uses: actions/cache@v3

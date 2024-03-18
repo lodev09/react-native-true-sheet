@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@lodev09/react-native-modal-sheet": ["./src/index"]
+      "@lodev09/react-native-sheetify": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

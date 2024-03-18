@@ -35,6 +35,18 @@ jobs:
       - name: Run unit tests
         run: yarn test --maxWorkers=2 --coverage
 
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run expo doctor
+        run: yarn example doctor
+
   build-library:
     runs-on: ubuntu-latest
     steps:
@@ -57,6 +69,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      - name: Prebuild example
+        run: yarn example setup
 
       - name: Cache turborepo for Android
         uses: actions/cache@v3
@@ -113,6 +128,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      - name: Prebuild example
+        run: yarn example setup
 
       - name: Cache turborepo for iOS
         uses: actions/cache@v3

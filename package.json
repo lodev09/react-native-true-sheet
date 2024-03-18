@@ -1,7 +1,7 @@
 {
-  "name": "@lodev09/react-native-modal-sheet",
+  "name": "@lodev09/react-native-sheetify",
   "version": "0.1.0",
-  "description": "Just another modal bottom sheet 🎼",
+  "description": "Just another bottom sheet... but native 😎",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
@@ -26,13 +26,13 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace modal-sheet-example",
+    "example": "yarn workspace sheetify-example",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
     "tidy": "yarn typecheck && yarn lint && yarn format",
-    "clean": "del-cli android/build lib && yarn workspace modal-sheet-example clean",
+    "clean": "del-cli android/build lib && yarn workspace sheetify-example clean",
     "prepare": "bob build",
     "release": "release-it"
   },
@@ -43,14 +43,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lodev09/react-native-modal-sheet.git"
+    "url": "git+https://github.com/lodev09/react-native-sheetify.git"
   },
   "author": "lodev09 <lodev09@gmail.com> (https://github.com/lodev09)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lodev09/react-native-modal-sheet/issues"
+    "url": "https://github.com/lodev09/react-native-sheetify/issues"
   },
-  "homepage": "https://github.com/lodev09/react-native-modal-sheet#readme",
+  "homepage": "https://github.com/lodev09/react-native-sheetify#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
