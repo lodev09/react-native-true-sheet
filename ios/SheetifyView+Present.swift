@@ -8,30 +8,12 @@
  */
 
 extension SheetifyView {
-  func present(promise: Promise) {
-    guard let rvc = reactViewController(), let controller else {
+  func present(promise _: Promise) {
+    guard let rvc = reactViewController() else {
       return
     }
 
-    if #available(iOS 15.0, *) {
-      if let sheet = controller.sheetPresentationController {
-        sheet.detents = [
-          .medium(),
-          .large()
-        ]
-
-        if #available(iOS 16.0, *) {
-          let contentView = controller.view.subviews[0]
-          sheet.detents.append(.custom() { context in
-            min(contentView.frame.height, 0.5 * context.maximumDetentValue)
-          })
-        }
-
-        sheet.prefersGrabberVisible = true
-        sheet.prefersEdgeAttachedInCompactHeight = true
-      }
-    }
-
+    controller.prepareForPresentation()
     rvc.present(controller, animated: true)
   }
 }

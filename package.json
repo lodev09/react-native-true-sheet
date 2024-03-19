@@ -30,6 +30,7 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
+    "lint-ios": "scripts/swiftlint.sh && scripts/swiftformat.sh",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
     "tidy": "yarn typecheck && yarn lint && yarn format",
     "clean": "del-cli android/build lib && yarn workspace sheetify-example clean",

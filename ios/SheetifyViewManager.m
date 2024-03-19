@@ -11,7 +11,7 @@
 
 @interface RCT_EXTERN_MODULE(SheetifyViewManager, RCTViewManager)
 
-RCT_EXTERN_METHOD(present: (nonnull NSNumber*)node
+RCT_EXTERN_METHOD(present: (nonnull NSNumber*)tag
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 

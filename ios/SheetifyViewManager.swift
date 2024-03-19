@@ -19,21 +19,23 @@ class SheetifyViewManager: RCTViewManager {
     return true
   }
 
-  override func view() -> (SheetifyView) {
-   return SheetifyView()
+  override func view() -> SheetifyView {
+    return SheetifyView(bridge.uiManager)
   }
 
   // MARK: - Private
 
-  private func getSheetView(withTag tag: NSNumber) -> SheetifyView {
+  private func getSheetifyView(_ tag: NSNumber) -> SheetifyView {
+    // swiftlint:disable force_cast
     return bridge.uiManager.view(forReactTag: tag) as! SheetifyView
+    // swiftlint:enable force_cast
   }
 
   // MARK: - React Functions
 
   @objc
-  func present(_ node: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-    let component = getSheetView(withTag: node)
-    component.present(promise: Promise(resolver: resolve, rejecter: reject))
+  func present(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let sheetifyView = getSheetifyView(tag)
+    sheetifyView.present(promise: Promise(resolver: resolve, rejecter: reject))
   }
 }
