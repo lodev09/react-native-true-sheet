@@ -13,8 +13,8 @@ import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
-const BUTTON_COLOR = '#3784d7'
-const BLOCK_COLOR = '#cfd4dd'
+const BLUE = '#3784d7'
+const GRAY = '#cfd4dd'
 
 interface ButtonProps extends TouchableHighlightProps {
   text: string
@@ -41,7 +41,7 @@ export default function App() {
         <Button text="Open ScrollView Sheet" onPress={openSheet2} />
       </View>
 
-      <SheetifyView ref={sheet1} contentContainerStyle={$content}>
+      <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
         <DemoContent />
         <DemoContent />
       </SheetifyView>
@@ -72,8 +72,8 @@ const DemoContent = (props: BlockProps) => {
 
 const $container: ViewStyle = {
   backgroundColor: 'white',
-  alignItems: 'center',
   justifyContent: 'center',
+  padding: 24,
   flex: 1,
 }
 
@@ -83,9 +83,8 @@ const $content: ViewStyle = {
 
 const $demoContent: ViewStyle = {
   height: 100,
-  width: '100%',
   borderRadius: 8,
-  backgroundColor: BLOCK_COLOR,
+  backgroundColor: GRAY,
   marginBottom: 16,
 }
 
@@ -94,7 +93,7 @@ const $button: ViewStyle = {
   minWidth: 300,
   padding: 12,
   borderRadius: 4,
-  backgroundColor: BUTTON_COLOR,
+  backgroundColor: BLUE,
   marginBottom: 12,
   alignItems: 'center',
 }

@@ -1,4 +1,4 @@
-import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
+import type { ColorValue, ViewProps } from 'react-native'
 
 /**
  * Supported Sheet size.
@@ -45,19 +45,11 @@ export type SheetifySize =
    */
   | 'large'
 
-
 export interface SheetifyViewProps extends ViewProps {
   /**
-   * The container style.
-   * Use this to style the Sheet background.
+   * Main sheet background color
    */
-  style?: StyleProp<ViewStyle>
-
-  /**
-   * Content container style.
-   * You can style safe area, padding, etc. here.
-   */
-  contentContainerStyle?: StyleProp<ViewStyle>
+  backgroundColor?: ColorValue
 
   /**
    * The sizes you want the Sheet to support.

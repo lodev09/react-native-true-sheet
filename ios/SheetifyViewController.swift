@@ -8,5 +8,10 @@
  */
 
 class SheetifyViewController: UIViewController {
-  
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    // TODO
+    view.backgroundColor = UIColor.white
+  }
 }

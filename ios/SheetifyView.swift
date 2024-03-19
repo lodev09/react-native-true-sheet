@@ -21,7 +21,6 @@ class SheetifyView : UIView {
   }
   
   override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
-    // The main controller view is the 1st child of the sheet component
-    controller?.view = subview
+    controller?.view.addSubview(subview)
   }
 }

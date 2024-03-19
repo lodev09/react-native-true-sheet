@@ -13,8 +13,6 @@ extension SheetifyView {
       return
     }
 
-    let contentView = controller.view.subviews[0]
-
     if #available(iOS 15.0, *) {
       if let sheet = controller.sheetPresentationController {
         sheet.detents = [
@@ -23,17 +21,16 @@ extension SheetifyView {
         ]
 
         if #available(iOS 16.0, *) {
+          let contentView = controller.view.subviews[0]
           sheet.detents.append(.custom() { context in
             min(contentView.frame.height, 0.5 * context.maximumDetentValue)
           })
         }
 
         sheet.prefersGrabberVisible = true
+        sheet.prefersEdgeAttachedInCompactHeight = true
       }
     }
-
-    print(controller.view.subviews[0].frame.height)
-    print(controller.view.frame.size.width, controller.view.frame.size.height)
 
     rvc.present(controller, animated: true)
   }
