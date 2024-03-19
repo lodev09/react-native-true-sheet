@@ -42,14 +42,14 @@ export default function App() {
       </View>
 
       <SheetifyView ref={sheet1} contentContainerStyle={$content}>
-        <Block />
-        <Block />
+        <DemoContent />
+        <DemoContent />
       </SheetifyView>
 
       <SheetifyView ref={sheet2}>
         <ScrollView indicatorStyle="black" contentContainerStyle={$content}>
           {times(25, (i) => (
-            <Block key={i} />
+            <DemoContent key={i} />
           ))}
         </ScrollView>
       </SheetifyView>
@@ -66,8 +66,8 @@ const Button = (props: ButtonProps) => {
   )
 }
 
-const Block = (props: BlockProps) => {
-  return <View style={$block} {...props} />
+const DemoContent = (props: BlockProps) => {
+  return <View style={$demoContent} {...props} />
 }
 
 const $container: ViewStyle = {
@@ -75,6 +75,18 @@ const $container: ViewStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   flex: 1,
+}
+
+const $content: ViewStyle = {
+  padding: 16,
+}
+
+const $demoContent: ViewStyle = {
+  height: 100,
+  width: '100%',
+  borderRadius: 8,
+  backgroundColor: BLOCK_COLOR,
+  marginBottom: 16,
 }
 
 const $button: ViewStyle = {
@@ -89,16 +101,4 @@ const $button: ViewStyle = {
 
 const $text: TextStyle = {
   color: 'white',
-}
-
-const $content: ViewStyle = {
-  padding: 16,
-}
-
-const $block: ViewStyle = {
-  height: 100,
-  width: '100%',
-  borderRadius: 8,
-  backgroundColor: BLOCK_COLOR,
-  marginBottom: 16,
 }

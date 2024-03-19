@@ -1,7 +1,16 @@
+/*
+ *
+ * Created by Jovanni Lo (@lodev09)
+ * Copyright 2024-present
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 @objc(SheetifyViewManager)
 class SheetifyViewManager: RCTViewManager {
   // MARK: - Properties
-  
+
   override var methodQueue: DispatchQueue! {
     return DispatchQueue.main
   }
@@ -10,15 +19,16 @@ class SheetifyViewManager: RCTViewManager {
     return true
   }
 
- override func view() -> (SheetifyView) {
+  override func view() -> (SheetifyView) {
    return SheetifyView()
- }
+  }
 
   // MARK: - Private
+
   private func getSheetView(withTag tag: NSNumber) -> SheetifyView {
     return bridge.uiManager.view(forReactTag: tag) as! SheetifyView
   }
-  
+
   // MARK: - React Functions
 
   @objc

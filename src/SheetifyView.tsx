@@ -35,10 +35,8 @@ if (!NativeSheetifyView) {
 
 export class SheetifyView extends PureComponent<SheetifyViewProps> {
   displayName = 'Sheetify'
-
   private readonly ref: RefObject<RefType>
 
-  /** @internal */
   constructor(props: SheetifyViewProps) {
     super(props)
     this.ref = createRef<RefType>()
