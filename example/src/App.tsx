@@ -6,7 +6,6 @@ import {
   type TouchableHighlightProps,
   type ViewStyle,
   type TextStyle,
-  ScrollView,
   type ViewProps,
 } from 'react-native'
 import { SheetifyView } from '@lodev09/react-native-sheetify'
@@ -20,7 +19,9 @@ interface ButtonProps extends TouchableHighlightProps {
   text: string
 }
 
-interface BlockProps extends ViewProps {}
+interface DemoContentProps extends ViewProps {
+  text?: string
+}
 
 export default function App() {
   const sheet1 = useRef<SheetifyView>(null)
@@ -28,17 +29,19 @@ export default function App() {
 
   const openSheet1 = async () => {
     await sheet1.current?.present()
+    // console.log('sheet 1 presented!')
   }
 
   const openSheet2 = async () => {
     await sheet2.current?.present()
+    // console.log('sheet 2 presented!')
   }
 
   return (
     <View style={$container}>
       <View>
-        <Button text="Open Sheet" onPress={openSheet1} />
-        <Button text="Open ScrollView Sheet" onPress={openSheet2} />
+        <Button text="Sheetify View" onPress={openSheet1} />
+        <Button text="Sheetify ScrollView" onPress={openSheet2} />
       </View>
 
       <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
@@ -47,11 +50,9 @@ export default function App() {
       </SheetifyView>
 
       <SheetifyView ref={sheet2}>
-        <ScrollView indicatorStyle="black" contentContainerStyle={$content}>
-          {times(25, (i) => (
-            <DemoContent key={i} />
-          ))}
-        </ScrollView>
+        {times(25, (i) => (
+          <DemoContent key={i} text={String(i)} />
+        ))}
       </SheetifyView>
     </View>
   )
@@ -61,13 +62,18 @@ const Button = (props: ButtonProps) => {
   const { text, ...rest } = props
   return (
     <TouchableHighlight underlayColor="#1f64ae" style={$button} {...rest}>
-      <Text style={$text}>{text}</Text>
+      <Text style={$buttonText}>{text}</Text>
     </TouchableHighlight>
   )
 }
 
-const DemoContent = (props: BlockProps) => {
-  return <View style={$demoContent} {...props} />
+const DemoContent = (props: DemoContentProps) => {
+  const { text, style: $style, ...rest } = props
+  return (
+    <View style={[$demoContent, $style]} {...rest}>
+      {text && <Text style={$demoText}>{text}</Text>}
+    </View>
+  )
 }
 
 const $container: ViewStyle = {
@@ -77,15 +83,24 @@ const $container: ViewStyle = {
   flex: 1,
 }
 
+// const $header: ViewStyle = {
+//   height: 64,
+//   marginBottom: 0,
+//   backgroundColor: BLUE,
+//   borderRadius: 0,
+// }
+
 const $content: ViewStyle = {
   padding: 16,
 }
 
 const $demoContent: ViewStyle = {
   height: 100,
-  borderRadius: 8,
+  borderRadius: 4,
   backgroundColor: GRAY,
   marginBottom: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
 }
 
 const $button: ViewStyle = {
@@ -98,6 +113,12 @@ const $button: ViewStyle = {
   alignItems: 'center',
 }
 
-const $text: TextStyle = {
+const $buttonText: TextStyle = {
   color: 'white',
+}
+
+const $demoText: TextStyle = {
+  fontSize: 32,
+  fontWeight: '500',
+  opacity: 0.25,
 }

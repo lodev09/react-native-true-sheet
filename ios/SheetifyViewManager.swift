@@ -20,7 +20,7 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   override func view() -> SheetifyView {
-    return SheetifyView(bridge.uiManager)
+    return SheetifyView()
   }
 
   // MARK: - Private

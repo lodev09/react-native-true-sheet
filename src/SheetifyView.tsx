@@ -5,9 +5,9 @@ import {
   Platform,
   findNodeHandle,
   type NativeMethods,
-  View,
   type ViewStyle,
   type StyleProp,
+  ScrollView,
 } from 'react-native'
 
 import type { SheetifyViewProps } from './types'
@@ -24,7 +24,7 @@ interface NativeSheetifyViewProps {
   children?: ReactNode
 }
 
-type RefType = Component<NativeSheetifyViewProps> & Readonly<NativeMethods>
+type ContentRef = Component<NativeSheetifyViewProps> & Readonly<NativeMethods>
 
 const ComponentName = 'SheetifyView'
 
@@ -35,11 +35,11 @@ if (!NativeSheetifyView) {
 
 export class SheetifyView extends PureComponent<SheetifyViewProps> {
   displayName = 'Sheetify'
-  private readonly ref: RefObject<RefType>
+  private readonly ref: RefObject<ContentRef>
 
   constructor(props: SheetifyViewProps) {
     super(props)
-    this.ref = createRef<RefType>()
+    this.ref = createRef<ContentRef>()
   }
 
   private get handle(): number {
@@ -61,7 +61,7 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
   render(): ReactNode {
     return (
       <NativeSheetifyView style={$nativeView} ref={this.ref}>
-        <View style={this.props.style}>{this.props.children}</View>
+        <ScrollView style={this.props.style}>{this.props.children}</ScrollView>
       </NativeSheetifyView>
     )
   }

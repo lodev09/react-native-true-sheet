@@ -7,12 +7,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-@objc(SheetifyView)
 class SheetifyView: UIView {
   var controller: SheetifyViewController
 
-  init(_ uiManager: RCTUIManager) {
-    controller = SheetifyViewController(uiManager)
+  // MARK: - Setup
+
+  init() {
+    controller = SheetifyViewController()
     super.init(frame: CGRect.zero)
   }
 
@@ -22,10 +23,37 @@ class SheetifyView: UIView {
   }
 
   override func insertReactSubview(_ subview: UIView!, at _: Int) {
-    // Add content as subview of the controller view
+    // Add main content as subview of the view controller
     controller.view.addSubview(subview)
 
     // TODO: Background color
-    controller.view.backgroundColor = backgroundColor
+    controller.view.backgroundColor = UIColor.white
+
+    // If content is a scrollview, add constraints to fix weirdness
+    // For some reason, sheet resizes scrollviews when collapsed 🤔
+    if subview is RCTScrollView {
+      let rctScrollView = subview as? RCTScrollView
+      let scrollView = rctScrollView?.scrollView
+      scrollView?.pinTo(view: controller.view)
+    }
+
+    if let rvc = reactViewController() {
+      rvc.addChild(controller)
+      controller.didMove(toParent: rvc)
+    }
+  }
+
+  // MARK: - Methods
+
+  func present(promise: Promise) {
+    guard let rvc = reactViewController() else {
+      promise.resolve(false)
+      return
+    }
+
+    controller.prepareForPresentation()
+    rvc.present(controller, animated: true) {
+      promise.resolve(true)
+    }
   }
 }
