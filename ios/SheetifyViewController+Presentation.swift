@@ -24,7 +24,7 @@ extension SheetifyViewController {
 
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
-  func present(promise: Promise) {
+  func prepareForPresentation() {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
       return
     }
@@ -32,9 +32,7 @@ extension SheetifyViewController {
     if #available(iOS 16.0, *) {
       sheet.detents = [
         .custom(identifier: .auto) { context in
-          let content = self.view.subviews[0]
-
-          let value = min(content.bounds.height, 0.5 * context.maximumDetentValue)
+          let value = min(self.contentView.bounds.height, 0.5 * context.maximumDetentValue)
           self.detentSize.auto = value
 
           return value
@@ -64,17 +62,8 @@ extension SheetifyViewController {
 
     sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
-    sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+    // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
-    
-    guard let rvc = sheetifyView.reactViewController() else {
-      promise.resolve(false)
-      return
-    }
-
-    rvc.present(self, animated: true) {
-      promise.resolve(true)
-    }
   }
 }

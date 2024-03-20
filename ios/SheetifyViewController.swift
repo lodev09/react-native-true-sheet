@@ -8,11 +8,13 @@
 
 class SheetifyViewController: UIViewController, UISheetPresentationControllerDelegate {
   // MARK: - Properties
-  
-  var sheetifyView: UIView
 
   // [auto, medium, large]
   var detentSize: DetentSize
+
+  var contentView: UIView {
+    return view.subviews[0]
+  }
 
   var maximumHeight: CGFloat {
     // Use view height to determine detent sizes
@@ -22,10 +24,8 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
 
   // MARK: - Setup
 
-  init(target: UIView) {
+  init() {
     detentSize = DetentSize()
-    sheetifyView = target
-
     super.init(nibName: nil, bundle: nil)
   }
 
@@ -33,7 +33,7 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
   required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
-  
+
   // TODO: Add options
   func setupContent(with contentView: UIView) {
     // Add main content as subview of the view controller
@@ -41,17 +41,6 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
 
     // TODO: Background color
     view.backgroundColor = UIColor.white
-
-    // If content is a scrollview, add constraints to fix weirdness
-    // For some reason, sheet resizes scrollviews when collapsed 🤔
-    if contentView.isRCTScrollView {
-      contentView.pinTo(view: view)
-    }
-
-    if let rvc = sheetifyView.reactViewController() {
-      rvc.addChild(self)
-      didMove(toParent: rvc)
-    }
   }
 
 //  override func viewDidAppear(_ animated: Bool) {

@@ -8,7 +8,7 @@ import {
   type TextStyle,
   type ViewProps,
 } from 'react-native'
-import { SheetifyView } from '@lodev09/react-native-sheetify'
+import { SheetifyScrollView, SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
@@ -47,12 +47,15 @@ export default function App() {
       <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
         <DemoContent />
         <DemoContent />
+        <DemoContent />
       </SheetifyView>
 
       <SheetifyView ref={sheet2}>
-        {times(25, (i) => (
-          <DemoContent key={i} text={String(i)} />
-        ))}
+        <SheetifyScrollView contentContainerStyle={$content} indicatorStyle="black">
+          {times(25, (i) => (
+            <DemoContent key={i} text={String(i)} />
+          ))}
+        </SheetifyScrollView>
       </SheetifyView>
     </View>
   )

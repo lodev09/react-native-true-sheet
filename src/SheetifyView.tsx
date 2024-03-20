@@ -7,7 +7,7 @@ import {
   type NativeMethods,
   type ViewStyle,
   type StyleProp,
-  ScrollView,
+  View,
 } from 'react-native'
 
 import type { SheetifyViewProps } from './types'
@@ -61,7 +61,7 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
   render(): ReactNode {
     return (
       <NativeSheetifyView style={$nativeView} ref={this.ref}>
-        <ScrollView style={this.props.style}>{this.props.children}</ScrollView>
+        <View style={this.props.style}>{this.props.children}</View>
       </NativeSheetifyView>
     )
   }

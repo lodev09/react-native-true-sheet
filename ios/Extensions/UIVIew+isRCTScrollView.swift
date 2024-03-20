@@ -11,7 +11,7 @@ extension UIView {
     guard self is RCTScrollView, let rctScrollView = self as? RCTScrollView else {
       return false
     }
-    
+
     return true
   }
 }

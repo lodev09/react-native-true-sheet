@@ -10,6 +10,8 @@
 class SheetifyViewManager: RCTViewManager {
   // MARK: - Properties
 
+  var scrollTags: [NSNumber] = []
+
   override var methodQueue: DispatchQueue! {
     return DispatchQueue.main
   }
@@ -19,7 +21,7 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   override func view() -> SheetifyView {
-    return SheetifyView()
+    return SheetifyView(viewManager: self)
   }
 
   // MARK: - Private
@@ -36,5 +38,10 @@ class SheetifyViewManager: RCTViewManager {
   func present(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let sheetifyView = getSheetifyView(tag)
     sheetifyView.present(promise: Promise(resolver: resolve, rejecter: reject))
+  }
+
+  @objc
+  func setScrollHandle(_ tag: NSNumber) {
+    scrollTags.append(tag)
   }
 }
