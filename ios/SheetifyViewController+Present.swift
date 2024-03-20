@@ -1,11 +1,10 @@
-/*
- *
- * Created by Jovanni Lo (@lodev09)
- * Copyright 2024-present
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+//
+//  Created by Jovanni Lo (@lodev09)
+//  Copyright (c) 2024-present. All rights reserved.
+//
+//  This source code is licensed under the MIT license found in the
+//  LICENSE file in the root directory of this source tree.
+//
 
 @available(iOS 15.0, *)
 extension UISheetPresentationController.Detent.Identifier {
@@ -16,7 +15,7 @@ extension SheetifyViewController {
   @available(iOS 15.0, *)
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
     if let detent = sheet.selectedDetentIdentifier {
-      let height = detentSize.size(for: detent)
+      let _height = detentSize.size(for: detent)
 
       // TODO: Change events
       // resizeScrollView(height)
@@ -25,7 +24,7 @@ extension SheetifyViewController {
 
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
-  func prepareForPresentation() {
+  func present(promise: Promise) {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
       return
     }
@@ -68,5 +67,14 @@ extension SheetifyViewController {
     sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
+    
+    guard let rvc = sheetifyView.reactViewController() else {
+      promise.resolve(false)
+      return
+    }
+
+    rvc.present(self, animated: true) {
+      promise.resolve(true)
+    }
   }
 }

@@ -1,13 +1,10 @@
-/*
- *
- * Created by Jovanni Lo (@lodev09)
- * Copyright 2024-present
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-import UIKit
+//
+//  Created by Jovanni Lo (@lodev09)
+//  Copyright (c) 2024-present. All rights reserved.
+//
+//  This source code is licensed under the MIT license found in the
+//  LICENSE file in the root directory of this source tree.
+//
 
 extension UIView {
   func pinTo(view: UIView, with insets: UIEdgeInsets = .zero, edges: UIRectEdge = .all) {

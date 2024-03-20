@@ -6,4 +6,12 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-#import <React/RCTViewManager.h>
+extension UIView {
+  var isRCTScrollView: Bool {
+    guard self is RCTScrollView, let rctScrollView = self as? RCTScrollView else {
+      return false
+    }
+    
+    return true
+  }
+}
