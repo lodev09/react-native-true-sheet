@@ -1,6 +1,6 @@
 # React Native Sheetify
 
-Just another bottom sheet... but less shitty 💩
+Tired of those bloated JS bottom sheets? Sheetify is for you!
 
 ## Installation
 

@@ -1,7 +1,7 @@
 {
   "name": "@lodev09/react-native-sheetify",
   "version": "0.1.0",
-  "description": "Just another bottom sheet... but less shitty 💩",
+  "description": "Not your average bottom sheet 💩",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
