@@ -8,7 +8,7 @@
 
 /// Get the custom detent based on the given size and view frame size
 @available(iOS 15.0, *)
-func detent(for size: Any, with bounds: CGRect) -> UISheetPresentationController.Detent? {
+func detent(for size: Any, with height: CGFloat) -> UISheetPresentationController.Detent? {
   if let floatSize = size as? CGFloat {
     if #available(iOS 16.0, *) {
       return UISheetPresentationController.Detent.custom { context in min(floatSize, context.maximumDetentValue)
@@ -24,7 +24,7 @@ func detent(for size: Any, with bounds: CGRect) -> UISheetPresentationController
       // Auto
       if stringSize == "auto" {
         return UISheetPresentationController.Detent.custom { context in
-          min(bounds.height, context.maximumDetentValue)
+          min(height, context.maximumDetentValue)
         }
       }
 

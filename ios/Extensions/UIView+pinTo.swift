@@ -7,19 +7,19 @@
 //
 
 extension UIView {
-  func pinTo(view: UIView, from edges: UIRectEdge = .all, insets: UIEdgeInsets = .zero) {
-    translatesAutoresizingMaskIntoConstraints = false
-    if edges.contains(.top) {
-      topAnchor.constraint(equalTo: view.topAnchor, constant: insets.top).isActive = true
-    }
-    if edges.contains(.bottom) {
-      bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -insets.bottom).isActive = true
-    }
-    if edges.contains(.left) {
-      leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: insets.left).isActive = true
-    }
-    if edges.contains(.right) {
-      trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -insets.right).isActive = true
+  func pinTo(view: UIView, from edges: UIRectEdge = .all, with height: CGFloat? = nil) {
+    var constraints: [NSLayoutConstraint] = []
+
+    if edges.contains(.top) { constraints.append(topAnchor.constraint(equalTo: view.topAnchor)) }
+    if edges.contains(.bottom) { constraints.append(bottomAnchor.constraint(equalTo: view.bottomAnchor)) }
+    if edges.contains(.left) { constraints.append(leadingAnchor.constraint(equalTo: view.leadingAnchor)) }
+    if edges.contains(.right) { constraints.append(trailingAnchor.constraint(equalTo: view.trailingAnchor)) }
+
+    if let height { constraints.append(heightAnchor.constraint(equalToConstant: height)) }
+
+    if !constraints.isEmpty {
+      translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate(constraints)
     }
   }
 }

@@ -61,12 +61,18 @@ export default function App() {
         ref={sheet1}
         style={$content}
         backgroundColor={DARK}
+        HeaderComponent={() => <View style={$header} />}
+        FooterComponent={() => <View style={$footer} />}
       >
         <DemoContent />
         <DemoContent />
       </SheetifyView>
 
-      <SheetifyView ref={sheet2} scrollRef={scrollViewRef}>
+      <SheetifyView
+        ref={sheet2}
+        scrollRef={scrollViewRef}
+        HeaderComponent={() => <View style={$header} />}
+      >
         <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
             <DemoContent key={i} text={String(i + 1)} />
@@ -74,7 +80,12 @@ export default function App() {
         </ScrollView>
       </SheetifyView>
 
-      <SheetifyView sizes={['large']} ref={sheet3} scrollRef={flatListRef}>
+      <SheetifyView
+        ref={sheet3}
+        scrollRef={flatListRef}
+        sizes={['large']}
+        FooterComponent={() => <View style={$footer} />}
+      >
         <FlatList<number>
           ref={flatListRef}
           data={times(50, (i) => i)}
@@ -113,12 +124,15 @@ const $container: ViewStyle = {
   flex: 1,
 }
 
-// const $header: ViewStyle = {
-//   height: 64,
-//   marginBottom: 0,
-//   backgroundColor: BLUE,
-//   borderRadius: 0,
-// }
+const $header: ViewStyle = {
+  height: 64,
+  backgroundColor: BLUE,
+}
+
+const $footer: ViewStyle = {
+  height: 64,
+  backgroundColor: BLUE,
+}
 
 const $content: ViewStyle = {
   padding: 16,

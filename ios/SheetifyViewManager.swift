@@ -39,12 +39,20 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   @objc
-  func handleScrollable(_ tag: NSNumber, scrollableTag: NSNumber) {
-    guard let scrollView = bridge.uiManager.view(forReactTag: scrollableTag) else {
-      return
-    }
-
+  func handleScrollable(_ tag: NSNumber, scrollTag: NSNumber) {
     let sheetifyView = getSheetifyView(tag)
-    sheetifyView.handleScrollable(scrollView)
+    sheetifyView.handleScrollable(scrollTag)
+  }
+
+  @objc
+  func handleHeader(_ tag: NSNumber, headerTag: NSNumber) {
+    let sheetifyView = getSheetifyView(tag)
+    sheetifyView.handleHeader(headerTag)
+  }
+
+  @objc
+  func handleFooter(_ tag: NSNumber, footerTag: NSNumber) {
+    let sheetifyView = getSheetifyView(tag)
+    sheetifyView.handleFooter(footerTag)
   }
 }

@@ -1,4 +1,4 @@
-import type { Component, RefObject } from 'react'
+import type { Component, ComponentType, RefObject } from 'react'
 import type { ColorValue, ViewProps } from 'react-native'
 
 /**
@@ -69,4 +69,16 @@ export interface SheetifyViewProps extends ViewProps {
    * @default ['medium', 'large']
    */
   sizes?: SheetifySize[]
+
+  /**
+   * A component that floats to the top of the Sheet.
+   * Scrollable insets are adjusted automatically.
+   */
+  HeaderComponent?: ComponentType<unknown>
+
+  /**
+   * A component that floats to the bottom of the Sheet.
+   * Scrollable insets are adjusted automatically.
+   */
+  FooterComponent?: ComponentType<unknown>
 }

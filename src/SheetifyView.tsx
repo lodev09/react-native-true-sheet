@@ -6,6 +6,7 @@ import {
   type NativeMethods,
   type ViewStyle,
   View,
+  type ViewProps,
 } from 'react-native'
 
 import type { SheetifyViewProps } from './types'
@@ -18,6 +19,8 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n'
 
 type ContentRef = Component<SheetifyViewProps> & Readonly<NativeMethods>
+type HeaderRef = Component<ViewProps> & Readonly<NativeMethods>
+type FooterRef = Component<ViewProps> & Readonly<NativeMethods>
 
 const ComponentName = 'SheetifyView'
 
@@ -29,10 +32,14 @@ if (!NativeSheetifyView) {
 export class SheetifyView extends PureComponent<SheetifyViewProps> {
   displayName = 'Sheetify'
   private readonly ref: RefObject<ContentRef>
+  private readonly headerRef: React.RefObject<HeaderRef>
+  private readonly footerRef: React.RefObject<FooterRef>
 
   constructor(props: SheetifyViewProps) {
     super(props)
     this.ref = createRef<ContentRef>()
+    this.headerRef = createRef<HeaderRef>()
+    this.footerRef = createRef<FooterRef>()
   }
 
   private get handle(): number {
@@ -45,10 +52,22 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
   }
 
   componentDidMount(): void {
-    if (!this.props.scrollRef?.current) return
+    if (this.props.scrollRef?.current) {
+      const scrollableHandle = findNodeHandle(this.props.scrollRef.current)
+      if (scrollableHandle) {
+        SheetifyModule.handleScrollable(this.handle, scrollableHandle)
+      }
+    }
 
-    const scrollableHandle = findNodeHandle(this.props.scrollRef.current)
-    SheetifyModule.handleScrollable(this.handle, scrollableHandle)
+    const headerHandle = findNodeHandle(this.headerRef.current)
+    if (headerHandle) {
+      SheetifyModule.handleHeader(this.handle, headerHandle)
+    }
+
+    const footerHandle = findNodeHandle(this.footerRef.current)
+    if (footerHandle) {
+      SheetifyModule.handleFooter(this.handle, footerHandle)
+    }
   }
 
   /**
@@ -59,6 +78,9 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
   }
 
   render(): ReactNode {
+    const HeaderComponent = this.props.HeaderComponent
+    const FooterComponent = this.props.FooterComponent
+
     return (
       <NativeSheetifyView
         sizes={this.props.sizes ?? ['medium', 'large']}
@@ -66,7 +88,19 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
         style={$sheetify}
         ref={this.ref}
       >
-        <View style={this.props.style}>{this.props.children}</View>
+        <View>
+          {!!HeaderComponent && (
+            <View ref={this.headerRef} style={$front}>
+              <HeaderComponent />
+            </View>
+          )}
+          <View style={this.props.style}>{this.props.children}</View>
+          {!!FooterComponent && (
+            <View ref={this.footerRef} style={$front}>
+              <FooterComponent />
+            </View>
+          )}
+        </View>
       </NativeSheetifyView>
     )
   }
@@ -76,4 +110,8 @@ const $sheetify: ViewStyle = {
   position: 'absolute',
   width: 0,
   zIndex: -99,
+}
+
+const $front: ViewStyle = {
+  // zIndex: 1,
 }
