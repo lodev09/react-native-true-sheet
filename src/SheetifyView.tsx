@@ -1,12 +1,10 @@
 import React, { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
 import {
-  StyleSheet,
   requireNativeComponent,
   Platform,
   findNodeHandle,
   type NativeMethods,
   type ViewStyle,
-  type StyleProp,
   View,
 } from 'react-native'
 
@@ -19,16 +17,11 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-interface NativeSheetifyViewProps {
-  style: StyleProp<ViewStyle>
-  children?: ReactNode
-}
-
-type ContentRef = Component<NativeSheetifyViewProps> & Readonly<NativeMethods>
+type ContentRef = Component<SheetifyViewProps> & Readonly<NativeMethods>
 
 const ComponentName = 'SheetifyView'
 
-const NativeSheetifyView = requireNativeComponent<NativeSheetifyViewProps>(ComponentName)
+const NativeSheetifyView = requireNativeComponent<SheetifyViewProps>(ComponentName)
 if (!NativeSheetifyView) {
   throw new Error(LINKING_ERROR)
 }
@@ -67,7 +60,12 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
 
   render(): ReactNode {
     return (
-      <NativeSheetifyView style={$sheetify} ref={this.ref}>
+      <NativeSheetifyView
+        sizes={this.props.sizes}
+        backgroundColor={this.props.backgroundColor}
+        style={$sheetify}
+        ref={this.ref}
+      >
         <View style={this.props.style}>{this.props.children}</View>
       </NativeSheetifyView>
     )
@@ -75,6 +73,7 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
 }
 
 const $sheetify: ViewStyle = {
-  ...StyleSheet.absoluteFillObject,
-  zIndex: -10000,
+  position: 'absolute',
+  width: 0,
+  zIndex: -99,
 }

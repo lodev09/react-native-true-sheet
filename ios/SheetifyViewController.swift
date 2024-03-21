@@ -17,7 +17,6 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
   // MARK: - Properties
 
   var detentSize: DetentSize
-
   var lastViewWidth: CGFloat = 0
 
   /// Notify bound rect changes so we can adjust our sheetify view
@@ -56,7 +55,6 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
     super.viewDidLayoutSubviews()
 
     if let widthDidChange, lastViewWidth != view.frame.width {
-      print("NEW WIDTH:", view.bounds.width)
       widthDidChange(view.bounds.width)
       lastViewWidth = view.frame.width
     }

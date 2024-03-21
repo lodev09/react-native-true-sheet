@@ -1,9 +1,9 @@
 import React, { useRef } from 'react'
 import {
   Text,
-  TouchableHighlight,
+  TouchableOpacity,
   View,
-  type TouchableHighlightProps,
+  type TouchableOpacityProps,
   type ViewStyle,
   type TextStyle,
   type ViewProps,
@@ -14,10 +14,12 @@ import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
+const DARK = '#282e37'
 const BLUE = '#3784d7'
+const BLUE_DARK = '#1f64ae'
 const GRAY = '#cfd4dd'
 
-interface ButtonProps extends TouchableHighlightProps {
+interface ButtonProps extends TouchableOpacityProps {
   text: string
 }
 
@@ -54,7 +56,7 @@ export default function App() {
       <Button text="Sheetify ScrollView" onPress={openSheet2} />
       <Button text="Sheetify FlatList" onPress={openSheet3} />
 
-      <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
+      <SheetifyView sizes={['medium', 'large']} ref={sheet1} style={$content} backgroundColor={DARK}>
         <DemoContent />
         <DemoContent />
       </SheetifyView>
@@ -83,9 +85,9 @@ export default function App() {
 const Button = (props: ButtonProps) => {
   const { text, ...rest } = props
   return (
-    <TouchableHighlight underlayColor="#1f64ae" style={$button} {...rest}>
+    <TouchableOpacity activeOpacity={0.6} style={$button} {...rest}>
       <Text style={$buttonText}>{text}</Text>
-    </TouchableHighlight>
+    </TouchableOpacity>
   )
 }
 
@@ -99,7 +101,7 @@ const DemoContent = (props: DemoContentProps) => {
 }
 
 const $container: ViewStyle = {
-  backgroundColor: 'white',
+  backgroundColor: BLUE,
   justifyContent: 'center',
   alignItems: 'center',
   padding: 24,
@@ -131,7 +133,7 @@ const $button: ViewStyle = {
   width: 300,
   padding: 12,
   borderRadius: 4,
-  backgroundColor: BLUE,
+  backgroundColor: BLUE_DARK,
   marginBottom: 12,
   alignItems: 'center',
 }

@@ -8,7 +8,7 @@
 
 @objc(SheetifyViewManager)
 class SheetifyViewManager: RCTViewManager {
-  // MARK: - Properties
+  // MARK: - properties
 
   override var methodQueue: DispatchQueue! {
     return DispatchQueue.main
@@ -19,7 +19,7 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   override func view() -> UIView? {
-    return SheetifyView(bridge: bridge)
+    return SheetifyView(with: bridge)
   }
 
   // MARK: - Private

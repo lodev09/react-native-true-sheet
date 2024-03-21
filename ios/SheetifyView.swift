@@ -6,7 +6,12 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
+@objc(SheetifyView)
 class SheetifyView: UIView {
+  // MARK: - React properties
+
+  @objc var sizes: NSArray = []
+  
   // MARK: - Initial properties
 
   private var bridge: RCTBridge
@@ -20,7 +25,7 @@ class SheetifyView: UIView {
 
   // MARK: - Setup
 
-  init(bridge: RCTBridge) {
+  init(with bridge: RCTBridge) {
     self.bridge = bridge
 
     viewController = SheetifyViewController()
@@ -47,8 +52,8 @@ class SheetifyView: UIView {
     // Add main content as subview of the view controller
     viewController.view.insertSubview(subview, at: 0)
 
-    // TODO: Background color
-    viewController.view.backgroundColor = UIColor.white
+    viewController.view.backgroundColor = backgroundColor ?? .white
+     backgroundColor = .clear
 
     touchHandler.attach(to: subview)
     contentView = subview
