@@ -59,11 +59,11 @@ export interface SheetifyViewProps extends ViewProps {
 
   /**
    * The sizes you want the Sheet to support.
-   * Sort them by ascending order
+   * IMPORTANT! Sort them in ascending order
    *
    * Example:
    * ```ts
-   * size={['auto', 400, '80%']}
+   * size={['auto', 400, '80%', 'large']}
    * ```
    *
    * @default ['medium', 'large']

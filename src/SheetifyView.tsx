@@ -61,7 +61,7 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
   render(): ReactNode {
     return (
       <NativeSheetifyView
-        sizes={this.props.sizes}
+        sizes={this.props.sizes ?? ['medium', 'large']}
         backgroundColor={this.props.backgroundColor}
         style={$sheetify}
         ref={this.ref}

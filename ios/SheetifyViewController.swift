@@ -6,17 +6,11 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-@available(iOS 15.0, *)
-extension UISheetPresentationController.Detent.Identifier {
-  static let auto = UISheetPresentationController.Detent.Identifier("auto")
-}
-
 // MARK: - SheetifyViewController
 
 class SheetifyViewController: UIViewController, UISheetPresentationControllerDelegate {
   // MARK: - Properties
 
-  var detentSize: DetentSize
   var lastViewWidth: CGFloat = 0
 
   /// Notify bound rect changes so we can adjust our sheetify view
@@ -30,23 +24,9 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
 
   // MARK: - Setup
 
-  init() {
-    detentSize = DetentSize()
-    super.init(nibName: nil, bundle: nil)
-  }
-
-  @available(*, unavailable)
-  required init?(coder _: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-
   @available(iOS 15.0, *)
-  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
-    if let detent = sheet.selectedDetentIdentifier {
-      // TODO: Change events
-      let height = detentSize.size(for: detent)
-      print("DETENT:", detent.rawValue, "HEIGHT:", height)
-    }
+  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_: UISheetPresentationController) {
+    // TODO: Change events
   }
 
   /// This is called multiple times while sheet is being dragged.

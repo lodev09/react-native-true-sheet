@@ -57,7 +57,7 @@ export default function App() {
       <Button text="Sheetify FlatList" onPress={openSheet3} />
 
       <SheetifyView
-        sizes={['medium', 'large']}
+        sizes={['auto', '70%', 'large']}
         ref={sheet1}
         style={$content}
         backgroundColor={DARK}
@@ -74,7 +74,7 @@ export default function App() {
         </ScrollView>
       </SheetifyView>
 
-      <SheetifyView ref={sheet3} scrollRef={flatListRef}>
+      <SheetifyView sizes={['large']} ref={sheet3} scrollRef={flatListRef}>
         <FlatList<number>
           ref={flatListRef}
           data={times(50, (i) => i)}

@@ -11,7 +11,7 @@ class SheetifyView: UIView {
   // MARK: - React properties
 
   @objc var sizes: NSArray = []
-  
+
   // MARK: - Initial properties
 
   private var bridge: RCTBridge
@@ -53,7 +53,7 @@ class SheetifyView: UIView {
     viewController.view.insertSubview(subview, at: 0)
 
     viewController.view.backgroundColor = backgroundColor ?? .white
-     backgroundColor = .clear
+    backgroundColor = .clear
 
     touchHandler.attach(to: subview)
     contentView = subview
@@ -101,7 +101,7 @@ class SheetifyView: UIView {
       return
     }
 
-    viewController.preparePresentation(for: contentView)
+    viewController.preparePresentation(for: contentView, with: sizes)
     rvc.present(viewController, animated: true) {
       promise.resolve(true)
     }
