@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "expo start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
     "setup": "npx expo prebuild",
     "clean": "yarn setup --clean",
     "doctor": "npx expo-doctor",

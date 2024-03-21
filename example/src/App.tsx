@@ -7,8 +7,10 @@ import {
   type ViewStyle,
   type TextStyle,
   type ViewProps,
+  ScrollView,
+  FlatList,
 } from 'react-native'
-import { SheetifyScrollView, SheetifyView } from '@lodev09/react-native-sheetify'
+import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
@@ -26,15 +28,24 @@ interface DemoContentProps extends ViewProps {
 export default function App() {
   const sheet1 = useRef<SheetifyView>(null)
   const sheet2 = useRef<SheetifyView>(null)
+  const sheet3 = useRef<SheetifyView>(null)
+
+  const scrollViewRef = useRef<ScrollView>(null)
+  const flatListRef = useRef<FlatList>(null)
 
   const openSheet1 = async () => {
     await sheet1.current?.present()
-    // console.log('sheet 1 presented!')
+    console.log('SHEET 1: presented!')
   }
 
   const openSheet2 = async () => {
     await sheet2.current?.present()
-    // console.log('sheet 2 presented!')
+    console.log('SHEET 2: presented!')
+  }
+
+  const openSheet3 = async () => {
+    await sheet3.current?.present()
+    console.log('SHEET 3: presented!')
   }
 
   return (
@@ -42,20 +53,30 @@ export default function App() {
       <View>
         <Button text="Sheetify View" onPress={openSheet1} />
         <Button text="Sheetify ScrollView" onPress={openSheet2} />
+        <Button text="Sheetify FlatList" onPress={openSheet3} />
       </View>
 
       <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
         <DemoContent />
         <DemoContent />
-        <DemoContent />
       </SheetifyView>
 
-      <SheetifyView ref={sheet2}>
-        <SheetifyScrollView contentContainerStyle={$content} indicatorStyle="black">
+      <SheetifyView ref={sheet2} scrollRef={scrollViewRef}>
+        <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
-            <DemoContent key={i} text={String(i)} />
+            <DemoContent key={i} text={String(i + 1)} />
           ))}
-        </SheetifyScrollView>
+        </ScrollView>
+      </SheetifyView>
+
+      <SheetifyView ref={sheet3} scrollRef={flatListRef}>
+        <FlatList<number>
+          ref={flatListRef}
+          data={times(50, (i) => i)}
+          contentContainerStyle={$content}
+          indicatorStyle="black"
+          renderItem={({ item }) => <DemoContent text={String(item + 1)} />}
+        />
       </SheetifyView>
     </View>
   )

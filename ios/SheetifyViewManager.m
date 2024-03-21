@@ -11,11 +11,12 @@
 @interface RCT_EXTERN_MODULE(SheetifyViewManager, RCTViewManager)
 
 /// Presents the sheet controller
-RCT_EXTERN_METHOD(present: (nonnull NSNumber*)tag
+RCT_EXTERN_METHOD(present:(nonnull NSNumber*)tag
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 
 /// Render the ScrollView to be handled properly
-RCT_EXTERN_METHOD(setScrollHandle: (nonnull NSNumber*)tag)
+RCT_EXTERN_METHOD(handleScrollable: (nonnull NSNumber*)tag
+                  scrollableTag:(nonnull NSNumber*)scrollTag)
 
 @end

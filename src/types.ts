@@ -1,3 +1,4 @@
+import type { Component, RefObject } from 'react'
 import type { ColorValue, ViewProps } from 'react-native'
 
 /**
@@ -50,6 +51,11 @@ export interface SheetifyViewProps extends ViewProps {
    * Main sheet background color
    */
   backgroundColor?: ColorValue
+
+  /**
+   * The main scrollable ref that Sheetify should handle.
+   */
+  scrollRef?: RefObject<Component<unknown>>
 
   /**
    * The sizes you want the Sheet to support.

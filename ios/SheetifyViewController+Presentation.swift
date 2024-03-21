@@ -15,9 +15,8 @@ extension SheetifyViewController {
   @available(iOS 15.0, *)
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
     if let detent = sheet.selectedDetentIdentifier {
-      let _height = detentSize.size(for: detent)
-
       // TODO: Change events
+      // let height = detentSize.size(for: detent)
       // resizeScrollView(height)
     }
   }

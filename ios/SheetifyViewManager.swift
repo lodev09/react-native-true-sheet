@@ -10,8 +10,6 @@
 class SheetifyViewManager: RCTViewManager {
   // MARK: - Properties
 
-  var scrollTags: [NSNumber] = []
-
   override var methodQueue: DispatchQueue! {
     return DispatchQueue.main
   }
@@ -21,7 +19,7 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   override func view() -> SheetifyView {
-    return SheetifyView(viewManager: self)
+    return SheetifyView()
   }
 
   // MARK: - Private
@@ -41,7 +39,12 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   @objc
-  func setScrollHandle(_ tag: NSNumber) {
-    scrollTags.append(tag)
+  func handleScrollable(_ tag: NSNumber, scrollableTag: NSNumber) {
+    guard let scrollView = bridge.uiManager.view(forReactTag: scrollableTag) else {
+      return
+    }
+
+    let sheetifyView = getSheetifyView(tag)
+    sheetifyView.handleScrollable(scrollView)
   }
 }

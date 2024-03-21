@@ -8,14 +8,12 @@
 
 class SheetifyView: UIView {
   var controller: SheetifyViewController
-  var viewManager: SheetifyViewManager
+  var scrollView: RCTScrollView?
 
   // MARK: - Setup
 
-  init(viewManager: SheetifyViewManager) {
+  init() {
     controller = SheetifyViewController()
-    self.viewManager = viewManager
-
     super.init(frame: CGRect.zero)
   }
 
@@ -35,20 +33,18 @@ class SheetifyView: UIView {
 
   // MARK: - Methods
 
-  func present(promise: Promise) {
-    controller.prepareForPresentation()
-    let contentView = controller.contentView
+  /// Add constraints to fix weirdness to an `RCTScrollView` component
+  func handleScrollable(_ view: UIView) {
+    guard view is RCTScrollView else { return }
+    scrollView = view as? RCTScrollView
+  }
 
-    // If content is a scrollview, add constraints to fix weirdness
-    // For some reason, sheet resizes scrollviews when collapsed 🤔
-    // Look for our `<SheetifyScrollView />` and handle constraints
-    if let view = contentView.subviews.first(where: { viewManager.scrollTags.contains($0.reactTag) }) {
-      if view.isRCTScrollView {
-        view.pinTo(
-          view: controller.view,
-          with: contentView.reactPaddingInsets
-        )
-      }
+  func present(promise: Promise) {
+    if let rctScrollView = scrollView {
+      let contentView = controller.contentView
+
+      contentView.pinTo(view: controller.view)
+      rctScrollView.pinTo(view: contentView)
     }
 
     guard let rvc = reactViewController() else {
@@ -56,6 +52,7 @@ class SheetifyView: UIView {
       return
     }
 
+    controller.prepareForPresentation()
     rvc.present(controller, animated: true) {
       promise.resolve(true)
     }

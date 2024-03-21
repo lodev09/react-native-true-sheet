@@ -51,6 +51,13 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
     return nodeHandle
   }
 
+  componentDidMount(): void {
+    if (!this.props.scrollRef?.current) return
+
+    const scrollableHandle = findNodeHandle(this.props.scrollRef.current)
+    SheetifyModule.handleScrollable(this.handle, scrollableHandle)
+  }
+
   /**
    * Present the modal sheet
    */
