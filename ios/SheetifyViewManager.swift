@@ -18,8 +18,8 @@ class SheetifyViewManager: RCTViewManager {
     return true
   }
 
-  override func view() -> SheetifyView {
-    return SheetifyView()
+  override func view() -> UIView? {
+    return SheetifyView(bridge: bridge)
   }
 
   // MARK: - Private

@@ -68,5 +68,5 @@ export interface SheetifyViewProps extends ViewProps {
    *
    * @default ['medium', 'large']
    */
-  sizes?: SheetifySize
+  sizes?: SheetifySize[]
 }

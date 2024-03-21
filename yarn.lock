@@ -3483,6 +3483,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/virtualized-lists@npm:0.75.0-main":
+  version: 0.75.0-main
+  resolution: "@react-native/virtualized-lists@npm:0.75.0-main"
+  dependencies:
+    invariant: "npm:^2.2.4"
+    nullthrows: "npm:^1.1.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/2d2596c7adb409a01b86bebb657c6775d6779f12e1bae3a94c366a5986a4aa07f89dcc36e5ec2fd8d59d6fe1b70accc5f90000c8572a8bfa074ef8017fc6297a
+  languageName: node
+  linkType: hard
+
 "@release-it/conventional-changelog@npm:^8.0.1":
   version: 8.0.1
   resolution: "@release-it/conventional-changelog@npm:8.0.1"
@@ -13500,6 +13513,7 @@ __metadata:
     "@babel/runtime": "npm:^7.20.0"
     "@react-native/babel-preset": "npm:0.73.21"
     "@react-native/metro-config": "npm:0.73.5"
+    "@react-native/virtualized-lists": "npm:0.75.0-main"
     babel-plugin-module-resolver: "npm:^5.0.0"
     expo: "npm:~50.0.14"
     react: "npm:18.2.0"

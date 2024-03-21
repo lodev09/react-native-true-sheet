@@ -3,7 +3,6 @@
     "name": "SheetifyExample",
     "slug": "SheetifyExample",
     "version": "1.0.0",
-    "orientation": "all",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {

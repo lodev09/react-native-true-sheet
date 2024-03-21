@@ -6,15 +6,22 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
+@available(iOS 15.0, *)
+extension UISheetPresentationController.Detent.Identifier {
+  static let auto = UISheetPresentationController.Detent.Identifier("auto")
+}
+
+// MARK: - SheetifyViewController
+
 class SheetifyViewController: UIViewController, UISheetPresentationControllerDelegate {
   // MARK: - Properties
 
-  // [auto, medium, large]
   var detentSize: DetentSize
 
-  var contentView: UIView {
-    return view.subviews[0]
-  }
+  var lastViewWidth: CGFloat = 0
+
+  /// Notify bound rect changes so we can adjust our sheetify view
+  var widthDidChange: ((CGFloat) -> Void)?
 
   var maximumHeight: CGFloat {
     // Use view height to determine detent sizes
@@ -34,29 +41,24 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
     fatalError("init(coder:) has not been implemented")
   }
 
-  // TODO: Add options
-  func setupContent(with contentView: UIView) {
-    // Add main content as subview of the view controller
-    view.addSubview(contentView)
-
-    // TODO: Background color
-    view.backgroundColor = UIColor.white
+  @available(iOS 15.0, *)
+  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
+    if let detent = sheet.selectedDetentIdentifier {
+      // TODO: Change events
+      let height = detentSize.size(for: detent)
+      print("DETENT:", detent.rawValue, "HEIGHT:", height)
+    }
   }
 
-//  override func viewDidAppear(_ animated: Bool) {
-//    super.viewDidAppear(animated)
+  /// This is called multiple times while sheet is being dragged.
+  /// let's try to minimize size update by comparing last known width
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
 
-  // Update content height on the first appearance
-//    resizeScrollView(view.bounds.height)
-//  }
-
-//  func resizeScrollView(_ height: CGFloat) {
-//    RCTExecuteOnUIManagerQueue {
-//      let shadowView = self.uiManager.shadowView(forReactTag: contentView.reactTag)
-//      if let node = shadowView?.yogaNode {
-//        YGNodeStyleSetHeight(node, Float(height + 59))
-//        self.uiManager.setNeedsLayout()
-//      }
-//    }
-//  }
+    if let widthDidChange, lastViewWidth != view.frame.width {
+      print("NEW WIDTH:", view.bounds.width)
+      widthDidChange(view.bounds.width)
+      lastViewWidth = view.frame.width
+    }
+  }
 }

@@ -67,14 +67,14 @@ export class SheetifyView extends PureComponent<SheetifyViewProps> {
 
   render(): ReactNode {
     return (
-      <NativeSheetifyView style={$nativeView} ref={this.ref}>
+      <NativeSheetifyView style={$sheetify} ref={this.ref}>
         <View style={this.props.style}>{this.props.children}</View>
       </NativeSheetifyView>
     )
   }
 }
 
-const $nativeView: ViewStyle = {
+const $sheetify: ViewStyle = {
   ...StyleSheet.absoluteFillObject,
-  zIndex: -1000,
+  zIndex: -10000,
 }

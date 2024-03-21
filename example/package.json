@@ -13,6 +13,7 @@
     "build:ios": "cd ios && xcodebuild -workspace SheetifyExample.xcworkspace -scheme SheetifyExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
   "dependencies": {
+    "@react-native/virtualized-lists": "0.75.0-main",
     "expo": "~50.0.14",
     "react": "18.2.0",
     "react-native": "0.73.6"

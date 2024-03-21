@@ -6,24 +6,10 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-@available(iOS 15.0, *)
-extension UISheetPresentationController.Detent.Identifier {
-  static let auto = UISheetPresentationController.Detent.Identifier("auto")
-}
-
 extension SheetifyViewController {
-  @available(iOS 15.0, *)
-  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
-    if let detent = sheet.selectedDetentIdentifier {
-      // TODO: Change events
-      // let height = detentSize.size(for: detent)
-      // resizeScrollView(height)
-    }
-  }
-
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
-  func prepareForPresentation() {
+  func preparePresentation(for view: UIView) {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
       return
     }
@@ -31,7 +17,7 @@ extension SheetifyViewController {
     if #available(iOS 16.0, *) {
       sheet.detents = [
         .custom(identifier: .auto) { context in
-          let value = min(self.contentView.bounds.height, 0.5 * context.maximumDetentValue)
+          let value = min(view.bounds.height, 0.5 * context.maximumDetentValue)
           self.detentSize.auto = value
 
           return value
@@ -61,7 +47,7 @@ extension SheetifyViewController {
 
     sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
-    // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+    sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
   }

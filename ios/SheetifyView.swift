@@ -7,14 +7,30 @@
 //
 
 class SheetifyView: UIView {
-  var controller: SheetifyViewController
-  var scrollView: RCTScrollView?
+  // MARK: - Initial properties
+
+  private var bridge: RCTBridge
+  private var touchHandler: RCTTouchHandler
+  private var viewController: SheetifyViewController
+
+  // MARK: - Setup properties
+
+  private var contentView: UIView?
+  private var scrollView: RCTScrollView?
 
   // MARK: - Setup
 
-  init() {
-    controller = SheetifyViewController()
-    super.init(frame: CGRect.zero)
+  init(bridge: RCTBridge) {
+    self.bridge = bridge
+
+    viewController = SheetifyViewController()
+    touchHandler = RCTTouchHandler(bridge: bridge)
+
+    super.init(frame: .zero)
+
+    viewController.widthDidChange = { width in
+      self.setContentWidth(width)
+    }
   }
 
   @available(*, unavailable)
@@ -23,11 +39,43 @@ class SheetifyView: UIView {
   }
 
   override func insertReactSubview(_ subview: UIView!, at _: Int) {
-    controller.setupContent(with: subview)
+    guard subview != nil, contentView == nil else {
+      print("Sheetify can only have one subview.")
+      return
+    }
 
-    if let rvc = reactViewController() {
-      rvc.addChild(controller)
-      controller.didMove(toParent: rvc)
+    // Add main content as subview of the view controller
+    viewController.view.insertSubview(subview, at: 0)
+
+    // TODO: Background color
+    viewController.view.backgroundColor = UIColor.white
+
+    touchHandler.attach(to: subview)
+    contentView = subview
+  }
+
+  override func removeReactSubview(_ subview: UIView!) {
+    guard subview == contentView else {
+      print("Cannot remove view other than modal view")
+      return
+    }
+
+    super.removeReactSubview(subview)
+
+    touchHandler.detach(from: subview)
+    contentView = nil
+  }
+
+  func setContentWidth(_ width: CGFloat) {
+    if let contentView {
+      let size = CGSize(width: width, height: contentView.bounds.height)
+      bridge.uiManager.setSize(size, for: contentView)
+
+      // Add constraits to our content and scrollView
+      if let scrollView {
+        contentView.pinTo(view: viewController.view)
+        scrollView.pinTo(view: contentView)
+      }
     }
   }
 
@@ -40,20 +88,16 @@ class SheetifyView: UIView {
   }
 
   func present(promise: Promise) {
-    if let rctScrollView = scrollView {
-      let contentView = controller.contentView
+    let rvc = reactViewController()
 
-      contentView.pinTo(view: controller.view)
-      rctScrollView.pinTo(view: contentView)
-    }
-
-    guard let rvc = reactViewController() else {
+    guard let contentView, let rvc else {
+      print("No content view or react view controller present.")
       promise.resolve(false)
       return
     }
 
-    controller.prepareForPresentation()
-    rvc.present(controller, animated: true) {
+    viewController.preparePresentation(for: contentView)
+    rvc.present(viewController, animated: true) {
       promise.resolve(true)
     }
   }

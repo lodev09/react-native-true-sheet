@@ -50,11 +50,9 @@ export default function App() {
 
   return (
     <View style={$container}>
-      <View>
-        <Button text="Sheetify View" onPress={openSheet1} />
-        <Button text="Sheetify ScrollView" onPress={openSheet2} />
-        <Button text="Sheetify FlatList" onPress={openSheet3} />
-      </View>
+      <Button text="Sheetify View" onPress={openSheet1} />
+      <Button text="Sheetify ScrollView" onPress={openSheet2} />
+      <Button text="Sheetify FlatList" onPress={openSheet3} />
 
       <SheetifyView ref={sheet1} style={$content} backgroundColor={BLUE}>
         <DemoContent />
@@ -103,6 +101,7 @@ const DemoContent = (props: DemoContentProps) => {
 const $container: ViewStyle = {
   backgroundColor: 'white',
   justifyContent: 'center',
+  alignItems: 'center',
   padding: 24,
   flex: 1,
 }
@@ -129,7 +128,7 @@ const $demoContent: ViewStyle = {
 
 const $button: ViewStyle = {
   height: 40,
-  minWidth: 300,
+  width: 300,
   padding: 12,
   borderRadius: 4,
   backgroundColor: BLUE,

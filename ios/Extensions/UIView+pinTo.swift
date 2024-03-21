@@ -7,7 +7,7 @@
 //
 
 extension UIView {
-  func pinTo(view: UIView, with insets: UIEdgeInsets = .zero, edges: UIRectEdge = .all) {
+  func pinTo(view: UIView, from edges: UIRectEdge = .all, insets: UIEdgeInsets = .zero) {
     translatesAutoresizingMaskIntoConstraints = false
     if edges.contains(.top) {
       topAnchor.constraint(equalTo: view.topAnchor, constant: insets.top).isActive = true
