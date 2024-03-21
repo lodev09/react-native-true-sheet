@@ -56,7 +56,12 @@ export default function App() {
       <Button text="Sheetify ScrollView" onPress={openSheet2} />
       <Button text="Sheetify FlatList" onPress={openSheet3} />
 
-      <SheetifyView sizes={['medium', 'large']} ref={sheet1} style={$content} backgroundColor={DARK}>
+      <SheetifyView
+        sizes={['medium', 'large']}
+        ref={sheet1}
+        style={$content}
+        backgroundColor={DARK}
+      >
         <DemoContent />
         <DemoContent />
       </SheetifyView>
