@@ -11,7 +11,8 @@
 func detent(for size: Any, with height: CGFloat) -> UISheetPresentationController.Detent? {
   if let floatSize = size as? CGFloat {
     if #available(iOS 16.0, *) {
-      return UISheetPresentationController.Detent.custom { context in min(floatSize, context.maximumDetentValue)
+      return UISheetPresentationController.Detent.custom { context in
+        min(floatSize, context.maximumDetentValue)
       }
     }
   }

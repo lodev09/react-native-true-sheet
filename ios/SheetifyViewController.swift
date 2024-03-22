@@ -42,7 +42,7 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
 
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
-  func preparePresentation(for sizes: NSArray, with height: CGFloat) {
+  func updateSheet(for sizes: NSArray, with height: CGFloat) {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
       return
     }
@@ -59,11 +59,12 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
       detents = [.medium(), .large()]
     }
 
-    sheet.detents = detents
     sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
-    // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+    sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
+    
+    sheet.detents = detents
   }
 }

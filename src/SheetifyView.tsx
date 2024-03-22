@@ -31,7 +31,7 @@ if (!SheetifyNativeView) {
   throw new Error(LINKING_ERROR)
 }
 
-type nativeRef = Component<SheetifyNativeViewProps> & Readonly<NativeMethods>
+type NativeRef = Component<SheetifyNativeViewProps> & Readonly<NativeMethods>
 type FooterRef = Component<ViewProps> & Readonly<NativeMethods>
 
 interface SheetifyState {
@@ -41,17 +41,19 @@ interface SheetifyState {
 
 export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState> {
   displayName = 'Sheetify'
-  private readonly ref: RefObject<nativeRef>
-  private readonly footerRef: React.RefObject<FooterRef>
+
+  private readonly ref: RefObject<NativeRef>
+  private readonly footerRef: RefObject<FooterRef>
 
   constructor(props: SheetifyViewProps) {
     super(props)
-    this.ref = createRef<nativeRef>()
+
+    this.ref = createRef<NativeRef>()
     this.footerRef = createRef<FooterRef>()
 
     this.state = {
-      footerHandle: null,
       scrollableHandle: null,
+      footerHandle: null,
     }
   }
 
@@ -65,16 +67,9 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
   }
 
   private updateHandles() {
-    let scrollableHandle = null
-    let footerHandle = null
+    const scrollableHandle = this.props.scrollRef?.current ? findNodeHandle(this.props.scrollRef.current) : null
 
-    if (this.props.scrollRef?.current) {
-      scrollableHandle = findNodeHandle(this.props.scrollRef.current)
-    }
-
-    if (this.footerRef.current) {
-      footerHandle = findNodeHandle(this.footerRef.current)
-    }
+    const footerHandle = findNodeHandle(this.footerRef.current)
 
     this.setState({
       footerHandle,
@@ -109,8 +104,10 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
         backgroundColor={this.props.backgroundColor}
         style={$sheetify}
       >
-        <View style={this.props.style}>
-          {this.props.children}
+        <View>
+          <View style={this.props.style}>
+            {this.props.children}
+          </View>
           {!!FooterComponent && (
             <View ref={this.footerRef}>
               <FooterComponent />
@@ -124,6 +121,5 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
 
 const $sheetify: ViewStyle = {
   position: 'absolute',
-  width: 0,
   zIndex: -99,
 }

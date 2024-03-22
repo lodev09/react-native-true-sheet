@@ -18,6 +18,7 @@ const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 64
 
 const DARK = '#282e37'
+const GREEN = '#27be78'
 const BLUE = '#3784d7'
 const BLUE_DARK = '#1f64ae'
 const GRAY = '#cfd4dd'
@@ -58,7 +59,6 @@ export default function App() {
       <Button text="Sheetify View" onPress={openSheet1} />
       <Button text="Sheetify ScrollView" onPress={openSheet2} />
       <Button text="Sheetify FlatList" onPress={openSheet3} />
-
       <SheetifyView
         sizes={['auto', '70%', 'large']}
         ref={sheet1}
@@ -127,7 +127,7 @@ const $content: ViewStyle = {
 
 const $footer: ViewStyle = {
   height: FOOTER_HEIGHT,
-  backgroundColor: BLUE_DARK,
+  backgroundColor: GREEN,
 }
 
 const $demoContent: ViewStyle = {

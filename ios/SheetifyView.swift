@@ -20,9 +20,15 @@ class SheetifyView: UIView {
 
   // MARK: - Content properties
 
+  private var containerView: UIView?
+  
   private var contentView: UIView?
-  private var rctScrollView: RCTScrollView?
   private var footerView: UIView?
+  private var rctScrollView: RCTScrollView?
+  
+  private var isContentMounted: Bool {
+    return contentView != nil
+  }
 
   private var bottomInset: CGFloat {
     let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
@@ -32,17 +38,22 @@ class SheetifyView: UIView {
   // Content height minus the footer height for `auto` layout
   private var contentHeight: CGFloat {
     guard let contentView else { return 0 }
+    
+    var height = contentView.frame.height
+    if let footerView { height += footerView.frame.height }
 
     // Exclude bottom safe area for consistency with a Scrollable content
-    return contentView.frame.height - bottomInset
+    return height - bottomInset
   }
 
   // MARK: - Setup
 
   init(with bridge: RCTBridge) {
     self.bridge = bridge
-
+    
     viewController = SheetifyViewController()
+    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+    
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
@@ -57,8 +68,10 @@ class SheetifyView: UIView {
     fatalError("init(coder:) has not been implemented")
   }
 
-  override func insertReactSubview(_ subview: UIView!, at _: Int) {
-    guard contentView == nil else {
+  override func insertReactSubview(_ subview: UIView!, at index: Int) {
+    super.insertReactSubview(subview, at: index)
+
+    guard containerView == nil else {
       Logger.error("Sheetify can only have one content view.")
       return
     }
@@ -67,12 +80,12 @@ class SheetifyView: UIView {
     viewController.view.backgroundColor = backgroundColor ?? .white
     backgroundColor = .clear
 
-    contentView = subview
+    containerView = subview
     touchHandler.attach(to: subview)
   }
 
   override func removeReactSubview(_ subview: UIView!) {
-    guard subview == contentView else {
+    guard subview == containerView else {
       Logger.error("Cannot remove view other than sheet view")
       return
     }
@@ -80,34 +93,22 @@ class SheetifyView: UIView {
     super.removeReactSubview(subview)
 
     touchHandler.detach(from: subview)
+
+    containerView = nil
     contentView = nil
+    footerView = nil
+  }
+  
+  override func didUpdateReactSubviews() {
+    // Do nothing, as subviews are managed by `insertReactSubview`
   }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-
-    guard let contentView else { return }
-
-    // Add constraints to fix weirdness and support ScrollView
-    if let rctScrollView {
-      contentView.pinTo(view: viewController.view)
-      rctScrollView.superview?.pinTo(view: contentView)
-      rctScrollView.pinTo(view: rctScrollView.superview!)
-    }
-
-    // Pin footer at the bottom
-    if let footerView {
-      contentView.bringSubviewToFront(footerView)
-      footerView.pinTo(
-        view: viewController.view,
-        from: [.bottom, .left, .right],
-        with: footerView.frame.height
-      )
-
-      if let scrollView = rctScrollView?.scrollView {
-        scrollView.contentInset.bottom = footerView.frame.height
-        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height - bottomInset
-      }
+    
+    if let containerView, contentView == nil {
+      contentView = containerView.subviews.first
+      setupContentIfNeeded()
     }
   }
 
@@ -115,33 +116,55 @@ class SheetifyView: UIView {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    guard let view = bridge.uiManager.view(forReactTag: tag), view is RCTScrollView else {
-      rctScrollView = nil
-      return
-    }
-
-    rctScrollView = view as? RCTScrollView
+    let view = bridge.uiManager.view(forReactTag: tag) as? RCTScrollView
+    rctScrollView = view
+    setupContentIfNeeded()
   }
-
+  
   @objc
   func setFooterHandle(_ tag: NSNumber?) {
-    guard let view = bridge.uiManager.view(forReactTag: tag) else {
-      footerView = nil
-      return
-    }
-
-    view.backgroundColor = .clear
+    let view = bridge.uiManager.view(forReactTag: tag)
     footerView = view
+    setupContentIfNeeded()
   }
 
   // MARK: - Methods
+  
+  func setupContentIfNeeded() {
+    guard isContentMounted, let containerView else { return }
+    
+    containerView.pinTo(view: viewController.view)
+    
+    // Add constraints to fix weirdness and support ScrollView
+    if let contentView, let rctScrollView, let scrollView = rctScrollView.scrollView {
+      contentView.pinTo(view: containerView)
+      rctScrollView.pinTo(view: contentView)
+      
+      if let footerView {
+        scrollView.contentInset.bottom = footerView.frame.height
+        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height - bottomInset
+      } else {
+        scrollView.contentInset.bottom = 0
+        scrollView.verticalScrollIndicatorInsets.bottom = 0
+      }
+    }
+    
+    // Pin footer at the bottom
+    if let footerView {
+      containerView.bringSubviewToFront(footerView)
+      footerView.pinTo(
+        view: viewController.view,
+        from: [.bottom, .left, .right],
+        with: footerView.frame.height
+      )
+    }
+  }
 
   func setContentWidth(_ width: CGFloat) {
-    guard let contentView else { return }
+    guard let containerView else { return }
 
-    let size = CGSize(width: width, height: contentView.bounds.height)
-
-    bridge.uiManager.setSize(size, for: contentView)
+    let size = CGSize(width: width, height: containerView.bounds.height)
+    bridge.uiManager.setSize(size, for: containerView)
 
     if let footerView {
       bridge.uiManager.setSize(size, for: footerView)
@@ -157,7 +180,7 @@ class SheetifyView: UIView {
       return
     }
 
-    viewController.preparePresentation(for: sizes, with: contentHeight)
+    viewController.updateSheet(for: sizes, with: contentHeight)
     rvc.present(viewController, animated: true) {
       promise.resolve(true)
     }
