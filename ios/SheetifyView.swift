@@ -21,11 +21,11 @@ class SheetifyView: UIView {
   // MARK: - Content properties
 
   private var containerView: UIView?
-  
+
   private var contentView: UIView?
   private var footerView: UIView?
   private var rctScrollView: RCTScrollView?
-  
+
   private var isContentMounted: Bool {
     return contentView != nil
   }
@@ -38,7 +38,7 @@ class SheetifyView: UIView {
   // Content height minus the footer height for `auto` layout
   private var contentHeight: CGFloat {
     guard let contentView else { return 0 }
-    
+
     var height = contentView.frame.height
     if let footerView { height += footerView.frame.height }
 
@@ -50,10 +50,10 @@ class SheetifyView: UIView {
 
   init(with bridge: RCTBridge) {
     self.bridge = bridge
-    
+
     viewController = SheetifyViewController()
     viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-    
+
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
@@ -98,14 +98,14 @@ class SheetifyView: UIView {
     contentView = nil
     footerView = nil
   }
-  
+
   override func didUpdateReactSubviews() {
     // Do nothing, as subviews are managed by `insertReactSubview`
   }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    
+
     if let containerView, contentView == nil {
       contentView = containerView.subviews.first
       setupContentIfNeeded()
@@ -120,7 +120,7 @@ class SheetifyView: UIView {
     rctScrollView = view
     setupContentIfNeeded()
   }
-  
+
   @objc
   func setFooterHandle(_ tag: NSNumber?) {
     let view = bridge.uiManager.view(forReactTag: tag)
@@ -129,17 +129,17 @@ class SheetifyView: UIView {
   }
 
   // MARK: - Methods
-  
+
   func setupContentIfNeeded() {
     guard isContentMounted, let containerView else { return }
-    
+
     containerView.pinTo(view: viewController.view)
-    
+
     // Add constraints to fix weirdness and support ScrollView
     if let contentView, let rctScrollView, let scrollView = rctScrollView.scrollView {
       contentView.pinTo(view: containerView)
       rctScrollView.pinTo(view: contentView)
-      
+
       if let footerView {
         scrollView.contentInset.bottom = footerView.frame.height
         scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height - bottomInset
@@ -148,7 +148,7 @@ class SheetifyView: UIView {
         scrollView.verticalScrollIndicatorInsets.bottom = 0
       }
     }
-    
+
     // Pin footer at the bottom
     if let footerView {
       containerView.bringSubviewToFront(footerView)

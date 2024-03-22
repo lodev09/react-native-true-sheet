@@ -64,7 +64,7 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
     sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
-    
+
     sheet.detents = detents
   }
 }

@@ -67,7 +67,9 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
   }
 
   private updateHandles() {
-    const scrollableHandle = this.props.scrollRef?.current ? findNodeHandle(this.props.scrollRef.current) : null
+    const scrollableHandle = this.props.scrollRef?.current
+      ? findNodeHandle(this.props.scrollRef.current)
+      : null
 
     const footerHandle = findNodeHandle(this.footerRef.current)
 
@@ -105,9 +107,7 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
         style={$sheetify}
       >
         <View>
-          <View style={this.props.style}>
-            {this.props.children}
-          </View>
+          <View style={this.props.style}>{this.props.children}</View>
           {!!FooterComponent && (
             <View ref={this.footerRef}>
               <FooterComponent />
