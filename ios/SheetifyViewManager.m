@@ -15,11 +15,9 @@
 /// Presents the sheet controller
 RCT_EXTERN_METHOD(present:(nonnull NSNumber*)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 
-/// Set the scrollable tag to be handled
-RCT_EXTERN_METHOD(handleScrollable: (nonnull NSNumber*)tag scrollTag:(nonnull NSNumber*)scrollTag)
-
-RCT_EXTERN_METHOD(handleHeader: (nonnull NSNumber*)tag headerTag:(nonnull NSNumber*)headerTag)
-RCT_EXTERN_METHOD(handleFooter: (nonnull NSNumber*)tag footerTag:(nonnull NSNumber*)footerTag)
+// Internal Properties
+RCT_EXPORT_VIEW_PROPERTY(scrollableHandle, NSNumber*)
+RCT_EXPORT_VIEW_PROPERTY(footerHandle, NSNumber*)
 
 // Properties
 RCT_EXPORT_VIEW_PROPERTY(sizes, NSArray)

@@ -37,22 +37,4 @@ class SheetifyViewManager: RCTViewManager {
     let sheetifyView = getSheetifyView(tag)
     sheetifyView.present(promise: Promise(resolver: resolve, rejecter: reject))
   }
-
-  @objc
-  func handleScrollable(_ tag: NSNumber, scrollTag: NSNumber) {
-    let sheetifyView = getSheetifyView(tag)
-    sheetifyView.handleScrollable(scrollTag)
-  }
-
-  @objc
-  func handleHeader(_ tag: NSNumber, headerTag: NSNumber) {
-    let sheetifyView = getSheetifyView(tag)
-    sheetifyView.handleHeader(headerTag)
-  }
-
-  @objc
-  func handleFooter(_ tag: NSNumber, footerTag: NSNumber) {
-    let sheetifyView = getSheetifyView(tag)
-    sheetifyView.handleFooter(footerTag)
-  }
 }

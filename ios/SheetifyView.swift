@@ -6,25 +6,6 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-extension UIScrollView {
-  func setInset(top: CGFloat) {
-    let insetChange = top - contentInset.top
-
-    contentInset.top = top
-    verticalScrollIndicatorInsets.top = top
-
-    // Adjust offset y to update scrolled offset
-    contentOffset = CGPoint(x: contentOffset.x, y: contentOffset.y - insetChange)
-  }
-
-  func setInset(bottom: CGFloat) {
-    contentInset.bottom = bottom
-    verticalScrollIndicatorInsets.bottom = bottom
-  }
-}
-
-// MARK: - SheetifyView
-
 @objc(SheetifyView)
 class SheetifyView: UIView {
   // MARK: - React properties
@@ -37,26 +18,24 @@ class SheetifyView: UIView {
   private var touchHandler: RCTTouchHandler
   private var viewController: SheetifyViewController
 
-  // MARK: - Setup properties
-
-  private var contentView: UIView?
-  private var contentHeight: CGFloat {
-    var height: CGFloat = 0
-
-    if let contentHeight = contentView?.frame.height { height += contentHeight }
-
-    // Exclude bottom safe area for consistency with a Scrollable content
-    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
-    let bottomInset = window?.safeAreaInsets.bottom ?? 0
-
-    return height - bottomInset
-  }
-
   // MARK: - Content properties
 
-  private var headerView: UIView?
-  private var footerView: UIView?
+  private var contentView: UIView?
   private var rctScrollView: RCTScrollView?
+  private var footerView: UIView?
+
+  private var bottomInset: CGFloat {
+    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+    return window?.safeAreaInsets.bottom ?? 0
+  }
+
+  // Content height minus the footer height for `auto` layout
+  private var contentHeight: CGFloat {
+    guard let contentView else { return 0 }
+
+    // Exclude bottom safe area for consistency with a Scrollable content
+    return contentView.frame.height - bottomInset
+  }
 
   // MARK: - Setup
 
@@ -89,7 +68,6 @@ class SheetifyView: UIView {
     backgroundColor = .clear
 
     contentView = subview
-
     touchHandler.attach(to: subview)
   }
 
@@ -110,25 +88,11 @@ class SheetifyView: UIView {
 
     guard let contentView else { return }
 
-    contentView.pinTo(view: viewController.view)
-
-    // Add constraints to fix weirdness to support ScrollView
+    // Add constraints to fix weirdness and support ScrollView
     if let rctScrollView {
-      rctScrollView.pinTo(view: contentView)
-    }
-
-    // Pin header at the top
-    if let headerView {
-      contentView.bringSubviewToFront(headerView)
-      headerView.pinTo(
-        view: viewController.view,
-        from: [.top, .left, .right], with: headerView.frame.height
-      )
-
-      // Adjust top inset
-      if let scrollView = rctScrollView?.scrollView {
-        scrollView.setInset(top: headerView.frame.height)
-      }
+      contentView.pinTo(view: viewController.view)
+      rctScrollView.superview?.pinTo(view: contentView)
+      rctScrollView.pinTo(view: rctScrollView.superview!)
     }
 
     // Pin footer at the bottom
@@ -140,11 +104,34 @@ class SheetifyView: UIView {
         with: footerView.frame.height
       )
 
-      // Adjust bottom inset
       if let scrollView = rctScrollView?.scrollView {
-        scrollView.setInset(bottom: footerView.frame.height)
+        scrollView.contentInset.bottom = footerView.frame.height
+        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height - bottomInset
       }
     }
+  }
+
+  // MARK: - Prop setters
+
+  @objc
+  func setScrollableHandle(_ tag: NSNumber?) {
+    guard let view = bridge.uiManager.view(forReactTag: tag), view is RCTScrollView else {
+      rctScrollView = nil
+      return
+    }
+
+    rctScrollView = view as? RCTScrollView
+  }
+
+  @objc
+  func setFooterHandle(_ tag: NSNumber?) {
+    guard let view = bridge.uiManager.view(forReactTag: tag) else {
+      footerView = nil
+      return
+    }
+
+    view.backgroundColor = .clear
+    footerView = view
   }
 
   // MARK: - Methods
@@ -153,40 +140,19 @@ class SheetifyView: UIView {
     guard let contentView else { return }
 
     let size = CGSize(width: width, height: contentView.bounds.height)
+
     bridge.uiManager.setSize(size, for: contentView)
-  }
 
-  func handleScrollable(_ tag: NSNumber) {
-    guard let view = bridge.uiManager.view(forReactTag: tag), view is RCTScrollView else {
-      return
+    if let footerView {
+      bridge.uiManager.setSize(size, for: footerView)
     }
-
-    rctScrollView = view as? RCTScrollView
-  }
-
-  func handleHeader(_ tag: NSNumber) {
-    guard let view = bridge.uiManager.view(forReactTag: tag) else {
-      return
-    }
-
-    view.backgroundColor = .clear
-    headerView = view
-  }
-
-  func handleFooter(_ tag: NSNumber) {
-    guard let view = bridge.uiManager.view(forReactTag: tag) else {
-      return
-    }
-
-    view.backgroundColor = .clear
-    footerView = view
   }
 
   func present(promise: Promise) {
     let rvc = reactViewController()
 
     guard let rvc else {
-      Logger.warning("No content view or react view controller present.")
+      Logger.warning("No react view controller present.")
       promise.resolve(false)
       return
     }

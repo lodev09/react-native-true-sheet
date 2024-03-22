@@ -14,6 +14,9 @@ import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
+const CONTENT_PADDING = 16
+const FOOTER_HEIGHT = 64
+
 const DARK = '#282e37'
 const BLUE = '#3784d7'
 const BLUE_DARK = '#1f64ae'
@@ -61,7 +64,6 @@ export default function App() {
         ref={sheet1}
         style={$content}
         backgroundColor={DARK}
-        HeaderComponent={() => <View style={$header} />}
         FooterComponent={() => <View style={$footer} />}
       >
         <DemoContent />
@@ -71,7 +73,7 @@ export default function App() {
       <SheetifyView
         ref={sheet2}
         scrollRef={scrollViewRef}
-        HeaderComponent={() => <View style={$header} />}
+        FooterComponent={() => <View style={$footer} />}
       >
         <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
@@ -80,12 +82,7 @@ export default function App() {
         </ScrollView>
       </SheetifyView>
 
-      <SheetifyView
-        ref={sheet3}
-        scrollRef={flatListRef}
-        sizes={['large']}
-        FooterComponent={() => <View style={$footer} />}
-      >
+      <SheetifyView ref={sheet3} scrollRef={flatListRef} sizes={['large']}>
         <FlatList<number>
           ref={flatListRef}
           data={times(50, (i) => i)}
@@ -124,18 +121,13 @@ const $container: ViewStyle = {
   flex: 1,
 }
 
-const $header: ViewStyle = {
-  height: 64,
-  backgroundColor: BLUE,
+const $content: ViewStyle = {
+  padding: CONTENT_PADDING,
 }
 
 const $footer: ViewStyle = {
-  height: 64,
-  backgroundColor: BLUE,
-}
-
-const $content: ViewStyle = {
-  padding: 16,
+  height: FOOTER_HEIGHT,
+  backgroundColor: BLUE_DARK,
 }
 
 const $demoContent: ViewStyle = {

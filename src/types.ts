@@ -71,14 +71,7 @@ export interface SheetifyViewProps extends ViewProps {
   sizes?: SheetifySize[]
 
   /**
-   * A component that floats to the top of the Sheet.
-   * Scrollable insets are adjusted automatically.
-   */
-  HeaderComponent?: ComponentType<unknown>
-
-  /**
-   * A component that floats to the bottom of the Sheet.
-   * Scrollable insets are adjusted automatically.
+   * A component that floats at the bottom of the Sheet.
    */
   FooterComponent?: ComponentType<unknown>
 }
