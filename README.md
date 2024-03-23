@@ -1,6 +1,12 @@
 # React Native True Sheet
 
-The real native bottom sheet
+The real native bottom sheet.
+
+## Features
+- ✅ Implemented on the native realm.
+- ✅ **_NOT_** your pure JS, (re)animated View.
+- ✅ Clean, fast and lightweight.
+- ✅ Handles your Sscrolling needs, easy.
 
 ## Installation
 
@@ -11,11 +17,11 @@ yarn add @lodev09/react-native-true-sheet
 ## Usage
 
 ```ts
-import { SheetView } from "@lodev09/react-native-true-sheet";
+import { TrueSheet } from "@lodev09/react-native-true-sheet";
 
 // ...
 
-const sheet = useRef<SheetView>(null)
+const sheet = useRef<TrueSheet>(null)
 
 const openSheet = () => {
   sheet.current?.present()
@@ -24,12 +30,15 @@ const openSheet = () => {
 return (
   <View>
     <Button onPress={openSheet} title="Open Sheet" />
-    <SheetView ref={sheet}>
+    <TrueSheet ref={sheet}>
       // ...
-    </SheetView>
+    </TrueSheet>
   </View>
 )
 ```
+
+## Options
+> TODO - laters
 
 ## Contributing
 
