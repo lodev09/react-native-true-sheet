@@ -33,8 +33,14 @@ class SheetifyViewManager: RCTViewManager {
   // MARK: - React Functions
 
   @objc
-  func present(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func present(_ tag: NSNumber, index: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let sheetifyView = getSheetifyView(tag)
-    sheetifyView.present(promise: Promise(resolver: resolve, rejecter: reject))
+    sheetifyView.present(at: index, promise: Promise(resolver: resolve, rejecter: reject))
+  }
+
+  @objc
+  func dismiss(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let sheetifyView = getSheetifyView(tag)
+    sheetifyView.dismiss(promise: Promise(resolver: resolve, rejecter: reject))
   }
 }

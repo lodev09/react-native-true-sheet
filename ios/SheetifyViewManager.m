@@ -13,7 +13,19 @@
 // Module Functions
 
 /// Presents the sheet controller
-RCT_EXTERN_METHOD(present:(nonnull NSNumber*)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(present:(nonnull NSNumber*)tag
+                  index:(int)index
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(dismiss:(nonnull NSNumber*)tag
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
+// Events
+RCT_EXPORT_VIEW_PROPERTY(onPresent, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock)
 
 // Internal Properties
 RCT_EXPORT_VIEW_PROPERTY(scrollableHandle, NSNumber*)

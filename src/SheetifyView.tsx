@@ -7,9 +7,12 @@ import {
   type ViewStyle,
   View,
   type ViewProps,
+  type NativeSyntheticEvent,
+  type StyleProp,
+  type ColorValue,
 } from 'react-native'
 
-import type { SheetifyViewProps } from './types'
+import type { SheetifyViewProps, SizeChangeEvent } from './types'
 import { SheetifyModule } from './SheetifyModule'
 
 const LINKING_ERROR =
@@ -20,9 +23,16 @@ const LINKING_ERROR =
 
 const ComponentName = 'SheetifyView'
 
-interface SheetifyNativeViewProps extends SheetifyViewProps {
+interface SheetifyNativeViewProps {
   scrollableHandle: number | null
   footerHandle: number | null
+  onDismiss: () => void
+  onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
+  onSizeChange: (event: NativeSyntheticEvent<SizeChangeEvent>) => void
+  children: ReactNode
+  backgroundColor?: ColorValue
+  style: StyleProp<ViewStyle>
+  sizes: SheetifyViewProps['sizes']
 }
 
 const SheetifyNativeView = requireNativeComponent<SheetifyNativeViewProps>(ComponentName)
@@ -50,6 +60,10 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
 
     this.ref = createRef<NativeRef>()
     this.footerRef = createRef<FooterRef>()
+
+    this.onDismiss = this.onDismiss.bind(this)
+    this.onPresent = this.onPresent.bind(this)
+    this.onSizeChange = this.onSizeChange.bind(this)
 
     this.state = {
       scrollableHandle: null,
@@ -79,6 +93,18 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
     })
   }
 
+  private onSizeChange(event: NativeSyntheticEvent<SizeChangeEvent>) {
+    this.props.onSizeChange?.(event.nativeEvent)
+  }
+
+  private onPresent(): void {
+    this.props.onPresent?.()
+  }
+
+  private onDismiss(): void {
+    this.props.onDismiss?.()
+  }
+
   componentDidMount(): void {
     this.updateHandles()
   }
@@ -88,10 +114,18 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
   }
 
   /**
-   * Present the modal sheet
+   * Present the modal sheet at size index.
+   * See `sizes` prop
    */
-  public async present() {
-    await SheetifyModule.present(this.handle)
+  public async present(index: number = 0) {
+    await SheetifyModule.present(this.handle, index)
+  }
+
+  /**
+   * Dismiss the Sheet
+   */
+  public async dismiss() {
+    await SheetifyModule.dismiss(this.handle)
   }
 
   render(): ReactNode {
@@ -100,11 +134,14 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
     return (
       <SheetifyNativeView
         ref={this.ref}
+        style={$sheetify}
         scrollableHandle={this.state.scrollableHandle}
         footerHandle={this.state.footerHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
         backgroundColor={this.props.backgroundColor}
-        style={$sheetify}
+        onPresent={this.onPresent}
+        onDismiss={this.onDismiss}
+        onSizeChange={this.onSizeChange}
       >
         <View>
           <View style={this.props.style}>{this.props.children}</View>

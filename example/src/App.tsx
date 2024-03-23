@@ -9,25 +9,28 @@ import {
   type ViewProps,
   ScrollView,
   FlatList,
+  type ColorValue,
 } from 'react-native'
 import { SheetifyView } from '@lodev09/react-native-sheetify'
 
 import { times } from './utils'
 
+const SAFE_AREA = 80 // use safe-area-context
 const CONTENT_PADDING = 16
-const FOOTER_HEIGHT = 64
+const FOOTER_HEIGHT = 80
 
 const DARK = '#282e37'
-const GREEN = '#27be78'
+const DARK_GRAY = '#333b48'
+const LIGHT_GRAY = '#ebedf1'
 const BLUE = '#3784d7'
 const BLUE_DARK = '#1f64ae'
-const GRAY = '#cfd4dd'
 
 interface ButtonProps extends TouchableOpacityProps {
   text: string
 }
 
 interface DemoContentProps extends ViewProps {
+  color?: ColorValue
   text?: string
 }
 
@@ -39,41 +42,38 @@ export default function App() {
   const scrollViewRef = useRef<ScrollView>(null)
   const flatListRef = useRef<FlatList>(null)
 
-  const openSheet1 = async () => {
-    await sheet1.current?.present()
-    console.log('SHEET 1: presented!')
-  }
-
-  const openSheet2 = async () => {
-    await sheet2.current?.present()
-    console.log('SHEET 2: presented!')
-  }
-
-  const openSheet3 = async () => {
-    await sheet3.current?.present()
-    console.log('SHEET 3: presented!')
+  const presentSheet1 = (index = 0) => {
+    sheet1.current?.present(index)
   }
 
   return (
     <View style={$container}>
-      <Button text="Sheetify View" onPress={openSheet1} />
-      <Button text="Sheetify ScrollView" onPress={openSheet2} />
-      <Button text="Sheetify FlatList" onPress={openSheet3} />
+      <Button text="Sheetify View" onPress={() => presentSheet1(0)} />
+      <Button text="Sheetify ScrollView" onPress={() => sheet2.current?.present()} />
+      <Button text="Sheetify FlatList" onPress={() => sheet3.current?.present()} />
       <SheetifyView
         sizes={['auto', '70%', 'large']}
         ref={sheet1}
         style={$content}
+        onDismiss={() => console.log('Sheet 1 dismissed!')}
+        onPresent={() => console.log(`Sheet 1 presented!`)}
+        onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
         backgroundColor={DARK}
-        FooterComponent={() => <View style={$footer} />}
+        FooterComponent={Footer}
       >
-        <DemoContent />
-        <DemoContent />
+        <DemoContent color={DARK_GRAY} />
+        <Button text="Present Large" onPress={() => presentSheet1(2)} />
+        <Button text="Present 70%" onPress={() => presentSheet1(1)} />
+        <Button text="Present Auto" onPress={() => presentSheet1(0)} />
+        <Button text="Dismis" onPress={() => sheet1.current?.dismiss()} />
       </SheetifyView>
 
       <SheetifyView
         ref={sheet2}
         scrollRef={scrollViewRef}
-        FooterComponent={() => <View style={$footer} />}
+        onDismiss={() => console.log('Sheet 2 dismissed!')}
+        onPresent={() => console.log(`Sheet 2 presented!`)}
+        FooterComponent={Footer}
       >
         <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
@@ -82,7 +82,13 @@ export default function App() {
         </ScrollView>
       </SheetifyView>
 
-      <SheetifyView ref={sheet3} scrollRef={flatListRef} sizes={['large']}>
+      <SheetifyView
+        ref={sheet3}
+        scrollRef={flatListRef}
+        sizes={['large']}
+        onDismiss={() => console.log('Sheet 3 dismissed!')}
+        onPresent={() => console.log(`Sheet 3 presented!`)}
+      >
         <FlatList<number>
           ref={flatListRef}
           data={times(50, (i) => i)}
@@ -95,19 +101,27 @@ export default function App() {
   )
 }
 
+const Footer = () => {
+  return (
+    <View style={$footer}>
+      <Text style={$whiteText}>FOOTER</Text>
+    </View>
+  )
+}
+
 const Button = (props: ButtonProps) => {
   const { text, ...rest } = props
   return (
     <TouchableOpacity activeOpacity={0.6} style={$button} {...rest}>
-      <Text style={$buttonText}>{text}</Text>
+      <Text style={$whiteText}>{text}</Text>
     </TouchableOpacity>
   )
 }
 
 const DemoContent = (props: DemoContentProps) => {
-  const { text, style: $style, ...rest } = props
+  const { text, style: $style, color = LIGHT_GRAY, ...rest } = props
   return (
-    <View style={[$demoContent, $style]} {...rest}>
+    <View style={[$demoContent, { backgroundColor: color }, $style]} {...rest}>
       {text && <Text style={$demoText}>{text}</Text>}
     </View>
   )
@@ -116,24 +130,25 @@ const DemoContent = (props: DemoContentProps) => {
 const $container: ViewStyle = {
   backgroundColor: BLUE,
   justifyContent: 'center',
-  alignItems: 'center',
   padding: 24,
   flex: 1,
 }
 
 const $content: ViewStyle = {
   padding: CONTENT_PADDING,
+  paddingBottom: SAFE_AREA,
 }
 
 const $footer: ViewStyle = {
   height: FOOTER_HEIGHT,
-  backgroundColor: GREEN,
+  backgroundColor: DARK_GRAY,
+  alignItems: 'center',
+  justifyContent: 'center',
 }
 
 const $demoContent: ViewStyle = {
   height: 100,
   borderRadius: 4,
-  backgroundColor: GRAY,
   marginBottom: 16,
   alignItems: 'center',
   justifyContent: 'center',
@@ -141,7 +156,6 @@ const $demoContent: ViewStyle = {
 
 const $button: ViewStyle = {
   height: 40,
-  width: 300,
   padding: 12,
   borderRadius: 4,
   backgroundColor: BLUE_DARK,
@@ -149,7 +163,7 @@ const $button: ViewStyle = {
   alignItems: 'center',
 }
 
-const $buttonText: TextStyle = {
+const $whiteText: TextStyle = {
   color: 'white',
 }
 

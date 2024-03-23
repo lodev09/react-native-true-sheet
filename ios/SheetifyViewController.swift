@@ -6,27 +6,54 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
+// MARK: - SizeInfo
+
+struct SizeInfo {
+  var index: Int
+  var value: CGFloat
+}
+
+// MARK: - SheetifyViewControllerDelegate
+
+protocol SheetifyViewControllerDelegate: AnyObject {
+  /// Notify bound rect changes so we can adjust our sheetify view
+  func viewDidChangeWidth(_ width: CGFloat)
+
+  /// Notify when view controller has been dismissed
+  func didDismiss()
+
+  /// Notify when size has changed from dragging the Sheet
+  func didChangeSize(_ value: CGFloat, at index: Int)
+}
+
 // MARK: - SheetifyViewController
 
 class SheetifyViewController: UIViewController, UISheetPresentationControllerDelegate {
   // MARK: - Properties
 
+  weak var delegate: SheetifyViewControllerDelegate?
+
   var lastViewWidth: CGFloat = 0
+  var detentValues: [String: SizeInfo] = [:]
 
-  /// Notify bound rect changes so we can adjust our sheetify view
-  var widthDidChange: ((CGFloat) -> Void)?
-
-  var maximumHeight: CGFloat {
-    // Use view height to determine detent sizes
-    let topInset = UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0
-    return view.bounds.height - topInset
+  @available(iOS 15.0, *)
+  var sheet: UISheetPresentationController? {
+    return sheetPresentationController
   }
 
   // MARK: - Setup
 
   @available(iOS 15.0, *)
-  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_: UISheetPresentationController) {
-    // TODO: Change events
+  func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
+    if let identifer = sheet.selectedDetentIdentifier,
+       let size = detentValues[identifer.rawValue] {
+      delegate?.didChangeSize(size.value, at: size.index)
+    }
+  }
+
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    delegate?.didDismiss()
   }
 
   /// This is called multiple times while sheet is being dragged.
@@ -34,37 +61,38 @@ class SheetifyViewController: UIViewController, UISheetPresentationControllerDel
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
 
-    if let widthDidChange, lastViewWidth != view.frame.width {
-      widthDidChange(view.bounds.width)
+    if lastViewWidth != view.frame.width {
+      delegate?.viewDidChangeWidth(view.bounds.width)
       lastViewWidth = view.frame.width
     }
   }
 
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
-  func updateSheet(for sizes: NSArray, with height: CGFloat) {
-    guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
-      return
-    }
+  @available(iOS 15.0, *)
+  func configureSheet(for sizes: [Any], with height: CGFloat) {
+    guard let sheet else { return }
+
+    detentValues = [:]
 
     var detents: [UISheetPresentationController.Detent] = []
-    for size in sizes {
-      if let detent = detent(for: size, with: height) {
-        detents.append(detent)
+
+    // Default to medium and large
+    let sheetSizes = sizes.isEmpty ? ["medium", "large"] : sizes
+
+    for (index, size) in sheetSizes.enumerated() {
+      let detent = detentFor(size, with: height) { id, value in
+        self.detentValues[id] = SizeInfo(index: index, value: value)
       }
+
+      detents.append(detent)
     }
-
-    // Default to [.medium, .large]
-    if detents.isEmpty {
-      detents = [.medium(), .large()]
-    }
-
-    sheet.prefersGrabberVisible = true
-    sheet.prefersEdgeAttachedInCompactHeight = true
-    sheet.prefersScrollingExpandsWhenScrolledToEdge = false
-
-    sheet.delegate = self
 
     sheet.detents = detents
+    sheet.prefersGrabberVisible = true
+    sheet.prefersEdgeAttachedInCompactHeight = true
+    // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+
+    sheet.delegate = self
   }
 }

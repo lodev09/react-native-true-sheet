@@ -7,13 +7,20 @@
 //
 
 @objc(SheetifyView)
-class SheetifyView: UIView {
+class SheetifyView: UIView, RCTInvalidating, SheetifyViewControllerDelegate {
   // MARK: - React properties
 
-  @objc var sizes: NSArray = []
+  @objc var sizes: [Any] = []
+
+  // Events
+  @objc var onDismiss: RCTDirectEventBlock?
+  @objc var onPresent: RCTDirectEventBlock?
+  @objc var onSizeChange: RCTDirectEventBlock?
 
   // MARK: - Private properties
 
+  private var isPresented = false
+  private var activeIndex: Int?
   private var bridge: RCTBridge
   private var touchHandler: RCTTouchHandler
   private var viewController: SheetifyViewController
@@ -30,20 +37,15 @@ class SheetifyView: UIView {
     return contentView != nil
   }
 
-  private var bottomInset: CGFloat {
-    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
-    return window?.safeAreaInsets.bottom ?? 0
-  }
-
   // Content height minus the footer height for `auto` layout
   private var contentHeight: CGFloat {
     guard let contentView else { return 0 }
 
-    var height = contentView.frame.height
-    if let footerView { height += footerView.frame.height }
-
     // Exclude bottom safe area for consistency with a Scrollable content
-    return height - bottomInset
+    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+    let bottomInset = window?.safeAreaInsets.bottom ?? 0
+
+    return contentView.frame.height - bottomInset
   }
 
   // MARK: - Setup
@@ -52,20 +54,42 @@ class SheetifyView: UIView {
     self.bridge = bridge
 
     viewController = SheetifyViewController()
-    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
 
-    viewController.widthDidChange = { width in
-      self.setContentWidth(width)
-    }
+    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+    viewController.delegate = self
   }
 
   @available(*, unavailable)
   required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  func viewDidChangeWidth(_ width: CGFloat) {
+    guard let containerView else { return }
+
+    let size = CGSize(width: width, height: containerView.bounds.height)
+    bridge.uiManager.setSize(size, for: containerView)
+
+    if let footerView {
+      bridge.uiManager.setSize(size, for: footerView)
+    }
+  }
+
+  func didDismiss() {
+    isPresented = false
+    activeIndex = nil
+
+    onDismiss?(nil)
+  }
+
+  func didChangeSize(_ value: CGFloat, at index: Int) {
+    if index != activeIndex {
+      activeIndex = index
+      onSizeChange?(["index": index, "value": value])
+    }
   }
 
   override func insertReactSubview(_ subview: UIView!, at index: Int) {
@@ -126,6 +150,14 @@ class SheetifyView: UIView {
     let view = bridge.uiManager.view(forReactTag: tag)
     footerView = view
     setupContentIfNeeded()
+
+    if #available(iOS 16.0, *) {
+      viewController.sheet?.invalidateDetents()
+    }
+  }
+
+  func invalidate() {
+    viewController.dismiss(animated: true)
   }
 
   // MARK: - Methods
@@ -136,17 +168,9 @@ class SheetifyView: UIView {
     containerView.pinTo(view: viewController.view)
 
     // Add constraints to fix weirdness and support ScrollView
-    if let contentView, let rctScrollView, let scrollView = rctScrollView.scrollView {
+    if let contentView, let rctScrollView {
       contentView.pinTo(view: containerView)
       rctScrollView.pinTo(view: contentView)
-
-      if let footerView {
-        scrollView.contentInset.bottom = footerView.frame.height
-        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height - bottomInset
-      } else {
-        scrollView.contentInset.bottom = 0
-        scrollView.verticalScrollIndicatorInsets.bottom = 0
-      }
     }
 
     // Pin footer at the bottom
@@ -160,29 +184,66 @@ class SheetifyView: UIView {
     }
   }
 
-  func setContentWidth(_ width: CGFloat) {
-    guard let containerView else { return }
-
-    let size = CGSize(width: width, height: containerView.bounds.height)
-    bridge.uiManager.setSize(size, for: containerView)
-
-    if let footerView {
-      bridge.uiManager.setSize(size, for: footerView)
+  func dismiss(promise: Promise) {
+    if isPresented {
+      viewController.dismiss(animated: true) {
+        promise.resolve(true)
+      }
     }
   }
 
-  func present(promise: Promise) {
+  func present(at index: Int, promise: Promise) {
     let rvc = reactViewController()
 
     guard let rvc else {
-      Logger.warning("No react view controller present.")
-      promise.resolve(false)
+      promise.reject(message: "No react view controller present.")
       return
     }
 
-    viewController.updateSheet(for: sizes, with: contentHeight)
-    rvc.present(viewController, animated: true) {
-      promise.resolve(true)
+    if #available(iOS 15.0, *), let sheet = viewController.sheet {
+      viewController.configureSheet(for: sizes, with: contentHeight)
+
+      guard sizes.indices.contains(index) else {
+        promise.reject(message: "Size at \(index) is not configured.")
+        return
+      }
+
+      var identifier: UISheetPresentationController.Detent.Identifier = .medium
+
+      if sheet.detents.indices.contains(index) {
+        let detent = sheet.detents[index]
+        if #available(iOS 16.0, *) {
+          identifier = detent.identifier
+        } else if detent == .large() {
+          identifier = .large
+        }
+      }
+
+      if isPresented {
+        sheet.animateChanges {
+          sheet.selectedDetentIdentifier = identifier
+
+          // Notify when size is changed programatically
+          let info = viewController.detentValues.first(where: { $0.value.index == index })
+          if let sizeValue = info?.value.value {
+            self.didChangeSize(sizeValue, at: index)
+          }
+        }
+      } else {
+        sheet.selectedDetentIdentifier = identifier
+      }
+    }
+
+    if !isPresented {
+      // Keep track of the active index
+      activeIndex = index
+
+      rvc.present(viewController, animated: true) {
+        self.isPresented = true
+        self.onPresent?(nil)
+
+        promise.resolve(true)
+      }
     }
   }
 }

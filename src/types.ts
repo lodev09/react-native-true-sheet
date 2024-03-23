@@ -1,6 +1,11 @@
 import type { Component, ComponentType, RefObject } from 'react'
 import type { ColorValue, ViewProps } from 'react-native'
 
+export interface SizeChangeEvent {
+  index: number
+  value: number
+}
+
 /**
  * Supported Sheet size.
  * Requires IOS 15+
@@ -29,6 +34,14 @@ export type SheetifySize =
    * @platform ios 16+
    */
   | `${number}%`
+
+  /**
+   * Translates to 25%
+   *
+   * @platform android
+   * @platform ios 16+
+   */
+  | 'small'
 
   /**
    * Translates to 50%
@@ -74,4 +87,21 @@ export interface SheetifyViewProps extends ViewProps {
    * A component that floats at the bottom of the Sheet.
    */
   FooterComponent?: ComponentType<unknown>
+
+  /**
+   * Called when the Sheet has been presented.
+   * Comes with the size index.
+   */
+  onPresent?: () => void
+
+  /**
+   * Called when the Sheet has been dismissed
+   */
+  onDismiss?: () => void
+
+  /**
+   * Called when the size of the sheet has changed.
+   * Either by dragging or programatically.
+   */
+  onSizeChange?: (event: SizeChangeEvent) => void
 }
