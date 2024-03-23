@@ -12,7 +12,7 @@ import Foundation
 
 enum Logger {
   /**
-   Log a message to the console in the format of `Sheetify.[caller-function-name]: [message]`
+   Log a message to the console in the format of `TrueSheet.[caller-function-name]: [message]`
 
    @discussion
    If the global ConsoleLogFunction is set, this function also logs to the JavaScript console (console.log, console.trace, console.warn or console.error)
@@ -25,7 +25,7 @@ enum Logger {
                   _ lineNumber: Int = #line,
                   _ function: String = #function) {
     #if DEBUG
-      RCTDefaultLogFunction(level, RCTLogSource.native, file, lineNumber as NSNumber, "Sheetify[\(function)]: \(message)")
+      RCTDefaultLogFunction(level, RCTLogSource.native, file, lineNumber as NSNumber, "TrueSheet[\(function)]: \(message)")
     #endif
   }
 

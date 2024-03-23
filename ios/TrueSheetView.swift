@@ -6,8 +6,8 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-@objc(SheetifyView)
-class SheetifyView: UIView, RCTInvalidating, SheetifyViewControllerDelegate {
+@objc(TrueSheetView)
+class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
   @objc var sizes: [Any] = []
@@ -23,7 +23,7 @@ class SheetifyView: UIView, RCTInvalidating, SheetifyViewControllerDelegate {
   private var activeIndex: Int?
   private var bridge: RCTBridge
   private var touchHandler: RCTTouchHandler
-  private var viewController: SheetifyViewController
+  private var viewController: TrueSheetViewController
 
   // MARK: - Content properties
 
@@ -53,7 +53,7 @@ class SheetifyView: UIView, RCTInvalidating, SheetifyViewControllerDelegate {
   init(with bridge: RCTBridge) {
     self.bridge = bridge
 
-    viewController = SheetifyViewController()
+    viewController = TrueSheetViewController()
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
@@ -96,7 +96,7 @@ class SheetifyView: UIView, RCTInvalidating, SheetifyViewControllerDelegate {
     super.insertReactSubview(subview, at: index)
 
     guard containerView == nil else {
-      Logger.error("Sheetify can only have one content view.")
+      Logger.error("Sheet can only have one content view.")
       return
     }
 

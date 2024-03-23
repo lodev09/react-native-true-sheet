@@ -8,7 +8,7 @@
 
 #import <React/RCTViewManager.h>
 
-@interface RCT_EXTERN_MODULE(SheetifyViewManager, RCTViewManager)
+@interface RCT_EXTERN_MODULE(TrueSheetViewManager, RCTViewManager)
 
 // Module Functions
 

@@ -11,7 +11,7 @@ import {
   FlatList,
   type ColorValue,
 } from 'react-native'
-import { SheetifyView } from '@lodev09/react-native-sheetify'
+import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
 import { times } from './utils'
 
@@ -35,9 +35,9 @@ interface DemoContentProps extends ViewProps {
 }
 
 export default function App() {
-  const sheet1 = useRef<SheetifyView>(null)
-  const sheet2 = useRef<SheetifyView>(null)
-  const sheet3 = useRef<SheetifyView>(null)
+  const sheet1 = useRef<TrueSheet>(null)
+  const sheet2 = useRef<TrueSheet>(null)
+  const sheet3 = useRef<TrueSheet>(null)
 
   const scrollViewRef = useRef<ScrollView>(null)
   const flatListRef = useRef<FlatList>(null)
@@ -48,10 +48,10 @@ export default function App() {
 
   return (
     <View style={$container}>
-      <Button text="Sheetify View" onPress={() => presentSheet1(0)} />
-      <Button text="Sheetify ScrollView" onPress={() => sheet2.current?.present()} />
-      <Button text="Sheetify FlatList" onPress={() => sheet3.current?.present()} />
-      <SheetifyView
+      <Button text="TrueSheet View" onPress={() => presentSheet1(0)} />
+      <Button text="TrueSheet ScrollView" onPress={() => sheet2.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => sheet3.current?.present()} />
+      <TrueSheet
         sizes={['auto', '70%', 'large']}
         ref={sheet1}
         style={$content}
@@ -66,9 +66,9 @@ export default function App() {
         <Button text="Present 70%" onPress={() => presentSheet1(1)} />
         <Button text="Present Auto" onPress={() => presentSheet1(0)} />
         <Button text="Dismis" onPress={() => sheet1.current?.dismiss()} />
-      </SheetifyView>
+      </TrueSheet>
 
-      <SheetifyView
+      <TrueSheet
         ref={sheet2}
         scrollRef={scrollViewRef}
         onDismiss={() => console.log('Sheet 2 dismissed!')}
@@ -80,9 +80,9 @@ export default function App() {
             <DemoContent key={i} text={String(i + 1)} />
           ))}
         </ScrollView>
-      </SheetifyView>
+      </TrueSheet>
 
-      <SheetifyView
+      <TrueSheet
         ref={sheet3}
         scrollRef={flatListRef}
         sizes={['large']}
@@ -96,7 +96,7 @@ export default function App() {
           indicatorStyle="black"
           renderItem={({ item }) => <DemoContent text={String(item + 1)} />}
         />
-      </SheetifyView>
+      </TrueSheet>
     </View>
   )
 }

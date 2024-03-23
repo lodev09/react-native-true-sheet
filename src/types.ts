@@ -10,7 +10,7 @@ export interface SizeChangeEvent {
  * Supported Sheet size.
  * Requires IOS 15+
  */
-export type SheetifySize =
+export type SheetSize =
   /**
    * Auto resize based on content height
    *
@@ -59,14 +59,14 @@ export type SheetifySize =
    */
   | 'large'
 
-export interface SheetifyViewProps extends ViewProps {
+export interface SheetViewProps extends ViewProps {
   /**
    * Main sheet background color
    */
   backgroundColor?: ColorValue
 
   /**
-   * The main scrollable ref that Sheetify should handle.
+   * The main scrollable ref that Sheet should handle.
    */
   scrollRef?: RefObject<Component<unknown>>
 
@@ -81,7 +81,7 @@ export interface SheetifyViewProps extends ViewProps {
    *
    * @default ['medium', 'large']
    */
-  sizes?: SheetifySize[]
+  sizes?: SheetSize[]
 
   /**
    * A component that floats at the bottom of the Sheet.

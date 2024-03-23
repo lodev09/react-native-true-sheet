@@ -6,8 +6,8 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-@objc(SheetifyViewManager)
-class SheetifyViewManager: RCTViewManager {
+@objc(TrueSheetViewManager)
+class TrueSheetViewManager: RCTViewManager {
   // MARK: - properties
 
   override var methodQueue: DispatchQueue! {
@@ -19,14 +19,14 @@ class SheetifyViewManager: RCTViewManager {
   }
 
   override func view() -> UIView? {
-    return SheetifyView(with: bridge)
+    return TrueSheetView(with: bridge)
   }
 
   // MARK: - Private
 
-  private func getSheetifyView(_ tag: NSNumber) -> SheetifyView {
+  private func getTrueSheetView(_ tag: NSNumber) -> TrueSheetView {
     // swiftlint:disable force_cast
-    return bridge.uiManager.view(forReactTag: tag) as! SheetifyView
+    return bridge.uiManager.view(forReactTag: tag) as! TrueSheetView
     // swiftlint:enable force_cast
   }
 
@@ -34,13 +34,13 @@ class SheetifyViewManager: RCTViewManager {
 
   @objc
   func present(_ tag: NSNumber, index: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let sheetifyView = getSheetifyView(tag)
-    sheetifyView.present(at: index, promise: Promise(resolver: resolve, rejecter: reject))
+    let trueSheetView = getTrueSheetView(tag)
+    trueSheetView.present(at: index, promise: Promise(resolver: resolve, rejecter: reject))
   }
 
   @objc
   func dismiss(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let sheetifyView = getSheetifyView(tag)
-    sheetifyView.dismiss(promise: Promise(resolver: resolve, rejecter: reject))
+    let trueSheetView = getTrueSheetView(tag)
+    trueSheetView.dismiss(promise: Promise(resolver: resolve, rejecter: reject))
   }
 }

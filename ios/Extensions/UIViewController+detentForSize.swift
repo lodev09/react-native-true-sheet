@@ -1,3 +1,11 @@
+//
+//  Created by Jovanni Lo (@lodev09)
+//  Copyright (c) 2024-present. All rights reserved.
+//
+//  This source code is licensed under the MIT license found in the
+//  LICENSE file in the root directory of this source tree.
+//
+
 @available(iOS 15.0, *)
 extension UISheetPresentationController.Detent.Identifier {
   static let small = UISheetPresentationController.Detent.Identifier("small")
@@ -41,10 +49,6 @@ extension UIViewController {
 
     resolution(view.frame.height / 2)
     return .medium()
-  }
-
-  func identifier(from id: String) -> UISheetPresentationController.Detent.Identifier {
-    return UISheetPresentationController.Detent.Identifier(id)
   }
 
   /// Get the custom detent based on the given size and view frame size
@@ -100,5 +104,9 @@ extension UIViewController {
     }
 
     return .medium()
+  }
+
+  func identifier(from id: String) -> UISheetPresentationController.Detent.Identifier {
+    return UISheetPresentationController.Detent.Identifier(id)
   }
 }

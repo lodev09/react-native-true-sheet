@@ -13,10 +13,10 @@ struct SizeInfo {
   var value: CGFloat
 }
 
-// MARK: - SheetifyViewControllerDelegate
+// MARK: - TrueSheetViewControllerDelegate
 
-protocol SheetifyViewControllerDelegate: AnyObject {
-  /// Notify bound rect changes so we can adjust our sheetify view
+protocol TrueSheetViewControllerDelegate: AnyObject {
+  /// Notify bound rect changes so we can adjust our sheet view
   func viewDidChangeWidth(_ width: CGFloat)
 
   /// Notify when view controller has been dismissed
@@ -26,12 +26,12 @@ protocol SheetifyViewControllerDelegate: AnyObject {
   func didChangeSize(_ value: CGFloat, at index: Int)
 }
 
-// MARK: - SheetifyViewController
+// MARK: - TrueSheetViewController
 
-class SheetifyViewController: UIViewController, UISheetPresentationControllerDelegate {
+class TrueSheetViewController: UIViewController, UISheetPresentationControllerDelegate {
   // MARK: - Properties
 
-  weak var delegate: SheetifyViewControllerDelegate?
+  weak var delegate: TrueSheetViewControllerDelegate?
 
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]

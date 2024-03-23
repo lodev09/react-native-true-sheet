@@ -1,7 +1,7 @@
 {
-  "name": "@lodev09/react-native-sheetify",
+  "name": "@lodev09/react-native-true-sheet",
   "version": "0.1.0",
-  "description": "Not your average bottom sheet 💩",
+  "description": "The true native bottom sheet. 💩",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
@@ -26,13 +26,13 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace sheetify-example",
+    "example": "yarn workspace true-sheet-example",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/swiftformat.sh",
-    "clean": "del-cli android/build lib && yarn workspace sheetify-example clean",
+    "clean": "del-cli android/build lib && yarn workspace true-sheet-example clean",
     "prepare": "bob build",
     "release": "release-it"
   },
@@ -43,14 +43,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lodev09/react-native-sheetify.git"
+    "url": "git+https://github.com/lodev09/react-native-true-sheet.git"
   },
   "author": "lodev09 <lodev09@gmail.com> (https://github.com/lodev09)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lodev09/react-native-sheetify/issues"
+    "url": "https://github.com/lodev09/react-native-true-sheet/issues"
   },
-  "homepage": "https://github.com/lodev09/react-native-sheetify#readme",
+  "homepage": "https://github.com/lodev09/react-native-true-sheet#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

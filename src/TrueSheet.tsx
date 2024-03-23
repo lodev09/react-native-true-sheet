@@ -12,18 +12,18 @@ import {
   type ColorValue,
 } from 'react-native'
 
-import type { SheetifyViewProps, SizeChangeEvent } from './types'
-import { SheetifyModule } from './SheetifyModule'
+import type { SheetViewProps, SizeChangeEvent } from './types'
+import { TrueSheetModule } from './TrueSheetModule'
 
 const LINKING_ERROR =
-  `The package 'react-native-sheetify' doesn't seem to be linked. Make sure: \n\n` +
+  `The package 'react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-const ComponentName = 'SheetifyView'
+const ComponentName = 'TrueSheetView'
 
-interface SheetifyNativeViewProps {
+interface TrueSheetNativeViewProps {
   scrollableHandle: number | null
   footerHandle: number | null
   onDismiss: () => void
@@ -32,30 +32,30 @@ interface SheetifyNativeViewProps {
   children: ReactNode
   backgroundColor?: ColorValue
   style: StyleProp<ViewStyle>
-  sizes: SheetifyViewProps['sizes']
+  sizes: SheetViewProps['sizes']
 }
 
-const SheetifyNativeView = requireNativeComponent<SheetifyNativeViewProps>(ComponentName)
+const TrueSheetNativeView = requireNativeComponent<TrueSheetNativeViewProps>(ComponentName)
 
-if (!SheetifyNativeView) {
+if (!TrueSheetNativeView) {
   throw new Error(LINKING_ERROR)
 }
 
-type NativeRef = Component<SheetifyNativeViewProps> & Readonly<NativeMethods>
+type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
 type FooterRef = Component<ViewProps> & Readonly<NativeMethods>
 
-interface SheetifyState {
+interface TrueSheetState {
   scrollableHandle: number | null
   footerHandle: number | null
 }
 
-export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState> {
-  displayName = 'Sheetify'
+export class TrueSheet extends PureComponent<SheetViewProps, TrueSheetState> {
+  displayName = 'TrueSheet'
 
   private readonly ref: RefObject<NativeRef>
   private readonly footerRef: RefObject<FooterRef>
 
-  constructor(props: SheetifyViewProps) {
+  constructor(props: SheetViewProps) {
     super(props)
 
     this.ref = createRef<NativeRef>()
@@ -118,23 +118,23 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
    * See `sizes` prop
    */
   public async present(index: number = 0) {
-    await SheetifyModule.present(this.handle, index)
+    await TrueSheetModule.present(this.handle, index)
   }
 
   /**
    * Dismiss the Sheet
    */
   public async dismiss() {
-    await SheetifyModule.dismiss(this.handle)
+    await TrueSheetModule.dismiss(this.handle)
   }
 
   render(): ReactNode {
     const FooterComponent = this.props.FooterComponent
 
     return (
-      <SheetifyNativeView
+      <TrueSheetNativeView
         ref={this.ref}
-        style={$sheetify}
+        style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
         footerHandle={this.state.footerHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
@@ -151,12 +151,12 @@ export class SheetifyView extends PureComponent<SheetifyViewProps, SheetifyState
             </View>
           )}
         </View>
-      </SheetifyNativeView>
+      </TrueSheetNativeView>
     )
   }
 }
 
-const $sheetify: ViewStyle = {
+const $nativeSheet: ViewStyle = {
   position: 'absolute',
   zIndex: -99,
 }

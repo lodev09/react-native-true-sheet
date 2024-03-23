@@ -1,34 +1,32 @@
-# React Native Sheetify
+# React Native True Sheet
 
-Tired of those bloated JS bottom sheets? Sheetify is for you!
+The real native bottom sheet
 
 ## Installation
 
 ```sh
-yarn add @lodev09/react-native-sheetify
+yarn add @lodev09/react-native-true-sheet
 ```
 
 ## Usage
 
-```js
-import { SheetifyView } from "@lodev09/react-native-sheetify";
+```ts
+import { SheetView } from "@lodev09/react-native-true-sheet";
 
 // ...
 
-const sheetify = useRef<SheetifyView>(null)
+const sheet = useRef<SheetView>(null)
 
 const openSheet = () => {
-  sheetify.current?.present()
+  sheet.current?.present()
 }
 
 return (
   <View>
     <Button onPress={openSheet} title="Open Sheet" />
-    <SheetifyView ref={sheetify}>
-      <ScrollView>
-        <View />
-      </ScrollView>
-    </SheetifyView>
+    <SheetView ref={sheet}>
+      // ...
+    </SheetView>
   </View>
 )
 ```
