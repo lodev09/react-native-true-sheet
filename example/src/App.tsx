@@ -18,6 +18,7 @@ import { times } from './utils'
 const SAFE_AREA = 80 // use safe-area-context
 const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 80
+const HEADER_HEIGHT = 64
 
 const DARK = '#282e37'
 const DARK_GRAY = '#333b48'
@@ -55,12 +56,13 @@ export default function App() {
         sizes={['auto', '70%', 'large']}
         ref={sheet1}
         style={$content}
+        backgroundColor={DARK}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
-        backgroundColor={DARK}
         FooterComponent={Footer}
       >
+        <DemoContent color={DARK_GRAY} />
         <DemoContent color={DARK_GRAY} />
         <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 70%" onPress={() => presentSheet1(1)} />
@@ -75,6 +77,7 @@ export default function App() {
         onPresent={() => console.log(`Sheet 2 presented!`)}
         FooterComponent={Footer}
       >
+        <Header />
         <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
             <DemoContent key={i} text={String(i + 1)} />
@@ -85,7 +88,7 @@ export default function App() {
       <TrueSheet
         ref={sheet3}
         scrollRef={flatListRef}
-        sizes={['large']}
+        // sizes={['large']}
         onDismiss={() => console.log('Sheet 3 dismissed!')}
         onPresent={() => console.log(`Sheet 3 presented!`)}
       >
@@ -105,6 +108,14 @@ const Footer = () => {
   return (
     <View style={$footer}>
       <Text style={$whiteText}>FOOTER</Text>
+    </View>
+  )
+}
+
+const Header = () => {
+  return (
+    <View style={$header}>
+      <Text style={$whiteText}>HEADER</Text>
     </View>
   )
 }
@@ -137,6 +148,17 @@ const $container: ViewStyle = {
 const $content: ViewStyle = {
   padding: CONTENT_PADDING,
   paddingBottom: SAFE_AREA,
+}
+
+const $header: ViewStyle = {
+  position: 'absolute',
+  zIndex: 1,
+  left: 0,
+  right: 0,
+  height: HEADER_HEIGHT,
+  backgroundColor: BLUE_DARK,
+  alignItems: 'center',
+  justifyContent: 'center',
 }
 
 const $footer: ViewStyle = {

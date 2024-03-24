@@ -9,7 +9,6 @@ import {
   type ViewProps,
   type NativeSyntheticEvent,
   type StyleProp,
-  type ColorValue,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeChangeEvent } from './types'
@@ -30,7 +29,6 @@ interface TrueSheetNativeViewProps {
   onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
   onSizeChange: (event: NativeSyntheticEvent<SizeChangeEvent>) => void
   children: ReactNode
-  backgroundColor?: ColorValue
   style: StyleProp<ViewStyle>
   sizes: TrueSheetProps['sizes']
 }
@@ -138,12 +136,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         scrollableHandle={this.state.scrollableHandle}
         footerHandle={this.state.footerHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
-        backgroundColor={this.props.backgroundColor}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
       >
-        <View>
+        <View style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}>
           <View style={this.props.style}>{this.props.children}</View>
           {!!FooterComponent && (
             <View ref={this.footerRef}>

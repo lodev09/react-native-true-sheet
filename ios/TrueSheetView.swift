@@ -101,8 +101,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     viewController.view.insertSubview(subview, at: 0)
-    viewController.view.backgroundColor = backgroundColor ?? .white
-    backgroundColor = .clear
 
     containerView = subview
     touchHandler.attach(to: subview)
@@ -169,15 +167,15 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     // Add constraints to fix weirdness and support ScrollView
     if let contentView, let rctScrollView {
-      contentView.pinTo(view: containerView)
-      rctScrollView.pinTo(view: contentView)
+       contentView.pinTo(view: containerView)
+       rctScrollView.pinTo(view: contentView)
     }
 
     // Pin footer at the bottom
     if let footerView {
       containerView.bringSubviewToFront(footerView)
       footerView.pinTo(
-        view: viewController.view,
+        view: containerView,
         from: [.bottom, .left, .right],
         with: footerView.frame.height
       )
