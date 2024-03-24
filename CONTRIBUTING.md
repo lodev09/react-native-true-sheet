@@ -23,7 +23,7 @@ The [example app](/example/) demonstrates usage of the library. You need to run 
 
 It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
 
-If you want to use Android Studio or XCode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/TrueSheetExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-true-sheet`.
+If you want to use Android Studio or XCode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/TrueSheetExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > TrueSheet`.
 
 To edit the Java or Kotlin files, open `example/android` in Android studio and find the source files at `react-native-true-sheet` under `Android`.
 

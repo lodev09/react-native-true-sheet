@@ -59,7 +59,7 @@ export type SheetSize =
    */
   | 'large'
 
-export interface SheetViewProps extends ViewProps {
+export interface TrueSheetProps extends ViewProps {
   /**
    * Main sheet background color
    */

@@ -12,11 +12,11 @@ import {
   type ColorValue,
 } from 'react-native'
 
-import type { SheetViewProps, SizeChangeEvent } from './types'
+import type { TrueSheetProps, SizeChangeEvent } from './types'
 import { TrueSheetModule } from './TrueSheetModule'
 
 const LINKING_ERROR =
-  `The package 'react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
+  `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
@@ -32,7 +32,7 @@ interface TrueSheetNativeViewProps {
   children: ReactNode
   backgroundColor?: ColorValue
   style: StyleProp<ViewStyle>
-  sizes: SheetViewProps['sizes']
+  sizes: TrueSheetProps['sizes']
 }
 
 const TrueSheetNativeView = requireNativeComponent<TrueSheetNativeViewProps>(ComponentName)
@@ -49,13 +49,13 @@ interface TrueSheetState {
   footerHandle: number | null
 }
 
-export class TrueSheet extends PureComponent<SheetViewProps, TrueSheetState> {
+export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet'
 
   private readonly ref: RefObject<NativeRef>
   private readonly footerRef: RefObject<FooterRef>
 
-  constructor(props: SheetViewProps) {
+  constructor(props: TrueSheetProps) {
     super(props)
 
     this.ref = createRef<NativeRef>()
