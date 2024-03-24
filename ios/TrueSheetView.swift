@@ -111,6 +111,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       footerView = containerView.subviews[1]
 
       containerView.pinTo(view: viewController.view)
+      
+      // Setup content constraints
+      setupContent()
     }
   }
 
@@ -121,36 +124,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     let size = CGSize(width: width, height: containerView.bounds.height)
     bridge.uiManager.setSize(size, for: containerView)
-
+    
     if let footerView {
       bridge.uiManager.setSize(size, for: footerView)
     }
   }
 
   func viewControllerDidAppear() {
-    guard let contentView, let containerView else { return }
-
-    // Add constraints to fix weirdness and support ScrollView
-    if let rctScrollView {
-      contentView.pinTo(view: containerView)
-      rctScrollView.pinTo(view: contentView)
-    }
-
-    // Pin footer at the bottom
-    if let footerView, let footerContent = footerView.subviews.first {
-      containerView.bringSubviewToFront(footerView)
-      footerView.pinTo(
-        view: viewController.view,
-        from: [.bottom, .left, .right],
-        with: footerContent.bounds.height
-      )
-
-      if let scrollView = rctScrollView?.scrollView {
-        scrollView.contentInset.bottom = footerView.frame.height
-        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
-        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
-      }
-    }
+    setupContent()
   }
 
   func viewControllerDidDismiss() {
@@ -202,6 +183,32 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
+  func setupContent() {
+    guard let contentView, let containerView else { return }
+
+    // Add constraints to fix weirdness and support ScrollView
+    if let rctScrollView {
+      contentView.pinTo(view: containerView)
+      rctScrollView.pinTo(view: contentView)
+    }
+
+    // Pin footer at the bottom
+    if let footerView, let footerContent = footerView.subviews.first {
+      containerView.bringSubviewToFront(footerView)
+      footerView.pinTo(
+        view: viewController.view,
+        from: [.bottom, .left, .right],
+        with: footerContent.bounds.height
+      )
+
+      if let scrollView = rctScrollView?.scrollView {
+        scrollView.contentInset.bottom = footerView.frame.height
+        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
+      }
+    }
+  }
+  
   func present(at index: Int, promise: Promise) {
     let rvc = reactViewController()
 
