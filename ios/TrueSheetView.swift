@@ -111,7 +111,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       footerView = containerView.subviews[1]
 
       containerView.pinTo(view: viewController.view)
-      
+
       // Setup content constraints
       setupContent()
     }
@@ -124,7 +124,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     let size = CGSize(width: width, height: containerView.bounds.height)
     bridge.uiManager.setSize(size, for: containerView)
-    
+
     if let footerView {
       bridge.uiManager.setSize(size, for: footerView)
     }
@@ -200,15 +200,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         from: [.bottom, .left, .right],
         with: footerContent.bounds.height
       )
-
-      if let scrollView = rctScrollView?.scrollView {
-        scrollView.contentInset.bottom = footerView.frame.height
-        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
-        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
-      }
     }
   }
-  
+
   func present(at index: Int, promise: Promise) {
     let rvc = reactViewController()
 
