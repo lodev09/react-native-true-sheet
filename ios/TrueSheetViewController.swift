@@ -103,12 +103,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       }
     }
     
-    if sheet.selectedDetentIdentifier != identifier {
-      sheet.animateChanges {
-        sheet.selectedDetentIdentifier = identifier
-        completion?()
-      }
-    } else {
+    sheet.animateChanges {
+      sheet.selectedDetentIdentifier = identifier
       completion?()
     }
   }
