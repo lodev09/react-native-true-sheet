@@ -58,7 +58,13 @@ export default function App() {
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
-        FooterComponent={Footer}
+        FooterComponent={() => (
+          <>
+            <Footer />
+            <Footer />
+            <Footer />
+          </>
+        )}
       >
         <DemoContent color={DARK_GRAY} />
         <DemoContent color={DARK_GRAY} />

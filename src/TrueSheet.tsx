@@ -3,10 +3,9 @@ import {
   requireNativeComponent,
   Platform,
   findNodeHandle,
+  View,
   type NativeMethods,
   type ViewStyle,
-  View,
-  type ViewProps,
   type NativeSyntheticEvent,
   type StyleProp,
 } from 'react-native'
@@ -24,7 +23,6 @@ const ComponentName = 'TrueSheetView'
 
 interface TrueSheetNativeViewProps {
   scrollableHandle: number | null
-  footerHandle: number | null
   onDismiss: () => void
   onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
   onSizeChange: (event: NativeSyntheticEvent<SizeChangeEvent>) => void
@@ -40,24 +38,20 @@ if (!TrueSheetNativeView) {
 }
 
 type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
-type FooterRef = Component<ViewProps> & Readonly<NativeMethods>
 
 interface TrueSheetState {
   scrollableHandle: number | null
-  footerHandle: number | null
 }
 
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet'
 
   private readonly ref: RefObject<NativeRef>
-  private readonly footerRef: RefObject<FooterRef>
 
   constructor(props: TrueSheetProps) {
     super(props)
 
     this.ref = createRef<NativeRef>()
-    this.footerRef = createRef<FooterRef>()
 
     this.onDismiss = this.onDismiss.bind(this)
     this.onPresent = this.onPresent.bind(this)
@@ -65,7 +59,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.state = {
       scrollableHandle: null,
-      footerHandle: null,
     }
   }
 
@@ -83,10 +76,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       ? findNodeHandle(this.props.scrollRef.current)
       : null
 
-    const footerHandle = findNodeHandle(this.footerRef.current)
-
     this.setState({
-      footerHandle,
       scrollableHandle,
     })
   }
@@ -134,7 +124,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         ref={this.ref}
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
-        footerHandle={this.state.footerHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
@@ -142,11 +131,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       >
         <View style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}>
           <View style={this.props.style}>{this.props.children}</View>
-          {!!FooterComponent && (
-            <View ref={this.footerRef}>
-              <FooterComponent />
-            </View>
-          )}
+          <View>{!!FooterComponent && <FooterComponent />}</View>
         </View>
       </TrueSheetNativeView>
     )

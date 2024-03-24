@@ -16,14 +16,10 @@ struct SizeInfo {
 // MARK: - TrueSheetViewControllerDelegate
 
 protocol TrueSheetViewControllerDelegate: AnyObject {
-  /// Notify bound rect changes so we can adjust our sheet view
-  func viewDidChangeWidth(_ width: CGFloat)
-
-  /// Notify when view controller has been dismissed
-  func didDismiss()
-
-  /// Notify when size has changed from dragging the Sheet
-  func didChangeSize(_ value: CGFloat, at index: Int)
+  func viewControllerDidChangeWidth(_ width: CGFloat)
+  func viewControllerDidDismiss()
+  func viewControllerSheetDidChangeSize(_ value: CGFloat, at index: Int)
+  func viewControllerDidAppear()
 }
 
 // MARK: - TrueSheetViewController
@@ -47,13 +43,18 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
     if let identifer = sheet.selectedDetentIdentifier,
        let size = detentValues[identifer.rawValue] {
-      delegate?.didChangeSize(size.value, at: size.index)
+      delegate?.viewControllerSheetDidChangeSize(size.value, at: size.index)
     }
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    delegate?.viewControllerDidAppear()
   }
 
   override func viewDidDisappear(_ animated: Bool) {
     super.viewDidDisappear(animated)
-    delegate?.didDismiss()
+    delegate?.viewControllerDidDismiss()
   }
 
   /// This is called multiple times while sheet is being dragged.
@@ -62,7 +63,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     super.viewDidLayoutSubviews()
 
     if lastViewWidth != view.frame.width {
-      delegate?.viewDidChangeWidth(view.bounds.width)
+      delegate?.viewControllerDidChangeWidth(view.bounds.width)
       lastViewWidth = view.frame.width
     }
   }
@@ -91,7 +92,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
-    
+
     var identifier: UISheetPresentationController.Detent.Identifier = .medium
 
     if sheet.detents.indices.contains(index) {
@@ -102,7 +103,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
         identifier = .large
       }
     }
-    
+
     sheet.animateChanges {
       sheet.selectedDetentIdentifier = identifier
       completion?()

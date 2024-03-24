@@ -33,18 +33,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var footerView: UIView?
   private var rctScrollView: RCTScrollView?
 
-  private var isContentMounted: Bool {
-    return contentView != nil
-  }
-
   // Content height minus the footer height for `auto` layout
   private var contentHeight: CGFloat {
     guard let contentView else { return 0 }
-    
+
     var height = contentView.frame.height
-    
+
     // Add footer view's height
-    if let footerView { height += footerView.frame.height }
+    if let footerContent = footerView?.subviews.first {
+      height += footerContent.bounds.height
+    }
 
     // Exclude bottom safe area for consistency with a Scrollable content
     let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
@@ -70,31 +68,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @available(*, unavailable)
   required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
-  }
-
-  func viewDidChangeWidth(_ width: CGFloat) {
-    guard let containerView else { return }
-
-    let size = CGSize(width: width, height: containerView.bounds.height)
-    bridge.uiManager.setSize(size, for: containerView)
-
-    if let footerView {
-      bridge.uiManager.setSize(size, for: footerView)
-    }
-  }
-
-  func didDismiss() {
-    isPresented = false
-    activeIndex = nil
-
-    onDismiss?(nil)
-  }
-
-  func didChangeSize(_ value: CGFloat, at index: Int) {
-    if index != activeIndex {
-      activeIndex = index
-      onSizeChange?(["index": index, "value": value])
-    }
   }
 
   override func insertReactSubview(_ subview: UIView!, at index: Int) {
@@ -134,31 +107,78 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     super.layoutSubviews()
 
     if let containerView, contentView == nil {
-      contentView = containerView.subviews.first
-      setupContentIfNeeded()
+      contentView = containerView.subviews[0]
+      footerView = containerView.subviews[1]
+
+      containerView.pinTo(view: viewController.view)
+    }
+  }
+
+  // MARK: - ViewController delegate
+
+  func viewControllerDidChangeWidth(_ width: CGFloat) {
+    guard let containerView else { return }
+
+    let size = CGSize(width: width, height: containerView.bounds.height)
+    bridge.uiManager.setSize(size, for: containerView)
+
+    if let footerView {
+      bridge.uiManager.setSize(size, for: footerView)
+    }
+  }
+
+  func viewControllerDidAppear() {
+    guard let contentView, let containerView else { return }
+
+    // Add constraints to fix weirdness and support ScrollView
+    if let rctScrollView {
+      contentView.pinTo(view: containerView)
+      rctScrollView.pinTo(view: contentView)
+    }
+
+    // Pin footer at the bottom
+    if let footerView, let footerContent = footerView.subviews.first {
+      containerView.bringSubviewToFront(footerView)
+      footerView.pinTo(
+        view: viewController.view,
+        from: [.bottom, .left, .right],
+        with: footerContent.bounds.height
+      )
+
+      if let scrollView = rctScrollView?.scrollView {
+        scrollView.contentInset.bottom = footerView.frame.height
+        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
+      }
+    }
+  }
+
+  func viewControllerDidDismiss() {
+    isPresented = false
+    activeIndex = nil
+
+    onDismiss?(nil)
+  }
+
+  func viewControllerSheetDidChangeSize(_ value: CGFloat, at index: Int) {
+    if index != activeIndex {
+      activeIndex = index
+      onSizeChange?(["index": index, "value": value])
     }
   }
 
   // MARK: - Prop setters
-  
+
   @objc
   func setSizes(_ sizes: [Any]) {
     self.sizes = sizes
-    setupContentIfNeeded()
+    configureSheetIfPresented()
   }
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
     let view = bridge.uiManager.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view
-    setupContentIfNeeded()
-  }
-
-  @objc
-  func setFooterHandle(_ tag: NSNumber?) {
-    let view = bridge.uiManager.view(forReactTag: tag)
-    footerView = view
-    setupContentIfNeeded()
   }
 
   func invalidate() {
@@ -167,33 +187,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Methods
 
-  func setupContentIfNeeded() {
-    guard isContentMounted, let containerView else { return }
-
-    containerView.pinTo(view: viewController.view)
-
-    // Add constraints to fix weirdness and support ScrollView
-    if let contentView, let rctScrollView {
-       contentView.pinTo(view: containerView)
-       rctScrollView.pinTo(view: contentView)
-    }
-
-    // Pin footer at the bottom
-    if let footerView {
-      containerView.bringSubviewToFront(footerView)
-      footerView.pinTo(
-        view: viewController.view,
-        from: [.bottom, .left, .right],
-        with: footerView.frame.height
-      )
-      
-      if let scrollView = rctScrollView?.scrollView {
-        scrollView.contentInset.bottom = footerView.frame.height
-        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
-        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
-      }
-    }
-    
+  func configureSheetIfPresented() {
     // Resize sheet
     if #available(iOS 15.0, *), isPresented {
       viewController.configureSheet(for: sizes, at: activeIndex ?? 0, with: contentHeight, nil)
@@ -215,7 +209,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       promise.reject(message: "No react view controller present.")
       return
     }
-    
+
     guard sizes.indices.contains(index) else {
       promise.reject(message: "Size at \(index) is not configured.")
       return
@@ -227,7 +221,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
           // Notify when size is changed programatically
           let info = self.viewController.detentValues.first(where: { $0.value.index == index })
           if let sizeValue = info?.value.value {
-            self.didChangeSize(sizeValue, at: index)
+            self.viewControllerSheetDidChangeSize(sizeValue, at: index)
           }
         }
       }
