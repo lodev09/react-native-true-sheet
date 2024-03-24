@@ -10,7 +10,7 @@
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
-  @objc var sizes: [Any] = []
+  var sizes: [Any] = ["medium", "large"]
 
   // Events
   @objc var onDismiss: RCTDirectEventBlock?
@@ -40,12 +40,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // Content height minus the footer height for `auto` layout
   private var contentHeight: CGFloat {
     guard let contentView else { return 0 }
+    
+    var height = contentView.frame.height
+    
+    // Add footer view's height
+    if let footerView { height += footerView.frame.height }
 
     // Exclude bottom safe area for consistency with a Scrollable content
     let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
     let bottomInset = window?.safeAreaInsets.bottom ?? 0
 
-    return contentView.frame.height - bottomInset
+    return height - bottomInset
   }
 
   // MARK: - Setup
@@ -135,6 +140,12 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   // MARK: - Prop setters
+  
+  @objc
+  func setSizes(_ sizes: [Any]) {
+    self.sizes = sizes
+    setupContentIfNeeded()
+  }
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
@@ -148,10 +159,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     let view = bridge.uiManager.view(forReactTag: tag)
     footerView = view
     setupContentIfNeeded()
-
-    if #available(iOS 16.0, *) {
-      viewController.sheet?.invalidateDetents()
-    }
   }
 
   func invalidate() {
@@ -175,10 +182,21 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     if let footerView {
       containerView.bringSubviewToFront(footerView)
       footerView.pinTo(
-        view: containerView,
+        view: viewController.view,
         from: [.bottom, .left, .right],
         with: footerView.frame.height
       )
+      
+      if let scrollView = rctScrollView?.scrollView {
+        scrollView.contentInset.bottom = footerView.frame.height
+        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+        scrollView.verticalScrollIndicatorInsets.bottom = footerView.frame.height
+      }
+    }
+    
+    // Resize sheet
+    if #available(iOS 15.0, *), isPresented {
+      viewController.configureSheet(for: sizes, at: activeIndex ?? 0, with: contentHeight, nil)
     }
   }
 
@@ -197,38 +215,21 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       promise.reject(message: "No react view controller present.")
       return
     }
+    
+    guard sizes.indices.contains(index) else {
+      promise.reject(message: "Size at \(index) is not configured.")
+      return
+    }
 
-    if #available(iOS 15.0, *), let sheet = viewController.sheet {
-      viewController.configureSheet(for: sizes, with: contentHeight)
-
-      guard sizes.indices.contains(index) else {
-        promise.reject(message: "Size at \(index) is not configured.")
-        return
-      }
-
-      var identifier: UISheetPresentationController.Detent.Identifier = .medium
-
-      if sheet.detents.indices.contains(index) {
-        let detent = sheet.detents[index]
-        if #available(iOS 16.0, *) {
-          identifier = detent.identifier
-        } else if detent == .large() {
-          identifier = .large
-        }
-      }
-
-      if isPresented {
-        sheet.animateChanges {
-          sheet.selectedDetentIdentifier = identifier
-
+    if #available(iOS 15.0, *) {
+      viewController.configureSheet(for: sizes, at: index, with: contentHeight) {
+        if self.isPresented {
           // Notify when size is changed programatically
-          let info = viewController.detentValues.first(where: { $0.value.index == index })
+          let info = self.viewController.detentValues.first(where: { $0.value.index == index })
           if let sizeValue = info?.value.value {
             self.didChangeSize(sizeValue, at: index)
           }
         }
-      } else {
-        sheet.selectedDetentIdentifier = identifier
       }
     }
 

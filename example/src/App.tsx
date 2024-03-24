@@ -15,7 +15,6 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
 import { times } from './utils'
 
-const SAFE_AREA = 80 // use safe-area-context
 const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 80
 
@@ -52,7 +51,7 @@ export default function App() {
       <Button text="TrueSheet ScrollView" onPress={() => sheet2.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => sheet3.current?.present()} />
       <TrueSheet
-        sizes={['auto', '70%', 'large']}
+        sizes={['auto', '80%', 'large']}
         ref={sheet1}
         style={$content}
         backgroundColor={DARK}
@@ -64,7 +63,7 @@ export default function App() {
         <DemoContent color={DARK_GRAY} />
         <DemoContent color={DARK_GRAY} />
         <Button text="Present Large" onPress={() => presentSheet1(2)} />
-        <Button text="Present 70%" onPress={() => presentSheet1(1)} />
+        <Button text="Present 80%" onPress={() => presentSheet1(1)} />
         <Button text="Present Auto" onPress={() => presentSheet1(0)} />
         <Button text="Dismis" onPress={() => sheet1.current?.dismiss()} />
       </TrueSheet>
@@ -137,7 +136,6 @@ const $container: ViewStyle = {
 
 const $content: ViewStyle = {
   padding: CONTENT_PADDING,
-  paddingBottom: SAFE_AREA,
 }
 
 const $footer: ViewStyle = {

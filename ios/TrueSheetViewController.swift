@@ -70,17 +70,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
   @available(iOS 15.0, *)
-  func configureSheet(for sizes: [Any], with height: CGFloat) {
+  func configureSheet(for sizes: [Any], at index: Int = 0, with height: CGFloat, _ completion: (() -> Void)?) {
     guard let sheet else { return }
 
     detentValues = [:]
 
     var detents: [UISheetPresentationController.Detent] = []
 
-    // Default to medium and large
-    let sheetSizes = sizes.isEmpty ? ["medium", "large"] : sizes
-
-    for (index, size) in sheetSizes.enumerated() {
+    for (index, size) in sizes.enumerated() {
       let detent = detentFor(size, with: height) { id, value in
         self.detentValues[id] = SizeInfo(index: index, value: value)
       }
@@ -94,5 +91,25 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
+    
+    var identifier: UISheetPresentationController.Detent.Identifier = .medium
+
+    if sheet.detents.indices.contains(index) {
+      let detent = sheet.detents[index]
+      if #available(iOS 16.0, *) {
+        identifier = detent.identifier
+      } else if detent == .large() {
+        identifier = .large
+      }
+    }
+    
+    if sheet.selectedDetentIdentifier != identifier {
+      sheet.animateChanges {
+        sheet.selectedDetentIdentifier = identifier
+        completion?()
+      }
+    } else {
+      completion?()
+    }
   }
 }
