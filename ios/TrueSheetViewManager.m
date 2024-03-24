@@ -33,6 +33,5 @@ RCT_EXPORT_VIEW_PROPERTY(footerHandle, NSNumber*)
 
 // Properties
 RCT_EXPORT_VIEW_PROPERTY(sizes, NSArray)
-RCT_EXPORT_VIEW_PROPERTY(backgroundColor, UIColor)
 
 @end
