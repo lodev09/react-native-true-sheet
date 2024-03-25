@@ -1,12 +1,16 @@
 # React Native True Sheet
 
-The real native bottom sheet.
+[![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml)
+![GitHub Release](https://img.shields.io/github/v/release/lodev09/react-native-true-sheet)
+![NPM Downloads](https://img.shields.io/npm/dw/%40lodev09%2Freact-native-true-sheet)
+
+The true native bottom sheet.
 
 ## Features
-- ✅ Implemented on the native realm.
-- ✅ **_NOT_** your pure JS, (re)animated View.
-- ✅ Clean, fast and lightweight.
-- ✅ Handles your Sscrolling needs, easy.
+* ✅ Implemented on the native realm.
+* ✅ **_NOT_** your pure JS, (re)animated View.
+* ✅ Clean, fast and lightweight.
+* ✅ Handles your Sscrolling needs, easy.
 
 ## Installation
 
