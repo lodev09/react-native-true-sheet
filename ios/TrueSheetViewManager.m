@@ -8,7 +8,7 @@
 
 #import <React/RCTViewManager.h>
 
-@interface RCT_EXTERN_MODULE(TrueSheetViewManager, RCTViewManager)
+@interface RCT_EXTERN_REMAP_MODULE (TrueSheetView, TrueSheetViewManager, RCTViewManager)
 
 // Module Functions
 

@@ -50,6 +50,7 @@ export default function App() {
       <Button text="TrueSheet View" onPress={() => presentSheet1(0)} />
       <Button text="TrueSheet ScrollView" onPress={() => sheet2.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => sheet3.current?.present()} />
+
       <TrueSheet
         sizes={['auto', '80%', 'large']}
         ref={sheet1}

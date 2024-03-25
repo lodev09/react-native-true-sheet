@@ -1,20 +1,16 @@
 package com.lodev09.truesheet
 
-import android.graphics.Color
-import android.view.View
-import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.ViewGroupManager
 
-class TrueSheetViewManager : SimpleViewManager<View>() {
-  override fun getName() = "TrueSheetView"
+class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
+  override fun getName() = NAME
 
-  override fun createViewInstance(reactContext: ThemedReactContext): View {
-    return View(reactContext)
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
+    return TrueSheetView(reactContext)
   }
 
-  @ReactProp(name = "color")
-  fun setColor(view: View, color: String) {
-    view.setBackgroundColor(Color.parseColor(color))
+  companion object {
+    const val NAME = "TrueSheetView"
   }
 }

@@ -25,7 +25,8 @@
     "target": "esnext",
     "verbatimModuleSyntax": true,
     "allowJs": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "moduleSuffixes": [".ios", ".android", ""],
   },
   "exclude": ["lib"]
 }
