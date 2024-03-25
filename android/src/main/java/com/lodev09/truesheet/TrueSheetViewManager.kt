@@ -10,7 +10,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   @SuppressLint("InflateParams")
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
-     return LayoutInflater.from(reactContext).inflate(R.layout.truesheet_layout, null) as TrueSheetView
+     return TrueSheetView(reactContext)
   }
 
   companion object {

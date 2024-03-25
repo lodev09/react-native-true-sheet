@@ -41,12 +41,12 @@ export default function App() {
   const _scrollViewRef = useRef<ScrollView>(null)
   const _flatListRef = useRef<FlatList>(null)
 
-  const presentSheet1 = (_index = 0) => {
-    // sheet1.current?.present(index)
+  const presentSheet1 = (index = 0) => {
+    sheet1.current?.present(index)
   }
 
   const dismissSheet1 = () => {
-    // sheet1.current?.dismiss()
+    sheet1.current?.dismiss()
   }
 
   return (
@@ -67,9 +67,9 @@ export default function App() {
       >
         <DemoContent color={DARK_GRAY} />
         <DemoContent color={DARK_GRAY} />
-        <Button text="Present Large" onPress={() => presentSheet1(2)} />
+        {/* <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 80%" onPress={() => presentSheet1(1)} />
-        <Button text="Present Auto" onPress={() => presentSheet1(0)} />
+        <Button text="Present Auto" onPress={() => presentSheet1(0)} /> */}
         <Button text="Dismis" onPress={dismissSheet1} />
       </TrueSheet>
 

@@ -9,7 +9,6 @@
       android:id="@+id/contents"
       android:layout_gravity="center_horizontal"
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      app:layout_behavior="com.lodev09.truesheet.TrueSheetBottomSheetBehavior"/>
+      android:layout_height="match_parent" />
 
 </com.lodev09.truesheet.TrueSheetView>
