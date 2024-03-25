@@ -13,7 +13,7 @@ import {
 } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
-import { times } from './utils'
+// import { times } from './utils'
 
 const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 80
@@ -38,11 +38,15 @@ export default function App() {
   const sheet2 = useRef<TrueSheet>(null)
   const sheet3 = useRef<TrueSheet>(null)
 
-  const scrollViewRef = useRef<ScrollView>(null)
-  const flatListRef = useRef<FlatList>(null)
+  const _scrollViewRef = useRef<ScrollView>(null)
+  const _flatListRef = useRef<FlatList>(null)
 
-  const presentSheet1 = (index = 0) => {
-    sheet1.current?.present(index)
+  const presentSheet1 = (_index = 0) => {
+    // sheet1.current?.present(index)
+  }
+
+  const dismissSheet1 = () => {
+    // sheet1.current?.dismiss()
   }
 
   return (
@@ -66,10 +70,10 @@ export default function App() {
         <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 80%" onPress={() => presentSheet1(1)} />
         <Button text="Present Auto" onPress={() => presentSheet1(0)} />
-        <Button text="Dismis" onPress={() => sheet1.current?.dismiss()} />
+        <Button text="Dismis" onPress={dismissSheet1} />
       </TrueSheet>
 
-      <TrueSheet
+      {/* <TrueSheet
         ref={sheet2}
         scrollRef={scrollViewRef}
         onDismiss={() => console.log('Sheet 2 dismissed!')}
@@ -97,7 +101,7 @@ export default function App() {
           indicatorStyle="black"
           renderItem={({ item }) => <DemoContent text={String(item + 1)} />}
         />
-      </TrueSheet>
+      </TrueSheet> */}
     </View>
   )
 }

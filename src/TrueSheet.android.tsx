@@ -35,13 +35,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
   }
 
   render(): ReactNode {
-    const FooterComponent = this.props.FooterComponent
-
     return (
       <TrueSheetNativeView ref={this.ref} sizes={this.props.sizes ?? ['medium', 'large']}>
         <View style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}>
           <View style={this.props.style}>{this.props.children}</View>
-          <View>{!!FooterComponent && <FooterComponent />}</View>
         </View>
       </TrueSheetNativeView>
     )
