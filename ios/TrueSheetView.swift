@@ -194,14 +194,15 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     // Pin footer at the bottom
     if let footerView {
-      containerView.bringSubviewToFront(footerView)
       if let footerContent = footerView.subviews.first {
+        containerView.bringSubviewToFront(footerView)
         footerView.pinTo(
           view: viewController.view,
           from: [.bottom, .left, .right],
           with: footerContent.bounds.height
         )
       } else {
+        containerView.sendSubviewToBack(footerView)
         footerView.removeConstraints(footerView.constraints)
       }
     }
