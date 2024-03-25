@@ -62,6 +62,10 @@ extension UIViewController {
           resolution(id, value)
           return value
         }
+      } else {
+        return detentFor(identifier: .medium) { value in
+          resolution(id, value)
+        }
       }
     }
 
@@ -79,30 +83,35 @@ extension UIViewController {
         return detentFor(identifier: .large) { value in
           resolution(UISheetPresentationController.Detent.Identifier.large.rawValue, value)
         }
-      case "auto":
-        if #available(iOS 16.0, *), let height {
-          return .custom(identifier: identifier(from: id)) { context in
-            let value = min(height, context.maximumDetentValue)
-            resolution(id, value)
-            return value
-          }
-        }
       default:
         if #available(iOS 16.0, *) {
-          // Percent
-          stringSize.removeAll(where: { $0 == "%" })
-          let floatSize = CGFloat((stringSize as NSString).floatValue)
-          if floatSize > 0.0 {
+          if stringSize == "auto" {
             return .custom(identifier: identifier(from: id)) { context in
-              let value = min((floatSize / 100) * context.maximumDetentValue, context.maximumDetentValue)
+              let value = min(height ?? context.maximumDetentValue / 2, context.maximumDetentValue)
               resolution(id, value)
               return value
             }
+          } else {
+            // Percent
+            stringSize.removeAll(where: { $0 == "%" })
+            let floatSize = CGFloat((stringSize as NSString).floatValue)
+            if floatSize > 0.0 {
+              return .custom(identifier: identifier(from: id)) { context in
+                let value = min((floatSize / 100) * context.maximumDetentValue, context.maximumDetentValue)
+                resolution(id, value)
+                return value
+              }
+            }
+          }
+        } else {
+          return detentFor(identifier: .medium) { value in
+            resolution(id, value)
           }
         }
       }
     }
 
+    resolution(id, 0)
     return .medium()
   }
 

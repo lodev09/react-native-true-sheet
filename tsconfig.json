@@ -26,5 +26,6 @@
     "verbatimModuleSyntax": true,
     "allowJs": false,
     "allowSyntheticDefaultImports": true
-  }
+  },
+  "exclude": ["lib"]
 }
