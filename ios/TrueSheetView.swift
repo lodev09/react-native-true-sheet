@@ -130,7 +130,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  func viewControllerDidAppear() {
+  func viewControllerWillAppear() {
     setupContent()
   }
 
@@ -193,13 +193,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     // Pin footer at the bottom
-    if let footerView, let footerContent = footerView.subviews.first {
+    if let footerView {
       containerView.bringSubviewToFront(footerView)
-      footerView.pinTo(
-        view: viewController.view,
-        from: [.bottom, .left, .right],
-        with: footerContent.bounds.height
-      )
+      if let footerContent = footerView.subviews.first {
+        footerView.pinTo(
+          view: viewController.view,
+          from: [.bottom, .left, .right],
+          with: footerContent.bounds.height
+        )
+      } else {
+        footerView.removeConstraints(footerView.constraints)
+      }
     }
   }
 

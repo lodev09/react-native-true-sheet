@@ -19,7 +19,7 @@ protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidChangeWidth(_ width: CGFloat)
   func viewControllerDidDismiss()
   func viewControllerSheetDidChangeSize(_ value: CGFloat, at index: Int)
-  func viewControllerDidAppear()
+  func viewControllerWillAppear()
 }
 
 // MARK: - TrueSheetViewController
@@ -47,9 +47,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
-  override func viewDidAppear(_ animated: Bool) {
-    super.viewDidAppear(animated)
-    delegate?.viewControllerDidAppear()
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    delegate?.viewControllerWillAppear()
   }
 
   override func viewDidDisappear(_ animated: Bool) {
