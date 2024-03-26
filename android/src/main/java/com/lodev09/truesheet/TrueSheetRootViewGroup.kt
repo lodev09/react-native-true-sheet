@@ -12,7 +12,6 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
-import kotlin.math.abs
 
 /**
  * TrueSheetRootViewGroup is the ViewGroup which contains all the children of a Modal. It gets all
