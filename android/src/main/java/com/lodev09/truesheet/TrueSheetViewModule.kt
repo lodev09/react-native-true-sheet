@@ -40,15 +40,15 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
 
   @ReactMethod
   fun present(tag: Int, index: Int, promise: Promise) {
-    withTrueSheetView(tag) { trueSheetView ->
-      trueSheetView.present()
+    withTrueSheetView(tag) {
+      it.present()
     }
   }
 
   @ReactMethod
   fun dismiss(tag: Int, promise: Promise) {
-    withTrueSheetView(tag) { trueSheetView ->
-      trueSheetView.dismiss()
+    withTrueSheetView(tag) {
+      it.dismiss()
     }
   }
 

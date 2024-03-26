@@ -72,7 +72,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
         ref={this.ref}
         sizes={this.props.sizes ?? ['medium', 'large']}
       >
-        <View style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}>
+        <View
+          collapsable={false}
+          style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}
+        >
           <View style={this.props.style}>{this.props.children}</View>
         </View>
       </TrueSheetNativeView>
@@ -81,8 +84,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
 }
 
 const $nativeSheet: ViewStyle = {
-  backgroundColor: 'red',
   position: 'absolute',
-  left: -9999,
-  zIndex: -99,
+  zIndex: -99999,
 }
