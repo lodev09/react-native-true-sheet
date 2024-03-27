@@ -152,7 +152,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setSizes(_ sizes: [Any]) {
-    self.sizes = sizes
+    self.sizes = Array(sizes.prefix(3))
     configureSheetIfPresented()
   }
 

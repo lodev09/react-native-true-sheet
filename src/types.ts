@@ -72,11 +72,12 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The sizes you want the Sheet to support.
-   * IMPORTANT! Sort them in ascending order
+   * ⚠️ Maximum of 3 sizes only!
+   * As in: [collapsed, half-expanded, expanded]
    *
    * Example:
    * ```ts
-   * size={['auto', 400, '80%', 'large']}
+   * size={['auto', '60%', 'large']}
    * ```
    *
    * @default ['medium', 'large']

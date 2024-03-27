@@ -13,7 +13,7 @@ import {
 } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
-// import { times } from './utils'
+import { times } from './utils'
 
 const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 80
@@ -38,8 +38,8 @@ export default function App() {
   const sheet2 = useRef<TrueSheet>(null)
   const sheet3 = useRef<TrueSheet>(null)
 
-  const _scrollViewRef = useRef<ScrollView>(null)
-  const _flatListRef = useRef<FlatList>(null)
+  const scrollViewRef = useRef<ScrollView>(null)
+  const flatListRef = useRef<FlatList>(null)
 
   const presentSheet1 = (index = 0) => {
     sheet1.current?.present(index)
@@ -67,20 +67,20 @@ export default function App() {
       >
         <DemoContent color={DARK_GRAY} />
         <DemoContent color={DARK_GRAY} />
-        {/* <Button text="Present Large" onPress={() => presentSheet1(2)} />
+        <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 80%" onPress={() => presentSheet1(1)} />
-        <Button text="Present Auto" onPress={() => presentSheet1(0)} /> */}
+        <Button text="Present Auto" onPress={() => presentSheet1(0)} />
         <Button text="Dismis" onPress={dismissSheet1} />
       </TrueSheet>
 
-      {/* <TrueSheet
+      <TrueSheet
         ref={sheet2}
         scrollRef={scrollViewRef}
         onDismiss={() => console.log('Sheet 2 dismissed!')}
         onPresent={() => console.log(`Sheet 2 presented!`)}
         FooterComponent={Footer}
       >
-        <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
+        <ScrollView contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
             <DemoContent key={i} text={String(i + 1)} />
           ))}
@@ -101,7 +101,7 @@ export default function App() {
           indicatorStyle="black"
           renderItem={({ item }) => <DemoContent text={String(item + 1)} />}
         />
-      </TrueSheet> */}
+      </TrueSheet>
     </View>
   )
 }
