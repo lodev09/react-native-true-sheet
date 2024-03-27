@@ -13,9 +13,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-@ReactModule(name = TrueSheetViewModule.NAME)
+@ReactModule(name = TrueSheetViewModule.TAG)
 class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
-  override fun getName(): String = NAME
+  override fun getName(): String = TAG
 
   private fun withTrueSheetView(tag: Int, closure: (trueSheetView: TrueSheetView) -> Unit) {
     UiThreadUtil.runOnUiThread {
@@ -23,14 +23,14 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
         val manager = UIManagerHelper.getUIManagerForReactTag(reactApplicationContext, tag)
         val view = manager?.resolveView(tag)
         if (view == null) {
-          Log.d(NAME, "TrueSheetView with tag $tag not found")
+          Log.d(TAG, "TrueSheetView with tag $tag not found")
           return@runOnUiThread
         }
 
         if (view is TrueSheetView) {
           closure(view)
         } else {
-          Log.d(NAME, "View is not of type TrueSheetView")
+          Log.d(TAG, "View is not of type TrueSheetView")
         }
       } catch (e: Exception) {
         e.printStackTrace()
@@ -53,6 +53,6 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
   }
 
   companion object {
-    const val NAME = "TrueSheetView"
+    const val TAG = "TrueSheetView"
   }
 }

@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
 import android.view.View
@@ -91,6 +92,7 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
     return super.onInterceptTouchEvent(event)
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
     mJSTouchDispatcher.handleTouchEvent(event, mEventDispatcher)
     mJSPointerDispatcher?.handleMotionEvent(event, mEventDispatcher, false)

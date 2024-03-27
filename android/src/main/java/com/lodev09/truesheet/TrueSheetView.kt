@@ -1,26 +1,31 @@
 package com.lodev09.truesheet
 
 import android.content.Context
+import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
-import android.widget.FrameLayout
+import android.widget.RelativeLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
-class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
+class TrueSheetView : ViewGroup, LifecycleEventListener {
+  constructor(context: Context) : super(context)
+  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+
   private val sheetRootView: TrueSheetRootViewGroup?
   private var sheetDialog: BottomSheetDialog?
 
-  private lateinit var sheetBehavior: BottomSheetBehavior<*>
+  private lateinit var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -29,6 +34,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     reactContext.addLifecycleEventListener(this)
     sheetRootView = TrueSheetRootViewGroup(context)
     sheetDialog = BottomSheetDialog(context)
+    sheetBehavior = TrueSheetBottomSheetBehavior()
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
@@ -116,28 +122,46 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   private fun setupSheetDialog(height: Int) {
-    val frameLayout = FrameLayout(context)
-    frameLayout.addView(sheetRootView)
+    val layout = RelativeLayout(context)
+    layout.addView(sheetRootView)
 
-    sheetDialog?.setContentView(frameLayout)
+    sheetDialog?.setContentView(layout)
 
-    sheetBehavior = BottomSheetBehavior.from(frameLayout.parent as View).apply {
+    val viewGroup = layout.parent as ViewGroup
+    val params = viewGroup.layoutParams as CoordinatorLayout.LayoutParams
+
+    sheetBehavior.apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+        override fun onSlide(bottomSheet: View, slideOffset: Float) { }
         override fun onStateChanged(bottomSheet: View, newState: Int) {
-          // TODO
+          when (newState) {
+            BottomSheetBehavior.STATE_HIDDEN -> {
+              dismiss()
+            }
+            BottomSheetBehavior.STATE_COLLAPSED -> {}
+            BottomSheetBehavior.STATE_DRAGGING -> {}
+            BottomSheetBehavior.STATE_EXPANDED -> {}
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> {}
+            BottomSheetBehavior.STATE_SETTLING -> {}
+          }
         }
       })
 
-      // virtually disables 'third' breakpoint
-      isFitToContents = true
+      isFitToContents = false
+      halfExpandedRatio = 0.8f
       isHideable = true
-      // skipCollapsed = true
-      peekHeight = height
+
+      Log.d(TAG, height.toString())
+
+      // TODO: Account for ScrollView content
+      peekHeight = 1652 // height
     }
+
+     params.behavior = sheetBehavior
   }
 
   fun present() {
+    sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     sheetDialog?.show()
   }
 
@@ -146,7 +170,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   companion object {
-    const val NAME = "TrueSheetView"
+    const val TAG = "TrueSheetView"
   }
 }
 
