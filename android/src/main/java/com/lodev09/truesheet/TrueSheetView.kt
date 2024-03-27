@@ -1,19 +1,26 @@
 package com.lodev09.truesheet
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import android.widget.FrameLayout
 import com.facebook.react.bridge.LifecycleEventListener
+import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
   private val sheetRootView: TrueSheetRootViewGroup?
   private var sheetDialog: BottomSheetDialog?
+
+  private lateinit var sheetBehavior: BottomSheetBehavior<*>
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -43,10 +50,17 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
     sheetRootView?.addView(child, index)
 
-    val frameLayout = FrameLayout(context)
-    frameLayout.addView(sheetRootView)
-
-    sheetDialog?.setContentView(frameLayout)
+    UiThreadUtil.runOnUiThread {
+      try {
+        val manager = UIManagerHelper.getUIManagerForReactTag(reactContext, child.id)
+        val view = manager?.resolveView(child.id)
+        if (view != null) {
+          setupSheetDialog(view.height)
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+    }
   }
 
   override fun getChildCount(): Int {
@@ -99,6 +113,28 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   override fun onHostDestroy() {
     // Drop the instance if the host is destroyed which will dismiss the dialog
     onDropInstance()
+  }
+
+  private fun setupSheetDialog(height: Int) {
+    val frameLayout = FrameLayout(context)
+    frameLayout.addView(sheetRootView)
+
+    sheetDialog?.setContentView(frameLayout)
+
+    sheetBehavior = BottomSheetBehavior.from(frameLayout.parent as View).apply {
+      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+          // TODO
+        }
+      })
+
+      // virtually disables 'third' breakpoint
+      isFitToContents = true
+      isHideable = true
+      // skipCollapsed = true
+      peekHeight = height
+    }
   }
 
   fun present() {
