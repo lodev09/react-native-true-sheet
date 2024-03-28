@@ -56,7 +56,7 @@ export default function App() {
       <Button text="TrueSheet FlatList" onPress={() => sheet3.current?.present()} />
 
       <TrueSheet
-        sizes={['auto', '80%', 'large']}
+        sizes={['auto', '80%']}
         ref={sheet1}
         style={$content}
         backgroundColor={DARK}

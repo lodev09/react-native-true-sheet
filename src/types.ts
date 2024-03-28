@@ -72,8 +72,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The sizes you want the Sheet to support.
-   * ⚠️ Maximum of 3 sizes only!
-   * As in: [collapsed, half-expanded, expanded]
+   * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
    *
    * Example:
    * ```ts

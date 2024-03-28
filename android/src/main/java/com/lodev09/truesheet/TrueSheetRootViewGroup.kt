@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.bridge.GuardedRunnable
@@ -126,5 +127,9 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // No-op - override in order to still receive events to onInterceptTouchEvent
     // even when some other view disallow that
+  }
+
+  companion object {
+    const val TAG = "TrueSheetView"
   }
 }

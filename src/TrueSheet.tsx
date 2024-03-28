@@ -71,7 +71,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     return nodeHandle
   }
 
-  private updateHandles() {
+  private updateState() {
     const scrollableHandle = this.props.scrollRef?.current
       ? findNodeHandle(this.props.scrollRef.current)
       : null
@@ -94,11 +94,17 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   componentDidMount(): void {
-    this.updateHandles()
+    if (this.props.sizes && this.props.sizes.length > 3) {
+      console.warn(
+        'TrueSheet only supports a maximum of 3 sizes; collapsed, half-expanded and expanded. Check your `sizes` prop.'
+      )
+    }
+
+    this.updateState()
   }
 
   componentDidUpdate(): void {
-    this.updateHandles()
+    this.updateState()
   }
 
   /**
@@ -140,5 +146,5 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const $nativeSheet: ViewStyle = {
   position: 'absolute',
-  zIndex: -99,
+  zIndex: -9999,
 }

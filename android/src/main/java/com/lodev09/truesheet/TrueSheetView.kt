@@ -9,23 +9,23 @@ import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import android.widget.RelativeLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.get
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
-class TrueSheetView : ViewGroup, LifecycleEventListener {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
 
-  private val sheetRootView: TrueSheetRootViewGroup?
-  private var sheetDialog: BottomSheetDialog?
+  private var sizes: Array<Any> = arrayOf("medium", "large")
+  private val sheetRootView: TrueSheetRootViewGroup
+  private var sheetDialog: BottomSheetDialog
 
-  private lateinit var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
+  private var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -38,7 +38,7 @@ class TrueSheetView : ViewGroup, LifecycleEventListener {
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
-    sheetRootView?.dispatchProvideStructure(structure)
+    sheetRootView.dispatchProvideStructure(structure)
   }
 
   override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -54,78 +54,12 @@ class TrueSheetView : ViewGroup, LifecycleEventListener {
     // Hide this host view
     visibility = GONE
 
-    sheetRootView?.addView(child, index)
+    sheetRootView.addView(child, index)
 
-    UiThreadUtil.runOnUiThread {
-      try {
-        val manager = UIManagerHelper.getUIManagerForReactTag(reactContext, child.id)
-        val view = manager?.resolveView(child.id)
-        if (view != null) {
-          setupSheetDialog(view.height)
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-    }
-  }
-
-  override fun getChildCount(): Int {
-    // This method may be called by the parent constructor
-    // before rootView is initialized.
-    return sheetRootView?.childCount ?: 0
-  }
-
-  override fun getChildAt(index: Int): View {
-    return sheetRootView!!.getChildAt(index)
-  }
-
-  override fun removeView(child: View) {
-    sheetRootView?.removeView(child)
-  }
-
-  override fun removeViewAt(index: Int) {
-    val child = getChildAt(index)
-    sheetRootView?.removeView(child)
-  }
-
-  override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
-    // Explicitly override this to prevent accessibility events being passed down to children
-    // Those will be handled by the rootView which lives in the dialog
-  }
-
-  override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean {
-    // Explicitly override this to prevent accessibility events being passed down to children
-    // Those will be handled by the rootView which lives in the dialog
-    return false
-  }
-
-  fun onDropInstance() {
-    reactContext.removeLifecycleEventListener(this)
-    dismiss()
-  }
-
-  fun setEventDispatcher(eventDispatcher: EventDispatcher) {
-    sheetRootView?.setEventDispatcher(eventDispatcher)
-  }
-
-  override fun onHostResume() {
-    // do nothing
-  }
-
-  override fun onHostPause() {
-    // do nothing
-  }
-
-  override fun onHostDestroy() {
-    // Drop the instance if the host is destroyed which will dismiss the dialog
-    onDropInstance()
-  }
-
-  private fun setupSheetDialog(height: Int) {
     val layout = RelativeLayout(context)
     layout.addView(sheetRootView)
 
-    sheetDialog?.setContentView(layout)
+    sheetDialog.setContentView(layout)
 
     val viewGroup = layout.parent as ViewGroup
     val params = viewGroup.layoutParams as CoordinatorLayout.LayoutParams
@@ -146,27 +80,141 @@ class TrueSheetView : ViewGroup, LifecycleEventListener {
           }
         }
       })
-
-      isFitToContents = false
-      halfExpandedRatio = 0.8f
-      isHideable = true
-
-      Log.d(TAG, height.toString())
-
-      // TODO: Account for ScrollView content
-      peekHeight = 1652 // height
     }
 
-     params.behavior = sheetBehavior
+    params.behavior = sheetBehavior
+    configureSheet()
+  }
+
+  override fun getChildCount(): Int {
+    // This method may be called by the parent constructor
+    // before rootView is initialized.
+    return sheetRootView.childCount
+  }
+
+  override fun getChildAt(index: Int): View {
+    return sheetRootView.getChildAt(index)
+  }
+
+  override fun removeView(child: View) {
+    sheetRootView.removeView(child)
+  }
+
+  override fun removeViewAt(index: Int) {
+    val child = getChildAt(index)
+    sheetRootView.removeView(child)
+  }
+
+  override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
+    // Explicitly override this to prevent accessibility events being passed down to children
+    // Those will be handled by the rootView which lives in the dialog
+  }
+
+  override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean {
+    // Explicitly override this to prevent accessibility events being passed down to children
+    // Those will be handled by the rootView which lives in the dialog
+    return false
+  }
+
+  override fun onHostResume() {
+    // do nothing
+  }
+
+  override fun onHostPause() {
+    // do nothing
+  }
+
+  override fun onHostDestroy() {
+    // Drop the instance if the host is destroyed which will dismiss the dialog
+    reactContext.removeLifecycleEventListener(this)
+    dismiss()
+  }
+
+  private fun getSizeHeight(size: Any, contentHeight: Int): Int {
+    val maxHeight = TrueSheetHelper.getViewSize(context).y
+    val height = when (size) {
+      is Double -> PixelUtil.toPixelFromDIP(size).toInt()
+      is Int -> PixelUtil.toPixelFromDIP(size.toDouble()).toInt()
+      is String -> {
+        return when (size) {
+          "auto" -> contentHeight
+          "large" -> maxHeight
+          "medium" -> (maxHeight * 0.50).toInt()
+          "small" -> (maxHeight * 0.25).toInt()
+          else -> {
+            if (size.endsWith('%')) {
+              val percent = size.trim('%').toDoubleOrNull()
+              return if (percent == null) 0
+              else ((percent / 100) * maxHeight).toInt()
+            } else {
+              val fixedHeight = size.toDoubleOrNull()
+              return if (fixedHeight == null) 0
+              else PixelUtil.toPixelFromDIP(fixedHeight).toInt()
+            }
+          }
+        }
+      }
+      else -> (maxHeight * 0.5).toInt()
+    }
+
+    return minOf(height, maxHeight)
+  }
+
+  private fun configureSheet() {
+    sheetRootView.getChildAt(0)?.let {it ->
+      UiThreadUtil.runOnUiThread {
+        sheetBehavior.apply {
+          val contentHeight = it.height
+          val maxViewHeight = TrueSheetHelper.getViewSize(context).y
+          val sizeCount = sizes.size
+
+          isFitToContents = true
+          isHideable = true
+          peekHeight = -1
+
+          when (sizeCount) {
+            1 -> {
+              maxHeight = getSizeHeight(sizes[0], contentHeight)
+            }
+            2 -> {
+              val height1 = getSizeHeight(sizes[0], contentHeight)
+              val height2 = getSizeHeight(sizes[1], contentHeight)
+
+              peekHeight = height1
+              maxHeight = height2
+            }
+            3 -> {
+              isFitToContents = false
+              val height1 = getSizeHeight(sizes[0], contentHeight)
+              val height2 = getSizeHeight(sizes[1], contentHeight)
+              val height3 = getSizeHeight(sizes[2], contentHeight)
+
+              peekHeight = minOf(height1, maxViewHeight)
+              halfExpandedRatio = height2.toFloat() / height3.toFloat()
+              maxHeight = height3
+            }
+          }
+        }
+      }
+    }
+  }
+
+  fun setSizes(newSizes: Array<Any>) {
+    sizes = newSizes
+    configureSheet()
   }
 
   fun present() {
     sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-    sheetDialog?.show()
+    sheetDialog.show()
   }
 
   fun dismiss() {
-    sheetDialog?.dismiss()
+    sheetDialog.dismiss()
+  }
+
+  fun setEventDispatcher(eventDispatcher: EventDispatcher) {
+    sheetRootView.setEventDispatcher(eventDispatcher)
   }
 
   companion object {

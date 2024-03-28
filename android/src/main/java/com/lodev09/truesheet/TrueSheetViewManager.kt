@@ -1,12 +1,17 @@
 package com.lodev09.truesheet
 
+import android.util.Log
 import android.view.LayoutInflater
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
+import com.facebook.react.uimanager.annotations.ReactProp
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
-  override fun getName() = NAME
+  override fun getName() = TAG
 
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
     return TrueSheetView(reactContext)
@@ -14,7 +19,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
-    view.onDropInstance()
+    view.onHostDestroy()
   }
 
   override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
@@ -24,7 +29,25 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     }
   }
 
+  @ReactProp(name = "sizes")
+  fun setSizes(view: TrueSheetView, sizes: ReadableArray?) {
+    if (sizes != null) {
+      val result = ArrayList<Any>()
+      for (i in 0 until minOf(sizes.size(), 3)) {
+        when (sizes.getType(i)) {
+          ReadableType.Number -> result.add(sizes.getDouble(i))
+          ReadableType.String -> result.add(sizes.getString(i))
+          else -> Log.d(TAG, "Invalid type")
+        }
+      }
+
+      view.setSizes(result.toArray())
+    } else {
+      view.setSizes(arrayOf("medium", "large"))
+    }
+  }
+
   companion object {
-    const val NAME = "TrueSheetView"
+    const val TAG = "TrueSheetView"
   }
 }
