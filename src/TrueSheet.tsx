@@ -139,10 +139,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           collapsable={false}
           style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}
         >
-          <View collapsable={false} style={this.props.style}>{this.props.children}</View>
-          <View collapsable={false}>
-            {!!FooterComponent && <FooterComponent />}
+          <View collapsable={false} style={this.props.style}>
+            {this.props.children}
           </View>
+          <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>
         </View>
       </TrueSheetNativeView>
     )
