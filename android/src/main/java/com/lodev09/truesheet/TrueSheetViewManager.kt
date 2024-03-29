@@ -1,9 +1,8 @@
 package com.lodev09.truesheet
 
+import android.graphics.Color
 import android.util.Log
-import android.view.LayoutInflater
 import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
@@ -27,6 +26,11 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     if (dispatcher != null) {
       view.setEventDispatcher(dispatcher)
     }
+  }
+
+  @ReactProp(name = "backgroundColor")
+  fun setBackgroundColor(view: TrueSheetView, backgroundColor: String?) {
+    view.setBackgroundColor(Color.parseColor(backgroundColor))
   }
 
   @ReactProp(name = "sizes")

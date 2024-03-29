@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -54,7 +53,6 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
     val layout = RelativeLayout(context)
     layout.addView(sheetRootView)
-    layout.setBackgroundColor(Color.parseColor("red"))
 
     sheetDialog.setContentView(layout)
 
@@ -80,7 +78,6 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     }
 
     params.behavior = sheetBehavior
-    // configureSheet()
   }
 
   override fun getChildCount(): Int {
@@ -168,11 +165,11 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
         state = BottomSheetBehavior.STATE_COLLAPSED
 
         // Reset properties
-//        isFitToContents = true
-//        isHideable = true
-//        peekHeight = 0
-//        maxHeight = -1
-//        halfExpandedRatio = 0.5f
+        isFitToContents = true
+        isHideable = true
+        peekHeight = 0
+        maxHeight = -1
+        halfExpandedRatio = 0.5f
 
         when (sizeCount) {
           1 -> {
@@ -200,13 +197,17 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     }
   }
 
+  override fun setBackgroundColor(color: Int) {
+    // We want to set root view background color here
+    sheetRootView.backgroundColor = color
+  }
+
   fun setSizes(newSizes: Array<Any>) {
     sizes = newSizes
      configureSheet()
   }
 
   fun present() {
-    // sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     configureSheet()
     sheetDialog.show()
   }
