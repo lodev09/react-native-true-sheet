@@ -31,7 +31,6 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
   RootView {
   private var hasAdjustedSize = false
   private var viewWidth = 0
-  private var viewHeight = 0
   private var mEventDispatcher: EventDispatcher? = null
 
   private val mJSTouchDispatcher = JSTouchDispatcher(this)
@@ -50,8 +49,8 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
+
     viewWidth = w
-    viewHeight = h
     updateFirstChildView()
   }
 
@@ -65,7 +64,8 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
             val uiManager: UIManagerModule = reactContext
               .reactApplicationContext
               .getNativeModule(UIManagerModule::class.java) ?: return
-            uiManager.updateNodeSize(viewTag, viewWidth, viewHeight)
+
+            uiManager.updateNodeSize(viewTag, viewWidth, -1)
           }
         })
     } else {

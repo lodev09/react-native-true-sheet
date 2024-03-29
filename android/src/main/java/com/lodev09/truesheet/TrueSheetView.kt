@@ -1,20 +1,16 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.util.AttributeSet
-import android.util.Log
+import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import android.widget.RelativeLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.get
 import com.facebook.react.bridge.LifecycleEventListener
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -58,6 +54,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
     val layout = RelativeLayout(context)
     layout.addView(sheetRootView)
+    layout.setBackgroundColor(Color.parseColor("red"))
 
     sheetDialog.setContentView(layout)
 
@@ -83,7 +80,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     }
 
     params.behavior = sheetBehavior
-    configureSheet()
+    // configureSheet()
   }
 
   override fun getChildCount(): Int {
@@ -132,6 +129,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
   private fun getSizeHeight(size: Any, contentHeight: Int): Int {
     val maxHeight = TrueSheetHelper.getViewSize(context).y
+
     val height = when (size) {
       is Double -> PixelUtil.toPixelFromDIP(size).toInt()
       is Int -> PixelUtil.toPixelFromDIP(size.toDouble()).toInt()
@@ -162,37 +160,40 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
   private fun configureSheet() {
     sheetRootView.getChildAt(0)?.let {it ->
-      UiThreadUtil.runOnUiThread {
-        sheetBehavior.apply {
-          val contentHeight = it.height
-          val maxViewHeight = TrueSheetHelper.getViewSize(context).y
-          val sizeCount = sizes.size
+      sheetBehavior.apply {
+        val contentHeight = it.height
+        val maxViewHeight = TrueSheetHelper.getViewSize(context).y
+        val sizeCount = sizes.size
 
-          isFitToContents = true
-          isHideable = true
-          peekHeight = -1
+        state = BottomSheetBehavior.STATE_COLLAPSED
 
-          when (sizeCount) {
-            1 -> {
-              maxHeight = getSizeHeight(sizes[0], contentHeight)
-            }
-            2 -> {
-              val height1 = getSizeHeight(sizes[0], contentHeight)
-              val height2 = getSizeHeight(sizes[1], contentHeight)
+        // Reset properties
+//        isFitToContents = true
+//        isHideable = true
+//        peekHeight = 0
+//        maxHeight = -1
+//        halfExpandedRatio = 0.5f
 
-              peekHeight = height1
-              maxHeight = height2
-            }
-            3 -> {
-              isFitToContents = false
-              val height1 = getSizeHeight(sizes[0], contentHeight)
-              val height2 = getSizeHeight(sizes[1], contentHeight)
-              val height3 = getSizeHeight(sizes[2], contentHeight)
+        when (sizeCount) {
+          1 -> {
+            maxHeight = getSizeHeight(sizes[0], contentHeight)
+          }
+          2 -> {
+            val height1 = getSizeHeight(sizes[0], contentHeight)
+            val height2 = getSizeHeight(sizes[1], contentHeight)
 
-              peekHeight = minOf(height1, maxViewHeight)
-              halfExpandedRatio = height2.toFloat() / height3.toFloat()
-              maxHeight = height3
-            }
+            peekHeight = height1
+            maxHeight = height2
+          }
+          3 -> {
+            isFitToContents = false
+            val height1 = getSizeHeight(sizes[0], contentHeight)
+            val height2 = getSizeHeight(sizes[1], contentHeight)
+            val height3 = getSizeHeight(sizes[2], contentHeight)
+
+            peekHeight = minOf(height1, maxViewHeight)
+            halfExpandedRatio = height2.toFloat() / height3.toFloat()
+            maxHeight = height3
           }
         }
       }
@@ -201,11 +202,12 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
   fun setSizes(newSizes: Array<Any>) {
     sizes = newSizes
-    configureSheet()
+     configureSheet()
   }
 
   fun present() {
-    sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    // sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    configureSheet()
     sheetDialog.show()
   }
 

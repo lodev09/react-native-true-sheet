@@ -135,7 +135,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
       >
-        <View style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}>
+        <View style={{ backgroundColor: this.props.backgroundColor ?? 'blue' }}>
           <View style={this.props.style}>{this.props.children}</View>
           <View>{!!FooterComponent && <FooterComponent />}</View>
         </View>
