@@ -17,8 +17,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
 
   private var sizes: Array<Any> = arrayOf("medium", "large")
+
+  private val sheetDialog: BottomSheetDialog
   private val sheetRootView: TrueSheetRootViewGroup
-  private var sheetDialog: BottomSheetDialog
+
+  // The first child of the container view
+  private var contentView: ViewGroup? = null
 
   private var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
 
@@ -30,6 +34,24 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     sheetRootView = TrueSheetRootViewGroup(context)
     sheetDialog = BottomSheetDialog(context)
     sheetBehavior = TrueSheetBottomSheetBehavior()
+
+    sheetBehavior.apply {
+      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(bottomSheet: View, slideOffset: Float) { }
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+          when (newState) {
+            BottomSheetBehavior.STATE_HIDDEN -> {
+              dismiss()
+            }
+            BottomSheetBehavior.STATE_COLLAPSED -> {}
+            BottomSheetBehavior.STATE_DRAGGING -> {}
+            BottomSheetBehavior.STATE_EXPANDED -> {}
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> {}
+            BottomSheetBehavior.STATE_SETTLING -> {}
+          }
+        }
+      })
+    }
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
@@ -49,7 +71,11 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     // Hide this host view
     visibility = GONE
 
+    // rootView's first child is the Container View
     sheetRootView.addView(child, index)
+
+    // Container View's first child is the Content View
+    contentView = (child as ViewGroup).getChildAt(0) as ViewGroup
 
     val layout = RelativeLayout(context)
     layout.addView(sheetRootView)
@@ -57,27 +83,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     sheetDialog.setContentView(layout)
 
     val viewGroup = layout.parent as ViewGroup
-    val params = viewGroup.layoutParams as CoordinatorLayout.LayoutParams
-
-    sheetBehavior.apply {
-      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) { }
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
-          when (newState) {
-            BottomSheetBehavior.STATE_HIDDEN -> {
-              dismiss()
-            }
-            BottomSheetBehavior.STATE_COLLAPSED -> {}
-            BottomSheetBehavior.STATE_DRAGGING -> {}
-            BottomSheetBehavior.STATE_EXPANDED -> {}
-            BottomSheetBehavior.STATE_HALF_EXPANDED -> {}
-            BottomSheetBehavior.STATE_SETTLING -> {}
-          }
-        }
-      })
-    }
-
-    params.behavior = sheetBehavior
+    (viewGroup.layoutParams as CoordinatorLayout.LayoutParams).behavior = sheetBehavior
   }
 
   override fun getChildCount(): Int {
@@ -125,7 +131,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   private fun getSizeHeight(size: Any, contentHeight: Int): Int {
-    val maxHeight = TrueSheetHelper.getViewSize(context).y
+    val maxViewHeight = TrueSheetHelper.getViewSize(context).y
 
     val height = when (size) {
       is Double -> PixelUtil.toPixelFromDIP(size).toInt()
@@ -133,14 +139,14 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
       is String -> {
         return when (size) {
           "auto" -> contentHeight
-          "large" -> maxHeight
-          "medium" -> (maxHeight * 0.50).toInt()
-          "small" -> (maxHeight * 0.25).toInt()
+          "large" -> maxViewHeight
+          "medium" -> (maxViewHeight * 0.50).toInt()
+          "small" -> (maxViewHeight * 0.25).toInt()
           else -> {
             if (size.endsWith('%')) {
               val percent = size.trim('%').toDoubleOrNull()
               return if (percent == null) 0
-              else ((percent / 100) * maxHeight).toInt()
+              else ((percent / 100) * maxViewHeight).toInt()
             } else {
               val fixedHeight = size.toDoubleOrNull()
               return if (fixedHeight == null) 0
@@ -149,62 +155,54 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
           }
         }
       }
-      else -> (maxHeight * 0.5).toInt()
+      else -> (maxViewHeight * 0.5).toInt()
     }
 
-    return minOf(height, maxHeight)
+    return minOf(height, maxViewHeight)
   }
 
   private fun configureSheet() {
-    sheetRootView.getChildAt(0)?.let {it ->
+    contentView?.let {
+      // Handle sheet content that might contain ScrollViews
+      sheetBehavior.contentView = it
+
       sheetBehavior.apply {
         val contentHeight = it.height
         val maxViewHeight = TrueSheetHelper.getViewSize(context).y
         val sizeCount = sizes.size
 
-        state = BottomSheetBehavior.STATE_COLLAPSED
-
         // Reset properties
         isFitToContents = true
         isHideable = true
-        peekHeight = 0
-        maxHeight = -1
-        halfExpandedRatio = 0.5f
+        skipCollapsed = false
+        state = BottomSheetBehavior.STATE_COLLAPSED
 
         when (sizeCount) {
           1 -> {
+            state = BottomSheetBehavior.STATE_EXPANDED
             maxHeight = getSizeHeight(sizes[0], contentHeight)
+            skipCollapsed = true
           }
           2 -> {
-            val height1 = getSizeHeight(sizes[0], contentHeight)
-            val height2 = getSizeHeight(sizes[1], contentHeight)
-
-            peekHeight = height1
-            maxHeight = height2
+            peekHeight = getSizeHeight(sizes[0], contentHeight)
+            maxHeight = getSizeHeight(sizes[1], contentHeight)
           }
           3 -> {
+            // Enables half expanded
             isFitToContents = false
-            val height1 = getSizeHeight(sizes[0], contentHeight)
-            val height2 = getSizeHeight(sizes[1], contentHeight)
-            val height3 = getSizeHeight(sizes[2], contentHeight)
 
-            peekHeight = minOf(height1, maxViewHeight)
-            halfExpandedRatio = height2.toFloat() / height3.toFloat()
-            maxHeight = height3
+            peekHeight = getSizeHeight(sizes[0], contentHeight)
+            halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxViewHeight.toFloat()
+            maxHeight = getSizeHeight(sizes[2], contentHeight)
           }
         }
       }
     }
   }
 
-  override fun setBackgroundColor(color: Int) {
-    // We want to set root view background color here
-    sheetRootView.backgroundColor = color
-  }
-
   fun setSizes(newSizes: Array<Any>) {
     sizes = newSizes
-     configureSheet()
+    configureSheet()
   }
 
   fun present() {

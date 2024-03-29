@@ -28,11 +28,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     }
   }
 
-  @ReactProp(name = "backgroundColor")
-  fun setBackgroundColor(view: TrueSheetView, backgroundColor: String?) {
-    view.setBackgroundColor(Color.parseColor(backgroundColor))
-  }
-
   @ReactProp(name = "sizes")
   fun setSizes(view: TrueSheetView, sizes: ReadableArray?) {
     if (sizes != null) {

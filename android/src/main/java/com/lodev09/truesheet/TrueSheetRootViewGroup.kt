@@ -2,7 +2,6 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.bridge.GuardedRunnable
@@ -31,6 +30,7 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
   RootView {
   private var hasAdjustedSize = false
   private var viewWidth = 0
+  private var viewHeight = 0
   private var mEventDispatcher: EventDispatcher? = null
 
   private val mJSTouchDispatcher = JSTouchDispatcher(this)
@@ -51,6 +51,7 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
     super.onSizeChanged(w, h, oldw, oldh)
 
     viewWidth = w
+    viewHeight = h
     updateFirstChildView()
   }
 
@@ -65,7 +66,7 @@ internal class TrueSheetRootViewGroup(context: Context?) : ReactViewGroup(contex
               .reactApplicationContext
               .getNativeModule(UIManagerModule::class.java) ?: return
 
-            uiManager.updateNodeSize(viewTag, viewWidth, -1)
+            uiManager.updateNodeSize(viewTag, viewWidth, viewHeight)
           }
         })
     } else {
