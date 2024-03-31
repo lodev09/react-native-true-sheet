@@ -11,6 +11,7 @@ The true native bottom sheet.
 * ✅ **_NOT_** your pure JS, (re)animated View.
 * ✅ Clean, fast and lightweight.
 * ✅ Handles your Sscrolling needs, easy.
+* ✅ Asynchronus `ref` methods.
 
 ## Installation
 
@@ -34,7 +35,7 @@ const openSheet = () => {
 return (
   <View>
     <Button onPress={openSheet} title="Open Sheet" />
-    <TrueSheet ref={sheet}>
+    <TrueSheet sizes={['auto', 'large']} ref={sheet}>
       // ...
     </TrueSheet>
   </View>
@@ -51,7 +52,3 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 ## License
 
 MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

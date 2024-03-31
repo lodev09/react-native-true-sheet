@@ -31,10 +31,6 @@ You can use various commands from the root directory to work with the project.
 
 To start the packager:
 
-```sh
-yarn example start
-```
-
 To run the example app on Android:
 
 ```sh
@@ -50,14 +46,7 @@ yarn example ios
 Make sure your code passes TypeScript and ESLint. Run the following to verify:
 
 ```sh
-yarn typecheck
-yarn lint
-```
-
-To fix formatting errors, run the following:
-
-```sh
-yarn lint --fix
+yarn tidy
 ```
 
 Remember to add tests for your change if possible. Run the unit tests by:
