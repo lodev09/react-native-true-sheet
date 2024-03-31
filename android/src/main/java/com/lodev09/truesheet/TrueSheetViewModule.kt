@@ -20,14 +20,14 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
         val manager = UIManagerHelper.getUIManagerForReactTag(reactApplicationContext, tag)
         val view = manager?.resolveView(tag)
         if (view == null) {
-          Log.d(TAG, "TrueSheetView with tag $tag not found")
+          Log.d(TAG, "Tag $tag not found")
           return@runOnUiThread
         }
 
         if (view is TrueSheetView) {
           closure(view)
         } else {
-          Log.d(TAG, "View is not of type TrueSheetView")
+          Log.d(TAG, "Tag $tag does not match")
         }
       } catch (e: Exception) {
         e.printStackTrace()

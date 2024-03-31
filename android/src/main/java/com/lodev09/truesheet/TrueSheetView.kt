@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -16,15 +15,15 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.RootViewGroup
-import com.lodev09.truesheet.core.ScrollableBehavior
+import com.lodev09.truesheet.core.SheetBehavior
 import com.lodev09.truesheet.utils.maxSize
 
 class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
   private var sizeIndex: Int = 0
   private var sizes: Array<Any> = arrayOf("medium", "large")
 
-  private lateinit var presentCallback: () -> Unit
-  private lateinit var dismissCallback: () -> Unit
+  private var presentCallback: (() -> Unit)? = null
+  private var dismissCallback: (() -> Unit)? = null
 
   private val sheetDialog: BottomSheetDialog
   private val sheetLayout: LinearLayout
@@ -34,7 +33,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   private var contentView: ViewGroup? = null
   private var footerView: ViewGroup? = null
 
-  private var sheetBehavior: ScrollableBehavior<ViewGroup>
+  private var sheetBehavior: SheetBehavior<ViewGroup>
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -46,7 +45,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     sheetDialog = BottomSheetDialog(context)
 
     // Configure Sheet events
-    sheetBehavior = ScrollableBehavior<ViewGroup>().apply {
+    sheetBehavior = SheetBehavior<ViewGroup>().apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(sheetView: View, slideOffset: Float) {
           footerView?.let {
@@ -54,6 +53,12 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
           }
         }
         override fun onStateChanged(view: View, newState: Int) {
+          val newSizeIndex = SheetBehavior.sizeIndexForState(sizes.size, newState)
+          if (newSizeIndex != -1 && newSizeIndex != sizeIndex) {
+            sizeIndex = newSizeIndex
+            // TODO: Invoke onSizeChange event
+          }
+
           when (newState) {
             BottomSheetBehavior.STATE_HIDDEN -> {
               sheetDialog.dismiss()
@@ -112,11 +117,17 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
         }
       }
 
-      presentCallback()
+      presentCallback?.invoke()
+      presentCallback = null
+
+      // TODO: Invoke onPresent event
     }
 
     sheetDialog.setOnDismissListener {
-      Log.d(TAG, "onDismiss")
+      dismissCallback?.invoke()
+      dismissCallback = null
+
+      // TODO: Invoke onDismiss event
     }
   }
 
@@ -219,17 +230,10 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
         1 -> {
           maxHeight = getSizeHeight(sizes[0], contentHeight)
           skipCollapsed = true
-
-          state = BottomSheetBehavior.STATE_EXPANDED
         }
         2 -> {
           peekHeight = getSizeHeight(sizes[0], contentHeight)
           maxHeight = getSizeHeight(sizes[1], contentHeight)
-
-          when (sizeIndex) {
-            0 -> state = BottomSheetBehavior.STATE_COLLAPSED
-            1 -> state = BottomSheetBehavior.STATE_EXPANDED
-          }
         }
         3 -> {
           // Enables half expanded
@@ -238,12 +242,6 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
           peekHeight = getSizeHeight(sizes[0], contentHeight)
           halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxViewHeight.toFloat()
           maxHeight = getSizeHeight(sizes[2], contentHeight)
-
-          when (sizeIndex) {
-            0 -> state = BottomSheetBehavior.STATE_COLLAPSED
-            1 -> state = BottomSheetBehavior.STATE_HALF_EXPANDED
-            2 -> state = BottomSheetBehavior.STATE_EXPANDED
-          }
         }
       }
     }
@@ -255,10 +253,12 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   fun present(index: Int, closure: () -> Unit) {
-    sizeIndex = index
-    configureSheet()
+    sheetBehavior.state = SheetBehavior.stateForSizeIndex(sizes.size, index)
 
-    if (!sheetDialog.isShowing) {
+    if (sheetDialog.isShowing) {
+      closure()
+    } else {
+      configureSheet()
       presentCallback = closure
       sheetDialog.show()
     }
