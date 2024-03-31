@@ -41,12 +41,14 @@ export default function App() {
   const scrollViewRef = useRef<ScrollView>(null)
   const flatListRef = useRef<FlatList>(null)
 
-  const presentSheet1 = (index = 0) => {
-    sheet1.current?.present(index)
+  const presentSheet1 = async (index = 0) => {
+    await sheet1.current?.present(index)
+    console.log(`Sheet 1 present OK`)
   }
 
-  const dismissSheet1 = () => {
-    sheet1.current?.dismiss()
+  const dismissSheet1 = async () => {
+    await sheet1.current?.dismiss()
+    console.log('Sheet 1 dismiss OK')
   }
 
   return (

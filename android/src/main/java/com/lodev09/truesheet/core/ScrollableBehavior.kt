@@ -1,4 +1,4 @@
-package com.lodev09.truesheet
+package com.lodev09.truesheet.core
 
 import android.util.Log
 import android.view.MotionEvent
@@ -8,7 +8,7 @@ import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class TrueSheetBottomSheetBehavior<T : ViewGroup>() : BottomSheetBehavior<T>() {
+class ScrollableBehavior<T : ViewGroup>() : BottomSheetBehavior<T>() {
   var contentView: ViewGroup? = null
 
   private fun isInsideSheet(scrollView: ScrollView, event: MotionEvent): Boolean {

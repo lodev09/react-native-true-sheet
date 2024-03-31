@@ -15,20 +15,26 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.lodev09.truesheet.core.RootViewGroup
+import com.lodev09.truesheet.core.ScrollableBehavior
+import com.lodev09.truesheet.utils.maxSize
 
 class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
 
   private var sizes: Array<Any> = arrayOf("medium", "large")
 
+  private lateinit var presentCallback: () -> Unit
+  private lateinit var dismissCallback: () -> Unit
+
   private val sheetDialog: BottomSheetDialog
   private val sheetLayout: LinearLayout
-  private val sheetRootView: TrueSheetRootViewGroup
+  private val sheetRootView: RootViewGroup
 
   // The first child of the container view
   private var contentView: ViewGroup? = null
   private var footerView: ViewGroup? = null
 
-  private var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
+  private var sheetBehavior: ScrollableBehavior<ViewGroup>
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -36,11 +42,11 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   init {
     reactContext.addLifecycleEventListener(this)
 
-    sheetRootView = TrueSheetRootViewGroup(context)
+    sheetRootView = RootViewGroup(context)
     sheetDialog = BottomSheetDialog(context)
 
     // Configure Sheet events
-    sheetBehavior = TrueSheetBottomSheetBehavior<ViewGroup>().apply {
+    sheetBehavior = ScrollableBehavior<ViewGroup>().apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(sheetView: View, slideOffset: Float) {
           footerView?.let {
@@ -50,7 +56,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
         override fun onStateChanged(view: View, newState: Int) {
           when (newState) {
             BottomSheetBehavior.STATE_HIDDEN -> {
-              dismiss()
+              sheetDialog.dismiss()
             }
             BottomSheetBehavior.STATE_COLLAPSED -> {}
             BottomSheetBehavior.STATE_DRAGGING -> {}
@@ -82,7 +88,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    dismiss()
+    sheetDialog.dismiss()
   }
 
   override fun addView(child: View, index: Int) {
@@ -105,6 +111,8 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
           it.y = (sheetView.height - sheetView.top - it.height).toFloat()
         }
       }
+
+      presentCallback()
     }
 
     sheetDialog.setOnDismissListener {
@@ -153,11 +161,11 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   override fun onHostDestroy() {
     // Drop the instance if the host is destroyed which will dismiss the dialog
     reactContext.removeLifecycleEventListener(this)
-    dismiss()
+    sheetDialog.dismiss()
   }
 
   private fun getSizeHeight(size: Any, contentHeight: Int): Int {
-    val maxViewHeight = TrueSheetHelper.getViewSize(context).y
+    val maxViewHeight = maxSize(context).y
 
     val height = when (size) {
       is Double -> PixelUtil.toPixelFromDIP(size).toInt()
@@ -188,7 +196,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   private fun configureSheet() {
-    val maxViewHeight = TrueSheetHelper.getViewSize(context).y
+    val maxViewHeight = maxSize(context).y
     var contentHeight = contentView?.height ?: 0
 
     footerView?.let {
@@ -236,12 +244,15 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     configureSheet()
   }
 
-  fun present() {
+  fun present(closure: () -> Unit) {
     configureSheet()
+
+    presentCallback = closure
     sheetDialog.show()
   }
 
-  fun dismiss() {
+  fun dismiss(closure: () -> Unit) {
+    dismissCallback = closure
     sheetDialog.dismiss()
   }
 
