@@ -34,7 +34,7 @@
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/ktlint.sh",
     "clean": "del-cli android/build lib && yarn workspace true-sheet-example clean",
     "prepare": "bob build",
-    "release": "release-it"
+    "release": "yarn tidy && release-it"
   },
   "keywords": [
     "react-native",
