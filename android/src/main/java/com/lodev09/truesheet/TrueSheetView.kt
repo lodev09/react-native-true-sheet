@@ -20,7 +20,7 @@ import com.lodev09.truesheet.core.ScrollableBehavior
 import com.lodev09.truesheet.utils.maxSize
 
 class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
-
+  private var sizeIndex: Int = 0
   private var sizes: Array<Any> = arrayOf("medium", "large")
 
   private lateinit var presentCallback: () -> Unit
@@ -199,40 +199,50 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     val maxViewHeight = maxSize(context).y
     var contentHeight = contentView?.height ?: 0
 
+    // Append footer view height
     footerView?.let {
       contentHeight += it.height
     }
 
+    // Handle sheet content that might contain ScrollViews
     contentView?.let {
-      // Handle sheet content that might contain ScrollViews
       sheetBehavior.contentView = it
+    }
 
-      sheetBehavior.apply {
-        val sizeCount = sizes.size
+    // Configure sheet sizes
+    sheetBehavior.apply {
+      isFitToContents = true
+      isHideable = true
+      skipCollapsed = false
 
-        // Reset properties
-        isFitToContents = true
-        isHideable = true
-        skipCollapsed = false
-        state = BottomSheetBehavior.STATE_COLLAPSED
+      when (sizes.size) {
+        1 -> {
+          maxHeight = getSizeHeight(sizes[0], contentHeight)
+          skipCollapsed = true
 
-        when (sizeCount) {
-          1 -> {
-            state = BottomSheetBehavior.STATE_EXPANDED
-            maxHeight = getSizeHeight(sizes[0], contentHeight)
-            skipCollapsed = true
+          state = BottomSheetBehavior.STATE_EXPANDED
+        }
+        2 -> {
+          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          maxHeight = getSizeHeight(sizes[1], contentHeight)
+
+          when (sizeIndex) {
+            0 -> state = BottomSheetBehavior.STATE_COLLAPSED
+            1 -> state = BottomSheetBehavior.STATE_EXPANDED
           }
-          2 -> {
-            peekHeight = getSizeHeight(sizes[0], contentHeight)
-            maxHeight = getSizeHeight(sizes[1], contentHeight)
-          }
-          3 -> {
-            // Enables half expanded
-            isFitToContents = false
+        }
+        3 -> {
+          // Enables half expanded
+          isFitToContents = false
 
-            peekHeight = getSizeHeight(sizes[0], contentHeight)
-            halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxViewHeight.toFloat()
-            maxHeight = getSizeHeight(sizes[2], contentHeight)
+          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxViewHeight.toFloat()
+          maxHeight = getSizeHeight(sizes[2], contentHeight)
+
+          when (sizeIndex) {
+            0 -> state = BottomSheetBehavior.STATE_COLLAPSED
+            1 -> state = BottomSheetBehavior.STATE_HALF_EXPANDED
+            2 -> state = BottomSheetBehavior.STATE_EXPANDED
           }
         }
       }
@@ -244,11 +254,14 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     configureSheet()
   }
 
-  fun present(closure: () -> Unit) {
+  fun present(index: Int, closure: () -> Unit) {
+    sizeIndex = index
     configureSheet()
 
-    presentCallback = closure
-    sheetDialog.show()
+    if (!sheetDialog.isShowing) {
+      presentCallback = closure
+      sheetDialog.show()
+    }
   }
 
   fun dismiss(closure: () -> Unit) {

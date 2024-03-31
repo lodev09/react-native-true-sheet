@@ -38,7 +38,7 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
   @ReactMethod
   fun present(tag: Int, index: Int, promise: Promise) {
     withTrueSheetView(tag) {
-      it.present {
+      it.present(index) {
         withPromise(promise) {
           return@withPromise null
         }
