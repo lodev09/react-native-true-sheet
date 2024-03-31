@@ -82,7 +82,7 @@ export default function App() {
         onPresent={() => console.log(`Sheet 2 presented!`)}
         FooterComponent={Footer}
       >
-        <ScrollView contentContainerStyle={$content} indicatorStyle="black">
+        <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
           {times(25, (i) => (
             <DemoContent key={i} text={String(i + 1)} />
           ))}

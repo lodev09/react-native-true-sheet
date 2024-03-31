@@ -180,6 +180,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       viewController.dismiss(animated: true) {
         promise.resolve(nil)
       }
+    } else {
+      promise.resolve(nil)
     }
   }
 
@@ -233,7 +235,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       }
     }
 
-    if !isPresented {
+    if isPresented {
+      promise.resolve(nil)
+    } else {
       // Keep track of the active index
       activeIndex = index
 

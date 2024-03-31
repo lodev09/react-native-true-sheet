@@ -26,6 +26,7 @@ class DismissEvent(surfaceId: Int, viewId: Int) : Event<PresentEvent>(surfaceId,
   }
 }
 
+// onSizeChange
 class SizeChangeEvent(surfaceId: Int, viewId: Int, private val sizeInfo: SizeInfo) : Event<SizeChangeEvent>(surfaceId, viewId) {
   override fun getEventName() = EVENT_NAME
 
