@@ -6,11 +6,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
 class TrueSheetPackage : ReactPackage {
-  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-    return listOf(TrueSheetViewModule(reactContext))
-  }
+  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> = listOf(TrueSheetViewModule(reactContext))
 
-  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return listOf(TrueSheetViewManager())
-  }
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> = listOf(TrueSheetViewManager())
 }

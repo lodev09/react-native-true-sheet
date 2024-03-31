@@ -1,18 +1,20 @@
 package com.lodev09.truesheet.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
 import android.view.WindowManager
 import com.facebook.infer.annotation.Assertions
 
 /**
-   * To get the size of the screen, we use information from the WindowManager and default Display.
-   * We don't use DisplayMetricsHolder, or Display#getSize() because they return values that include
-   * the status bar. We only want the values of what will actually be shown on screen. We use
-   * Display#getSize() to determine if the screen is in portrait or landscape. We don't use
-   * getRotation because the 'natural' rotation will be portrait on phones and landscape on tablets.
-   * This should only be called on the native modules/shadow nodes thread.
-   */
+ * To get the size of the screen, we use information from the WindowManager and default Display.
+ * We don't use DisplayMetricsHolder, or Display#getSize() because they return values that include
+ * the status bar. We only want the values of what will actually be shown on screen. We use
+ * Display#getSize() to determine if the screen is in portrait or landscape. We don't use
+ * getRotation because the 'natural' rotation will be portrait on phones and landscape on tablets.
+ * This should only be called on the native modules/shadow nodes thread.
+ */
+@SuppressLint("DiscouragedApi", "InternalInsetResource")
 fun maxSize(context: Context): Point {
   val minPoint = Point()
   val maxPoint = Point()

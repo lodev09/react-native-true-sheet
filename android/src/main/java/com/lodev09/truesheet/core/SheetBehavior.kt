@@ -11,7 +11,7 @@ import com.lodev09.truesheet.utils.toDIP
 
 data class SizeInfo(val index: Int, val value: Float)
 
-class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
+class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
   var maxSize: Point = Point()
 
   var contentView: ViewGroup? = null
@@ -23,7 +23,7 @@ class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
       val expanded = state == STATE_EXPANDED
 
       if (isDownEvent && expanded) {
-        for(i in 0 until it.childCount) {
+        for (i in 0 until it.childCount) {
           val contentChild = it.getChildAt(i)
           val scrolled = (contentChild is ScrollView && contentChild.scrollY > 0)
 
@@ -58,30 +58,44 @@ class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
   private fun getSizeHeight(size: Any, contentHeight: Int): Int {
     val maxHeight = maxSize.y
 
-    val height = when (size) {
-      is Double -> PixelUtil.toPixelFromDIP(size).toInt()
-      is Int -> PixelUtil.toPixelFromDIP(size.toDouble()).toInt()
-      is String -> {
-        return when (size) {
-          "auto" -> contentHeight
-          "large" -> maxHeight
-          "medium" -> (maxHeight * 0.50).toInt()
-          "small" -> (maxHeight * 0.25).toInt()
-          else -> {
-            if (size.endsWith('%')) {
-              val percent = size.trim('%').toDoubleOrNull()
-              return if (percent == null) 0
-              else ((percent / 100) * maxHeight).toInt()
-            } else {
-              val fixedHeight = size.toDoubleOrNull()
-              return if (fixedHeight == null) 0
-              else PixelUtil.toPixelFromDIP(fixedHeight).toInt()
+    val height =
+      when (size) {
+        is Double -> PixelUtil.toPixelFromDIP(size).toInt()
+
+        is Int -> PixelUtil.toPixelFromDIP(size.toDouble()).toInt()
+
+        is String -> {
+          return when (size) {
+            "auto" -> contentHeight
+
+            "large" -> maxHeight
+
+            "medium" -> (maxHeight * 0.50).toInt()
+
+            "small" -> (maxHeight * 0.25).toInt()
+
+            else -> {
+              if (size.endsWith('%')) {
+                val percent = size.trim('%').toDoubleOrNull()
+                return if (percent == null) {
+                  0
+                } else {
+                  ((percent / 100) * maxHeight).toInt()
+                }
+              } else {
+                val fixedHeight = size.toDoubleOrNull()
+                return if (fixedHeight == null) {
+                  0
+                } else {
+                  PixelUtil.toPixelFromDIP(fixedHeight).toInt()
+                }
+              }
             }
           }
         }
+
+        else -> (maxHeight * 0.5).toInt()
       }
-      else -> (maxHeight * 0.5).toInt()
-    }
 
     return minOf(height, maxHeight)
   }
@@ -103,10 +117,12 @@ class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
           maxHeight = getSizeHeight(sizes[0], contentHeight)
           skipCollapsed = true
         }
+
         2 -> {
           peekHeight = getSizeHeight(sizes[0], contentHeight)
           maxHeight = getSizeHeight(sizes[1], contentHeight)
         }
+
         3 -> {
           // Enables half expanded
           isFitToContents = false
@@ -119,14 +135,15 @@ class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
     }
   }
 
-  fun getSizeInfoForState(sizeCount: Int, state: Int): SizeInfo? {
-    return when (sizeCount) {
+  fun getSizeInfoForState(sizeCount: Int, state: Int): SizeInfo? =
+    when (sizeCount) {
       1 -> {
         when (state) {
           STATE_EXPANDED -> SizeInfo(0, PixelUtil.toDIPFromPixel(maxHeight.toFloat()))
           else -> null
         }
       }
+
       2 -> {
         when (state) {
           STATE_COLLAPSED -> SizeInfo(0, toDIP(peekHeight))
@@ -134,40 +151,48 @@ class SheetBehavior<T: ViewGroup> : BottomSheetBehavior<T>() {
           else -> null
         }
       }
+
       3 -> {
         when (state) {
           STATE_COLLAPSED -> SizeInfo(0, toDIP(peekHeight))
+
           STATE_HALF_EXPANDED -> {
             val height = halfExpandedRatio * maxSize.y
             SizeInfo(1, toDIP(height.toInt()))
           }
+
           STATE_EXPANDED -> SizeInfo(2, toDIP(maxHeight))
+
           else -> null
         }
       }
+
       else -> null
     }
-  }
 
   fun setStateForSizeIndex(sizeCount: Int, index: Int) {
-    state = when (sizeCount) {
-      1 -> STATE_EXPANDED
-      2 -> {
-        when (index) {
-          0 -> STATE_COLLAPSED
-          1 -> STATE_EXPANDED
-          else -> STATE_HIDDEN
+    state =
+      when (sizeCount) {
+        1 -> STATE_EXPANDED
+
+        2 -> {
+          when (index) {
+            0 -> STATE_COLLAPSED
+            1 -> STATE_EXPANDED
+            else -> STATE_HIDDEN
+          }
         }
-      }
-      3 -> {
-        when(index) {
-          0 -> STATE_COLLAPSED
-          1 -> STATE_HALF_EXPANDED
-          2 -> STATE_EXPANDED
-          else -> STATE_HIDDEN
+
+        3 -> {
+          when (index) {
+            0 -> STATE_COLLAPSED
+            1 -> STATE_HALF_EXPANDED
+            2 -> STATE_EXPANDED
+            else -> STATE_HIDDEN
+          }
         }
+
+        else -> STATE_HIDDEN
       }
-      else -> STATE_HIDDEN
-    }
   }
 }

@@ -31,7 +31,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
-    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/swiftformat.sh",
+    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/ktlint.sh",
     "clean": "del-cli android/build lib && yarn workspace true-sheet-example clean",
     "prepare": "bob build",
     "release": "release-it"

@@ -14,9 +14,7 @@ import com.lodev09.truesheet.core.SizeChangeEvent
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
-    return TrueSheetView(reactContext)
-  }
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView = TrueSheetView(reactContext)
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)

@@ -21,7 +21,9 @@ import com.lodev09.truesheet.core.SheetBehavior
 import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.utils.maxSize
 
-class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListener {
+class TrueSheetView(context: Context) :
+  ViewGroup(context),
+  LifecycleEventListener {
   private var eventDispatcher: EventDispatcher? = null
 
   private val reactContext: ThemedReactContext
@@ -62,33 +64,31 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     // Configure Sheet events
     sheetBehavior.apply {
       maxSize = maxSize(context)
-      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(sheetView: View, slideOffset: Float) {
-          footerView?.let {
-            it.y = (sheetView.height - sheetView.top - it.height).toFloat()
-          }
-        }
-        override fun onStateChanged(view: View, newState: Int) {
-          val sizeInfo = getSizeInfoForState(sizes.size, newState)
-          if (sizeInfo != null && sizeInfo.index != sizeIndex) {
-            sizeIndex = sizeInfo.index
 
-            // dispatch onSizeChange event
-            eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
-          }
-
-          when (newState) {
-            BottomSheetBehavior.STATE_HIDDEN -> {
-              sheetDialog.dismiss()
+      addBottomSheetCallback(
+        object : BottomSheetBehavior.BottomSheetCallback() {
+          override fun onSlide(sheetView: View, slideOffset: Float) {
+            footerView?.let {
+              it.y = (sheetView.height - sheetView.top - it.height).toFloat()
             }
-            BottomSheetBehavior.STATE_COLLAPSED -> {}
-            BottomSheetBehavior.STATE_DRAGGING -> {}
-            BottomSheetBehavior.STATE_EXPANDED -> {}
-            BottomSheetBehavior.STATE_HALF_EXPANDED -> {}
-            BottomSheetBehavior.STATE_SETTLING -> {}
+          }
+
+          override fun onStateChanged(view: View, newState: Int) {
+            val sizeInfo = getSizeInfoForState(sizes.size, newState)
+            if (sizeInfo != null && sizeInfo.index != sizeIndex) {
+              sizeIndex = sizeInfo.index
+
+              // dispatch onSizeChange event
+              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+            }
+
+            when (newState) {
+              BottomSheetBehavior.STATE_HIDDEN -> sheetDialog.dismiss()
+              else -> {}
+            }
           }
         }
-      })
+      )
     }
 
     // Configure the sheet layout
@@ -131,7 +131,13 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     sheetRootView.dispatchProvideStructure(structure)
   }
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    l: Int,
+    t: Int,
+    r: Int,
+    b: Int
+  ) {
     // Do nothing as we are laid out by UIManager
   }
 
@@ -163,9 +169,7 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     return sheetRootView.childCount
   }
 
-  override fun getChildAt(index: Int): View {
-    return sheetRootView.getChildAt(index)
-  }
+  override fun getChildAt(index: Int): View = sheetRootView.getChildAt(index)
 
   override fun removeView(child: View) {
     sheetRootView.removeView(child)
@@ -227,4 +231,3 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     const val TAG = "TrueSheetView"
   }
 }
-

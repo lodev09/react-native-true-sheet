@@ -26,7 +26,8 @@ import com.facebook.react.views.view.ReactViewGroup
  * styleHeight on the LayoutShadowNode to be the window size. This is done through the
  * UIManagerModule, and will then cause the children to layout as if they can fill the window.
  */
-internal class RootViewGroup(context: Context?) : ReactViewGroup(context),
+internal class RootViewGroup(context: Context?) :
+  ReactViewGroup(context),
   RootView {
   private var hasAdjustedSize = false
   private var viewWidth = 0
@@ -59,13 +60,15 @@ internal class RootViewGroup(context: Context?) : ReactViewGroup(context),
       reactContext.runOnNativeModulesQueueThread(
         object : GuardedRunnable(reactContext) {
           override fun runGuarded() {
-            val uiManager: UIManagerModule = reactContext
-              .reactApplicationContext
-              .getNativeModule(UIManagerModule::class.java) ?: return
+            val uiManager: UIManagerModule =
+              reactContext
+                .reactApplicationContext
+                .getNativeModule(UIManagerModule::class.java) ?: return
 
             uiManager.updateNodeSize(viewTag, viewWidth, viewHeight)
           }
-        })
+        }
+      )
     } else {
       hasAdjustedSize = true
     }
