@@ -1,13 +1,15 @@
 package com.lodev09.truesheet
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
-import android.widget.RelativeLayout
+import android.widget.LinearLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.LifecycleEventListener
+import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -19,10 +21,12 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   private var sizes: Array<Any> = arrayOf("medium", "large")
 
   private val sheetDialog: BottomSheetDialog
+  private val sheetLayout: LinearLayout
   private val sheetRootView: TrueSheetRootViewGroup
 
   // The first child of the container view
   private var contentView: ViewGroup? = null
+  private var footerView: ViewGroup? = null
 
   private var sheetBehavior: TrueSheetBottomSheetBehavior<ViewGroup>
 
@@ -31,14 +35,19 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
 
   init {
     reactContext.addLifecycleEventListener(this)
+
     sheetRootView = TrueSheetRootViewGroup(context)
     sheetDialog = BottomSheetDialog(context)
-    sheetBehavior = TrueSheetBottomSheetBehavior()
 
-    sheetBehavior.apply {
+    // Configure Sheet events
+    sheetBehavior = TrueSheetBottomSheetBehavior<ViewGroup>().apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) { }
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
+        override fun onSlide(sheetView: View, slideOffset: Float) {
+          footerView?.let {
+            it.y = (sheetView.height - sheetView.top - it.height).toFloat()
+          }
+        }
+        override fun onStateChanged(view: View, newState: Int) {
           when (newState) {
             BottomSheetBehavior.STATE_HIDDEN -> {
               dismiss()
@@ -51,6 +60,15 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
           }
         }
       })
+    }
+
+    // Configure the sheet layout
+    sheetLayout = LinearLayout(context).apply {
+      addView(sheetRootView)
+      sheetDialog.setContentView(this)
+
+      val layoutParent = parent as ViewGroup
+      (layoutParent.layoutParams as CoordinatorLayout.LayoutParams).behavior = sheetBehavior
     }
   }
 
@@ -71,19 +89,27 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
     // Hide this host view
     visibility = GONE
 
-    // rootView's first child is the Container View
-    sheetRootView.addView(child, index)
+    (child as ViewGroup).let {
+      // Container View's first child is the Content View
+      contentView = it.getChildAt(0) as ViewGroup
+      footerView = it.getChildAt(1) as ViewGroup
 
-    // Container View's first child is the Content View
-    contentView = (child as ViewGroup).getChildAt(0) as ViewGroup
+      // rootView's first child is the Container View
+      sheetRootView.addView(it, index)
+    }
 
-    val layout = RelativeLayout(context)
-    layout.addView(sheetRootView)
+    sheetDialog.setOnShowListener {
+      UiThreadUtil.runOnUiThread {
+        footerView?.let {
+          val sheetView = sheetLayout.parent as ViewGroup
+          it.y = (sheetView.height - sheetView.top - it.height).toFloat()
+        }
+      }
+    }
 
-    sheetDialog.setContentView(layout)
-
-    val viewGroup = layout.parent as ViewGroup
-    (viewGroup.layoutParams as CoordinatorLayout.LayoutParams).behavior = sheetBehavior
+    sheetDialog.setOnDismissListener {
+      Log.d(TAG, "onDismiss")
+    }
   }
 
   override fun getChildCount(): Int {
@@ -162,13 +188,18 @@ class TrueSheetView(context: Context) : ViewGroup(context), LifecycleEventListen
   }
 
   private fun configureSheet() {
+    val maxViewHeight = TrueSheetHelper.getViewSize(context).y
+    var contentHeight = contentView?.height ?: 0
+
+    footerView?.let {
+      contentHeight += it.height
+    }
+
     contentView?.let {
       // Handle sheet content that might contain ScrollViews
       sheetBehavior.contentView = it
 
       sheetBehavior.apply {
-        val contentHeight = it.height
-        val maxViewHeight = TrueSheetHelper.getViewSize(context).y
         val sizeCount = sizes.size
 
         // Reset properties

@@ -66,7 +66,8 @@ export interface TrueSheetProps extends ViewProps {
   backgroundColor?: ColorValue
 
   /**
-   * The main scrollable ref that Sheet should handle.
+   * The main scrollable ref that Sheet should handle on IOS.
+   * @platform ios
    */
   scrollRef?: RefObject<Component<unknown>>
 

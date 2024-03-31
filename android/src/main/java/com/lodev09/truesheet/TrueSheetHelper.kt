@@ -5,7 +5,6 @@ import android.graphics.Point
 import android.view.WindowManager
 import com.facebook.infer.annotation.Assertions
 
-/** Helper class for Modals.  */ /*package*/
 internal object TrueSheetHelper {
   private val MIN_POINT = Point()
   private val MAX_POINT = Point()
