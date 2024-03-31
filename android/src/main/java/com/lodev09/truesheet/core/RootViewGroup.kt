@@ -31,20 +31,17 @@ internal class RootViewGroup(context: Context?) : ReactViewGroup(context),
   private var hasAdjustedSize = false
   private var viewWidth = 0
   private var viewHeight = 0
-  private var mEventDispatcher: EventDispatcher? = null
 
   private val mJSTouchDispatcher = JSTouchDispatcher(this)
 
   private var mJSPointerDispatcher: JSPointerDispatcher? = null
 
+  var eventDispatcher: EventDispatcher? = null
+
   init {
     if (ReactFeatureFlags.dispatchPointerEvents) {
       mJSPointerDispatcher = JSPointerDispatcher(this)
     }
-  }
-
-  fun setEventDispatcher(eventDispatcher: EventDispatcher) {
-    mEventDispatcher = eventDispatcher
   }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -89,15 +86,15 @@ internal class RootViewGroup(context: Context?) : ReactViewGroup(context),
     get() = context as ThemedReactContext
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-    mJSTouchDispatcher.handleTouchEvent(event, mEventDispatcher)
-    mJSPointerDispatcher?.handleMotionEvent(event, mEventDispatcher, true)
+    mJSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     return super.onInterceptTouchEvent(event)
   }
 
   @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
-    mJSTouchDispatcher.handleTouchEvent(event, mEventDispatcher)
-    mJSPointerDispatcher?.handleMotionEvent(event, mEventDispatcher, false)
+    mJSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     super.onTouchEvent(event)
 
     // In case when there is no children interested in handling touch event, we return true from
@@ -106,22 +103,22 @@ internal class RootViewGroup(context: Context?) : ReactViewGroup(context),
   }
 
   override fun onInterceptHoverEvent(event: MotionEvent): Boolean {
-    mJSPointerDispatcher?.handleMotionEvent(event, mEventDispatcher, true)
+    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     return super.onHoverEvent(event)
   }
 
   override fun onHoverEvent(event: MotionEvent): Boolean {
-    mJSPointerDispatcher?.handleMotionEvent(event, mEventDispatcher, false)
+    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     return super.onHoverEvent(event)
   }
 
   override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
-    mJSTouchDispatcher.onChildStartedNativeGesture(ev, mEventDispatcher)
-    mJSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, mEventDispatcher)
+    mJSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+    mJSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
-    mJSTouchDispatcher.onChildEndedNativeGesture(ev, mEventDispatcher)
+    mJSTouchDispatcher.onChildEndedNativeGesture(ev, eventDispatcher)
     mJSPointerDispatcher?.onChildEndedNativeGesture()
   }
 

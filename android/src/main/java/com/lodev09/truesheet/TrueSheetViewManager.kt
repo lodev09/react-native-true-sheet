@@ -1,13 +1,15 @@
 package com.lodev09.truesheet
 
-import android.graphics.Color
 import android.util.Log
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
+import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.lodev09.truesheet.core.DismissEvent
+import com.lodev09.truesheet.core.PresentEvent
+import com.lodev09.truesheet.core.SizeChangeEvent
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG
@@ -21,12 +23,12 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.onHostDestroy()
   }
 
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
-    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
-    if (dispatcher != null) {
-      view.setEventDispatcher(dispatcher)
-    }
-  }
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? =
+    MapBuilder.builder<String, Any>()
+      .put(PresentEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPresent"))
+      .put(DismissEvent.EVENT_NAME, MapBuilder.of("registrationName", "onDismiss"))
+      .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
+      .build()
 
   @ReactProp(name = "sizes")
   fun setSizes(view: TrueSheetView, sizes: ReadableArray?) {

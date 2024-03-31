@@ -178,7 +178,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func dismiss(promise: Promise) {
     if isPresented {
       viewController.dismiss(animated: true) {
-        promise.resolve(true)
+        promise.resolve(nil)
       }
     }
   }
@@ -241,7 +241,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         self.isPresented = true
         self.onPresent?(nil)
 
-        promise.resolve(true)
+        promise.resolve(nil)
       }
     }
   }
