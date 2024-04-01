@@ -5,14 +5,13 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import com.facebook.react.uimanager.PixelUtil
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.utils.toDIP
 
 data class SizeInfo(val index: Int, val value: Float)
 
 class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
-  var maxSize: Point = Point()
+  var maxSheetSize: Point = Point()
+  var maxSheetHeight: Int? = null
 
   var contentView: ViewGroup? = null
   var footerView: ViewGroup? = null
@@ -55,49 +54,47 @@ class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
       event.action == MotionEvent.ACTION_CANCEL
   }
 
-  private fun getSizeHeight(size: Any, contentHeight: Int): Int {
-    val maxHeight = maxSize.y
-
+  fun getSizeHeight(size: Any, contentHeight: Int): Int {
     val height =
       when (size) {
-        is Double -> PixelUtil.toPixelFromDIP(size).toInt()
+        is Double -> Utils.toPixel(size)
 
-        is Int -> PixelUtil.toPixelFromDIP(size.toDouble()).toInt()
+        is Int -> Utils.toPixel(size.toDouble())
 
         is String -> {
-          return when (size) {
+          when (size) {
             "auto" -> contentHeight
 
-            "large" -> maxHeight
+            "large" -> maxSheetSize.y
 
-            "medium" -> (maxHeight * 0.50).toInt()
+            "medium" -> (maxSheetSize.y * 0.50).toInt()
 
-            "small" -> (maxHeight * 0.25).toInt()
+            "small" -> (maxSheetSize.y * 0.25).toInt()
 
             else -> {
               if (size.endsWith('%')) {
                 val percent = size.trim('%').toDoubleOrNull()
-                return if (percent == null) {
+                if (percent == null) {
                   0
                 } else {
-                  ((percent / 100) * maxHeight).toInt()
+                  ((percent / 100) * maxSheetSize.y).toInt()
                 }
               } else {
                 val fixedHeight = size.toDoubleOrNull()
-                return if (fixedHeight == null) {
+                if (fixedHeight == null) {
                   0
                 } else {
-                  PixelUtil.toPixelFromDIP(fixedHeight).toInt()
+                  Utils.toPixel(fixedHeight)
                 }
               }
             }
           }
         }
 
-        else -> (maxHeight * 0.5).toInt()
+        else -> (maxSheetSize.y * 0.5).toInt()
       }
 
-    return minOf(height, maxHeight)
+    return minOf(height, maxSheetHeight ?: maxSheetSize.y)
   }
 
   fun configure(sizes: Array<Any>) {
@@ -128,7 +125,7 @@ class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
           isFitToContents = false
 
           peekHeight = getSizeHeight(sizes[0], contentHeight)
-          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxSize.y.toFloat()
+          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxSheetSize.y.toFloat()
           maxHeight = getSizeHeight(sizes[2], contentHeight)
         }
       }
@@ -139,29 +136,29 @@ class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
     when (sizeCount) {
       1 -> {
         when (state) {
-          STATE_EXPANDED -> SizeInfo(0, PixelUtil.toDIPFromPixel(maxHeight.toFloat()))
+          STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(maxHeight))
           else -> null
         }
       }
 
       2 -> {
         when (state) {
-          STATE_COLLAPSED -> SizeInfo(0, toDIP(peekHeight))
-          STATE_EXPANDED -> SizeInfo(1, toDIP(maxHeight))
+          STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(peekHeight))
+          STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(maxHeight))
           else -> null
         }
       }
 
       3 -> {
         when (state) {
-          STATE_COLLAPSED -> SizeInfo(0, toDIP(peekHeight))
+          STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(peekHeight))
 
           STATE_HALF_EXPANDED -> {
-            val height = halfExpandedRatio * maxSize.y
-            SizeInfo(1, toDIP(height.toInt()))
+            val height = halfExpandedRatio * maxSheetSize.y
+            SizeInfo(1, Utils.toDIP(height.toInt()))
           }
 
-          STATE_EXPANDED -> SizeInfo(2, toDIP(maxHeight))
+          STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(maxHeight))
 
           else -> null
         }

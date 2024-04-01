@@ -19,7 +19,7 @@ import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
 import com.lodev09.truesheet.core.SheetBehavior
 import com.lodev09.truesheet.core.SizeChangeEvent
-import com.lodev09.truesheet.utils.maxSize
+import com.lodev09.truesheet.core.Utils
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -63,7 +63,9 @@ class TrueSheetView(context: Context) :
 
     // Configure Sheet events
     sheetBehavior.apply {
-      maxSize = maxSize(context)
+
+      // Set our default max height
+      maxSheetSize = Utils.maxSize(context)
 
       addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
@@ -103,6 +105,8 @@ class TrueSheetView(context: Context) :
     // Configure Sheet Dialog
     sheetDialog.apply {
       setOnShowListener {
+
+        // Initialize footer y
         UiThreadUtil.runOnUiThread {
           footerView?.let {
             val sheetView = sheetLayout.parent as ViewGroup
@@ -203,6 +207,14 @@ class TrueSheetView(context: Context) :
     // Drop the instance if the host is destroyed which will dismiss the dialog
     reactContext.removeLifecycleEventListener(this)
     sheetDialog.dismiss()
+  }
+
+  fun setMaxSize(size: Any) {
+    // Note: Size "auto" will always resolve to `0` during first initialization
+    val contentHeight = contentView?.height ?: 0
+
+    sheetBehavior.maxSheetHeight = sheetBehavior.getSizeHeight(size, contentHeight)
+    sheetBehavior.configure(sizes)
   }
 
   fun setSizes(newSizes: Array<Any>) {

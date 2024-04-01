@@ -85,6 +85,14 @@ export interface TrueSheetProps extends ViewProps {
   sizes?: SheetSize[]
 
   /**
+   * Overrides `large` or `100%` height.
+   *
+   * @platform android
+   * @platform ios 15+
+   */
+  maxSize?: SheetSize
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   FooterComponent?: ComponentType<unknown>

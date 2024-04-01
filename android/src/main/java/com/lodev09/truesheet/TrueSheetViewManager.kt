@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.util.Log
+import com.facebook.react.bridge.Dynamic
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -28,22 +29,31 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
       .build()
 
-  @ReactProp(name = "sizes")
-  fun setSizes(view: TrueSheetView, sizes: ReadableArray?) {
-    if (sizes != null) {
-      val result = ArrayList<Any>()
-      for (i in 0 until minOf(sizes.size(), 3)) {
-        when (sizes.getType(i)) {
-          ReadableType.Number -> result.add(sizes.getDouble(i))
-          ReadableType.String -> result.add(sizes.getString(i))
-          else -> Log.d(TAG, "Invalid type")
-        }
-      }
-
-      view.setSizes(result.toArray())
-    } else {
-      view.setSizes(arrayOf("medium", "large"))
+  @ReactProp(name = "maxSize")
+  fun setMaxSize(view: TrueSheetView, maxSize: Dynamic) {
+    val value: Any? = when (maxSize.type) {
+      ReadableType.Number -> maxSize.asDouble()
+      ReadableType.String -> maxSize.asString()
+      else -> Log.d(TAG, "Invalid type")
     }
+
+    if (value != null) {
+      view.setMaxSize(value)
+    }
+  }
+
+  @ReactProp(name = "sizes")
+  fun setSizes(view: TrueSheetView, sizes: ReadableArray) {
+    val result = ArrayList<Any>()
+    for (i in 0 until minOf(sizes.size(), 3)) {
+      when (sizes.getType(i)) {
+        ReadableType.Number -> result.add(sizes.getDouble(i))
+        ReadableType.String -> result.add(sizes.getString(i))
+        else -> Log.d(TAG, "Invalid type")
+      }
+    }
+
+    view.setSizes(result.toArray())
   }
 
   companion object {

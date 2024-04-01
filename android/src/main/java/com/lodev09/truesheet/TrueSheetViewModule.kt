@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.UIManagerHelper
-import com.lodev09.truesheet.utils.withPromise
+import com.lodev09.truesheet.core.Utils
 
 @ReactModule(name = TrueSheetViewModule.TAG)
 class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -39,7 +39,7 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
   fun present(tag: Int, index: Int, promise: Promise) {
     withTrueSheetView(tag) {
       it.present(index) {
-        withPromise(promise) {
+        Utils.withPromise(promise) {
           return@withPromise null
         }
       }
@@ -50,7 +50,7 @@ class TrueSheetViewModule(reactContext: ReactApplicationContext) : ReactContextB
   fun dismiss(tag: Int, promise: Promise) {
     withTrueSheetView(tag) {
       it.dismiss {
-        withPromise(promise) {
+        Utils.withPromise(promise) {
           return@withPromise null
         }
       }
