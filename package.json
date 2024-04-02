@@ -128,7 +128,8 @@
   "eslintConfig": {
     "root": true,
     "ignorePatterns": [
-      "lib"
+      "lib",
+      "src/__mocks__"
     ],
     "extends": [
       "plugin:@typescript-eslint/recommended",
@@ -169,6 +170,7 @@
     "semi": false
   },
   "react-native-builder-bob": {
+    "exclude": "**/{__tests__,__fixtures__}/**",
     "source": "src",
     "output": "lib",
     "targets": [
