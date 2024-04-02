@@ -10,7 +10,7 @@
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
-  var sizes: [Any] = ["medium", "large"]
+  var maxHeight: CGFloat?
 
   // Events
   @objc var onDismiss: RCTDirectEventBlock?
@@ -151,8 +151,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - Prop setters
 
   @objc
+  func setMaxHeight(_ height: NSNumber) {
+    viewController.maxHeight = CGFloat(height.floatValue)
+    configureSheetIfPresented()
+  }
+
+  @objc
   func setSizes(_ sizes: [Any]) {
-    self.sizes = Array(sizes.prefix(3))
+    viewController.sizes = Array(sizes.prefix(3))
     configureSheetIfPresented()
   }
 
@@ -171,7 +177,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func configureSheetIfPresented() {
     // Resize sheet
     if #available(iOS 15.0, *), isPresented {
-      viewController.configureSheet(for: sizes, at: activeIndex ?? 0, with: contentHeight, nil)
+      viewController.configureSheet(at: activeIndex ?? 0, with: contentHeight, nil)
     }
   }
 
@@ -218,13 +224,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    guard sizes.indices.contains(index) else {
+    guard viewController.sizes.indices.contains(index) else {
       promise.reject(message: "Size at \(index) is not configured.")
       return
     }
 
     if #available(iOS 15.0, *) {
-      viewController.configureSheet(for: sizes, at: index, with: contentHeight) {
+      viewController.configureSheet(at: index, with: contentHeight) {
         if self.isPresented {
           // Notify when size is changed programatically
           let info = self.viewController.detentValues.first(where: { $0.value.index == index })

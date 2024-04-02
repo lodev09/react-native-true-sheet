@@ -27,11 +27,9 @@ RCT_EXPORT_VIEW_PROPERTY(onPresent, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock)
 
-// Internal Properties
-RCT_EXPORT_VIEW_PROPERTY(scrollableHandle, NSNumber*)
-RCT_EXPORT_VIEW_PROPERTY(footerHandle, NSNumber*)
-
 // Properties
+RCT_EXPORT_VIEW_PROPERTY(scrollableHandle, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(maxHeight, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(sizes, NSArray)
 
 @end

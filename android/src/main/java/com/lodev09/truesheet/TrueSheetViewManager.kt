@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.util.Log
-import com.facebook.react.bridge.Dynamic
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -30,16 +29,8 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       .build()
 
   @ReactProp(name = "maxSize")
-  fun setMaxSize(view: TrueSheetView, maxSize: Dynamic) {
-    val value: Any? = when (maxSize.type) {
-      ReadableType.Number -> maxSize.asDouble()
-      ReadableType.String -> maxSize.asString()
-      else -> Log.d(TAG, "Invalid type")
-    }
-
-    if (value != null) {
-      view.setMaxSize(value)
-    }
+  fun setMaxSize(view: TrueSheetView, maxSize: String) {
+    view.setMaxSize(maxSize)
   }
 
   @ReactProp(name = "sizes")

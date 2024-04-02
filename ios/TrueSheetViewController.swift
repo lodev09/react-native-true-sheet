@@ -29,6 +29,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   weak var delegate: TrueSheetViewControllerDelegate?
 
+  var sizes: [Any] = ["medium", "large"]
+  var maxHeight: CGFloat?
+
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
 
@@ -71,7 +74,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   /// Prepares the view controller for sheet presentation
   /// Do nothing on IOS 14 and below... sad
   @available(iOS 15.0, *)
-  func configureSheet(for sizes: [Any], at index: Int = 0, with height: CGFloat, _ completion: (() -> Void)?) {
+  func configureSheet(at index: Int = 0, with contentHeight: CGFloat, _ completion: (() -> Void)?) {
     guard let sheet else { return }
 
     detentValues = [:]
@@ -79,7 +82,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     var detents: [UISheetPresentationController.Detent] = []
 
     for (index, size) in sizes.enumerated() {
-      let detent = detentFor(size, with: height) { id, value in
+      let detent = detentFor(size, with: contentHeight, with: maxHeight ?? view.frame.height) { id, value in
         self.detentValues[id] = SizeInfo(index: index, value: value)
       }
 

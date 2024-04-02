@@ -93,7 +93,7 @@ export default function App() {
         ref={sheet3}
         scrollRef={flatListRef}
         sizes={['large']}
-        maxSize="80%"
+        maxHeight={600}
         onDismiss={() => console.log('Sheet 3 dismissed!')}
         onPresent={() => console.log(`Sheet 3 presented!`)}
       >
