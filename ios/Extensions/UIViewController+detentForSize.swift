@@ -13,14 +13,23 @@ extension UISheetPresentationController.Detent.Identifier {
 
 @available(iOS 15.0, *)
 extension UIViewController {
+  private func minValue(_ x: CGFloat?, _ maxHeight: CGFloat?) -> CGFloat {
+    let x = x ?? 0
+    guard let maxHeight else {
+      return x
+    }
+
+    return min(x, maxHeight)
+  }
+
   private func detentFor(identifier: UISheetPresentationController.Detent.Identifier,
-                         with maxHeight: CGFloat,
+                         with maxHeight: CGFloat?,
                          _ resolution: @escaping (CGFloat) -> Void) -> UISheetPresentationController.Detent {
     switch identifier {
     case .large:
       if #available(iOS 16.0, *) {
         return .custom(identifier: .large) { context in
-          let value = min(UISheetPresentationController.Detent.large().resolvedValue(in: context) ?? 0, maxHeight)
+          let value = self.minValue(UISheetPresentationController.Detent.large().resolvedValue(in: context), maxHeight)
           resolution(value)
           return value
         }
@@ -31,7 +40,7 @@ extension UIViewController {
     case .medium:
       if #available(iOS 16.0, *) {
         return .custom(identifier: .medium) { context in
-          let value = min(UISheetPresentationController.Detent.medium().resolvedValue(in: context) ?? 0, maxHeight)
+          let value = self.minValue(UISheetPresentationController.Detent.medium().resolvedValue(in: context), maxHeight)
           resolution(value)
           return value
         }
@@ -39,7 +48,7 @@ extension UIViewController {
     case .small:
       if #available(iOS 16.0, *) {
         return .custom { context in
-          let value = min(0.25 * context.maximumDetentValue, maxHeight)
+          let value = self.minValue(0.25 * context.maximumDetentValue, maxHeight)
           resolution(value)
           return value
         }
@@ -55,14 +64,14 @@ extension UIViewController {
   /// Get the custom detent based on the given size and view frame size
   func detentFor(_ anySize: Any,
                  with height: CGFloat?,
-                 with maxHeight: CGFloat,
+                 with maxHeight: CGFloat?,
                  _ resolution: @escaping (String, CGFloat) -> Void) -> UISheetPresentationController.Detent {
     let id = "custom-\(anySize)"
 
     if let floatSize = anySize as? CGFloat {
       if #available(iOS 16.0, *) {
         return .custom(identifier: identifier(from: id)) { context in
-          let value = min(floatSize, context.maximumDetentValue, maxHeight)
+          let value = min(floatSize, self.minValue(context.maximumDetentValue, maxHeight))
           resolution(id, value)
           return value
         }
@@ -91,7 +100,7 @@ extension UIViewController {
         if #available(iOS 16.0, *) {
           if stringSize == "auto" {
             return .custom(identifier: identifier(from: id)) { context in
-              let value = min(height ?? context.maximumDetentValue / 2, context.maximumDetentValue, maxHeight)
+              let value = min(height ?? context.maximumDetentValue / 2, self.minValue(context.maximumDetentValue, maxHeight))
               resolution(id, value)
               return value
             }
@@ -101,7 +110,7 @@ extension UIViewController {
             let floatSize = CGFloat((stringSize as NSString).floatValue)
             if floatSize > 0.0 {
               return .custom(identifier: identifier(from: id)) { context in
-                let value = min((floatSize / 100) * context.maximumDetentValue, context.maximumDetentValue, maxHeight)
+                let value = min((floatSize / 100) * context.maximumDetentValue, self.minValue(context.maximumDetentValue, maxHeight))
                 resolution(id, value)
                 return value
               }

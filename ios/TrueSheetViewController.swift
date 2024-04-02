@@ -82,7 +82,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     var detents: [UISheetPresentationController.Detent] = []
 
     for (index, size) in sizes.enumerated() {
-      let detent = detentFor(size, with: contentHeight, with: maxHeight ?? view.frame.height) { id, value in
+      let detent = detentFor(size, with: contentHeight, with: maxHeight) { id, value in
         self.detentValues[id] = SizeInfo(index: index, value: value)
       }
 
