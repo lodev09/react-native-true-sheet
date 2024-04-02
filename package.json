@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "0.4.3",
+  "version": "0.4.5",
   "description": "The true native bottom sheet. 💩",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -128,7 +128,7 @@
     "root": true,
     "ignorePatterns": [
       "lib",
-      "src/__mocks__"
+      "__mocks__"
     ],
     "extends": [
       "plugin:@typescript-eslint/recommended",
