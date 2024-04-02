@@ -10,6 +10,7 @@ import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.DismissEvent
 import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.SizeChangeEvent
+import com.lodev09.truesheet.core.Utils
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG
@@ -28,9 +29,9 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
       .build()
 
-  @ReactProp(name = "maxSize")
-  fun setMaxSize(view: TrueSheetView, maxSize: String) {
-    view.setMaxSize(maxSize)
+  @ReactProp(name = "maxHeight")
+  fun setMaxHeight(view: TrueSheetView, height: Double) {
+    view.setMaxHeight(Utils.toPixel(height))
   }
 
   @ReactProp(name = "sizes")

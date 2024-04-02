@@ -209,11 +209,8 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismiss()
   }
 
-  fun setMaxSize(size: Any) {
-    // Note: Size "auto" will always resolve to `0` during first initialization
-    val contentHeight = contentView?.height ?: 0
-
-    sheetBehavior.maxSheetHeight = sheetBehavior.getSizeHeight(size, contentHeight)
+  fun setMaxHeight(height: Int) {
+    sheetBehavior.maxSheetHeight = height
     sheetBehavior.configure(sizes)
   }
 
