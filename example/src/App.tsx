@@ -18,6 +18,7 @@ import { times } from './utils'
 const CONTENT_PADDING = 16
 const FOOTER_HEIGHT = 56
 
+const DARK = '#282e37'
 const DARK_GRAY = '#333b48'
 const LIGHT_GRAY = '#ebedf1'
 const BLUE = '#3784d7'
@@ -62,6 +63,7 @@ export default function App() {
         ref={sheet1}
         style={$content}
         blurStyle="dark"
+        backgroundColor={DARK}
         cornerRadius={12}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
