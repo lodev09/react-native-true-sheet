@@ -134,7 +134,17 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
       >
-        <View collapsable={false} style={{ backgroundColor: this.props.backgroundColor }}>
+        <View
+          collapsable={false}
+          style={[
+            $sheetWrapper,
+            {
+              borderTopLeftRadius: this.props.cornerRadius,
+              borderTopRightRadius: this.props.cornerRadius,
+              backgroundColor: this.props.backgroundColor,
+            },
+          ]}
+        >
           <View collapsable={false} style={this.props.style}>
             {this.props.children}
           </View>
@@ -149,4 +159,8 @@ const $nativeSheet: ViewStyle = {
   position: 'absolute',
   width: 0,
   zIndex: -9999,
+}
+
+const $sheetWrapper: ViewStyle = {
+  overflow: 'hidden',
 }

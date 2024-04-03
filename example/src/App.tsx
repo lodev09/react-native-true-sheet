@@ -62,6 +62,8 @@ export default function App() {
         ref={sheet1}
         style={$content}
         blurStyle="dark"
+        backgroundColor={DARK_GRAY}
+        cornerRadius={12}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}

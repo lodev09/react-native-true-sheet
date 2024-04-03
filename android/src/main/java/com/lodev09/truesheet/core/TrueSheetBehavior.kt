@@ -9,14 +9,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 data class SizeInfo(val index: Int, val value: Float)
 
-class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
+class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
   var maxSheetSize: Point = Point()
   var maxSheetHeight: Int? = null
 
   var contentView: ViewGroup? = null
   var footerView: ViewGroup? = null
 
-  override fun onInterceptTouchEvent(parent: CoordinatorLayout, child: T, event: MotionEvent): Boolean {
+  override fun onInterceptTouchEvent(parent: CoordinatorLayout, child: ViewGroup, event: MotionEvent): Boolean {
     contentView?.let {
       val isDownEvent = (event.actionMasked == MotionEvent.ACTION_DOWN)
       val expanded = state == STATE_EXPANDED
@@ -54,7 +54,7 @@ class SheetBehavior<T : ViewGroup> : BottomSheetBehavior<T>() {
       event.action == MotionEvent.ACTION_CANCEL
   }
 
-  fun getSizeHeight(size: Any, contentHeight: Int): Int {
+  private fun getSizeHeight(size: Any, contentHeight: Int): Int {
     val height =
       when (size) {
         is Double -> Utils.toPixel(size)

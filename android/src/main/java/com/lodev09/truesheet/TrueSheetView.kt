@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.content.Context
+import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -17,8 +18,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.DismissEvent
 import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
-import com.lodev09.truesheet.core.SheetBehavior
 import com.lodev09.truesheet.core.SizeChangeEvent
+import com.lodev09.truesheet.core.TrueSheetBehavior
 import com.lodev09.truesheet.core.Utils
 
 class TrueSheetView(context: Context) :
@@ -39,7 +40,10 @@ class TrueSheetView(context: Context) :
   private var dismissPromise: (() -> Unit)? = null
 
   private val sheetDialog: BottomSheetDialog
-  private val sheetLayout: LinearLayout
+  private val sheetBehavior: TrueSheetBehavior
+  private val sheetView: ViewGroup
+
+  // React root view placeholder
   private val sheetRootView: RootViewGroup
 
   // 1st child of the container view
@@ -47,8 +51,6 @@ class TrueSheetView(context: Context) :
 
   // 2nd child of the container view
   private var footerView: ViewGroup? = null
-
-  private var sheetBehavior: SheetBehavior<ViewGroup>
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -58,8 +60,7 @@ class TrueSheetView(context: Context) :
     sheetRootView.eventDispatcher = eventDispatcher
 
     sheetDialog = BottomSheetDialog(context)
-    sheetBehavior = SheetBehavior()
-    sheetLayout = LinearLayout(context)
+    sheetBehavior = TrueSheetBehavior()
 
     // Configure Sheet events
     sheetBehavior.apply {
@@ -93,13 +94,17 @@ class TrueSheetView(context: Context) :
       )
     }
 
-    // Configure the sheet layout
-    sheetLayout.apply {
+    // Configure the sheet layout view
+    LinearLayout(context).apply {
       addView(sheetRootView)
       sheetDialog.setContentView(this)
 
-      val layoutParent = parent as ViewGroup
-      (layoutParent.layoutParams as CoordinatorLayout.LayoutParams).behavior = sheetBehavior
+      sheetView = parent as ViewGroup
+      sheetView.setBackgroundColor(Color.TRANSPARENT)
+
+      // Assign our main BottomSheetBehavior
+      val sheetViewParams = sheetView.layoutParams as CoordinatorLayout.LayoutParams
+      sheetViewParams.behavior = sheetBehavior
     }
 
     // Configure Sheet Dialog
@@ -109,7 +114,6 @@ class TrueSheetView(context: Context) :
         // Initialize footer y
         UiThreadUtil.runOnUiThread {
           footerView?.let {
-            val sheetView = sheetLayout.parent as ViewGroup
             it.y = (sheetView.height - sheetView.top - it.height).toFloat()
           }
         }
