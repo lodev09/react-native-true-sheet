@@ -74,6 +74,14 @@ export interface TrueSheetProps extends ViewProps {
   cornerRadius?: number
 
   /**
+   * Shows native grabber (or handle) on IOS
+   *
+   * @platform ios
+   * @default true
+   */
+  grabber?: boolean
+
+  /**
    * The blur effect style.
    * This only works if `backgroundColor` is not set.
    *

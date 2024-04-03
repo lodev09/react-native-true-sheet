@@ -95,6 +95,7 @@ export default function App() {
         sizes={['large']}
         backgroundColor="white"
         cornerRadius={24}
+        grabber={false}
         maxHeight={600}
         onDismiss={() => console.log('Sheet 3 dismissed!')}
         onPresent={() => console.log(`Sheet 3 presented!`)}

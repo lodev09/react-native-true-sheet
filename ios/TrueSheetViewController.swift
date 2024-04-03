@@ -40,6 +40,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
+  var grabber = true {
+    didSet {
+      if #available(iOS 15.0, *) {
+        sheet?.prefersGrabberVisible = grabber
+      }
+    }
+  }
+
   var blurView: UIVisualEffectView
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
@@ -118,8 +126,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
 
     sheet.detents = detents
-    sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
+    sheet.prefersGrabberVisible = grabber
     sheet.preferredCornerRadius = cornerRadius
 
     sheet.delegate = self

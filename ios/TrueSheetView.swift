@@ -168,6 +168,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
+  func setGrabber(_ visible: Bool) {
+    viewController.grabber = visible
+  }
+
+  @objc
   func setCornerRadius(_ radius: NSNumber?) {
     guard let radius else {
       viewController.cornerRadius = nil

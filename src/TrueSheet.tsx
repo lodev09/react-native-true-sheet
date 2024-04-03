@@ -128,6 +128,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         sizes={this.props.sizes ?? ['medium', 'large']}
         blurStyle={this.props.blurStyle ?? 'light'}
         cornerRadius={this.props.cornerRadius}
+        grabber={this.props.grabber ?? true}
         maxHeight={this.props.maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
