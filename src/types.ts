@@ -66,6 +66,41 @@ export interface TrueSheetProps extends ViewProps {
   backgroundColor?: ColorValue
 
   /**
+   * The sheet corner radius.
+   */
+  cornerRadius?: number
+
+  /**
+   * The blur effect style.
+   * This only works if `backgroundColor` is not set.
+   *
+   * @platform ios
+   * @default light
+   */
+  blurStyle?:
+    | 'light'
+    | 'dark'
+    | 'default'
+    | 'extraLight'
+    | 'regular'
+    | 'prominent'
+    | 'systemUltraThinMaterial'
+    | 'systemThinMaterial'
+    | 'systemMaterial'
+    | 'systemThickMaterial'
+    | 'systemChromeMaterial'
+    | 'systemUltraThinMaterialLight'
+    | 'systemThinMaterialLight'
+    | 'systemMaterialLight'
+    | 'systemThickMaterialLight'
+    | 'systemChromeMaterialLight'
+    | 'systemUltraThinMaterialDark'
+    | 'systemThinMaterialDark'
+    | 'systemMaterialDark'
+    | 'systemThickMaterialDark'
+    | 'systemChromeMaterialDark'
+
+  /**
    * The main scrollable ref that Sheet should handle on IOS.
    * @platform ios
    */

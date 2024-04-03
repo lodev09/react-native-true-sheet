@@ -16,9 +16,8 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { times } from './utils'
 
 const CONTENT_PADDING = 16
-const FOOTER_HEIGHT = 80
+const FOOTER_HEIGHT = 56
 
-const DARK = '#282e37'
 const DARK_GRAY = '#333b48'
 const LIGHT_GRAY = '#ebedf1'
 const BLUE = '#3784d7'
@@ -61,14 +60,13 @@ export default function App() {
         sizes={['auto', '80%', 'large']}
         ref={sheet1}
         style={$content}
-        backgroundColor={DARK}
+        blurStyle="dark"
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
-        FooterComponent={Footer}
       >
-        <DemoContent color={DARK_GRAY} />
-        <DemoContent color={DARK_GRAY} />
+        <DemoContent color={LIGHT_GRAY} />
+        <DemoContent color={LIGHT_GRAY} />
         <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 80%" onPress={() => presentSheet1(1)} />
         <Button text="Present Auto" onPress={() => presentSheet1(0)} />
@@ -78,6 +76,7 @@ export default function App() {
       <TrueSheet
         ref={sheet2}
         scrollRef={scrollViewRef}
+        backgroundColor="white"
         onDismiss={() => console.log('Sheet 2 dismissed!')}
         onPresent={() => console.log(`Sheet 2 presented!`)}
         FooterComponent={Footer}
@@ -93,6 +92,7 @@ export default function App() {
         ref={sheet3}
         scrollRef={flatListRef}
         sizes={['large']}
+        backgroundColor="white"
         maxHeight={600}
         onDismiss={() => console.log('Sheet 3 dismissed!')}
         onPresent={() => console.log(`Sheet 3 presented!`)}
@@ -144,6 +144,7 @@ const $container: ViewStyle = {
 
 const $content: ViewStyle = {
   padding: CONTENT_PADDING,
+  paddingBottom: FOOTER_HEIGHT,
 }
 
 const $footer: ViewStyle = {

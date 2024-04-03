@@ -61,7 +61,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     super.init(frame: .zero)
 
-    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
     viewController.delegate = self
   }
 
@@ -78,7 +77,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.view.insertSubview(subview, at: 0)
+    // viewController.view.insertSubview(subview, at: 0)
+    viewController.view.addSubview(subview)
 
     containerView = subview
     touchHandler.attach(to: subview)
@@ -149,6 +149,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   // MARK: - Prop setters
+
+  @objc
+  func setBlurStyle(_ style: NSString) {
+    viewController.blurView.effect = UIBlurEffect(with: style as String)
+  }
 
   @objc
   func setMaxHeight(_ height: NSNumber) {

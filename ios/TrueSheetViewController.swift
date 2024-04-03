@@ -32,6 +32,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var sizes: [Any] = ["medium", "large"]
   var maxHeight: CGFloat?
 
+  var blurView: UIVisualEffectView
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
 
@@ -41,6 +42,25 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   // MARK: - Setup
+
+  init() {
+    blurView = UIVisualEffectView()
+
+    super.init(nibName: nil, bundle: nil)
+
+    view.addSubview(blurView)
+    view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+
+    let blurEffect = UIBlurEffect(style: .light)
+    blurView.effect = blurEffect
+    blurView.frame = view.bounds
+    blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+  }
+
+  @available(*, unavailable)
+  required init?(coder _: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
 
   @available(iOS 15.0, *)
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
@@ -92,7 +112,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     sheet.detents = detents
     sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
-    // sheet.prefersScrollingExpandsWhenScrolledToEdge = false
 
     sheet.delegate = self
 

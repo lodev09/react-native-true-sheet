@@ -26,6 +26,7 @@ interface TrueSheetNativeViewProps {
   style: StyleProp<ViewStyle>
   sizes: TrueSheetProps['sizes']
   maxHeight?: TrueSheetProps['maxHeight']
+  blurStyle: TrueSheetProps['blurStyle']
   children: ReactNode
   onDismiss: () => void
   onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
@@ -132,15 +133,13 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
+        blurStyle={this.props.blurStyle ?? 'light'}
         maxHeight={this.props.maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
       >
-        <View
-          collapsable={false}
-          style={{ backgroundColor: this.props.backgroundColor ?? 'white' }}
-        >
+        <View collapsable={false} style={{ backgroundColor: this.props.backgroundColor }}>
           <View collapsable={false} style={this.props.style}>
             {this.props.children}
           </View>
@@ -153,5 +152,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const $nativeSheet: ViewStyle = {
   position: 'absolute',
+  width: 0,
   zIndex: -9999,
 }
