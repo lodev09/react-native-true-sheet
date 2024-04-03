@@ -28,6 +28,7 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 interface DemoContentProps extends ViewProps {
+  radius?: number
   color?: ColorValue
   text?: string
 }
@@ -93,6 +94,7 @@ export default function App() {
         scrollRef={flatListRef}
         sizes={['large']}
         backgroundColor="white"
+        cornerRadius={24}
         maxHeight={600}
         onDismiss={() => console.log('Sheet 3 dismissed!')}
         onPresent={() => console.log(`Sheet 3 presented!`)}
@@ -102,7 +104,7 @@ export default function App() {
           data={times(50, (i) => i)}
           contentContainerStyle={$content}
           indicatorStyle="black"
-          renderItem={({ item }) => <DemoContent text={String(item + 1)} />}
+          renderItem={({ item }) => <DemoContent radius={24} text={String(item + 1)} />}
         />
       </TrueSheet>
     </View>
@@ -127,9 +129,12 @@ const Button = (props: ButtonProps) => {
 }
 
 const DemoContent = (props: DemoContentProps) => {
-  const { text, style: $style, color = LIGHT_GRAY, ...rest } = props
+  const { text, radius = 4, style: $style, color = LIGHT_GRAY, ...rest } = props
   return (
-    <View style={[$demoContent, { backgroundColor: color }, $style]} {...rest}>
+    <View
+      style={[$demoContent, { backgroundColor: color, borderRadius: radius }, $style]}
+      {...rest}
+    >
       {text && <Text style={$demoText}>{text}</Text>}
     </View>
   )
@@ -156,7 +161,6 @@ const $footer: ViewStyle = {
 
 const $demoContent: ViewStyle = {
   height: 100,
-  borderRadius: 4,
   marginBottom: 16,
   alignItems: 'center',
   justifyContent: 'center',

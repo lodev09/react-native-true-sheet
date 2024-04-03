@@ -151,11 +151,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - Prop setters
 
   @objc
-  func setBlurStyle(_ style: NSString) {
-    viewController.blurView.effect = UIBlurEffect(with: style as String)
-  }
-
-  @objc
   func setMaxHeight(_ height: NSNumber) {
     viewController.maxHeight = CGFloat(height.floatValue)
     configureSheetIfPresented()
@@ -165,6 +160,21 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func setSizes(_ sizes: [Any]) {
     viewController.sizes = Array(sizes.prefix(3))
     configureSheetIfPresented()
+  }
+
+  @objc
+  func setBlurStyle(_ style: NSString) {
+    viewController.blurView.effect = UIBlurEffect(with: style as String)
+  }
+
+  @objc
+  func setCornerRadius(_ radius: NSNumber?) {
+    guard let radius else {
+      viewController.cornerRadius = nil
+      return
+    }
+
+    viewController.cornerRadius = CGFloat(radius.floatValue)
   }
 
   @objc

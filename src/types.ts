@@ -67,6 +67,9 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The sheet corner radius.
+   *
+   * @platform android
+   * @platform ios 15+
    */
   cornerRadius?: number
 

@@ -32,6 +32,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var sizes: [Any] = ["medium", "large"]
   var maxHeight: CGFloat?
 
+  var cornerRadius: CGFloat? {
+    didSet {
+      if #available(iOS 15.0, *) {
+        sheet?.preferredCornerRadius = cornerRadius
+      }
+    }
+  }
+
   var blurView: UIVisualEffectView
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
@@ -112,6 +120,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     sheet.detents = detents
     sheet.prefersGrabberVisible = true
     sheet.prefersEdgeAttachedInCompactHeight = true
+    sheet.preferredCornerRadius = cornerRadius
 
     sheet.delegate = self
 

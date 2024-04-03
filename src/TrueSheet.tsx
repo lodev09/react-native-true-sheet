@@ -7,7 +7,6 @@ import {
   type NativeMethods,
   type ViewStyle,
   type NativeSyntheticEvent,
-  type StyleProp,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeChangeEvent } from './types'
@@ -21,14 +20,8 @@ const LINKING_ERROR =
 
 const ComponentName = 'TrueSheetView'
 
-interface TrueSheetNativeViewProps {
+interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
   scrollableHandle: number | null
-  style: StyleProp<ViewStyle>
-  sizes: TrueSheetProps['sizes']
-  maxHeight?: TrueSheetProps['maxHeight']
-  blurStyle: TrueSheetProps['blurStyle']
-  children: ReactNode
-  onDismiss: () => void
   onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
   onSizeChange: (event: NativeSyntheticEvent<SizeChangeEvent>) => void
 }
@@ -134,6 +127,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         scrollableHandle={this.state.scrollableHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
         blurStyle={this.props.blurStyle ?? 'light'}
+        cornerRadius={this.props.cornerRadius}
         maxHeight={this.props.maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
