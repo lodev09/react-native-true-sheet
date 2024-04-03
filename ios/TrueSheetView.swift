@@ -163,7 +163,12 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
-  func setBlurStyle(_ style: NSString) {
+  func setBlurStyle(_ style: NSString?) {
+    guard let style else {
+      viewController.blurView.effect = nil
+      return
+    }
+
     viewController.blurView.effect = UIBlurEffect(with: style as String)
   }
 

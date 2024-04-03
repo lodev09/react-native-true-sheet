@@ -82,11 +82,10 @@ export interface TrueSheetProps extends ViewProps {
   grabber?: boolean
 
   /**
-   * The blur effect style.
-   * This only works if `backgroundColor` is not set.
+   * The blur effect style on iOS.
+   * Overrides `backgroundColor` if set.
    *
    * @platform ios
-   * @default light
    */
   blurStyle?:
     | 'light'

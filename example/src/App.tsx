@@ -62,7 +62,6 @@ export default function App() {
         ref={sheet1}
         style={$content}
         blurStyle="dark"
-        backgroundColor={DARK_GRAY}
         cornerRadius={12}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={() => console.log(`Sheet 1 presented!`)}
@@ -79,7 +78,6 @@ export default function App() {
       <TrueSheet
         ref={sheet2}
         scrollRef={scrollViewRef}
-        backgroundColor="white"
         onDismiss={() => console.log('Sheet 2 dismissed!')}
         onPresent={() => console.log(`Sheet 2 presented!`)}
         FooterComponent={Footer}
@@ -95,7 +93,6 @@ export default function App() {
         ref={sheet3}
         scrollRef={flatListRef}
         sizes={['large']}
-        backgroundColor="white"
         cornerRadius={24}
         grabber={false}
         maxHeight={600}

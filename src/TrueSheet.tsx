@@ -120,13 +120,19 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   render(): ReactNode {
     const FooterComponent = this.props.FooterComponent
 
+    // Remove backgroundColor if `blurStyle` is set on iOS
+    const backgroundColor = Platform.select({
+      ios: this.props.blurStyle ? undefined : this.props.backgroundColor ?? 'white',
+      android: this.props.backgroundColor ?? 'white',
+    })
+
     return (
       <TrueSheetNativeView
         ref={this.ref}
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
         sizes={this.props.sizes ?? ['medium', 'large']}
-        blurStyle={this.props.blurStyle ?? 'light'}
+        blurStyle={this.props.blurStyle}
         cornerRadius={this.props.cornerRadius}
         grabber={this.props.grabber ?? true}
         maxHeight={this.props.maxHeight}
@@ -141,7 +147,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
             {
               borderTopLeftRadius: this.props.cornerRadius,
               borderTopRightRadius: this.props.cornerRadius,
-              backgroundColor: this.props.backgroundColor,
+              backgroundColor,
             },
           ]}
         >
