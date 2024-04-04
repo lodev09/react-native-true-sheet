@@ -38,7 +38,10 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "bottom-sheet",
+    "native-sheet",
+    "sheet"
   ],
   "repository": {
     "type": "git",
