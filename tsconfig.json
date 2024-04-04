@@ -27,5 +27,5 @@
     "allowJs": false,
     "allowSyntheticDefaultImports": true
   },
-  "exclude": ["lib", "__mocks__"]
+  "exclude": ["lib", "src/__mocks__"]
 }

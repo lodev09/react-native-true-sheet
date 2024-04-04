@@ -131,7 +131,7 @@
     "root": true,
     "ignorePatterns": [
       "lib",
-      "__mocks__"
+      "src/__mocks__"
     ],
     "extends": [
       "plugin:@typescript-eslint/recommended",

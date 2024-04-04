@@ -75,7 +75,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
     blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     blurView.frame = view.bounds
-    
+
     view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
     view.insertSubview(blurView, at: 0)
   }
