@@ -57,8 +57,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     self.bridge = bridge
 
     viewController = TrueSheetViewController()
-    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
@@ -166,11 +164,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setBlurStyle(_ style: NSString?) {
     guard let style else {
-      viewController.setBlurStyle(nil)
+      viewController.blurView.effect = nil
       return
     }
 
-    viewController.setBlurStyle(style as String)
+    viewController.blurView.effect = UIBlurEffect(with: style as String)
   }
 
   @objc

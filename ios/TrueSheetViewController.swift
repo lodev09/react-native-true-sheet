@@ -75,6 +75,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
     blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     blurView.frame = view.bounds
+    
+    view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
     view.insertSubview(blurView, at: 0)
   }
 
@@ -110,15 +112,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       delegate?.viewControllerDidChangeWidth(view.bounds.width)
       lastViewWidth = view.frame.width
     }
-  }
-
-  func setBlurStyle(_ style: String?) {
-    guard let style else {
-      blurView.effect = nil
-      return
-    }
-
-    blurView.effect = UIBlurEffect(with: style)
   }
 
   /// Prepares the view controller for sheet presentation
