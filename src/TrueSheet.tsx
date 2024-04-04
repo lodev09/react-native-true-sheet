@@ -66,7 +66,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     return nodeHandle
   }
 
-  private updateState() {
+  private updateState(): void {
     const scrollableHandle = this.props.scrollRef?.current
       ? findNodeHandle(this.props.scrollRef.current)
       : null
@@ -76,7 +76,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onSizeChange(event: NativeSyntheticEvent<SizeInfo>) {
+  private onSizeChange(event: NativeSyntheticEvent<SizeInfo>): void {
     this.props.onSizeChange?.(event.nativeEvent)
   }
 
@@ -103,17 +103,25 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   /**
-   * Present the modal sheet at size index.
+   * Present the modal sheet. Optionally accepts a size `index`.
    * See `sizes` prop
    */
-  public async present(index: number = 0) {
+  public async present(index: number = 0): Promise<void> {
     await TrueSheetModule.present(this.handle, index)
+  }
+
+  /**
+   * Resizes the Sheet programmatically by `index`.
+   * This is an alias of the `present(index)` method.
+   */
+  public async resize(index: number): Promise<void> {
+    await this.present(index)
   }
 
   /**
    * Dismisses the Sheet
    */
-  public async dismiss() {
+  public async dismiss(): Promise<void> {
     await TrueSheetModule.dismiss(this.handle)
   }
 

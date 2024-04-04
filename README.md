@@ -69,9 +69,8 @@ Extended from `ViewProps`
 ```ts
 const sheet = useRef<TrueSheet>(null)
 
-const open = () => {
-  // Presents 80%
-  sheet.current?.present(1)
+const resize = () => {
+  sheet.current?.resize(1)
 }
 
 const dismiss = () => {
@@ -80,7 +79,7 @@ const dismiss = () => {
 
 return (
   <View>
-    <Button onPress={open} title="Open" />
+    <Button onPress={resize} title="Resize to 80%" />
     <Button onPress={dismiss} title="Dimiss" />
     <TrueSheet sizes={['auto', '80%']} ref={sheet}>
       // ...
@@ -91,7 +90,8 @@ return (
 
 | Name | Parameters | Description |
 | - | - | - |
-| present | `index: number = 0` | Present the modal sheet at size index. See `sizes` prop. |
+| present | `index: number = 0` | Present the modal sheet. Optionally accepts a size `index`. See `sizes` prop. |
+| resize | `index: number` | Resizes the Sheet programmatically by `index`. This is an alias of the `present(index)` method. |
 | dismiss | - | Dismisses the Sheet. |
 
 ## Events
@@ -110,9 +110,9 @@ return (
 
 | Name | Parameters | Description |
 | - | - | - |
-| onPresent | - | Called when the Sheet has been presented. Comes with the size index and value. |
+| onPresent | [`SizeInfo`](#sizeinfo) | Called when the Sheet has been presented. Comes with the size index and value. |
 | onDismiss | - | Called when the Sheet has been dismissed. |
-| onSizeChange | [`SizeInfo`](#sizeinfo) | Called when the size of the sheet has changed. Either by dragging or programatically. |
+| onSizeChange | [`SizeInfo`](#sizeinfo) | Called when the size of the sheet has changed. Either by dragging or presenting programatically. Comes with the size index and value. |
 
 ## Types
 
