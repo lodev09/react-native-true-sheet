@@ -10,7 +10,7 @@ The true native bottom sheet 💩
 
 ## Features
 * ✅ Implemented on the native realm.
-* ✅ **_NOT_** your pure JS, (re)animated View.
+* ✅ **_NOT_** your pure JS, (re)animated View. But might integrate in the future 👀
 * ✅ Clean, fast and lightweight.
 * ✅ Handles your Sscrolling needs, easy.
 * ✅ Asynchronus `ref` methods.
@@ -54,7 +54,7 @@ Extended from `ViewProps`
 
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
-| sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the Sheet to support. Maximum of _**3 sizes**_ only; "collapsed", "half-expanded" and "expanded". Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
+| sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the Sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_** and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
 | backgroundColor | `ColorValue` | - | Main sheet background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | The sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
@@ -125,40 +125,46 @@ return (
 
 | Value | Description | 🍎 | 🤖 |
 | - | - | - | - |
-| `medium` | Translates to 50% | ✅ | ✅ |
 | `large` | Translates to 100% | ✅ | ✅ |
-| `auto` | Auto resize based on content height. | iOS 16+ | ✅ |
-| `number` | Fixed height | iOS 16+ | ✅ |
-| `${number}%` | Fixed height in % | iOS 16+ | ✅ |
-| `small` | Translates to 25% | iOS 16+ | ✅ |
+| `medium` | Translates to 50% | **_15+_** | ✅ |
+| `auto` | Auto resize based on content height. | **_16+_** | ✅ |
+| `number` | Fixed height | **_16+_** | ✅ |
+| `${number}%` | Fixed height in % | **_16+_** | ✅ |
+| `small` | Translates to 25% | **_16+_** | ✅ |
 
 ### `BlurStyle`
 
 Blur style mapped to native values in IOS.
 
+```ts
+<TrueSheet blurStyle="dark">
+  // ...
+</TrueSheet>
+```
+
 | Value |
 | - |
-| `light` |
-| `dark` |
-| `default` |
-| `extraLight` |
-| `regular` |
-| `prominent` |
-| `systemUltraThinMaterial` |
-| `systemThinMaterial` |
-| `systemMaterial` |
-| `systemThickMaterial` |
-| `systemChromeMaterial` |
-| `systemUltraThinMaterialLight` |
-| `systemThinMaterialLight` |
-| `systemMaterialLight` |
-| `systemThickMaterialLight` |
-| `systemChromeMaterialLight` |
-| `systemUltraThinMaterialDark` |
-| `systemThinMaterialDark` |
-| `systemMaterialDark` |
-| `systemThickMaterialDark` |
-| `systemChromeMaterialDark` |
+| `"light"` |
+| `"dark"` |
+| `"default"` |
+| `"extraLight"` |
+| `"regular"` |
+| `"prominent"` |
+| `"systemUltraThinMaterial"` |
+| `"systemThinMaterial"` |
+| `"systemMaterial"` |
+| `"systemThickMaterial"` |
+| `"systemChromeMaterial"` |
+| `"systemUltraThinMaterialLight"` |
+| `"systemThinMaterialLight"` |
+| `"systemMaterialLight"` |
+| `"systemThickMaterialLight"` |
+| `"systemChromeMaterialLight"` |
+| `"systemUltraThinMaterialDark"` |
+| `"systemThinMaterialDark"` |
+| `"systemMaterialDark"` |
+| `"systemThickMaterialDark"` |
+| `"systemChromeMaterialDark"` |
 
 ### `SizeInfo`
 
