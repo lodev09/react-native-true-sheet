@@ -141,10 +141,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     onDismiss?(nil)
   }
 
-  func viewControllerSheetDidChangeSize(_ value: CGFloat, at index: Int) {
-    if index != activeIndex {
-      activeIndex = index
-      onSizeChange?(["index": index, "value": value])
+  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo) {
+    if sizeInfo.index != activeIndex {
+      activeIndex = sizeInfo.index
+      onSizeChange?(sizeInfoData(from: sizeInfo))
     }
   }
 
@@ -198,6 +198,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   // MARK: - Methods
+
+  private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
+    guard let sizeInfo else {
+      return ["index": 0, "value": 0.0]
+    }
+
+    return ["index": sizeInfo.index, "value": sizeInfo.value]
+  }
 
   func configureSheetIfPresented() {
     // Resize sheet
@@ -256,12 +264,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if #available(iOS 15.0, *) {
       viewController.configureSheet(at: index, with: contentHeight) {
-        if self.isPresented {
-          // Notify when size is changed programatically
-          let info = self.viewController.detentValues.first(where: { $0.value.index == index })
-          if let sizeValue = info?.value.value {
-            self.viewControllerSheetDidChangeSize(sizeValue, at: index)
-          }
+        if self.isPresented, let sizeInfo = self.viewController.selectedSizeInfo {
+          self.viewControllerSheetDidChangeSize(sizeInfo)
         }
       }
     }
@@ -274,8 +278,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
       rvc.present(viewController, animated: true) {
         self.isPresented = true
-        self.onPresent?(nil)
 
+        var data = ["index": 0, "value": 0.0]
+
+        if #available(iOS 15.0, *), let sizeInfo = self.viewController.selectedSizeInfo {
+          data = self.sizeInfoData(from: sizeInfo)
+        }
+
+        self.onPresent?(data)
         promise.resolve(nil)
       }
     }

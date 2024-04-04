@@ -9,7 +9,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native'
 
-import type { TrueSheetProps, SizeChangeEvent } from './types'
+import type { TrueSheetProps, SizeInfo } from './types'
 import { TrueSheetModule } from './TrueSheetModule'
 
 const LINKING_ERROR =
@@ -22,8 +22,8 @@ const ComponentName = 'TrueSheetView'
 
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
   scrollableHandle: number | null
-  onPresent: (event: NativeSyntheticEvent<{ index: number }>) => void
-  onSizeChange: (event: NativeSyntheticEvent<SizeChangeEvent>) => void
+  onPresent: (event: NativeSyntheticEvent<SizeInfo>) => void
+  onSizeChange: (event: NativeSyntheticEvent<SizeInfo>) => void
 }
 
 const TrueSheetNativeView = requireNativeComponent<TrueSheetNativeViewProps>(ComponentName)
@@ -76,12 +76,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onSizeChange(event: NativeSyntheticEvent<SizeChangeEvent>) {
+  private onSizeChange(event: NativeSyntheticEvent<SizeInfo>) {
     this.props.onSizeChange?.(event.nativeEvent)
   }
 
-  private onPresent(): void {
-    this.props.onPresent?.()
+  private onPresent(event: NativeSyntheticEvent<SizeInfo>): void {
+    this.props.onPresent?.(event.nativeEvent)
   }
 
   private onDismiss(): void {
@@ -111,48 +111,61 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   /**
-   * Dismiss the Sheet
+   * Dismisses the Sheet
    */
   public async dismiss() {
     await TrueSheetModule.dismiss(this.handle)
   }
 
   render(): ReactNode {
-    const FooterComponent = this.props.FooterComponent
-
-    // Remove backgroundColor if `blurStyle` is set on iOS
-    const backgroundColor = Platform.select({
-      ios: this.props.blurStyle ? undefined : this.props.backgroundColor ?? 'white',
-      android: this.props.backgroundColor ?? 'white',
-    })
+    const {
+      sizes,
+      backgroundColor,
+      blurStyle,
+      cornerRadius,
+      grabber,
+      maxHeight,
+      FooterComponent,
+      testID,
+      style,
+      children,
+      ...rest
+    } = this.props
 
     return (
       <TrueSheetNativeView
         ref={this.ref}
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
-        sizes={this.props.sizes ?? ['medium', 'large']}
-        blurStyle={this.props.blurStyle}
-        cornerRadius={this.props.cornerRadius}
-        grabber={this.props.grabber ?? true}
-        maxHeight={this.props.maxHeight}
+        sizes={sizes ?? ['medium', 'large']}
+        blurStyle={blurStyle}
+        cornerRadius={cornerRadius}
+        grabber={grabber ?? true}
+        maxHeight={maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
+        testID={testID}
       >
         <View
           collapsable={false}
           style={[
             $sheetWrapper,
             {
-              borderTopLeftRadius: this.props.cornerRadius,
-              borderTopRightRadius: this.props.cornerRadius,
-              backgroundColor,
+              borderTopLeftRadius: cornerRadius,
+              borderTopRightRadius: cornerRadius,
+
+              // Remove backgroundColor if `blurStyle` is set on iOS
+              backgroundColor: Platform.select({
+                ios: blurStyle ? undefined : backgroundColor ?? 'white',
+                android: backgroundColor ?? 'white',
+              }),
             },
           ]}
+          {...rest}
         >
-          <View collapsable={false} style={this.props.style}>
-            {this.props.children}
+          <View collapsable={false} style={style}>
+            {children}
           </View>
           <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>
         </View>

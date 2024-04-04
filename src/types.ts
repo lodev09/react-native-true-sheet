@@ -1,14 +1,44 @@
 import type { Component, ComponentType, RefObject } from 'react'
 import type { ColorValue, ViewProps } from 'react-native'
 
-export interface SizeChangeEvent {
+export interface SizeInfo {
   index: number
   value: number
 }
 
 /**
+ * Blur style mapped to native values in IOS.
+ *
+ * @platform ios
+ */
+export type BlurStyle =
+  | 'light'
+  | 'dark'
+  | 'default'
+  | 'extraLight'
+  | 'regular'
+  | 'prominent'
+  | 'systemUltraThinMaterial'
+  | 'systemThinMaterial'
+  | 'systemMaterial'
+  | 'systemThickMaterial'
+  | 'systemChromeMaterial'
+  | 'systemUltraThinMaterialLight'
+  | 'systemThinMaterialLight'
+  | 'systemMaterialLight'
+  | 'systemThickMaterialLight'
+  | 'systemChromeMaterialLight'
+  | 'systemUltraThinMaterialDark'
+  | 'systemThinMaterialDark'
+  | 'systemMaterialDark'
+  | 'systemThickMaterialDark'
+  | 'systemChromeMaterialDark'
+
+/**
  * Supported Sheet size.
- * Requires IOS 15+
+ *
+ * @platform android
+ * @platform ios 15+
  */
 export type SheetSize =
   /**
@@ -61,6 +91,19 @@ export type SheetSize =
 
 export interface TrueSheetProps extends ViewProps {
   /**
+   * The sizes you want the Sheet to support.
+   * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
+   *
+   * Example:
+   * ```ts
+   * size={['auto', '60%', 'large']}
+   * ```
+   *
+   * @default ['medium', 'large']
+   */
+  sizes?: SheetSize[]
+
+  /**
    * Main sheet background color
    */
   backgroundColor?: ColorValue
@@ -87,47 +130,14 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @platform ios
    */
-  blurStyle?:
-    | 'light'
-    | 'dark'
-    | 'default'
-    | 'extraLight'
-    | 'regular'
-    | 'prominent'
-    | 'systemUltraThinMaterial'
-    | 'systemThinMaterial'
-    | 'systemMaterial'
-    | 'systemThickMaterial'
-    | 'systemChromeMaterial'
-    | 'systemUltraThinMaterialLight'
-    | 'systemThinMaterialLight'
-    | 'systemMaterialLight'
-    | 'systemThickMaterialLight'
-    | 'systemChromeMaterialLight'
-    | 'systemUltraThinMaterialDark'
-    | 'systemThinMaterialDark'
-    | 'systemMaterialDark'
-    | 'systemThickMaterialDark'
-    | 'systemChromeMaterialDark'
+  blurStyle?: BlurStyle
 
   /**
    * The main scrollable ref that Sheet should handle on IOS.
+   *
    * @platform ios
    */
   scrollRef?: RefObject<Component<unknown>>
-
-  /**
-   * The sizes you want the Sheet to support.
-   * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
-   *
-   * Example:
-   * ```ts
-   * size={['auto', '60%', 'large']}
-   * ```
-   *
-   * @default ['medium', 'large']
-   */
-  sizes?: SheetSize[]
 
   /**
    * Overrides `large` or `100%` height.
@@ -141,9 +151,9 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the Sheet has been presented.
-   * Comes with the size index.
+   * Comes with the size info.
    */
-  onPresent?: () => void
+  onPresent?: (info: SizeInfo) => void
 
   /**
    * Called when the Sheet has been dismissed
@@ -154,5 +164,5 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the size of the sheet has changed.
    * Either by dragging or programatically.
    */
-  onSizeChange?: (event: SizeChangeEvent) => void
+  onSizeChange?: (info: SizeInfo) => void
 }

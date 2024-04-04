@@ -33,8 +33,7 @@ class TrueSheetView(context: Context) :
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
 
-  private var sizeIndex: Int = 0
-  private var sizes: Array<Any> = arrayOf("medium", "large")
+  private var activeIndex: Int = 0
 
   private var presentPromise: (() -> Unit)? = null
   private var dismissPromise: (() -> Unit)? = null
@@ -62,38 +61,6 @@ class TrueSheetView(context: Context) :
     sheetDialog = BottomSheetDialog(context)
     sheetBehavior = TrueSheetBehavior()
 
-    // Configure Sheet events
-    sheetBehavior.apply {
-
-      // Set our default max height
-      maxSheetSize = Utils.maxSize(context)
-
-      addBottomSheetCallback(
-        object : BottomSheetBehavior.BottomSheetCallback() {
-          override fun onSlide(sheetView: View, slideOffset: Float) {
-            footerView?.let {
-              it.y = (sheetView.height - sheetView.top - it.height).toFloat()
-            }
-          }
-
-          override fun onStateChanged(view: View, newState: Int) {
-            val sizeInfo = getSizeInfoForState(sizes.size, newState)
-            if (sizeInfo != null && sizeInfo.index != sizeIndex) {
-              sizeIndex = sizeInfo.index
-
-              // dispatch onSizeChange event
-              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
-            }
-
-            when (newState) {
-              BottomSheetBehavior.STATE_HIDDEN -> sheetDialog.dismiss()
-              else -> {}
-            }
-          }
-        }
-      )
-    }
-
     // Configure the sheet layout view
     LinearLayout(context).apply {
       addView(sheetRootView)
@@ -110,7 +77,6 @@ class TrueSheetView(context: Context) :
     // Configure Sheet Dialog
     sheetDialog.apply {
       setOnShowListener {
-
         // Initialize footer y
         UiThreadUtil.runOnUiThread {
           footerView?.let {
@@ -122,7 +88,7 @@ class TrueSheetView(context: Context) :
         presentPromise = null
 
         // dispatch onPresent event
-        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id))
+        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetBehavior.getSizeInfoForIndex(activeIndex)))
       }
 
       setOnDismissListener {
@@ -132,6 +98,37 @@ class TrueSheetView(context: Context) :
         // dispatch onDismiss event
         eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
       }
+    }
+
+    // Configure Sheet events
+    sheetBehavior.apply {
+
+      // Set our default max height
+      maxSheetSize = Utils.maxSize(context)
+
+      addBottomSheetCallback(
+        object : BottomSheetBehavior.BottomSheetCallback() {
+          override fun onSlide(sheetView: View, slideOffset: Float) {
+            footerView?.let {
+              it.y = (sheetView.height - sheetView.top - it.height).toFloat()
+            }
+          }
+
+          override fun onStateChanged(view: View, newState: Int) {
+            val sizeInfo = getSizeInfoForState(newState)
+            if (sizeInfo != null && sizeInfo.index != activeIndex) {
+              activeIndex = sizeInfo.index
+
+              // dispatch onSizeChange event
+              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+            }
+
+            if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+              sheetDialog.dismiss()
+            }
+          }
+        }
+      )
     }
   }
 
@@ -215,21 +212,24 @@ class TrueSheetView(context: Context) :
 
   fun setMaxHeight(height: Int) {
     sheetBehavior.maxSheetHeight = height
-    sheetBehavior.configure(sizes)
+    sheetBehavior.configure()
   }
 
   fun setSizes(newSizes: Array<Any>) {
-    sizes = newSizes
-    sheetBehavior.configure(sizes)
+    sheetBehavior.sizes = newSizes
+    sheetBehavior.configure()
   }
 
   fun present(index: Int, promiseCallback: () -> Unit) {
-    sheetBehavior.setStateForSizeIndex(sizes.size, index)
-
     if (sheetDialog.isShowing) {
+      sheetBehavior.setStateForSizeIndex(index)
       promiseCallback()
     } else {
-      sheetBehavior.configure(sizes)
+      sheetBehavior.configure()
+
+      activeIndex = index
+      sheetBehavior.setStateForSizeIndex(index)
+
       presentPromise = promiseCallback
       sheetDialog.show()
     }

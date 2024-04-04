@@ -18,7 +18,7 @@ struct SizeInfo {
 protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidChangeWidth(_ width: CGFloat)
   func viewControllerDidDismiss()
-  func viewControllerSheetDidChangeSize(_ value: CGFloat, at index: Int)
+  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo)
   func viewControllerWillAppear()
 }
 
@@ -57,6 +57,15 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     return sheetPresentationController
   }
 
+  @available(iOS 15.0, *)
+  var selectedSizeInfo: SizeInfo? {
+    guard let rawValue = sheet?.selectedDetentIdentifier?.rawValue else {
+      return nil
+    }
+
+    return detentValues[rawValue]
+  }
+
   // MARK: - Setup
 
   init() {
@@ -80,9 +89,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   @available(iOS 15.0, *)
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
-    if let identifer = sheet.selectedDetentIdentifier,
-       let size = detentValues[identifer.rawValue] {
-      delegate?.viewControllerSheetDidChangeSize(size.value, at: size.index)
+    if let rawValue = sheet.selectedDetentIdentifier?.rawValue,
+       let sizeInfo = detentValues[rawValue] {
+      delegate?.viewControllerSheetDidChangeSize(sizeInfo)
     }
   }
 

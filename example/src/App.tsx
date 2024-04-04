@@ -66,7 +66,9 @@ export default function App() {
         backgroundColor={DARK}
         cornerRadius={12}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
-        onPresent={() => console.log(`Sheet 1 presented!`)}
+        onPresent={({ index, value }) =>
+          console.log(`Sheet 1 presented with size of ${value} at index: ${index}`)
+        }
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
       >
         <DemoContent color={LIGHT_GRAY} />

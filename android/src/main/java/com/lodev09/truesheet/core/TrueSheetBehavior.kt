@@ -16,6 +16,8 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
   var contentView: ViewGroup? = null
   var footerView: ViewGroup? = null
 
+  var sizes: Array<Any> = arrayOf("medium", "large")
+
   override fun onInterceptTouchEvent(parent: CoordinatorLayout, child: ViewGroup, event: MotionEvent): Boolean {
     contentView?.let {
       val isDownEvent = (event.actionMasked == MotionEvent.ACTION_DOWN)
@@ -97,7 +99,7 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
     return minOf(height, maxSheetHeight ?: maxSheetSize.y)
   }
 
-  fun configure(sizes: Array<Any>) {
+  fun configure() {
     var contentHeight = 0
 
     contentView?.let { contentHeight = it.height }
@@ -132,8 +134,32 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
     }
   }
 
-  fun getSizeInfoForState(sizeCount: Int, state: Int): SizeInfo? =
-    when (sizeCount) {
+  fun getStateForIndex(index: Int) =
+    when (sizes.size) {
+      1 -> STATE_EXPANDED
+
+      2 -> {
+        when (index) {
+          0 -> STATE_COLLAPSED
+          1 -> STATE_EXPANDED
+          else -> STATE_HIDDEN
+        }
+      }
+
+      3 -> {
+        when (index) {
+          0 -> STATE_COLLAPSED
+          1 -> STATE_HALF_EXPANDED
+          2 -> STATE_EXPANDED
+          else -> STATE_HIDDEN
+        }
+      }
+
+      else -> STATE_HIDDEN
+    }
+
+  fun getSizeInfoForState(state: Int): SizeInfo? =
+    when (sizes.size) {
       1 -> {
         when (state) {
           STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(maxHeight))
@@ -167,29 +193,9 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
       else -> null
     }
 
-  fun setStateForSizeIndex(sizeCount: Int, index: Int) {
-    state =
-      when (sizeCount) {
-        1 -> STATE_EXPANDED
+  fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForIndex(index)) ?: SizeInfo(0, 0f)
 
-        2 -> {
-          when (index) {
-            0 -> STATE_COLLAPSED
-            1 -> STATE_EXPANDED
-            else -> STATE_HIDDEN
-          }
-        }
-
-        3 -> {
-          when (index) {
-            0 -> STATE_COLLAPSED
-            1 -> STATE_HALF_EXPANDED
-            2 -> STATE_EXPANDED
-            else -> STATE_HIDDEN
-          }
-        }
-
-        else -> STATE_HIDDEN
-      }
+  fun setStateForSizeIndex(index: Int) {
+    state = getStateForIndex(index)
   }
 }
