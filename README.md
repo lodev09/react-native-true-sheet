@@ -55,14 +55,14 @@ Extended from `ViewProps`
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
 | sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the Sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_** and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
-| backgroundColor | `ColorValue` | - | Main sheet background color. | ✅ | ✅ |
+| backgroundColor | `ColorValue` | `white` | Main sheet background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | The sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
 | FooterComponent | `ReactNode` | - | A component that floats at the bottom of the Sheet. | ✅ | ✅ |
-| grabber | `boolean` | - | Shows native grabber (or handle) on IOS. | ✅ | |
+| grabber | `boolean` | `true` | Shows native grabber (or handle) on iOS. | ✅ | |
 | blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
-| scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on IOS. | ✅ | |
+| scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
 
 ## Methods
 
@@ -135,7 +135,7 @@ return (
 
 ### `BlurTint`
 
-Blur style mapped to native values in IOS.
+Blur tint that is mapped into native values in iOS.
 
 ```ts
 <TrueSheet blurTint="dark">
