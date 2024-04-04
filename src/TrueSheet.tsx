@@ -121,16 +121,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     const {
       sizes,
       backgroundColor,
-      blurStyle,
+      blurTint,
       cornerRadius,
       grabber,
       maxHeight,
       FooterComponent,
-      testID,
       style,
+      contentContainerStyle,
       children,
       ...rest
     } = this.props
+
+    const wrapperBackgroundColor = backgroundColor ?? 'white'
 
     return (
       <TrueSheetNativeView
@@ -138,31 +140,33 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
         sizes={sizes ?? ['medium', 'large']}
-        blurStyle={blurStyle}
+        blurTint={blurTint}
         cornerRadius={cornerRadius}
         grabber={grabber ?? true}
         maxHeight={maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
-        testID={testID}
       >
         <View
           collapsable={false}
-          style={{
-            overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-            borderTopLeftRadius: cornerRadius,
-            borderTopRightRadius: cornerRadius,
+          style={[
+            {
+              overflow: Platform.select({ ios: undefined, android: 'hidden' }),
+              borderTopLeftRadius: cornerRadius,
+              borderTopRightRadius: cornerRadius,
 
-            // Remove backgroundColor if `blurStyle` is set on iOS
-            backgroundColor: Platform.select({
-              ios: blurStyle ? undefined : backgroundColor ?? 'white',
-              android: backgroundColor ?? 'white',
-            }),
-          }}
+              // Remove backgroundColor if `blurTint` is set on iOS
+              backgroundColor: Platform.select({
+                ios: blurTint ? undefined : wrapperBackgroundColor,
+                android: wrapperBackgroundColor,
+              }),
+            },
+            style,
+          ]}
           {...rest}
         >
-          <View collapsable={false} style={style}>
+          <View collapsable={false} style={contentContainerStyle}>
             {children}
           </View>
           <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>

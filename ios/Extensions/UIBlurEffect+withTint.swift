@@ -7,10 +7,10 @@
 //
 
 extension UIBlurEffect {
-  convenience init(with style: String) {
+  convenience init(with tint: String) {
     var blurStyle: Style
 
-    switch style {
+    switch tint {
     case "default":
       blurStyle = .regular
     case "extraLight":

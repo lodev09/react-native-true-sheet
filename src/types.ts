@@ -1,5 +1,5 @@
 import type { Component, ComponentType, RefObject } from 'react'
-import type { ColorValue, ViewProps } from 'react-native'
+import type { ColorValue, StyleProp, ViewProps, ViewStyle } from 'react-native'
 
 export interface SizeInfo {
   index: number
@@ -11,7 +11,7 @@ export interface SizeInfo {
  *
  * @platform ios
  */
-export type BlurStyle =
+export type BlurTint =
   | 'light'
   | 'dark'
   | 'default'
@@ -130,7 +130,12 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @platform ios
    */
-  blurStyle?: BlurStyle
+  blurTint?: BlurTint
+
+  /**
+   * Optional content container styles.
+   */
+  contentContainerStyle?: StyleProp<ViewStyle>
 
   /**
    * The main scrollable ref that Sheet should handle on IOS.

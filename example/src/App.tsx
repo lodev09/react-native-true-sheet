@@ -61,8 +61,8 @@ export default function App() {
       <TrueSheet
         sizes={['auto', '80%', 'large']}
         ref={sheet1}
-        style={$content}
-        blurStyle="dark"
+        contentContainerStyle={$content}
+        blurTint="dark"
         backgroundColor={DARK}
         cornerRadius={12}
         onDismiss={() => console.log('Sheet 1 dismissed!')}

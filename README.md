@@ -24,7 +24,7 @@ yarn add @lodev09/react-native-true-sheet
 ## Usage
 
 ```ts
-import { TrueSheet } from "@lodev09/react-native-true-sheet";
+import { TrueSheet } from "@lodev09/react-native-true-sheet"
 
 // ...
 
@@ -58,9 +58,10 @@ Extended from `ViewProps`
 | backgroundColor | `ColorValue` | - | Main sheet background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | The sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
+| contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
 | FooterComponent | `ReactNode` | - | A component that floats at the bottom of the Sheet. | ✅ | ✅ |
 | grabber | `boolean` | - | Shows native grabber (or handle) on IOS. | ✅ | |
-| blurStyle | [`BlurStyle`](#blurstyle) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
+| blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on IOS. | ✅ | |
 
 ## Methods
@@ -132,12 +133,12 @@ return (
 | `${number}%` | Fixed height in % | **_16+_** | ✅ |
 | `small` | Translates to 25% | **_16+_** | ✅ |
 
-### `BlurStyle`
+### `BlurTint`
 
 Blur style mapped to native values in IOS.
 
 ```ts
-<TrueSheet blurStyle="dark">
+<TrueSheet blurTint="dark">
   // ...
 </TrueSheet>
 ```
