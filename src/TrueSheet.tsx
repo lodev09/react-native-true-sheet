@@ -149,19 +149,17 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       >
         <View
           collapsable={false}
-          style={[
-            $sheetWrapper,
-            {
-              borderTopLeftRadius: cornerRadius,
-              borderTopRightRadius: cornerRadius,
+          style={{
+            overflow: Platform.select({ ios: undefined, android: 'hidden' }),
+            borderTopLeftRadius: cornerRadius,
+            borderTopRightRadius: cornerRadius,
 
-              // Remove backgroundColor if `blurStyle` is set on iOS
-              backgroundColor: Platform.select({
-                ios: blurStyle ? undefined : backgroundColor ?? 'white',
-                android: backgroundColor ?? 'white',
-              }),
-            },
-          ]}
+            // Remove backgroundColor if `blurStyle` is set on iOS
+            backgroundColor: Platform.select({
+              ios: blurStyle ? undefined : backgroundColor ?? 'white',
+              android: backgroundColor ?? 'white',
+            }),
+          }}
           {...rest}
         >
           <View collapsable={false} style={style}>
@@ -178,8 +176,4 @@ const $nativeSheet: ViewStyle = {
   position: 'absolute',
   width: 0,
   zIndex: -9999,
-}
-
-const $sheetWrapper: ViewStyle = {
-  overflow: 'hidden',
 }

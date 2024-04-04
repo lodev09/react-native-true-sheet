@@ -29,6 +29,10 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   weak var delegate: TrueSheetViewControllerDelegate?
 
+  var blurView: UIVisualEffectView
+  var lastViewWidth: CGFloat = 0
+  var detentValues: [String: SizeInfo] = [:]
+
   var sizes: [Any] = ["medium", "large"]
   var maxHeight: CGFloat?
 
@@ -47,10 +51,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       }
     }
   }
-
-  var blurView: UIVisualEffectView
-  var lastViewWidth: CGFloat = 0
-  var detentValues: [String: SizeInfo] = [:]
 
   @available(iOS 15.0, *)
   var sheet: UISheetPresentationController? {
@@ -73,13 +73,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
     super.init(nibName: nil, bundle: nil)
 
-    view.addSubview(blurView)
-    view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-
-    let blurEffect = UIBlurEffect(style: .light)
-    blurView.effect = blurEffect
-    blurView.frame = view.bounds
     blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    blurView.frame = view.bounds
+    view.insertSubview(blurView, at: 0)
   }
 
   @available(*, unavailable)
@@ -114,6 +110,15 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       delegate?.viewControllerDidChangeWidth(view.bounds.width)
       lastViewWidth = view.frame.width
     }
+  }
+
+  func setBlurStyle(_ style: String?) {
+    guard let style else {
+      blurView.effect = nil
+      return
+    }
+
+    blurView.effect = UIBlurEffect(with: style)
   }
 
   /// Prepares the view controller for sheet presentation

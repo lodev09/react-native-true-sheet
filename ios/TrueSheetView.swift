@@ -57,6 +57,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     self.bridge = bridge
 
     viewController = TrueSheetViewController()
+    viewController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+
     touchHandler = RCTTouchHandler(bridge: bridge)
 
     super.init(frame: .zero)
@@ -77,11 +79,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    // viewController.view.insertSubview(subview, at: 0)
     viewController.view.addSubview(subview)
 
     containerView = subview
-    touchHandler.attach(to: subview)
+    touchHandler.attach(to: containerView)
   }
 
   override func removeReactSubview(_ subview: UIView!) {
@@ -165,11 +166,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setBlurStyle(_ style: NSString?) {
     guard let style else {
-      viewController.blurView.effect = nil
+      viewController.setBlurStyle(nil)
       return
     }
 
-    viewController.blurView.effect = UIBlurEffect(with: style as String)
+    viewController.setBlurStyle(style as String)
   }
 
   @objc
