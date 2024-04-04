@@ -6,10 +6,7 @@
 
 The true native bottom sheet 💩
 
-<div>
-  <img height="600" src="preview-ios.gif" />
-  <img height="600" src="preview-android.gif" />
-</div>
+![Preview](preview.gif)
 
 ## Features
 * ✅ Implemented on the native realm.
@@ -112,7 +109,7 @@ return (
 
 | Name | Parameters | Description |
 | - | - | - |
-| onPresent | [`SizeInfo`](#sizeinfo) | Called when the Sheet has been presented. Comes with the size index and value. |
+| onPresent | - | Called when the Sheet has been presented. Comes with the size index and value. |
 | onDismiss | - | Called when the Sheet has been dismissed. |
 | onSizeChange | [`SizeInfo`](#sizeinfo) | Called when the size of the sheet has changed. Either by dragging or programatically. |
 
