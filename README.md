@@ -9,10 +9,10 @@ The true native bottom sheet 💩
 ![Preview](preview.gif)
 
 ## Features
-* ✅ Implemented on the native realm.
-* ✅ **_NOT_** your pure JS, (re)animated View. But might integrate in the future 👀
-* ✅ Clean, fast and lightweight.
-* ✅ Handles your Sscrolling needs, easy.
+* ✅ Implemented in the native realm.
+* ✅ **_NOT_** your pure JS, (re)animated view (might integrate in the future 👀)
+* ✅ Clean, fast, and lightweight.
+* ✅ Handles your scrolling needs, easy.
 * ✅ Asynchronus `ref` methods.
 
 ## Installation
@@ -54,13 +54,13 @@ Extended from `ViewProps`
 
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
-| sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the Sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_** and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
+| sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
 | backgroundColor | `ColorValue` | `white` | Main sheet background color. | ✅ | ✅ |
-| cornerRadius | `number` | - | The sheet corner radius. | ✅ | ✅ |
+| cornerRadius | `number` | - | the sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
-| FooterComponent | `ReactNode` | - | A component that floats at the bottom of the Sheet. | ✅ | ✅ |
-| dismissible | `boolean` | `true` | Prevents interactive dismissal of the Sheet. | ✅ | ✅ |
+| FooterComponent | `ReactNode` | - | A component that floats at the bottom of the sheet. | ✅ | ✅ |
+| dismissible | `boolean` | `true` | Prevents interactive dismissal of the sheet. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows native grabber (or handle) on iOS. | ✅ | |
 | blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
@@ -92,8 +92,8 @@ return (
 | Name | Parameters | Description |
 | - | - | - |
 | present | `index: number = 0` | Present the modal sheet. Optionally accepts a size `index`. See `sizes` prop. |
-| resize | `index: number` | Resizes the Sheet programmatically by `index`. This is an alias of the `present(index)` method. |
-| dismiss | - | Dismisses the Sheet. |
+| resize | `index: number` | Resizes the sheet programmatically by `index`. This is an alias of the `present(index)` method. |
+| dismiss | - | Dismisses the sheet. |
 
 ## Events
 
@@ -111,8 +111,8 @@ return (
 
 | Name | Parameters | Description |
 | - | - | - |
-| onPresent | [`SizeInfo`](#sizeinfo) | Called when the Sheet has been presented. Comes with the size index and value. |
-| onDismiss | - | Called when the Sheet has been dismissed. |
+| onPresent | [`SizeInfo`](#sizeinfo) | Called when the sheet has been presented. Comes with the size index and value. |
+| onDismiss | - | Called when the sheet has been dismissed. |
 | onSizeChange | [`SizeInfo`](#sizeinfo) | Called when the size of the sheet has changed. Either by dragging or presenting programatically. Comes with the size index and value. |
 
 ## Types
@@ -127,12 +127,17 @@ return (
 
 | Value | Description | 🍎 | 🤖 |
 | - | - | - | - |
-| `large` | Translates to 100% | ✅ | ✅ |
-| `medium` | Translates to 50% | **_15+_** | ✅ |
-| `auto` | Auto resize based on content height. | **_16+_** | ✅ |
-| `number` | Fixed height | **_16+_** | ✅ |
+| `"large"` | Translates to 100% | ✅ | ✅ |
+| `"medium"` | Translates to 50% | **_15+_** | ✅ |
+| `"auto"` | Auto resize based on content height. | **_16+_** | ✅ |
+| `"number"` | Fixed height | **_16+_** | ✅ |
 | `${number}%` | Fixed height in % | **_16+_** | ✅ |
-| `small` | Translates to 25% | **_16+_** | ✅ |
+| `"small"` | Translates to 25% | **_16+_** | ✅ |
+
+> [!NOTE]
+> `auto` is not guaranteed to be accurate if your content depends on various rendering logic. Experiment with it and try to keep your content size as fixed as possible.
+>
+> Alternatively, you can programmatically call [`resize`](#methods) to adjust the sheet size on-the-fly.
 
 ### `BlurTint`
 
@@ -183,6 +188,12 @@ Blur tint that is mapped into native values in iOS.
 | - | - | - |
 | index | `number` | The size index from the provided sizes. See `sizes` prop. |
 | value | `number` | The actual height value of the size. |
+
+## v1 Roadmap
+
+- [ ] Inline sheet
+- [ ] Reanimated integration(?)
+- [ ] Any ideas?
 
 ## Contributing
 
