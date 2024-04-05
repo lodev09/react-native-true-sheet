@@ -58,12 +58,12 @@ export default function App() {
 
   const presentSheet1 = async (index = 0) => {
     await sheet1.current?.present(index)
-    console.log(`Sheet 1 present OK`)
+    console.log(`Sheet 1 present asynced`)
   }
 
   const dismissSheet1 = async () => {
     await sheet1.current?.dismiss()
-    console.log('Sheet 1 dismiss OK')
+    console.log('Sheet 1 dismiss asynced')
   }
 
   return (
@@ -110,7 +110,7 @@ export default function App() {
       >
         <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
         <Input />
-        <Button text="Dismis" onPress={dismissSheet1} />
+        <Button text="Dismis" onPress={() => sheetPrompt.current?.dismiss()} />
       </TrueSheet>
 
       <TrueSheet

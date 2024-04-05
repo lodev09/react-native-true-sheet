@@ -6,20 +6,64 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
+// MARK: - Constraints
+
+struct Constraints {
+  var top: NSLayoutConstraint?
+  var bottom: NSLayoutConstraint?
+  var left: NSLayoutConstraint?
+  var right: NSLayoutConstraint?
+  var height: NSLayoutConstraint?
+}
+
 extension UIView {
-  func pinTo(view: UIView, from edges: UIRectEdge = .all, with height: CGFloat? = nil) {
-    var constraints: [NSLayoutConstraint] = []
+  /// Pin a view to the given view.
+  /// Optionally accepts a completion handler for the resulting constraints
+  func pinTo(
+    view: UIView,
+    from edges: UIRectEdge = .all,
+    with height: CGFloat? = nil,
+    constraints: ((Constraints) -> Void)?
+  ) {
+    translatesAutoresizingMaskIntoConstraints = false
 
-    if edges.contains(.top) { constraints.append(topAnchor.constraint(equalTo: view.topAnchor)) }
-    if edges.contains(.bottom) { constraints.append(bottomAnchor.constraint(equalTo: view.bottomAnchor)) }
-    if edges.contains(.left) { constraints.append(leadingAnchor.constraint(equalTo: view.leadingAnchor)) }
-    if edges.contains(.right) { constraints.append(trailingAnchor.constraint(equalTo: view.trailingAnchor)) }
+    var topConstraint: NSLayoutConstraint?
+    var bottomConstraint: NSLayoutConstraint?
+    var leftConstraint: NSLayoutConstraint?
+    var rightConstraint: NSLayoutConstraint?
+    var heightConstraint: NSLayoutConstraint?
 
-    if let height { constraints.append(heightAnchor.constraint(equalToConstant: height)) }
-
-    if !constraints.isEmpty {
-      translatesAutoresizingMaskIntoConstraints = false
-      NSLayoutConstraint.activate(constraints)
+    if edges.contains(.top) {
+      topConstraint = topAnchor.constraint(equalTo: view.topAnchor)
+      topConstraint?.isActive = true
     }
+
+    if edges.contains(.bottom) {
+      bottomConstraint = bottomAnchor.constraint(equalTo: view.bottomAnchor)
+      bottomConstraint?.isActive = true
+    }
+
+    if edges.contains(.left) {
+      leftConstraint = leadingAnchor.constraint(equalTo: view.leadingAnchor)
+      leftConstraint?.isActive = true
+    }
+
+    if edges.contains(.right) {
+      rightConstraint = trailingAnchor.constraint(equalTo: view.trailingAnchor)
+      rightConstraint?.isActive = true
+    }
+
+    if let height {
+      heightConstraint = heightAnchor.constraint(equalToConstant: height)
+      heightConstraint?.isActive = true
+    }
+
+    constraints?(Constraints(
+      top: topConstraint,
+      bottom: bottomConstraint,
+      left: leftConstraint,
+      right: rightConstraint,
+      height: heightConstraint
+    ))
   }
 }

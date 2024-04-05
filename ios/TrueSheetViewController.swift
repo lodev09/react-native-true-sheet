@@ -20,6 +20,8 @@ protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidDismiss()
   func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo)
   func viewControllerWillAppear()
+  func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat)
+  func viewControllerKeyboardWillHide()
 }
 
 // MARK: - TrueSheetViewController
@@ -52,6 +54,10 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     view.insertSubview(blurView, at: 0)
   }
 
+  deinit {
+    NotificationCenter.default.removeObserver(self)
+  }
+
   @available(*, unavailable)
   required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
@@ -63,6 +69,36 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
        let sizeInfo = detentValues[rawValue] {
       delegate?.viewControllerSheetDidChangeSize(sizeInfo)
     }
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(keyboardWillShow(_:)),
+      name: UIResponder.keyboardWillShowNotification,
+      object: nil
+    )
+
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(keyboardWillHide(_:)),
+      name: UIResponder.keyboardWillHideNotification,
+      object: nil
+    )
+  }
+
+  @objc
+  private func keyboardWillShow(_ notification: Notification) {
+    guard let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
+      return
+    }
+
+    delegate?.viewControllerKeyboardWillShow(keyboardSize.height)
+  }
+
+  @objc
+  private func keyboardWillHide(_: Notification) {
+    delegate?.viewControllerKeyboardWillHide()
   }
 
   override func viewWillAppear(_ animated: Bool) {

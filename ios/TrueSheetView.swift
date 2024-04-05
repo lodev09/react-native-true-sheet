@@ -31,6 +31,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   private var contentView: UIView?
   private var footerView: UIView?
+
+  // Reference the bottom constraint to adjust during keyboard event
+  private var footerViewBottomConstraint: NSLayoutConstraint?
+
+  // Reference height constraint during content updates
+  private var footerViewHeightConstraint: NSLayoutConstraint?
+
   private var rctScrollView: RCTScrollView?
 
   // Content height minus the footer height for `auto` layout
@@ -109,14 +116,42 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       contentView = containerView.subviews[0]
       footerView = containerView.subviews[1]
 
-      containerView.pinTo(view: viewController.view)
+      containerView.pinTo(view: viewController.view, constraints: nil)
 
-      // Setup content constraints
+      // Set footer constraints
+      if let footerView {
+        footerView.pinTo(view: viewController.view, from: [.left, .right, .bottom], with: 0) { constraints in
+          self.footerViewBottomConstraint = constraints.bottom
+          self.footerViewHeightConstraint = constraints.height
+        }
+      }
+
+      // Update content containers
       setupContent()
     }
   }
 
   // MARK: - ViewController delegate
+
+  func viewControllerKeyboardWillHide() {
+    guard let footerViewBottomConstraint else { return }
+
+    footerViewBottomConstraint.constant = 0
+
+    UIView.animate(withDuration: 0.3) {
+      self.viewController.view.layoutIfNeeded()
+    }
+  }
+
+  func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat) {
+    guard let footerViewBottomConstraint else { return }
+
+    footerViewBottomConstraint.constant = -keyboardHeight
+
+    UIView.animate(withDuration: 0.3) {
+      self.viewController.view.layoutIfNeeded()
+    }
+  }
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
     guard let containerView else { return }
@@ -238,38 +273,37 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  func dismiss(promise: Promise) {
-    if isPresented {
-      viewController.dismiss(animated: true) {
-        promise.resolve(nil)
-      }
-    } else {
-      promise.resolve(nil)
-    }
-  }
-
   func setupContent() {
     guard let contentView, let containerView else { return }
 
     // Add constraints to fix weirdness and support ScrollView
     if let rctScrollView {
-      contentView.pinTo(view: containerView)
-      rctScrollView.pinTo(view: contentView)
+      contentView.pinTo(view: containerView, constraints: nil)
+      rctScrollView.pinTo(view: contentView, constraints: nil)
     }
 
-    // Pin footer at the bottom
-    if let footerView {
+    if let footerView, let footerViewHeightConstraint {
       if let footerContent = footerView.subviews.first {
         containerView.bringSubviewToFront(footerView)
-        footerView.pinTo(
-          view: viewController.view,
-          from: [.bottom, .left, .right],
-          with: footerContent.bounds.height
-        )
+        footerViewHeightConstraint.constant = footerContent.bounds.height
       } else {
         containerView.sendSubviewToBack(footerView)
-        footerView.removeConstraints(footerView.constraints)
+        footerViewHeightConstraint.constant = 0
       }
+    }
+  }
+
+  func dismiss(promise: Promise) {
+    guard isPresented else {
+      promise.resolve(nil)
+      return
+    }
+
+    // Dismiss the keyboard
+    contentView?.endEditing(true)
+
+    viewController.dismiss(animated: true) {
+      promise.resolve(nil)
     }
   }
 
