@@ -2,7 +2,6 @@ package com.lodev09.truesheet
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure

@@ -146,13 +146,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       onSizeChange?(sizeInfoData(from: sizeInfo))
     }
   }
-  
+
   func invalidate() {
     viewController.dismiss(animated: true)
   }
 
   // MARK: - Prop setters
-  
+
   @objc
   func setDismissible(_ dismissible: Bool) {
     viewController.isModalInPresentation = !dismissible
@@ -179,14 +179,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController.blurView.effect = UIBlurEffect(with: tint as String)
   }
-  
+
   @objc
   func setCornerRadius(_ radius: NSNumber?) {
-    var cornerRadius: CGFloat? = nil
+    var cornerRadius: CGFloat?
     if let radius {
       cornerRadius = CGFloat(radius.floatValue)
     }
-    
+
     viewController.cornerRadius = cornerRadius
     if #available(iOS 15.0, *) {
       configureSheetIfPresented { sheet in
@@ -220,14 +220,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     return ["index": sizeInfo.index, "value": sizeInfo.value]
   }
-  
+
   /// Use to customize some properties of the Sheet
   @available(iOS 15.0, *)
   func configureSheetIfPresented(completion: (UISheetPresentationController) -> Void) {
     guard isPresented, let sheet = viewController.sheetPresentationController else {
       return
     }
-    
+
     completion(sheet)
   }
 
@@ -285,7 +285,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       promise.reject(message: "Size at \(index) is not configured.")
       return
     }
-    
+
     viewController.configureSheet(at: index, with: contentHeight) { sizeInfo in
       // Trigger onSizeChange event when size is changed while presenting
       if self.isPresented {
@@ -297,7 +297,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
         rvc.present(self.viewController, animated: true) {
           self.isPresented = true
-          
+
           let data = self.sizeInfoData(from: sizeInfo)
           self.onPresent?(data)
           promise.resolve(nil)
