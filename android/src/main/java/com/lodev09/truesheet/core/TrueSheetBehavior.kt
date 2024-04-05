@@ -108,7 +108,6 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
     // Configure sheet sizes
     apply {
       isFitToContents = true
-      isHideable = true
       skipCollapsed = false
 
       when (sizes.size) {
@@ -134,7 +133,7 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
     }
   }
 
-  fun getStateForIndex(index: Int) =
+  private fun getStateForIndex(index: Int) =
     when (sizes.size) {
       1 -> STATE_EXPANDED
 

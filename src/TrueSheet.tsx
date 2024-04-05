@@ -128,10 +128,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   render(): ReactNode {
     const {
       sizes,
-      backgroundColor,
+      backgroundColor = 'white',
+      grabber = true,
+      dismissible = true,
       blurTint,
       cornerRadius,
-      grabber,
       maxHeight,
       FooterComponent,
       style,
@@ -139,8 +140,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       children,
       ...rest
     } = this.props
-
-    const wrapperBackgroundColor = backgroundColor ?? 'white'
 
     return (
       <TrueSheetNativeView
@@ -150,7 +149,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         sizes={sizes ?? ['medium', 'large']}
         blurTint={blurTint}
         cornerRadius={cornerRadius}
-        grabber={grabber ?? true}
+        grabber={grabber}
+        dismissible={dismissible}
         maxHeight={maxHeight}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
@@ -166,8 +166,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
               // Remove backgroundColor if `blurTint` is set on iOS
               backgroundColor: Platform.select({
-                ios: blurTint ? undefined : wrapperBackgroundColor,
-                android: wrapperBackgroundColor,
+                ios: blurTint ? undefined : backgroundColor,
+                android: backgroundColor,
               }),
             },
             style,

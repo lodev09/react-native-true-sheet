@@ -104,7 +104,16 @@ export interface TrueSheetProps extends ViewProps {
   sizes?: SheetSize[]
 
   /**
+   * Prevents interactive dismissal of the Sheet.
+   *
+   * @default true
+   */
+  dismissible?: boolean
+
+  /**
    * Main sheet background color
+   *
+   * @default white
    */
   backgroundColor?: ColorValue
 

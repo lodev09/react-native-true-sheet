@@ -34,6 +34,11 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setMaxHeight(Utils.toPixel(height))
   }
 
+  @ReactProp(name = "dismissible")
+  fun setDismissible(view: TrueSheetView, dismissible: Boolean) {
+    view.setDismissible(dismissible)
+  }
+
   @ReactProp(name = "sizes")
   fun setSizes(view: TrueSheetView, sizes: ReadableArray) {
     val result = ArrayList<Any>()

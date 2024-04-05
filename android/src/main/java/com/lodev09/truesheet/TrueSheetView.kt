@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -213,6 +214,11 @@ class TrueSheetView(context: Context) :
   fun setMaxHeight(height: Int) {
     sheetBehavior.maxSheetHeight = height
     sheetBehavior.configure()
+  }
+
+  fun setDismissible(dismissible: Boolean) {
+    sheetBehavior.isHideable = dismissible
+    sheetDialog.setCancelable(dismissible)
   }
 
   fun setSizes(newSizes: Array<Any>) {

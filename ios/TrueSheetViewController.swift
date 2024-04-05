@@ -35,36 +35,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   var sizes: [Any] = ["medium", "large"]
   var maxHeight: CGFloat?
-
-  var cornerRadius: CGFloat? {
-    didSet {
-      if #available(iOS 15.0, *) {
-        sheet?.preferredCornerRadius = cornerRadius
-      }
-    }
-  }
-
-  var grabber = true {
-    didSet {
-      if #available(iOS 15.0, *) {
-        sheet?.prefersGrabberVisible = grabber
-      }
-    }
-  }
-
-  @available(iOS 15.0, *)
-  var sheet: UISheetPresentationController? {
-    return sheetPresentationController
-  }
-
-  @available(iOS 15.0, *)
-  var selectedSizeInfo: SizeInfo? {
-    guard let rawValue = sheet?.selectedDetentIdentifier?.rawValue else {
-      return nil
-    }
-
-    return detentValues[rawValue]
-  }
+  var cornerRadius: CGFloat?
+  var grabber = true
 
   // MARK: - Setup
 
@@ -115,10 +87,13 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   /// Prepares the view controller for sheet presentation
-  /// Do nothing on IOS 14 and below... sad
-  @available(iOS 15.0, *)
-  func configureSheet(at index: Int = 0, with contentHeight: CGFloat, _ completion: (() -> Void)?) {
-    guard let sheet else { return }
+  func configureSheet(at index: Int = 0, with contentHeight: CGFloat, _ completion: ((SizeInfo) -> Void)?) {
+    let defaultSizeInfo = SizeInfo(index: index, value: view.bounds.height)
+
+    guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
+      completion?(defaultSizeInfo)
+      return
+    }
 
     detentValues = [:]
 
@@ -136,7 +111,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     sheet.prefersEdgeAttachedInCompactHeight = true
     sheet.prefersGrabberVisible = grabber
     sheet.preferredCornerRadius = cornerRadius
-
     sheet.delegate = self
 
     var identifier: UISheetPresentationController.Detent.Identifier = .medium
@@ -152,7 +126,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
     sheet.animateChanges {
       sheet.selectedDetentIdentifier = identifier
-      completion?()
+      completion?(self.detentValues[identifier.rawValue] ?? defaultSizeInfo)
     }
   }
 }

@@ -146,8 +146,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       onSizeChange?(sizeInfoData(from: sizeInfo))
     }
   }
+  
+  func invalidate() {
+    viewController.dismiss(animated: true)
+  }
 
   // MARK: - Prop setters
+  
+  @objc
+  func setDismissible(_ dismissible: Bool) {
+    viewController.isModalInPresentation = !dismissible
+  }
 
   @objc
   func setMaxHeight(_ height: NSNumber) {
@@ -170,30 +179,36 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController.blurView.effect = UIBlurEffect(with: tint as String)
   }
+  
+  @objc
+  func setCornerRadius(_ radius: NSNumber?) {
+    var cornerRadius: CGFloat? = nil
+    if let radius {
+      cornerRadius = CGFloat(radius.floatValue)
+    }
+    
+    viewController.cornerRadius = cornerRadius
+    if #available(iOS 15.0, *) {
+      configureSheetIfPresented { sheet in
+        sheet.preferredCornerRadius = viewController.cornerRadius
+      }
+    }
+  }
 
   @objc
   func setGrabber(_ visible: Bool) {
     viewController.grabber = visible
-  }
-
-  @objc
-  func setCornerRadius(_ radius: NSNumber?) {
-    guard let radius else {
-      viewController.cornerRadius = nil
-      return
+    if #available(iOS 15.0, *) {
+      configureSheetIfPresented { sheet in
+        sheet.prefersGrabberVisible = visible
+      }
     }
-
-    viewController.cornerRadius = CGFloat(radius.floatValue)
   }
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
     let view = bridge.uiManager.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view
-  }
-
-  func invalidate() {
-    viewController.dismiss(animated: true)
   }
 
   // MARK: - Methods
@@ -205,10 +220,20 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     return ["index": sizeInfo.index, "value": sizeInfo.value]
   }
+  
+  /// Use to customize some properties of the Sheet
+  @available(iOS 15.0, *)
+  func configureSheetIfPresented(completion: (UISheetPresentationController) -> Void) {
+    guard isPresented, let sheet = viewController.sheetPresentationController else {
+      return
+    }
+    
+    completion(sheet)
+  }
 
+  /// Full reconfiguration of the Sheet
   func configureSheetIfPresented() {
-    // Resize sheet
-    if #available(iOS 15.0, *), isPresented {
+    if isPresented {
       viewController.configureSheet(at: activeIndex ?? 0, with: contentHeight, nil)
     }
   }
@@ -260,32 +285,23 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       promise.reject(message: "Size at \(index) is not configured.")
       return
     }
-
-    if #available(iOS 15.0, *) {
-      viewController.configureSheet(at: index, with: contentHeight) {
-        if self.isPresented, let sizeInfo = self.viewController.selectedSizeInfo {
-          self.viewControllerSheetDidChangeSize(sizeInfo)
-        }
-      }
-    }
-
-    if isPresented {
-      promise.resolve(nil)
-    } else {
-      // Keep track of the active index
-      activeIndex = index
-
-      rvc.present(viewController, animated: true) {
-        self.isPresented = true
-
-        var data = ["index": 0, "value": 0.0]
-
-        if #available(iOS 15.0, *), let sizeInfo = self.viewController.selectedSizeInfo {
-          data = self.sizeInfoData(from: sizeInfo)
-        }
-
-        self.onPresent?(data)
+    
+    viewController.configureSheet(at: index, with: contentHeight) { sizeInfo in
+      // Trigger onSizeChange event when size is changed while presenting
+      if self.isPresented {
+        self.viewControllerSheetDidChangeSize(sizeInfo)
         promise.resolve(nil)
+      } else {
+        // Keep track of the active index
+        self.activeIndex = index
+
+        rvc.present(self.viewController, animated: true) {
+          self.isPresented = true
+          
+          let data = self.sizeInfoData(from: sizeInfo)
+          self.onPresent?(data)
+          promise.resolve(nil)
+        }
       }
     }
   }

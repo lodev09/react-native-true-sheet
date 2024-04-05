@@ -60,6 +60,7 @@ Extended from `ViewProps`
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
 | FooterComponent | `ReactNode` | - | A component that floats at the bottom of the Sheet. | ✅ | ✅ |
+| dismissible | `boolean` | `true` | Prevents interactive dismissal of the Sheet. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows native grabber (or handle) on iOS. | ✅ | |
 | blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
