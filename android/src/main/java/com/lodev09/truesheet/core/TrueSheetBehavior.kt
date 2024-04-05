@@ -1,16 +1,16 @@
 package com.lodev09.truesheet.core
 
-import android.graphics.Point
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.facebook.react.bridge.ReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 data class SizeInfo(val index: Int, val value: Float)
 
 class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
-  var maxSheetSize: Point = Point()
+  var maxScreenHeight: Int = 0
   var maxSheetHeight: Int? = null
 
   var contentView: ViewGroup? = null
@@ -67,11 +67,11 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
           when (size) {
             "auto" -> contentHeight
 
-            "large" -> maxSheetSize.y
+            "large" -> maxScreenHeight
 
-            "medium" -> (maxSheetSize.y * 0.50).toInt()
+            "medium" -> (maxScreenHeight * 0.50).toInt()
 
-            "small" -> (maxSheetSize.y * 0.25).toInt()
+            "small" -> (maxScreenHeight * 0.25).toInt()
 
             else -> {
               if (size.endsWith('%')) {
@@ -79,7 +79,7 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
                 if (percent == null) {
                   0
                 } else {
-                  ((percent / 100) * maxSheetSize.y).toInt()
+                  ((percent / 100) * maxScreenHeight).toInt()
                 }
               } else {
                 val fixedHeight = size.toDoubleOrNull()
@@ -93,13 +93,16 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
           }
         }
 
-        else -> (maxSheetSize.y * 0.5).toInt()
+        else -> (maxScreenHeight * 0.5).toInt()
       }
 
-    return minOf(height, maxSheetHeight ?: maxSheetSize.y)
+    return minOf(height, maxSheetHeight ?: maxScreenHeight)
   }
 
-  fun configure() {
+  fun configure(reactContext: ReactContext) {
+    // Set our default max height
+    maxScreenHeight = Utils.screenHeight(reactContext)
+
     var contentHeight = 0
 
     contentView?.let { contentHeight = it.height }
@@ -126,7 +129,7 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
           isFitToContents = false
 
           peekHeight = getSizeHeight(sizes[0], contentHeight)
-          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxSheetSize.y.toFloat()
+          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxScreenHeight.toFloat()
           maxHeight = getSizeHeight(sizes[2], contentHeight)
         }
       }
@@ -179,7 +182,7 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
           STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(peekHeight))
 
           STATE_HALF_EXPANDED -> {
-            val height = halfExpandedRatio * maxSheetSize.y
+            val height = halfExpandedRatio * maxScreenHeight
             SizeInfo(1, Utils.toDIP(height.toInt()))
           }
 

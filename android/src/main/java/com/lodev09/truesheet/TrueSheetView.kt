@@ -20,7 +20,6 @@ import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
 import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.TrueSheetBehavior
-import com.lodev09.truesheet.core.Utils
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -80,7 +79,7 @@ class TrueSheetView(context: Context) :
         // Initialize footer y
         UiThreadUtil.runOnUiThread {
           footerView?.let {
-            it.y = (sheetView.height - sheetView.top - it.height).toFloat()
+            it.y = (sheetBehavior.maxScreenHeight - sheetView.top - it.height).toFloat()
           }
         }
 
@@ -102,15 +101,13 @@ class TrueSheetView(context: Context) :
 
     // Configure Sheet events
     sheetBehavior.apply {
-
-      // Set our default max height
-      maxSheetSize = Utils.maxSize(context)
-
       addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
             footerView?.let {
-              it.y = (sheetView.height - sheetView.top - it.height).toFloat()
+              if (slideOffset >= 0) {
+                it.y = (maxScreenHeight - sheetView.top - it.height).toFloat()
+              }
             }
           }
 
@@ -212,7 +209,7 @@ class TrueSheetView(context: Context) :
 
   fun setMaxHeight(height: Int) {
     sheetBehavior.maxSheetHeight = height
-    sheetBehavior.configure()
+    sheetBehavior.configure(reactContext)
   }
 
   fun setDismissible(dismissible: Boolean) {
@@ -222,7 +219,7 @@ class TrueSheetView(context: Context) :
 
   fun setSizes(newSizes: Array<Any>) {
     sheetBehavior.sizes = newSizes
-    sheetBehavior.configure()
+    sheetBehavior.configure(reactContext)
   }
 
   fun present(index: Int, promiseCallback: () -> Unit) {
@@ -230,7 +227,7 @@ class TrueSheetView(context: Context) :
       sheetBehavior.setStateForSizeIndex(index)
       promiseCallback()
     } else {
-      sheetBehavior.configure()
+      sheetBehavior.configure(reactContext)
 
       activeIndex = index
       sheetBehavior.setStateForSizeIndex(index)

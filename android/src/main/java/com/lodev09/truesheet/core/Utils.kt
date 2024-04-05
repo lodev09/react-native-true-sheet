@@ -1,46 +1,32 @@
 package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.graphics.Point
-import android.view.WindowManager
-import com.facebook.infer.annotation.Assertions
+import android.util.DisplayMetrics
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.PixelUtil
 
 object Utils {
   @SuppressLint("DiscouragedApi", "InternalInsetResource")
-  fun maxSize(context: Context): Point {
-    val minPoint = Point()
-    val maxPoint = Point()
-    val sizePoint = Point()
+  fun screenHeight(reactContext: ReactContext): Int {
+    val activity = reactContext.currentActivity ?: return 0
 
-    val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val display = Assertions.assertNotNull(wm).defaultDisplay
-    // getCurrentSizeRange will return the min and max width and height that the window can be
-    display.getCurrentSizeRange(minPoint, maxPoint)
-    // getSize will return the dimensions of the screen in its current orientation
-    display.getSize(sizePoint)
-    val attrs = intArrayOf(android.R.attr.windowFullscreen)
-    val theme = context.theme
-    val ta = theme.obtainStyledAttributes(attrs)
-    val windowFullscreen = ta.getBoolean(0, false)
+    // Get the screen metrics
+    val displayMetrics = DisplayMetrics()
+    activity.windowManager.defaultDisplay.getMetrics(displayMetrics)
+    val screenHeight = displayMetrics.heightPixels
 
-    // We need to add the status bar height to the height if we have a fullscreen window,
-    // because Display.getCurrentSizeRange doesn't include it.
-    val resources = context.resources
-    val statusBarId = resources.getIdentifier("status_bar_height", "dimen", "android")
+    val resources = activity.resources
+
+    // Calculate status bar height
     var statusBarHeight = 0
-    if (windowFullscreen && statusBarId > 0) {
-      statusBarHeight = resources.getDimension(statusBarId).toInt()
+    val resourceId: Int = resources.getIdentifier("status_bar_height", "dimen", "android")
+    if (resourceId > 0) {
+      statusBarHeight = resources.getDimensionPixelSize(resourceId)
     }
-    return if (sizePoint.x < sizePoint.y) {
-      // If we are vertical the width value comes from min width and height comes from max height
-      Point(minPoint.x, maxPoint.y + statusBarHeight)
-    } else {
-      // If we are horizontal the width value comes from max width and height comes from min height
-      Point(maxPoint.x, minPoint.y + statusBarHeight)
-    }
+
+    // Calculate max usable height
+    return screenHeight - statusBarHeight
   }
 
   fun toDIP(value: Int): Float = PixelUtil.toDIPFromPixel(value.toFloat())

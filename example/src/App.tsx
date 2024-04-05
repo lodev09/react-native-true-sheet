@@ -96,7 +96,7 @@ export default function App() {
 
       <TrueSheet
         ref={sheetPrompt}
-        sizes={['auto']}
+        sizes={['auto', '80%']}
         contentContainerStyle={$content}
         blurTint="dark"
         backgroundColor={DARK}
