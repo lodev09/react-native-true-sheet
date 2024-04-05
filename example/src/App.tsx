@@ -10,19 +10,32 @@ import {
   ScrollView,
   FlatList,
   type ColorValue,
+  TextInput,
 } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
-import { times } from './utils'
+import { random, times } from './utils'
 
-const CONTENT_PADDING = 16
-const FOOTER_HEIGHT = 56
+const SPACING = 16
+const INPUT_HEIGHT = SPACING * 3
+const FOOTER_HEIGHT = SPACING * 6
+const BORDER_RADIUS = 4
 
 const DARK = '#282e37'
+const GRAY = '#b2bac8'
 const DARK_GRAY = '#333b48'
 const LIGHT_GRAY = '#ebedf1'
 const BLUE = '#3784d7'
-const BLUE_DARK = '#1f64ae'
+const DARK_BLUE = '#1f64ae'
+
+const randomTexts: string[] = [
+  `Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.`,
+  `Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
+]
 
 interface ButtonProps extends TouchableOpacityProps {
   text: string
@@ -36,8 +49,9 @@ interface DemoContentProps extends ViewProps {
 
 export default function App() {
   const sheet1 = useRef<TrueSheet>(null)
-  const sheet2 = useRef<TrueSheet>(null)
-  const sheet3 = useRef<TrueSheet>(null)
+  const sheetPrompt = useRef<TrueSheet>(null)
+  const sheetScrollView = useRef<TrueSheet>(null)
+  const sheetFlatList = useRef<TrueSheet>(null)
 
   const scrollViewRef = useRef<ScrollView>(null)
   const flatListRef = useRef<FlatList>(null)
@@ -55,8 +69,9 @@ export default function App() {
   return (
     <View style={$container}>
       <Button text="TrueSheet View" onPress={() => presentSheet1(0)} />
-      <Button text="TrueSheet ScrollView" onPress={() => sheet2.current?.present()} />
-      <Button text="TrueSheet FlatList" onPress={() => sheet3.current?.present()} />
+      <Button text="TrueSheet Prompt" onPress={() => sheetPrompt.current?.present()} />
+      <Button text="TrueSheet ScrollView" onPress={() => sheetScrollView.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => sheetFlatList.current?.present()} />
 
       <TrueSheet
         sizes={['auto', '80%', 'large']}
@@ -70,9 +85,9 @@ export default function App() {
           console.log(`Sheet 1 presented with size of ${value} at index: ${index}`)
         }
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
+        FooterComponent={Footer}
       >
-        <DemoContent color={LIGHT_GRAY} />
-        <DemoContent color={LIGHT_GRAY} />
+        <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
         <Button text="Present Large" onPress={() => presentSheet1(2)} />
         <Button text="Present 80%" onPress={() => presentSheet1(1)} />
         <Button text="Present Auto" onPress={() => presentSheet1(0)} />
@@ -80,37 +95,68 @@ export default function App() {
       </TrueSheet>
 
       <TrueSheet
-        ref={sheet2}
-        scrollRef={scrollViewRef}
-        onDismiss={() => console.log('Sheet 2 dismissed!')}
-        onPresent={() => console.log(`Sheet 2 presented!`)}
+        ref={sheetPrompt}
+        sizes={['auto']}
+        contentContainerStyle={$content}
+        blurTint="dark"
+        backgroundColor={DARK}
+        cornerRadius={12}
+        onDismiss={() => console.log('Sheet Prompt dismissed!')}
+        onPresent={({ index, value }) =>
+          console.log(`Sheet Prompt presented with size of ${value} at index: ${index}`)
+        }
+        onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
         FooterComponent={Footer}
       >
-        <ScrollView ref={scrollViewRef} contentContainerStyle={$content} indicatorStyle="black">
+        <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
+        <Input />
+        <Button text="Dismis" onPress={dismissSheet1} />
+      </TrueSheet>
+
+      <TrueSheet
+        ref={sheetScrollView}
+        scrollRef={scrollViewRef}
+        onDismiss={() => console.log('Sheet ScrollView dismissed!')}
+        onPresent={() => console.log(`Sheet ScrollView presented!`)}
+        FooterComponent={Footer}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={[$content, $scrollable]}
+          indicatorStyle="black"
+        >
           {times(25, (i) => (
-            <DemoContent key={i} text={String(i + 1)} />
+            <DemoContent key={i} />
           ))}
         </ScrollView>
       </TrueSheet>
 
       <TrueSheet
-        ref={sheet3}
+        ref={sheetFlatList}
         scrollRef={flatListRef}
         sizes={['large']}
         cornerRadius={24}
         grabber={false}
         maxHeight={600}
-        onDismiss={() => console.log('Sheet 3 dismissed!')}
-        onPresent={() => console.log(`Sheet 3 presented!`)}
+        onDismiss={() => console.log('Sheet FlatList dismissed!')}
+        onPresent={() => console.log(`Sheet FlatList presented!`)}
       >
         <FlatList<number>
           ref={flatListRef}
           data={times(50, (i) => i)}
           contentContainerStyle={$content}
           indicatorStyle="black"
-          renderItem={({ item }) => <DemoContent radius={24} text={String(item + 1)} />}
+          renderItem={() => <DemoContent radius={24} />}
         />
       </TrueSheet>
+    </View>
+  )
+}
+
+const Input = () => {
+  return (
+    <View style={$inputContainer}>
+      <TextInput style={$input} placeholder="Enter some text..." placeholderTextColor={GRAY} />
     </View>
   )
 }
@@ -133,7 +179,7 @@ const Button = (props: ButtonProps) => {
 }
 
 const DemoContent = (props: DemoContentProps) => {
-  const { text, radius = 4, style: $style, color = LIGHT_GRAY, ...rest } = props
+  const { text, radius = BORDER_RADIUS, style: $style, color = LIGHT_GRAY, ...rest } = props
   return (
     <View
       style={[$demoContent, { backgroundColor: color, borderRadius: radius }, $style]}
@@ -151,9 +197,26 @@ const $container: ViewStyle = {
   flex: 1,
 }
 
+const $inputContainer: ViewStyle = {
+  backgroundColor: 'white',
+  paddingHorizontal: SPACING,
+  height: INPUT_HEIGHT,
+  borderRadius: BORDER_RADIUS,
+  justifyContent: 'center',
+  marginBottom: SPACING * 2,
+}
+
+const $input: TextStyle = {
+  fontSize: 16,
+  height: SPACING * 3,
+}
+
 const $content: ViewStyle = {
-  padding: CONTENT_PADDING,
-  paddingBottom: FOOTER_HEIGHT,
+  padding: SPACING,
+}
+
+const $scrollable: ViewStyle = {
+  paddingBottom: FOOTER_HEIGHT + SPACING,
 }
 
 const $footer: ViewStyle = {
@@ -166,15 +229,15 @@ const $footer: ViewStyle = {
 const $demoContent: ViewStyle = {
   height: 100,
   marginBottom: 16,
+  padding: SPACING / 2,
   alignItems: 'center',
-  justifyContent: 'center',
 }
 
 const $button: ViewStyle = {
   height: 40,
   padding: 12,
-  borderRadius: 4,
-  backgroundColor: BLUE_DARK,
+  borderRadius: BORDER_RADIUS,
+  backgroundColor: DARK_BLUE,
   marginBottom: 12,
   alignItems: 'center',
 }
@@ -184,7 +247,7 @@ const $whiteText: TextStyle = {
 }
 
 const $demoText: TextStyle = {
-  fontSize: 32,
-  fontWeight: '500',
-  opacity: 0.25,
+  fontSize: 16,
+  lineHeight: 20,
+  color: 'white',
 }
