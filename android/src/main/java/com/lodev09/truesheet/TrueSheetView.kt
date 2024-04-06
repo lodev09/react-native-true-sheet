@@ -22,7 +22,6 @@ import com.lodev09.truesheet.core.RootViewGroup
 import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.TrueSheetBehavior
 
-
 class TrueSheetView(context: Context) :
   ViewGroup(context),
   LifecycleEventListener {
@@ -34,22 +33,49 @@ class TrueSheetView(context: Context) :
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
 
+  /**
+   * Current activeIndex.
+   */
   private var activeIndex: Int = 0
 
+  /**
+   * Promise callback to be invoked after `present` is called.
+   */
   private var presentPromise: (() -> Unit)? = null
+
+  /**
+   * Promise callback to be invoked after `dismiss` is called.
+   */
   private var dismissPromise: (() -> Unit)? = null
 
+  /**
+   * The main BottomSheetDialog instance.
+   */
   private val sheetDialog: BottomSheetDialog
+
+  /**
+   * The custom BottomSheetDialogBehavior instance.
+   */
   private val sheetBehavior: TrueSheetBehavior
+
+  /**
+   * The main view of the sheet dialog.
+   */
   private val sheetView: ViewGroup
 
-  // React root view placeholder
+  /**
+   * React root view placeholder.
+   */
   private val sheetRootView: RootViewGroup
 
-  // 1st child of the container view
+  /**
+   * 1st child of the container view.
+   */
   private var contentView: ViewGroup? = null
 
-  // 2nd child of the container view
+  /**
+   * 2nd child of the container view.
+   */
   private var footerView: ViewGroup? = null
 
   init {
@@ -80,18 +106,24 @@ class TrueSheetView(context: Context) :
     // Configure Sheet Dialog
     sheetDialog.apply {
 
+      // Setup window params to adjust layout based on Keyboard state.
       window?.apply {
         // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
         // SOFT_INPUT_STATE_HIDDEN to hide the keyboard when sheet is shown
-        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            or WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+        setSoftInputMode(
+          WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            or WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+        )
       }
 
+      // Setup listener when the dialog has been presented.
       setOnShowListener {
+        sheetBehavior.registerKeyboardManager()
+
         // Initialize footer y
-        UiThreadUtil.runOnUiThread {
-          footerView?.let {
-            it.y = (sheetBehavior.maxScreenHeight - sheetView.top - it.height).toFloat()
+        footerView?.apply {
+          UiThreadUtil.runOnUiThread {
+            y = (sheetBehavior.maxScreenHeight - sheetView.top - height).toFloat()
           }
         }
 
@@ -102,7 +134,10 @@ class TrueSheetView(context: Context) :
         eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetBehavior.getSizeInfoForIndex(activeIndex)))
       }
 
+      // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
+        sheetBehavior.unregisterKeyboardManager()
+
         dismissPromise?.invoke()
         dismissPromise = null
 
@@ -111,7 +146,7 @@ class TrueSheetView(context: Context) :
       }
     }
 
-    // Configure Sheet events
+    // Configure sheet behavior events
     sheetBehavior.apply {
       addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
@@ -176,6 +211,7 @@ class TrueSheetView(context: Context) :
 
       sheetBehavior.contentView = contentView
       sheetBehavior.footerView = footerView
+      sheetBehavior.sheetView = sheetView
 
       // rootView's first child is the Container View
       sheetRootView.addView(it, index)
@@ -239,6 +275,9 @@ class TrueSheetView(context: Context) :
     sheetBehavior.configure()
   }
 
+  /**
+   * Present the sheet at given size index.
+   */
   fun present(index: Int, promiseCallback: () -> Unit) {
     if (sheetDialog.isShowing) {
       sheetBehavior.setStateForSizeIndex(index)
@@ -250,11 +289,13 @@ class TrueSheetView(context: Context) :
       sheetBehavior.setStateForSizeIndex(index)
 
       presentPromise = promiseCallback
-
       sheetDialog.show()
     }
   }
 
+  /**
+   * Dismisses the sheet.
+   */
   fun dismiss(promiseCallback: () -> Unit) {
     dismissPromise = promiseCallback
     sheetDialog.dismiss()

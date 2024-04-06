@@ -6,9 +6,9 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.PixelUtil
 
 object Utils {
-  fun screenHeight(reactContext: ReactContext): Int {
-    val activity = reactContext.currentActivity ?: return 0
-    return activity.findViewById<View>(android.R.id.content).height
+  fun activityView(reactContext: ReactContext): View? {
+    val activity = reactContext.currentActivity ?: return null
+    return activity.findViewById(android.R.id.content)
   }
 
   fun toDIP(value: Int): Float = PixelUtil.toDIPFromPixel(value.toFloat())

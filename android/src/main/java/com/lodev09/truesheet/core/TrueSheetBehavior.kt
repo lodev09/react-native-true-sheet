@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
@@ -10,11 +11,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 data class SizeInfo(val index: Int, val value: Float)
 
 class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBehavior<ViewGroup>() {
+  private var keyboardManager = KeyboardManager(reactContext)
+
   var maxScreenHeight: Int = 0
   var maxSheetHeight: Int? = null
 
   var contentView: ViewGroup? = null
   var footerView: ViewGroup? = null
+  var sheetView: ViewGroup? = null
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
@@ -56,6 +60,9 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
       event.action == MotionEvent.ACTION_CANCEL
   }
 
+  /**
+   * Get the height value based on the size config value.
+   */
   private fun getSizeHeight(size: Any, contentHeight: Int): Int {
     val height =
       when (size) {
@@ -99,6 +106,9 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
     return minOf(height, maxSheetHeight ?: maxScreenHeight)
   }
 
+  /**
+   * Determines the state based on the given size index.
+   */
   private fun getStateForSizeIndex(index: Int) =
     when (sizes.size) {
       1 -> STATE_EXPANDED
@@ -123,9 +133,35 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
       else -> STATE_HIDDEN
     }
 
+  /**
+   * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
+   * Also update footer's Y position.
+   */
+  fun registerKeyboardManager() {
+    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
+      override fun onKeyboardStateChange(isVisible: Boolean) {
+        Log.d(TAG, isVisible.toString())
+        maxScreenHeight = Utils.activityView(reactContext)?.height ?: 0
+        footerView?.apply {
+          y = (maxScreenHeight - (sheetView?.top ?: 0) - height).toFloat()
+        }
+      }
+    })
+  }
+
+  /**
+   * Remove keyboard listener.
+   */
+  fun unregisterKeyboardManager() {
+    keyboardManager.unregisterKeyboardListener()
+  }
+
+  /**
+   * Configure the sheet based on size preferences.
+   */
   fun configure() {
-    // Set our default max height
-    maxScreenHeight = Utils.screenHeight(reactContext)
+    // Update the usable sheet height
+    maxScreenHeight = Utils.activityView(reactContext)?.height ?: 0
 
     var contentHeight = 0
 
@@ -161,6 +197,9 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
     }
   }
 
+  /**
+   * Get the SizeInfo data by state.
+   */
   fun getSizeInfoForState(state: Int): SizeInfo? =
     when (sizes.size) {
       1 -> {
@@ -196,8 +235,14 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
       else -> null
     }
 
+  /**
+   * Get SizeInfo data for given size index.
+   */
   fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForSizeIndex(index)) ?: SizeInfo(0, 0f)
 
+  /**
+   * Set the state based on the given size index.
+   */
   fun setStateForSizeIndex(index: Int) {
     state = getStateForSizeIndex(index)
   }
