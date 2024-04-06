@@ -20,7 +20,6 @@ import com.lodev09.truesheet.core.DismissEvent
 import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
 import com.lodev09.truesheet.core.SizeChangeEvent
-import com.lodev09.truesheet.core.TrueSheetBehavior
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),

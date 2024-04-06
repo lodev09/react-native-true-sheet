@@ -3,6 +3,7 @@ package com.lodev09.truesheet.core
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
+import com.lodev09.truesheet.SizeInfo
 
 // onPresent
 class PresentEvent(surfaceId: Int, viewId: Int, private val sizeInfo: SizeInfo) : Event<PresentEvent>(surfaceId, viewId) {

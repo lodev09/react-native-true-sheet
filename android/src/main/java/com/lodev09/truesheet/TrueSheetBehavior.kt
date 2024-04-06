@@ -1,4 +1,4 @@
-package com.lodev09.truesheet.core
+package com.lodev09.truesheet
 
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -6,6 +6,8 @@ import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.ReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.KeyboardManager
+import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
