@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
@@ -9,7 +10,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 data class SizeInfo(val index: Int, val value: Float)
 
-class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
+class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBehavior<ViewGroup>() {
   var maxScreenHeight: Int = 0
   var maxSheetHeight: Int? = null
 
@@ -99,46 +100,9 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
     return minOf(height, maxSheetHeight ?: maxScreenHeight)
   }
 
-  fun configure(reactContext: ReactContext) {
-    // Set our default max height
-    maxScreenHeight = Utils.screenHeight(reactContext)
-
-    var contentHeight = 0
-
-    contentView?.let { contentHeight = it.height }
-    footerView?.let { contentHeight += it.height }
-
-    // Configure sheet sizes
-    apply {
-      isFitToContents = true
-      skipCollapsed = false
-
-      when (sizes.size) {
-        1 -> {
-          maxHeight = getSizeHeight(sizes[0], contentHeight)
-          skipCollapsed = true
-        }
-
-        2 -> {
-          peekHeight = getSizeHeight(sizes[0], contentHeight)
-          maxHeight = getSizeHeight(sizes[1], contentHeight)
-        }
-
-        3 -> {
-          // Enables half expanded
-          isFitToContents = false
-
-          peekHeight = getSizeHeight(sizes[0], contentHeight)
-          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxScreenHeight.toFloat()
-          maxHeight = getSizeHeight(sizes[2], contentHeight)
-        }
-      }
-    }
-  }
-
-  private fun getStateForIndex(index: Int) =
+  private fun getStateForSizeIndex(index: Int) =
     when (sizes.size) {
-      1 -> STATE_EXPANDED
+      1 -> STATE_COLLAPSED
 
       2 -> {
         when (index) {
@@ -159,6 +123,42 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
 
       else -> STATE_HIDDEN
     }
+
+  fun configure() {
+    // Set our default max height
+    maxScreenHeight = Utils.screenHeight(reactContext)
+
+    var contentHeight = 0
+
+    contentView?.let { contentHeight = it.height }
+    footerView?.let { contentHeight += it.height }
+
+    // Configure sheet sizes
+    apply {
+      isFitToContents = true
+
+      when (sizes.size) {
+        1 -> {
+          maxHeight = getSizeHeight(sizes[0], contentHeight)
+          peekHeight = maxHeight
+        }
+
+        2 -> {
+          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          maxHeight = getSizeHeight(sizes[1], contentHeight)
+        }
+
+        3 -> {
+          // Enables half expanded
+          isFitToContents = false
+
+          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxScreenHeight.toFloat()
+          maxHeight = getSizeHeight(sizes[2], contentHeight)
+        }
+      }
+    }
+  }
 
   fun getSizeInfoForState(state: Int): SizeInfo? =
     when (sizes.size) {
@@ -195,9 +195,13 @@ class TrueSheetBehavior : BottomSheetBehavior<ViewGroup>() {
       else -> null
     }
 
-  fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForIndex(index)) ?: SizeInfo(0, 0f)
+  fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForSizeIndex(index)) ?: SizeInfo(0, 0f)
 
   fun setStateForSizeIndex(index: Int) {
-    state = getStateForIndex(index)
+    state = getStateForSizeIndex(index)
+  }
+
+  companion object {
+    const val TAG = "TrueSheetView"
   }
 }

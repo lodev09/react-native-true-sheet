@@ -209,7 +209,7 @@ class TrueSheetView(context: Context) :
 
   fun setMaxHeight(height: Int) {
     sheetBehavior.maxSheetHeight = height
-    sheetBehavior.configure(reactContext)
+    sheetBehavior.configure()
   }
 
   fun setDismissible(dismissible: Boolean) {
@@ -219,7 +219,7 @@ class TrueSheetView(context: Context) :
 
   fun setSizes(newSizes: Array<Any>) {
     sheetBehavior.sizes = newSizes
-    sheetBehavior.configure(reactContext)
+    sheetBehavior.configure()
   }
 
   fun present(index: Int, promiseCallback: () -> Unit) {
@@ -227,7 +227,7 @@ class TrueSheetView(context: Context) :
       sheetBehavior.setStateForSizeIndex(index)
       promiseCallback()
     } else {
-      sheetBehavior.configure(reactContext)
+      sheetBehavior.configure()
 
       activeIndex = index
       sheetBehavior.setStateForSizeIndex(index)
