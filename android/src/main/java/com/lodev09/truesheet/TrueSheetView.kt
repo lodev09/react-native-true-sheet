@@ -57,8 +57,8 @@ class TrueSheetView(context: Context) :
     sheetRootView = RootViewGroup(context)
     sheetRootView.eventDispatcher = eventDispatcher
 
-    sheetDialog = BottomSheetDialog(context)
-    sheetBehavior = TrueSheetBehavior()
+    sheetDialog = BottomSheetDialog(reactContext)
+    sheetBehavior = TrueSheetBehavior(reactContext)
 
     // Configure the sheet layout view
     LinearLayout(context).apply {
@@ -105,23 +105,28 @@ class TrueSheetView(context: Context) :
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
             footerView?.let {
+              val y = (maxScreenHeight - sheetView.top - it.height).toFloat()
               if (slideOffset >= 0) {
-                it.y = (maxScreenHeight - sheetView.top - it.height).toFloat()
+                it.y = y
+              } else {
+                it.y = y - it.height * slideOffset
               }
             }
           }
 
           override fun onStateChanged(view: View, newState: Int) {
-            val sizeInfo = getSizeInfoForState(newState)
-            if (sizeInfo != null && sizeInfo.index != activeIndex) {
-              activeIndex = sizeInfo.index
+            when (newState) {
+              BottomSheetBehavior.STATE_HIDDEN -> sheetDialog.dismiss()
 
-              // dispatch onSizeChange event
-              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
-            }
+              else -> {
+                val sizeInfo = getSizeInfoForState(newState)
+                if (sizeInfo != null && sizeInfo.index != activeIndex) {
+                  activeIndex = sizeInfo.index
 
-            if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-              sheetDialog.dismiss()
+                  // dispatch onSizeChange event
+                  eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+                }
+              }
             }
           }
         }

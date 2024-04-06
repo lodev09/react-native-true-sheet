@@ -1,6 +1,5 @@
 package com.lodev09.truesheet.core
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
@@ -102,7 +101,7 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
 
   private fun getStateForSizeIndex(index: Int) =
     when (sizes.size) {
-      1 -> STATE_COLLAPSED
+      1 -> STATE_EXPANDED
 
       2 -> {
         when (index) {
@@ -135,12 +134,14 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
 
     // Configure sheet sizes
     apply {
+      skipCollapsed = false
       isFitToContents = true
 
       when (sizes.size) {
         1 -> {
           maxHeight = getSizeHeight(sizes[0], contentHeight)
           peekHeight = maxHeight
+          skipCollapsed = true
         }
 
         2 -> {
