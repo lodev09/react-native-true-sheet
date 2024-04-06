@@ -1,6 +1,5 @@
 package com.lodev09.truesheet.core
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ScrollView
@@ -140,7 +139,6 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
   fun registerKeyboardManager() {
     keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
       override fun onKeyboardStateChange(isVisible: Boolean) {
-        Log.d(TAG, isVisible.toString())
         maxScreenHeight = Utils.activityView(reactContext)?.height ?: 0
         footerView?.apply {
           y = (maxScreenHeight - (sheetView?.top ?: 0) - height).toFloat()
