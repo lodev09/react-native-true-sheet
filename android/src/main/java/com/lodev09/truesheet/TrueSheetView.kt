@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.LinearLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -20,6 +21,7 @@ import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
 import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.TrueSheetBehavior
+
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -66,6 +68,8 @@ class TrueSheetView(context: Context) :
       sheetDialog.setContentView(this)
 
       sheetView = parent as ViewGroup
+
+      // Set to transparent background to support corner radius
       sheetView.setBackgroundColor(Color.TRANSPARENT)
 
       // Assign our main BottomSheetBehavior
@@ -75,6 +79,14 @@ class TrueSheetView(context: Context) :
 
     // Configure Sheet Dialog
     sheetDialog.apply {
+
+      window?.apply {
+        // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
+        // SOFT_INPUT_STATE_HIDDEN to hide the keyboard when sheet is shown
+        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            or WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+      }
+
       setOnShowListener {
         // Initialize footer y
         UiThreadUtil.runOnUiThread {
@@ -238,6 +250,7 @@ class TrueSheetView(context: Context) :
       sheetBehavior.setStateForSizeIndex(index)
 
       presentPromise = promiseCallback
+
       sheetDialog.show()
     }
   }
