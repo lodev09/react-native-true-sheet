@@ -195,7 +195,6 @@ Blur tint that is mapped into native values in iOS.
 
 ## v1 Roadmap
 
-- [ ] Android: grabber
 - [ ] Inline sheet
 - [ ] Reanimated integration(?)
 - [ ] Any ideas?
