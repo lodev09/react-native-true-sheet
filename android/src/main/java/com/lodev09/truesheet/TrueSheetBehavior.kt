@@ -6,14 +6,11 @@ import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.ReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.core.KeyboardManager
 import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
 class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBehavior<ViewGroup>() {
-  private var keyboardManager = KeyboardManager(reactContext)
-
   var maxScreenHeight: Int = 0
   var maxSheetHeight: Int? = null
 

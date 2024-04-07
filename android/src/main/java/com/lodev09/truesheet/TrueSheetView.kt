@@ -82,7 +82,6 @@ class TrueSheetView(context: Context) :
       // Setup listener when the dialog has been presented.
       setOnShowListener {
         registerKeyboardManager()
-        sheetBehavior.state = sheetBehavior.getStateForSizeIndex(activeIndex)
 
         // Initialize footer y
         footerView?.apply {
@@ -103,8 +102,6 @@ class TrueSheetView(context: Context) :
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
         unregisterKeyboardManager()
-        sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-
         dismissPromise?.let { promise ->
           promise()
           dismissPromise = null
