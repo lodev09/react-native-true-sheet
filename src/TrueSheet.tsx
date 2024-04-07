@@ -11,6 +11,7 @@ import {
 
 import type { TrueSheetProps, SizeInfo } from './types'
 import { TrueSheetModule } from './TrueSheetModule'
+import { TrueSheetGrabber } from './TrueSheetGrabber'
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -178,6 +179,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
             {children}
           </View>
           <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>
+          {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} />}
         </View>
       </TrueSheetNativeView>
     )

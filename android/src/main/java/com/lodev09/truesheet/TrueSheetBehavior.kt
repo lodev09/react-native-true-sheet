@@ -150,6 +150,9 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
       skipCollapsed = false
       isFitToContents = true
 
+      // m3 max width 640dp
+      maxWidth = Utils.toPixel(640.0)
+
       when (sizes.size) {
         1 -> {
           maxHeight = getSizeHeight(sizes[0], contentHeight)

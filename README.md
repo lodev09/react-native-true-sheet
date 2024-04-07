@@ -65,7 +65,7 @@ Extended from `ViewProps`
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
 | FooterComponent | `ReactNode` | - | A component that floats at the bottom of the sheet. | ✅ | ✅ |
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
-| grabber | `boolean` | `true` | Shows native grabber (or handle) on iOS. | ✅ | |
+| grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
 | blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
 
@@ -195,7 +195,6 @@ Blur tint that is mapped into native values in iOS.
 
 ## v1 Roadmap
 
-- [ ] Max width
 - [ ] Android: grabber
 - [ ] Inline sheet
 - [ ] Reanimated integration(?)
