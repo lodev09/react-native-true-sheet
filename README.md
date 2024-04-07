@@ -21,6 +21,10 @@ The true native bottom sheet 💩
 yarn add @lodev09/react-native-true-sheet
 ```
 
+```sh
+npm i @lodev09/react-native-true-sheet
+```
+
 ## Usage
 
 ```ts
@@ -191,6 +195,8 @@ Blur tint that is mapped into native values in iOS.
 
 ## v1 Roadmap
 
+- [ ] Max width
+- [ ] Android: grabber
 - [ ] Inline sheet
 - [ ] Reanimated integration(?)
 - [ ] Any ideas?

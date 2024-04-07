@@ -1,21 +1,16 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
-import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import android.widget.LinearLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.DismissEvent
 import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootViewGroup
@@ -50,17 +45,12 @@ class TrueSheetView(context: Context) :
   /**
    * The main BottomSheetDialog instance.
    */
-  private val sheetDialog: BottomSheetDialog
+  private val sheetDialog: TrueSheetDialog
 
   /**
    * The custom BottomSheetDialogBehavior instance.
    */
   private val sheetBehavior: TrueSheetBehavior
-
-  /**
-   * The main view of the sheet dialog.
-   */
-  private val sheetView: ViewGroup
 
   /**
    * React root view placeholder.
@@ -84,40 +74,15 @@ class TrueSheetView(context: Context) :
     sheetRootView = RootViewGroup(context)
     sheetRootView.eventDispatcher = eventDispatcher
 
-    sheetDialog = BottomSheetDialog(reactContext)
     sheetBehavior = TrueSheetBehavior(reactContext)
-
-    // Configure the sheet layout view
-    LinearLayout(context).apply {
-      addView(sheetRootView)
-      sheetDialog.setContentView(this)
-
-      sheetView = parent as ViewGroup
-
-      // Set to transparent background to support corner radius
-      sheetView.setBackgroundColor(Color.TRANSPARENT)
-
-      // Assign our main BottomSheetBehavior
-      val sheetViewParams = sheetView.layoutParams as CoordinatorLayout.LayoutParams
-      sheetViewParams.behavior = sheetBehavior
-    }
+    sheetDialog = TrueSheetDialog(reactContext, sheetBehavior, sheetRootView)
 
     // Configure Sheet Dialog
     sheetDialog.apply {
-
-      // Setup window params to adjust layout based on Keyboard state.
-      window?.apply {
-        // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
-        // SOFT_INPUT_STATE_HIDDEN to hide the keyboard when sheet is shown
-        setSoftInputMode(
-          WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            or WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
-        )
-      }
-
       // Setup listener when the dialog has been presented.
       setOnShowListener {
-        sheetBehavior.registerKeyboardManager()
+        registerKeyboardManager()
+        sheetBehavior.state = sheetBehavior.getStateForSizeIndex(activeIndex)
 
         // Initialize footer y
         footerView?.apply {
@@ -126,8 +91,10 @@ class TrueSheetView(context: Context) :
           }
         }
 
-        presentPromise?.invoke()
-        presentPromise = null
+        presentPromise?.let { promise ->
+          promise()
+          presentPromise = null
+        }
 
         // dispatch onPresent event
         eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetBehavior.getSizeInfoForIndex(activeIndex)))
@@ -135,10 +102,13 @@ class TrueSheetView(context: Context) :
 
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
-        sheetBehavior.unregisterKeyboardManager()
+        unregisterKeyboardManager()
+        sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
-        dismissPromise?.invoke()
-        dismissPromise = null
+        dismissPromise?.let { promise ->
+          promise()
+          dismissPromise = null
+        }
 
         // dispatch onDismiss event
         eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
@@ -167,6 +137,12 @@ class TrueSheetView(context: Context) :
               else -> {
                 val sizeInfo = getSizeInfoForState(newState)
                 if (sizeInfo != null && sizeInfo.index != activeIndex) {
+                  // Invoke promise when sheet resized programmatically
+                  presentPromise?.let { promise ->
+                    promise()
+                    presentPromise = null
+                  }
+
                   activeIndex = sizeInfo.index
 
                   // dispatch onSizeChange event
@@ -210,7 +186,6 @@ class TrueSheetView(context: Context) :
 
       sheetBehavior.contentView = contentView
       sheetBehavior.footerView = footerView
-      sheetBehavior.sheetView = sheetView
 
       // rootView's first child is the Container View
       sheetRootView.addView(it, index)
@@ -277,19 +252,13 @@ class TrueSheetView(context: Context) :
   /**
    * Present the sheet at given size index.
    */
-  fun present(index: Int, promiseCallback: () -> Unit) {
-    if (sheetDialog.isShowing) {
-      sheetBehavior.setStateForSizeIndex(index)
-      promiseCallback()
-    } else {
-      sheetBehavior.configure()
-
-      activeIndex = index
-      sheetBehavior.setStateForSizeIndex(index)
-
-      presentPromise = promiseCallback
-      sheetDialog.show()
+  fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
+    if (!sheetDialog.isShowing) {
+      activeIndex = sizeIndex
     }
+
+    presentPromise = promiseCallback
+    sheetDialog.show(sizeIndex)
   }
 
   /**

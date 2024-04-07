@@ -56,7 +56,12 @@ export default function App() {
 
   const presentSheet1 = async (index = 0) => {
     await sheet1.current?.present(index)
-    console.log(`Sheet 1 present asynced`)
+    console.log('Sheet 1 present async')
+  }
+
+  const resizeSheet1 = async (index: number) => {
+    await sheet1.current?.resize(index)
+    console.log(`Sheet 1 resize to ${index} async`)
   }
 
   const dismissSheet1 = async () => {
@@ -86,9 +91,9 @@ export default function App() {
         FooterComponent={Footer}
       >
         <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
-        <Button text="Present Large" onPress={() => presentSheet1(2)} />
-        <Button text="Present 80%" onPress={() => presentSheet1(1)} />
-        <Button text="Present Auto" onPress={() => presentSheet1(0)} />
+        <Button text="Present Large" onPress={() => resizeSheet1(2)} />
+        <Button text="Present 80%" onPress={() => resizeSheet1(1)} />
+        <Button text="Present Auto" onPress={() => resizeSheet1(0)} />
         <Button text="Dismis" onPress={dismissSheet1} />
       </TrueSheet>
 
