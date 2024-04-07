@@ -39,10 +39,8 @@ class TrueSheetDialog(
     // Setup window params to adjust layout based on Keyboard state.
     window?.apply {
       // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
-      // SOFT_INPUT_STATE_HIDDEN to hide the keyboard when sheet is shown
       setSoftInputMode(
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-          or WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
       )
     }
   }
