@@ -130,8 +130,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     const {
       sizes,
       backgroundColor = 'white',
-      grabber = true,
       dismissible = true,
+      grabber = true,
+      grabberProps,
       blurTint,
       cornerRadius,
       maxHeight,
@@ -179,7 +180,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
             {children}
           </View>
           <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>
-          {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} />}
+          {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
         </View>
       </TrueSheetNativeView>
     )

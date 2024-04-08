@@ -1,39 +1,52 @@
 import React from 'react'
-import { View, type ColorValue, type ViewProps, type ViewStyle } from 'react-native'
+import {
+  View,
+  type ColorValue,
+  type ViewStyle,
+  type DimensionValue,
+  type StyleProp,
+} from 'react-native'
 
 const GRABBER_WRAPPER_HEIGHT = 24
 const GRABBER_DEFAULT_HEIGHT = 4
 const GRABBER_DEFAULT_WIDTH = 32
-const GRABBER_DEFAULT_COLOR = '#49454F'
 
-export interface TrueSheetGrabberProps extends ViewProps {
+// M3 spec: #49454F 0.4 alpha
+const GRABBER_DEFAULT_COLOR = 'rgba(73,69,79,0.4)'
+
+export interface TrueSheetGrabberProps {
   /**
-   * Is grabber visible
+   * Is grabber visible.
    * @default true
    */
   visible?: boolean
 
   /**
-   * Grabber color according to M3 specs
-   * @default #49454F
+   * Optional style that overrides the default style.
+   */
+  style?: StyleProp<ViewStyle>
+
+  /**
+   * Grabber color according to M3 specs.
+   * @default rgba(73,69,79,0.4)
    */
   color?: ColorValue
 
   /**
-   * Grabber height according to M3 specs
+   * Grabber height according to M3 specs.
    * @default 4
    */
-  height?: number
+  height?: DimensionValue
 
   /**
-   * Grabber width according to M3 specs
+   * Grabber width according to M3 specs.
    * @default 32
    */
-  width?: number
+  width?: DimensionValue
 }
 
 /**
- * Little Grabber component.
+ * Grabber component.
  * Used by defualt for Android but feel free to re-use.
  */
 export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
@@ -43,14 +56,13 @@ export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
     width = GRABBER_DEFAULT_WIDTH,
     height = GRABBER_DEFAULT_HEIGHT,
     style,
-    ...rest
   } = props
 
   if (!visible) return null
 
   return (
     <View style={$wrapper}>
-      <View style={[$grabber, { height, width, backgroundColor: color }, style]} {...rest} />
+      <View style={[$grabber, { height, width, backgroundColor: color }, style]} />
     </View>
   )
 }
@@ -67,8 +79,6 @@ const $wrapper: ViewStyle = {
 }
 
 const $grabber: ViewStyle = {
-  // M3 spec for opacity
-  opacity: 0.4,
   borderRadius: GRABBER_DEFAULT_HEIGHT / 2,
   top: 6,
 }

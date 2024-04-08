@@ -54,7 +54,8 @@ return (
 
 ## Options
 
-Extended from `ViewProps`
+Props available for `TrueSheet`.
+Extends `ViewProps`
 
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
@@ -66,6 +67,7 @@ Extended from `ViewProps`
 | FooterComponent | `ReactNode` | - | A component that floats at the bottom of the sheet. | ✅ | ✅ |
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
+| grabberProps | [`TrueSheetGrabberProps`](#truesheetgrabberprops) | - | Overrides the grabber props for android. | | ✅ |
 | blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
 
@@ -131,17 +133,28 @@ return (
 
 | Value | Description | 🍎 | 🤖 |
 | - | - | - | - |
-| `"large"` | Translates to 100% | ✅ | ✅ |
-| `"medium"` | Translates to 50% | **_15+_** | ✅ |
 | `"auto"` | Auto resize based on content height. | **_16+_** | ✅ |
-| `"number"` | Fixed height | **_16+_** | ✅ |
-| `${number}%` | Fixed height in % | **_16+_** | ✅ |
 | `"small"` | Translates to 25% | **_16+_** | ✅ |
+| `"medium"` | Translates to 50% | **_15+_** | ✅ |
+| `"large"` | Translates to 100% | ✅ | ✅ |
+| `number` | Fixed height | **_16+_** | ✅ |
+| `${number}%` | Fixed height in % | **_16+_** | ✅ |
 
 > [!NOTE]
 > `auto` is not guaranteed to be accurate if your content depends on various rendering logic. Experiment with it and try to keep your content size as fixed as possible.
 >
 > Alternatively, you can programmatically call [`resize`](#methods) to adjust the sheet size on-the-fly.
+
+### `TrueSheetGrabberProps`
+
+Grabber props to be used for android grabber or handle.
+
+| Prop | Type | Default | Description |
+| - | - | - | - |
+| visible | `boolean` | `true` | Is grabber visible. |
+| color | `ColorValue` | `"rgba(73,69,79,0.4)"` | Grabber color according to M3 specs. |
+| height | `DimensionValue` | `4` | Grabber height according to M3 specs. |
+| width | `DimensionValue` | `32` | Grabber width according to M3 specs. |
 
 ### `BlurTint`
 

@@ -1,5 +1,6 @@
 import type { Component, ComponentType, RefObject } from 'react'
 import type { ColorValue, StyleProp, ViewProps, ViewStyle } from 'react-native'
+import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
 export interface SizeInfo {
   index: number
@@ -126,12 +127,19 @@ export interface TrueSheetProps extends ViewProps {
   cornerRadius?: number
 
   /**
-   * Shows native grabber (or handle) on IOS
+   * Shows native grabber (or handle) on IOS.
    *
    * @platform ios
    * @default true
    */
   grabber?: boolean
+
+  /**
+   * Grabber props to be used for android grabber or handle.
+   *
+   * @platform android
+   */
+  grabberProps?: TrueSheetGrabberProps
 
   /**
    * The blur effect style on iOS.
