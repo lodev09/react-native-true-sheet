@@ -235,35 +235,9 @@ return (
 )
 ```
 
-### `FooterComponent` weird layout
+### Weird layout render
 
-If you pass a functional `Component` to the `FooterComponent` prop, it may cause unexpected issues during layout changes. Consider passing a `ReactElement` instead!
-
-Alaternatively, you can wrap the component using the [`useCallback`](https://react.dev/reference/react/useCallback) hook.
-
-```ts
-// Bad ❌
-<TrueSheet FooterComponent={() => <View />}>
-  // ...
-</TrueSheet>
-```
-
-```ts
-// Good ✅
-const MyFooter = useCallback(() => <View />, [])
-return (
-  <TrueSheet FooterComponent={MyFooter}>
-    // ...
-  </TrueSheet>
-)
-```
-
-```ts
-// Better ✅
-<TrueSheet FooterComponent={<View />}>
-  // ...
-</TrueSheet>
-````
+The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
 
 ## v1 Roadmap
 
