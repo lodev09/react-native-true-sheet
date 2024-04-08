@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React from 'react'
 import { View, type ColorValue, type ViewProps, type ViewStyle } from 'react-native'
 
 const GRABBER_WRAPPER_HEIGHT = 24
@@ -36,7 +36,7 @@ export interface TrueSheetGrabberProps extends ViewProps {
  * Little Grabber component.
  * Used by defualt for Android but feel free to re-use.
  */
-export const TrueSheetGrabber = memo((props: TrueSheetGrabberProps) => {
+export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
   const {
     visible = true,
     color = GRABBER_DEFAULT_COLOR,
@@ -53,9 +53,7 @@ export const TrueSheetGrabber = memo((props: TrueSheetGrabberProps) => {
       <View style={[$grabber, { height, width, backgroundColor: color }, style]} {...rest} />
     </View>
   )
-})
-
-TrueSheetGrabber.displayName = 'TrueSheetGrabber'
+}
 
 const $wrapper: ViewStyle = {
   position: 'absolute',
