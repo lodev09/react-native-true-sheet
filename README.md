@@ -12,8 +12,12 @@ The true native bottom sheet 💩
 * ✅ Implemented in the native realm.
 * ✅ **_NOT_** your pure JS, (re)animated view (might integrate in the future 👀)
 * ✅ Clean, fast, and lightweight.
-* ✅ Handles your scrolling needs, easy.
-* ✅ Asynchronus `ref` methods.
+* ✅ Handles your _Scrolling_ needs, natively.
+* ✅ Handles your _Footer_ needs, natively.
+* ✅ Handles your _Keyboard_ needs, natively.
+* ✅ Asynchronus `ref` [methods](#methods).
+* ✅ Works with Expo by default.
+* ✅ Bonus! [Blur](#blurtint) support on iOS 😎
 
 ## Installation
 
@@ -69,7 +73,7 @@ Extends `ViewProps`
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
 | grabberProps | [`TrueSheetGrabberProps`](#truesheetgrabberprops) | - | Overrides the grabber props for android. | | ✅ |
-| blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `"light"`, `"dark"`, etc. | ✅ | |
+| blurTint | [`BlurTint`](#blurtint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `"light"`, `"dark"`, etc. | ✅ | |
 | scrollRef | `RefObject<...>` | - | The main scrollable ref that the sheet should handle on iOS. | ✅ | |
 
 ## Methods
@@ -264,8 +268,8 @@ return (
 ## v1 Roadmap
 
 - [ ] Inline sheet
+- [ ] Test with RN new architecture
 - [ ] Reanimated integration(?)
-- [ ] Any ideas?
 
 ## Contributing
 
