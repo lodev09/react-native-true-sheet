@@ -90,7 +90,7 @@ export default function App() {
           console.log(`Sheet 1 presented with size of ${value} at index: ${index}`)
         }
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
-        FooterComponent={Footer}
+        FooterComponent={<Footer />}
       >
         <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
         <Button text="Present Large" onPress={() => resizeSheet1(2)} />
@@ -112,7 +112,7 @@ export default function App() {
           console.log(`Sheet Prompt presented with size of ${value} at index: ${index}`)
         }
         onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
-        FooterComponent={Footer}
+        FooterComponent={<Footer />}
       >
         <DemoContent color={DARK_BLUE} text={random(randomTexts)} />
         <Input />
@@ -124,7 +124,7 @@ export default function App() {
         scrollRef={scrollViewRef}
         onDismiss={() => console.log('Sheet ScrollView dismissed!')}
         onPresent={() => console.log(`Sheet ScrollView presented!`)}
-        FooterComponent={Footer}
+        FooterComponent={<Footer />}
       >
         <ScrollView
           ref={scrollViewRef}

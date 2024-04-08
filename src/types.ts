@@ -1,5 +1,6 @@
-import type { Component, ComponentType, RefObject } from 'react'
+import type { Component, ComponentType, ReactElement, RefObject } from 'react'
 import type { ColorValue, StyleProp, ViewProps, ViewStyle } from 'react-native'
+
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
 export interface SizeInfo {
@@ -169,7 +170,7 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * A component that floats at the bottom of the Sheet.
    */
-  FooterComponent?: ComponentType<unknown>
+  FooterComponent?: ComponentType<unknown> | ReactElement
 
   /**
    * Called when the Sheet has been presented.

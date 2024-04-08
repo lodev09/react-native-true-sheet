@@ -64,7 +64,7 @@ Extends `ViewProps`
 | cornerRadius | `number` | - | the sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
-| FooterComponent | `ReactNode` | - | A component that floats at the bottom of the sheet. | ✅ | ✅ |
+| FooterComponent | `ComponentType<...> | ReactElement` | - | A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`. | ✅ | ✅ |
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
 | grabberProps | [`TrueSheetGrabberProps`](#truesheetgrabberprops) | - | Overrides the grabber props for android. | | ✅ |

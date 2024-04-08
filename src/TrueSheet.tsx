@@ -179,12 +179,26 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           <View collapsable={false} style={contentContainerStyle}>
             {children}
           </View>
-          <View collapsable={false}>{!!FooterComponent && <FooterComponent />}</View>
+          <View collapsable={false}>
+            <TrueSheetFooter FooterComponent={FooterComponent} />
+          </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
         </View>
       </TrueSheetNativeView>
     )
   }
+}
+
+const TrueSheetFooter = (props: Pick<TrueSheetProps, 'FooterComponent'>) => {
+  const { FooterComponent } = props
+
+  if (!FooterComponent) return null
+
+  if (typeof FooterComponent !== 'function') {
+    return FooterComponent
+  }
+
+  return <FooterComponent />
 }
 
 const $nativeSheet: ViewStyle = {
