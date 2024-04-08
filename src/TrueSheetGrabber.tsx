@@ -1,10 +1,8 @@
 import React from 'react'
 import { View, type ColorValue, type ViewStyle, type StyleProp } from 'react-native'
 
-const GRABBER_WRAPPER_HEIGHT = 24
 const GRABBER_DEFAULT_HEIGHT = 4
 const GRABBER_DEFAULT_WIDTH = 32
-const GRABBER_DEFAULT_TOP_OFFSET = 6
 
 // M3 spec: #49454F 0.4 alpha
 const GRABBER_DEFAULT_COLOR = 'rgba(73,69,79,0.4)'
@@ -57,27 +55,25 @@ export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
     color = GRABBER_DEFAULT_COLOR,
     width = GRABBER_DEFAULT_WIDTH,
     height = GRABBER_DEFAULT_HEIGHT,
-    topOffset = GRABBER_DEFAULT_TOP_OFFSET,
+    topOffset = 0,
     style,
   } = props
 
   if (!visible) return null
 
   return (
-    <View style={$wrapper}>
-      <View style={[$grabber, { height, width, backgroundColor: color, top: topOffset }, style]} />
+    <View style={[$wrapper, style, { height: GRABBER_DEFAULT_HEIGHT * 4, top: topOffset }]}>
+      <View style={[$grabber, { height, width, backgroundColor: color }]} />
     </View>
   )
 }
 
 const $wrapper: ViewStyle = {
   position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
   alignSelf: 'center',
-  height: GRABBER_WRAPPER_HEIGHT,
+  paddingHorizontal: 12,
   alignItems: 'center',
+  justifyContent: 'center',
   zIndex: 9999,
 }
 
