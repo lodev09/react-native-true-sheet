@@ -153,9 +153,9 @@ Grabber props to be used for android grabber or handle.
 | - | - | - | - |
 | visible | `boolean` | `true` | Is grabber visible. |
 | color | `ColorValue` | `"rgba(73,69,79,0.4)"` | Grabber color according to M3 specs. |
-| height | `DimensionValue` | `4` | Grabber height according to M3 specs. |
-| width | `DimensionValue` | `32` | Grabber width according to M3 specs. |
-| topOffset | `DimensionValue` | `6` | Grabber top position offset. |
+| height | `number` | `4` | Grabber height according to M3 specs. |
+| width | `number` | `32` | Grabber width according to M3 specs. |
+| topOffset | `number` | `6` | Grabber top position offset. |
 
 ### `BlurTint`
 

@@ -1,11 +1,5 @@
 import React from 'react'
-import {
-  View,
-  type ColorValue,
-  type ViewStyle,
-  type DimensionValue,
-  type StyleProp,
-} from 'react-native'
+import { View, type ColorValue, type ViewStyle, type StyleProp } from 'react-native'
 
 const GRABBER_WRAPPER_HEIGHT = 24
 const GRABBER_DEFAULT_HEIGHT = 4
@@ -37,20 +31,20 @@ export interface TrueSheetGrabberProps {
    * Grabber height according to M3 specs.
    * @default 4
    */
-  height?: DimensionValue
+  height?: number
 
   /**
    * Grabber top position offset.
    *
    * @default 6
    */
-  topOffset?: DimensionValue
+  topOffset?: number
 
   /**
    * Grabber width according to M3 specs.
    * @default 32
    */
-  width?: DimensionValue
+  width?: number
 }
 
 /**
