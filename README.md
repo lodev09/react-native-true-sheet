@@ -237,19 +237,24 @@ If you pass a functional `Component` to the `FooterComponent` prop, it may cause
 
 Alaternatively, you can wrap the component using the [`useCallback`](https://react.dev/reference/react/useCallback) hook.
 
-Example:
 ```ts
 // Bad ❌
 <TrueSheet FooterComponent={() => <View />}>
   // ...
 </TrueSheet>
+```
 
+```ts
 // Good ✅
 const MyFooter = useCallback(() => <View />, [])
-<TrueSheet FooterComponent={MyFooter}>
-  // ...
-</TrueSheet>
+return (
+  <TrueSheet FooterComponent={MyFooter}>
+    // ...
+  </TrueSheet>
+)
+```
 
+```ts
 // Better ✅
 <TrueSheet FooterComponent={<View />}>
   // ...
