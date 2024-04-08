@@ -34,8 +34,9 @@ import { TrueSheet } from "@lodev09/react-native-true-sheet"
 
 const sheet = useRef<TrueSheet>(null)
 
-const openSheet = () => {
-  sheet.current?.present()
+const openSheet = async () => {
+  await sheet.current?.present()
+  console.log('horray! sheet has been presented 💩')
 }
 
 return (
@@ -59,17 +60,17 @@ Extends `ViewProps`
 
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
-| sizes | [`SheetSize[]`](#sheetsize) | `['medium', 'large']` | Array of sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
-| backgroundColor | `ColorValue` | `white` | Main sheet background color. | ✅ | ✅ |
+| sizes | [`SheetSize[]`](#sheetsize) | `["medium", "large"]` | Array of sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={["auto", "60%", "large"]}`| ✅ | ✅ |
+| backgroundColor | `ColorValue` | `"white"` | The sheet's background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | the sheet corner radius. | ✅ | ✅ |
-| maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
+| maxHeight | `number` | - | Overrides `"large"` or `"100%"` height. | ✅ | ✅ |
 | contentContainerStyle | `StyleProp<ViewStyle>` | - | Optional content container styles. | ✅ | ✅ |
 | FooterComponent | `ComponentType<...> \| ReactElement` | - | A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`. | ✅ | ✅ |
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
 | grabberProps | [`TrueSheetGrabberProps`](#truesheetgrabberprops) | - | Overrides the grabber props for android. | | ✅ |
-| blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `light`, `dark`, etc. | ✅ | |
-| scrollRef | `RefObject<...>` | - | The main scrollable ref that Sheet should handle on iOS. | ✅ | |
+| blurTint | [`BlurTint`](#blurTint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `"light"`, `"dark"`, etc. | ✅ | |
+| scrollRef | `RefObject<...>` | - | The main scrollable ref that the sheet should handle on iOS. | ✅ | |
 
 ## Methods
 
@@ -206,6 +207,54 @@ Blur tint that is mapped into native values in iOS.
 | - | - | - |
 | index | `number` | The size index from the provided sizes. See `sizes` prop. |
 | value | `number` | The actual height value of the size. |
+
+## Troubleshooting
+
+### Integrating `@react-navigation/native` on iOS
+
+On iOS, navigating to a [React Navigation](https://reactnavigation.org) screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
+
+Example:
+```ts
+const sheet = useRef<TrueSheet>(null)
+
+const navigate = async () => {
+  await sheet.current?.dismiss() // wait for the sheet to dismiss ✅
+  navigation.navigate('SomeScreen') // navigate to the screen 🎉
+}
+
+return (
+  <TrueSheet ref={sheet}>
+    <Button onPress={navigate} title="Navigate to SomeScreen" />
+    // ...
+  </TrueSheet>
+)
+```
+
+### `FooterComponent` weird layout
+
+If you pass a functional `Component` to the `FooterComponent` prop, it may cause unexpected issues during layout changes. Consider passing a `ReactElement` instead!
+
+Alaternatively, you can wrap the component using the [`useCallback`](https://react.dev/reference/react/useCallback) hook.
+
+Example:
+```ts
+// Bad ❌
+<TrueSheet FooterComponent={() => <View />}>
+  // ...
+</TrueSheet>
+
+// Good ✅
+const MyFooter = useCallback(() => <View />, [])
+<TrueSheet FooterComponent={MyFooter}>
+  // ...
+</TrueSheet>
+
+// Better ✅
+<TrueSheet FooterComponent={<View />}>
+  // ...
+</TrueSheet>
+````
 
 ## v1 Roadmap
 
