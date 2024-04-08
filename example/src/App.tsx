@@ -20,6 +20,7 @@ const SPACING = 16
 const INPUT_HEIGHT = SPACING * 3
 const FOOTER_HEIGHT = SPACING * 6
 const BORDER_RADIUS = 4
+const GRABBER_COLOR = 'rgba(121, 135, 160, 0.5)'
 
 const DARK = '#282e37'
 const GRAY = '#b2bac8'
@@ -83,6 +84,7 @@ export default function App() {
         blurTint="dark"
         backgroundColor={DARK}
         cornerRadius={12}
+        grabberProps={{ color: GRABBER_COLOR }}
         onDismiss={() => console.log('Sheet 1 dismissed!')}
         onPresent={({ index, value }) =>
           console.log(`Sheet 1 presented with size of ${value} at index: ${index}`)
@@ -104,6 +106,7 @@ export default function App() {
         blurTint="dark"
         backgroundColor={DARK}
         cornerRadius={12}
+        grabberProps={{ color: GRABBER_COLOR }}
         onDismiss={() => console.log('Sheet Prompt dismissed!')}
         onPresent={({ index, value }) =>
           console.log(`Sheet Prompt presented with size of ${value} at index: ${index}`)
