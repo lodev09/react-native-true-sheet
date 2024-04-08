@@ -59,7 +59,7 @@ Extends `ViewProps`
 
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
-| sizes | [`SheetSize`](#sheetsize) | `['medium', 'large']` | The sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
+| sizes | [`SheetSize[]`](#sheetsize) | `['medium', 'large']` | Array of sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={['auto', '60%', 'large']}`| ✅ | ✅ |
 | backgroundColor | `ColorValue` | `white` | Main sheet background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | the sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `large` or `100%` height. | ✅ | ✅ |
