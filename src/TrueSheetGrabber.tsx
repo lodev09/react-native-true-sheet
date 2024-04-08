@@ -10,6 +10,7 @@ import {
 const GRABBER_WRAPPER_HEIGHT = 24
 const GRABBER_DEFAULT_HEIGHT = 4
 const GRABBER_DEFAULT_WIDTH = 32
+const GRABBER_DEFAULT_TOP_OFFSET = 6
 
 // M3 spec: #49454F 0.4 alpha
 const GRABBER_DEFAULT_COLOR = 'rgba(73,69,79,0.4)'
@@ -39,6 +40,13 @@ export interface TrueSheetGrabberProps {
   height?: DimensionValue
 
   /**
+   * Grabber top position offset.
+   *
+   * @default 6
+   */
+  topOffset?: DimensionValue
+
+  /**
    * Grabber width according to M3 specs.
    * @default 32
    */
@@ -55,6 +63,7 @@ export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
     color = GRABBER_DEFAULT_COLOR,
     width = GRABBER_DEFAULT_WIDTH,
     height = GRABBER_DEFAULT_HEIGHT,
+    topOffset = GRABBER_DEFAULT_TOP_OFFSET,
     style,
   } = props
 
@@ -62,7 +71,7 @@ export const TrueSheetGrabber = (props: TrueSheetGrabberProps) => {
 
   return (
     <View style={$wrapper}>
-      <View style={[$grabber, { height, width, backgroundColor: color }, style]} />
+      <View style={[$grabber, { height, width, backgroundColor: color, top: topOffset }, style]} />
     </View>
   )
 }
@@ -80,5 +89,4 @@ const $wrapper: ViewStyle = {
 
 const $grabber: ViewStyle = {
   borderRadius: GRABBER_DEFAULT_HEIGHT / 2,
-  top: 6,
 }
