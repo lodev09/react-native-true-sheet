@@ -128,7 +128,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   render(): ReactNode {
     const {
-      sizes,
+      sizes = ['medium', 'large'],
       backgroundColor = 'white',
       dismissible = true,
       grabber = true,
@@ -148,7 +148,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         ref={this.ref}
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle}
-        sizes={sizes ?? ['medium', 'large']}
+        sizes={sizes}
         blurTint={blurTint}
         cornerRadius={cornerRadius}
         grabber={grabber}
