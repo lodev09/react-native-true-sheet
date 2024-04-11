@@ -214,6 +214,24 @@ Blur tint that is mapped into native values in iOS.
 
 ## Troubleshooting
 
+### Using `react-native-gesture-handler` on **Android**
+
+On Android, RNGH does not work by default because modals are not located under React Native Root view in native hierarchy. To fix that, components need to be wrapped with `GestureHandlerRootView`.
+
+Example:
+```ts
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+```
+```ts
+return (
+  <TrueSheet ref={sheet}>
+    <GestureHandlerRootView>
+      <MyComponent />
+    </GestureHandlerRootView>
+  </TrueSheet>
+)
+```
+
 ### Integrating `@react-navigation/native` on iOS
 
 On iOS, navigating to a [React Navigation](https://reactnavigation.org) screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!

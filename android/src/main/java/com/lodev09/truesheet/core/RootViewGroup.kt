@@ -115,6 +115,11 @@ class RootViewGroup(context: Context?) :
     return super.onHoverEvent(event)
   }
 
+  @Deprecated("Deprecated in Java")
+  override fun onChildStartedNativeGesture(ev: MotionEvent?) {
+    mJSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+  }
+
   override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
     mJSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
     mJSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
