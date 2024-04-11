@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import { View, type ViewStyle } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
-import { BasicSheet, FlatListSheet, PromptSheet, ScrollViewSheet } from './sheets'
+import { BasicSheet, FlatListSheet, GestureSheet, PromptSheet, ScrollViewSheet } from './sheets'
 import { Button } from './components'
 import { BLUE } from './utils'
 
@@ -11,6 +11,7 @@ export default function App() {
   const promptSheet = useRef<TrueSheet>(null)
   const scrollViewSheet = useRef<TrueSheet>(null)
   const flatListSheet = useRef<TrueSheet>(null)
+  const gestureSheet = useRef<TrueSheet>(null)
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
@@ -23,11 +24,13 @@ export default function App() {
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
       <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+      <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
 
       <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
       <ScrollViewSheet ref={scrollViewSheet} />
       <FlatListSheet ref={flatListSheet} />
+      <GestureSheet ref={gestureSheet} />
     </View>
   )
 }
