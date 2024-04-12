@@ -8,15 +8,20 @@ import com.facebook.react.bridge.ReactContext
 
 class KeyboardManager(reactContext: ReactContext) {
   interface OnKeyboardListener {
-    fun onKeyboardStateChange(isVisible: Boolean)
+    fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?)
   }
 
-  private var screenView: View? = Utils.activityView(reactContext)
+  private var contentView: View? = null
   private var onGlobalLayoutListener: OnGlobalLayoutListener? = null
   private var isKeyboardVisible = false
 
+  init {
+    val activity = reactContext.currentActivity
+    contentView = activity?.findViewById(android.R.id.content)
+  }
+
   fun registerKeyboardListener(listener: OnKeyboardListener?) {
-    screenView?.apply {
+    contentView?.apply {
       unregisterKeyboardListener()
 
       onGlobalLayoutListener = object : OnGlobalLayoutListener {
@@ -28,13 +33,13 @@ class KeyboardManager(reactContext: ReactContext) {
             // Will ask InputMethodManager.isAcceptingText() to detect if keyboard appeared or not.
             val inputManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             if (height != previousHeight && inputManager.isAcceptingText()) {
-              listener?.onKeyboardStateChange(true)
+              listener?.onKeyboardStateChange(true, height)
 
               previousHeight = height
               isKeyboardVisible = true
             }
           } else if (isKeyboardVisible) {
-            listener?.onKeyboardStateChange(false)
+            listener?.onKeyboardStateChange(false, null)
             previousHeight = 0
             isKeyboardVisible = false
           }
@@ -47,7 +52,7 @@ class KeyboardManager(reactContext: ReactContext) {
 
   fun unregisterKeyboardListener() {
     onGlobalLayoutListener?.let {
-      screenView?.getViewTreeObserver()?.removeOnGlobalLayoutListener(onGlobalLayoutListener)
+      contentView?.getViewTreeObserver()?.removeOnGlobalLayoutListener(onGlobalLayoutListener)
     }
   }
 }

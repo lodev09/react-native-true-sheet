@@ -62,8 +62,12 @@ class TrueSheetDialog(
    */
   fun registerKeyboardManager() {
     keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
-      override fun onKeyboardStateChange(isVisible: Boolean) {
-        behavior.maxScreenHeight = Utils.activityView(reactContext)?.height ?: 0
+      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
+        when (isVisible) {
+          true -> behavior.maxScreenHeight = visibleHeight ?: 0
+          else -> behavior.maxScreenHeight = Utils.screenHeight(reactContext)
+        }
+
         behavior.footerView?.apply {
           y = (behavior.maxScreenHeight - (sheetView.top ?: 0) - height).toFloat()
         }

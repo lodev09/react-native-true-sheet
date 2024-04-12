@@ -135,7 +135,7 @@ class TrueSheetBehavior(private val reactContext: ReactContext) : BottomSheetBeh
    */
   fun configure() {
     // Update the usable sheet height
-    maxScreenHeight = Utils.activityView(reactContext)?.height ?: 0
+    maxScreenHeight = Utils.screenHeight(reactContext)
 
     var contentHeight = 0
 
