@@ -212,6 +212,14 @@ Blur tint that is mapped into native values in iOS.
 | index | `number` | The size index from the provided sizes. See `sizes` prop. |
 | value | `number` | The actual height value of the size. |
 
+## Testing
+
+When using `jest`, simply mock the entire package.
+
+```ts
+jest.mock('@lodev09/react-native-true-sheet')
+```
+
 ## Troubleshooting
 
 ### Using `react-native-gesture-handler` on **Android**
