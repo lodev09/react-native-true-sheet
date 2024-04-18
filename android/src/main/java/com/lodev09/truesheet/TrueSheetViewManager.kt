@@ -5,7 +5,6 @@ import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.DismissEvent
@@ -52,11 +51,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     }
 
     view.setSizes(result.toArray())
-  }
-
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
-    super.addEventEmitters(reactContext, view)
-    view.rootSheetView.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.getId())
   }
 
   companion object {

@@ -31,6 +31,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     <TrueSheet
       ref={sheetRef}
       sizes={['auto', '80%']}
+      dismissible={false}
       contentContainerStyle={$content}
       blurTint="dark"
       backgroundColor={DARK}

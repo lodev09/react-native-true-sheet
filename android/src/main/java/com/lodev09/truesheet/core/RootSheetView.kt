@@ -15,8 +15,8 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * RootViewGroup is the ViewGroup which contains all the children of a Modal. It gets all
- * child information forwarded from ReactModalHostView and uses that to create children. It is
+ * RootSheetView is the ViewGroup which contains all the children of a Modal. It gets all
+ * child information forwarded from TrueSheetView and uses that to create children. It is
  * also responsible for acting as a RootView and handling touch events. It does this the same way
  * as ReactRootView.
  *
@@ -34,7 +34,6 @@ class RootSheetView(context: Context?) :
   private var viewHeight = 0
 
   private val mJSTouchDispatcher = JSTouchDispatcher(this)
-
   private var mJSPointerDispatcher: JSPointerDispatcher? = null
 
   var eventDispatcher: EventDispatcher? = null
@@ -133,9 +132,5 @@ class RootSheetView(context: Context?) :
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // No-op - override in order to still receive events to onInterceptTouchEvent
     // even when some other view disallow that
-  }
-
-  companion object {
-    const val TAG = "TrueSheetView"
   }
 }

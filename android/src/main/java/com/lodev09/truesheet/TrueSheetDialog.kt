@@ -53,29 +53,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
-   * Also update footer's Y position.
+   * Set the state based on the given size index.
    */
-  fun registerKeyboardManager() {
-    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
-      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
-        when (isVisible) {
-          true -> maxScreenHeight = visibleHeight ?: 0
-          else -> maxScreenHeight = Utils.screenHeight(reactContext)
-        }
-
-        footerView?.apply {
-          y = (maxScreenHeight - (sheetView.top ?: 0) - height).toFloat()
-        }
-      }
-    })
-  }
-
-  /**
-   * Remove keyboard listener.
-   */
-  fun unregisterKeyboardManager() {
-    keyboardManager.unregisterKeyboardListener()
+  private fun setStateForSizeIndex(index: Int) {
+    behavior.state = getStateForSizeIndex(index)
   }
 
   /**
@@ -150,6 +131,32 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       else -> BottomSheetBehavior.STATE_HIDDEN
     }
+
+  /**
+   * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
+   * Also update footer's Y position.
+   */
+  fun registerKeyboardManager() {
+    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
+      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
+        maxScreenHeight = when (isVisible) {
+          true -> visibleHeight ?: 0
+          else -> Utils.screenHeight(reactContext)
+        }
+
+        footerView?.apply {
+          y = (maxScreenHeight - (sheetView.top ?: 0) - height).toFloat()
+        }
+      }
+    })
+  }
+
+  /**
+   * Remove keyboard listener.
+   */
+  fun unregisterKeyboardManager() {
+    keyboardManager.unregisterKeyboardListener()
+  }
 
   /**
    * Configure the sheet based on size preferences.
@@ -237,13 +244,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Get SizeInfo data for given size index.
    */
   fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForSizeIndex(index)) ?: SizeInfo(0, 0f)
-
-  /**
-   * Set the state based on the given size index.
-   */
-  fun setStateForSizeIndex(index: Int) {
-    behavior.state = getStateForSizeIndex(index)
-  }
 
   companion object {
     const val TAG = "TrueSheetView"

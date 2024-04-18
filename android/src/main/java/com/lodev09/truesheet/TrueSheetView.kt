@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -50,7 +51,7 @@ class TrueSheetView(context: Context) :
   /**
    * React root view placeholder.
    */
-  val rootSheetView: RootSheetView
+  private val rootSheetView: RootSheetView
 
   /**
    * 1st child of the container view.
@@ -67,6 +68,7 @@ class TrueSheetView(context: Context) :
     eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
 
     rootSheetView = RootSheetView(context)
+    rootSheetView.eventDispatcher = eventDispatcher
 
     sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
 
@@ -94,6 +96,7 @@ class TrueSheetView(context: Context) :
 
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
+        Log.d(TAG, "dismissed")
         unregisterKeyboardManager()
         dismissPromise?.let { promise ->
           promise()
