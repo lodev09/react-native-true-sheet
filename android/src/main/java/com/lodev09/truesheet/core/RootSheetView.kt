@@ -26,7 +26,7 @@ import com.facebook.react.views.view.ReactViewGroup
  * styleHeight on the LayoutShadowNode to be the window size. This is done through the
  * UIManagerModule, and will then cause the children to layout as if they can fill the window.
  */
-class RootViewGroup(context: Context?) :
+class RootSheetView(context: Context?) :
   ReactViewGroup(context),
   RootView {
   private var hasAdjustedSize = false

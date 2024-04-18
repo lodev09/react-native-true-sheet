@@ -13,7 +13,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.DismissEvent
 import com.lodev09.truesheet.core.PresentEvent
-import com.lodev09.truesheet.core.RootViewGroup
+import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.SizeChangeEvent
 
 class TrueSheetView(context: Context) :
@@ -48,14 +48,9 @@ class TrueSheetView(context: Context) :
   private val sheetDialog: TrueSheetDialog
 
   /**
-   * The custom BottomSheetDialogBehavior instance.
-   */
-  private val sheetBehavior: TrueSheetBehavior
-
-  /**
    * React root view placeholder.
    */
-  private val sheetRootView: RootViewGroup
+  val rootSheetView: RootSheetView
 
   /**
    * 1st child of the container view.
@@ -71,11 +66,9 @@ class TrueSheetView(context: Context) :
     reactContext.addLifecycleEventListener(this)
     eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
 
-    sheetRootView = RootViewGroup(context)
-    sheetRootView.eventDispatcher = eventDispatcher
+    rootSheetView = RootSheetView(context)
 
-    sheetBehavior = TrueSheetBehavior(reactContext)
-    sheetDialog = TrueSheetDialog(reactContext, sheetBehavior, sheetRootView)
+    sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
 
     // Configure Sheet Dialog
     sheetDialog.apply {
@@ -86,7 +79,7 @@ class TrueSheetView(context: Context) :
         // Initialize footer y
         footerView?.apply {
           UiThreadUtil.runOnUiThread {
-            y = (sheetBehavior.maxScreenHeight - sheetView.top - height).toFloat()
+            y = (sheetDialog.maxScreenHeight - sheetView.top - height).toFloat()
           }
         }
 
@@ -96,7 +89,7 @@ class TrueSheetView(context: Context) :
         }
 
         // dispatch onPresent event
-        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetBehavior.getSizeInfoForIndex(activeIndex)))
+        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(activeIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -113,8 +106,8 @@ class TrueSheetView(context: Context) :
     }
 
     // Configure sheet behavior events
-    sheetBehavior.apply {
-      addBottomSheetCallback(
+    sheetDialog.apply {
+      behavior.addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
             footerView?.let {
@@ -128,24 +121,18 @@ class TrueSheetView(context: Context) :
           }
 
           override fun onStateChanged(view: View, newState: Int) {
-            when (newState) {
-              BottomSheetBehavior.STATE_HIDDEN -> sheetDialog.dismiss()
-
-              else -> {
-                val sizeInfo = getSizeInfoForState(newState)
-                if (sizeInfo != null && sizeInfo.index != activeIndex) {
-                  // Invoke promise when sheet resized programmatically
-                  presentPromise?.let { promise ->
-                    promise()
-                    presentPromise = null
-                  }
-
-                  activeIndex = sizeInfo.index
-
-                  // dispatch onSizeChange event
-                  eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
-                }
+            val sizeInfo = getSizeInfoForState(newState)
+            if (sizeInfo != null && sizeInfo.index != activeIndex) {
+              // Invoke promise when sheet resized programmatically
+              presentPromise?.let { promise ->
+                promise()
+                presentPromise = null
               }
+
+              activeIndex = sizeInfo.index
+
+              // dispatch onSizeChange event
+              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
             }
           }
         }
@@ -154,7 +141,7 @@ class TrueSheetView(context: Context) :
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
-    sheetRootView.dispatchProvideStructure(structure)
+    rootSheetView.dispatchProvideStructure(structure)
   }
 
   override fun onLayout(
@@ -181,29 +168,29 @@ class TrueSheetView(context: Context) :
       contentView = it.getChildAt(0) as ViewGroup
       footerView = it.getChildAt(1) as ViewGroup
 
-      sheetBehavior.contentView = contentView
-      sheetBehavior.footerView = footerView
+      sheetDialog.contentView = contentView
+      sheetDialog.footerView = footerView
 
       // rootView's first child is the Container View
-      sheetRootView.addView(it, index)
+      rootSheetView.addView(it, index)
     }
   }
 
   override fun getChildCount(): Int {
     // This method may be called by the parent constructor
     // before rootView is initialized.
-    return sheetRootView.childCount
+    return rootSheetView.childCount
   }
 
-  override fun getChildAt(index: Int): View = sheetRootView.getChildAt(index)
+  override fun getChildAt(index: Int): View = rootSheetView.getChildAt(index)
 
   override fun removeView(child: View) {
-    sheetRootView.removeView(child)
+    rootSheetView.removeView(child)
   }
 
   override fun removeViewAt(index: Int) {
     val child = getChildAt(index)
-    sheetRootView.removeView(child)
+    rootSheetView.removeView(child)
   }
 
   override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
@@ -232,18 +219,18 @@ class TrueSheetView(context: Context) :
   }
 
   fun setMaxHeight(height: Int) {
-    sheetBehavior.maxSheetHeight = height
-    sheetBehavior.configure()
+    sheetDialog.maxSheetHeight = height
+    sheetDialog.configure()
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetBehavior.isHideable = dismissible
+    sheetDialog.behavior.isHideable = dismissible
     sheetDialog.setCancelable(dismissible)
   }
 
   fun setSizes(newSizes: Array<Any>) {
-    sheetBehavior.sizes = newSizes
-    sheetBehavior.configure()
+    sheetDialog.sizes = newSizes
+    sheetDialog.configure()
   }
 
   /**

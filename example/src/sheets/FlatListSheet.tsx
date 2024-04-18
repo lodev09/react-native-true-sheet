@@ -24,6 +24,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
     >
       <FlatList<number>
         ref={flatListRef}
+        nestedScrollEnabled
         data={times(50, (i) => i)}
         contentContainerStyle={$content}
         indicatorStyle="black"
