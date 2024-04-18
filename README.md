@@ -31,7 +31,7 @@ npm i @lodev09/react-native-true-sheet
 
 ## Usage
 
-```ts
+```tsx
 import { TrueSheet } from "@lodev09/react-native-true-sheet"
 
 // ...
@@ -78,7 +78,7 @@ Extends `ViewProps`
 
 ## Methods
 
-```ts
+```tsx
 const sheet = useRef<TrueSheet>(null)
 
 const resize = () => {
@@ -108,7 +108,7 @@ return (
 
 ## Events
 
-```ts
+```tsx
 const handleSizeChange = (info: SizeInfo) => {
   console.log(info)
 }
@@ -130,7 +130,7 @@ return (
 
 ### `SheetSize`
 
-```ts
+```tsx
 <TrueSheet sizes={['auto', '80%', 'large']}>
   // ...
 </TrueSheet>
@@ -166,7 +166,7 @@ Grabber props to be used for android grabber or handle.
 
 Blur tint that is mapped into native values in iOS.
 
-```ts
+```tsx
 <TrueSheet blurTint="dark">
   // ...
 </TrueSheet>
@@ -200,7 +200,7 @@ Blur tint that is mapped into native values in iOS.
 
 `Object` that comes with some events.
 
-```ts
+```tsx
 {
   index: 1,
   value: 69
@@ -216,25 +216,37 @@ Blur tint that is mapped into native values in iOS.
 
 When using `jest`, simply mock the entire package.
 
-```ts
+```tsx
 jest.mock('@lodev09/react-native-true-sheet')
 ```
 
 ## Troubleshooting
+
+### Handling `ScrollView` on **Android**
+
+On Android, `nestedScrollEnabled` needs to be enabled so that scrolling works when the sheet is expanded to its `maxHeight`.
+
+```tsx
+<TrueSheet ref={sheet}>
+  <ScrollView nestedScrollEnabled>
+    // ...
+  </ScrollView>
+</TrueSheet>
+```
 
 ### Using `react-native-gesture-handler` on **Android**
 
 On Android, RNGH does not work by default because modals are not located under React Native Root view in native hierarchy. To fix that, components need to be wrapped with `GestureHandlerRootView`.
 
 Example:
-```ts
+```tsx
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 ```
-```ts
+```tsx
 return (
   <TrueSheet ref={sheet}>
     <GestureHandlerRootView>
-      <MyComponent />
+      // ...
     </GestureHandlerRootView>
   </TrueSheet>
 )
@@ -245,7 +257,7 @@ return (
 On iOS, navigating to a [React Navigation](https://reactnavigation.org) screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
 
 Example:
-```ts
+```tsx
 const sheet = useRef<TrueSheet>(null)
 
 const navigate = async () => {
