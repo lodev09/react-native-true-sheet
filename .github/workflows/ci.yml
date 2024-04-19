@@ -59,19 +59,7 @@ jobs:
       - name: Build package
         run: yarn prepare
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Prebuild example
-        run: yarn example setup
-
-  build-ios:
+  prebuild:
     runs-on: macos-14
     steps:
       - name: Checkout
