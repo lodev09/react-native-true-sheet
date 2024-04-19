@@ -299,9 +299,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    // Dismiss the keyboard
-    contentView?.endEditing(true)
-
     viewController.dismiss(animated: true) {
       promise.resolve(nil)
     }
