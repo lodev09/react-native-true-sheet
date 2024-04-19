@@ -142,8 +142,8 @@ return (
 | `"small"` | Translates to 25% | **_16+_** | ✅ |
 | `"medium"` | Translates to 50% | **_15+_** | ✅ |
 | `"large"` | Translates to 100% | ✅ | ✅ |
+| `"${number}%"` | Fixed height in % | **_16+_** | ✅ |
 | `number` | Fixed height | **_16+_** | ✅ |
-| `${number}%` | Fixed height in % | **_16+_** | ✅ |
 
 > [!NOTE]
 > `auto` is not guaranteed to be accurate if your content depends on various rendering logic. Experiment with it and try to keep your content size as fixed as possible.
@@ -281,6 +281,7 @@ The sheet does not have control over how React Native renders components and may
 
 - [ ] Inline sheet
 - [ ] Test with RN new architecture
+- [ ] Context/Hooks
 - [ ] Reanimated integration(?)
 
 ## Contributing
