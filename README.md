@@ -16,7 +16,6 @@ The true native bottom sheet 💩
 * ✅ Handles your _Footer_ needs, natively.
 * ✅ Handles your _Keyboard_ needs, natively.
 * ✅ Asynchronus `ref` [methods](#methods).
-* ✅ Works with Expo by default.
 * ✅ Bonus! [Blur](#blurtint) support on iOS 😎
 
 ## Installation
@@ -28,6 +27,9 @@ yarn add @lodev09/react-native-true-sheet
 ```sh
 npm i @lodev09/react-native-true-sheet
 ```
+
+> [!NOTE]
+> This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). However, it does work with Expo [`prebuild`](https://docs.expo.dev/workflow/prebuild/).
 
 ## Usage
 
