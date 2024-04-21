@@ -93,6 +93,21 @@ export type SheetSize =
 
 export interface TrueSheetProps extends ViewProps {
   /**
+   * The name to reference this sheet. It has to be unique.
+   * You can then present this sheet globally using its `name`.
+   *
+   * Example:
+   * ```ts
+   * <TrueSheet name="my-awesome-sheet">
+   *   <MyComponent />
+   * </TrueSheet>
+   * ```
+   * ```ts
+   * TrueSheet.present('my-awesome-sheet')
+   * ```
+   */
+  name?: string
+  /**
    * The sizes you want the Sheet to support.
    * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
    *

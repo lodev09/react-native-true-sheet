@@ -30,6 +30,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   return (
     <TrueSheet
       ref={sheetRef}
+      name="prompt-sheet"
       sizes={['auto', '80%']}
       dismissible={false}
       contentContainerStyle={$content}
