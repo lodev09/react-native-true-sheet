@@ -7,7 +7,7 @@ const config: Config = {
   tagline: 'The true native bottom sheet 💩',
   favicon: 'img/favicon.png',
   url: 'https://sheet.lodev09.com',
-  baseUrl: '/',
+  baseUrl: '/react-native-true-sheet/',
   organizationName: 'lodev09',
   projectName: 'react-native-true-sheet',
   onBrokenLinks: 'throw',
