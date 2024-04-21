@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
@@ -79,10 +78,8 @@ class TrueSheetView(context: Context) :
         registerKeyboardManager()
 
         // Initialize footer y
-        footerView?.apply {
-          UiThreadUtil.runOnUiThread {
-            y = (sheetDialog.maxScreenHeight - sheetView.top - height).toFloat()
-          }
+        UiThreadUtil.runOnUiThread {
+          positionFooter()
         }
 
         presentPromise?.let { promise ->
@@ -96,8 +93,8 @@ class TrueSheetView(context: Context) :
 
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
-        Log.d(TAG, "dismissed")
         unregisterKeyboardManager()
+
         dismissPromise?.let { promise ->
           promise()
           dismissPromise = null
@@ -221,9 +218,18 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismiss()
   }
 
+  private fun configureIfPresented() {
+    if (sheetDialog.isShowing) {
+      UiThreadUtil.runOnUiThread {
+        sheetDialog.configure()
+        sheetDialog.positionFooter()
+      }
+    }
+  }
+
   fun setMaxHeight(height: Int) {
     sheetDialog.maxSheetHeight = height
-    sheetDialog.configure()
+    configureIfPresented()
   }
 
   fun setDismissible(dismissible: Boolean) {
@@ -233,7 +239,7 @@ class TrueSheetView(context: Context) :
 
   fun setSizes(newSizes: Array<Any>) {
     sheetDialog.sizes = newSizes
-    sheetDialog.configure()
+    configureIfPresented()
   }
 
   /**
