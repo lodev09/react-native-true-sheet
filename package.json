@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "The true native bottom sheet. 💩",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
