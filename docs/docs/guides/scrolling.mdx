@@ -1,3 +1,43 @@
 ---
 title: Scrolling
+description: Handle scrollable content when using TrueSheet.
 ---
+
+## IOS
+
+On iOS, use [`scrollRef`](/reference/props#scrollref) to reference the scrollable component, allowing iOS to handle it automatically.
+
+This works for `FlatList` as well.
+
+```tsx {6-7}
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+  const scrollview = useRef<ScrollView>(null)
+
+  return (
+    <TrueSheet ref={sheet} scrollRef={scrollview}>
+      <ScrollView ref={scrollview} nestedScrollEnabled>
+        <View />
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+```
+
+## Android
+
+On Android, `nestedScrollEnabled` needs to be enabled so that scrolling works when the sheet is expanded to its `maxHeight`.
+
+```tsx {6}
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  return (
+    <TrueSheet ref={sheet}>
+      <ScrollView nestedScrollEnabled>
+        <View />
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+```

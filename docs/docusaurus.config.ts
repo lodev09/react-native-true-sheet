@@ -6,7 +6,7 @@ const config: Config = {
   title: 'React Native True Sheet',
   tagline: 'The true native bottom sheet 💩',
   favicon: 'img/favicon.png',
-  url: 'https://truesheet.lodev09.com',
+  url: 'https://sheet.lodev09.com',
   baseUrl: '/',
   organizationName: 'lodev09',
   projectName: 'react-native-true-sheet',
@@ -43,7 +43,7 @@ const config: Config = {
     navbar: {
       title: 'True Sheet',
       logo: {
-        alt: 'TrueSheet Logo',
+        alt: 'True Sheet Logo',
         src: 'img/logo.svg',
       },
       items: [
