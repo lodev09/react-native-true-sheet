@@ -1,11 +1,19 @@
-import React, { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
+import React, {
+  forwardRef,
+  useRef,
+  type Ref,
+  useImperativeHandle,
+  useState,
+  useEffect,
+} from 'react'
 import { TextInput, View, type TextStyle, type ViewStyle } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
+import { TrueSheet, type SheetSize, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import {
   BORDER_RADIUS,
   DARK,
   DARK_BLUE,
+  FOOTER_HEIGHT,
   GRABBER_COLOR,
   GRAY,
   INPUT_HEIGHT,
@@ -20,25 +28,44 @@ interface PromptSheetProps extends TrueSheetProps {}
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null)
 
+  const [contentHeight, setContentHeight] = useState<number>()
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [size, setSize] = useState<SheetSize>('auto')
+
+  const handleDismiss = () => {
+    setIsSubmitted(false)
+    setSize('auto')
+    console.log('Sheet prompt dismissed!')
+  }
+
   const dismiss = async () => {
     await sheetRef.current?.dismiss()
     console.log('Sheet prompt dismiss asynced')
   }
 
+  const submit = async () => {
+    setIsSubmitted(true)
+  }
+
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
+
+  useEffect(() => {
+    if (isSubmitted && contentHeight) {
+      setSize(contentHeight + FOOTER_HEIGHT)
+    }
+  }, [isSubmitted, contentHeight])
 
   return (
     <TrueSheet
       ref={sheetRef}
       name="prompt-sheet"
-      sizes={['auto', '80%']}
-      dismissible={false}
+      sizes={[size, '80%']}
       contentContainerStyle={$content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
-      onDismiss={() => console.log('Sheet prompt dismissed!')}
+      onDismiss={handleDismiss}
       onPresent={({ index, value }) =>
         console.log(`Sheet prompt presented with size of ${value} at index: ${index}`)
       }
@@ -46,9 +73,13 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       FooterComponent={<Footer />}
       {...props}
     >
-      <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
-      <Input />
-      <Button text="Dismis" onPress={dismiss} />
+      <View onLayout={(e) => isSubmitted && setContentHeight(e.nativeEvent.layout.height)}>
+        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+        <Input />
+        {isSubmitted && <Input />}
+        <Button text="Submit" onPress={submit} />
+        <Button text="Dismis" onPress={dismiss} />
+      </View>
     </TrueSheet>
   )
 })
@@ -73,7 +104,7 @@ const $inputContainer: ViewStyle = {
   height: INPUT_HEIGHT,
   borderRadius: BORDER_RADIUS,
   justifyContent: 'center',
-  marginBottom: SPACING * 2,
+  marginBottom: SPACING,
 }
 
 const $input: TextStyle = {

@@ -25,7 +25,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
-  var sheetView: ViewGroup
+  private var sheetView: ViewGroup
 
   init {
     setContentView(rootSheetView)
@@ -39,6 +39,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
       )
     }
+
+    // Update the usable sheet height
+    maxScreenHeight = Utils.screenHeight(reactContext)
   }
 
   fun show(sizeIndex: Int) {
@@ -49,6 +52,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       setStateForSizeIndex(sizeIndex)
 
       this.show()
+    }
+  }
+
+  fun positionFooter() {
+    footerView?.apply {
+      y = (maxScreenHeight - sheetView.top - height).toFloat()
     }
   }
 
@@ -102,7 +111,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         else -> (maxScreenHeight * 0.5).toInt()
       }
 
-    return minOf(height, maxSheetHeight ?: maxScreenHeight)
+    return when (maxSheetHeight) {
+      null -> height
+      else -> minOf(height, maxSheetHeight ?: maxScreenHeight)
+    }
   }
 
   /**
@@ -144,9 +156,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           else -> Utils.screenHeight(reactContext)
         }
 
-        footerView?.apply {
-          y = (maxScreenHeight - (sheetView.top ?: 0) - height).toFloat()
-        }
+        positionFooter()
       }
     })
   }
@@ -162,9 +172,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Configure the sheet based on size preferences.
    */
   fun configure() {
-    // Update the usable sheet height
-    maxScreenHeight = Utils.screenHeight(reactContext)
-
     var contentHeight = 0
 
     contentView?.let { contentHeight = it.height }
@@ -181,12 +188,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       when (sizes.size) {
         1 -> {
           maxHeight = getSizeHeight(sizes[0], contentHeight)
-          peekHeight = maxHeight
+          setPeekHeight(maxHeight, isShowing)
           skipCollapsed = true
         }
 
         2 -> {
-          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          setPeekHeight(getSizeHeight(sizes[0], contentHeight), isShowing)
           maxHeight = getSizeHeight(sizes[1], contentHeight)
         }
 
@@ -194,7 +201,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           // Enables half expanded
           isFitToContents = false
 
-          peekHeight = getSizeHeight(sizes[0], contentHeight)
+          setPeekHeight(getSizeHeight(sizes[0], contentHeight), isShowing)
           halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxScreenHeight.toFloat()
           maxHeight = getSizeHeight(sizes[2], contentHeight)
         }
