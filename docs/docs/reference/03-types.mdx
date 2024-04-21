@@ -1,0 +1,88 @@
+---
+title: Types
+---
+
+## `SheetSize`
+
+```tsx
+<TrueSheet sizes={['auto', '80%', 'large']}>
+  <View />
+</TrueSheet>
+```
+
+| Value | Description | 🍎 | 🤖 |
+| - | - | - | - |
+| `"auto"` | Auto resize based on content height. | **_16+_** | ✅ |
+| `"small"` | Translates to 25% | **_16+_** | ✅ |
+| `"medium"` | Translates to 50% | **_15+_** | ✅ |
+| `"large"` | Translates to 100% | ✅ | ✅ |
+| `"${number}%"` | Fixed height in % | **_16+_** | ✅ |
+| `number` | Fixed height | **_16+_** | ✅ |
+
+:::info
+`auto` is not guaranteed to be accurate if your content depends on various rendering logic. Experiment with it and try to keep your content size as fixed as possible.
+
+Alternatively, you can programmatically call [`resize`](#methods) to adjust the sheet size on-the-fly.
+:::
+
+## `TrueSheetGrabberProps`
+
+Grabber props to be used for android grabber or handle.
+
+| Prop | Type | Default | Description |
+| - | - | - | - |
+| visible | `boolean` | `true` | Is grabber visible. |
+| color | `ColorValue` | `"rgba(73,69,79,0.4)"` | Grabber color according to M3 specs. |
+| height | `number` | `4` | Grabber height according to M3 specs. |
+| width | `number` | `32` | Grabber width according to M3 specs. |
+| topOffset | `number` | `0` | Grabber top position offset. |
+
+## `BlurTint`
+
+Blur tint that is mapped into native values in IOS.
+
+```tsx
+<TrueSheet blurTint="dark">
+  <View />
+</TrueSheet>
+```
+
+| Value |
+| - |
+| `"light"` |
+| `"dark"` |
+| `"default"` |
+| `"extraLight"` |
+| `"regular"` |
+| `"prominent"` |
+| `"systemUltraThinMaterial"` |
+| `"systemThinMaterial"` |
+| `"systemMaterial"` |
+| `"systemThickMaterial"` |
+| `"systemChromeMaterial"` |
+| `"systemUltraThinMaterialLight"` |
+| `"systemThinMaterialLight"` |
+| `"systemMaterialLight"` |
+| `"systemThickMaterialLight"` |
+| `"systemChromeMaterialLight"` |
+| `"systemUltraThinMaterialDark"` |
+| `"systemThinMaterialDark"` |
+| `"systemMaterialDark"` |
+| `"systemThickMaterialDark"` |
+| `"systemChromeMaterialDark"` |
+
+## `SizeInfo`
+
+`Object` that comes with some events.
+
+```tsx
+{
+  index: 1,
+  value: 69
+}
+```
+
+| Property | Type | Description |
+| - | - | - |
+| index | `number` | The size index from the provided sizes. See `sizes` prop. |
+| value | `number` | The actual height value of the size. |

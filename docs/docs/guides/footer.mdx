@@ -1,0 +1,55 @@
+---
+title: Floating Footer
+description: Add a floating Footer component to the sheet.
+---
+
+Do you need an FAB (Floating Action Button) on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
+
+`TrueSheet` provides first-class support for a `Footer` component. This component will float at the bottom of the sheet.
+
+## How?
+
+Define your footer component.
+
+```tsx
+const SomeFooter = () => {
+  return (
+    <View>
+      <Text>My Foot-er is Awesome.</Text>
+    </View>
+  )
+}
+```
+
+Stick it in the [`FooterComponent`](/reference/props#footercomponent).
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet FooterComponent={SomeFooter}>
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+For best performance, use `ReactElement` instead!
+
+```tsx {5-9}
+const App = () => {
+  return (
+    <TrueSheet
+      ref={sheet}
+      FooterComponent={
+        <View>
+          <Text>My Foot-er is more awesome.</Text>
+        </View>
+      }
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+:::

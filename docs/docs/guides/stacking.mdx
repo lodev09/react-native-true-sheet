@@ -1,0 +1,49 @@
+---
+title: Stacking
+description: Guide on how to present sheet on top of an existing sheet.
+---
+
+Sometimes you want to stack the sheets one after another. On iOS, this can cause issues. There are _**two**_ ways to resolve this.
+
+### Dismiss the "parent" sheet first
+
+```tsx
+const presentSheet2 = async () => {
+  await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss ✅
+  await sheet2.current?.present() // Sheet 2 will now present 🎉
+}
+
+return (
+  <>
+    <TrueSheet ref={sheet1}>
+      <Button onPress={presentSheet2} title="Present Sheet 2" />
+      // ...
+    </TrueSheet>
+
+    <TrueSheet ref={sheet2}>
+      // ...
+    </TrueSheet>
+  </>
+)
+```
+### Define the 2nd sheet within the "parent" sheet.
+
+IOS handles this automatically by default 😎.
+
+```tsx
+const presentSheet2 = async () => {
+  await sheet2.current?.present() // Sheet 2 will now present 🎉
+}
+
+return (
+  <TrueSheet ref={sheet1}>
+    <Button onPress={presentSheet2} title="Present Sheet 2" />
+
+    // ...
+
+    <TrueSheet ref={sheet2}>
+      // ...
+    </TrueSheet>
+  </TrueSheet>
+)
+```
