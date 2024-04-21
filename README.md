@@ -16,7 +16,7 @@ The true native bottom sheet 💩
 * ✅ Handles your _Footer_ needs, natively.
 * ✅ Handles your _Keyboard_ needs, natively.
 * ✅ Asynchronus `ref` [methods](#methods).
-* ✅ Bonus! [Blur](#blurtint) support on iOS 😎
+* ✅ Bonus! [Blur](#blurtint) support on IOS 😎
 
 ## Installation
 
@@ -28,8 +28,7 @@ yarn add @lodev09/react-native-true-sheet
 npm i @lodev09/react-native-true-sheet
 ```
 
-> [!NOTE]
-> This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). However, it does work with Expo [`prebuild`](https://docs.expo.dev/workflow/prebuild/).
+> This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). Use this with [Expo CNG](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
 
 ## Usage
 
@@ -67,6 +66,7 @@ Extends `ViewProps`
 | Prop | Type | Default | Description | 🍎 | 🤖 |
 | - | - | - | - | - | - |
 | sizes | [`SheetSize[]`](#sheetsize) | `["medium", "large"]` | Array of sizes you want the sheet to support. Maximum of _**3 sizes**_ only! **_collapsed_**, **_half-expanded_**, and **_expanded_**. Example: `size={["auto", "60%", "large"]}`| ✅ | ✅ |
+| name | `string` | - | The name to reference this sheet. It has to be **_unique_**. You can then present this sheet globally using its name. | ✅ | ✅ |
 | backgroundColor | `ColorValue` | `"white"` | The sheet's background color. | ✅ | ✅ |
 | cornerRadius | `number` | - | the sheet corner radius. | ✅ | ✅ |
 | maxHeight | `number` | - | Overrides `"large"` or `"100%"` height. | ✅ | ✅ |
@@ -75,8 +75,8 @@ Extends `ViewProps`
 | dismissible | `boolean` | `true` | If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it. | ✅ | ✅ |
 | grabber | `boolean` | `true` | Shows a grabber (or handle). Native on IOS and styled `View` on Android. | ✅ | ✅ |
 | grabberProps | [`TrueSheetGrabberProps`](#truesheetgrabberprops) | - | Overrides the grabber props for android. | | ✅ |
-| blurTint | [`BlurTint`](#blurtint) | - | The blur effect style on iOS. Overrides `backgroundColor` if set. Example: `"light"`, `"dark"`, etc. | ✅ | |
-| scrollRef | `RefObject<...>` | - | The main scrollable ref that the sheet should handle on iOS. | ✅ | |
+| blurTint | [`BlurTint`](#blurtint) | - | The blur effect style on IOS. Overrides `backgroundColor` if set. Example: `"light"`, `"dark"`, etc. | ✅ | |
+| scrollRef | `RefObject<...>` | - | The main scrollable ref that the sheet should handle on IOS. | ✅ | |
 
 ## Methods
 
@@ -107,6 +107,37 @@ return (
 | present | `index: number = 0` | Present the modal sheet. Optionally accepts a size `index`. See `sizes` prop. |
 | resize | `index: number` | Resizes the sheet programmatically by `index`. This is an alias of the `present(index)` method. |
 | dismiss | - | Dismisses the sheet. |
+
+### Static Methods
+
+You can also call the above methods statically without having access to a sheet's `ref`. This is particularly useful when you want to present a sheet from anywhere.
+
+The API is similar to the ref methods except for the required `name` prop.
+
+```ts
+TrueSheet.present('SHEET-NAME')
+TrueSheet.dismiss('SHEET-NAME')
+TrueSheet.resize('SHEET-NAME', 1)
+```
+
+Example:
+```tsx
+// Define the sheet as usual
+<TrueSheet name="my-sheet">
+  // ...
+</TrueSheet>
+```
+```tsx
+// Somewhere in your screen
+const presentMySheet = async () => {
+  await TrueSheet.present('my-sheet')
+  console.log('🎉')
+}
+
+return (
+  <Button onPress={presentMySheet} />
+)
+```
 
 ## Events
 
@@ -166,7 +197,7 @@ Grabber props to be used for android grabber or handle.
 
 ### `BlurTint`
 
-Blur tint that is mapped into native values in iOS.
+Blur tint that is mapped into native values in IOS.
 
 ```tsx
 <TrueSheet blurTint="dark">
@@ -224,6 +255,55 @@ jest.mock('@lodev09/react-native-true-sheet')
 
 ## Troubleshooting
 
+### Presenting a sheet on top of an existing sheet on **IOS**
+
+On IOS, presenting a sheet on top of an existing sheet will cause error.
+
+```console
+Attempt to present <TrueSheet.TrueSheetViewController: 0x11829f800> on <UIViewController: 0x10900eb10> (from <RNSScreen: 0x117dbf400>) which is already presenting <TrueSheet.TrueSheetViewController: 0x11a0b9200>
+```
+
+There are _two_ ways to resolve this.
+
+1. Dismiss the "parent" sheet first
+    ```tsx
+    const presentSheet2 = async () => {
+      await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss ✅
+      await sheet2.current?.present() // Sheet 2 will now present 🎉
+    }
+
+    return (
+      <>
+        <TrueSheet ref={sheet1}>
+          <Button onPress={presentSheet2} title="Present Sheet 2" />
+          // ...
+        </TrueSheet>
+
+        <TrueSheet ref={sheet2}>
+          // ...
+        </TrueSheet>
+      </>
+    )
+    ```
+2. Define the 2nd sheet within the "parent" sheet. IOS handles this automatically by default 😎.
+    ```tsx
+    const presentSheet2 = async () => {
+      await sheet2.current?.present() // Sheet 2 will now present 🎉
+    }
+
+    return (
+      <TrueSheet ref={sheet1}>
+        <Button onPress={presentSheet2} title="Present Sheet 2" />
+
+        // ...
+
+        <TrueSheet ref={sheet2}>
+          // ...
+        </TrueSheet>
+      </TrueSheet>
+    )
+    ```
+
 ### Handling `ScrollView` on **Android**
 
 On Android, `nestedScrollEnabled` needs to be enabled so that scrolling works when the sheet is expanded to its `maxHeight`.
@@ -254,9 +334,9 @@ return (
 )
 ```
 
-### Integrating `@react-navigation/native` on iOS
+### Integrating `@react-navigation/native` on **IOS**
 
-On iOS, navigating to a [React Navigation](https://reactnavigation.org) screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
+On IOS, navigating to a [React Navigation](https://reactnavigation.org) screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
 
 Example:
 ```tsx
@@ -283,7 +363,6 @@ The sheet does not have control over how React Native renders components and may
 
 - [ ] Inline sheet
 - [ ] Test with RN new architecture
-- [ ] Context/Hooks
 - [ ] Reanimated integration(?)
 
 ## Contributing

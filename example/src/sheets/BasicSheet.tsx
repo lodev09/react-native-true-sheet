@@ -3,12 +3,13 @@ import { type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { DARK, DARK_BLUE, GRABBER_COLOR, RANDOM_TEXTS, SPACING, random } from '../utils'
-import { Button, DemoContent, Footer } from '../components'
+import { Button, DemoContent, Footer, Spacer } from '../components'
 
 interface BasicSheetProps extends TrueSheetProps {}
 
 export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null)
+  const childSheet = useRef<TrueSheet>(null)
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index)
@@ -18,6 +19,20 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const dismiss = async () => {
     await sheetRef.current?.dismiss()
     console.log('Basic sheet dismiss asynced')
+  }
+
+  const presentChild = async () => {
+    // Note: no need to dismiss this sheet 😎
+    await childSheet.current?.present()
+
+    console.log('Child sheet presented!')
+  }
+
+  const presentPromptSheet = async () => {
+    // Note: we need to dismiss this sheet first
+    await sheetRef.current?.dismiss()
+
+    await TrueSheet.present('prompt-sheet')
   }
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
@@ -43,7 +58,25 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text="Present Large" onPress={() => resize(2)} />
       <Button text="Present 80%" onPress={() => resize(1)} />
       <Button text="Present Auto" onPress={() => resize(0)} />
-      <Button text="Dismis" onPress={dismiss} />
+      <Spacer />
+      <Button text="Present Child Sheet" onPress={presentChild} />
+      <Button text="Present PromptSheet" onPress={presentPromptSheet} />
+      <Spacer />
+      <Spacer />
+      <Button text="Dismiss" onPress={dismiss} />
+
+      <TrueSheet
+        ref={childSheet}
+        sizes={['auto']}
+        backgroundColor={DARK}
+        contentContainerStyle={$content}
+        FooterComponent={<Footer />}
+      >
+        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+        <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
+      </TrueSheet>
     </TrueSheet>
   )
 })
