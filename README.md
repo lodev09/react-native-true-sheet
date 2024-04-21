@@ -15,8 +15,8 @@ The true native bottom sheet 💩
 * ✅ Handles your _Scrolling_ needs, natively.
 * ✅ Handles your _Footer_ needs, natively.
 * ✅ Handles your _Keyboard_ needs, natively.
-* ✅ Asynchronus `ref` [methods](#methods).
-* ✅ Bonus! [Blur](#blurtint) support on IOS 😎
+* ✅ Asynchronus `ref` [methods](https://sheet.lodev09.com/reference#methods).
+* ✅ Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
 
 ## Installation
 
