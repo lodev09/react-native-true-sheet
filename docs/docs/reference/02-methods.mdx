@@ -1,0 +1,82 @@
+---
+title: Methods
+---
+
+## `Ref` Methods
+
+`TrueSheet` has a couple of core methods that you'll be using most of the time. These methods are asynchronous so you can use `async` and `await` on them.
+
+Define the sheet and provide a `ref`. We will be using the `sheet` to access these methods.
+```tsx {4}
+const sheet = useRef<TrueSheet>(null)
+
+return (
+  <TrueSheet ref={sheet} sizes={['auto', '80%']}>
+    <View />
+  </TrueSheet>
+)
+```
+
+### `present`
+
+Present the sheet. Optionally accepts a size `index`. See [`sizes`](/reference/props#sizes) prop.
+
+| Parameters | Required |
+| - | - |
+| `index: number = 0` | No |
+
+```tsx
+await sheet.current?.present()
+```
+
+
+### `dismiss`
+
+Dismisses the sheet.
+
+```tsx
+await sheet.current?.dismiss()
+```
+
+### `resize`
+
+Resizes the sheet programmatically by `index`. This is an alias of the [`present(index)`](#present) method.
+
+| Parameters | Required |
+| - | - |
+| `index: number` | Yes
+
+```tsx
+// Resize to 80%
+await sheet.current?.resize(1)
+```
+
+## Global Methods
+
+You can also call the above methods statically without having access to a sheet's `ref`. This is particularly useful when you want to present a sheet from anywhere.
+
+The API is similar to the `ref` methods except for the required [`name`](/reference/props#name) prop. See [this guide](/guides/global-methods) for example.
+
+In the example below, we provide `"my-sheet"` as the `name` of our sheet.
+```tsx {4}
+const sheet = useRef<TrueSheet>(null)
+
+return (
+  <TrueSheet name="my-sheet" sizes={['auto', '80%']}>
+    <View />
+  </TrueSheet>
+)
+```
+
+You can then use these methods globally.
+
+```tsx
+await TrueSheet.present('my-sheet')
+```
+```tsx
+await TrueSheet.dismiss('my-sheet')
+```
+```tsx
+// Resize to 80%
+await TrueSheet.resize('my-sheet', 1)
+```

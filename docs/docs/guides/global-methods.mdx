@@ -1,0 +1,43 @@
+---
+title: Presenting Globally
+---
+
+`TrueSheet` relies heavily on [`ref` methods](/reference/methods) to present and dismiss the sheet. However, this becomes challenging when the button is deep within the component tree.
+
+To resolve this issue, `TrueSheet` provides [global methods](/reference/methods#global-methods) that allow you to present or dismiss any sheet from anywhere!
+
+## How?
+
+Somewhere in your App, define the sheet with a [`name`](/reference/props#name).
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet name="my-sheet">
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+In your component, present the sheet using the `present` global method.
+
+```tsx {5}
+import { TrueSheet } from '@lodev09/react-native-true-sheet'
+
+const SomeComponent = () => {
+  const presentMySheet = () => {
+    TrueSheet.present('my-sheet') // 🎉
+  }
+
+  return (
+    <Button onPress={presentMySheet} title="Present My Sheet" />
+  )
+}
+```
+
+Guess what? You can also `dismiss` it globally 🤩.
+
+```tsx
+TrueSheet.dismiss('my-sheet') // ✅
+```
