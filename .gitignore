@@ -78,3 +78,4 @@ lib/
 # Example
 example/ios
 example/android
+.vercel

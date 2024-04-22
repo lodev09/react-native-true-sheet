@@ -26,6 +26,7 @@
   ],
   "scripts": {
     "example": "yarn workspace true-sheet-example",
+    "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
