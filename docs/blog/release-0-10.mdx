@@ -1,0 +1,61 @@
+---
+slug: release-0-10
+title: Version 0.10 Release
+authors: [lodev09]
+tags: [release]
+---
+
+## Version 0.10 🎉
+
+True Sheet is getting better with every update! This latest version introduces some exciting new features to enhance your experience.
+
+### Global Static Methods
+
+Many users have asked about presenting the sheet from anywhere within their applications. While there are multiple solutions, we've chosen the simplest approach.
+
+Introducing [static methods](/reference/methods#global-methods)!
+
+With this update, you can now present the sheet from any part of your code by providing a [`name`](/reference/props#name) to your sheet instance. This streamlines the process and makes it easier to manage your sheets across your application.
+
+Here's an example:
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet name="my-sheet">
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+
+```tsx {5}
+import { TrueSheet } from '@lodev09/react-native-true-sheet'
+
+const SomeComponent = () => {
+  const presentMySheet = () => {
+    TrueSheet.present('my-sheet') // 🎉
+  }
+
+  return (
+    <Button onPress={presentMySheet} title="Present My Sheet" />
+  )
+}
+```
+
+Check out our [guide](/guides/global-methods) on global static methods for examples and detailed usage instructions.
+
+### Truly Automatic `auto` Sizing
+
+True Sheet has long supported [`auto`](/reference/types#sheetsize) sizing, where the sheet's height adjusts dynamically based on its content. However, in previous versions, this feature had some limitations and required re-presenting the sheet to update the size after content changes.
+
+With version `0.10`, `auto` sizing is now truly automatic. Whenever the content within the sheet changes, the sheet's height will adjust seamlessly without the need for re-presenting. 😎
+
+This enhancement ensures a smooth and responsive experience, keeping your sheets sized appropriately at all times without any extra effort on your part.
+
+Checkout [this example](https://github.com/lodev09/react-native-true-sheet/blob/main/example/src/sheets/PromptSheet.tsx) to see it in action!
+
+## That's All
+
+We're constantly working to improve True Sheet and bring you the features you need. Stay tuned for more exciting updates in the future!
