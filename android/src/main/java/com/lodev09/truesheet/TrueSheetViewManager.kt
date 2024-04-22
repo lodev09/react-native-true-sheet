@@ -39,6 +39,16 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setDismissible(dismissible)
   }
 
+  @ReactProp(name = "contentHeight")
+  fun setContentHeight(view: TrueSheetView, height: Double) {
+    view.setContentHeight(Utils.toPixel(height))
+  }
+
+  @ReactProp(name = "footerHeight")
+  fun setFooterHeight(view: TrueSheetView, height: Double) {
+    view.setFooterHeight(Utils.toPixel(height))
+  }
+
   @ReactProp(name = "sizes")
   fun setSizes(view: TrueSheetView, sizes: ReadableArray) {
     val result = ArrayList<Any>()
