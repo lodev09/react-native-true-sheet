@@ -17,6 +17,15 @@ const config: Config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  plugins: [
+    [
+      'vercel-analytics',
+      {
+        debug: true,
+        mode: 'auto',
+      },
+    ],
+  ],
   presets: [
     [
       'classic',
@@ -37,6 +46,10 @@ const config: Config = {
         },
         theme: {
           customCss: './src/css/custom.css',
+        },
+        gtag: {
+          trackingID: 'G-1KKZ78CJ2X',
+          anonymizeIP: false,
         },
       } satisfies Preset.Options,
     ],

@@ -3459,7 +3459,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/plugin-google-gtag@npm:3.2.1":
+"@docusaurus/plugin-google-gtag@npm:3.2.1, @docusaurus/plugin-google-gtag@npm:^3.2.1":
   version: 3.2.1
   resolution: "@docusaurus/plugin-google-gtag@npm:3.2.1"
   dependencies:
@@ -3507,6 +3507,24 @@ __metadata:
     react: ^18.0.0
     react-dom: ^18.0.0
   checksum: 10c0/24856320dcc039d5081d5c39834111aaa044880b98173c1193a5bef2556ccacf829e3623d48936142073daa58dac8d4220a6e0fa8756897fec811c580f03d491
+  languageName: node
+  linkType: hard
+
+"@docusaurus/plugin-vercel-analytics@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "@docusaurus/plugin-vercel-analytics@npm:3.2.1"
+  dependencies:
+    "@docusaurus/core": "npm:3.2.1"
+    "@docusaurus/logger": "npm:3.2.1"
+    "@docusaurus/types": "npm:3.2.1"
+    "@docusaurus/utils": "npm:3.2.1"
+    "@docusaurus/utils-validation": "npm:3.2.1"
+    "@vercel/analytics": "npm:^1.1.1"
+    tslib: "npm:^2.6.0"
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  checksum: 10c0/d22805a71ab12492708a54c6e9b2fba398d96b7ef931007e9a0c305c359e338bf05c24ac3e8703f5af20c29a215860e761320bf24b08cbd9f26cf69955e14e65
   languageName: node
   linkType: hard
 
@@ -6559,6 +6577,23 @@ __metadata:
   peerDependencies:
     graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0
   checksum: 10c0/6ea0ecbc56de94f228627d06cd084b5d71d605884a68b3f7f03873ac538c290f9500e67938635650edd7f32e53dfa9c4b6e38f5aa8fd48f061b6135c42f3a204
+  languageName: node
+  linkType: hard
+
+"@vercel/analytics@npm:^1.1.1":
+  version: 1.2.2
+  resolution: "@vercel/analytics@npm:1.2.2"
+  dependencies:
+    server-only: "npm:^0.0.1"
+  peerDependencies:
+    next: ">= 13"
+    react: ^18 || ^19
+  peerDependenciesMeta:
+    next:
+      optional: true
+    react:
+      optional: true
+  checksum: 10c0/82c89846356b370574414aa511d5a341535dcc7ba3b0a5eabfc7644df6d52a7b30253247627382faf4a0cc4192715cea718fe91027f7ba35efba80256064a005
   languageName: node
   linkType: hard
 
@@ -9875,6 +9910,8 @@ __metadata:
   dependencies:
     "@docusaurus/core": "npm:3.2.1"
     "@docusaurus/module-type-aliases": "npm:3.2.1"
+    "@docusaurus/plugin-google-gtag": "npm:^3.2.1"
+    "@docusaurus/plugin-vercel-analytics": "npm:^3.2.1"
     "@docusaurus/preset-classic": "npm:3.2.1"
     "@docusaurus/tsconfig": "npm:3.2.1"
     "@docusaurus/types": "npm:3.2.1"
@@ -20166,6 +20203,13 @@ __metadata:
     parseurl: "npm:~1.3.3"
     send: "npm:0.18.0"
   checksum: 10c0/fa9f0e21a540a28f301258dfe1e57bb4f81cd460d28f0e973860477dd4acef946a1f41748b5bd41c73b621bea2029569c935faa38578fd34cd42a9b4947088ba
+  languageName: node
+  linkType: hard
+
+"server-only@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "server-only@npm:0.0.1"
+  checksum: 10c0/4704f0ef85da0be981af6d4ed8e739d39bcfd265b9c246a684060acda5642d0fdc6daffc2308e71e2682c5f508090978802eae0a77623c9b90a49f9ae68048d6
   languageName: node
   linkType: hard
 
