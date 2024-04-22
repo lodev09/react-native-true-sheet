@@ -1,0 +1,84 @@
+---
+title: Resizing
+description: Programmatically resize the sheet and listen for size changes.
+---
+
+import resizing from './resizing.gif'
+
+`TrueSheet` has a main prop called [`sizes`](/reference/props#sizes) which allows you to define the sizes that the sheet can support. This is an array of [`SheetSize`](/reference/types#sheetsize) that supports sizes like `"auto"`, `"medium"`, `"large"`, etc.
+
+In some cases, you may want to resize the sheet programmatically for a better experience.
+
+<img alt="resizing" src={resizing} width="300"/>
+
+## How?
+
+### Resize Programmatically
+
+Define the sheet and use the [`resize`](/reference/methods#resize) method.
+
+```tsx {2-2,6-6,11-13}
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  const resize = async () => {
+    // Resize to 69%
+    await sheet.current?.resize(1)
+    console.log('Yay, we are now at 69% 💦')
+  }
+
+  return (
+    <TrueSheet name="resizing-sheet" ref={sheet} sizes={['auto', '69%', 'large']}>
+      <Button onPress={resize} title="Resize" />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+You can also do it globally using the related [global method](/reference/methods#global-methods).
+
+```tsx
+TrueSheet.resize('resizing-sheet', 1)
+```
+:::
+
+:::note
+`sizes` can only support up to 3 sizes. **_collapsed_**, **_half-expanded_**, and **_expanded_**.
+:::
+
+
+### Listening to Size Change
+
+For some reason, if you want to get the resolved size, you can listen to size changes by providing the [`onSizeChange`](/reference/props#onsizechange) event.
+
+The event comes with the [`SizeInfo`](/reference/types#sizeinfo) that you can use to get the size `value`.
+
+```tsx {9-11,17-17}
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  const resize = async () => {
+    // Resize to 69%
+    await sheet.current?.resize(1)
+  }
+
+  const handleSizeChange = (sizeInfo: SizeInfo) => {
+    console.log(sizeInfo.index, sizeInfo.value) // Do whatever you need from this size ✅
+  }
+
+  return (
+    <TrueSheet
+      ref={sheet}
+      sizes={['auto', '69%', 'large']}
+      onSizeChange={handleSizeChange}
+    >
+      <Button onPress={resize} title="Resize" />
+    </TrueSheet>
+  )
+}
+```
+
+:::info
+The event will also trigger when the user drags the sheet into a size.
+:::

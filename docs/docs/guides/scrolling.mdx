@@ -3,7 +3,13 @@ title: Scrolling
 description: Handle scrollable content when using TrueSheet.
 ---
 
-## IOS
+Scrolling content within the sheet requires some special configuration on both iOS and Android. Let's admit, some things just don't work out of the box.
+
+Follow the guide below so you can scroll your content using `TrueSheet`.
+
+## How?
+
+### IOS
 
 On iOS, use [`scrollRef`](/reference/props#scrollref) to reference the scrollable component, allowing iOS to handle it automatically.
 
@@ -24,7 +30,7 @@ const App = () => {
 }
 ```
 
-## Android
+### Android
 
 On Android, `nestedScrollEnabled` needs to be enabled so that scrolling works when the sheet is expanded to its `maxHeight`.
 
