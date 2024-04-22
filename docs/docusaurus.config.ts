@@ -60,6 +60,7 @@ const config: Config = {
       appId: 'AEIYW2K56K',
       apiKey: '41925ec2de867f214b3fac11bc69b079',
       indexName: 'sheet-lodev09',
+      contextualSearch: false,
     },
     colorMode: {
       respectPrefersColorScheme: true,
