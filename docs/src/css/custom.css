@@ -36,10 +36,19 @@
   --ifm-alert-background-color: #11663f;
 }
 
-.menu_node_modules-\@docusaurus-theme-classic-lib-theme-DocSidebar-Desktop-Content-styles-module {
-  padding: 1rem !important;
+.padding-top--md {
+  padding: 1.5rem !important;
 }
 
-.docSidebarContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-Sidebar-styles-module {
-  border-right-width: 0px !important;
+.doc-sidebar-content {
+  padding: 1.5rem !important;
+}
+
+.theme-doc-sidebar-container {
+  border-right-width: 0 !important;
+}
+
+.pagination-nav__link {
+  background-color: var(--ifm-menu-color-background-active);
+  border-width: 0;
 }

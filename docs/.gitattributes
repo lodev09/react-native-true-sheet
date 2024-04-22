@@ -1,0 +1,2 @@
+# This is just so that GitHub shows the language "Swift" as the repo language.
+*.mdx linguist-language=Swift

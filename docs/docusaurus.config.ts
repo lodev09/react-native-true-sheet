@@ -34,12 +34,6 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/lodev09/react-native-true-sheet/blob/main/docs/',
-          versions: {
-            current: {
-              label: pkg.version,
-              badge: true,
-            },
-          },
         },
         blog: {
           showReadingTime: true,
