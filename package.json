@@ -99,7 +99,8 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/docs/node_modules",
-      "<rootDir>/lib/"
+      "<rootDir>/lib/",
+      "<rootDir>/docs/build"
     ]
   },
   "commitlint": {
@@ -131,10 +132,6 @@
   },
   "eslintConfig": {
     "root": true,
-    "ignorePatterns": [
-      "lib",
-      "src/__mocks__"
-    ],
     "extends": [
       "plugin:@typescript-eslint/recommended",
       "eslint:recommended",
