@@ -21,11 +21,10 @@ return (
   <>
     <TrueSheet ref={sheet1}>
       <Button onPress={presentSheet2} title="Present Sheet 2" />
-      // ...
+      <View />
     </TrueSheet>
-
     <TrueSheet ref={sheet2}>
-      // ...
+      <View />
     </TrueSheet>
   </>
 )
@@ -42,11 +41,8 @@ const presentSheet2 = async () => {
 return (
   <TrueSheet ref={sheet1}>
     <Button onPress={presentSheet2} title="Present Sheet 2" />
-
-    // ...
-
     <TrueSheet ref={sheet2}>
-      // ...
+      <View />
     </TrueSheet>
   </TrueSheet>
 )

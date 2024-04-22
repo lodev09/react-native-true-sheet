@@ -56,7 +56,7 @@ return (
       sizes={['auto', 'large']}
       cornerRadius={24}
     >
-      // ...
+      <View />
     </TrueSheet>
   </View>
 )
