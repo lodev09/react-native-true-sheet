@@ -99,9 +99,15 @@ const config: Config = {
       copyright: `Made with ❤️ by <a href="https://github.com/lodev09">Jovanni Lo</a>`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.palenight,
+      theme: prismThemes.oneDark,
+      darkTheme: prismThemes.oneDark,
       additionalLanguages: ['swift', 'java', 'kotlin'],
+    },
+    announcementBar: {
+      id: 'v0.10.2',
+      content: `<b>Version ${pkg.version}</b> is out 🎉. Check out the <a href="/blog/release-0-10">blog post</a> to learn what's new ✨`,
+      backgroundColor: '#1f64ae',
+      textColor: '#ffffff',
     },
     image: 'img/logo.png',
     metadata: [

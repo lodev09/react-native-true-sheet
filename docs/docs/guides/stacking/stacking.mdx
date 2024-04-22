@@ -11,7 +11,7 @@ Sometimes you want to stack the sheets one after another. On iOS, this can cause
 
 ### 1. Dismiss the "parent" sheet first
 
-```tsx
+```tsx {2-3,9-9}
 const presentSheet2 = async () => {
   await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss ✅
   await sheet2.current?.present() // Sheet 2 will now present 🎉
@@ -33,7 +33,7 @@ return (
 
 IOS handles this automatically by default 😎.
 
-```tsx
+```tsx {2-2,7-7}
 const presentSheet2 = async () => {
   await sheet2.current?.present() // Sheet 2 will now present 🎉
 }
