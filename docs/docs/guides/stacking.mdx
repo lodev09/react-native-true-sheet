@@ -5,7 +5,7 @@ description: Guide on how to present sheet on top of an existing sheet.
 
 Sometimes you want to stack the sheets one after another. On iOS, this can cause issues. There are _**two**_ ways to resolve this.
 
-### Dismiss the "parent" sheet first
+### 1. Dismiss the "parent" sheet first
 
 ```tsx
 const presentSheet2 = async () => {
@@ -26,7 +26,7 @@ return (
   </>
 )
 ```
-### Define the 2nd sheet within the "parent" sheet.
+### 2. Define the 2nd sheet within the "parent" sheet.
 
 IOS handles this automatically by default 😎.
 

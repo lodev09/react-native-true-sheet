@@ -4,7 +4,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/lodev09/react-native-true-sheet)
 ![NPM Downloads](https://img.shields.io/npm/dw/%40lodev09%2Freact-native-true-sheet)
 
-The true native bottom sheet 💩
+The true native bottom sheet experience for your React Native Apps. 💩
 
 ![Preview](preview.gif)
 
