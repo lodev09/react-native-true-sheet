@@ -53,11 +53,6 @@ class TrueSheetView(context: Context) :
   private val rootSheetView: RootSheetView
 
   /**
-   * 1st child of the container view.
-   */
-  private var contentView: ViewGroup? = null
-
-  /**
    * 2nd child of the container view.
    */
   private var footerView: ViewGroup? = null
@@ -103,19 +98,17 @@ class TrueSheetView(context: Context) :
         // dispatch onDismiss event
         eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
       }
-    }
 
-    // Configure sheet behavior events
-    sheetDialog.apply {
+      // Configure sheet behavior events
       behavior.addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
             footerView?.let {
-              val y = (maxScreenHeight - sheetView.top - it.height).toFloat()
+              val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
               if (slideOffset >= 0) {
                 it.y = y
               } else {
-                it.y = y - it.height * slideOffset
+                it.y = y - footerHeight * slideOffset
               }
             }
           }
@@ -165,10 +158,8 @@ class TrueSheetView(context: Context) :
 
     (child as ViewGroup).let {
       // Container View's first child is the Content View
-      contentView = it.getChildAt(0) as ViewGroup
       footerView = it.getChildAt(1) as ViewGroup
 
-      sheetDialog.contentView = contentView
       sheetDialog.footerView = footerView
 
       // rootView's first child is the Container View
@@ -218,18 +209,26 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismiss()
   }
 
-  private fun configureIfPresented() {
+  private fun configureIfShowing() {
     if (sheetDialog.isShowing) {
-      UiThreadUtil.runOnUiThread {
-        sheetDialog.configure()
-        sheetDialog.positionFooter()
-      }
+      sheetDialog.configure()
+      sheetDialog.positionFooter()
     }
   }
 
   fun setMaxHeight(height: Int) {
     sheetDialog.maxSheetHeight = height
-    configureIfPresented()
+    configureIfShowing()
+  }
+
+  fun setContentHeight(height: Int) {
+    sheetDialog.contentHeight = height
+    configureIfShowing()
+  }
+
+  fun setFooterHeight(height: Int) {
+    sheetDialog.footerHeight = height
+    configureIfShowing()
   }
 
   fun setDismissible(dismissible: Boolean) {
@@ -239,7 +238,7 @@ class TrueSheetView(context: Context) :
 
   fun setSizes(newSizes: Array<Any>) {
     sheetDialog.sizes = newSizes
-    configureIfPresented()
+    configureIfShowing()
   }
 
   /**

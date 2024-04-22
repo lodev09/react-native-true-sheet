@@ -10,8 +10,6 @@
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
-  var maxHeight: CGFloat?
-
   // Events
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
@@ -39,24 +37,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var footerViewHeightConstraint: NSLayoutConstraint?
 
   private var rctScrollView: RCTScrollView?
-
-  // Content height minus the footer height for `auto` layout
-  private var contentHeight: CGFloat {
-    guard let contentView else { return 0 }
-
-    var height = contentView.frame.height
-
-    // Add footer view's height
-    if let footerContent = footerView?.subviews.first {
-      height += footerContent.bounds.height
-    }
-
-    // Exclude bottom safe area for consistency with a Scrollable content
-    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
-    let bottomInset = window?.safeAreaInsets.bottom ?? 0
-
-    return height - bottomInset
-  }
 
   // MARK: - Setup
 
@@ -127,7 +107,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       }
 
       // Update content containers
-      setupContent()
+      setupScrollable()
     }
   }
 
@@ -158,14 +138,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     let size = CGSize(width: width, height: containerView.bounds.height)
     bridge.uiManager.setSize(size, for: containerView)
-
-    if let footerView {
-      bridge.uiManager.setSize(size, for: footerView)
-    }
   }
 
   func viewControllerWillAppear() {
-    setupContent()
+    setupScrollable()
   }
 
   func viewControllerDidDismiss() {
@@ -200,6 +176,35 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
+  func setContentHeight(_ height: NSNumber) {
+    // Exclude bottom safe area for consistency with a Scrollable content
+    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+    let bottomInset = window?.safeAreaInsets.bottom ?? 0
+
+    viewController.contentHeight = CGFloat(height.floatValue) - bottomInset
+    configureSheetIfPresented()
+  }
+
+  @objc
+  func setFooterHeight(_ height: NSNumber) {
+    guard let footerView, let footerViewHeightConstraint else {
+      return
+    }
+
+    viewController.footerHeight = CGFloat(height.floatValue)
+
+    if footerView.subviews.first != nil {
+      containerView?.bringSubviewToFront(footerView)
+      footerViewHeightConstraint.constant = viewController.footerHeight
+    } else {
+      containerView?.sendSubviewToBack(footerView)
+      footerViewHeightConstraint.constant = 0
+    }
+
+    configureSheetIfPresented()
+  }
+
+  @objc
   func setSizes(_ sizes: [Any]) {
     viewController.sizes = Array(sizes.prefix(3))
     configureSheetIfPresented()
@@ -224,7 +229,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController.cornerRadius = cornerRadius
     if #available(iOS 15.0, *) {
-      configureSheetIfPresented { sheet in
+      configureIfPresented { sheet in
         sheet.preferredCornerRadius = viewController.cornerRadius
       }
     }
@@ -234,7 +239,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func setGrabber(_ visible: Bool) {
     viewController.grabber = visible
     if #available(iOS 15.0, *) {
-      configureSheetIfPresented { sheet in
+      configureIfPresented { sheet in
         sheet.prefersGrabberVisible = visible
       }
     }
@@ -258,7 +263,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   /// Use to customize some properties of the Sheet
   @available(iOS 15.0, *)
-  func configureSheetIfPresented(completion: (UISheetPresentationController) -> Void) {
+  func configureIfPresented(completion: (UISheetPresentationController) -> Void) {
     guard isPresented, let sheet = viewController.sheetPresentationController else {
       return
     }
@@ -269,27 +274,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   /// Full reconfiguration of the Sheet
   func configureSheetIfPresented() {
     if isPresented {
-      viewController.configureSheet(at: activeIndex ?? 0, with: contentHeight, nil)
+      viewController.configureSheet(at: activeIndex ?? 0, nil)
     }
   }
 
-  func setupContent() {
+  func setupScrollable() {
     guard let contentView, let containerView else { return }
 
     // Add constraints to fix weirdness and support ScrollView
     if let rctScrollView {
       contentView.pinTo(view: containerView, constraints: nil)
       rctScrollView.pinTo(view: contentView, constraints: nil)
-    }
-
-    if let footerView, let footerViewHeightConstraint {
-      if let footerContent = footerView.subviews.first {
-        containerView.bringSubviewToFront(footerView)
-        footerViewHeightConstraint.constant = footerContent.bounds.height
-      } else {
-        containerView.sendSubviewToBack(footerView)
-        footerViewHeightConstraint.constant = 0
-      }
     }
   }
 
@@ -317,7 +312,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.configureSheet(at: index, with: contentHeight) { sizeInfo in
+    viewController.configureSheet(at: index) { sizeInfo in
       // Trigger onSizeChange event when size is changed while presenting
       if self.isPresented {
         self.viewControllerSheetDidChangeSize(sizeInfo)

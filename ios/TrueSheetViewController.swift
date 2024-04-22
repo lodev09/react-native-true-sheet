@@ -36,7 +36,11 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var detentValues: [String: SizeInfo] = [:]
 
   var sizes: [Any] = ["medium", "large"]
+
   var maxHeight: CGFloat?
+  var contentHeight: CGFloat = 0
+  var footerHeight: CGFloat = 0
+
   var cornerRadius: CGFloat?
   var grabber = true
 
@@ -123,7 +127,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   /// Prepares the view controller for sheet presentation
-  func configureSheet(at index: Int = 0, with contentHeight: CGFloat, _ completion: ((SizeInfo) -> Void)?) {
+  func configureSheet(at index: Int = 0, _ completion: ((SizeInfo) -> Void)?) {
     let defaultSizeInfo = SizeInfo(index: index, value: view.bounds.height)
 
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
@@ -136,7 +140,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     var detents: [UISheetPresentationController.Detent] = []
 
     for (index, size) in sizes.enumerated() {
-      let detent = detentFor(size, with: contentHeight, with: maxHeight) { id, value in
+      let detent = detentFor(size, with: contentHeight + footerHeight, with: maxHeight) { id, value in
         self.detentValues[id] = SizeInfo(index: index, value: value)
       }
 

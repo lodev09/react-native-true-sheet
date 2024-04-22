@@ -36,4 +36,8 @@ RCT_EXPORT_VIEW_PROPERTY(cornerRadius, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(grabber, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dismissible, BOOL)
 
+// Internal properties
+RCT_EXPORT_VIEW_PROPERTY(contentHeight, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(footerHeight, NSNumber)
+
 @end

@@ -18,9 +18,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private var keyboardManager = KeyboardManager(reactContext)
 
   var maxScreenHeight: Int = 0
+  var contentHeight: Int = 0
+  var footerHeight: Int = 0
   var maxSheetHeight: Int? = null
 
-  var contentView: ViewGroup? = null
   var footerView: ViewGroup? = null
 
   var sizes: Array<Any> = arrayOf("medium", "large")
@@ -57,7 +58,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   fun positionFooter() {
     footerView?.apply {
-      y = (maxScreenHeight - sheetView.top - height).toFloat()
+      y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
     }
   }
 
@@ -71,7 +72,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Get the height value based on the size config value.
    */
-  private fun getSizeHeight(size: Any, contentHeight: Int): Int {
+  private fun getSizeHeight(size: Any): Int {
     val height =
       when (size) {
         is Double -> Utils.toPixel(size)
@@ -80,7 +81,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
         is String -> {
           when (size) {
-            "auto" -> contentHeight
+            "auto" -> contentHeight + footerHeight
 
             "large" -> maxScreenHeight
 
@@ -172,11 +173,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Configure the sheet based on size preferences.
    */
   fun configure() {
-    var contentHeight = 0
-
-    contentView?.let { contentHeight = it.height }
-    footerView?.let { contentHeight += it.height }
-
     // Configure sheet sizes
     behavior.apply {
       skipCollapsed = false
@@ -187,23 +183,22 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       when (sizes.size) {
         1 -> {
-          maxHeight = getSizeHeight(sizes[0], contentHeight)
-          setPeekHeight(maxHeight, isShowing)
+          maxHeight = getSizeHeight(sizes[0])
           skipCollapsed = true
         }
 
         2 -> {
-          setPeekHeight(getSizeHeight(sizes[0], contentHeight), isShowing)
-          maxHeight = getSizeHeight(sizes[1], contentHeight)
+          setPeekHeight(getSizeHeight(sizes[0]), isShowing)
+          maxHeight = getSizeHeight(sizes[1])
         }
 
         3 -> {
           // Enables half expanded
           isFitToContents = false
 
-          setPeekHeight(getSizeHeight(sizes[0], contentHeight), isShowing)
-          halfExpandedRatio = getSizeHeight(sizes[1], contentHeight).toFloat() / maxScreenHeight.toFloat()
-          maxHeight = getSizeHeight(sizes[2], contentHeight)
+          setPeekHeight(getSizeHeight(sizes[0]), isShowing)
+          halfExpandedRatio = getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat()
+          maxHeight = getSizeHeight(sizes[2])
         }
       }
     }

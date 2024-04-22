@@ -7,6 +7,7 @@ import {
   type NativeMethods,
   type ViewStyle,
   type NativeSyntheticEvent,
+  type LayoutRectangle,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeInfo } from './types'
@@ -22,6 +23,8 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n'
 
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
+  contentHeight?: number
+  footerHeight?: number
   scrollableHandle: number | null
   onPresent: (event: NativeSyntheticEvent<SizeInfo>) => void
   onSizeChange: (event: NativeSyntheticEvent<SizeInfo>) => void
@@ -30,6 +33,8 @@ interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'o
 type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
 
 interface TrueSheetState {
+  contentHeight?: number
+  footerHeight?: number
   scrollableHandle: number | null
 }
 
@@ -57,8 +62,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDismiss = this.onDismiss.bind(this)
     this.onPresent = this.onPresent.bind(this)
     this.onSizeChange = this.onSizeChange.bind(this)
+    this.onContentLayout = this.onContentLayout.bind(this)
+    this.onFooterLayout = this.onFooterLayout.bind(this)
 
     this.state = {
+      contentHeight: undefined,
+      footerHeight: undefined,
       scrollableHandle: null,
     }
   }
@@ -134,6 +143,19 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onPresent?.(event.nativeEvent)
   }
 
+  private onFooterLayout(layout: LayoutRectangle): void {
+    console.log('footerHeight', layout.height)
+    this.setState({
+      footerHeight: layout.height,
+    })
+  }
+
+  private onContentLayout(layout: LayoutRectangle): void {
+    this.setState({
+      contentHeight: layout.height,
+    })
+  }
+
   private onDismiss(): void {
     this.props.onDismiss?.()
   }
@@ -200,6 +222,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         sizes={sizes}
         blurTint={blurTint}
         cornerRadius={cornerRadius}
+        contentHeight={this.state.contentHeight}
+        footerHeight={this.state.footerHeight}
         grabber={grabber}
         dismissible={dismissible}
         maxHeight={maxHeight}
@@ -225,10 +249,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           ]}
           {...rest}
         >
-          <View collapsable={false} style={contentContainerStyle}>
+          <View
+            collapsable={false}
+            onLayout={(e) => this.onContentLayout(e.nativeEvent.layout)}
+            style={contentContainerStyle}
+          >
             {children}
           </View>
-          <View collapsable={false}>
+          <View collapsable={false} onLayout={(e) => this.onFooterLayout(e.nativeEvent.layout)}>
             <TrueSheetFooter Component={FooterComponent} />
           </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}

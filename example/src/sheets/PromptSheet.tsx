@@ -1,19 +1,11 @@
-import React, {
-  forwardRef,
-  useRef,
-  type Ref,
-  useImperativeHandle,
-  useState,
-  useEffect,
-} from 'react'
+import React, { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react'
 import { TextInput, View, type TextStyle, type ViewStyle } from 'react-native'
-import { TrueSheet, type SheetSize, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import {
   BORDER_RADIUS,
   DARK,
   DARK_BLUE,
-  FOOTER_HEIGHT,
   GRABBER_COLOR,
   GRAY,
   INPUT_HEIGHT,
@@ -28,13 +20,10 @@ interface PromptSheetProps extends TrueSheetProps {}
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null)
 
-  const [contentHeight, setContentHeight] = useState<number>()
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [size, setSize] = useState<SheetSize>('auto')
 
   const handleDismiss = () => {
     setIsSubmitted(false)
-    setSize('auto')
     console.log('Sheet prompt dismissed!')
   }
 
@@ -49,17 +38,11 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
 
-  useEffect(() => {
-    if (isSubmitted && contentHeight) {
-      setSize(contentHeight + FOOTER_HEIGHT)
-    }
-  }, [isSubmitted, contentHeight])
-
   return (
     <TrueSheet
       ref={sheetRef}
       name="prompt-sheet"
-      sizes={[size, '80%']}
+      sizes={['auto', 'large']}
       contentContainerStyle={$content}
       blurTint="dark"
       backgroundColor={DARK}
@@ -73,13 +56,11 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       FooterComponent={<Footer />}
       {...props}
     >
-      <View onLayout={(e) => isSubmitted && setContentHeight(e.nativeEvent.layout.height)}>
-        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
-        <Input />
-        {isSubmitted && <Input />}
-        <Button text="Submit" onPress={submit} />
-        <Button text="Dismis" onPress={dismiss} />
-      </View>
+      <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+      <Input />
+      {isSubmitted && <Input />}
+      <Button text="Submit" onPress={submit} />
+      <Button text="Dismis" onPress={dismiss} />
     </TrueSheet>
   )
 })
