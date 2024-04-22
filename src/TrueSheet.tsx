@@ -144,7 +144,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onFooterLayout(layout: LayoutRectangle): void {
-    console.log('footerHeight', layout.height)
     this.setState({
       footerHeight: layout.height,
     })
