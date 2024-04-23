@@ -6,7 +6,7 @@
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-![Preview](preview.gif)
+<img alt="React Native True Sheet" src="docs/static/img/preview.gif" width="600px" />
 
 ## Features
 * ✅ Implemented in the native realm.
