@@ -7,7 +7,7 @@ import {
   type ViewStyle,
   Text,
 } from 'react-native'
-import { BORDER_RADIUS, LIGHT_GRAY, SPACING } from '../utils'
+import { BORDER_RADIUS, SPACING } from '../utils'
 
 interface DemoContentProps extends ViewProps {
   radius?: number
@@ -16,7 +16,7 @@ interface DemoContentProps extends ViewProps {
 }
 
 export const DemoContent = (props: DemoContentProps) => {
-  const { text, radius = BORDER_RADIUS, style: $style, color = LIGHT_GRAY, ...rest } = props
+  const { text, radius = BORDER_RADIUS, style: $style, color = 'rgba(0,0,0,0.2)', ...rest } = props
   return (
     <View
       style={[$demoContent, { backgroundColor: color, borderRadius: radius }, $style]}

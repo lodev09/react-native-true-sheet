@@ -43,6 +43,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   var cornerRadius: CGFloat?
   var grabber = true
+  var modal = true
 
   // MARK: - Setup
 
@@ -126,6 +127,19 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
+  @available(iOS 15.0, *)
+  func configureModalMode(for sheet: UISheetPresentationController) {
+    if modal {
+      sheet.largestUndimmedDetentIdentifier = nil
+    } else {
+      sheet.largestUndimmedDetentIdentifier = .large
+      if #available(iOS 16.0, *),
+         let lastIdentifier = sheet.detents.last?.identifier {
+        sheet.largestUndimmedDetentIdentifier = lastIdentifier
+      }
+    }
+  }
+
   /// Prepares the view controller for sheet presentation
   func configureSheet(at index: Int = 0, _ completion: ((SizeInfo) -> Void)?) {
     let defaultSizeInfo = SizeInfo(index: index, value: view.bounds.height)
@@ -147,26 +161,28 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       detents.append(detent)
     }
 
-    sheet.detents = detents
-    sheet.prefersEdgeAttachedInCompactHeight = true
-    sheet.prefersGrabberVisible = grabber
-    sheet.preferredCornerRadius = cornerRadius
-    sheet.delegate = self
-
-    var identifier: UISheetPresentationController.Detent.Identifier = .medium
-
-    if sheet.detents.indices.contains(index) {
-      let detent = sheet.detents[index]
-      if #available(iOS 16.0, *) {
-        identifier = detent.identifier
-      } else if detent == .large() {
-        identifier = .large
-      }
-    }
-
     sheet.animateChanges {
+      sheet.detents = detents
+      sheet.prefersEdgeAttachedInCompactHeight = true
+      sheet.prefersGrabberVisible = grabber
+      sheet.preferredCornerRadius = cornerRadius
+      sheet.delegate = self
+
+      var identifier: UISheetPresentationController.Detent.Identifier = .medium
+
+      if sheet.detents.indices.contains(index) {
+        let detent = sheet.detents[index]
+        if #available(iOS 16.0, *) {
+          identifier = detent.identifier
+        } else if detent == .large() {
+          identifier = .large
+        }
+      }
+
+      configureModalMode(for: sheet)
+
       sheet.selectedDetentIdentifier = identifier
-      completion?(self.detentValues[identifier.rawValue] ?? defaultSizeInfo)
+      completion?(detentValues[identifier.rawValue] ?? defaultSizeInfo)
     }
   }
 }

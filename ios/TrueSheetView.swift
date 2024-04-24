@@ -172,7 +172,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setMaxHeight(_ height: NSNumber) {
     viewController.maxHeight = CGFloat(height.floatValue)
-    configureSheetIfPresented()
+    configurePresentedSheet()
   }
 
   @objc
@@ -182,7 +182,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     let bottomInset = window?.safeAreaInsets.bottom ?? 0
 
     viewController.contentHeight = CGFloat(height.floatValue) - bottomInset
-    configureSheetIfPresented()
+    configurePresentedSheet()
   }
 
   @objc
@@ -201,13 +201,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       footerViewHeightConstraint.constant = 0
     }
 
-    configureSheetIfPresented()
+    configurePresentedSheet()
   }
 
   @objc
   func setSizes(_ sizes: [Any]) {
     viewController.sizes = Array(sizes.prefix(3))
-    configureSheetIfPresented()
+    configurePresentedSheet()
   }
 
   @objc
@@ -229,7 +229,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController.cornerRadius = cornerRadius
     if #available(iOS 15.0, *) {
-      configureIfPresented { sheet in
+      updatePresentedSheet { sheet in
         sheet.preferredCornerRadius = viewController.cornerRadius
       }
     }
@@ -239,8 +239,19 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func setGrabber(_ visible: Bool) {
     viewController.grabber = visible
     if #available(iOS 15.0, *) {
-      configureIfPresented { sheet in
+      updatePresentedSheet { sheet in
         sheet.prefersGrabberVisible = visible
+      }
+    }
+  }
+
+  @objc
+  func setModal(_ modal: Bool) {
+    viewController.modal = modal
+
+    if #available(iOS 15.0, *) {
+      updatePresentedSheet { sheet in
+        viewController.configureModalMode(for: sheet)
       }
     }
   }
@@ -261,18 +272,20 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     return ["index": sizeInfo.index, "value": sizeInfo.value]
   }
 
-  /// Use to customize some properties of the Sheet
+  /// Use to customize some properties of the Sheet without fully reconfiguring.
   @available(iOS 15.0, *)
-  func configureIfPresented(completion: (UISheetPresentationController) -> Void) {
+  func updatePresentedSheet(completion: (UISheetPresentationController) -> Void) {
     guard isPresented, let sheet = viewController.sheetPresentationController else {
       return
     }
 
-    completion(sheet)
+    sheet.animateChanges {
+      completion(sheet)
+    }
   }
 
-  /// Full reconfiguration of the Sheet
-  func configureSheetIfPresented() {
+  /// Fully reconfigure the sheet. Use during size prop changes.
+  func configurePresentedSheet() {
     if isPresented {
       viewController.configureSheet(at: activeIndex ?? 0, nil)
     }

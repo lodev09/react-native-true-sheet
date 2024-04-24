@@ -35,6 +35,7 @@ RCT_EXPORT_VIEW_PROPERTY(blurTint, NSString)
 RCT_EXPORT_VIEW_PROPERTY(cornerRadius, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(grabber, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dismissible, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(modal, BOOL)
 
 // Internal properties
 RCT_EXPORT_VIEW_PROPERTY(contentHeight, NSNumber)

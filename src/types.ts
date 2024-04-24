@@ -121,6 +121,14 @@ export interface TrueSheetProps extends ViewProps {
   sizes?: SheetSize[]
 
   /**
+   * Specify whether the sheet is presented modally.
+   * Set to `false` to allow interaction with the components behind it.
+   *
+   * @default true
+   */
+  modal?: boolean
+
+  /**
    * Prevents interactive dismissal of the Sheet.
    *
    * @default true
