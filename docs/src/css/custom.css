@@ -52,3 +52,7 @@
   background-color: var(--ifm-menu-color-background-active);
   border-width: 0;
 }
+
+img {
+  border-radius: var(--ifm-pre-border-radius);
+}
