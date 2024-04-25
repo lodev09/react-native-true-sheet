@@ -46,8 +46,8 @@ export const InlineSheet = forwardRef((props: InlineSheetProps, ref: Ref<InlineS
       )}
       <TrueSheet
         ref={sheetRef}
-        dimmed={false}
-        dimmedIndex={1}
+        // dimmed={false}
+        // dimmedIndex={1}
         sizes={['auto', '75%', 'large']}
         blurTint="dark"
         backgroundColor={DARK}

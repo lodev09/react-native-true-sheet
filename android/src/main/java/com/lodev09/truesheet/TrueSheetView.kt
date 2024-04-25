@@ -45,7 +45,7 @@ class TrueSheetView(context: Context) :
   /**
    * The main BottomSheetDialog instance.
    */
-  private val sheetDialog: TrueSheetDialog
+  private val sheetContainer: TrueSheetContainer
 
   /**
    * React root view placeholder.
@@ -64,12 +64,12 @@ class TrueSheetView(context: Context) :
     rootSheetView = RootSheetView(context)
     rootSheetView.eventDispatcher = eventDispatcher
 
-    sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
+    sheetContainer = TrueSheetContainer(reactContext, rootSheetView)
 
     // Configure Sheet Dialog
-    sheetDialog.apply {
+    sheetContainer.apply {
       // Setup listener when the dialog has been presented.
-      setOnShowListener {
+      onShowListener = {
         registerKeyboardManager()
 
         // Initialize footer y
@@ -83,11 +83,11 @@ class TrueSheetView(context: Context) :
         }
 
         // dispatch onPresent event
-        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(activeIndex)))
+        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, getSizeInfoForIndex(activeIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
-      setOnDismissListener {
+      onDismissListener = {
         unregisterKeyboardManager()
 
         dismissPromise?.let { promise ->
@@ -100,36 +100,37 @@ class TrueSheetView(context: Context) :
       }
 
       // Configure sheet behavior events
-      behavior.addBottomSheetCallback(
-        object : BottomSheetBehavior.BottomSheetCallback() {
-          override fun onSlide(sheetView: View, slideOffset: Float) {
-            footerView?.let {
-              val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
-              if (slideOffset >= 0) {
-                it.y = y
-              } else {
-                it.y = y - footerHeight * slideOffset
-              }
-            }
-          }
-
-          override fun onStateChanged(view: View, newState: Int) {
-            val sizeInfo = getSizeInfoForState(newState)
-            if (sizeInfo != null && sizeInfo.index != activeIndex) {
-              // Invoke promise when sheet resized programmatically
-              presentPromise?.let { promise ->
-                promise()
-                presentPromise = null
-              }
-
-              activeIndex = sizeInfo.index
-
-              // dispatch onSizeChange event
-              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+      bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(sheetView: View, slideOffset: Float) {
+          footerView?.let {
+            val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
+            if (slideOffset >= 0) {
+              it.y = y
+            } else {
+              it.y = y - footerHeight * slideOffset
             }
           }
         }
-      )
+
+        override fun onStateChanged(view: View, newState: Int) {
+          val sizeInfo = getSizeInfoForState(newState)
+          if (sizeInfo != null && sizeInfo.index != activeIndex) {
+            // Invoke promise when sheet resized programmatically
+            presentPromise?.let { promise ->
+              promise()
+              presentPromise = null
+            }
+
+            activeIndex = sizeInfo.index
+
+            // dispatch onSizeChange event
+            eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+          }
+        }
+      }
+
+      // Finally setup content
+      setup()
     }
   }
 
@@ -149,7 +150,7 @@ class TrueSheetView(context: Context) :
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    sheetDialog.dismiss()
+    sheetContainer.dismiss()
   }
 
   override fun addView(child: View, index: Int) {
@@ -160,7 +161,7 @@ class TrueSheetView(context: Context) :
       // Container View's first child is the Content View
       footerView = it.getChildAt(1) as ViewGroup
 
-      sheetDialog.footerView = footerView
+      sheetContainer.footerView = footerView
 
       // rootView's first child is the Container View
       rootSheetView.addView(it, index)
@@ -206,38 +207,44 @@ class TrueSheetView(context: Context) :
   override fun onHostDestroy() {
     // Drop the instance if the host is destroyed which will dismiss the dialog
     reactContext.removeLifecycleEventListener(this)
-    sheetDialog.dismiss()
+    sheetContainer.dismiss()
   }
 
   private fun configureIfShowing() {
-    if (sheetDialog.isShowing) {
-      sheetDialog.configure()
-      sheetDialog.positionFooter()
+    if (sheetContainer.isShowing) {
+      sheetContainer.configure()
+      sheetContainer.positionFooter()
     }
   }
 
   fun setMaxHeight(height: Int) {
-    sheetDialog.maxSheetHeight = height
+    sheetContainer.maxSheetHeight = height
     configureIfShowing()
   }
 
   fun setContentHeight(height: Int) {
-    sheetDialog.contentHeight = height
+    sheetContainer.contentHeight = height
     configureIfShowing()
   }
 
   fun setFooterHeight(height: Int) {
-    sheetDialog.footerHeight = height
+    sheetContainer.footerHeight = height
     configureIfShowing()
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog.behavior.isHideable = dismissible
-    sheetDialog.setCancelable(dismissible)
+    sheetContainer.setDismissible(dismissible)
+  }
+
+  fun setDimmed(dimmed: Boolean) {
+    if (sheetContainer.dimmed != dimmed) {
+      sheetContainer.dimmed = dimmed
+      sheetContainer.setup()
+    }
   }
 
   fun setSizes(newSizes: Array<Any>) {
-    sheetDialog.sizes = newSizes
+    sheetContainer.sizes = newSizes
     configureIfShowing()
   }
 
@@ -245,12 +252,12 @@ class TrueSheetView(context: Context) :
    * Present the sheet at given size index.
    */
   fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
-    if (!sheetDialog.isShowing) {
+    if (!sheetContainer.isShowing) {
       activeIndex = sizeIndex
     }
 
     presentPromise = promiseCallback
-    sheetDialog.show(sizeIndex)
+    sheetContainer.show(sizeIndex)
   }
 
   /**
@@ -258,7 +265,7 @@ class TrueSheetView(context: Context) :
    */
   fun dismiss(promiseCallback: () -> Unit) {
     dismissPromise = promiseCallback
-    sheetDialog.dismiss()
+    sheetContainer.dismiss()
   }
 
   companion object {

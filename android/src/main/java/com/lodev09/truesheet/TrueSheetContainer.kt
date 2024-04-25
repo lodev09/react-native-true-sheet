@@ -3,8 +3,10 @@ package com.lodev09.truesheet
 import android.graphics.Color
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.KeyboardManager
 import com.lodev09.truesheet.core.RootSheetView
@@ -12,10 +14,17 @@ import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
-  BottomSheetDialog(reactContext) {
+class TrueSheetContainer(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) {
 
   private var keyboardManager = KeyboardManager(reactContext)
+  private var sheetDialog: BottomSheetDialog? = null
+
+  lateinit var onDismissListener: () -> Unit
+  lateinit var onShowListener: () -> Unit
+  lateinit var bottomSheetCallback: (BottomSheetCallback)
+  lateinit var behavior: BottomSheetBehavior<FrameLayout>
+
+  var dimmed = true
 
   var maxScreenHeight: Int = 0
   var contentHeight: Int = 0
@@ -26,23 +35,51 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
-  private var sheetView: ViewGroup
+  private var sheetView: ViewGroup? = null
 
-  init {
-    setContentView(rootSheetView)
-    sheetView = rootSheetView.parent as ViewGroup
-    sheetView.setBackgroundColor(Color.TRANSPARENT)
-
-    // Setup window params to adjust layout based on Keyboard state.
-    window?.apply {
-      // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
-      setSoftInputMode(
-        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-      )
+  val isShowing: Boolean
+    get() = when (dimmed) {
+      true -> sheetDialog?.isShowing == true
+      else -> TODO()
     }
 
+  init {
     // Update the usable sheet height
     maxScreenHeight = Utils.screenHeight(reactContext)
+  }
+
+  fun setup() {
+    if (dimmed) {
+      sheetDialog = BottomSheetDialog(reactContext)
+      sheetDialog?.let {
+        it.setContentView(rootSheetView)
+
+        it.setOnShowListener {
+          onShowListener()
+        }
+
+        it.setOnDismissListener {
+          onDismissListener()
+        }
+
+        sheetView = rootSheetView.parent as ViewGroup
+        sheetView?.setBackgroundColor(Color.TRANSPARENT)
+
+        // Setup window params to adjust layout based on Keyboard state.
+        it.window?.apply {
+          // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
+          setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+          )
+        }
+
+        behavior = it.behavior
+      }
+    } else {
+      TODO()
+    }
+
+    behavior.addBottomSheetCallback(bottomSheetCallback)
   }
 
   fun show(sizeIndex: Int) {
@@ -52,13 +89,34 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       configure()
       setStateForSizeIndex(sizeIndex)
 
-      this.show()
+      when (dimmed) {
+        true -> sheetDialog?.show()
+        else -> TODO()
+      }
+    }
+  }
+
+  fun dismiss() {
+    when (dimmed) {
+      true -> sheetDialog?.dismiss()
+      else -> TODO()
     }
   }
 
   fun positionFooter() {
     footerView?.apply {
-      y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
+      y = (maxScreenHeight - (sheetView?.top ?: 0) - footerHeight).toFloat()
+    }
+  }
+
+  fun setDismissible(dismissible: Boolean) {
+    when (dimmed) {
+      true -> {
+        behavior.isHideable = dismissible
+        sheetDialog?.setCancelable(dismissible)
+      }
+
+      else -> TODO()
     }
   }
 
@@ -207,40 +265,43 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Get the SizeInfo data by state.
    */
-  fun getSizeInfoForState(state: Int): SizeInfo? =
-    when (sizes.size) {
-      1 -> {
-        when (state) {
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight))
-          else -> null
-        }
-      }
-
-      2 -> {
-        when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight))
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(behavior.maxHeight))
-          else -> null
-        }
-      }
-
-      3 -> {
-        when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight))
-
-          BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-            val height = behavior.halfExpandedRatio * maxScreenHeight
-            SizeInfo(1, Utils.toDIP(height.toInt()))
+  fun getSizeInfoForState(state: Int): SizeInfo? {
+    behavior.apply {
+      return when (sizes.size) {
+        1 -> {
+          when (state) {
+            BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(maxHeight))
+            else -> null
           }
-
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(behavior.maxHeight))
-
-          else -> null
         }
-      }
 
-      else -> null
+        2 -> {
+          when (state) {
+            BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(peekHeight))
+            BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(maxHeight))
+            else -> null
+          }
+        }
+
+        3 -> {
+          when (state) {
+            BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(peekHeight))
+
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+              val height = halfExpandedRatio * maxScreenHeight
+              SizeInfo(1, Utils.toDIP(height.toInt()))
+            }
+
+            BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(maxHeight))
+
+            else -> null
+          }
+        }
+
+        else -> null
+      }
     }
+  }
 
   /**
    * Get SizeInfo data for given size index.
