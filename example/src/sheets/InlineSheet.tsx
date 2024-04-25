@@ -46,7 +46,7 @@ export const InlineSheet = forwardRef((props: InlineSheetProps, ref: Ref<InlineS
       )}
       <TrueSheet
         ref={sheetRef}
-        modal={false}
+        dimmed={false}
         sizes={['auto', 'large']}
         blurTint="dark"
         backgroundColor={DARK}
@@ -54,8 +54,6 @@ export const InlineSheet = forwardRef((props: InlineSheetProps, ref: Ref<InlineS
         contentContainerStyle={$content}
         {...props}
       >
-        <DemoContent color={BLUE} />
-        <DemoContent color={BLUE} />
         <DemoContent color={BLUE} />
         <Button text="Dismiss" onPress={dismiss} />
       </TrueSheet>

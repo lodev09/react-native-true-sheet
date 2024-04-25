@@ -43,7 +43,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   var cornerRadius: CGFloat?
   var grabber = true
-  var modal = true
+  var dimmed = true
 
   // MARK: - Setup
 
@@ -128,8 +128,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   @available(iOS 15.0, *)
-  func configureModalMode(for sheet: UISheetPresentationController) {
-    if modal {
+  func setDimmed(for sheet: UISheetPresentationController) {
+    if dimmed {
       sheet.largestUndimmedDetentIdentifier = nil
     } else {
       sheet.largestUndimmedDetentIdentifier = .large
@@ -179,7 +179,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
         }
       }
 
-      configureModalMode(for: sheet)
+      setDimmed(for: sheet)
 
       sheet.selectedDetentIdentifier = identifier
       completion?(detentValues[identifier.rawValue] ?? defaultSizeInfo)

@@ -246,12 +246,12 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
-  func setModal(_ modal: Bool) {
-    viewController.modal = modal
+  func setDimmed(_ dimmed: Bool) {
+    viewController.dimmed = dimmed
 
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
-        viewController.configureModalMode(for: sheet)
+        viewController.setDimmed(for: sheet)
       }
     }
   }

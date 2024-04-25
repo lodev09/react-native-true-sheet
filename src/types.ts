@@ -121,12 +121,19 @@ export interface TrueSheetProps extends ViewProps {
   sizes?: SheetSize[]
 
   /**
-   * Specify whether the sheet is presented modally.
+   * Specify whether the sheet background is dimmed.
    * Set to `false` to allow interaction with the background components.
    *
    * @default true
    */
-  modal?: boolean
+  dimmed?: boolean
+
+  /**
+   * The size index that the sheet should start to dim in IOS.
+   *
+   * @platform ios
+   */
+  dimmedIndex?: number
 
   /**
    * Prevents interactive dismissal of the Sheet.
