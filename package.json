@@ -53,7 +53,7 @@
   "bugs": {
     "url": "https://github.com/lodev09/react-native-true-sheet/issues"
   },
-  "homepage": "https://github.com/lodev09/react-native-true-sheet#readme",
+  "homepage": "https://sheet.lodev09.com",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

@@ -1,8 +1,8 @@
 # React Native True Sheet
 
 [![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml)
-![GitHub Release](https://img.shields.io/github/v/release/lodev09/react-native-true-sheet)
-![NPM Downloads](https://img.shields.io/npm/dw/%40lodev09%2Freact-native-true-sheet)
+[![NPM Version](https://img.shields.io/npm/v/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
+[![NPM Downloads](https://img.shields.io/npm/d18m/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
@@ -39,27 +39,34 @@ npm i @lodev09/react-native-true-sheet
 ```tsx
 import { TrueSheet } from "@lodev09/react-native-true-sheet"
 
-// ...
+export const App = () => {
+  const sheet = useRef<TrueSheet>(null)
 
-const sheet = useRef<TrueSheet>(null)
+  // Present the sheet ✅
+  const present = async () => {
+    await sheet.current?.present()
+    console.log('horray! sheet has been presented 💩')
+  }
 
-const openSheet = async () => {
-  await sheet.current?.present()
-  console.log('horray! sheet has been presented 💩')
+  // Dismiss the sheet ✅
+  const dismiss = async () => {
+    await sheet.current?.dismiss()
+    console.log('Bye bye 👋')
+  }
+
+  return (
+    <View>
+      <Button onPress={present} title="Present" />
+      <TrueSheet
+        ref={sheet}
+        sizes={['auto', 'large']}
+        cornerRadius={24}
+      >
+        <Button onPress={dismiss} title="Dismiss" />
+      </TrueSheet>
+    </View>
+  )
 }
-
-return (
-  <View>
-    <Button onPress={openSheet} title="Open Sheet" />
-    <TrueSheet
-      ref={sheet}
-      sizes={['auto', 'large']}
-      cornerRadius={24}
-    >
-      <View />
-    </TrueSheet>
-  </View>
-)
 ```
 
 ## v1 Roadmap
