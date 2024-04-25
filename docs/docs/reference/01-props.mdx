@@ -74,6 +74,24 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
+### `dimmed`
+
+Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ |
+
+### `dimmedIndex`
+
+The size index that the sheet should start to dim on IOS. When value is `> 0`, `dimmed` is ignored.
+
+Consider using `dimmed` for consistency across platforms.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `number` | `0` | ✅ | ✅ |
+
 ### `grabber`
 
 Shows a grabber (or handle). Native on IOS and styled `View` on Android.

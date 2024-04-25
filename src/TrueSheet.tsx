@@ -203,6 +203,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dismissible = true,
       grabber = true,
       dimmed = true,
+      dimmedIndex,
       grabberProps,
       blurTint,
       cornerRadius,
@@ -226,6 +227,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         footerHeight={this.state.footerHeight}
         grabber={grabber}
         dimmed={dimmed}
+        dimmedIndex={dimmedIndex}
         dismissible={dismissible}
         maxHeight={maxHeight}
         onPresent={this.onPresent}

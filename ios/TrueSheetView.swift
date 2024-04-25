@@ -257,6 +257,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
+  func setDimmedIndex(_ index: NSNumber) {
+    viewController.dimmedIndex = index as? Int
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { sheet in
+        viewController.setDimmed(for: sheet)
+      }
+    }
+  }
+
+  @objc
   func setScrollableHandle(_ tag: NSNumber?) {
     let view = bridge.uiManager.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view

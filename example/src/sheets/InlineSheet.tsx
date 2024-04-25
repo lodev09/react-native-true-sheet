@@ -47,13 +47,15 @@ export const InlineSheet = forwardRef((props: InlineSheetProps, ref: Ref<InlineS
       <TrueSheet
         ref={sheetRef}
         dimmed={false}
-        sizes={['auto', 'large']}
+        dimmedIndex={1}
+        sizes={['auto', '75%', 'large']}
         blurTint="dark"
         backgroundColor={DARK}
         onDismiss={() => setIsPresented(false)}
         contentContainerStyle={$content}
         {...props}
       >
+        <DemoContent color={BLUE} />
         <DemoContent color={BLUE} />
         <Button text="Dismiss" onPress={dismiss} />
       </TrueSheet>
@@ -69,7 +71,7 @@ const $content: ViewStyle = {
 }
 
 const $backgroundContent: ViewStyle = {
-  padding: SPACING,
+  padding: 24,
   paddingTop: SPACING * 6,
   backgroundColor: BLUE,
 }

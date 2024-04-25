@@ -44,6 +44,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var cornerRadius: CGFloat?
   var grabber = true
   var dimmed = true
+  var dimmedIndex: Int? = 0
 
   // MARK: - Setup
 
@@ -127,15 +128,21 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
+  /// Setup dimmed sheet.
+  /// `dimmedIndex` will further customize the dimming behavior.
   @available(iOS 15.0, *)
   func setDimmed(for sheet: UISheetPresentationController) {
-    if dimmed {
+    if dimmed, dimmedIndex == 0 {
       sheet.largestUndimmedDetentIdentifier = nil
     } else {
       sheet.largestUndimmedDetentIdentifier = .large
-      if #available(iOS 16.0, *),
-         let lastIdentifier = sheet.detents.last?.identifier {
-        sheet.largestUndimmedDetentIdentifier = lastIdentifier
+
+      if #available(iOS 16.0, *) {
+        if let dimmedIndex, sheet.detents.indices.contains(dimmedIndex - 1) {
+          sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIndex - 1].identifier
+        } else if let lastIdentifier = sheet.detents.last?.identifier {
+          sheet.largestUndimmedDetentIdentifier = lastIdentifier
+        }
       }
     }
   }
