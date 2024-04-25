@@ -122,7 +122,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Specify whether the sheet is presented modally.
-   * Set to `false` to allow interaction with the components behind it.
+   * Set to `false` to allow interaction with the background components.
    *
    * @default true
    */

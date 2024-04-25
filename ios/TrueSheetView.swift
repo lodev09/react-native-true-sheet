@@ -229,7 +229,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController.cornerRadius = cornerRadius
     if #available(iOS 15.0, *) {
-      updatePresentedSheet { sheet in
+      withPresentedSheet { sheet in
         sheet.preferredCornerRadius = viewController.cornerRadius
       }
     }
@@ -239,7 +239,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func setGrabber(_ visible: Bool) {
     viewController.grabber = visible
     if #available(iOS 15.0, *) {
-      updatePresentedSheet { sheet in
+      withPresentedSheet { sheet in
         sheet.prefersGrabberVisible = visible
       }
     }
@@ -250,7 +250,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     viewController.modal = modal
 
     if #available(iOS 15.0, *) {
-      updatePresentedSheet { sheet in
+      withPresentedSheet { sheet in
         viewController.configureModalMode(for: sheet)
       }
     }
@@ -274,7 +274,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   /// Use to customize some properties of the Sheet without fully reconfiguring.
   @available(iOS 15.0, *)
-  func updatePresentedSheet(completion: (UISheetPresentationController) -> Void) {
+  func withPresentedSheet(completion: (UISheetPresentationController) -> Void) {
     guard isPresented, let sheet = viewController.sheetPresentationController else {
       return
     }

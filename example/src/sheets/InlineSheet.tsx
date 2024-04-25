@@ -40,8 +40,8 @@ export const InlineSheet = forwardRef((props: InlineSheetProps, ref: Ref<InlineS
             mollit anim id est laborum.
           </Text>
           <Spacer />
-          <Button text="Some Button" />
-          <Button text="Do Not Press Me" />
+          <Button text="Some Button" onPress={() => sheetRef.current?.resize(1)} />
+          <Button text="Do Not Press Me" onPress={() => sheetRef.current?.dismiss()} />
         </View>
       )}
       <TrueSheet
