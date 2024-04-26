@@ -7,7 +7,7 @@ import {
   type NativeMethods,
   type ViewStyle,
   type NativeSyntheticEvent,
-  type LayoutRectangle,
+  type LayoutChangeEvent,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeInfo } from './types'
@@ -143,15 +143,15 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onPresent?.(event.nativeEvent)
   }
 
-  private onFooterLayout(layout: LayoutRectangle): void {
+  private onFooterLayout(event: LayoutChangeEvent): void {
     this.setState({
-      footerHeight: layout.height,
+      footerHeight: event.nativeEvent.layout.height,
     })
   }
 
-  private onContentLayout(layout: LayoutRectangle): void {
+  private onContentLayout(event: LayoutChangeEvent): void {
     this.setState({
-      contentHeight: layout.height,
+      contentHeight: event.nativeEvent.layout.height,
     })
   }
 
@@ -252,14 +252,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           ]}
           {...rest}
         >
-          <View
-            collapsable={false}
-            onLayout={(e) => this.onContentLayout(e.nativeEvent.layout)}
-            style={contentContainerStyle}
-          >
+          <View collapsable={false} onLayout={this.onContentLayout} style={contentContainerStyle}>
             {children}
           </View>
-          <View collapsable={false} onLayout={(e) => this.onFooterLayout(e.nativeEvent.layout)}>
+          <View collapsable={false} onLayout={this.onFooterLayout}>
             <TrueSheetFooter Component={FooterComponent} />
           </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
