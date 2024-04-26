@@ -9,9 +9,7 @@ import {
   GRABBER_COLOR,
   GRAY,
   INPUT_HEIGHT,
-  RANDOM_TEXTS,
   SPACING,
-  random,
 } from '../utils'
 import { Button, DemoContent, Footer } from '../components'
 
@@ -56,7 +54,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       FooterComponent={<Footer />}
       {...props}
     >
-      <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+      <DemoContent color={DARK_BLUE} />
       <Input />
       {isSubmitted && <Input />}
       <Button text="Submit" onPress={submit} />

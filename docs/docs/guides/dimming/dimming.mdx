@@ -1,0 +1,50 @@
+---
+title: Dimming
+description: Control the sheet's dimming behavior.
+---
+
+import dimming from './dimming.gif'
+
+One of the most common use cases for a Bottom Sheet is to present it while still allowing users to interact with background components, such as in a Maps app.
+
+In this guide, you can configure `TrueSheet` to achieve this exact functionality.
+
+<img alt="dimming" src={dimming} width="300"/>
+
+## How?
+
+You can easily disable the dimmed background of the sheet by setting [`dimmed`](/reference/props#dimmed) to `false`.
+
+```tsx {5}
+export const App = () => {
+  return (
+    <TrueSheet
+      sizes={['auto', '69%', 'large']}
+      dimmed={false}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+### Dimmed by Size Index
+
+To further customize the dimming behavior, [`dimmedIndex`](/reference/props#dimmedindex) is also available. Set the [size](/reference/props#sizes) `index` at which you want the sheet to start dimming.
+
+```tsx {5}
+export const App = () => {
+  return (
+    <TrueSheet
+      sizes={['auto', '69%', 'large']}
+      dimmedIndex={1} // Dim will start at 69% ✅
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+:::info
+`dimmedIndex` is ignored if `dimmed` is set to `false`.
+:::

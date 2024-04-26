@@ -1,6 +1,8 @@
 package com.lodev09.truesheet
 
+import android.annotation.SuppressLint
 import android.graphics.Color
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -12,14 +14,30 @@ import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
+@SuppressLint("ClickableViewAccessibility")
 class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
 
-  var maxScreenHeight: Int = 0
-  var contentHeight: Int = 0
-  var footerHeight: Int = 0
+  /**
+   * Specify whether the sheet background is dimmed.
+   * Set to `false` to allow interaction with the background components.
+   */
+  var dimmed = true
+
+  /**
+   * The size index that the sheet should start to dim the background.
+   * This is ignored if `dimmed` is set to `false`.
+   */
+  var dimmedIndex = 0
+
+  /**
+   * The maximum window height
+   */
+  var maxScreenHeight = 0
+  var contentHeight = 0
+  var footerHeight = 0
   var maxSheetHeight: Int? = null
 
   var footerView: ViewGroup? = null
@@ -45,7 +63,46 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     maxScreenHeight = Utils.screenHeight(reactContext)
   }
 
+  /**
+   * Setup dimmed sheet.
+   * `dimmedIndex` will further customize the dimming behavior.
+   */
+  fun setupDimmedBackground(sizeIndex: Int) {
+    window?.apply {
+      val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
+
+      if (dimmed && sizeIndex >= dimmedIndex) {
+        // Remove touch listener
+        view.setOnTouchListener(null)
+
+        // Add the dimmed background
+        setFlags(
+          WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+          WindowManager.LayoutParams.FLAG_DIM_BEHIND
+        )
+
+        setCanceledOnTouchOutside(true)
+      } else {
+        // Override the background touch and pass it to the components outside
+        view.setOnTouchListener { v, event ->
+          event.setLocation(event.rawX - v.x, event.rawY - v.y)
+          reactContext.currentActivity?.dispatchTouchEvent(event)
+          false
+        }
+
+        // Remove the dimmed background
+        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+
+        setCanceledOnTouchOutside(false)
+      }
+    }
+  }
+
+  /**
+   * Present the sheet.
+   */
   fun show(sizeIndex: Int) {
+    setupDimmedBackground(sizeIndex)
     if (isShowing) {
       setStateForSizeIndex(sizeIndex)
     } else {
@@ -63,7 +120,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Set the state based on the given size index.
+   * Set the state based for the given size index.
    */
   private fun setStateForSizeIndex(index: Int) {
     behavior.state = getStateForSizeIndex(index)
@@ -119,7 +176,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Determines the state based on the given size index.
+   * Determines the state based from the given size index.
    */
   private fun getStateForSizeIndex(index: Int) =
     when (sizes.size) {
@@ -170,7 +227,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Configure the sheet based on size preferences.
+   * Configure the sheet based from the size preference.
    */
   fun configure() {
     // Configure sheet sizes

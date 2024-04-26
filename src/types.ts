@@ -121,6 +121,24 @@ export interface TrueSheetProps extends ViewProps {
   sizes?: SheetSize[]
 
   /**
+   * Specify whether the sheet background is dimmed.
+   * Set to `false` to allow interaction with the background components.
+   *
+   * @platform android
+   * @platform ios 15+
+   * @default true
+   */
+  dimmed?: boolean
+
+  /**
+   * The size index that the sheet should start to dim the background.
+   * This is ignored if `dimmed` is set to `false`.
+   *
+   * @default 0
+   */
+  dimmedIndex?: number
+
+  /**
    * Prevents interactive dismissal of the Sheet.
    *
    * @default true

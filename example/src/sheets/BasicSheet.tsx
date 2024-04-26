@@ -2,7 +2,7 @@ import React, { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
 import { type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import { DARK, DARK_BLUE, GRABBER_COLOR, RANDOM_TEXTS, SPACING, random } from '../utils'
+import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../utils'
 import { Button, DemoContent, Footer, Spacer } from '../components'
 
 interface BasicSheetProps extends TrueSheetProps {}
@@ -54,7 +54,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       FooterComponent={<Footer />}
       {...props}
     >
-      <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+      <DemoContent color={DARK_BLUE} />
       <Button text="Present Large" onPress={() => resize(2)} />
       <Button text="Present 80%" onPress={() => resize(1)} />
       <Button text="Present Auto" onPress={() => resize(0)} />
@@ -72,9 +72,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         contentContainerStyle={$content}
         FooterComponent={<Footer />}
       >
-        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
-        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
-        <DemoContent color={DARK_BLUE} text={random(RANDOM_TEXTS)} />
+        <DemoContent color={DARK_BLUE} />
+        <DemoContent color={DARK_BLUE} />
+        <DemoContent color={DARK_BLUE} />
         <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
       </TrueSheet>
     </TrueSheet>

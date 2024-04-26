@@ -14,10 +14,3 @@ export const BLUE = '#3784d7'
 export const DARK_BLUE = '#1f64ae'
 
 export const $WHITE_TEXT: TextStyle = { color: 'white' }
-
-export const RANDOM_TEXTS: string[] = [
-  `Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.`,
-  `Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat.`,
-]

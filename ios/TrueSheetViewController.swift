@@ -43,6 +43,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   var cornerRadius: CGFloat?
   var grabber = true
+  var dimmed = true
+  var dimmedIndex: Int? = 0
 
   // MARK: - Setup
 
@@ -126,6 +128,25 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
+  /// Setup dimmed sheet.
+  /// `dimmedIndex` will further customize the dimming behavior.
+  @available(iOS 15.0, *)
+  func setupDimmedBackground(for sheet: UISheetPresentationController) {
+    if dimmed, dimmedIndex == 0 {
+      sheet.largestUndimmedDetentIdentifier = nil
+    } else {
+      sheet.largestUndimmedDetentIdentifier = .large
+
+      if #available(iOS 16.0, *) {
+        if dimmed, let dimmedIndex, sheet.detents.indices.contains(dimmedIndex - 1) {
+          sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIndex - 1].identifier
+        } else if let lastIdentifier = sheet.detents.last?.identifier {
+          sheet.largestUndimmedDetentIdentifier = lastIdentifier
+        }
+      }
+    }
+  }
+
   /// Prepares the view controller for sheet presentation
   func configureSheet(at index: Int = 0, _ completion: ((SizeInfo) -> Void)?) {
     let defaultSizeInfo = SizeInfo(index: index, value: view.bounds.height)
@@ -147,26 +168,28 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       detents.append(detent)
     }
 
-    sheet.detents = detents
-    sheet.prefersEdgeAttachedInCompactHeight = true
-    sheet.prefersGrabberVisible = grabber
-    sheet.preferredCornerRadius = cornerRadius
-    sheet.delegate = self
-
-    var identifier: UISheetPresentationController.Detent.Identifier = .medium
-
-    if sheet.detents.indices.contains(index) {
-      let detent = sheet.detents[index]
-      if #available(iOS 16.0, *) {
-        identifier = detent.identifier
-      } else if detent == .large() {
-        identifier = .large
-      }
-    }
-
     sheet.animateChanges {
+      sheet.detents = detents
+      sheet.prefersEdgeAttachedInCompactHeight = true
+      sheet.prefersGrabberVisible = grabber
+      sheet.preferredCornerRadius = cornerRadius
+      sheet.delegate = self
+
+      var identifier: UISheetPresentationController.Detent.Identifier = .medium
+
+      if sheet.detents.indices.contains(index) {
+        let detent = sheet.detents[index]
+        if #available(iOS 16.0, *) {
+          identifier = detent.identifier
+        } else if detent == .large() {
+          identifier = .large
+        }
+      }
+
+      setupDimmedBackground(for: sheet)
+
       sheet.selectedDetentIdentifier = identifier
-      completion?(self.detentValues[identifier.rawValue] ?? defaultSizeInfo)
+      completion?(detentValues[identifier.rawValue] ?? defaultSizeInfo)
     }
   }
 }
