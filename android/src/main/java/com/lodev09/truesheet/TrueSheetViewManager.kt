@@ -44,6 +44,11 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setDimmed(dimmed)
   }
 
+  @ReactProp(name = "dimmedIndex")
+  fun setDimmedIndex(view: TrueSheetView, index: Int) {
+    view.setDimmedIndex(index)
+  }
+
   @ReactProp(name = "contentHeight")
   fun setContentHeight(view: TrueSheetView, height: Double) {
     view.setContentHeight(Utils.toPixel(height))

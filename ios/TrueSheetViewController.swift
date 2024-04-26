@@ -131,14 +131,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   /// Setup dimmed sheet.
   /// `dimmedIndex` will further customize the dimming behavior.
   @available(iOS 15.0, *)
-  func setDimmed(for sheet: UISheetPresentationController) {
+  func setupDimmedBackground(for sheet: UISheetPresentationController) {
     if dimmed, dimmedIndex == 0 {
       sheet.largestUndimmedDetentIdentifier = nil
     } else {
       sheet.largestUndimmedDetentIdentifier = .large
 
       if #available(iOS 16.0, *) {
-        if let dimmedIndex, sheet.detents.indices.contains(dimmedIndex - 1) {
+        if dimmed, let dimmedIndex, sheet.detents.indices.contains(dimmedIndex - 1) {
           sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIndex - 1].identifier
         } else if let lastIdentifier = sheet.detents.last?.identifier {
           sheet.largestUndimmedDetentIdentifier = lastIdentifier
@@ -186,7 +186,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
         }
       }
 
-      setDimmed(for: sheet)
+      setupDimmedBackground(for: sheet)
 
       sheet.selectedDetentIdentifier = identifier
       completion?(detentValues[identifier.rawValue] ?? defaultSizeInfo)

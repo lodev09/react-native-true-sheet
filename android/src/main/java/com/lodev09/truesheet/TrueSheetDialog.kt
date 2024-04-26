@@ -20,9 +20,24 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   private var keyboardManager = KeyboardManager(reactContext)
 
-  var maxScreenHeight: Int = 0
-  var contentHeight: Int = 0
-  var footerHeight: Int = 0
+  /**
+   * Specify whether the sheet background is dimmed.
+   * Set to `false` to allow interaction with the background components.
+   */
+  var dimmed = true
+
+  /**
+   * The size index that the sheet should start to dim the background.
+   * This is ignored when `dimmed` is set to `false`.
+   */
+  var dimmedIndex = 0
+
+  /**
+   * The maximum window height
+   */
+  var maxScreenHeight = 0
+  var contentHeight = 0
+  var footerHeight = 0
   var maxSheetHeight: Int? = null
 
   var footerView: ViewGroup? = null
@@ -48,12 +63,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     maxScreenHeight = Utils.screenHeight(reactContext)
   }
 
-  fun setDimmed(dimmed: Boolean) {
+  /**
+   * Setup dimmed sheet.
+   * `dimmedIndex` will further customize the dimming behavior.
+   */
+  fun setupDimmedBackground(sizeIndex: Int) {
     window?.apply {
-      setCanceledOnTouchOutside(dimmed)
       val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
 
-      if (dimmed) {
+      if (dimmed && sizeIndex >= dimmedIndex) {
         // Remove touch listener
         view.setOnTouchListener(null)
 
@@ -62,6 +80,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           WindowManager.LayoutParams.FLAG_DIM_BEHIND,
           WindowManager.LayoutParams.FLAG_DIM_BEHIND
         )
+
+        setCanceledOnTouchOutside(true)
       } else {
         // Override the background touch and pass it to the components outside
         view.setOnTouchListener { v, event ->
@@ -72,11 +92,17 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
         // Remove the dimmed background
         clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+
+        setCanceledOnTouchOutside(false)
       }
     }
   }
 
+  /**
+   * Present the sheet.
+   */
   fun show(sizeIndex: Int) {
+    setupDimmedBackground(sizeIndex)
     if (isShowing) {
       setStateForSizeIndex(sizeIndex)
     } else {
@@ -94,7 +120,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Set the state based on the given size index.
+   * Set the state based for the given size index.
    */
   private fun setStateForSizeIndex(index: Int) {
     behavior.state = getStateForSizeIndex(index)
@@ -150,7 +176,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Determines the state based on the given size index.
+   * Determines the state based from the given size index.
    */
   private fun getStateForSizeIndex(index: Int) =
     when (sizes.size) {
@@ -201,7 +227,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Configure the sheet based on size preferences.
+   * Configure the sheet based from the size preference.
    */
   fun configure() {
     // Configure sheet sizes

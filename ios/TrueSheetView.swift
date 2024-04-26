@@ -251,7 +251,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
-        viewController.setDimmed(for: sheet)
+        viewController.setupDimmedBackground(for: sheet)
       }
     }
   }
@@ -262,7 +262,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
-        viewController.setDimmed(for: sheet)
+        viewController.setupDimmedBackground(for: sheet)
       }
     }
   }

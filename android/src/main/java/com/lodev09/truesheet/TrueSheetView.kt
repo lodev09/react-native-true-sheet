@@ -30,7 +30,7 @@ class TrueSheetView(context: Context) :
   /**
    * Current activeIndex.
    */
-  private var activeIndex: Int = 0
+  private var currentSizeIndex: Int = 0
 
   /**
    * Promise callback to be invoked after `present` is called.
@@ -77,19 +77,21 @@ class TrueSheetView(context: Context) :
           positionFooter()
         }
 
+        // Resolve the present promise
         presentPromise?.let { promise ->
           promise()
           presentPromise = null
         }
 
         // dispatch onPresent event
-        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(activeIndex)))
+        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(currentSizeIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
         unregisterKeyboardManager()
 
+        // Resolve the dismiss promise
         dismissPromise?.let { promise ->
           promise()
           dismissPromise = null
@@ -106,27 +108,32 @@ class TrueSheetView(context: Context) :
             footerView?.let {
               val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
               if (slideOffset >= 0) {
+                // Sheet is expanding
                 it.y = y
               } else {
+                // Sheet is collapsing
                 it.y = y - footerHeight * slideOffset
               }
             }
           }
 
           override fun onStateChanged(view: View, newState: Int) {
+            if (!isShowing) return
+
             val sizeInfo = getSizeInfoForState(newState)
-            if (sizeInfo != null && sizeInfo.index != activeIndex) {
-              // Invoke promise when sheet resized programmatically
-              presentPromise?.let { promise ->
-                promise()
-                presentPromise = null
-              }
+            if (sizeInfo == null || sizeInfo.index == currentSizeIndex) return
 
-              activeIndex = sizeInfo.index
-
-              // dispatch onSizeChange event
-              eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+            // Invoke promise when sheet resized programmatically
+            presentPromise?.let { promise ->
+              promise()
+              presentPromise = null
             }
+
+            currentSizeIndex = sizeInfo.index
+            setupDimmedBackground(sizeInfo.index)
+
+            // dispatch onSizeChange event
+            eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
           }
         }
       )
@@ -232,7 +239,17 @@ class TrueSheetView(context: Context) :
   }
 
   fun setDimmed(dimmed: Boolean) {
-    sheetDialog.setDimmed(dimmed)
+    sheetDialog.dimmed = dimmed
+    if (sheetDialog.isShowing) {
+      sheetDialog.setupDimmedBackground(currentSizeIndex)
+    }
+  }
+
+  fun setDimmedIndex(index: Int) {
+    sheetDialog.dimmedIndex = index
+    if (sheetDialog.isShowing) {
+      sheetDialog.setupDimmedBackground(currentSizeIndex)
+    }
   }
 
   fun setDismissible(dismissible: Boolean) {
@@ -249,7 +266,7 @@ class TrueSheetView(context: Context) :
    */
   fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
     if (!sheetDialog.isShowing) {
-      activeIndex = sizeIndex
+      currentSizeIndex = sizeIndex
     }
 
     presentPromise = promiseCallback
@@ -261,7 +278,10 @@ class TrueSheetView(context: Context) :
    */
   fun dismiss(promiseCallback: () -> Unit) {
     dismissPromise = promiseCallback
-    sheetDialog.dismiss()
+
+    // Note: We are not calling `sheetDialog.dismiss()` here.
+    // This is to properly set the behavior state.
+    sheetDialog.behavior.state = BottomSheetBehavior.STATE_HIDDEN
   }
 
   companion object {

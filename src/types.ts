@@ -131,12 +131,9 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean
 
   /**
-   * The size index that the sheet should start to dim on IOS.
-   * When value is `> 0`, `dimmed` is ignored.
+   * The size index that the sheet should start to dim the background.
+   * This is ignored when `dimmed` is set to `false`.
    *
-   * Consider using `dimmed` for consistency across platforms.
-   *
-   * @platform ios 16+
    * @default 0
    */
   dimmedIndex?: number
