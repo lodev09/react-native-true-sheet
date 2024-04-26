@@ -69,9 +69,8 @@ export const App = () => {
 }
 ```
 
-## v1 Roadmap
+## TODO (v1)
 
-- [ ] Inline sheet
 - [ ] Test with RN new architecture
 - [ ] Reanimated integration(?)
 
