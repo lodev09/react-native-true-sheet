@@ -1,6 +1,8 @@
 package com.lodev09.truesheet
 
+import android.annotation.SuppressLint
 import android.graphics.Color
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -12,6 +14,7 @@ import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
+@SuppressLint("ClickableViewAccessibility")
 class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
   BottomSheetDialog(reactContext) {
 
@@ -43,6 +46,34 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
     // Update the usable sheet height
     maxScreenHeight = Utils.screenHeight(reactContext)
+  }
+
+  fun setDimmed(dimmed: Boolean) {
+    window?.apply {
+      setCanceledOnTouchOutside(dimmed)
+      val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
+
+      if (dimmed) {
+        // Remove touch listener
+        view.setOnTouchListener(null)
+
+        // Add the dimmed background
+        setFlags(
+          WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+          WindowManager.LayoutParams.FLAG_DIM_BEHIND
+        )
+      } else {
+        // Override the background touch and pass it to the components outside
+        view.setOnTouchListener { v, event ->
+          event.setLocation(event.rawX - v.x, event.rawY - v.y)
+          reactContext.currentActivity?.dispatchTouchEvent(event)
+          false
+        }
+
+        // Remove the dimmed background
+        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+      }
+    }
   }
 
   fun show(sizeIndex: Int) {

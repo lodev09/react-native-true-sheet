@@ -231,8 +231,11 @@ class TrueSheetView(context: Context) :
     configureIfShowing()
   }
 
+  fun setDimmed(dimmed: Boolean) {
+    sheetDialog.setDimmed(dimmed)
+  }
+
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog.behavior.isHideable = dismissible
     sheetDialog.setCancelable(dismissible)
   }
 
