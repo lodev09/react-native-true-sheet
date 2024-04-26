@@ -132,7 +132,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The size index that the sheet should start to dim the background.
-   * This is ignored when `dimmed` is set to `false`.
+   * This is ignored if `dimmed` is set to `false`.
    *
    * @default 0
    */

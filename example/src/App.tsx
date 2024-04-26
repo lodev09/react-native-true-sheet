@@ -6,7 +6,7 @@ import {
   BasicSheet,
   FlatListSheet,
   GestureSheet,
-  InlineSheet,
+  UndimmedSheet,
   PromptSheet,
   ScrollViewSheet,
 } from './sheets'
@@ -19,7 +19,7 @@ export default function App() {
   const scrollViewSheet = useRef<TrueSheet>(null)
   const flatListSheet = useRef<TrueSheet>(null)
   const gestureSheet = useRef<TrueSheet>(null)
-  const inlineSheet = useRef<TrueSheet>(null)
+  const undimmedSheet = useRef<TrueSheet>(null)
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
@@ -33,14 +33,14 @@ export default function App() {
       <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
       <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-      <Button text="TrueSheet Inline" onPress={() => inlineSheet.current?.present()} />
+      <Button text="TrueSheet Inline" onPress={() => undimmedSheet.current?.present()} />
 
       <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
       <ScrollViewSheet ref={scrollViewSheet} />
       <FlatListSheet ref={flatListSheet} />
       <GestureSheet ref={gestureSheet} />
-      <InlineSheet ref={inlineSheet} />
+      <UndimmedSheet ref={undimmedSheet} />
     </View>
   )
 }

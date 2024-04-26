@@ -28,7 +28,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   /**
    * The size index that the sheet should start to dim the background.
-   * This is ignored when `dimmed` is set to `false`.
+   * This is ignored if `dimmed` is set to `false`.
    */
   var dimmedIndex = 0
 
