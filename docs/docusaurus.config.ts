@@ -1,7 +1,8 @@
 import { themes as prismThemes } from 'prism-react-renderer'
 import type { Config } from '@docusaurus/types'
 import type * as Preset from '@docusaurus/preset-classic'
-import pkg from '../package.json'
+
+// import pkg from '../package.json'
 
 const config: Config = {
   title: 'React Native True Sheet',
@@ -98,8 +99,8 @@ const config: Config = {
       additionalLanguages: ['swift', 'java', 'kotlin'],
     },
     announcementBar: {
-      id: 'v0.10.2',
-      content: `<b>Version ${pkg.version}</b> is out 🎉. Check out the <a href="/blog/release-0-10">blog post</a> to learn what's new ✨`,
+      id: '0.11.0-dimming',
+      content: `<b style="color: #47d995">Dimming</b> is now available 🎉! Checkout <a href="/guides/dimming">this guide</a> and start building your own Maps App 😎`,
       backgroundColor: '#1f64ae',
       textColor: '#ffffff',
     },
