@@ -79,6 +79,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/contributing',
+          label: 'Contributing',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
           label: 'Example',
           position: 'right',

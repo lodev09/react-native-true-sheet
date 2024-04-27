@@ -3,7 +3,7 @@ title: Methods
 description: TrueSheet methods.
 ---
 
-## `Ref` Methods
+## Component Methods
 
 `TrueSheet` has a couple of core methods that you'll be using most of the time. These methods are asynchronous so you can use `async` and `await` on them.
 
@@ -56,7 +56,7 @@ await sheet.current?.resize(1)
 
 You can also call the above methods statically without having access to a sheet's `ref`. This is particularly useful when you want to present a sheet from anywhere.
 
-The API is similar to the `ref` methods except for the required [`name`](/reference/props#name) prop. See [this guide](/guides/global-methods) for example.
+The API is similar to the component methods except for the required [`name`](/reference/props#name) prop. See [this guide](/guides/global-methods) for example.
 
 In the example below, we provide `"my-sheet"` as the `name` of our sheet.
 ```tsx {4}

@@ -9,23 +9,27 @@ The true native bottom sheet experience for your React Native Apps. 💩
 <img alt="React Native True Sheet" src="docs/static/img/preview.gif" width="600px" />
 
 ## Features
-* ✅ Implemented in the native realm.
-* ✅ **_NOT_** your pure JS, (re)animated view (might integrate in the future 👀)
-* ✅ Clean, fast, and lightweight.
-* ✅ Handles your _Scrolling_ needs, natively.
-* ✅ Handles your _Footer_ needs, natively.
-* ✅ Handles your _Keyboard_ needs, natively.
-* ✅ Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods).
-* ✅ Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
+
+* Implemented in the native realm.
+* Clean, fast, and lightweight.
+* Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods).
+* Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
 
 ## Installation
+
+You can install the package by using either `yarn` or `npm`.
 
 ```sh
 yarn add @lodev09/react-native-true-sheet
 ```
-
 ```sh
 npm i @lodev09/react-native-true-sheet
+```
+
+Next, run the following to install it on IOS.
+
+```sh
+cd ios && pod install
 ```
 
 ## Documentation
@@ -69,15 +73,10 @@ export const App = () => {
 }
 ```
 
-## TODO (v1)
-
-- [ ] Test with RN new architecture
-- [ ] Reanimated integration(?)
-
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
 ## License
 
-MIT
+[MIT](LICENSE)
