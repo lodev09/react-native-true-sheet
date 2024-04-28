@@ -49,7 +49,59 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'preconnect',
+        href: 'https://github.com/lodev09',
+      },
+    },
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'Person',
+        'name': 'Jovanni Lo',
+        'url': 'https://github.com/lodev09',
+        'image': 'https://github.com/lodev09.png',
+        'jobTitle': 'Lead React Native Developer',
+        'sameAs': ['https://www.linkedin.com/in/lodev09/'],
+      }),
+    },
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'WebSite',
+        'name': 'Installation',
+        'url': 'https://sheet.lodev09.com/install',
+        'potentialAction': {
+          '@type': 'SearchAction',
+          'target': 'https://sheet.lodev09.com/search?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      }),
+    },
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'WebSite',
+        'name': 'Guides',
+        'url': 'https://sheet.lodev09.com/category/guides',
+      }),
+    },
+  ],
   themeConfig: {
     algolia: {
       appId: 'AEIYW2K56K',
