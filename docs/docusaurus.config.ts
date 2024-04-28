@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic'
 // import pkg from '../package.json'
 
 const config: Config = {
-  title: 'React Native True Sheet',
+  title: 'True Native Bottom Sheet',
   tagline: 'The true native bottom sheet experience for your React Native Apps.',
   favicon: 'img/favicon.png',
   url: 'https://sheet.lodev09.com',
@@ -113,12 +113,11 @@ const config: Config = {
     metadata: [
       {
         name: 'author',
-        content: 'Marc Rousavy',
+        content: 'Jovanni Lo',
       },
       {
         name: 'keywords',
-        content:
-          'react, native, sheet, bottom-sheet, react-native, react-native-bottom-sheet, react-native-true-sheet, TrueSheet, True Sheet, Bottom Sheet, documentation, coding, docs, guides, lodev09, jovanni',
+        content: 'Bottom Sheet, Pure Native Bottom Sheet, React Native Bottom Sheet',
       },
       {
         name: 'og:title',

@@ -2,6 +2,7 @@
   "label": "Reference",
   "position": 5,
   "link": {
-    "type": "generated-index"
+    "type": "generated-index",
+    "description": "True Native Bottom Sheet API reference."
   }
 }
