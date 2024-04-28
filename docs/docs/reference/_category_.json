@@ -3,6 +3,7 @@
   "position": 5,
   "link": {
     "type": "generated-index",
-    "description": "True Native Bottom Sheet API reference."
+    "description": "True Native Bottom Sheet API reference.",
+    "keywords": ["Bottom Sheet API reference", "React Native Bottom Sheet", "Bottom Sheet documentation"]
   }
 }
