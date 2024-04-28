@@ -117,7 +117,8 @@ const config: Config = {
       },
       {
         name: 'keywords',
-        content: 'Bottom Sheet, Pure Native Bottom Sheet, React Native Bottom Sheet',
+        content:
+          'bottom sheet, pure native bottom sheet, react native bottom sheet, bottom sheet documentation',
       },
       {
         name: 'og:title',

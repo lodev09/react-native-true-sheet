@@ -1,7 +1,7 @@
 ---
 title: Stacking
 description: Guide on how to present bottom sheet on top of an existing sheet.
-keywords: [Bottom Sheet stacking, React Native Bottom Sheet, Bottom Sheet documentation]
+keywords: [bottom sheet stacking, multiple bottom sheets, parent bottom sheet, child bottom sheet]
 ---
 
 import stacking from './stacking.gif'
@@ -9,6 +9,8 @@ import stacking from './stacking.gif'
 Sometimes you want to stack the sheets one after another. On iOS, this can cause issues. There are _**two**_ ways to resolve this.
 
 <img alt="stacking" src={stacking} width="300"/>
+
+## How?
 
 ### 1. Dismiss the "parent" sheet first
 
@@ -48,3 +50,7 @@ return (
   </TrueSheet>
 )
 ```
+
+:::tip
+You can do the same with **Android** for a more consistent user experience.
+:::
