@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
+# Host
+Host: https://sheet.lodev09.com
+
+# Sitemaps
 Sitemap: https://sheet.lodev09.com/sitemap.xml

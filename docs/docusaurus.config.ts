@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic'
 const config: Config = {
   title: 'True Native Bottom Sheet',
   tagline: 'The true native bottom sheet experience for your React Native Apps.',
-  favicon: 'img/favicon.png',
+  favicon: '/favicon.ico',
   url: 'https://sheet.lodev09.com',
   baseUrl: '/',
   organizationName: 'lodev09',
