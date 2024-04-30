@@ -19,25 +19,21 @@ enum Logger {
    This function also always logs to [RCTDefaultLogFunction].
    In non-DEBUG builds, this function is no-op.
    */
-  static func log(level: RCTLogLevel,
-                  message: String,
-                  _ file: String = #file,
-                  _ lineNumber: Int = #line,
-                  _ function: String = #function) {
+  static func log(level: RCTLogLevel, _ message: String) {
     #if DEBUG
-      RCTDefaultLogFunction(level, RCTLogSource.native, file, lineNumber as NSNumber, "TrueSheet[\(function)]: \(message)")
+    RCTDefaultLogFunction(level, RCTLogSource.javaScript, nil, nil, "TrueSheet: \(message)")
     #endif
   }
 
   static func info(_ message: String) {
-    log(level: .info, message: message)
+    log(level: .info, message)
   }
 
   static func warning(_ message: String) {
-    log(level: .warning, message: message)
+    log(level: .warning, message)
   }
 
   static func error(_ message: String) {
-    log(level: .error, message: message)
+    log(level: .error, message)
   }
 }
