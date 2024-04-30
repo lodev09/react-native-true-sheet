@@ -253,7 +253,7 @@ class TrueSheetView(context: Context) :
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog.setCancelable(dismissible)
+    sheetDialog.dismissible = dismissible
   }
 
   fun setSizes(newSizes: Array<Any>) {
@@ -270,7 +270,7 @@ class TrueSheetView(context: Context) :
     }
 
     presentPromise = promiseCallback
-    sheetDialog.show(sizeIndex)
+    sheetDialog.present(sizeIndex)
   }
 
   /**
@@ -278,10 +278,7 @@ class TrueSheetView(context: Context) :
    */
   fun dismiss(promiseCallback: () -> Unit) {
     dismissPromise = promiseCallback
-
-    // Note: We are not calling `sheetDialog.dismiss()` here.
-    // This is to properly set the behavior state.
-    sheetDialog.behavior.state = BottomSheetBehavior.STATE_HIDDEN
+    sheetDialog.dismiss()
   }
 
   companion object {

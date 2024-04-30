@@ -40,6 +40,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
+  var dismissible: Boolean = true
+    set(value) {
+      field = value
+      setCanceledOnTouchOutside(value)
+      setCancelable(value)
+
+      behavior.isHideable = value
+    }
+
   var footerView: ViewGroup? = null
 
   var sizes: Array<Any> = arrayOf("medium", "large")
@@ -81,7 +90,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           WindowManager.LayoutParams.FLAG_DIM_BEHIND
         )
 
-        setCanceledOnTouchOutside(true)
+        setCanceledOnTouchOutside(dismissible)
       } else {
         // Override the background touch and pass it to the components outside
         view.setOnTouchListener { v, event ->
@@ -101,7 +110,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Present the sheet.
    */
-  fun show(sizeIndex: Int) {
+  fun present(sizeIndex: Int) {
     setupDimmedBackground(sizeIndex)
     if (isShowing) {
       setStateForSizeIndex(sizeIndex)

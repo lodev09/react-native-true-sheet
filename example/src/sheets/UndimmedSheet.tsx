@@ -43,6 +43,7 @@ export const UndimmedSheet = forwardRef((props: UndimmedSheetProps, ref: Ref<Und
         dimmedIndex={1}
         sizes={['auto', '69%', 'large']}
         blurTint="dark"
+        cornerRadius={12}
         backgroundColor={DARK}
         onDismiss={() => setIsPresented(false)}
         contentContainerStyle={$content}
