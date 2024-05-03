@@ -1,2 +1,2 @@
-# This is just so that GitHub shows the language "Swift" as the repo language.
-*.mdx linguist-language=Swift
+# Mark the docs/ directory as documentation only, so it doesn't show up as JS code.
+**/* linguist-documentation
