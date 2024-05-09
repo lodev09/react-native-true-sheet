@@ -21,7 +21,7 @@ enum Logger {
    */
   static func log(level: RCTLogLevel, _ message: String) {
     #if DEBUG
-    RCTDefaultLogFunction(level, RCTLogSource.javaScript, nil, nil, "TrueSheet: \(message)")
+      RCTDefaultLogFunction(level, RCTLogSource.javaScript, nil, nil, "TrueSheet: \(message)")
     #endif
   }
 

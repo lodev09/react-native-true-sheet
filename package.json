@@ -60,7 +60,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^19.0.3",
     "@evilmartians/lefthook": "^1.6.5",
-    "@react-native/eslint-config": "^0.73.2",
+    "@react-native/eslint-config": "^0.74.83",
     "@release-it/conventional-changelog": "^8.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "^18.2.64",
@@ -78,13 +78,10 @@
     "jest": "^29.7.0",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
-    "react-native": "^0.73.5",
+    "react-native": "^0.74.1",
     "react-native-builder-bob": "^0.23.2",
     "release-it": "^17.1.1",
     "typescript": "~5.3.3"
-  },
-  "resolutions": {
-    "@types/react": "^18.2.44"
   },
   "peerDependencies": {
     "react": "*",
