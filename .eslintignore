@@ -1,4 +1,5 @@
 lib
+build
 src/__mocks__
 docs/build
 docs/.docusaurus

@@ -27,5 +27,5 @@
     "allowJs": false,
     "allowSyntheticDefaultImports": true
   },
-  "exclude": ["lib", "src/__mocks__", "docs/.docusaurus"]
+  "exclude": ["lib", "build", "src/__mocks__", "docs/.docusaurus"]
 }
