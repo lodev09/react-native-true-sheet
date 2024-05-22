@@ -11,7 +11,13 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.PixelUtil
 
 object Utils {
-  @SuppressLint("DiscouragedApi", "InternalInsetResource")
+  @SuppressLint("DiscouragedApi")
+  private fun getIdentifierHeight(context: ReactContext, name: String): Int =
+    context.resources.getDimensionPixelSize(
+      context.resources.getIdentifier(name, "dimen", "android")
+    ).takeIf { it > 0 } ?: 0
+
+  @SuppressLint("InternalInsetResource", "DiscouragedApi")
   fun screenHeight(context: ReactContext): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val displayMetrics = DisplayMetrics()
@@ -23,10 +29,7 @@ object Utils {
     }
 
     val screenHeight = displayMetrics.heightPixels
-    val statusBarHeight = context.resources.getDimensionPixelSize(
-      context.resources.getIdentifier("status_bar_height", "dimen", "android")
-    ).takeIf { it > 0 } ?: 0
-
+    val statusBarHeight = getIdentifierHeight(context, "status_bar_height")
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       context.getSystemService(WindowManager::class.java)
         ?.currentWindowMetrics
@@ -37,9 +40,7 @@ object Utils {
     }
 
     val navigationBarHeight = if (hasNavigationBar) {
-      context.resources.getDimensionPixelSize(
-        context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-      ).takeIf { it > 0 } ?: 0
+      getIdentifierHeight(context, "navigation_bar_height")
     } else {
       0
     }
