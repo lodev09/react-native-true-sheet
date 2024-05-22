@@ -23,34 +23,23 @@ object Utils {
     }
 
     val screenHeight = displayMetrics.heightPixels
+    val statusBarHeight = context.resources.getDimensionPixelSize(
+      context.resources.getIdentifier("status_bar_height", "dimen", "android")
+    ).takeIf { it > 0 } ?: 0
 
-    // Subtract status bar height
-    val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-    val statusBarHeight = if (resourceId > 0) {
-      context.resources.getDimensionPixelSize(resourceId)
-    } else {
-      0
-    }
-
-    // Subtract navigation bar height (if present)
-    val navigationBarHeight: Int
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      val windowInsets = context.getSystemService(WindowManager::class.java)
+      context.getSystemService(WindowManager::class.java)
         ?.currentWindowMetrics
         ?.windowInsets
-      windowInsets?.isVisible(WindowInsets.Type.navigationBars()) ?: false
+        ?.isVisible(WindowInsets.Type.navigationBars()) ?: false
     } else {
-      val resourceIdNav = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-      resourceIdNav > 0
+      context.resources.getIdentifier("navigation_bar_height", "dimen", "android") > 0
     }
 
-    navigationBarHeight = if (hasNavigationBar) {
-      val resourceIdNav = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-      if (resourceIdNav > 0) {
-        context.resources.getDimensionPixelSize(resourceIdNav)
-      } else {
-        0
-      }
+    val navigationBarHeight = if (hasNavigationBar) {
+      context.resources.getDimensionPixelSize(
+        context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+      ).takeIf { it > 0 } ?: 0
     } else {
       0
     }
