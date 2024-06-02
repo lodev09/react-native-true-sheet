@@ -22,6 +22,17 @@ class PresentEvent(surfaceId: Int, viewId: Int, private val sizeInfo: SizeInfo) 
   }
 }
 
+// onLoad
+class LoadEvent(surfaceId: Int, viewId: Int) : Event<PresentEvent>(surfaceId, viewId) {
+  override fun getEventName() = EVENT_NAME
+
+  override fun getEventData(): WritableMap = Arguments.createMap()
+
+  companion object {
+    const val EVENT_NAME = "load"
+  }
+}
+
 // onDismiss
 class DismissEvent(surfaceId: Int, viewId: Int) : Event<PresentEvent>(surfaceId, viewId) {
   override fun getEventName() = EVENT_NAME

@@ -8,6 +8,8 @@ import { Button } from './components'
 import { BLUE, DARK, GRAY, SPACING } from './utils'
 
 export default function App() {
+  const sheetRef = useRef<TrueSheet>(null)
+
   const basicSheet = useRef<TrueSheet>(null)
   const promptSheet = useRef<TrueSheet>(null)
   const scrollViewSheet = useRef<TrueSheet>(null)
@@ -25,7 +27,7 @@ export default function App() {
         style={$map}
         initialCamera={{
           altitude: 18000,
-          zoom: 11,
+          zoom: 14,
           center: { latitude: 9.306743705457553, longitude: 123.30474002203727 },
           pitch: 0,
           heading: 0,
@@ -35,6 +37,7 @@ export default function App() {
 
       <TrueSheet
         sizes={['15%', 'auto', 'large']}
+        ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
         contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
@@ -42,7 +45,10 @@ export default function App() {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onLoad={() => console.log('Sheet has been loaded!')}
+        onLoad={() => {
+          // sheetRef.current?.present(1)
+          console.log('Sheet has been loaded!')
+        }}
       >
         <View style={$heading}>
           <Text style={$title}>True Sheet 💩</Text>

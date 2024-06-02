@@ -263,7 +263,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           isFitToContents = false
 
           setPeekHeight(getSizeHeight(sizes[0]), isShowing)
-          halfExpandedRatio = getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat()
+
+          val size2 = getSizeHeight(sizes[1])
+          if (size2 < maxScreenHeight) {
+            halfExpandedRatio = size2.toFloat() / maxScreenHeight.toFloat()
+          }
+
           maxHeight = getSizeHeight(sizes[2])
         }
       }
