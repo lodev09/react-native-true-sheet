@@ -217,6 +217,11 @@ export interface TrueSheetProps extends ViewProps {
   FooterComponent?: ComponentType<unknown> | ReactElement
 
   /**
+   * Called when the sheet is ready to present.
+   */
+  onLoad?: () => void
+
+  /**
    * Called when the Sheet has been presented.
    * Comes with the size info.
    */

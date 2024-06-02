@@ -43,10 +43,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       ref={sheetRef}
       contentContainerStyle={$content}
       blurTint="dark"
-      initialIndex={0}
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
+      onLoad={() => console.log('Basic sheet loaded!')}
       onDismiss={() => console.log('Basic sheet dismissed!')}
       onPresent={({ index, value }) =>
         console.log(`Basic sheet presented with size of ${value} at index: ${index}`)

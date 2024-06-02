@@ -59,6 +59,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.ref = createRef<NativeRef>()
 
+    this.onLoad = this.onLoad.bind(this)
     this.onDismiss = this.onDismiss.bind(this)
     this.onPresent = this.onPresent.bind(this)
     this.onSizeChange = this.onSizeChange.bind(this)
@@ -159,6 +160,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDismiss?.()
   }
 
+  private onLoad(): void {
+    this.props.onLoad?.()
+  }
+
   /**
    * Present the sheet. Optionally accepts a size `index`.
    * See `sizes` prop
@@ -232,6 +237,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         initialIndex={initialIndex}
         dismissible={dismissible}
         maxHeight={maxHeight}
+        onLoad={this.onLoad}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}

@@ -12,6 +12,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Events
 
+  @objc var onLoad: RCTDirectEventBlock?
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
@@ -300,6 +301,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     if initialIndex >= 0 {
       present(at: initialIndex, promise: nil, animated: false)
     }
+
+    onLoad?(nil)
   }
 
   private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
@@ -371,10 +374,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       } else {
         // Keep track of the active index
         self.activeIndex = index
+        self.isPresented = true
 
         rvc.present(self.viewController, animated: animated) {
-          self.isPresented = true
-
           let data = self.sizeInfoData(from: sizeInfo)
           self.onPresent?(data)
           promise?.resolve(nil)
