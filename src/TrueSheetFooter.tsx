@@ -1,5 +1,5 @@
 import React from 'react'
-import type { TrueSheetProps } from './types'
+import type { TrueSheetProps } from './TrueSheet.types'
 
 interface TrueSheetFooterProps {
   Component?: TrueSheetProps['FooterComponent']

@@ -10,7 +10,7 @@ import {
   type LayoutChangeEvent,
 } from 'react-native'
 
-import type { TrueSheetProps, SizeInfo } from './types'
+import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
