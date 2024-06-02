@@ -13,7 +13,7 @@
     "build:ios": "cd ios && xcodebuild -workspace TrueSheetExample.xcworkspace -scheme TrueSheetExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
   "dependencies": {
-    "expo": "~51.0.8",
+    "expo": "~51.0.9",
     "expo-build-properties": "~0.12.1",
     "react": "18.2.0",
     "react-native": "0.74.1",
