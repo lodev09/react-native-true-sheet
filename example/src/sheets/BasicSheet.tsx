@@ -43,6 +43,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       ref={sheetRef}
       contentContainerStyle={$content}
       blurTint="dark"
+      initialIndex={0}
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}

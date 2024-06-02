@@ -37,6 +37,7 @@ RCT_EXPORT_VIEW_PROPERTY(grabber, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dismissible, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dimmed, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dimmedIndex, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(initialIndex, NSNumber)
 
 // Internal properties
 RCT_EXPORT_VIEW_PROPERTY(contentHeight, NSNumber)

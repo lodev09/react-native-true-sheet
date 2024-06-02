@@ -10,10 +10,15 @@
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
-  // Events
+  // MARK: - Events
+
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
+
+  // MARK: - React Properties
+
+  @objc var initialIndex: NSNumber = -1
 
   // MARK: - Private properties
 
@@ -106,8 +111,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         }
       }
 
-      // Update content containers
-      setupScrollable()
+      initializeContent()
     }
   }
 
@@ -258,7 +262,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setDimmedIndex(_ index: NSNumber) {
-    viewController.dimmedIndex = index as? Int
+    viewController.dimmedIndex = index.intValue
 
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
@@ -274,6 +278,29 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   // MARK: - Methods
+
+  private func initializeContent() {
+    guard let contentView, let footerView else {
+      return
+    }
+
+    // Update content containers
+    setupScrollable()
+
+    // Set initial content height
+    let contentHeight = contentView.bounds.height
+    setContentHeight(NSNumber(value: contentHeight))
+
+    // Set initial footer height
+    let footerHeight = footerView.bounds.height
+    setFooterHeight(NSNumber(value: footerHeight))
+
+    // Present sheet at initial index
+    let initialIndex = self.initialIndex.intValue
+    if initialIndex >= 0 {
+      present(at: initialIndex, promise: nil, animated: false)
+    }
+  }
 
   private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
     guard let sizeInfo else {
@@ -323,16 +350,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  func present(at index: Int, promise: Promise) {
+  func present(at index: Int, promise: Promise?, animated: Bool = true) {
     let rvc = reactViewController()
 
     guard let rvc else {
-      promise.reject(message: "No react view controller present.")
+      promise?.reject(message: "No react view controller present.")
       return
     }
 
     guard viewController.sizes.indices.contains(index) else {
-      promise.reject(message: "Size at \(index) is not configured.")
+      promise?.reject(message: "Size at \(index) is not configured.")
       return
     }
 
@@ -340,17 +367,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       // Trigger onSizeChange event when size is changed while presenting
       if self.isPresented {
         self.viewControllerSheetDidChangeSize(sizeInfo)
-        promise.resolve(nil)
+        promise?.resolve(nil)
       } else {
         // Keep track of the active index
         self.activeIndex = index
 
-        rvc.present(self.viewController, animated: true) {
+        rvc.present(self.viewController, animated: animated) {
           self.isPresented = true
 
           let data = self.sizeInfoData(from: sizeInfo)
           self.onPresent?(data)
-          promise.resolve(nil)
+          promise?.resolve(nil)
         }
       }
     }

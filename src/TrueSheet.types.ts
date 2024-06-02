@@ -131,6 +131,17 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean
 
   /**
+   * Sets the initial size index to present during mount.
+   * Omitting this prop will initially hide the sheet.
+   *
+   * @note This prop does not change the sheet's size on the fly.
+   * Use the `present` method instead.
+   *
+   * @default -1
+   */
+  initialIndex?: number
+
+  /**
    * The size index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    *
