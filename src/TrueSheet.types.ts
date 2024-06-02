@@ -131,12 +131,9 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean
 
   /**
-   * Sets the initial size index to present during mount.
-   * Omitting this prop will initially hide the sheet.
+   * Initially present the sheet, after loading, at a given size index.
    *
-   * @note This prop does not change the sheet's size on the fly.
-   * Use the `present` method instead.
-   *
+   * @note This property is only used during the initial load.
    * @default -1
    */
   initialIndex?: number
@@ -217,7 +214,7 @@ export interface TrueSheetProps extends ViewProps {
   FooterComponent?: ComponentType<unknown> | ReactElement
 
   /**
-   * Called when the sheet is ready to present.
+   * This is called when the sheet is ready to present.
    */
   onLoad?: () => void
 

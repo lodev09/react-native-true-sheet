@@ -83,6 +83,18 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
+### `initialIndex`
+
+Initially present the sheet, after loading, at a given size index.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `number` | `-1` | ✅ | ✅ |
+
+:::info
+This property is only used during the initial load.
+:::
+
 ### `dimmedIndex`
 
 The size index that the sheet should start to dim the background.
@@ -184,6 +196,10 @@ const App = () => {
   )
 }
 ```
+
+### `onLoad`
+
+This is called when the sheet is ready to present. Use this event to [`present`](reference/methods#present) the sheet during mount.
 
 ### `onPresent`
 
