@@ -20,7 +20,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.lodev09.truesheet"
+      "package": "com.lodev09.truesheet",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBeaou3cjmq_BED6HlTRdg5fSyArUCzoTM"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
