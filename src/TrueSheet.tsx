@@ -151,6 +151,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onContentLayout(event: LayoutChangeEvent): void {
+    console.log(event.nativeEvent.layout.height)
     this.setState({
       contentHeight: event.nativeEvent.layout.height,
     })

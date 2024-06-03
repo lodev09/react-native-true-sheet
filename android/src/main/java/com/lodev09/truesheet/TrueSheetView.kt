@@ -99,6 +99,13 @@ class TrueSheetView(context: Context) :
         eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
       }
 
+      // Configure when showing and size changed
+      setOnSizeChangeListener(object : RootSheetView.OnSizeChangeListener {
+        override fun onSizeChange(width: Int, height: Int) {
+          maxScreenHeight = height
+        }
+      })
+
       // Configure sheet behavior events
       behavior.addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {

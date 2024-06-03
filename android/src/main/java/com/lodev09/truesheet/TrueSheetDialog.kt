@@ -178,10 +178,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         else -> (maxScreenHeight * 0.5).toInt()
       }
 
-    return when (maxSheetHeight) {
-      null -> height
-      else -> minOf(height, maxSheetHeight ?: maxScreenHeight)
-    }
+    return maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
   }
 
   /**
@@ -216,7 +213,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Also update footer's Y position.
    */
   fun registerKeyboardManager() {
-    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
+    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
@@ -226,6 +223,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         positionFooter()
       }
     })
+  }
+
+  fun setOnSizeChangeListener(listener: RootSheetView.OnSizeChangeListener) {
+    rootSheetView.setOnSizeChangeListener(listener)
   }
 
   /**
