@@ -12,7 +12,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Events
 
-  @objc var onLoad: RCTDirectEventBlock?
+  @objc var onReady: RCTDirectEventBlock?
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
@@ -324,7 +324,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       present(at: initialIndex, promise: nil, animated: false)
     }
 
-    onLoad?(nil)
+    onReady?(nil)
   }
 
   private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {

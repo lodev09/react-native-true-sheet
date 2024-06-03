@@ -216,7 +216,7 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * This is called when the sheet is ready to present.
    */
-  onLoad?: () => void
+  onReady?: () => void
 
   /**
    * Called when the Sheet has been presented.

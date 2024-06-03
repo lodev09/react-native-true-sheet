@@ -45,9 +45,9 @@ export default function App() {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onLoad={() => {
+        onReady={() => {
           // sheetRef.current?.present(1)
-          console.log('Sheet has been loaded!')
+          console.log('Sheet is ready!')
         }}
       >
         <View style={$heading}>

@@ -8,8 +8,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.DismissEvent
-import com.lodev09.truesheet.core.LoadEvent
 import com.lodev09.truesheet.core.PresentEvent
+import com.lodev09.truesheet.core.ReadyEvent
 import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.Utils
 
@@ -25,7 +25,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? =
     MapBuilder.builder<String, Any>()
-      .put(LoadEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoad"))
+      .put(ReadyEvent.EVENT_NAME, MapBuilder.of("registrationName", "onReady"))
       .put(PresentEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPresent"))
       .put(DismissEvent.EVENT_NAME, MapBuilder.of("registrationName", "onDismiss"))
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
