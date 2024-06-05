@@ -20,7 +20,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React Properties
 
   @objc var initialIndex: NSNumber = -1
-  @objc var animateOnMount = true
+  @objc var initialIndexAnimated = true
 
   // MARK: - Private properties
 
@@ -322,7 +322,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     // Present sheet at initial index
     let initialIndex = self.initialIndex.intValue
     if initialIndex >= 0 {
-      present(at: initialIndex, promise: nil, animated: animateOnMount)
+      present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
     }
 
     onMount?(nil)

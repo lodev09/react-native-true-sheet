@@ -28,7 +28,8 @@ class TrueSheetView(context: Context) :
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
 
-  private var initialIndex: Int = -1
+  var initialIndex: Int = -1
+  var initialIndexAnimated: Boolean = true
 
   /**
    * Current activeIndex.
@@ -74,6 +75,9 @@ class TrueSheetView(context: Context) :
         UiThreadUtil.runOnUiThread {
           positionFooter()
         }
+
+        // Re-enable animation
+        resetAnimation()
 
         // Resolve the present promise
         presentPromise?.let { promise ->
@@ -184,7 +188,8 @@ class TrueSheetView(context: Context) :
         setFooterHeight(footerView.height)
 
         if (initialIndex >= 0) {
-          sheetDialog.present(initialIndex)
+          currentSizeIndex = initialIndex
+          sheetDialog.present(initialIndex, initialIndexAnimated)
         }
 
         // Dispatch onMount event
@@ -270,10 +275,6 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.isShowing) {
       sheetDialog.setupDimmedBackground(currentSizeIndex)
     }
-  }
-
-  fun setInitialIndex(index: Int) {
-    initialIndex = index
   }
 
   fun setDimmedIndex(index: Int) {

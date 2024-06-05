@@ -4,7 +4,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 
 import { BasicSheet, FlatListSheet, GestureSheet, PromptSheet, ScrollViewSheet } from './sheets'
-import { Button } from './components'
+import { Button, Spacer } from './components'
 import { BLUE, DARK, GRAY, SPACING } from './utils'
 
 export default function App() {
@@ -35,6 +35,12 @@ export default function App() {
         userInterfaceStyle="dark"
       />
 
+      {/* <Button
+        style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+        text="Present"
+        onPress={() => sheetRef.current?.present(1)}
+      /> */}
+
       <TrueSheet
         sizes={['15%', 'auto', 'large']}
         ref={sheetRef}
@@ -45,7 +51,7 @@ export default function App() {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        // animateOnMount={false}
+        initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!')
@@ -60,6 +66,11 @@ export default function App() {
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+
+        <Spacer />
+        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(1)} />
+        {/*<Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />*/}
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />

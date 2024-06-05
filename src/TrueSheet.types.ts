@@ -144,7 +144,7 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @default true
    */
-  animateOnMount?: boolean
+  initialIndexAnimated?: boolean
 
   /**
    * The size index that the sheet should start to dim the background.

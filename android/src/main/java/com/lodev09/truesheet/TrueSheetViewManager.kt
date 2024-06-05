@@ -48,7 +48,12 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   @ReactProp(name = "initialIndex")
   fun setInitialIndex(view: TrueSheetView, index: Int) {
-    view.setInitialIndex(index)
+    view.initialIndex = index
+  }
+
+  @ReactProp(name = "initialIndexAnimated")
+  fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
+    view.initialIndexAnimated = animate
   }
 
   @ReactProp(name = "dimmedIndex")

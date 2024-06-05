@@ -19,6 +19,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
+  private var sheetView: ViewGroup
+  private var windowAnimation: Int = 0
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -53,19 +55,20 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
-  private var sheetView: ViewGroup
-
   init {
     setContentView(rootSheetView)
     sheetView = rootSheetView.parent as ViewGroup
     sheetView.setBackgroundColor(Color.TRANSPARENT)
 
-    // Setup window params to adjust layout based on Keyboard state.
+    // Setup window params to adjust layout based on Keyboard state
     window?.apply {
       // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
       setSoftInputMode(
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
       )
+
+      // Store current windowAnimation value to toggle later
+      windowAnimation = attributes.windowAnimations
     }
 
     // Update the usable sheet height
@@ -107,10 +110,16 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
   }
 
+  fun resetAnimation() {
+    window?.apply {
+      setWindowAnimations(windowAnimation)
+    }
+  }
+
   /**
    * Present the sheet.
    */
-  fun present(sizeIndex: Int) {
+  fun present(sizeIndex: Int, animated: Boolean = true) {
     setupDimmedBackground(sizeIndex)
     if (isShowing) {
       setStateForSizeIndex(sizeIndex)
@@ -118,7 +127,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       configure()
       setStateForSizeIndex(sizeIndex)
 
-      this.show()
+      if (!animated) {
+        // Disable animation
+        window?.setWindowAnimations(0)
+      }
+
+      show()
     }
   }
 
