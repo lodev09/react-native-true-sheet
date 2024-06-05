@@ -131,9 +131,9 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean
 
   /**
-   * Initially present the sheet, after loading, at a given size index.
+   * Initially present the sheet, after mounting, at a given size index.
    *
-   * @note This property is only used during the initial load.
+   * @note This property is only used during the initial mount.
    * @default -1
    */
   initialIndex?: number
@@ -216,7 +216,7 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * This is called when the sheet is ready to present.
    */
-  onReady?: () => void
+  onMount?: () => void
 
   /**
    * Called when the Sheet has been presented.

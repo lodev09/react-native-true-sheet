@@ -23,7 +23,7 @@ RCT_EXTERN_METHOD(dismiss:(nonnull NSNumber*)tag
                   reject:(RCTPromiseRejectBlock)reject)
 
 // Events
-RCT_EXPORT_VIEW_PROPERTY(onReady, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onMount, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPresent, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock)

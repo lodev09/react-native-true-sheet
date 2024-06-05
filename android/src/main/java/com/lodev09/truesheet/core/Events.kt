@@ -22,8 +22,8 @@ class PresentEvent(surfaceId: Int, viewId: Int, private val sizeInfo: SizeInfo) 
   }
 }
 
-// onReady
-class ReadyEvent(surfaceId: Int, viewId: Int) : Event<PresentEvent>(surfaceId, viewId) {
+// onMount
+class MountEvent(surfaceId: Int, viewId: Int) : Event<PresentEvent>(surfaceId, viewId) {
   override fun getEventName() = EVENT_NAME
 
   override fun getEventData(): WritableMap = Arguments.createMap()

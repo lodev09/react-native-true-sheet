@@ -12,8 +12,8 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.DismissEvent
+import com.lodev09.truesheet.core.MountEvent
 import com.lodev09.truesheet.core.PresentEvent
-import com.lodev09.truesheet.core.ReadyEvent
 import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.SizeChangeEvent
 
@@ -187,8 +187,8 @@ class TrueSheetView(context: Context) :
           sheetDialog.present(initialIndex)
         }
 
-        // Dispatch onReady event
-        eventDispatcher?.dispatchEvent(ReadyEvent(surfaceId, id))
+        // Dispatch onMount event
+        eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
       }
     }
   }

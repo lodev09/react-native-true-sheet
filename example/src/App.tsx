@@ -45,7 +45,7 @@ export default function App() {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onReady={() => {
+        onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!')
         }}
