@@ -45,6 +45,7 @@ export default function App() {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
+        // animateOnMount={false}
         onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!')
@@ -87,7 +88,7 @@ const $heading: ViewStyle = {
 const $title: TextStyle = {
   fontSize: 24,
   lineHeight: 30,
-  fontWeight: 'medium',
+  fontWeight: 500,
   color: 'white',
 }
 

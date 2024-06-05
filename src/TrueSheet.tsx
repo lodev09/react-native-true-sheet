@@ -151,7 +151,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onContentLayout(event: LayoutChangeEvent): void {
-    console.log(event.nativeEvent.layout.height)
     this.setState({
       contentHeight: event.nativeEvent.layout.height,
     })
@@ -209,6 +208,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dismissible = true,
       grabber = true,
       dimmed = true,
+      animateOnMount = true,
       initialIndex,
       dimmedIndex,
       grabberProps,
@@ -236,6 +236,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
         initialIndex={initialIndex}
+        animateOnMount={animateOnMount}
         dismissible={dismissible}
         maxHeight={maxHeight}
         onMount={this.onMount}
@@ -276,6 +277,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const $nativeSheet: ViewStyle = {
   position: 'absolute',
+  width: '100%',
   left: -9999,
   zIndex: -9999,
 }
