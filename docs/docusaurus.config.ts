@@ -158,12 +158,12 @@ const config: Config = {
       darkTheme: prismThemes.oneDark,
       additionalLanguages: ['swift', 'java', 'kotlin'],
     },
-    announcementBar: {
-      id: '0.11.0-dimming',
-      content: `<b style="color: #47d995">Dimming</b> is now available 🎉! Checkout <a href="/guides/dimming">this guide</a> and start building your own Maps App 😎`,
-      backgroundColor: '#1f64ae',
-      textColor: '#ffffff',
-    },
+    // announcementBar: {
+    //   id: '0.11.0-dimming',
+    //   content: `<b style="color: #47d995">Dimming</b> is now available 🎉! Checkout <a href="/guides/dimming">this guide</a> and start building your own Maps App 😎`,
+    //   backgroundColor: '#1f64ae',
+    //   textColor: '#ffffff',
+    // },
     image: 'img/logo.png',
     metadata: [
       {
