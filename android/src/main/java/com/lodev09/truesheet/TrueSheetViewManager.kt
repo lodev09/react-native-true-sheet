@@ -7,11 +7,11 @@ import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.lodev09.truesheet.core.DismissEvent
-import com.lodev09.truesheet.core.MountEvent
-import com.lodev09.truesheet.core.PresentEvent
-import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.DismissEvent
+import com.lodev09.truesheet.events.MountEvent
+import com.lodev09.truesheet.events.PresentEvent
+import com.lodev09.truesheet.events.SizeChangeEvent
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG

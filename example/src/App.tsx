@@ -70,7 +70,7 @@ export default function App() {
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(1)} />
-        {/*<Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />*/}
+        {/* <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} /> */}
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
