@@ -11,10 +11,11 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.core.DismissEvent
-import com.lodev09.truesheet.core.PresentEvent
 import com.lodev09.truesheet.core.RootSheetView
-import com.lodev09.truesheet.core.SizeChangeEvent
+import com.lodev09.truesheet.events.DismissEvent
+import com.lodev09.truesheet.events.MountEvent
+import com.lodev09.truesheet.events.PresentEvent
+import com.lodev09.truesheet.events.SizeChangeEvent
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -26,6 +27,9 @@ class TrueSheetView(context: Context) :
 
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
+
+  var initialIndex: Int = -1
+  var initialIndexAnimated: Boolean = true
 
   /**
    * Current activeIndex.
@@ -52,11 +56,6 @@ class TrueSheetView(context: Context) :
    */
   private val rootSheetView: RootSheetView
 
-  /**
-   * 2nd child of the container view.
-   */
-  private var footerView: ViewGroup? = null
-
   init {
     reactContext.addLifecycleEventListener(this)
     eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
@@ -77,13 +76,16 @@ class TrueSheetView(context: Context) :
           positionFooter()
         }
 
+        // Re-enable animation
+        resetAnimation()
+
         // Resolve the present promise
         presentPromise?.let { promise ->
           promise()
           presentPromise = null
         }
 
-        // dispatch onPresent event
+        // Dispatch onPresent event
         eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(currentSizeIndex)))
       }
 
@@ -97,9 +99,16 @@ class TrueSheetView(context: Context) :
           dismissPromise = null
         }
 
-        // dispatch onDismiss event
+        // Dispatch onDismiss event
         eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
       }
+
+      // Configure when showing and size changed
+      setOnSizeChangeListener(object : RootSheetView.OnSizeChangeListener {
+        override fun onSizeChange(width: Int, height: Int) {
+          maxScreenHeight = height
+        }
+      })
 
       // Configure sheet behavior events
       behavior.addBottomSheetCallback(
@@ -132,7 +141,7 @@ class TrueSheetView(context: Context) :
             currentSizeIndex = sizeInfo.index
             setupDimmedBackground(sizeInfo.index)
 
-            // dispatch onSizeChange event
+            // Dispatch onSizeChange event
             eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
           }
         }
@@ -164,13 +173,28 @@ class TrueSheetView(context: Context) :
     visibility = GONE
 
     (child as ViewGroup).let {
-      // Container View's first child is the Content View
-      footerView = it.getChildAt(1) as ViewGroup
-
-      sheetDialog.footerView = footerView
-
       // rootView's first child is the Container View
       rootSheetView.addView(it, index)
+
+      // Initialize content
+      UiThreadUtil.runOnUiThread {
+        // 1st child is the content view
+        val contentView = it.getChildAt(0) as ViewGroup
+        setContentHeight(contentView.height)
+
+        // 2nd child is the footer view
+        val footerView = it.getChildAt(1) as ViewGroup
+        sheetDialog.footerView = footerView
+        setFooterHeight(footerView.height)
+
+        if (initialIndex >= 0) {
+          currentSizeIndex = initialIndex
+          sheetDialog.present(initialIndex, initialIndexAnimated)
+        }
+
+        // Dispatch onMount event
+        eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
+      }
     }
   }
 
@@ -224,21 +248,29 @@ class TrueSheetView(context: Context) :
   }
 
   fun setMaxHeight(height: Int) {
+    if (sheetDialog.maxSheetHeight == height) return
+
     sheetDialog.maxSheetHeight = height
     configureIfShowing()
   }
 
   fun setContentHeight(height: Int) {
+    if (sheetDialog.contentHeight == height) return
+
     sheetDialog.contentHeight = height
     configureIfShowing()
   }
 
   fun setFooterHeight(height: Int) {
+    if (sheetDialog.footerHeight == height) return
+
     sheetDialog.footerHeight = height
     configureIfShowing()
   }
 
   fun setDimmed(dimmed: Boolean) {
+    if (sheetDialog.dimmed == dimmed) return
+
     sheetDialog.dimmed = dimmed
     if (sheetDialog.isShowing) {
       sheetDialog.setupDimmedBackground(currentSizeIndex)
@@ -246,6 +278,8 @@ class TrueSheetView(context: Context) :
   }
 
   fun setDimmedIndex(index: Int) {
+    if (sheetDialog.dimmedIndex == index) return
+
     sheetDialog.dimmedIndex = index
     if (sheetDialog.isShowing) {
       sheetDialog.setupDimmedBackground(currentSizeIndex)

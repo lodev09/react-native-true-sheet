@@ -83,6 +83,10 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
+:::info
+This property is only used during the initial mount.
+:::
+
 ### `dimmedIndex`
 
 The size index that the sheet should start to dim the background.
@@ -94,6 +98,23 @@ The size index that the sheet should start to dim the background.
 :::info
 This is ignored if `dimmed` is set to `false`.
 :::
+
+### `initialIndex`
+
+Initially present the sheet, after mounting, at a given size index.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `number` | `-1` | ✅ | ✅ |
+
+### `initialIndexAnimated`
+
+Specify whether the sheet should animate after mounting.
+Used with `initialIndex`.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ |
 
 ### `grabber`
 
@@ -184,6 +205,10 @@ const App = () => {
   )
 }
 ```
+
+### `onMount`
+
+This is called when the sheet has been mounted and is ready to present.
 
 ### `onPresent`
 

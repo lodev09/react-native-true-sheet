@@ -7,10 +7,11 @@ import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.lodev09.truesheet.core.DismissEvent
-import com.lodev09.truesheet.core.PresentEvent
-import com.lodev09.truesheet.core.SizeChangeEvent
 import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.DismissEvent
+import com.lodev09.truesheet.events.MountEvent
+import com.lodev09.truesheet.events.PresentEvent
+import com.lodev09.truesheet.events.SizeChangeEvent
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG
@@ -24,6 +25,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? =
     MapBuilder.builder<String, Any>()
+      .put(MountEvent.EVENT_NAME, MapBuilder.of("registrationName", "onMount"))
       .put(PresentEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPresent"))
       .put(DismissEvent.EVENT_NAME, MapBuilder.of("registrationName", "onDismiss"))
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
@@ -42,6 +44,16 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   @ReactProp(name = "dimmed")
   fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)
+  }
+
+  @ReactProp(name = "initialIndex")
+  fun setInitialIndex(view: TrueSheetView, index: Int) {
+    view.initialIndex = index
+  }
+
+  @ReactProp(name = "initialIndexAnimated")
+  fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
+    view.initialIndexAnimated = animate
   }
 
   @ReactProp(name = "dimmedIndex")
