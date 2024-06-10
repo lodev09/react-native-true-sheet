@@ -26,7 +26,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   private var isPresented = false
   private var activeIndex: Int?
-  private var bridge?: RCTBridge
+  private var bridge: RCTBridge?
   private var touchHandler: RCTTouchHandler
   private var viewController: TrueSheetViewController
 
@@ -143,7 +143,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     guard let containerView else { return }
 
     let size = CGSize(width: width, height: containerView.bounds.height)
-    bridge?.uiManager?.setSize(size, for: containerView)
+    bridge?.uiManager.setSize(size, for: containerView)
   }
 
   func viewControllerWillAppear() {
