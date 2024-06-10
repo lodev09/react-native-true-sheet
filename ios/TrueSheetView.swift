@@ -143,7 +143,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     guard let containerView else { return }
 
     let size = CGSize(width: width, height: containerView.bounds.height)
-    bridge?.uiManager.setSize(size, for: containerView)
+    bridge?.uiManager?.setSize(size, for: containerView)
   }
 
   func viewControllerWillAppear() {
@@ -297,7 +297,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    let view = bridge?.uiManager.view(forReactTag: tag) as? RCTScrollView
+    let view = bridge?.uiManager?.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view
   }
 
