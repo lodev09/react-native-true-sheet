@@ -7,7 +7,7 @@ import android.view.inputmethod.InputMethodManager
 import com.facebook.react.bridge.ReactContext
 
 class KeyboardManager(reactContext: ReactContext) {
-  interface OnKeyboardListener {
+  interface OnKeyboardChangeListener {
     fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?)
   }
 
@@ -20,7 +20,7 @@ class KeyboardManager(reactContext: ReactContext) {
     contentView = activity?.findViewById(android.R.id.content)
   }
 
-  fun registerKeyboardListener(listener: OnKeyboardListener?) {
+  fun registerKeyboardListener(listener: OnKeyboardChangeListener?) {
     contentView?.apply {
       unregisterKeyboardListener()
 

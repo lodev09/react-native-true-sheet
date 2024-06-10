@@ -10,10 +10,17 @@
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - React properties
 
-  // Events
+  // MARK: - Events
+
+  @objc var onMount: RCTDirectEventBlock?
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
+
+  // MARK: - React Properties
+
+  @objc var initialIndex: NSNumber = -1
+  @objc var initialIndexAnimated = true
 
   // MARK: - Private properties
 
@@ -106,8 +113,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         }
       }
 
-      // Update content containers
-      setupScrollable()
+      initializeContent()
     }
   }
 
@@ -171,7 +177,12 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setMaxHeight(_ height: NSNumber) {
-    viewController.maxHeight = CGFloat(height.floatValue)
+    let maxHeight = CGFloat(height.floatValue)
+    guard viewController.maxHeight != maxHeight else {
+      return
+    }
+
+    viewController.maxHeight = maxHeight
     configurePresentedSheet()
   }
 
@@ -181,17 +192,24 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
     let bottomInset = window?.safeAreaInsets.bottom ?? 0
 
-    viewController.contentHeight = CGFloat(height.floatValue) - bottomInset
+    let contentHeight = CGFloat(height.floatValue) - bottomInset
+    guard viewController.contentHeight != contentHeight else {
+      return
+    }
+
+    viewController.contentHeight = contentHeight
     configurePresentedSheet()
   }
 
   @objc
   func setFooterHeight(_ height: NSNumber) {
-    guard let footerView, let footerViewHeightConstraint else {
+    let footerHeight = CGFloat(height.floatValue)
+    guard let footerView, let footerViewHeightConstraint,
+          viewController.footerHeight != footerHeight else {
       return
     }
 
-    viewController.footerHeight = CGFloat(height.floatValue)
+    viewController.footerHeight = footerHeight
 
     if footerView.subviews.first != nil {
       containerView?.bringSubviewToFront(footerView)
@@ -223,6 +241,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setCornerRadius(_ radius: NSNumber?) {
     var cornerRadius: CGFloat?
+
     if let radius {
       cornerRadius = CGFloat(radius.floatValue)
     }
@@ -238,6 +257,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setGrabber(_ visible: Bool) {
     viewController.grabber = visible
+
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
         sheet.prefersGrabberVisible = visible
@@ -247,6 +267,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setDimmed(_ dimmed: Bool) {
+    guard viewController.dimmed != dimmed else {
+      return
+    }
+
     viewController.dimmed = dimmed
 
     if #available(iOS 15.0, *) {
@@ -258,7 +282,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setDimmedIndex(_ index: NSNumber) {
-    viewController.dimmedIndex = index as? Int
+    guard viewController.dimmedIndex != index.intValue else {
+      return
+    }
+
+    viewController.dimmedIndex = index.intValue
 
     if #available(iOS 15.0, *) {
       withPresentedSheet { sheet in
@@ -274,6 +302,31 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   // MARK: - Methods
+
+  private func initializeContent() {
+    guard let contentView, let footerView else {
+      return
+    }
+
+    // Update content containers
+    setupScrollable()
+
+    // Set initial content height
+    let contentHeight = contentView.bounds.height
+    setContentHeight(NSNumber(value: contentHeight))
+
+    // Set initial footer height
+    let footerHeight = footerView.bounds.height
+    setFooterHeight(NSNumber(value: footerHeight))
+
+    // Present sheet at initial index
+    let initialIndex = self.initialIndex.intValue
+    if initialIndex >= 0 {
+      present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
+    }
+
+    onMount?(nil)
+  }
 
   private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
     guard let sizeInfo else {
@@ -323,16 +376,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  func present(at index: Int, promise: Promise) {
+  func present(at index: Int, promise: Promise?, animated: Bool = true) {
     let rvc = reactViewController()
 
     guard let rvc else {
-      promise.reject(message: "No react view controller present.")
+      promise?.reject(message: "No react view controller present.")
       return
     }
 
     guard viewController.sizes.indices.contains(index) else {
-      promise.reject(message: "Size at \(index) is not configured.")
+      promise?.reject(message: "Size at \(index) is not configured.")
       return
     }
 
@@ -340,17 +393,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       // Trigger onSizeChange event when size is changed while presenting
       if self.isPresented {
         self.viewControllerSheetDidChangeSize(sizeInfo)
-        promise.resolve(nil)
+        promise?.resolve(nil)
       } else {
         // Keep track of the active index
         self.activeIndex = index
+        self.isPresented = true
 
-        rvc.present(self.viewController, animated: true) {
-          self.isPresented = true
-
+        rvc.present(self.viewController, animated: animated) {
           let data = self.sizeInfoData(from: sizeInfo)
           self.onPresent?(data)
-          promise.resolve(nil)
+          promise?.resolve(nil)
         }
       }
     }

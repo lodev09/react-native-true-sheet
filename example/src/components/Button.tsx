@@ -8,9 +8,9 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 export const Button = (props: ButtonProps) => {
-  const { text, ...rest } = props
+  const { text, style: $styleOverride, ...rest } = props
   return (
-    <TouchableOpacity activeOpacity={0.6} style={$button} {...rest}>
+    <TouchableOpacity activeOpacity={0.6} style={[$button, $styleOverride]} {...rest}>
       <Text style={$WHITE_TEXT}>{text}</Text>
     </TouchableOpacity>
   )

@@ -26,21 +26,26 @@ import com.facebook.react.views.view.ReactViewGroup
  * styleHeight on the LayoutShadowNode to be the window size. This is done through the
  * UIManagerModule, and will then cause the children to layout as if they can fill the window.
  */
-class RootSheetView(context: Context?) :
+class RootSheetView(private val context: Context?) :
   ReactViewGroup(context),
   RootView {
   private var hasAdjustedSize = false
   private var viewWidth = 0
   private var viewHeight = 0
 
-  private val mJSTouchDispatcher = JSTouchDispatcher(this)
-  private var mJSPointerDispatcher: JSPointerDispatcher? = null
+  private val jSTouchDispatcher = JSTouchDispatcher(this)
+  private var jSPointerDispatcher: JSPointerDispatcher? = null
+  private var sizeChangeListener: OnSizeChangeListener? = null
 
   var eventDispatcher: EventDispatcher? = null
 
+  interface OnSizeChangeListener {
+    fun onSizeChange(width: Int, height: Int)
+  }
+
   init {
     if (ReactFeatureFlags.dispatchPointerEvents) {
-      mJSPointerDispatcher = JSPointerDispatcher(this)
+      jSPointerDispatcher = JSPointerDispatcher(this)
     }
   }
 
@@ -50,6 +55,12 @@ class RootSheetView(context: Context?) :
     viewWidth = w
     viewHeight = h
     updateFirstChildView()
+
+    sizeChangeListener?.onSizeChange(w, h)
+  }
+
+  fun setOnSizeChangeListener(listener: OnSizeChangeListener) {
+    sizeChangeListener = listener
   }
 
   private fun updateFirstChildView() {
@@ -88,15 +99,15 @@ class RootSheetView(context: Context?) :
     get() = context as ThemedReactContext
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-    mJSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
-    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
+    jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     return super.onInterceptTouchEvent(event)
   }
 
   @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
-    mJSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
-    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
+    jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     super.onTouchEvent(event)
 
     // In case when there is no children interested in handling touch event, we return true from
@@ -105,28 +116,28 @@ class RootSheetView(context: Context?) :
   }
 
   override fun onInterceptHoverEvent(event: MotionEvent): Boolean {
-    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
+    jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     return super.onHoverEvent(event)
   }
 
   override fun onHoverEvent(event: MotionEvent): Boolean {
-    mJSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
+    jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     return super.onHoverEvent(event)
   }
 
   @Deprecated("Deprecated in Java")
   override fun onChildStartedNativeGesture(ev: MotionEvent?) {
-    mJSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+    jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
   }
 
   override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
-    mJSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
-    mJSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
+    jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+    jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
-    mJSTouchDispatcher.onChildEndedNativeGesture(ev, eventDispatcher)
-    mJSPointerDispatcher?.onChildEndedNativeGesture()
+    jSTouchDispatcher.onChildEndedNativeGesture(ev, eventDispatcher)
+    jSPointerDispatcher?.onChildEndedNativeGesture()
   }
 
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {

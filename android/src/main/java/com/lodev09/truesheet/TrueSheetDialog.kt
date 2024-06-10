@@ -19,6 +19,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
+  private var sheetView: ViewGroup
+  private var windowAnimation: Int = 0
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -53,19 +55,20 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
-  private var sheetView: ViewGroup
-
   init {
     setContentView(rootSheetView)
     sheetView = rootSheetView.parent as ViewGroup
     sheetView.setBackgroundColor(Color.TRANSPARENT)
 
-    // Setup window params to adjust layout based on Keyboard state.
+    // Setup window params to adjust layout based on Keyboard state
     window?.apply {
       // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
       setSoftInputMode(
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
       )
+
+      // Store current windowAnimation value to toggle later
+      windowAnimation = attributes.windowAnimations
     }
 
     // Update the usable sheet height
@@ -107,10 +110,16 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
   }
 
+  fun resetAnimation() {
+    window?.apply {
+      setWindowAnimations(windowAnimation)
+    }
+  }
+
   /**
    * Present the sheet.
    */
-  fun present(sizeIndex: Int) {
+  fun present(sizeIndex: Int, animated: Boolean = true) {
     setupDimmedBackground(sizeIndex)
     if (isShowing) {
       setStateForSizeIndex(sizeIndex)
@@ -118,7 +127,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       configure()
       setStateForSizeIndex(sizeIndex)
 
-      this.show()
+      if (!animated) {
+        // Disable animation
+        window?.setWindowAnimations(0)
+      }
+
+      show()
     }
   }
 
@@ -178,10 +192,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         else -> (maxScreenHeight * 0.5).toInt()
       }
 
-    return when (maxSheetHeight) {
-      null -> height
-      else -> minOf(height, maxSheetHeight ?: maxScreenHeight)
-    }
+    return maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
   }
 
   /**
@@ -216,7 +227,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Also update footer's Y position.
    */
   fun registerKeyboardManager() {
-    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardListener {
+    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
@@ -226,6 +237,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         positionFooter()
       }
     })
+  }
+
+  fun setOnSizeChangeListener(listener: RootSheetView.OnSizeChangeListener) {
+    rootSheetView.setOnSizeChangeListener(listener)
   }
 
   /**
@@ -263,7 +278,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           isFitToContents = false
 
           setPeekHeight(getSizeHeight(sizes[0]), isShowing)
-          halfExpandedRatio = getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat()
+
+          halfExpandedRatio = minOf(getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat(), 1.0f)
           maxHeight = getSizeHeight(sizes[2])
         }
       }
