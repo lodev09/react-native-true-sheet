@@ -222,6 +222,15 @@ export interface TrueSheetProps extends ViewProps {
   FooterComponent?: ComponentType<unknown> | ReactElement
 
   /**
+   * Determines how the software keyboard will impact the layout of the sheet.
+   * Set to `pan` if you're working with `FlatList` with a `TextInput`.
+   *
+   * @platform android
+   * @default resize
+   */
+  keyboardMode?: 'resize' | 'pan'
+
+  /**
    * This is called when the sheet is ready to present.
    */
   onMount?: () => void

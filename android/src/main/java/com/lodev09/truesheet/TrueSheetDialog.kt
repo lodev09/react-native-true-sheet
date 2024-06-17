@@ -62,11 +62,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {
-      // SOFT_INPUT_ADJUST_RESIZE to resize the sheet above the keyboard
-      setSoftInputMode(
-        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-      )
-
       // Store current windowAnimation value to toggle later
       windowAnimation = attributes.windowAnimations
     }

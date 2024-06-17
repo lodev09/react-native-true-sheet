@@ -209,6 +209,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       grabber = true,
       dimmed = true,
       initialIndexAnimated = true,
+      keyboardMode = 'resize',
       initialIndex,
       dimmedIndex,
       grabberProps,
@@ -237,6 +238,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         dimmedIndex={dimmedIndex}
         initialIndex={initialIndex}
         initialIndexAnimated={initialIndexAnimated}
+        keyboardMode={keyboardMode}
         dismissible={dismissible}
         maxHeight={maxHeight}
         onMount={this.onMount}

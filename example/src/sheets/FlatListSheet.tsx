@@ -3,7 +3,7 @@ import { FlatList, View, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { DARK, INPUT_HEIGHT, SPACING, times } from '../utils'
-import { DemoContent, Input } from '../components'
+import { DemoContent, Footer, Input } from '../components'
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
@@ -14,12 +14,14 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
     <TrueSheet
       ref={ref}
       scrollRef={flatListRef}
-      sizes={['small', 'medium', 'large']}
+      sizes={['medium', 'large']}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={24}
+      keyboardMode="pan"
       onDismiss={() => console.log('Sheet FlatList dismissed!')}
       onPresent={() => console.log(`Sheet FlatList presented!`)}
+      FooterComponent={<Footer />}
       {...props}
     >
       <View style={$header}>

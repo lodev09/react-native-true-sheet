@@ -286,6 +286,12 @@ class TrueSheetView(context: Context) :
     }
   }
 
+  fun setSoftInputMode(mode: Int) {
+    sheetDialog.window?.apply {
+      this.setSoftInputMode(mode)
+    }
+  }
+
   fun setDismissible(dismissible: Boolean) {
     sheetDialog.dismissible = dismissible
   }

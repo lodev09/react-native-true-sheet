@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.util.Log
+import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -54,6 +55,16 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   @ReactProp(name = "initialIndexAnimated")
   fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
     view.initialIndexAnimated = animate
+  }
+
+  @ReactProp(name = "keyboardMode")
+  fun setKeyboardMode(view: TrueSheetView, mode: String) {
+    val softInputMode = when (mode) {
+      "pan" -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+      else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+    }
+
+    view.setSoftInputMode(softInputMode)
   }
 
   @ReactProp(name = "dimmedIndex")
