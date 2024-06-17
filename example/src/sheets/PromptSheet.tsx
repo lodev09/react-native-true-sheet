@@ -1,17 +1,9 @@
 import React, { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react'
-import { TextInput, View, type TextStyle, type ViewStyle } from 'react-native'
+import { type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import {
-  BORDER_RADIUS,
-  DARK,
-  DARK_BLUE,
-  GRABBER_COLOR,
-  GRAY,
-  INPUT_HEIGHT,
-  SPACING,
-} from '../utils'
-import { Button, DemoContent, Footer } from '../components'
+import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../utils'
+import { Button, DemoContent, Footer, Input } from '../components'
 
 interface PromptSheetProps extends TrueSheetProps {}
 
@@ -67,28 +59,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 
 PromptSheet.displayName = 'PromptSheet'
 
-const Input = () => {
-  return (
-    <View style={$inputContainer}>
-      <TextInput style={$input} placeholder="Enter some text..." placeholderTextColor={GRAY} />
-    </View>
-  )
-}
-
 const $content: ViewStyle = {
   padding: SPACING,
-}
-
-const $inputContainer: ViewStyle = {
-  backgroundColor: 'white',
-  paddingHorizontal: SPACING,
-  height: INPUT_HEIGHT,
-  borderRadius: BORDER_RADIUS,
-  justifyContent: 'center',
-  marginBottom: SPACING,
-}
-
-const $input: TextStyle = {
-  fontSize: 16,
-  height: SPACING * 3,
 }

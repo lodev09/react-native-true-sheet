@@ -35,12 +35,6 @@ export default function App() {
         userInterfaceStyle="dark"
       />
 
-      {/* <Button
-        style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
-        text="Present"
-        onPress={() => sheetRef.current?.present(1)}
-      /> */}
-
       <TrueSheet
         sizes={['15%', 'auto', 'large']}
         ref={sheetRef}
@@ -70,7 +64,6 @@ export default function App() {
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(1)} />
-        {/* <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} /> */}
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
