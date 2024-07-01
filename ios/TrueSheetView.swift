@@ -45,6 +45,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   private var rctScrollView: RCTScrollView?
 
+  private var uiManager: RCTUIManager? {
+    guard let uiManager = bridge?.uiManager else { return nil }
+    return uiManager
+  }
+
   // MARK: - Setup
 
   init(with bridge: RCTBridge) {
@@ -143,7 +148,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     guard let containerView else { return }
 
     let size = CGSize(width: width, height: containerView.bounds.height)
-    bridge?.uiManager.setSize(size, for: containerView)
+    uiManager?.setSize(size, for: containerView)
   }
 
   func viewControllerWillAppear() {
@@ -297,7 +302,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    let view = bridge?.uiManager.view(forReactTag: tag) as? RCTScrollView
+    let view = uiManager?.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view
   }
 
