@@ -172,13 +172,13 @@ class TrueSheetView(context: Context) :
       // Initialize content
       UiThreadUtil.runOnUiThread {
         // 1st child is the content view
-        val contentView = it.getChildAt(0) as ViewGroup
-        setContentHeight(contentView.height)
+        val contentView = it.getChildAt(0) as ViewGroup?
+        setContentHeight(contentView?.height ?: 0)
 
         // 2nd child is the footer view
-        val footerView = it.getChildAt(1) as ViewGroup
+        val footerView = it.getChildAt(1) as ViewGroup?
         sheetDialog.footerView = footerView
-        setFooterHeight(footerView.height)
+        setFooterHeight(footerView?.height ?: 0)
 
         if (initialIndex >= 0) {
           currentSizeIndex = initialIndex
