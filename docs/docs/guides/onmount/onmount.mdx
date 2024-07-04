@@ -1,0 +1,37 @@
+---
+title: Presenting During Mount
+description: Present the bottom sheet on mount.
+keywords: [bottom sheet on mount, bottom sheet initialIndex]
+---
+
+import onmount from './onmount.gif'
+
+Sometimes, you may want to present the sheet directly during mount. For example, you might want to present the sheet when a screen is opened through a deep link.
+
+<img alt="onmount" src={onmount} width="300"/>
+
+## How?
+
+You can do this by setting [`initialIndex`](/reference/props#initialindex) prop. It accepts the [`size`](/reference/types#sheetsize) `index` that your sheet is configured with. See [sizes](/reference/props#sizes) prop for more information.
+
+```tsx {5-6}
+const App = () => {
+  return (
+    <TrueSheet
+      sizes={['auto', '69%', 'large']}
+      initialIndex={1}
+      initialindexanimated
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+### Disabling Animation
+
+You may want to disable the present animation. To do this, simply set [`initialIndexAnimated`](/reference/props#initialindexanimated) to `false`.
+
+### Using with React Navigation
+
+Using this with [`react-navigation`](https://reactnavigation.org) can cause render issue. Check out the [troubleshooting guide](/troubleshooting#present-during-mount) for the fix 😉.
