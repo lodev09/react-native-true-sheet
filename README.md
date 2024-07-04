@@ -81,3 +81,7 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+Made with ❤️ by [@lodev09](http://linkedin.com/in/lodev09/)
