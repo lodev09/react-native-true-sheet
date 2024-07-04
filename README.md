@@ -37,7 +37,7 @@ cd ios && pod install
 - [Example](example)
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
-- [Troubleshooting]((https://sheet.lodev09.com/troubleshooting))
+- [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 
 ## Usage
 
