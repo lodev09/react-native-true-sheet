@@ -220,6 +220,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       style,
       contentContainerStyle,
       children,
+      anchorViewTag, // Added for popover support
       ...rest
     } = this.props
 
@@ -245,6 +246,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
+        anchorViewTag={anchorViewTag} // Added for popover support
+        {...rest}
       >
         <View
           collapsable={false}

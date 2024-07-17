@@ -251,4 +251,10 @@ export interface TrueSheetProps extends ViewProps {
    * Either by dragging or programatically.
    */
   onSizeChange?: (info: SizeInfo) => void
+
+  /**
+   * React tag of the view to anchor the popover.
+   * @platform ios
+   */
+  anchorViewTag?: number
 }

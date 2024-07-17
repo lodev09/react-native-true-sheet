@@ -41,6 +41,8 @@ RCT_EXPORT_VIEW_PROPERTY(dimmedIndex, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(initialIndex, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(initialIndexAnimated, BOOL)
 
+RCT_EXPORT_VIEW_PROPERTY(anchorViewTag, NSNumber)
+
 // Internal properties
 RCT_EXPORT_VIEW_PROPERTY(contentHeight, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(footerHeight, NSNumber)

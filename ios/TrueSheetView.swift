@@ -1,7 +1,7 @@
 //
+//  TrueSheetView.swift
 //  Created by Jovanni Lo (@lodev09)
 //  Copyright (c) 2024-present. All rights reserved.
-//
 //  This source code is licensed under the MIT license found in the
 //  LICENSE file in the root directory of this source tree.
 //
@@ -21,6 +21,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc var initialIndex: NSNumber = -1
   @objc var initialIndexAnimated = true
+
+  @objc var anchorViewTag: NSNumber?
 
   // MARK: - Private properties
 
@@ -44,11 +46,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var footerViewHeightConstraint: NSLayoutConstraint?
 
   private var rctScrollView: RCTScrollView?
-
-  private var uiManager: RCTUIManager? {
-    guard let uiManager = bridge?.uiManager else { return nil }
-    return uiManager
-  }
 
   // MARK: - Setup
 
@@ -122,6 +119,26 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
+  override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    super.traitCollectionDidChange(previousTraitCollection)
+
+    if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+      // Switch to popover
+      if isPresented {
+        viewController.dismiss(animated: false) {
+          self.presentAsPopover(at: self.activeIndex ?? 0, promise: nil, animated: true)
+        }
+      }
+    } else {
+      // Switch to sheet
+      if isPresented {
+        viewController.dismiss(animated: false) {
+          self.presentAsSheet(at: self.activeIndex ?? 0, promise: nil, animated: true)
+        }
+      }
+    }
+  }
+
   // MARK: - ViewController delegate
 
   func viewControllerKeyboardWillHide() {
@@ -148,7 +165,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     guard let containerView else { return }
 
     let size = CGSize(width: width, height: containerView.bounds.height)
-    uiManager?.setSize(size, for: containerView)
+    bridge?.uiManager.setSize(size, for: containerView)
   }
 
   func viewControllerWillAppear() {
@@ -302,7 +319,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    let view = uiManager?.view(forReactTag: tag) as? RCTScrollView
+    let view = bridge?.uiManager.view(forReactTag: tag) as? RCTScrollView
     rctScrollView = view
   }
 
@@ -382,6 +399,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func present(at index: Int, promise: Promise?, animated: Bool = true) {
+    if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+      presentAsPopover(at: index, promise: promise, animated: animated)
+    } else {
+      presentAsSheet(at: index, promise: promise, animated: animated)
+    }
+  }
+
+  private func presentAsSheet(at index: Int = 0, promise: Promise?, animated: Bool = true) {
     let rvc = reactViewController()
 
     guard let rvc else {
@@ -391,6 +416,52 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     guard viewController.sizes.indices.contains(index) else {
       promise?.reject(message: "Size at \(index) is not configured.")
+      return
+    }
+
+    viewController.modalPresentationStyle = .pageSheet
+
+    viewController.configureSheet(at: index) { sizeInfo in
+      // Trigger onSizeChange event when size is changed while presenting
+      if self.isPresented {
+        self.viewControllerSheetDidChangeSize(sizeInfo)
+        promise?.resolve(nil)
+      } else {
+        // Keep track of the active index
+        self.activeIndex = index
+        self.isPresented = true
+
+        rvc.present(self.viewController, animated: animated) {
+          let data = self.sizeInfoData(from: sizeInfo)
+          self.onPresent?(data)
+          promise?.resolve(nil)
+        }
+      }
+    }
+  }
+
+  private func presentAsPopover(at index: Int = 0, promise: Promise?, animated: Bool = true) {
+    let rvc = reactViewController()
+
+    guard let rvc else {
+      promise?.reject(message: "No react view controller present.")
+      return
+    }
+
+    guard viewController.sizes.indices.contains(index) else {
+      promise?.reject(message: "Size at \(index) is not configured.")
+      return
+    }
+
+    if let anchorTag = anchorViewTag, let anchorView = bridge?.uiManager.view(forReactTag: anchorTag) {
+      viewController.modalPresentationStyle = .popover
+      if let popoverController = viewController.popoverPresentationController {
+        popoverController.sourceView = anchorView
+        popoverController.sourceRect = anchorView.bounds
+        popoverController.delegate = self // Set delegate to handle size adjustments
+      }
+    } else {
+      promise?.reject(message: "No anchor view specified for popover presentation.")
       return
     }
 
@@ -410,6 +481,27 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
           promise?.resolve(nil)
         }
       }
+    }
+  }
+}
+
+// MARK: - UIPopoverPresentationControllerDelegate
+
+extension TrueSheetView: UIPopoverPresentationControllerDelegate {
+  func prepareForPopoverPresentation(_ popoverPresentationController: UIPopoverPresentationController) {
+    // Wrap content in UIScrollView if needed
+    if let contentView = contentView, contentView.bounds.height > self.bounds.height {
+      let scrollView = UIScrollView(frame: self.bounds)
+      scrollView.contentSize = contentView.bounds.size
+      scrollView.addSubview(contentView)
+      self.addSubview(scrollView)
+    }
+  }
+
+  func popoverPresentationControllerDidDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) {
+    // Cleanup UIScrollView if used
+    if let scrollView = self.subviews.first(where: { $0 is UIScrollView }) {
+      scrollView.removeFromSuperview()
     }
   }
 }
