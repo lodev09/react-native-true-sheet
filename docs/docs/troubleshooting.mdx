@@ -1,0 +1,100 @@
+---
+sidebar_position: 6
+description: Fix common issues when using True Native Bottom Sheet.
+keywords: [bottom sheet troubleshooting, fixing bottom sheet, debugging bottom sheet]
+---
+
+# Troubleshooting
+
+## React Native Gesture Handler
+
+[`react-native-gesture-handler`](https://docs.swmansion.com/react-native-gesture-handler/docs/)
+
+On Android, [RNGH does not work](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation/#usage-with-modals-on-android) by default because modals are not located under React Native Root view in native hierarchy. To fix that, components need to be wrapped with `GestureHandlerRootView`.
+
+```tsx
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+```
+
+```tsx
+return (
+  <TrueSheet ref={sheet}>
+    <GestureHandlerRootView>
+      <View />
+    </GestureHandlerRootView>
+  </TrueSheet>
+)
+```
+
+## React Navigation
+
+[`react-navigation`](https://reactnavigation.org)
+
+### Navigation Crash
+
+On IOS, navigating to a screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
+
+Example:
+```tsx
+const sheet = useRef<TrueSheet>(null)
+
+const navigate = async () => {
+  await sheet.current?.dismiss() // wait for the sheet to dismiss ✅
+  navigation.navigate('SomeScreen') // navigate to the screen 🎉
+}
+
+return (
+  <TrueSheet ref={sheet}>
+    <Button onPress={navigate} title="Navigate to SomeScreen" />
+    <View />
+  </TrueSheet>
+)
+```
+
+### Present during Mount
+
+On iOS, when setting [`initialIndex`](/reference/props#initialindex) and enabling `initialIndexAnimated` (default is `true`) to present during mount, the presentation animation becomes weird. This happens because RNN is not yet finished when the sheet is trying to present.
+
+To solve this, you can do the following:
+
+1. Set `initialIndexAnimated` to `false`. Disables animation during mount.
+
+```tsx
+return (
+  <TrueSheet initialIndex={0} initialIndexAnimated={false}>
+    <View />
+  </TrueSheet>
+)
+```
+
+2. Wait for the screen to fully transition. See [`transitionEnd`](https://reactnavigation.org/docs/native-stack-navigator/#transitionend) event.
+
+```tsx
+const navigation = useNavigation()
+const [isScreenShown, setIsScreenShown] = useState(false)
+
+// Subscribe to the transitionEnd event ✅
+useEffect(() => {
+  const unsubscribe = navigation.addListener("transitionEnd", ({ data }) => {
+    if (!data.closing) {
+      setIsScreenShown(true)
+    }
+  })
+
+  return unsubscribe
+}, [])
+
+// Wait for the screen to finish transitioning ✅
+if (!isScreenShown) return null
+
+// Finally show the sheet 🎉
+return (
+  <TrueSheet initialIndex={0} initialIndexAnimated>
+    <View />
+  </TrueSheet>
+)
+```
+
+## Weird layout render
+
+The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
