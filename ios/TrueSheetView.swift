@@ -22,6 +22,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc var initialIndex: NSNumber = -1
   @objc var initialIndexAnimated = true
 
+  // MARK: - New Popover Properties
+
   @objc var anchorViewTag: NSNumber?
 
   // MARK: - Private properties
@@ -31,6 +33,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var bridge: RCTBridge?
   private var touchHandler: RCTTouchHandler
   private var viewController: TrueSheetViewController
+  private var currentPresentationStyle: UIModalPresentationStyle?
 
   // MARK: - Content properties
 
@@ -121,20 +124,30 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
     super.traitCollectionDidChange(previousTraitCollection)
+    updatePresentationStyle()
+  }
 
-    if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
-      // Switch to popover
-      if isPresented {
-        viewController.dismiss(animated: false) {
-          self.presentAsPopover(at: self.activeIndex ?? 0, promise: nil, animated: true)
+  @objc
+  private func updatePresentationStyle() {
+    let isRegularSizeClass = traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular
+    let newPresentationStyle: UIModalPresentationStyle = isRegularSizeClass && anchorViewTag != nil ? .popover : .pageSheet
+
+    if currentPresentationStyle == newPresentationStyle {
+      return
+    }
+
+    currentPresentationStyle = newPresentationStyle
+
+    if isPresented {
+      if let anchorTag = anchorViewTag, let anchorView = bridge?.uiManager.view(forReactTag: anchorTag), isRegularSizeClass {
+        viewController.modalPresentationStyle = .popover
+        if let popoverController = viewController.popoverPresentationController {
+          popoverController.sourceView = anchorView
+          popoverController.sourceRect = anchorView.bounds
+          popoverController.delegate = self
         }
-      }
-    } else {
-      // Switch to sheet
-      if isPresented {
-        viewController.dismiss(animated: false) {
-          self.presentAsSheet(at: self.activeIndex ?? 0, promise: nil, animated: true)
-        }
+      } else {
+        viewController.modalPresentationStyle = .pageSheet
       }
     }
   }
@@ -399,7 +412,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func present(at index: Int, promise: Promise?, animated: Bool = true) {
-    if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+    if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular && anchorViewTag != nil {
       presentAsPopover(at: index, promise: promise, animated: animated)
     } else {
       presentAsSheet(at: index, promise: promise, animated: animated)
@@ -420,6 +433,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     viewController.modalPresentationStyle = .pageSheet
+    currentPresentationStyle = .pageSheet
 
     viewController.configureSheet(at: index) { sizeInfo in
       // Trigger onSizeChange event when size is changed while presenting
@@ -455,13 +469,15 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if let anchorTag = anchorViewTag, let anchorView = bridge?.uiManager.view(forReactTag: anchorTag) {
       viewController.modalPresentationStyle = .popover
+      currentPresentationStyle = .popover
+
       if let popoverController = viewController.popoverPresentationController {
         popoverController.sourceView = anchorView
         popoverController.sourceRect = anchorView.bounds
         popoverController.delegate = self // Set delegate to handle size adjustments
       }
     } else {
-      promise?.reject(message: "No anchor view specified for popover presentation.")
+      presentAsSheet(at: index, promise: promise, animated: animated)
       return
     }
 
