@@ -3,7 +3,14 @@ import { Text, View, type TextStyle, type ViewStyle } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 
-import { BasicSheet, FlatListSheet, GestureSheet, PromptSheet, ScrollViewSheet } from './sheets'
+import {
+  BasicSheet,
+  BlankSheet,
+  FlatListSheet,
+  GestureSheet,
+  PromptSheet,
+  ScrollViewSheet,
+} from './sheets'
 import { Button, Spacer } from './components'
 import { BLUE, DARK, GRAY, SPACING } from './utils'
 
@@ -15,6 +22,7 @@ export default function App() {
   const scrollViewSheet = useRef<TrueSheet>(null)
   const flatListSheet = useRef<TrueSheet>(null)
   const gestureSheet = useRef<TrueSheet>(null)
+  const blankSheet = useRef<TrueSheet>(null)
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
@@ -60,6 +68,7 @@ export default function App() {
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
@@ -70,6 +79,7 @@ export default function App() {
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
+        <BlankSheet ref={blankSheet} />
       </TrueSheet>
     </View>
   )
