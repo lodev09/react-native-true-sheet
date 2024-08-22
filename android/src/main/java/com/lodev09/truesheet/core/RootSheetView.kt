@@ -99,14 +99,14 @@ class RootSheetView(private val context: Context?) :
     get() = context as ThemedReactContext
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-    jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    eventDispatcher?.let { jSTouchDispatcher.handleTouchEvent(event, it) }
     jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     return super.onInterceptTouchEvent(event)
   }
 
   @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
-    jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
+    eventDispatcher?.let { jSTouchDispatcher.handleTouchEvent(event, it) }
     jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     super.onTouchEvent(event)
 
@@ -127,16 +127,20 @@ class RootSheetView(private val context: Context?) :
 
   @Deprecated("Deprecated in Java")
   override fun onChildStartedNativeGesture(ev: MotionEvent?) {
-    jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+    eventDispatcher?.let {
+      if (ev != null) {
+        jSTouchDispatcher.onChildStartedNativeGesture(ev, it)
+      }
+    }
   }
 
   override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
-    jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
+    eventDispatcher?.let { jSTouchDispatcher.onChildStartedNativeGesture(ev, it) }
     jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
-    jSTouchDispatcher.onChildEndedNativeGesture(ev, eventDispatcher)
+    eventDispatcher?.let { jSTouchDispatcher.onChildEndedNativeGesture(ev, it) }
     jSPointerDispatcher?.onChildEndedNativeGesture()
   }
 
