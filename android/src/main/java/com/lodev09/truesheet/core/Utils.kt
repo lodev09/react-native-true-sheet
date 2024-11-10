@@ -38,10 +38,6 @@ object Utils {
 
     val screenHeight = displayMetrics.heightPixels
 
-    if (EDGE_TO_EDGE) {
-      return screenHeight
-    }
-
     val statusBarHeight = getIdentifierHeight(context, "status_bar_height")
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       context.getSystemService(WindowManager::class.java)
@@ -56,6 +52,15 @@ object Utils {
       getIdentifierHeight(context, "navigation_bar_height")
     } else {
       0
+    }
+
+    if (EDGE_TO_EDGE) {
+      // getRealMetrics includes navigation bar height
+      // windowManager.defaultDisplay.getMetrics isn't
+      return when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        true -> screenHeight
+        false -> screenHeight + navigationBarHeight
+      }
     }
 
     return screenHeight - statusBarHeight - navigationBarHeight
