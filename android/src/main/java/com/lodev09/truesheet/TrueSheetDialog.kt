@@ -71,7 +71,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   override fun getEdgeToEdgeEnabled(): Boolean {
-    return if (Utils.EDGE_TO_EDGE) true else super.getEdgeToEdgeEnabled()
+    return Utils.EDGE_TO_EDGE || super.getEdgeToEdgeEnabled()
   }
 
   override fun onStart() {

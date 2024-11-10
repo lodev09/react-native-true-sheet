@@ -37,7 +37,6 @@ object Utils {
     }
 
     val screenHeight = displayMetrics.heightPixels
-
     val statusBarHeight = getIdentifierHeight(context, "status_bar_height")
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       context.getSystemService(WindowManager::class.java)
