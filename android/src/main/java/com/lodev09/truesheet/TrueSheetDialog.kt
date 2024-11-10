@@ -22,6 +22,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private var sheetView: ViewGroup
   private var windowAnimation: Int = 0
 
+  override fun getEdgeToEdgeEnabled(): Boolean {
+    return if (Utils.EDGE_TO_EDGE) true else super.getEdgeToEdgeEnabled()
+  }
+
   /**
    * Specify whether the sheet background is dimmed.
    * Set to `false` to allow interaction with the background components.

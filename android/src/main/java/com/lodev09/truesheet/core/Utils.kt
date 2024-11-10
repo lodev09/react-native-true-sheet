@@ -11,6 +11,14 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.PixelUtil
 
 object Utils {
+  // Detect `react-native-edge-to-edge` (https://github.com/zoontek/react-native-edge-to-edge)
+  val EDGE_TO_EDGE = try {
+    Class.forName("com.zoontek.rnedgetoedge.EdgeToEdgePackage")
+    true
+  } catch (exception: ClassNotFoundException) {
+    false
+  }
+
   @SuppressLint("DiscouragedApi")
   private fun getIdentifierHeight(context: ReactContext, name: String): Int =
     context.resources.getDimensionPixelSize(
@@ -29,6 +37,11 @@ object Utils {
     }
 
     val screenHeight = displayMetrics.heightPixels
+
+    if (EDGE_TO_EDGE) {
+      return screenHeight
+    }
+
     val statusBarHeight = getIdentifierHeight(context, "status_bar_height")
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       context.getSystemService(WindowManager::class.java)
