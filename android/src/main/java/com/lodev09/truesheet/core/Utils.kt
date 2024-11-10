@@ -54,16 +54,16 @@ object Utils {
       0
     }
 
-    if (EDGE_TO_EDGE) {
+    return if (EDGE_TO_EDGE) {
       // getRealMetrics includes navigation bar height
       // windowManager.defaultDisplay.getMetrics isn't
-      return when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         true -> screenHeight
         false -> screenHeight + navigationBarHeight
       }
+    } else {
+      screenHeight - statusBarHeight - navigationBarHeight
     }
-
-    return screenHeight - statusBarHeight - navigationBarHeight
   }
 
   fun toDIP(value: Int): Float = PixelUtil.toDIPFromPixel(value.toFloat())
