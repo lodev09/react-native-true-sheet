@@ -55,7 +55,7 @@ object Utils {
 
     return if (EDGE_TO_EDGE) {
       // getRealMetrics includes navigation bar height
-      // windowManager.defaultDisplay.getMetrics isn't
+      // windowManager.defaultDisplay.getMetrics doesn't
       when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         true -> screenHeight
         false -> screenHeight + navigationBarHeight
