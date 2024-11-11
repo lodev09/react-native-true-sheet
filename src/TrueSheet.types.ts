@@ -231,6 +231,15 @@ export interface TrueSheetProps extends ViewProps {
   keyboardMode?: 'resize' | 'pan'
 
   /**
+   * Determines how the software keyboard will impact the layout of the sheet.
+   * Set to `pan` if you're working with `FlatList` with a `TextInput`.
+   *
+   * @platform android
+   * @default `true` is `react-native-edge-to-edge` is installed, `false` otherwise
+   */
+  edgeToEdge?: boolean
+
+  /**
    * This is called when the sheet is ready to present.
    */
   onMount?: () => void

@@ -42,6 +42,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
+  var edgeToEdge: Boolean = false
+    set(value) {
+      field = value
+      maxScreenHeight = Utils.screenHeight(reactContext, value)
+    }
+
   var dismissible: Boolean = true
     set(value) {
       field = value
@@ -67,17 +73,17 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
 
     // Update the usable sheet height
-    maxScreenHeight = Utils.screenHeight(reactContext)
+    maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
   }
 
   override fun getEdgeToEdgeEnabled(): Boolean {
-    return Utils.EDGE_TO_EDGE || super.getEdgeToEdgeEnabled()
+    return edgeToEdge || super.getEdgeToEdgeEnabled()
   }
 
   override fun onStart() {
     super.onStart()
 
-    if (Utils.EDGE_TO_EDGE) {
+    if (edgeToEdge) {
       window?.apply {
         setFlags(
           WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -245,7 +251,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> Utils.screenHeight(reactContext)
+          else -> Utils.screenHeight(reactContext, edgeToEdge)
         }
 
         positionFooter()

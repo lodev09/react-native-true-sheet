@@ -240,6 +240,10 @@ class TrueSheetView(context: Context) :
     }
   }
 
+  fun setEdgeToEdge(edgeToEdge: Boolean) {
+    sheetDialog.edgeToEdge = edgeToEdge
+  }
+
   fun setMaxHeight(height: Int) {
     if (sheetDialog.maxSheetHeight == height) return
 

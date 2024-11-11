@@ -57,6 +57,9 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "dependencies": {
+    "react-native-is-edge-to-edge": "^1.1.6"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.0.3",
     "@evilmartians/lefthook": "^1.6.5",
@@ -139,7 +142,8 @@
       "prettier"
     ],
     "globals": {
-      "it": false
+      "it": false,
+      "__DEV__": true
     },
     "rules": {
       "@typescript-eslint/no-var-requires": 0,

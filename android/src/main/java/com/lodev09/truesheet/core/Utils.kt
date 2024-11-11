@@ -11,14 +11,6 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.PixelUtil
 
 object Utils {
-  // Detect `react-native-edge-to-edge` (https://github.com/zoontek/react-native-edge-to-edge)
-  val EDGE_TO_EDGE = try {
-    Class.forName("com.zoontek.rnedgetoedge.EdgeToEdgePackage")
-    true
-  } catch (exception: ClassNotFoundException) {
-    false
-  }
-
   @SuppressLint("DiscouragedApi")
   private fun getIdentifierHeight(context: ReactContext, name: String): Int =
     context.resources.getDimensionPixelSize(
@@ -26,7 +18,7 @@ object Utils {
     ).takeIf { it > 0 } ?: 0
 
   @SuppressLint("InternalInsetResource", "DiscouragedApi")
-  fun screenHeight(context: ReactContext): Int {
+  fun screenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val displayMetrics = DisplayMetrics()
 
@@ -53,7 +45,7 @@ object Utils {
       0
     }
 
-    return if (EDGE_TO_EDGE) {
+    return if (edgeToEdge) {
       // getRealMetrics includes navigation bar height
       // windowManager.defaultDisplay.getMetrics doesn't
       when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
