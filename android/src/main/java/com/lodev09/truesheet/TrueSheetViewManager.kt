@@ -32,6 +32,11 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
       .build()
 
+  @ReactProp(name = "edgeToEdge")
+  fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
+    view.setEdgeToEdge(edgeToEdge)
+  }
+
   @ReactProp(name = "maxHeight")
   fun setMaxHeight(view: TrueSheetView, height: Double) {
     view.setMaxHeight(Utils.toPixel(height))

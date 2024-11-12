@@ -9,6 +9,7 @@ import {
   type NativeSyntheticEvent,
   type LayoutChangeEvent,
 } from 'react-native'
+import { isEdgeToEdge, controlEdgeToEdgeValues } from 'react-native-is-edge-to-edge'
 
 import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
@@ -21,6 +22,8 @@ const LINKING_ERROR =
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
+
+const EDGE_TO_EDGE = isEdgeToEdge()
 
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
   contentHeight?: number
@@ -194,6 +197,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       )
     }
 
+    if (__DEV__) {
+      controlEdgeToEdgeValues({ edgeToEdge: this.props.edgeToEdge })
+    }
+
     this.updateState()
   }
 
@@ -209,6 +216,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       grabber = true,
       dimmed = true,
       initialIndexAnimated = true,
+      edgeToEdge = false,
       keyboardMode = 'resize',
       initialIndex,
       dimmedIndex,
@@ -236,6 +244,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
+        edgeToEdge={EDGE_TO_EDGE || edgeToEdge}
         initialIndex={initialIndex}
         initialIndexAnimated={initialIndexAnimated}
         keyboardMode={keyboardMode}

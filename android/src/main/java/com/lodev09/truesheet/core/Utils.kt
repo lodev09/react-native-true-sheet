@@ -18,7 +18,7 @@ object Utils {
     ).takeIf { it > 0 } ?: 0
 
   @SuppressLint("InternalInsetResource", "DiscouragedApi")
-  fun screenHeight(context: ReactContext): Int {
+  fun screenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val displayMetrics = DisplayMetrics()
 
@@ -45,7 +45,16 @@ object Utils {
       0
     }
 
-    return screenHeight - statusBarHeight - navigationBarHeight
+    return if (edgeToEdge) {
+      // getRealMetrics includes navigation bar height
+      // windowManager.defaultDisplay.getMetrics doesn't
+      when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        true -> screenHeight
+        false -> screenHeight + navigationBarHeight
+      }
+    } else {
+      screenHeight - statusBarHeight - navigationBarHeight
+    }
   }
 
   fun toDIP(value: Int): Float = PixelUtil.toDIPFromPixel(value.toFloat())
