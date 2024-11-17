@@ -27,8 +27,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var isPresented = false
   private var activeIndex: Int?
   private var bridge: RCTBridge?
-  private var touchHandler: RCTTouchHandler
   private var viewController: TrueSheetViewController
+  
+  private var touchHandler: RCTTouchHandler
+  // New Arch
+  private var surfaceTouchHandler: RCTSurfaceTouchHandler
 
   // MARK: - Content properties
 
@@ -57,6 +60,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController = TrueSheetViewController()
     touchHandler = RCTTouchHandler(bridge: bridge)
+    surfaceTouchHandler = RCTSurfaceTouchHandler()
 
     super.init(frame: .zero)
 
@@ -77,9 +81,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     viewController.view.addSubview(subview)
-
+    touchHandler.attach(to: subview)
+    surfaceTouchHandler.attach(to: subview)
+    
     containerView = subview
-    touchHandler.attach(to: containerView)
   }
 
   override func removeReactSubview(_ subview: UIView!) {
@@ -91,6 +96,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     super.removeReactSubview(subview)
 
     touchHandler.detach(from: subview)
+    surfaceTouchHandler.detach(from: subview)
 
     containerView = nil
     contentView = nil
