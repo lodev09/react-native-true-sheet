@@ -1,5 +1,5 @@
 import React, { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react'
-import { type ViewStyle } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../utils'
@@ -35,7 +35,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       grabber={false}
       name="prompt-sheet"
       sizes={['auto', 'large']}
-      contentContainerStyle={$content}
+      contentContainerStyle={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
@@ -59,6 +59,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 
 PromptSheet.displayName = 'PromptSheet'
 
-const $content: ViewStyle = {
-  padding: SPACING,
-}
+const styles = StyleSheet.create({
+  content: {
+    padding: SPACING,
+  },
+})

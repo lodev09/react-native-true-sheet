@@ -76,9 +76,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
   }
 
-  override fun getEdgeToEdgeEnabled(): Boolean {
-    return edgeToEdge || super.getEdgeToEdgeEnabled()
-  }
+  override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 
   override fun onStart() {
     super.onStart()

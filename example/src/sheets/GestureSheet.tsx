@@ -1,5 +1,5 @@
 import React, { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { type ViewStyle, useWindowDimensions } from 'react-native'
+import { type ViewStyle, useWindowDimensions, StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -47,7 +47,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     <TrueSheet
       sizes={['auto']}
       ref={sheetRef}
-      contentContainerStyle={$content}
+      contentContainerStyle={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
@@ -62,9 +62,9 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     >
       <GestureHandlerRootView>
         <GestureDetector gesture={pan}>
-          <Animated.View style={[$panContainer, $animatedContainer]}>
+          <Animated.View style={[styles.panContainer, $animatedContainer]}>
             {times(BOXES_COUNT, (i) => (
-              <DemoContent key={i} text={String(i + 1)} style={$box} />
+              <DemoContent key={i} text={String(i + 1)} style={styles.box} />
             ))}
           </Animated.View>
         </GestureDetector>
@@ -76,22 +76,22 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
 GestureSheet.displayName = 'GestureSheet'
 
-const $content: ViewStyle = {
-  padding: SPACING,
-}
-
-const $panContainer: ViewStyle = {
-  height: CONTAINER_HEIGHT,
-  flexDirection: 'row',
-  paddingVertical: SPACING,
-  marginBottom: SPACING,
-  gap: BOX_GAP,
-}
-
-const $box: ViewStyle = {
-  backgroundColor: DARK_GRAY,
-  width: BOX_SIZE,
-  height: BOX_SIZE,
-  alignItems: 'center',
-  justifyContent: 'center',
-}
+const styles = StyleSheet.create({
+  box: {
+    alignItems: 'center',
+    backgroundColor: DARK_GRAY,
+    height: BOX_SIZE,
+    justifyContent: 'center',
+    width: BOX_SIZE,
+  },
+  content: {
+    padding: SPACING,
+  },
+  panContainer: {
+    flexDirection: 'row',
+    gap: BOX_GAP,
+    height: CONTAINER_HEIGHT,
+    marginBottom: SPACING,
+    paddingVertical: SPACING,
+  },
+})
