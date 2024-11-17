@@ -27,6 +27,7 @@ RCT_EXPORT_VIEW_PROPERTY(onMount, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPresent, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onWidthChange, RCTDirectEventBlock)
 
 // Properties
 RCT_EXPORT_VIEW_PROPERTY(scrollableHandle, NSNumber)

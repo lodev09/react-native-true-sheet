@@ -25,17 +25,22 @@ const LINKING_ERROR =
 
 const EDGE_TO_EDGE = isEdgeToEdge()
 
+type WidthChangeEvent = NativeSyntheticEvent<{ width: number }>
+type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
+
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
   contentHeight?: number
   footerHeight?: number
   scrollableHandle: number | null
-  onPresent: (event: NativeSyntheticEvent<SizeInfo>) => void
-  onSizeChange: (event: NativeSyntheticEvent<SizeInfo>) => void
+  onPresent: (event: SizeChangeEvent) => void
+  onSizeChange: (event: SizeChangeEvent) => void
+  onWidthChange: (event: WidthChangeEvent) => void
 }
 
 type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
 
 interface TrueSheetState {
+  containerWidth?: number
   contentHeight?: number
   footerHeight?: number
   scrollableHandle: number | null
@@ -68,8 +73,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onSizeChange = this.onSizeChange.bind(this)
     this.onContentLayout = this.onContentLayout.bind(this)
     this.onFooterLayout = this.onFooterLayout.bind(this)
+    this.onWidthChange = this.onWidthChange.bind(this)
 
     this.state = {
+      containerWidth: undefined,
       contentHeight: undefined,
       footerHeight: undefined,
       scrollableHandle: null,
@@ -139,11 +146,17 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onSizeChange(event: NativeSyntheticEvent<SizeInfo>): void {
+  private onSizeChange(event: SizeChangeEvent): void {
     this.props.onSizeChange?.(event.nativeEvent)
   }
 
-  private onPresent(event: NativeSyntheticEvent<SizeInfo>): void {
+  private onWidthChange(event: WidthChangeEvent): void {
+    this.setState({
+      containerWidth: event.nativeEvent.width,
+    })
+  }
+
+  private onPresent(event: SizeChangeEvent): void {
     this.props.onPresent?.(event.nativeEvent)
   }
 
@@ -254,6 +267,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
+        onWidthChange={this.onWidthChange}
       >
         <View
           collapsable={false}
@@ -262,6 +276,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
               overflow: Platform.select({ ios: undefined, android: 'hidden' }),
               borderTopLeftRadius: cornerRadius,
               borderTopRightRadius: cornerRadius,
+
+              // Update the width on JS side.
+              // New Arch interop does not support updating it in native :/
+              width: this.state.containerWidth,
 
               // Remove backgroundColor if `blurTint` is set on iOS
               backgroundColor: Platform.select({
