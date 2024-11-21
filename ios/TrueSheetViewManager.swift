@@ -24,9 +24,11 @@ class TrueSheetViewManager: RCTViewManager {
 
   // MARK: - Private
 
-  private func getTrueSheetView(_ tag: NSNumber) -> TrueSheetView {
+  private func getTrueSheetView(_ tag: NSNumber) -> TrueSheetView? {
+    guard let uiManager = bridge?.uiManager else { return nil }
+    guard let viewForTag = uiManager.view(forReactTag: tag) else { return nil }
     // swiftlint:disable force_cast
-    return bridge.uiManager.view(forReactTag: tag) as! TrueSheetView
+    return viewForTag as! TrueSheetView
     // swiftlint:enable force_cast
   }
 
@@ -35,12 +37,12 @@ class TrueSheetViewManager: RCTViewManager {
   @objc
   func present(_ tag: NSNumber, index: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let trueSheetView = getTrueSheetView(tag)
-    trueSheetView.present(at: index, promise: Promise(resolver: resolve, rejecter: reject))
+    trueSheetView?.present(at: index, promise: Promise(resolver: resolve, rejecter: reject))
   }
 
   @objc
   func dismiss(_ tag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let trueSheetView = getTrueSheetView(tag)
-    trueSheetView.dismiss(promise: Promise(resolver: resolve, rejecter: reject))
+    trueSheetView?.dismiss(promise: Promise(resolver: resolve, rejecter: reject))
   }
 }
