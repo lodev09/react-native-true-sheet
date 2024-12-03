@@ -22,5 +22,10 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- https://github.com/react-native-maps/react-native-maps/blob/master/docs/installation.md#android -->
+      <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyBeaou3cjmq_BED6HlTRdg5fSyArUCzoTM" />
     </application>
 </manifest>
