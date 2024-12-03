@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
+import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
 import { type ViewStyle, useWindowDimensions, StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'

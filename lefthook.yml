@@ -6,7 +6,7 @@ pre-commit:
       run: npx eslint --fix {staged_files}
     types:
       glob: "*.{js,ts, jsx, tsx}"
-      run: npx tsc --noEmit
+      run: npx tsc
     prettier:
       glob: "*.{js,ts,jsx,tsx}"
       run: npx prettier --write {staged_files}

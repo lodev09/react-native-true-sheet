@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
+import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
 import { StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 

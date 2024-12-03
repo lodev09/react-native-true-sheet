@@ -1,33 +1,33 @@
 {
-  "name": "true-sheet-example",
+  "name": "react-native-true-sheet-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "expo start",
-    "ios": "expo run:ios",
-    "android": "expo run:android",
-    "setup": "npx expo prebuild",
-    "clean": "yarn setup --clean",
-    "doctor": "npx expo-doctor",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
     "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
     "build:ios": "react-native build-ios --scheme TrueSheetExample --mode Debug --extra-params \"-sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO\""
   },
   "dependencies": {
-    "expo": "~52.0.11",
-    "expo-build-properties": "~0.13.1",
     "react": "18.3.1",
     "react-native": "0.76.3",
-    "react-native-gesture-handler": "~2.20.2",
-    "react-native-maps": "1.18.0",
-    "react-native-reanimated": "~3.16.1"
+    "react-native-gesture-handler": "^2.21.2",
+    "react-native-is-edge-to-edge": "^1.1.6",
+    "react-native-maps": "^1.20.1",
+    "react-native-reanimated": "^3.16.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native/babel-preset": "0.76.2",
-    "@react-native/metro-config": "0.76.2",
-    "babel-plugin-module-resolver": "^5.0.0"
+    "@react-native-community/cli": "15.0.1",
+    "@react-native-community/cli-platform-android": "15.0.1",
+    "@react-native-community/cli-platform-ios": "15.0.1",
+    "@react-native/babel-preset": "0.76.3",
+    "@react-native/metro-config": "0.76.3",
+    "@react-native/typescript-config": "0.76.3",
+    "react-native-builder-bob": "^0.33.3"
   },
   "engines": {
     "node": ">=18"

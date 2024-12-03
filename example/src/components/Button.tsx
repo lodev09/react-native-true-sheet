@@ -1,4 +1,3 @@
-import React from 'react'
 import { Text, TouchableOpacity, type TouchableOpacityProps, type ViewStyle } from 'react-native'
 
 import { $WHITE_TEXT, BORDER_RADIUS, DARK_BLUE } from '../utils'
