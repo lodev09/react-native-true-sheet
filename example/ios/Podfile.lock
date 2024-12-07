@@ -1242,7 +1242,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-maps (1.18.0):
+  - react-native-maps (1.20.1):
     - React-Core
   - react-native-true-sheet (0.1.0):
     - DoubleConversion
@@ -1532,7 +1532,7 @@ PODS:
     - React-logger (= 0.76.3)
     - React-perflogger (= 0.76.3)
     - React-utils (= 0.76.3)
-  - RNGestureHandler (2.20.2):
+  - RNGestureHandler (2.21.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1891,8 +1891,8 @@ SPEC CHECKSUMS:
   React-logger: 26155dc23db5c9038794db915f80bd2044512c2e
   React-Mapbuffer: ad1ba0205205a16dbff11b8ade6d1b3959451658
   React-microtasksnativemodule: e771eb9eb6ace5884ee40a293a0e14a9d7a4343c
-  react-native-maps: 2e6e9896195781327ee15b33e3e84bf73c08207a
-  react-native-true-sheet: 9668d149ff73acaaa4eaa9d3b1d0829767758cb9
+  react-native-maps: ee1e65647460c3d41e778071be5eda10e3da6225
+  react-native-true-sheet: 4a449f0688b0d769ef20c0e21e21d178b8fbd6dd
   React-nativeconfig: aeed6e2a8ac02b2df54476afcc7c663416c12bf7
   React-NativeModulesApple: c5b7813da94136f50ef084fa1ac077332dcfc658
   React-perflogger: 6afb7eebf7d9521cc70481688ccddf212970e9d3
@@ -1920,7 +1920,7 @@ SPEC CHECKSUMS:
   React-utils: 2bcaf4f4dfe361344bce2fae428603d518488630
   ReactCodegen: ae99a130606068ed40d1d9c0d5f25fda142a0647
   ReactCommon: 89c87b343deacc8610b099ac764848f0ce937e3e
-  RNGestureHandler: fc5ce5bf284640d3af6431c3a5c3bc121e98d045
+  RNGestureHandler: 0e5ae8d72ef4afb855e98dcdbe60f27d938abe13
   RNReanimated: 006a5d3961bf09c1e96d62ed436e02b2e43b89bb
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 3deb2471faa9916c8a82dda2a22d3fba2620ad37

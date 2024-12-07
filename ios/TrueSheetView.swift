@@ -16,7 +16,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
-  @objc var onWidthChange: RCTDirectEventBlock?
+  @objc var onContainerSizeChange: RCTDirectEventBlock?
 
   // MARK: - React Properties
 
@@ -168,7 +168,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
-    onWidthChange?(["width": width])
+    // We only pass width to JS since height is handled by the constraints
+    onContainerSizeChange?(["width": width])
   }
 
   func viewControllerWillAppear() {
