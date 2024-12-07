@@ -257,8 +257,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     })
   }
 
-  fun setOnSizeChangeListener(listener: RootSheetView.OnSizeChangeListener) {
-    rootSheetView.setOnSizeChangeListener(listener)
+  fun setOnSizeChangeListener(listener: (w: Int, h: Int) -> Unit) {
+    rootSheetView.sizeChangeListener = listener
   }
 
   /**

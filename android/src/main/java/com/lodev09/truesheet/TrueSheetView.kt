@@ -12,6 +12,8 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.RootSheetView
+import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.ContainerSizeChangeEvent
 import com.lodev09.truesheet.events.DismissEvent
 import com.lodev09.truesheet.events.MountEvent
 import com.lodev09.truesheet.events.PresentEvent
@@ -67,6 +69,10 @@ class TrueSheetView(context: Context) :
 
     // Configure Sheet Dialog
     sheetDialog.apply {
+      setOnSizeChangeListener { w, h ->
+        eventDispatcher?.dispatchEvent(ContainerSizeChangeEvent(surfaceId, id, Utils.toDIP(w), Utils.toDIP(h)))
+      }
+
       // Setup listener when the dialog has been presented.
       setOnShowListener {
         registerKeyboardManager()
