@@ -9,4 +9,5 @@
 #import <React/RCTViewManager.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTTouchHandler.h>
+#import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTScrollView.h>

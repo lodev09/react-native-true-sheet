@@ -16,6 +16,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
+  @objc var onContainerSizeChange: RCTDirectEventBlock?
 
   // MARK: - React Properties
 
@@ -27,8 +28,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var isPresented = false
   private var activeIndex: Int?
   private var bridge: RCTBridge?
-  private var touchHandler: RCTTouchHandler
   private var viewController: TrueSheetViewController
+
+  private var touchHandler: RCTTouchHandler
+  // New Arch
+  private var surfaceTouchHandler: RCTSurfaceTouchHandler
 
   // MARK: - Content properties
 
@@ -43,7 +47,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // Reference height constraint during content updates
   private var footerViewHeightConstraint: NSLayoutConstraint?
 
-  private var rctScrollView: RCTScrollView?
+  private var scrollableTag: NSNumber?
 
   private var uiManager: RCTUIManager? {
     guard let uiManager = bridge?.uiManager else { return nil }
@@ -57,6 +61,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     viewController = TrueSheetViewController()
     touchHandler = RCTTouchHandler(bridge: bridge)
+    surfaceTouchHandler = RCTSurfaceTouchHandler()
 
     super.init(frame: .zero)
 
@@ -76,10 +81,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.view.addSubview(subview)
-
     containerView = subview
-    touchHandler.attach(to: containerView)
+
+    viewController.view.addSubview(subview)
+    touchHandler.attach(to: subview)
+    surfaceTouchHandler.attach(to: subview)
   }
 
   override func removeReactSubview(_ subview: UIView!) {
@@ -91,6 +97,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     super.removeReactSubview(subview)
 
     touchHandler.detach(from: subview)
+    surfaceTouchHandler.detach(from: subview)
 
     containerView = nil
     contentView = nil
@@ -110,15 +117,31 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
       containerView.pinTo(view: viewController.view, constraints: nil)
 
+      if let contentView {
+        // Set initial content height
+        let contentHeight = contentView.bounds.height
+        setContentHeight(NSNumber(value: contentHeight))
+      }
+
       // Set footer constraints
       if let footerView {
         footerView.pinTo(view: viewController.view, from: [.left, .right, .bottom], with: 0) { constraints in
           self.footerViewBottomConstraint = constraints.bottom
           self.footerViewHeightConstraint = constraints.height
         }
+
+        // Set initial footer height
+        let footerHeight = footerView.bounds.height
+        setFooterHeight(NSNumber(value: footerHeight))
       }
 
-      initializeContent()
+      // Present sheet at initial index
+      let initialIndex = self.initialIndex.intValue
+      if initialIndex >= 0 {
+        present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
+      }
+
+      onMount?(nil)
     }
   }
 
@@ -145,10 +168,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
-    guard let containerView else { return }
-
-    let size = CGSize(width: width, height: containerView.bounds.height)
-    uiManager?.setSize(size, for: containerView)
+    // We only pass width to JS since height is handled by the constraints
+    onContainerSizeChange?(["width": width])
   }
 
   func viewControllerWillAppear() {
@@ -302,36 +323,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    let view = uiManager?.view(forReactTag: tag) as? RCTScrollView
-    rctScrollView = view
+    scrollableTag = tag
   }
 
   // MARK: - Methods
-
-  private func initializeContent() {
-    guard let contentView, let footerView else {
-      return
-    }
-
-    // Update content containers
-    setupScrollable()
-
-    // Set initial content height
-    let contentHeight = contentView.bounds.height
-    setContentHeight(NSNumber(value: contentHeight))
-
-    // Set initial footer height
-    let footerHeight = footerView.bounds.height
-    setFooterHeight(NSNumber(value: footerHeight))
-
-    // Present sheet at initial index
-    let initialIndex = self.initialIndex.intValue
-    if initialIndex >= 0 {
-      present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
-    }
-
-    onMount?(nil)
-  }
 
   private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
     guard let sizeInfo else {
@@ -361,12 +356,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func setupScrollable() {
-    guard let contentView, let containerView else { return }
+    guard let contentView, let containerView, let scrollableTag else {
+      return
+    }
+
+    let scrollView = uiManager?.view(forReactTag: scrollableTag)
 
     // Add constraints to fix weirdness and support ScrollView
-    if let rctScrollView {
+    if let scrollView {
       contentView.pinTo(view: containerView, constraints: nil)
-      rctScrollView.pinTo(view: contentView, constraints: nil)
+      scrollView.pinTo(view: contentView, constraints: nil)
     }
   }
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import type { TrueSheetProps } from './TrueSheet.types'
 
 interface TrueSheetFooterProps {

@@ -1,4 +1,3 @@
-import React from 'react'
 import { TextInput, View, type TextStyle, type ViewStyle } from 'react-native'
 
 import { BORDER_RADIUS, GRAY, INPUT_HEIGHT, SPACING } from '../utils'

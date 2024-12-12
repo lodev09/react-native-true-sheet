@@ -1,0 +1,25 @@
+---
+title: Enable edge-to-edge
+description: Turning on edge-to-edge support for Android.
+keywords: [bottom sheet edge-to-edge, edge-to-edge, android]
+---
+
+Yes! TrueSheet does support [`edge-to-edge`](https://developer.android.com/develop/ui/views/layout/edge-to-edge).
+
+## How?
+
+It's easy, just set [`edgeToEdge`](/reference/props#edgetoedge) to `true`.
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet edgeToEdge={true}>
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+## react-native-edge-to-edge
+
+[`react-native-edge-to-edge`](https://github.com/zoontek/react-native-edge-to-edge) is a cool tiny package that lets you effortlessly enable `edge-to-edge` display for your app. Go check it out!

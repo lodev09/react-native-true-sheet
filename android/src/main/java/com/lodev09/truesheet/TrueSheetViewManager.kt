@@ -9,6 +9,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.ContainerSizeChangeEvent
 import com.lodev09.truesheet.events.DismissEvent
 import com.lodev09.truesheet.events.MountEvent
 import com.lodev09.truesheet.events.PresentEvent
@@ -30,6 +31,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       .put(PresentEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPresent"))
       .put(DismissEvent.EVENT_NAME, MapBuilder.of("registrationName", "onDismiss"))
       .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
+      .put(ContainerSizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContainerSizeChange"))
       .build()
 
   @ReactProp(name = "edgeToEdge")

@@ -1,4 +1,3 @@
-import React from 'react'
 import { View, type ColorValue, type ViewStyle, type StyleProp } from 'react-native'
 
 const GRABBER_DEFAULT_HEIGHT = 4

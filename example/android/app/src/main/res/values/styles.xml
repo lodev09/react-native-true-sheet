@@ -1,0 +1,11 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <!-- <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar"> -->
+    <!-- https://github.com/zoontek/react-native-edge-to-edge?tab=readme-ov-file#bare-react-native -->
+    <style name="AppTheme" parent="Theme.EdgeToEdge">
+        <!-- Customize your theme here. -->
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    </style>
+
+</resources>

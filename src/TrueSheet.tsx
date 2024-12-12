@@ -1,4 +1,4 @@
-import React, { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
+import { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
 import {
   requireNativeComponent,
   Platform,
@@ -9,7 +9,6 @@ import {
   type NativeSyntheticEvent,
   type LayoutChangeEvent,
 } from 'react-native'
-import { isEdgeToEdge, controlEdgeToEdgeValues } from 'react-native-is-edge-to-edge'
 
 import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
@@ -23,19 +22,23 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-const EDGE_TO_EDGE = isEdgeToEdge()
+type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
+type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
 
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
   contentHeight?: number
   footerHeight?: number
   scrollableHandle: number | null
-  onPresent: (event: NativeSyntheticEvent<SizeInfo>) => void
-  onSizeChange: (event: NativeSyntheticEvent<SizeInfo>) => void
+  onPresent: (event: SizeChangeEvent) => void
+  onSizeChange: (event: SizeChangeEvent) => void
+  onContainerSizeChange: (event: ContainerSizeChangeEvent) => void
 }
 
 type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
 
 interface TrueSheetState {
+  containerWidth?: number
+  containerHeight?: number
   contentHeight?: number
   footerHeight?: number
   scrollableHandle: number | null
@@ -68,8 +71,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onSizeChange = this.onSizeChange.bind(this)
     this.onContentLayout = this.onContentLayout.bind(this)
     this.onFooterLayout = this.onFooterLayout.bind(this)
+    this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
 
     this.state = {
+      containerWidth: undefined,
+      containerHeight: undefined,
       contentHeight: undefined,
       footerHeight: undefined,
       scrollableHandle: null,
@@ -139,11 +145,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onSizeChange(event: NativeSyntheticEvent<SizeInfo>): void {
+  private onSizeChange(event: SizeChangeEvent): void {
     this.props.onSizeChange?.(event.nativeEvent)
   }
 
-  private onPresent(event: NativeSyntheticEvent<SizeInfo>): void {
+  private onContainerSizeChange(event: ContainerSizeChangeEvent): void {
+    this.setState({
+      containerWidth: event.nativeEvent.width,
+      containerHeight: event.nativeEvent.height,
+    })
+  }
+
+  private onPresent(event: SizeChangeEvent): void {
     this.props.onPresent?.(event.nativeEvent)
   }
 
@@ -197,10 +210,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       )
     }
 
-    if (__DEV__) {
-      controlEdgeToEdgeValues({ edgeToEdge: this.props.edgeToEdge })
-    }
-
     this.updateState()
   }
 
@@ -244,7 +253,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        edgeToEdge={EDGE_TO_EDGE || edgeToEdge}
+        edgeToEdge={edgeToEdge}
         initialIndex={initialIndex}
         initialIndexAnimated={initialIndexAnimated}
         keyboardMode={keyboardMode}
@@ -254,6 +263,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
+        onContainerSizeChange={this.onContainerSizeChange}
       >
         <View
           collapsable={false}
@@ -262,6 +272,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
               overflow: Platform.select({ ios: undefined, android: 'hidden' }),
               borderTopLeftRadius: cornerRadius,
               borderTopRightRadius: cornerRadius,
+
+              // Update the width on JS side.
+              // New Arch interop does not support updating it in native :/
+              width: this.state.containerWidth,
+              height: this.state.containerHeight,
 
               // Remove backgroundColor if `blurTint` is set on iOS
               backgroundColor: Platform.select({

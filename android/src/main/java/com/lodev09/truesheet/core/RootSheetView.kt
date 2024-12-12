@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
 import android.view.View
-import com.facebook.react.bridge.GuardedRunnable
 import com.facebook.react.config.ReactFeatureFlags
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
@@ -35,13 +33,9 @@ class RootSheetView(private val context: Context?) :
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
-  private var sizeChangeListener: OnSizeChangeListener? = null
+  public var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
 
   var eventDispatcher: EventDispatcher? = null
-
-  interface OnSizeChangeListener {
-    fun onSizeChange(width: Int, height: Int)
-  }
 
   init {
     if (ReactFeatureFlags.dispatchPointerEvents) {
@@ -55,30 +49,12 @@ class RootSheetView(private val context: Context?) :
     viewWidth = w
     viewHeight = h
     updateFirstChildView()
-
-    sizeChangeListener?.onSizeChange(w, h)
-  }
-
-  fun setOnSizeChangeListener(listener: OnSizeChangeListener) {
-    sizeChangeListener = listener
   }
 
   private fun updateFirstChildView() {
     if (childCount > 0) {
       hasAdjustedSize = false
-      val viewTag = getChildAt(0).id
-      reactContext.runOnNativeModulesQueueThread(
-        object : GuardedRunnable(reactContext) {
-          override fun runGuarded() {
-            val uiManager: UIManagerModule =
-              reactContext
-                .reactApplicationContext
-                .getNativeModule(UIManagerModule::class.java) ?: return
-
-            uiManager.updateNodeSize(viewTag, viewWidth, viewHeight)
-          }
-        }
-      )
+      sizeChangeListener?.let { it(viewWidth, viewHeight) }
     } else {
       hasAdjustedSize = true
     }

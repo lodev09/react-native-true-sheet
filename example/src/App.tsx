@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import { Text, View, type TextStyle, type ViewStyle } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
@@ -36,7 +36,10 @@ export default function App() {
         initialCamera={{
           altitude: 18000,
           zoom: 14,
-          center: { latitude: 9.306743705457553, longitude: 123.30474002203727 },
+          center: {
+            latitude: 9.306743705457553,
+            longitude: 123.30474002203727,
+          },
           pitch: 0,
           heading: 0,
         }}
@@ -48,6 +51,7 @@ export default function App() {
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
+        edgeToEdge
         contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
         dimmedIndex={2}
         dismissible={false}

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Text, View, type ViewStyle } from 'react-native'
 
 import { $WHITE_TEXT, DARK_GRAY, FOOTER_HEIGHT } from '../utils'
