@@ -232,6 +232,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Supports edge-to-edge on Android.
+   * Turn this on if your app has it enabled.
    *
    * @platform android
    */
