@@ -26,10 +26,9 @@ def isNewArchitectureEnabled() {
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
-// TODO: Getting build error with this block :(
-// if (isNewArchitectureEnabled()) {
-//   apply plugin: "com.facebook.react"
-// }
+if (isNewArchitectureEnabled()) {
+  apply plugin: "com.facebook.react"
+}
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["TrueSheet_" + name]

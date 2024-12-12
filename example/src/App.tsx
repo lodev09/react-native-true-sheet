@@ -51,6 +51,7 @@ export default function App() {
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
+        edgeToEdge
         contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
         dimmedIndex={2}
         dismissible={false}
