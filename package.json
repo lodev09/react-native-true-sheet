@@ -169,6 +169,7 @@
     "semi": false
   },
   "react-native-builder-bob": {
+    "exclude": "**/{__tests__,__fixtures__}/**",
     "source": "src",
     "output": "lib",
     "targets": [
