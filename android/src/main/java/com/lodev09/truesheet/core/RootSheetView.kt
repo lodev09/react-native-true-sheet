@@ -2,6 +2,7 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.config.ReactFeatureFlags
@@ -33,7 +34,7 @@ class RootSheetView(private val context: Context?) :
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
-  public var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
+  var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
 
   var eventDispatcher: EventDispatcher? = null
 

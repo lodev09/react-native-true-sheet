@@ -49,6 +49,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       ref={sheetRef}
       contentContainerStyle={styles.content}
       blurTint="dark"
+      edgeToEdge
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
