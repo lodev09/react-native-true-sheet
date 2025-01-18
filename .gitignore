@@ -84,3 +84,6 @@ android/generated
 
 # Docs
 .vercel
+
+# Misc
+.xcode.env.local
