@@ -2,7 +2,6 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.config.ReactFeatureFlags
@@ -55,7 +54,7 @@ class RootSheetView(private val context: Context?) :
 
     viewWidth = w
     viewHeight = h
-    
+
     updateContainerSize()
   }
 

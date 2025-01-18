@@ -57,8 +57,8 @@ object Utils {
     }
   }
 
-  fun toDIP(value: Int): Float = PixelUtil.toDIPFromPixel(value.toFloat())
-  fun toPixel(value: Double): Int = PixelUtil.toPixelFromDIP(value).toInt()
+  fun toDIP(value: Float): Float = PixelUtil.toDIPFromPixel(value)
+  fun toPixel(value: Double): Float = PixelUtil.toPixelFromDIP(value)
 
   fun withPromise(promise: Promise, closure: () -> Any?) {
     try {

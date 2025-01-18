@@ -274,19 +274,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           style={[
             {
               overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-              borderTopLeftRadius: cornerRadius,
-              borderTopRightRadius: cornerRadius,
 
               // Update the width on JS side.
               // New Arch interop does not support updating it in native :/
               width: this.state.containerWidth,
               height: this.state.containerHeight,
-
-              // Remove backgroundColor if `blurTint` is set on iOS
-              // backgroundColor: Platform.select({
-              //   ios: blurTint ? undefined : backgroundColor,
-              //   android: backgroundColor,
-              // }),
             },
             style,
           ]}
