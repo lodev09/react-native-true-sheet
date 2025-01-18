@@ -28,7 +28,6 @@ import com.facebook.react.views.view.ReactViewGroup
 class RootSheetView(private val context: Context?) :
   ReactViewGroup(context),
   RootView {
-  private var hasAdjustedSize = false
   private var viewWidth = 0
   private var viewHeight = 0
 
@@ -44,36 +43,30 @@ class RootSheetView(private val context: Context?) :
     }
   }
 
+  private val reactContext: ThemedReactContext
+    get() = context as ThemedReactContext
+
+  private fun updateContainerSize() {
+    sizeChangeListener?.let { it(viewWidth, viewHeight) }
+  }
+
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
 
     viewWidth = w
     viewHeight = h
-    updateFirstChildView()
-  }
-
-  private fun updateFirstChildView() {
-    if (childCount > 0) {
-      hasAdjustedSize = false
-      sizeChangeListener?.let { it(viewWidth, viewHeight) }
-    } else {
-      hasAdjustedSize = true
-    }
+    
+    updateContainerSize()
   }
 
   override fun addView(child: View, index: Int, params: LayoutParams) {
     super.addView(child, index, params)
-    if (hasAdjustedSize) {
-      updateFirstChildView()
-    }
+    updateContainerSize()
   }
 
   override fun handleException(t: Throwable) {
     reactContext.reactApplicationContext.handleException(RuntimeException(t))
   }
-
-  private val reactContext: ThemedReactContext
-    get() = context as ThemedReactContext
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let { jSTouchDispatcher.handleTouchEvent(event, it) }
