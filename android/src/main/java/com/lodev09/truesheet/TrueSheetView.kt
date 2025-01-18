@@ -36,7 +36,7 @@ class TrueSheetView(context: Context) :
   /**
    * Current activeIndex.
    */
-  private var currentSizeIndex: Int = 0
+  private var currentSizeIndex: Int = -1
 
   /**
    * Promise callback to be invoked after `present` is called.
