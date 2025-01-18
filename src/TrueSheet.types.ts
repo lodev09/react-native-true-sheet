@@ -162,7 +162,8 @@ export interface TrueSheetProps extends ViewProps {
   dismissible?: boolean
 
   /**
-   * Main sheet background color
+   * Main sheet background color.
+   * This prop only supports HEX and named colors. Example: `#282e37ff`, `blue`.
    *
    * @default white
    */

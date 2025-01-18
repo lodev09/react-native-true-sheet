@@ -255,13 +255,25 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
-  func setBlurTint(_ tint: NSString?) {
-    guard let tint else {
-      viewController.blurView.effect = nil
-      return
+  func setBackground(_ color: NSString?) {
+    if let color {
+      viewController.backgroundColor = UIColor(name: color as String)
+    } else {
+      viewController.backgroundColor = nil
     }
 
-    viewController.blurView.effect = UIBlurEffect(with: tint as String)
+    viewController.setupBackground()
+  }
+
+  @objc
+  func setBlurTint(_ tint: NSString?) {
+    if let tint {
+      viewController.blurEffect = UIBlurEffect(with: tint as String)
+    } else {
+      viewController.blurEffect = nil
+    }
+
+    viewController.setupBackground()
   }
 
   @objc

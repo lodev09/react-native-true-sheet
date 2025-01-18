@@ -31,7 +31,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   weak var delegate: TrueSheetViewControllerDelegate?
 
-  var blurView: UIVisualEffectView
+  var backgroundView: UIVisualEffectView
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
 
@@ -41,6 +41,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var contentHeight: CGFloat = 0
   var footerHeight: CGFloat = 0
 
+  var backgroundColor: UIColor?
+  var blurEffect: UIBlurEffect?
+
   var cornerRadius: CGFloat?
   var grabber = true
   var dimmed = true
@@ -49,15 +52,15 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   // MARK: - Setup
 
   init() {
-    blurView = UIVisualEffectView()
+    backgroundView = UIVisualEffectView()
 
     super.init(nibName: nil, bundle: nil)
 
-    blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    blurView.frame = view.bounds
+    backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    backgroundView.frame = view.bounds
 
     view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-    view.insertSubview(blurView, at: 0)
+    view.insertSubview(backgroundView, at: 0)
   }
 
   deinit {
@@ -125,6 +128,18 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     if lastViewWidth != view.frame.width {
       delegate?.viewControllerDidChangeWidth(view.bounds.width)
       lastViewWidth = view.frame.width
+    }
+  }
+
+  /// Setup background. Supports color or blur effect.
+  /// Can only use one or the other.
+  func setupBackground() {
+    if let blurEffect {
+      backgroundView.effect = blurEffect
+      backgroundView.backgroundColor = nil
+    } else {
+      backgroundView.backgroundColor = backgroundColor
+      backgroundView.effect = nil
     }
   }
 
