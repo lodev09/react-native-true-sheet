@@ -36,7 +36,7 @@ class TrueSheetView(context: Context) :
   /**
    * Current activeIndex.
    */
-  private var currentSizeIndex: Int = 0
+  private var currentSizeIndex: Int = -1
 
   /**
    * Promise callback to be invoked after `present` is called.
@@ -70,7 +70,7 @@ class TrueSheetView(context: Context) :
     // Configure Sheet Dialog
     sheetDialog.apply {
       setOnSizeChangeListener { w, h ->
-        eventDispatcher?.dispatchEvent(ContainerSizeChangeEvent(surfaceId, id, Utils.toDIP(w), Utils.toDIP(h)))
+        eventDispatcher?.dispatchEvent(ContainerSizeChangeEvent(surfaceId, id, Utils.toDIP(w.toFloat()), Utils.toDIP(h.toFloat())))
       }
 
       // Setup listener when the dialog has been presented.
@@ -287,6 +287,20 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.isShowing) {
       sheetDialog.setupDimmedBackground(currentSizeIndex)
     }
+  }
+
+  fun setCornerRadius(radius: Float) {
+    if (sheetDialog.cornerRadius == radius) return
+
+    sheetDialog.cornerRadius = radius
+    sheetDialog.setupBackground()
+  }
+
+  fun setBackground(color: Int) {
+    if (sheetDialog.backgroundColor == color) return
+
+    sheetDialog.backgroundColor = color
+    sheetDialog.setupBackground()
   }
 
   fun setSoftInputMode(mode: Int) {

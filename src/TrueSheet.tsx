@@ -8,6 +8,7 @@ import {
   type ViewStyle,
   type NativeSyntheticEvent,
   type LayoutChangeEvent,
+  type ColorValue,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
@@ -25,9 +26,11 @@ const LINKING_ERROR =
 type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
 type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
 
-interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange'> {
+interface TrueSheetNativeViewProps
+  extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange' | 'backgroundColor'> {
   contentHeight?: number
   footerHeight?: number
+  background?: ColorValue
   scrollableHandle: number | null
   onPresent: (event: SizeChangeEvent) => void
   onSizeChange: (event: SizeChangeEvent) => void
@@ -247,6 +250,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         scrollableHandle={this.state.scrollableHandle}
         sizes={sizes}
         blurTint={blurTint}
+        background={backgroundColor}
         cornerRadius={cornerRadius}
         contentHeight={this.state.contentHeight}
         footerHeight={this.state.footerHeight}
@@ -270,19 +274,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           style={[
             {
               overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-              borderTopLeftRadius: cornerRadius,
-              borderTopRightRadius: cornerRadius,
 
               // Update the width on JS side.
               // New Arch interop does not support updating it in native :/
               width: this.state.containerWidth,
               height: this.state.containerHeight,
-
-              // Remove backgroundColor if `blurTint` is set on iOS
-              backgroundColor: Platform.select({
-                ios: blurTint ? undefined : backgroundColor,
-                android: backgroundColor,
-              }),
             },
             style,
           ]}

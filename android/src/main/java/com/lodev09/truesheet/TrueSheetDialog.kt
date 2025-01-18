@@ -2,6 +2,8 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -38,6 +40,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * The maximum window height
    */
   var maxScreenHeight = 0
+
   var contentHeight = 0
   var footerHeight = 0
   var maxSheetHeight: Int? = null
@@ -57,12 +60,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       behavior.isHideable = value
     }
 
+  var cornerRadius: Float = 0f
+  var backgroundColor: Int = Color.WHITE
   var footerView: ViewGroup? = null
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
   init {
     setContentView(rootSheetView)
+
     sheetView = rootSheetView.parent as ViewGroup
     sheetView.setBackgroundColor(Color.TRANSPARENT)
 
@@ -91,6 +97,18 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
       }
     }
+  }
+
+  /**
+   * Setup background color and corner radius.
+   */
+  fun setupBackground() {
+    val outerRadii = FloatArray(8) { cornerRadius }
+    val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
+
+    // Use current background color
+    background.paint.color = backgroundColor
+    sheetView.background = background
   }
 
   /**
@@ -171,11 +189,11 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Get the height value based on the size config value.
    */
   private fun getSizeHeight(size: Any): Int {
-    val height =
+    val height: Int =
       when (size) {
-        is Double -> Utils.toPixel(size)
+        is Double -> Utils.toPixel(size).toInt()
 
-        is Int -> Utils.toPixel(size.toDouble())
+        is Int -> Utils.toPixel(size.toDouble()).toInt()
 
         is String -> {
           when (size) {
@@ -200,7 +218,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
                 if (fixedHeight == null) {
                   0
                 } else {
-                  Utils.toPixel(fixedHeight)
+                  Utils.toPixel(fixedHeight).toInt()
                 }
               }
             }
@@ -278,7 +296,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       isFitToContents = true
 
       // m3 max width 640dp
-      maxWidth = Utils.toPixel(640.0)
+      maxWidth = Utils.toPixel(640.0).toInt()
 
       when (sizes.size) {
         1 -> {
@@ -311,29 +329,29 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     when (sizes.size) {
       1 -> {
         when (state) {
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight))
+          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
           else -> null
         }
       }
 
       2 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight))
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(behavior.maxHeight))
+          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
+          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(behavior.maxHeight.toFloat()))
           else -> null
         }
       }
 
       3 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight))
+          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
 
           BottomSheetBehavior.STATE_HALF_EXPANDED -> {
             val height = behavior.halfExpandedRatio * maxScreenHeight
-            SizeInfo(1, Utils.toDIP(height.toInt()))
+            SizeInfo(1, Utils.toDIP(height))
           }
 
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(behavior.maxHeight))
+          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(behavior.maxHeight.toFloat()))
 
           else -> null
         }

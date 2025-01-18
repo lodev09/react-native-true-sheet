@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.graphics.Color
 import android.util.Log
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
@@ -41,7 +42,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   @ReactProp(name = "maxHeight")
   fun setMaxHeight(view: TrueSheetView, height: Double) {
-    view.setMaxHeight(Utils.toPixel(height))
+    view.setMaxHeight(Utils.toPixel(height).toInt())
   }
 
   @ReactProp(name = "dismissible")
@@ -81,12 +82,23 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   @ReactProp(name = "contentHeight")
   fun setContentHeight(view: TrueSheetView, height: Double) {
-    view.setContentHeight(Utils.toPixel(height))
+    view.setContentHeight(Utils.toPixel(height).toInt())
   }
 
   @ReactProp(name = "footerHeight")
   fun setFooterHeight(view: TrueSheetView, height: Double) {
-    view.setFooterHeight(Utils.toPixel(height))
+    view.setFooterHeight(Utils.toPixel(height).toInt())
+  }
+
+  @ReactProp(name = "cornerRadius")
+  fun setCornerRadius(view: TrueSheetView, radius: Double) {
+    view.setCornerRadius(Utils.toPixel(radius))
+  }
+
+  @ReactProp(name = "background")
+  fun setBackground(view: TrueSheetView, colorName: String) {
+    val color = runCatching { Color.parseColor(colorName) }.getOrDefault(Color.WHITE)
+    view.setBackground(color)
   }
 
   @ReactProp(name = "sizes")
