@@ -4,8 +4,10 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 // import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 // import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 
-import { DARK, DARK_GRAY, GRABBER_COLOR, SPACING } from '../utils'
-import { Button, Footer, Spacer } from '../components'
+import { DARK, DARK_GRAY, GRABBER_COLOR, SPACING } from '../../utils'
+import { Footer } from '../Footer'
+import { Spacer } from '../Spacer'
+import { Button } from '../Button'
 
 // const BOXES_COUNT = 20
 const CONTAINER_HEIGHT = 200

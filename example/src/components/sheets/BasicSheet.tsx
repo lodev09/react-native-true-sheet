@@ -2,8 +2,11 @@ import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
 import { StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../utils'
-import { Button, DemoContent, Footer, Spacer } from '../components'
+import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../../utils'
+import { DemoContent } from '../DemoContent'
+import { Footer } from '../Footer'
+import { Button } from '../Button'
+import { Spacer } from '../Spacer'
 
 interface BasicSheetProps extends TrueSheetProps {}
 
