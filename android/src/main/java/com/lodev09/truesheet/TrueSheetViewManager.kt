@@ -107,7 +107,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     for (i in 0 until minOf(sizes.size(), 3)) {
       when (sizes.getType(i)) {
         ReadableType.Number -> result.add(sizes.getDouble(i))
-        ReadableType.String -> result.add(sizes.getString(i) as String)
+        ReadableType.String -> sizes.getString(i)?.let { result.add(it) }
         else -> Log.d(TAG, "Invalid type")
       }
     }
