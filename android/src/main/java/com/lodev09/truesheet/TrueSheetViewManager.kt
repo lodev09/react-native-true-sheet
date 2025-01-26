@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.graphics.Color
 import android.util.Log
 import android.view.WindowManager
+import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -96,8 +97,8 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   }
 
   @ReactProp(name = "background")
-  fun setBackground(view: TrueSheetView, colorName: String) {
-    val color = runCatching { Color.parseColor(colorName) }.getOrDefault(Color.WHITE)
+  fun setBackground(view: TrueSheetView, colorName: Double) {
+    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrDefault(Color.WHITE)
     view.setBackground(color)
   }
 
