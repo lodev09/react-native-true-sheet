@@ -50,8 +50,8 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var dimmedIndex: Int? = 0
 
   var currentSizeInfo: SizeInfo? {
-    guard let sheet = sheetPresentationController,
-          let rawValue = sheet.selectedDetentIdentifier?.rawValue else {
+    guard #available(iOS 15.0, *), let sheet = sheetPresentationController,
+      let rawValue = sheet.selectedDetentIdentifier?.rawValue else {
       return nil
     }
 
