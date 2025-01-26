@@ -18,10 +18,11 @@ struct SizeInfo {
 protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidChangeWidth(_ width: CGFloat)
   func viewControllerDidDismiss()
-  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo?)
+  func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?)
   func viewControllerWillAppear()
   func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat)
   func viewControllerKeyboardWillHide()
+  func viewControllerDidDrag(_ state: UIPanGestureRecognizer.State, _ height: CGFloat)
 }
 
 // MARK: - TrueSheetViewController
@@ -31,7 +32,11 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   weak var delegate: TrueSheetViewControllerDelegate?
 
-  var backgroundView: UIVisualEffectView
+  /// The bottomInset of the sheet.
+  /// We will be excluding these on height calculation for conistency with scrollable content.
+  private var bottomInset: CGFloat
+  private var backgroundView: UIVisualEffectView
+
   var lastViewWidth: CGFloat = 0
   var detentValues: [String: SizeInfo] = [:]
 
@@ -51,7 +56,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   var currentSizeInfo: SizeInfo? {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController,
-      let rawValue = sheet.selectedDetentIdentifier?.rawValue else {
+          let rawValue = sheet.selectedDetentIdentifier?.rawValue else {
       return nil
     }
 
@@ -62,6 +67,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   init() {
     backgroundView = UIVisualEffectView()
+
+    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+    bottomInset = window?.safeAreaInsets.bottom ?? 0
 
     super.init(nibName: nil, bundle: nil)
 
@@ -85,7 +93,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   func sheetPresentationControllerDidChangeSelectedDetentIdentifier(_ sheet: UISheetPresentationController) {
     if let rawValue = sheet.selectedDetentIdentifier?.rawValue,
        let sizeInfo = detentValues[rawValue] {
-      delegate?.viewControllerSheetDidChangeSize(sizeInfo)
+      delegate?.viewControllerDidChangeSize(sizeInfo)
     }
   }
 
@@ -103,6 +111,18 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       name: UIResponder.keyboardWillHideNotification,
       object: nil
     )
+  }
+
+  @objc
+  func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+    guard let view = gesture.view else { return }
+
+    // Calculate visible height
+    let screenHeight = UIScreen.main.bounds.height
+    let sheetY = view.frame.origin.y
+    let height = screenHeight - bottomInset - sheetY
+
+    delegate?.viewControllerDidDrag(gesture.state, height)
   }
 
   @objc
@@ -140,6 +160,17 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
+  func setContentHeight(_ height: CGFloat) {
+    // Exclude bottom safe area for consistency with a Scrollable content
+    let adjustedContentHeight = height - bottomInset
+
+    guard contentHeight != adjustedContentHeight else {
+      return
+    }
+
+    contentHeight = adjustedContentHeight
+  }
+
   /// Setup background. Supports color or blur effect.
   /// Can only use one or the other.
   func setupBackground() {
@@ -167,6 +198,20 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
         } else if let lastIdentifier = sheet.detents.last?.identifier {
           sheet.largestUndimmedDetentIdentifier = lastIdentifier
         }
+      }
+    }
+  }
+
+  /// Observe while the sheet is being dragged.
+  func observeDrag() {
+    guard let sheet = sheetPresentationController,
+          let presentedView = sheet.presentedView else {
+      return
+    }
+
+    for recognizer in presentedView.gestureRecognizers ?? [] {
+      if let panGesture = recognizer as? UIPanGestureRecognizer {
+        panGesture.addTarget(self, action: #selector(handlePanGesture(_:)))
       }
     }
   }

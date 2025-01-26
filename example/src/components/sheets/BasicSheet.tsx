@@ -50,6 +50,15 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       cornerRadius={12}
       edgeToEdge
       grabberProps={{ color: GRABBER_COLOR }}
+      onDragChange={({ index, value }) =>
+        console.log(`drag changed with size of ${value} at index: ${index}`)
+      }
+      onDragBegin={({ index, value }) =>
+        console.log(`drag began with size of ${value} at index: ${index}`)
+      }
+      onDragEnd={({ index, value }) =>
+        console.log(`drag ended with size of ${value} at index: ${index}`)
+      }
       onDismiss={() => console.log('Basic sheet dismissed!')}
       onPresent={({ index, value }) =>
         console.log(`Basic sheet presented with size of ${value} at index: ${index}`)
