@@ -18,7 +18,7 @@ struct SizeInfo {
 protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidChangeWidth(_ width: CGFloat)
   func viewControllerDidDismiss()
-  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo)
+  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo?)
   func viewControllerWillAppear()
   func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat)
   func viewControllerKeyboardWillHide()
@@ -48,6 +48,15 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   var grabber = true
   var dimmed = true
   var dimmedIndex: Int? = 0
+
+  var currentSizeInfo: SizeInfo? {
+    guard let sheet = sheetPresentationController,
+          let rawValue = sheet.selectedDetentIdentifier?.rawValue else {
+      return nil
+    }
+
+    return detentValues[rawValue]
+  }
 
   // MARK: - Setup
 
@@ -163,11 +172,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   /// Prepares the view controller for sheet presentation
-  func configureSheet(at index: Int = 0, _ completion: ((SizeInfo) -> Void)?) {
-    let defaultSizeInfo = SizeInfo(index: index, value: view.bounds.height)
-
+  func configureSheet(at index: Int = 0, _ completion: (() -> Void)?) {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
-      completion?(defaultSizeInfo)
+      completion?()
       return
     }
 
@@ -204,7 +211,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
       setupDimmedBackground(for: sheet)
 
       sheet.selectedDetentIdentifier = identifier
-      completion?(detentValues[identifier.rawValue] ?? defaultSizeInfo)
+      completion?()
     }
   }
 }

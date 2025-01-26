@@ -183,7 +183,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     onDismiss?(nil)
   }
 
-  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo) {
+  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo?) {
+    guard let sizeInfo else { return }
+
     if sizeInfo.index != activeIndex {
       activeIndex = sizeInfo.index
       onSizeChange?(sizeInfoData(from: sizeInfo))
@@ -340,9 +342,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Methods
 
-  private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
+  private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any]? {
     guard let sizeInfo else {
-      return ["index": 0, "value": 0.0]
+      return nil
     }
 
     return ["index": sizeInfo.index, "value": sizeInfo.value]
@@ -405,10 +407,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.configureSheet(at: index) { sizeInfo in
+    viewController.configureSheet(at: index) {
       // Trigger onSizeChange event when size is changed while presenting
       if self.isPresented {
-        self.viewControllerSheetDidChangeSize(sizeInfo)
+        self.viewControllerSheetDidChangeSize(self.viewController.currentSizeInfo)
         promise?.resolve(nil)
       } else {
         // Keep track of the active index
@@ -416,7 +418,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         self.isPresented = true
 
         rvc.present(self.viewController, animated: animated) {
-          let data = self.sizeInfoData(from: sizeInfo)
+          let data = self.sizeInfoData(from: self.viewController.currentSizeInfo)
           self.onPresent?(data)
           promise?.resolve(nil)
         }
