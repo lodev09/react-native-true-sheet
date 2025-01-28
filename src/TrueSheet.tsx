@@ -9,6 +9,7 @@ import {
   type NativeSyntheticEvent,
   type LayoutChangeEvent,
   type ColorValue,
+  processColor,
 } from 'react-native'
 
 import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
@@ -250,7 +251,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         scrollableHandle={this.state.scrollableHandle}
         sizes={sizes}
         blurTint={blurTint}
-        background={backgroundColor}
+        background={(backgroundColor ? processColor(backgroundColor) : undefined) as any}
         cornerRadius={cornerRadius}
         contentHeight={this.state.contentHeight}
         footerHeight={this.state.footerHeight}
