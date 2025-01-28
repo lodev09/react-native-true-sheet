@@ -108,7 +108,10 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     for (i in 0 until minOf(sizes.size(), 3)) {
       when (sizes.getType(i)) {
         ReadableType.Number -> result.add(sizes.getDouble(i))
-        ReadableType.String -> result.add(sizes.getString(i))
+        // React Native < 0.77 used String for getString, but 0.77
+        // changed it to String?. Suppress the error for older APIs.
+        @Suppress("UNNECESSARY_SAFE_CALL")
+        ReadableType.String -> sizes.getString(i)?.let { result.add(it) }
         else -> Log.d(TAG, "Invalid type")
       }
     }
