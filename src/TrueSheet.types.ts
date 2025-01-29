@@ -260,4 +260,22 @@ export interface TrueSheetProps extends ViewProps {
    * Either by dragging or programatically.
    */
   onSizeChange?: (info: SizeInfo) => void
+
+  /**
+   * Called when the sheet has began dragging.
+   * Comes with the size info.
+   */
+  onDragBegin?: (info: SizeInfo) => void
+
+  /**
+   * Called when the sheet is being dragged.
+   * Comes with the size info.
+   */
+  onDragChange?: (info: SizeInfo) => void
+
+  /**
+   * Called when the sheet dragging has ended.
+   * Comes with the size info.
+   */
+  onDragEnd?: (info: SizeInfo) => void
 }
