@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.graphics.Color
 import android.util.Log
 import android.view.WindowManager
+import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -96,8 +97,8 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   }
 
   @ReactProp(name = "background")
-  fun setBackground(view: TrueSheetView, colorName: String) {
-    val color = runCatching { Color.parseColor(colorName) }.getOrDefault(Color.WHITE)
+  fun setBackground(view: TrueSheetView, colorName: Double) {
+    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrDefault(Color.WHITE)
     view.setBackground(color)
   }
 
@@ -107,10 +108,13 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     for (i in 0 until minOf(sizes.size(), 3)) {
       when (sizes.getType(i)) {
         ReadableType.Number -> result.add(sizes.getDouble(i))
+
         // React Native < 0.77 used String for getString, but 0.77
         // changed it to String?. Suppress the error for older APIs.
         @Suppress("UNNECESSARY_SAFE_CALL")
-        ReadableType.String -> sizes.getString(i)?.let { result.add(it) }
+        ReadableType.String
+        -> sizes.getString(i)?.let { result.add(it) }
+
         else -> Log.d(TAG, "Invalid type")
       }
     }
