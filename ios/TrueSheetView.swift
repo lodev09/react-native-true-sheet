@@ -255,13 +255,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   @objc
-  func setBackground(_ color: NSString?) {
-    if let color {
-      viewController.backgroundColor = UIColor(name: color as String)
-    } else {
-      viewController.backgroundColor = nil
-    }
-
+  func setBackground(_ color: NSNumber?) {
+    viewController.backgroundColor = RCTConvert.uiColor(color)
     viewController.setupBackground()
   }
 
