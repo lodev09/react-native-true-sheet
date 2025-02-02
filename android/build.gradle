@@ -23,6 +23,9 @@ def isNewArchitectureEnabled() {
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
+// TODO:
+// When running example, comment this block!
+// Not sure what's going on but we are getting multiple definition error when this is enabled.
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
