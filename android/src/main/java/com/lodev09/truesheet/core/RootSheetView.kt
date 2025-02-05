@@ -2,6 +2,7 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.config.ReactFeatureFlags
@@ -30,6 +31,8 @@ class RootSheetView(private val context: Context?) :
   private var viewWidth = 0
   private var viewHeight = 0
 
+  private var hasUpdatedSize = false
+
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
   var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
@@ -45,22 +48,13 @@ class RootSheetView(private val context: Context?) :
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
 
-  private fun updateContainerSize() {
-    sizeChangeListener?.let { it(viewWidth, viewHeight) }
-  }
-
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
 
     viewWidth = w
     viewHeight = h
 
-    updateContainerSize()
-  }
-
-  override fun addView(child: View, index: Int, params: LayoutParams) {
-    super.addView(child, index, params)
-    updateContainerSize()
+    sizeChangeListener?.let { it(viewWidth, viewHeight) }
   }
 
   override fun handleException(t: Throwable) {
