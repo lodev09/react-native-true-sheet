@@ -70,7 +70,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     setContentView(rootSheetView)
 
     sheetView = rootSheetView.parent as ViewGroup
-    sheetView.setBackgroundColor(Color.TRANSPARENT)
+
+    sheetView.setBackgroundColor(backgroundColor)
+    sheetView.clipToOutline = true
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {

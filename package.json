@@ -44,7 +44,7 @@
     "lint": "eslint --fix \"**/*.{js,ts,tsx}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/ktlint.sh",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
+    "clean": "scripts/clean.sh",
     "prepare": "bob build",
     "release": "yarn tidy && release-it"
   },

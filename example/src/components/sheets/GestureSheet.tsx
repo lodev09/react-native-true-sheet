@@ -1,12 +1,11 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { StyleSheet, Text, useWindowDimensions, type ViewStyle } from 'react-native'
+import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 
 import { DARK, DARK_GRAY, GRABBER_COLOR, SPACING, times } from '../../utils'
 import { Footer } from '../Footer'
-import { Spacer } from '../Spacer'
 import { Button } from '../Button'
 import { DemoContent } from '../DemoContent'
 
@@ -64,13 +63,6 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       FooterComponent={<Footer />}
       {...props}
     >
-      <Text style={styles.text}>
-        react-native-gesture-handler is causing build issues on Android at this time 🤷‍♂️
-      </Text>
-      <Spacer />
-      <Text style={styles.text}>Removed for now.</Text>
-      <Spacer />
-      <Button text="Dismis" onPress={dismiss} />
       <GestureHandlerRootView>
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.panContainer, $animatedContainer]}>
