@@ -103,7 +103,17 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Setup background color and corner radius.
    */
   fun setupBackground() {
-    val outerRadii = FloatArray(8) { cornerRadius }
+    val outerRadii = floatArrayOf(
+      cornerRadius,
+      cornerRadius,
+      cornerRadius,
+      cornerRadius,
+      0f,
+      0f,
+      0f,
+      0f
+    )
+
     val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
 
     // Use current background color

@@ -45,22 +45,13 @@ class RootSheetView(private val context: Context?) :
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
 
-  private fun updateContainerSize() {
-    sizeChangeListener?.let { it(viewWidth, viewHeight) }
-  }
-
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
 
     viewWidth = w
     viewHeight = h
 
-    updateContainerSize()
-  }
-
-  override fun addView(child: View, index: Int, params: LayoutParams) {
-    super.addView(child, index, params)
-    updateContainerSize()
+    sizeChangeListener?.let { it(viewWidth, viewHeight) }
   }
 
   override fun handleException(t: Throwable) {
