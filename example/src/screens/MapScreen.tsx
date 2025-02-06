@@ -1,9 +1,22 @@
 import { useRef } from 'react'
-import { Text, TouchableOpacity, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native'
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native'
 import { TrueSheet, type SizeInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Animated, { useSharedValue, withSpring, useAnimatedStyle, useEvent, useHandler } from 'react-native-reanimated'
+import Animated, {
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+  useEvent,
+  useHandler,
+} from 'react-native-reanimated'
 
 import {
   BasicSheet,
@@ -51,7 +64,7 @@ export const MapScreen = () => {
       }
     },
     ['onDragChange'],
-    doDependenciesDiffer,
+    doDependenciesDiffer
   )
 
   const presentBasicSheet = async (index = 0) => {
@@ -63,10 +76,8 @@ export const MapScreen = () => {
     $mapStyle,
     { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
-      transform: [
-        { translateY: buttonY.value }
-      ]
-    }))
+      transform: [{ translateY: buttonY.value }],
+    })),
   ]
 
   const handlePresent = (sizeInfo: SizeInfo) => {
