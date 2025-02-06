@@ -1,4 +1,5 @@
 import type { TextStyle } from 'react-native'
+import type { WithSpringConfig } from 'react-native-reanimated'
 
 export const SPACING = 16
 export const INPUT_HEIGHT = SPACING * 3
@@ -14,3 +15,12 @@ export const BLUE = '#3784d7'
 export const DARK_BLUE = '#1f64ae'
 
 export const $WHITE_TEXT: TextStyle = { color: 'white' }
+
+export const SPRING_CONFIG: WithSpringConfig = {
+  damping: 500,
+  stiffness: 1000,
+  mass: 3,
+  overshootClamping: true,
+  restDisplacementThreshold: 10,
+  restSpeedThreshold: 10,
+}

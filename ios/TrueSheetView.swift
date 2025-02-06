@@ -12,6 +12,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Events
 
+  // TODO: migrate to RCTEventDispatcher
+  // https://github.com/software-mansion/react-native-reanimated/issues/1229#issuecomment-735609106
   @objc var onMount: RCTDirectEventBlock?
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?

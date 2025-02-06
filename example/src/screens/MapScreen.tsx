@@ -1,7 +1,9 @@
 import { useRef } from 'react'
-import { Text, View, type TextStyle, type ViewStyle } from 'react-native'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
+import { Text, TouchableOpacity, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native'
+import { TrueSheet, type SizeInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Animated, { useSharedValue, withSpring, useAnimatedStyle, useEvent, useHandler } from 'react-native-reanimated'
 
 import {
   BasicSheet,
@@ -12,7 +14,10 @@ import {
   ScrollViewSheet,
 } from '../components/sheets'
 import { Button, Spacer } from '../components'
-import { BLUE, DARK, GRAY, SPACING } from '../utils'
+import { BLUE, DARK, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+
+const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
+const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
 
 export const MapScreen = () => {
   const sheetRef = useRef<TrueSheet>(null)
@@ -24,9 +29,52 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null)
   const blankSheet = useRef<TrueSheet>(null)
 
+  const insets = useSafeAreaInsets()
+  const buttonY = useSharedValue(0)
+
+  const handlers = {
+    onDragChange: (e: SizeInfo, _: Record<string, unknown>) => {
+      'worklet'
+      buttonY.value = -e.value
+    },
+  }
+
+  const { context, doDependenciesDiffer } = useHandler(handlers, [])
+
+  const dragChangeHandler = useEvent<SizeInfo>(
+    (event) => {
+      'worklet'
+      console.log(event)
+      const { onDragChange } = handlers
+      if (onDragChange && event.eventName.endsWith('onDragChange')) {
+        onDragChange(event, context)
+      }
+    },
+    ['onDragChange'],
+    doDependenciesDiffer,
+  )
+
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
     console.log('Sheet 1 present async')
+  }
+
+  const $mapStyleButtonStyles: StyleProp<ViewStyle> = [
+    $mapStyle,
+    { bottom: insets.bottom + SPACING },
+    useAnimatedStyle(() => ({
+      transform: [
+        { translateY: buttonY.value }
+      ]
+    }))
+  ]
+
+  const handlePresent = (sizeInfo: SizeInfo) => {
+    buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
+  }
+
+  const handleOnDragEnd = (sizeInfo: SizeInfo) => {
+    buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
   return (
@@ -46,7 +94,8 @@ export const MapScreen = () => {
         userInterfaceStyle="dark"
       />
 
-      <TrueSheet
+      <AnimatedButton activeOpacity={0.6} style={$mapStyleButtonStyles} />
+      <AnimatedTrueSheet
         sizes={['15%', 'auto', 'large']}
         ref={sheetRef}
         blurTint="dark"
@@ -57,6 +106,9 @@ export const MapScreen = () => {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
+        onPresent={handlePresent}
+        onDragChange={dragChangeHandler}
+        onDragEnd={handleOnDragEnd}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
@@ -84,9 +136,23 @@ export const MapScreen = () => {
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
         <BlankSheet ref={blankSheet} />
-      </TrueSheet>
+      </AnimatedTrueSheet>
     </View>
   )
+}
+
+const $mapStyle: ViewStyle = {
+  position: 'absolute',
+  right: SPACING,
+  height: SPACING * 3,
+  width: SPACING * 3,
+  borderRadius: (SPACING * 3) / 2,
+  backgroundColor: BLUE,
+  shadowColor: DARK,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 2,
+  elevation: 4,
 }
 
 const $container: ViewStyle = {
