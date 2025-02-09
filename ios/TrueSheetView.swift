@@ -146,7 +146,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
       }
 
-      onMount?(nil)
+      dispatchEvent(name: "onMount", data: nil)
     }
   }
 
@@ -174,7 +174,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
     // We only pass width to JS since height is handled by the constraints
-    onContainerSizeChange?(["width": width])
+    dispatchEvent(name: "onContainerSizeChange", data: ["width": width])
   }
 
   func viewControllerDidDrag(_ state: UIGestureRecognizer.State, _ height: CGFloat) {
@@ -182,11 +182,11 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     switch state {
     case .began:
-      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragBegin", data: sizeInfoData(from: sizeInfo)))
+      dispatchEvent(name: "onDragBegin", data: sizeInfoData(from: sizeInfo))
     case .changed:
-      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragChange", data: sizeInfoData(from: sizeInfo)))
+      dispatchEvent(name: "onDragChange", data: sizeInfoData(from: sizeInfo))
     case .ended, .cancelled:
-      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragEnd", data: sizeInfoData(from: sizeInfo)))
+      dispatchEvent(name: "onDragEnd", data: sizeInfoData(from: sizeInfo))
     default:
       Logger.info("Drag state is not supported")
     }
@@ -199,8 +199,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func viewControllerDidDismiss() {
     isPresented = false
     activeIndex = nil
-
-    onDismiss?(nil)
+    dispatchEvent(name: "onDismiss", data: nil)
   }
 
   func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?) {
@@ -208,7 +207,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if sizeInfo.index != activeIndex {
       activeIndex = sizeInfo.index
-      onSizeChange?(sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onSizeChange", data: sizeInfoData(from: sizeInfo))
     }
   }
 
@@ -389,6 +388,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
+  func dispatchEvent(name: String, data: [String: Any]?) {
+    eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: name, data: data))
+  }
+
   func dismiss(promise: Promise) {
     guard isPresented else {
       promise.resolve(nil)
@@ -429,7 +432,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
           }
 
           let data = self.sizeInfoData(from: self.viewController.currentSizeInfo)
-          self.onPresent?(data)
+          self.dispatchEvent(name: "onPresent", data: data)
           promise?.resolve(nil)
         }
       }

@@ -14,10 +14,11 @@ import {
 
 import type {
   TrueSheetProps,
-  SizeInfo,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
+  SizeChangeEvent,
+  PresentEvent,
 } from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
@@ -30,17 +31,13 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
-type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
+export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
 
-interface TrueSheetNativeViewProps
-  extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange' | 'backgroundColor'> {
+interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'backgroundColor'> {
   contentHeight?: number
   footerHeight?: number
   background?: ProcessedColorValue | null
   scrollableHandle: number | null
-  onPresent: (event: SizeChangeEvent) => void
-  onSizeChange: (event: SizeChangeEvent) => void
   onContainerSizeChange: (event: ContainerSizeChangeEvent) => void
 }
 
@@ -159,7 +156,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onSizeChange(event: SizeChangeEvent): void {
-    this.props.onSizeChange?.(event.nativeEvent)
+    this.props.onSizeChange?.(event)
   }
 
   private onContainerSizeChange(event: ContainerSizeChangeEvent): void {
@@ -169,8 +166,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onPresent(event: SizeChangeEvent): void {
-    this.props.onPresent?.(event.nativeEvent)
+  private onPresent(event: PresentEvent): void {
+    this.props.onPresent?.(event)
   }
 
   private onFooterLayout(event: LayoutChangeEvent): void {

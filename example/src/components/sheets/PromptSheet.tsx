@@ -45,10 +45,14 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
       onDismiss={handleDismiss}
-      onPresent={({ index, value }) =>
-        console.log(`Sheet prompt presented with size of ${value} at index: ${index}`)
+      onPresent={(e) =>
+        console.log(
+          `Sheet prompt presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
       }
-      onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
+      onSizeChange={(e) =>
+        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+      }
       FooterComponent={<Footer />}
       {...props}
     >

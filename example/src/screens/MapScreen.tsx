@@ -95,7 +95,7 @@ export const MapScreen = () => {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onPresent={handlePresent}
+        onPresent={(e) => handlePresent(e.nativeEvent)}
         onDragChange={dragChangeHandler}
         onDragEnd={(e) => handleDragEnd(e.nativeEvent)}
         // initialIndexAnimated={false}

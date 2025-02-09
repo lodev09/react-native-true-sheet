@@ -14,6 +14,8 @@ export interface SizeInfo {
   value: number
 }
 
+export type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
+export type PresentEvent = NativeSyntheticEvent<SizeInfo>
 export type DragBeginEvent = NativeSyntheticEvent<SizeInfo>
 export type DragChangeEvent = NativeSyntheticEvent<SizeInfo>
 export type DragEndEvent = NativeSyntheticEvent<SizeInfo>
@@ -257,7 +259,7 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the Sheet has been presented.
    * Comes with the size info.
    */
-  onPresent?: (info: SizeInfo) => void
+  onPresent?: (event: PresentEvent) => void
 
   /**
    * Called when the Sheet has been dismissed
@@ -268,7 +270,7 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the size of the sheet has changed.
    * Either by dragging or programatically.
    */
-  onSizeChange?: (info: SizeInfo) => void
+  onSizeChange?: (event: SizeChangeEvent) => void
 
   /**
    * Called when the sheet has began dragging.

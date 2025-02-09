@@ -56,10 +56,14 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
       onDismiss={() => console.log('Gesture sheet dismissed!')}
-      onPresent={({ index, value }) =>
-        console.log(`Gesture sheet presented with size of ${value} at index: ${index}`)
+      onPresent={(e) =>
+        console.log(
+          `Gesture sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
       }
-      onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
+      onSizeChange={(e) =>
+        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+      }
       FooterComponent={<Footer />}
       {...props}
     >
