@@ -4,7 +4,6 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 
-// onDragBegin
 class TrueSheetEvent(surfaceId: Int, viewId: Int, private val name: String, private val data: WritableMap?) :
   Event<TrueSheetEvent>(surfaceId, viewId) {
   override fun getEventName() = name
