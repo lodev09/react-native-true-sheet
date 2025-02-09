@@ -62,7 +62,7 @@ export const MapScreen = () => {
     buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
-  const handleDragEnd = (sizeInfo: SizeInfo) => {
+  const handleSizeChange = (sizeInfo: SizeInfo) => {
     buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
@@ -95,9 +95,10 @@ export const MapScreen = () => {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onPresent={(e) => handlePresent(e.nativeEvent)}
         onDragChange={dragChangeHandler}
-        onDragEnd={(e) => handleDragEnd(e.nativeEvent)}
+        onPresent={(e) => handlePresent(e.nativeEvent)}
+        onSizeChange={(e) => handleSizeChange(e.nativeEvent)}
+        // onDragEnd={(e) => handleSizeChange(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
@@ -141,7 +142,6 @@ const $mapStyle: ViewStyle = {
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.3,
   shadowRadius: 2,
-  elevation: 4,
 }
 
 const $container: ViewStyle = {
