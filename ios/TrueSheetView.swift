@@ -230,13 +230,28 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     viewController.maxHeight = maxHeight
-    configurePresentedSheet()
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
   func setContentHeight(_ height: NSNumber) {
-    viewController.setContentHeight(CGFloat(height.floatValue))
-    configurePresentedSheet()
+    let contentHeight = CGFloat(height.floatValue)
+    guard viewController.contentHeight != contentHeight else {
+      return
+    }
+
+    viewController.contentHeight = contentHeight
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
@@ -257,13 +272,22 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       footerViewHeightConstraint.constant = 0
     }
 
-    configurePresentedSheet()
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
   func setSizes(_ sizes: [Any]) {
     viewController.sizes = Array(sizes.prefix(3))
-    configurePresentedSheet()
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
@@ -319,8 +343,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     viewController.dimmed = dimmed
 
     if #available(iOS 15.0, *) {
-      withPresentedSheet { sheet in
-        viewController.setupDimmedBackground(for: sheet)
+      withPresentedSheet { _ in
+        viewController.setupDimmedBackground()
       }
     }
   }
@@ -334,8 +358,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     viewController.dimmedIndex = index.intValue
 
     if #available(iOS 15.0, *) {
-      withPresentedSheet { sheet in
-        viewController.setupDimmedBackground(for: sheet)
+      withPresentedSheet { _ in
+        viewController.setupDimmedBackground()
       }
     }
   }
@@ -364,13 +388,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     sheet.animateChanges {
       completion(sheet)
-    }
-  }
-
-  /// Fully reconfigure the sheet. Use during size prop changes.
-  func configurePresentedSheet() {
-    if isPresented {
-      viewController.configureSheet(at: activeIndex ?? 0, nil)
     }
   }
 
@@ -416,12 +433,16 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.configureSheet(at: index) {
-      // Trigger onSizeChange event when size is changed while presenting
-      if self.isPresented {
-        self.viewControllerDidChangeSize(self.viewController.currentSizeInfo)
+    if isPresented {
+      withPresentedSheet { sheet in
+        sheet.selectedDetentIdentifier = viewController.detentIdentifierForIndex(index)
+
+        // Trigger onSizeChange event when size is changed while presenting
+        viewControllerDidChangeSize(self.viewController.currentSizeInfo)
         promise?.resolve(nil)
-      } else {
+      }
+    } else {
+      viewController.prepareForPresentation(at: index) {
         // Keep track of the active index
         self.activeIndex = index
         self.isPresented = true

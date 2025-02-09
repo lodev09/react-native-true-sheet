@@ -58,11 +58,7 @@ export const MapScreen = () => {
     })),
   ]
 
-  const handlePresent = (sizeInfo: SizeInfo) => {
-    buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
-  }
-
-  const handleSizeChange = (sizeInfo: SizeInfo) => {
+  const animateButton = (sizeInfo: SizeInfo) => {
     buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
@@ -96,9 +92,9 @@ export const MapScreen = () => {
         cornerRadius={12}
         initialIndex={1}
         onDragChange={dragChangeHandler}
-        onPresent={(e) => handlePresent(e.nativeEvent)}
-        onSizeChange={(e) => handleSizeChange(e.nativeEvent)}
-        // onDragEnd={(e) => handleSizeChange(e.nativeEvent)}
+        onPresent={(e) => animateButton(e.nativeEvent)}
+        onSizeChange={(e) => animateButton(e.nativeEvent)}
+        onDragEnd={(e) => animateButton(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)

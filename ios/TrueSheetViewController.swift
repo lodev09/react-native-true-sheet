@@ -160,17 +160,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     }
   }
 
-  func setContentHeight(_ height: CGFloat) {
-    // Exclude bottom safe area for consistency with a Scrollable content
-    let adjustedContentHeight = height - bottomInset
-
-    guard contentHeight != adjustedContentHeight else {
-      return
-    }
-
-    contentHeight = adjustedContentHeight
-  }
-
   /// Setup background. Supports color or blur effect.
   /// Can only use one or the other.
   func setupBackground() {
@@ -186,7 +175,11 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   /// Setup dimmed sheet.
   /// `dimmedIndex` will further customize the dimming behavior.
   @available(iOS 15.0, *)
-  func setupDimmedBackground(for sheet: UISheetPresentationController) {
+  func setupDimmedBackground() {
+    guard let sheet = sheetPresentationController else {
+      return
+    }
+
     if dimmed, dimmedIndex == 0 {
       sheet.largestUndimmedDetentIdentifier = nil
     } else {
@@ -200,6 +193,50 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
         }
       }
     }
+  }
+
+  /// Setup sheet detents by sizes.
+  @available(iOS 15.0, *)
+  func setupSizes() {
+    guard let sheet = sheetPresentationController else {
+      return
+    }
+
+    // Configure detents
+    detentValues = [:]
+    var detents: [UISheetPresentationController.Detent] = []
+
+    for (index, size) in sizes.enumerated() {
+      // Exclude bottom safe area for consistency with a Scrollable content
+      let adjustedContentHeight = contentHeight - bottomInset
+      let detent = detentFor(size, with: adjustedContentHeight + footerHeight, with: maxHeight) { id, value in
+        self.detentValues[id] = SizeInfo(index: index, value: value)
+      }
+
+      detents.append(detent)
+    }
+
+    sheet.detents = detents
+  }
+
+  /// Get the detent identifier for a given index
+  @available(iOS 15.0, *)
+  func detentIdentifierForIndex(_ index: Int) -> UISheetPresentationController.Detent.Identifier {
+    guard let sheet = sheetPresentationController else {
+      return .medium
+    }
+
+    var identifier = UISheetPresentationController.Detent.Identifier.medium
+    if sheet.detents.indices.contains(index) {
+      let detent = sheet.detents[index]
+      if #available(iOS 16.0, *) {
+        identifier = detent.identifier
+      } else if detent == .large() {
+        identifier = .large
+      }
+    }
+
+    return identifier
   }
 
   /// Observe while the sheet is being dragged.
@@ -218,46 +255,21 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   /// Prepares the view controller for sheet presentation
-  func configureSheet(at index: Int = 0, _ completion: (() -> Void)?) {
+  func prepareForPresentation(at index: Int = 0, _ completion: (() -> Void)?) {
     guard #available(iOS 15.0, *), let sheet = sheetPresentationController else {
       completion?()
       return
     }
 
-    detentValues = [:]
+    setupSizes()
+    setupDimmedBackground()
 
-    var detents: [UISheetPresentationController.Detent] = []
+    sheet.delegate = self
+    sheet.prefersEdgeAttachedInCompactHeight = true
+    sheet.prefersGrabberVisible = grabber
+    sheet.preferredCornerRadius = cornerRadius
+    sheet.selectedDetentIdentifier = detentIdentifierForIndex(index)
 
-    for (index, size) in sizes.enumerated() {
-      let detent = detentFor(size, with: contentHeight + footerHeight, with: maxHeight) { id, value in
-        self.detentValues[id] = SizeInfo(index: index, value: value)
-      }
-
-      detents.append(detent)
-    }
-
-    sheet.animateChanges {
-      sheet.detents = detents
-      sheet.prefersEdgeAttachedInCompactHeight = true
-      sheet.prefersGrabberVisible = grabber
-      sheet.preferredCornerRadius = cornerRadius
-      sheet.delegate = self
-
-      var identifier: UISheetPresentationController.Detent.Identifier = .medium
-
-      if sheet.detents.indices.contains(index) {
-        let detent = sheet.detents[index]
-        if #available(iOS 16.0, *) {
-          identifier = detent.identifier
-        } else if detent == .large() {
-          identifier = .large
-        }
-      }
-
-      setupDimmedBackground(for: sheet)
-
-      sheet.selectedDetentIdentifier = identifier
-      completion?()
-    }
+    completion?()
   }
 }
