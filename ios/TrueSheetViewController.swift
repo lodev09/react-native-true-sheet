@@ -203,6 +203,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   }
 
   /// Observe while the sheet is being dragged.
+  @available(iOS 15.0, *)
   func observeDrag() {
     guard let sheet = sheetPresentationController,
           let presentedView = sheet.presentedView else {

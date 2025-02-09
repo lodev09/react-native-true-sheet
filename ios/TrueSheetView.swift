@@ -12,14 +12,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Events
 
-  // TODO: migrate to RCTEventDispatcher
-  // https://github.com/software-mansion/react-native-reanimated/issues/1229#issuecomment-735609106
   @objc var onMount: RCTDirectEventBlock?
   @objc var onDismiss: RCTDirectEventBlock?
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
   @objc var onContainerSizeChange: RCTDirectEventBlock?
-  @objc var onDrag: RCTDirectEventBlock?
+  @objc var onDragBegin: RCTDirectEventBlock?
+  @objc var onDragChange: RCTDirectEventBlock?
+  @objc var onDragEnd: RCTDirectEventBlock?
 
   // MARK: - React Properties
 
@@ -31,6 +31,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var isPresented = false
   private var activeIndex: Int?
   private var bridge: RCTBridge?
+  private var eventDispatcher: (any RCTEventDispatcherProtocol)?
   private var viewController: TrueSheetViewController
 
   private var touchHandler: RCTTouchHandler
@@ -61,6 +62,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   init(with bridge: RCTBridge) {
     self.bridge = bridge
+    eventDispatcher = bridge.eventDispatcher()
 
     viewController = TrueSheetViewController()
     touchHandler = RCTTouchHandler(bridge: bridge)
@@ -176,20 +178,18 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerDidDrag(_ state: UIGestureRecognizer.State, _ height: CGFloat) {
-    var stateData: String
+    let sizeInfo = SizeInfo(index: activeIndex ?? 0, value: height)
+
     switch state {
     case .began:
-      stateData = "began"
+      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragBegin", data: sizeInfoData(from: sizeInfo)))
     case .changed:
-      stateData = "changed"
+      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragChange", data: sizeInfoData(from: sizeInfo)))
     case .ended, .cancelled:
-      stateData = "ended"
+      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: "onDragEnd", data: sizeInfoData(from: sizeInfo)))
     default:
-      stateData = "unknown"
+      Logger.info("Drag state is not supported")
     }
-
-    let sizeInfo = sizeInfoData(from: SizeInfo(index: activeIndex ?? 0, value: height)) as Any
-    onDrag?(["state": stateData, "sizeInfo": sizeInfo])
   }
 
   func viewControllerWillAppear() {
@@ -424,7 +424,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         self.isPresented = true
 
         rvc.present(self.viewController, animated: animated) {
-          self.viewController.observeDrag()
+          if #available(iOS 15.0, *) {
+            self.viewController.observeDrag()
+          }
 
           let data = self.sizeInfoData(from: self.viewController.currentSizeInfo)
           self.onPresent?(data)

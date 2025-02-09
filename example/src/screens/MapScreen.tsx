@@ -10,13 +10,7 @@ import {
 import { TrueSheet, type SizeInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Animated, {
-  useSharedValue,
-  withSpring,
-  useAnimatedStyle,
-  useEvent,
-  useHandler,
-} from 'react-native-reanimated'
+import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
 
 import {
   BasicSheet,
@@ -28,6 +22,7 @@ import {
 } from '../components/sheets'
 import { Button, Spacer } from '../components'
 import { BLUE, DARK, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+import { useDragChangeHandler } from '../hooks'
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
 const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
@@ -45,27 +40,10 @@ export const MapScreen = () => {
   const insets = useSafeAreaInsets()
   const buttonY = useSharedValue(0)
 
-  const handlers = {
-    onDragChange: (e: SizeInfo, _: Record<string, unknown>) => {
-      'worklet'
-      buttonY.value = -e.value
-    },
-  }
-
-  const { context, doDependenciesDiffer } = useHandler(handlers, [])
-
-  const dragChangeHandler = useEvent<SizeInfo>(
-    (event) => {
-      'worklet'
-      console.log(event)
-      const { onDragChange } = handlers
-      if (onDragChange && event.eventName.endsWith('onDragChange')) {
-        onDragChange(event, context)
-      }
-    },
-    ['onDragChange'],
-    doDependenciesDiffer
-  )
+  const dragChangeHandler = useDragChangeHandler((sizeInfo: SizeInfo) => {
+    'worklet'
+    buttonY.value = -sizeInfo.value
+  })
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
@@ -84,7 +62,7 @@ export const MapScreen = () => {
     buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
-  const handleOnDragEnd = (sizeInfo: SizeInfo) => {
+  const handleDragEnd = (sizeInfo: SizeInfo) => {
     buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
   }
 
@@ -119,7 +97,7 @@ export const MapScreen = () => {
         initialIndex={1}
         onPresent={handlePresent}
         onDragChange={dragChangeHandler}
-        onDragEnd={handleOnDragEnd}
+        onDragEnd={(e) => handleDragEnd(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)

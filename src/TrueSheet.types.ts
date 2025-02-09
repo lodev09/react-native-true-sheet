@@ -1,5 +1,11 @@
 import type { Component, ComponentType, ReactElement, RefObject } from 'react'
-import type { ColorValue, StyleProp, ViewProps, ViewStyle } from 'react-native'
+import type {
+  ColorValue,
+  NativeSyntheticEvent,
+  StyleProp,
+  ViewProps,
+  ViewStyle,
+} from 'react-native'
 
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
@@ -7,6 +13,10 @@ export interface SizeInfo {
   index: number
   value: number
 }
+
+export type DragBeginEvent = NativeSyntheticEvent<SizeInfo>
+export type DragChangeEvent = NativeSyntheticEvent<SizeInfo>
+export type DragEndEvent = NativeSyntheticEvent<SizeInfo>
 
 /**
  * Blur style mapped to native values in IOS.
@@ -163,8 +173,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Main sheet background color.
-   * This prop only supports HEX and named colors. Example: `#282e37ff`, `blue`.
-   *
+
    * @default white
    */
   backgroundColor?: ColorValue
@@ -264,18 +273,27 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * Called when the sheet has began dragging.
    * Comes with the size info.
+   *
+   * @platform android
+   * @platform ios 15+
    */
-  onDragBegin?: (info: SizeInfo) => void
+  onDragBegin?: (event: DragBeginEvent) => void
 
   /**
    * Called when the sheet is being dragged.
    * Comes with the size info.
+   *
+   * @platform android
+   * @platform ios 15+
    */
-  onDragChange?: (info: SizeInfo) => void
+  onDragChange?: (event: DragChangeEvent) => void
 
   /**
    * Called when the sheet dragging has ended.
    * Comes with the size info.
+   *
+   * @platform android
+   * @platform ios 15+
    */
-  onDragEnd?: (info: SizeInfo) => void
+  onDragEnd?: (event: DragEndEvent) => void
 }
