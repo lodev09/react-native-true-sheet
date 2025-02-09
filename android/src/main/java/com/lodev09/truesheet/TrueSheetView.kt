@@ -123,7 +123,7 @@ class TrueSheetView(context: Context) :
           override fun onSlide(sheetView: View, slideOffset: Float) {
             if (isDragging) {
               when (sheetDialog.behavior.state) {
-                // To be consistent with IOS, we consider SETTLING as dragging change.
+                // For consistency with IOS, we consider SETTLING as dragging change.
                 BottomSheetBehavior.STATE_DRAGGING,
                 BottomSheetBehavior.STATE_SETTLING -> {
                   val height = maxScreenHeight - sheetView.top
@@ -168,27 +168,31 @@ class TrueSheetView(context: Context) :
               BottomSheetBehavior.STATE_EXPANDED,
               BottomSheetBehavior.STATE_COLLAPSED,
               BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-                val sizeInfo = getSizeInfoForState(newState)
-                sizeInfo?.let {
-                  // Dispatch drag ended after dragging
-                  if (isDragging) {
+                // For consistency with IOS,
+                // we only handle state changes after dragging.
+                //
+                // Changing size programmatically is handled via the present method.
+                if (isDragging) {
+                  val sizeInfo = getSizeInfoForState(newState)
+                  sizeInfo?.let {
+                    // Dispatch drag ended after dragging
                     eventDispatcher?.dispatchEvent(DragEndEvent(surfaceId, id, it))
-                    isDragging = false
-                  }
+                    if (it.index != currentSizeIndex) {
+                      // Invoke promise when sheet resized programmatically
+                      presentPromise?.let { promise ->
+                        promise()
+                        presentPromise = null
+                      }
 
-                  if (it.index != currentSizeIndex) {
-                    // Invoke promise when sheet resized programmatically
-                    presentPromise?.let { promise ->
-                      promise()
-                      presentPromise = null
+                      currentSizeIndex = it.index
+                      setupDimmedBackground(it.index)
+
+                      // Dispatch onSizeChange event
+                      eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, it))
                     }
-
-                    currentSizeIndex = it.index
-                    setupDimmedBackground(it.index)
-
-                    // Dispatch onSizeChange event
-                    eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, it))
                   }
+
+                  isDragging = false
                 }
               }
 
@@ -374,11 +378,19 @@ class TrueSheetView(context: Context) :
    * Present the sheet at given size index.
    */
   fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
-    if (!sheetDialog.isShowing) {
-      currentSizeIndex = sizeIndex
+    currentSizeIndex = sizeIndex
+
+    if (sheetDialog.isShowing) {
+      // For consistency with IOS, we are not waiting
+      // for the state to change before dispatching onSizeChange event.
+      val sizeInfo = sheetDialog.getSizeInfoForIndex(sizeIndex)
+      eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
+
+      promiseCallback()
+    } else {
+      presentPromise = promiseCallback
     }
 
-    presentPromise = promiseCallback
     sheetDialog.present(sizeIndex)
   }
 
