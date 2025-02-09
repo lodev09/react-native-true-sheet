@@ -64,8 +64,8 @@ const App = () => {
     await sheet.current?.resize(1)
   }
 
-  const handleSizeChange = (sizeInfo: SizeInfo) => {
-    console.log(sizeInfo.index, sizeInfo.value) // Do whatever you need from this size ✅
+  const handleSizeChange = (e: SizeChangeEvent) => {
+    console.log(e.nativeEvent.index, e.nativeEvent.value) // Do whatever you need from this size ✅
   }
 
   return (

@@ -21,7 +21,7 @@ import {
   ScrollViewSheet,
 } from '../components/sheets'
 import { Button, Spacer } from '../components'
-import { BLUE, DARK, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+import { BLUE, DARK, DARK_BLUE, GRAY, SPACING, SPRING_CONFIG } from '../utils'
 import { useDragChangeHandler } from '../hooks'
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
@@ -50,8 +50,8 @@ export const MapScreen = () => {
     console.log('Sheet 1 present async')
   }
 
-  const $mapStyleButtonStyles: StyleProp<ViewStyle> = [
-    $mapStyle,
+  const $floatingButtonStyles: StyleProp<ViewStyle> = [
+    $floatingButton,
     { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
       transform: [{ translateY: buttonY.value }],
@@ -78,8 +78,11 @@ export const MapScreen = () => {
         }}
         userInterfaceStyle="dark"
       />
-
-      <AnimatedButton activeOpacity={0.6} style={$mapStyleButtonStyles} />
+      <AnimatedButton
+        activeOpacity={0.6}
+        style={$floatingButtonStyles}
+        onPress={() => sheetRef.current?.resize(0)}
+      />
       <AnimatedTrueSheet
         sizes={['15%', 'auto', 'large']}
         ref={sheetRef}
@@ -127,13 +130,13 @@ export const MapScreen = () => {
   )
 }
 
-const $mapStyle: ViewStyle = {
+const $floatingButton: ViewStyle = {
   position: 'absolute',
   right: SPACING,
   height: SPACING * 3,
   width: SPACING * 3,
   borderRadius: (SPACING * 3) / 2,
-  backgroundColor: BLUE,
+  backgroundColor: DARK_BLUE,
   shadowColor: DARK,
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.3,
