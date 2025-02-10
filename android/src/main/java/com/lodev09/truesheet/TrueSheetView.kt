@@ -5,19 +5,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
-import com.lodev09.truesheet.events.ContainerSizeChangeEvent
-import com.lodev09.truesheet.events.DismissEvent
-import com.lodev09.truesheet.events.MountEvent
-import com.lodev09.truesheet.events.PresentEvent
-import com.lodev09.truesheet.events.SizeChangeEvent
 
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -32,6 +29,11 @@ class TrueSheetView(context: Context) :
 
   var initialIndex: Int = -1
   var initialIndexAnimated: Boolean = true
+
+  /**
+   * Determines if the sheet is being dragged by the user.
+   */
+  private var isDragging = false
 
   /**
    * Current activeIndex.
@@ -70,7 +72,10 @@ class TrueSheetView(context: Context) :
     // Configure Sheet Dialog
     sheetDialog.apply {
       setOnSizeChangeListener { w, h ->
-        eventDispatcher?.dispatchEvent(ContainerSizeChangeEvent(surfaceId, id, Utils.toDIP(w.toFloat()), Utils.toDIP(h.toFloat())))
+        val data = Arguments.createMap()
+        data.putDouble("width", Utils.toDIP(w.toFloat()).toDouble())
+        data.putDouble("height", Utils.toDIP(h.toFloat()).toDouble())
+        dispatchEvent(TrueSheetEvent.CONTAINER_SIZE_CHANGE, data)
       }
 
       // Setup listener when the dialog has been presented.
@@ -92,7 +97,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onPresent event
-        eventDispatcher?.dispatchEvent(PresentEvent(surfaceId, id, sheetDialog.getSizeInfoForIndex(currentSizeIndex)))
+        dispatchEvent(TrueSheetEvent.PRESENT, sizeInfoData(sheetDialog.getSizeInfoForIndex(currentSizeIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -106,13 +111,21 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onDismiss event
-        eventDispatcher?.dispatchEvent(DismissEvent(surfaceId, id))
+        dispatchEvent(TrueSheetEvent.DISMISS)
       }
 
       // Configure sheet behavior events
       behavior.addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
+            when (sheetDialog.behavior.state) {
+              // For consistency with IOS, we consider SETTLING as dragging change.
+              BottomSheetBehavior.STATE_DRAGGING,
+              BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
+
+              else -> { }
+            }
+
             footerView?.let {
               val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
               if (slideOffset >= 0) {
@@ -125,23 +138,20 @@ class TrueSheetView(context: Context) :
             }
           }
 
-          override fun onStateChanged(view: View, newState: Int) {
+          override fun onStateChanged(sheetView: View, newState: Int) {
             if (!isShowing) return
 
-            val sizeInfo = getSizeInfoForState(newState)
-            if (sizeInfo == null || sizeInfo.index == currentSizeIndex) return
+            when (newState) {
+              // When changed to dragging, we know that the drag has started
+              BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
 
-            // Invoke promise when sheet resized programmatically
-            presentPromise?.let { promise ->
-              promise()
-              presentPromise = null
+              // Either of the following state determines drag end
+              BottomSheetBehavior.STATE_EXPANDED,
+              BottomSheetBehavior.STATE_COLLAPSED,
+              BottomSheetBehavior.STATE_HALF_EXPANDED -> handleDragEnd(newState)
+
+              else -> { }
             }
-
-            currentSizeIndex = sizeInfo.index
-            setupDimmedBackground(sizeInfo.index)
-
-            // Dispatch onSizeChange event
-            eventDispatcher?.dispatchEvent(SizeChangeEvent(surfaceId, id, sizeInfo))
           }
         }
       )
@@ -192,7 +202,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onMount event
-        eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
+        dispatchEvent(TrueSheetEvent.MOUNT)
       }
     }
   }
@@ -237,6 +247,68 @@ class TrueSheetView(context: Context) :
     // Drop the instance if the host is destroyed which will dismiss the dialog
     reactContext.removeLifecycleEventListener(this)
     sheetDialog.dismiss()
+  }
+
+  private fun sizeInfoData(sizeInfo: SizeInfo): WritableMap {
+    val data = Arguments.createMap()
+    data.putInt("index", sizeInfo.index)
+    data.putDouble("value", sizeInfo.value.toDouble())
+
+    return data
+  }
+
+  private fun getCurrentSizeInfo(sheetView: View): SizeInfo {
+    val height = sheetDialog.maxScreenHeight - sheetView.top
+    val currentSizeInfo = SizeInfo(currentSizeIndex, Utils.toDIP(height.toFloat()))
+
+    return currentSizeInfo
+  }
+
+  private fun handleDragBegin(sheetView: View) {
+    // Dispatch drag started event
+    dispatchEvent(TrueSheetEvent.DRAG_BEGIN, sizeInfoData(getCurrentSizeInfo(sheetView)))
+    // Flag sheet is being dragged
+    isDragging = true
+  }
+
+  private fun handleDragChange(sheetView: View) {
+    if (!isDragging) return
+
+    // Dispatch drag change event
+    dispatchEvent(TrueSheetEvent.DRAG_CHANGE, sizeInfoData(getCurrentSizeInfo(sheetView)))
+  }
+
+  private fun handleDragEnd(state: Int) {
+    if (!isDragging) return
+
+    // For consistency with IOS,
+    // we only handle state changes after dragging.
+    //
+    // Changing size programmatically is handled via the present method.
+    val sizeInfo = sheetDialog.getSizeInfoForState(state)
+    sizeInfo?.let {
+      // Dispatch drag ended after dragging
+      dispatchEvent(TrueSheetEvent.DRAG_END, sizeInfoData(it))
+      if (it.index != currentSizeIndex) {
+        // Invoke promise when sheet resized programmatically
+        presentPromise?.let { promise ->
+          promise()
+          presentPromise = null
+        }
+
+        currentSizeIndex = it.index
+        sheetDialog.setupDimmedBackground(it.index)
+
+        // Dispatch onSizeChange event
+        dispatchEvent(TrueSheetEvent.SIZE_CHANGE, sizeInfoData(it))
+      }
+    }
+
+    isDragging = false
+  }
+
+  private fun dispatchEvent(name: String, data: WritableMap? = null) {
+    eventDispatcher?.dispatchEvent(TrueSheetEvent(surfaceId, id, name, data))
   }
 
   private fun configureIfShowing() {
@@ -322,11 +394,19 @@ class TrueSheetView(context: Context) :
    * Present the sheet at given size index.
    */
   fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
-    if (!sheetDialog.isShowing) {
-      currentSizeIndex = sizeIndex
+    currentSizeIndex = sizeIndex
+
+    if (sheetDialog.isShowing) {
+      // For consistency with IOS, we are not waiting
+      // for the state to change before dispatching onSizeChange event.
+      val sizeInfo = sheetDialog.getSizeInfoForIndex(sizeIndex)
+      dispatchEvent(TrueSheetEvent.SIZE_CHANGE, sizeInfoData(sizeInfo))
+
+      promiseCallback()
+    } else {
+      presentPromise = promiseCallback
     }
 
-    presentPromise = promiseCallback
     sheetDialog.present(sizeIndex)
   }
 
@@ -336,9 +416,5 @@ class TrueSheetView(context: Context) :
   fun dismiss(promiseCallback: () -> Unit) {
     dismissPromise = promiseCallback
     sheetDialog.dismiss()
-  }
-
-  companion object {
-    const val TAG = "TrueSheetView"
   }
 }

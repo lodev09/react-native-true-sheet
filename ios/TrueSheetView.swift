@@ -17,6 +17,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc var onPresent: RCTDirectEventBlock?
   @objc var onSizeChange: RCTDirectEventBlock?
   @objc var onContainerSizeChange: RCTDirectEventBlock?
+  @objc var onDragBegin: RCTDirectEventBlock?
+  @objc var onDragChange: RCTDirectEventBlock?
+  @objc var onDragEnd: RCTDirectEventBlock?
 
   // MARK: - React Properties
 
@@ -28,6 +31,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   private var isPresented = false
   private var activeIndex: Int?
   private var bridge: RCTBridge?
+  private var eventDispatcher: (any RCTEventDispatcherProtocol)?
   private var viewController: TrueSheetViewController
 
   private var touchHandler: RCTTouchHandler
@@ -58,6 +62,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   init(with bridge: RCTBridge) {
     self.bridge = bridge
+    eventDispatcher = bridge.eventDispatcher()
 
     viewController = TrueSheetViewController()
     touchHandler = RCTTouchHandler(bridge: bridge)
@@ -141,7 +146,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
       }
 
-      onMount?(nil)
+      dispatchEvent(name: "onMount", data: nil)
     }
   }
 
@@ -169,7 +174,22 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
     // We only pass width to JS since height is handled by the constraints
-    onContainerSizeChange?(["width": width])
+    dispatchEvent(name: "onContainerSizeChange", data: ["width": width])
+  }
+
+  func viewControllerDidDrag(_ state: UIGestureRecognizer.State, _ height: CGFloat) {
+    let sizeInfo = SizeInfo(index: activeIndex ?? 0, value: height)
+
+    switch state {
+    case .began:
+      dispatchEvent(name: "onDragBegin", data: sizeInfoData(from: sizeInfo))
+    case .changed:
+      dispatchEvent(name: "onDragChange", data: sizeInfoData(from: sizeInfo))
+    case .ended, .cancelled:
+      dispatchEvent(name: "onDragEnd", data: sizeInfoData(from: sizeInfo))
+    default:
+      Logger.info("Drag state is not supported")
+    }
   }
 
   func viewControllerWillAppear() {
@@ -179,14 +199,15 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   func viewControllerDidDismiss() {
     isPresented = false
     activeIndex = nil
-
-    onDismiss?(nil)
+    dispatchEvent(name: "onDismiss", data: nil)
   }
 
-  func viewControllerSheetDidChangeSize(_ sizeInfo: SizeInfo) {
+  func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?) {
+    guard let sizeInfo else { return }
+
     if sizeInfo.index != activeIndex {
       activeIndex = sizeInfo.index
-      onSizeChange?(sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onSizeChange", data: sizeInfoData(from: sizeInfo))
     }
   }
 
@@ -209,22 +230,28 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     viewController.maxHeight = maxHeight
-    configurePresentedSheet()
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
   func setContentHeight(_ height: NSNumber) {
-    // Exclude bottom safe area for consistency with a Scrollable content
-    let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
-    let bottomInset = window?.safeAreaInsets.bottom ?? 0
-
-    let contentHeight = CGFloat(height.floatValue) - bottomInset
+    let contentHeight = CGFloat(height.floatValue)
     guard viewController.contentHeight != contentHeight else {
       return
     }
 
     viewController.contentHeight = contentHeight
-    configurePresentedSheet()
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
@@ -245,13 +272,22 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       footerViewHeightConstraint.constant = 0
     }
 
-    configurePresentedSheet()
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
   func setSizes(_ sizes: [Any]) {
     viewController.sizes = Array(sizes.prefix(3))
-    configurePresentedSheet()
+
+    if #available(iOS 15.0, *) {
+      withPresentedSheet { _ in
+        viewController.setupSizes()
+      }
+    }
   }
 
   @objc
@@ -307,8 +343,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     viewController.dimmed = dimmed
 
     if #available(iOS 15.0, *) {
-      withPresentedSheet { sheet in
-        viewController.setupDimmedBackground(for: sheet)
+      withPresentedSheet { _ in
+        viewController.setupDimmedBackground()
       }
     }
   }
@@ -322,8 +358,8 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     viewController.dimmedIndex = index.intValue
 
     if #available(iOS 15.0, *) {
-      withPresentedSheet { sheet in
-        viewController.setupDimmedBackground(for: sheet)
+      withPresentedSheet { _ in
+        viewController.setupDimmedBackground()
       }
     }
   }
@@ -335,9 +371,9 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   // MARK: - Methods
 
-  private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any] {
+  private func sizeInfoData(from sizeInfo: SizeInfo?) -> [String: Any]? {
     guard let sizeInfo else {
-      return ["index": 0, "value": 0.0]
+      return nil
     }
 
     return ["index": sizeInfo.index, "value": sizeInfo.value]
@@ -355,13 +391,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  /// Fully reconfigure the sheet. Use during size prop changes.
-  func configurePresentedSheet() {
-    if isPresented {
-      viewController.configureSheet(at: activeIndex ?? 0, nil)
-    }
-  }
-
   func setupScrollable() {
     guard let contentView, let containerView, let scrollableTag else {
       return
@@ -374,6 +403,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       contentView.pinTo(view: containerView, constraints: nil)
       scrollView.pinTo(view: contentView, constraints: nil)
     }
+  }
+
+  func dispatchEvent(name: String, data: [String: Any]?) {
+    eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: name, data: data))
   }
 
   func dismiss(promise: Promise) {
@@ -400,19 +433,27 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       return
     }
 
-    viewController.configureSheet(at: index) { sizeInfo in
-      // Trigger onSizeChange event when size is changed while presenting
-      if self.isPresented {
-        self.viewControllerSheetDidChangeSize(sizeInfo)
+    if isPresented {
+      withPresentedSheet { sheet in
+        sheet.selectedDetentIdentifier = viewController.detentIdentifierForIndex(index)
+
+        // Trigger onSizeChange event when size is changed while presenting
+        viewControllerDidChangeSize(self.viewController.currentSizeInfo)
         promise?.resolve(nil)
-      } else {
+      }
+    } else {
+      viewController.prepareForPresentation(at: index) {
         // Keep track of the active index
         self.activeIndex = index
         self.isPresented = true
 
         rvc.present(self.viewController, animated: animated) {
-          let data = self.sizeInfoData(from: sizeInfo)
-          self.onPresent?(data)
+          if #available(iOS 15.0, *) {
+            self.viewController.observeDrag()
+          }
+
+          let data = self.sizeInfoData(from: self.viewController.currentSizeInfo)
+          self.dispatchEvent(name: "onPresent", data: data)
           promise?.resolve(nil)
         }
       }

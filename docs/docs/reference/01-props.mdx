@@ -51,10 +51,6 @@ The sheet's background color.
 | - | - | - | - |
 | `ColorValue` | `"white"` | ✅ | ✅ |
 
-:::info
-This prop only supports HEX and named colors. Example: `#282e37ff`, `blue`.
-:::
-
 ### `cornerRadius`
 
 The sheet corner radius.
@@ -201,12 +197,12 @@ const App = () => {
     console.log('Bye bye 👋')
   }
 
-  const handleOnPresent = (sizeInfo: SizeInfo) => {
-    console.log(sizeInfo) // { index: 0, value: 69 }
+  const handleOnPresent = (e: PresentEvent) => {
+    console.log(e.nativeEvent) // { index: 0, value: 69 }
   }
 
-  const handleSizeChange = (sizeInfo: SizeInfo) => {
-    console.log(sizeInfo) // { index: 1, value: 247 }
+  const handleSizeChange = (e: SizeChangeEvent) => {
+    console.log(e.nativeEvent) // { index: 1, value: 247 }
   }
 
   return (
@@ -245,4 +241,22 @@ This is called when the sheet has been dismissed.
 
 Comes with [`SizeInfo`](/reference/types#sizeinfo).
 
-This is called when the size of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it. It provides the size `index` and `value`.
+This is called when the size of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
+
+### `onDragBegin`
+
+Comes with [`SizeInfo`](/reference/types#sizeinfo).
+
+This is called when the sheet has began dragging.
+
+### `onDragChange`
+
+Comes with [`SizeInfo`](/reference/types#sizeinfo).
+
+This is called when the sheet is being dragged.
+
+### `onDragEnd`
+
+Comes with [`SizeInfo`](/reference/types#sizeinfo).
+
+This is called when the sheet dragging has ended.

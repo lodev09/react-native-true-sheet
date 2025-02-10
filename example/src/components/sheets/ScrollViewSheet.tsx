@@ -16,6 +16,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       ref={ref}
       sizes={['80%']}
       scrollRef={scrollViewRef}
+      cornerRadius={12}
       onDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onPresent={() => console.log(`Sheet ScrollView presented!`)}
       FooterComponent={<Footer />}

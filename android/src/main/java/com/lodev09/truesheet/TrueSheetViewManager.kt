@@ -11,11 +11,6 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.Utils
-import com.lodev09.truesheet.events.ContainerSizeChangeEvent
-import com.lodev09.truesheet.events.DismissEvent
-import com.lodev09.truesheet.events.MountEvent
-import com.lodev09.truesheet.events.PresentEvent
-import com.lodev09.truesheet.events.SizeChangeEvent
 
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getName() = TAG
@@ -29,11 +24,14 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? =
     MapBuilder.builder<String, Any>()
-      .put(MountEvent.EVENT_NAME, MapBuilder.of("registrationName", "onMount"))
-      .put(PresentEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPresent"))
-      .put(DismissEvent.EVENT_NAME, MapBuilder.of("registrationName", "onDismiss"))
-      .put(SizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onSizeChange"))
-      .put(ContainerSizeChangeEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContainerSizeChange"))
+      .put(TrueSheetEvent.MOUNT, MapBuilder.of("registrationName", "onMount"))
+      .put(TrueSheetEvent.PRESENT, MapBuilder.of("registrationName", "onPresent"))
+      .put(TrueSheetEvent.DISMISS, MapBuilder.of("registrationName", "onDismiss"))
+      .put(TrueSheetEvent.SIZE_CHANGE, MapBuilder.of("registrationName", "onSizeChange"))
+      .put(TrueSheetEvent.DRAG_BEGIN, MapBuilder.of("registrationName", "onDragBegin"))
+      .put(TrueSheetEvent.DRAG_CHANGE, MapBuilder.of("registrationName", "onDragChange"))
+      .put(TrueSheetEvent.DRAG_END, MapBuilder.of("registrationName", "onDragEnd"))
+      .put(TrueSheetEvent.CONTAINER_SIZE_CHANGE, MapBuilder.of("registrationName", "onContainerSizeChange"))
       .build()
 
   @ReactProp(name = "edgeToEdge")

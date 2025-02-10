@@ -50,11 +50,30 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       cornerRadius={12}
       edgeToEdge
       grabberProps={{ color: GRABBER_COLOR }}
-      onDismiss={() => console.log('Basic sheet dismissed!')}
-      onPresent={({ index, value }) =>
-        console.log(`Basic sheet presented with size of ${value} at index: ${index}`)
+      onDragChange={(e) =>
+        console.log(
+          `drag changed with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
       }
-      onSizeChange={({ index, value }) => console.log(`Resized to:`, value, 'at index:', index)}
+      onDragBegin={(e) =>
+        console.log(
+          `drag began with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
+      }
+      onDragEnd={(e) =>
+        console.log(
+          `drag ended with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
+      }
+      onDismiss={() => console.log('Basic sheet dismissed!')}
+      onPresent={(e) =>
+        console.log(
+          `Basic sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+        )
+      }
+      onSizeChange={(e) =>
+        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+      }
       FooterComponent={<Footer />}
       {...props}
     >

@@ -15,6 +15,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
     <TrueSheet
       ref={ref}
       scrollRef={flatListRef}
+      cornerRadius={12}
       sizes={['medium', 'large']}
       blurTint="dark"
       backgroundColor={DARK}

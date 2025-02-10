@@ -12,7 +12,14 @@ import {
   processColor,
 } from 'react-native'
 
-import type { TrueSheetProps, SizeInfo } from './TrueSheet.types'
+import type {
+  TrueSheetProps,
+  DragBeginEvent,
+  DragChangeEvent,
+  DragEndEvent,
+  SizeChangeEvent,
+  PresentEvent,
+} from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
@@ -24,17 +31,13 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n'
 
-type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
-type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
+export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
 
-interface TrueSheetNativeViewProps
-  extends Omit<TrueSheetProps, 'onPresent' | 'onSizeChange' | 'backgroundColor'> {
+interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'backgroundColor'> {
   contentHeight?: number
   footerHeight?: number
   background?: ProcessedColorValue | null
   scrollableHandle: number | null
-  onPresent: (event: SizeChangeEvent) => void
-  onSizeChange: (event: SizeChangeEvent) => void
   onContainerSizeChange: (event: ContainerSizeChangeEvent) => void
 }
 
@@ -73,6 +76,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDismiss = this.onDismiss.bind(this)
     this.onPresent = this.onPresent.bind(this)
     this.onSizeChange = this.onSizeChange.bind(this)
+    this.onDragBegin = this.onDragBegin.bind(this)
+    this.onDragChange = this.onDragChange.bind(this)
+    this.onDragEnd = this.onDragEnd.bind(this)
     this.onContentLayout = this.onContentLayout.bind(this)
     this.onFooterLayout = this.onFooterLayout.bind(this)
     this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
@@ -150,7 +156,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onSizeChange(event: SizeChangeEvent): void {
-    this.props.onSizeChange?.(event.nativeEvent)
+    this.props.onSizeChange?.(event)
   }
 
   private onContainerSizeChange(event: ContainerSizeChangeEvent): void {
@@ -160,8 +166,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onPresent(event: SizeChangeEvent): void {
-    this.props.onPresent?.(event.nativeEvent)
+  private onPresent(event: PresentEvent): void {
+    this.props.onPresent?.(event)
   }
 
   private onFooterLayout(event: LayoutChangeEvent): void {
@@ -182,6 +188,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private onMount(): void {
     this.props.onMount?.()
+  }
+
+  private onDragBegin(event: DragBeginEvent): void {
+    this.props.onDragBegin?.(event)
+  }
+
+  private onDragChange(event: DragChangeEvent): void {
+    this.props.onDragChange?.(event)
+  }
+
+  private onDragEnd(event: DragEndEvent): void {
+    this.props.onDragEnd?.(event)
   }
 
   /**
@@ -268,6 +286,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
         onSizeChange={this.onSizeChange}
+        onDragBegin={this.onDragBegin}
+        onDragChange={this.onDragChange}
+        onDragEnd={this.onDragEnd}
         onContainerSizeChange={this.onContainerSizeChange}
       >
         <View

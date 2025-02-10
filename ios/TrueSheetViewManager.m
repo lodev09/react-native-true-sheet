@@ -27,6 +27,9 @@ RCT_EXPORT_VIEW_PROPERTY(onMount, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPresent, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDragBegin, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDragChange, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDragEnd, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onContainerSizeChange, RCTDirectEventBlock)
 
 // Properties

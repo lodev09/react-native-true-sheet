@@ -1,0 +1,87 @@
+---
+title: Integrating Reanimated
+description: Integrate Reanimated while dragging your sheet.
+keywords: [bottom sheet dragging, react-native-reanimated, reanimated]
+---
+
+import reanimated from './reanimated.gif'
+
+Yes! `TrueSheet` does support [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/). One use case would be a floating action button (FAB) to the sheet's movement, adjusting its position, opacity, or scale as the Sheet is being dragged.
+
+<img alt="reanimated" src={reanimated} width="300"/>
+
+## How?
+
+In this example, we will use the [`onDragChange`](/reference/props#ondragchange) event to listen to size changes while dragging.
+
+You can checkout [example](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for the complete implementation.
+
+### 1. Define a handler hook
+
+```tsx
+import { useEvent, useHandler } from 'react-native-reanimated'
+
+type PageScrollHandler = (sizeInfo: SizeInfo, context: unknown) => void
+
+export const useDragChangeHandler = (
+  handler: PageScrollHandler,
+  dependencies: DependencyList = []
+) => {
+  const handlers = {
+    onDragChange: handler,
+  }
+
+  const { context, doDependenciesDiffer } = useHandler(
+    {
+      onDragChange: handler,
+    },
+    dependencies
+  )
+
+  return useEvent<DragChangeEvent>(
+    (event) => {
+      'worklet'
+      const { onDragChange } = handlers
+      if (onDragChange && event.eventName.endsWith('onDragChange')) {
+        onDragChange(event, context)
+      }
+    },
+    ['onDragChange'],
+    doDependenciesDiffer
+  )
+}
+```
+
+### 2. Attach the event handler
+
+```tsx {3-4,9-12,23}
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated'
+
+const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
+const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
+
+const App = () => {
+  const buttonY = useSharedValue(0)
+
+  const dragChangeHandler = useDragChangeHandler((sizeInfo: SizeInfo) => {
+    'worklet'
+    buttonY.value = -sizeInfo.value
+  })
+
+  const $animatedStyle: ViewStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: buttonY.value }],
+  }))
+
+  return (
+    <View>
+      <AnimatedButton style={$animatedStyle} />
+      <AnimatedTrueSheet
+        sizes={['auto', '69%', 'large']}
+        onDragChange={dragChangeHandler}
+      >
+        <View />
+      </AnimatedTrueSheet>
+    </View>
+  )
+}
+```
