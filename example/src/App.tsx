@@ -11,7 +11,7 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-        initialRouteName="Map"
+        initialRouteName="Navigation"
       >
         <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
         <Stack.Screen
