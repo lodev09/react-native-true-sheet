@@ -41,17 +41,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - Content properties
 
   private var containerView: UIView?
-
   private var contentView: UIView?
   private var footerView: UIView?
+  private var scrollView: UIView?
 
-  // Reference the bottom constraint to adjust during keyboard event
-  private var footerViewBottomConstraint: NSLayoutConstraint?
-
-  // Reference height constraint during content updates
-  private var footerViewHeightConstraint: NSLayoutConstraint?
-
-  private var scrollableTag: NSNumber?
+  // Bottom: Reference the bottom constraint to adjust during keyboard event
+  // Height: Reference height constraint during content updates
+  private var footerConstraints: Constraints?
 
   private var uiManager: RCTUIManager? {
     guard let uiManager = bridge?.uiManager else { return nil }
@@ -104,9 +100,17 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     touchHandler.detach(from: subview)
     surfaceTouchHandler.detach(from: subview)
 
+    // Remove all constraints
+    // Fixes New Arch weird layout degration
+    containerView?.unpin()
+    footerView?.unpin()
+    contentView?.unpin()
+    scrollView?.unpin()
+
     containerView = nil
     contentView = nil
     footerView = nil
+    scrollView = nil
   }
 
   override func didUpdateReactSubviews() {
@@ -131,8 +135,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       // Set footer constraints
       if let footerView {
         footerView.pinTo(view: viewController.view, from: [.left, .right, .bottom], with: 0) { constraints in
-          self.footerViewBottomConstraint = constraints.bottom
-          self.footerViewHeightConstraint = constraints.height
+          self.footerConstraints = constraints
         }
 
         // Set initial footer height
@@ -153,9 +156,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - ViewController delegate
 
   func viewControllerKeyboardWillHide() {
-    guard let footerViewBottomConstraint else { return }
-
-    footerViewBottomConstraint.constant = 0
+    footerConstraints?.bottom?.constant = 0
 
     UIView.animate(withDuration: 0.3) {
       self.viewController.view.layoutIfNeeded()
@@ -163,9 +164,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat) {
-    guard let footerViewBottomConstraint else { return }
-
-    footerViewBottomConstraint.constant = -keyboardHeight
+    footerConstraints?.bottom?.constant = -keyboardHeight
 
     UIView.animate(withDuration: 0.3) {
       self.viewController.view.layoutIfNeeded()
@@ -193,7 +192,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerWillAppear() {
-    setupScrollable()
+    guard let contentView, let scrollView, let containerView else {
+      return
+    }
+
+    // Add constraints to fix weirdness and support ScrollView
+    contentView.pinTo(view: containerView, constraints: nil)
+    scrollView.pinTo(view: contentView, constraints: nil)
   }
 
   func viewControllerDidDismiss() {
@@ -257,8 +262,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setFooterHeight(_ height: NSNumber) {
     let footerHeight = CGFloat(height.floatValue)
-    guard let footerView, let footerViewHeightConstraint,
-          viewController.footerHeight != footerHeight else {
+    guard let footerView, viewController.footerHeight != footerHeight else {
       return
     }
 
@@ -266,10 +270,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if footerView.subviews.first != nil {
       containerView?.bringSubviewToFront(footerView)
-      footerViewHeightConstraint.constant = viewController.footerHeight
+      footerConstraints?.height?.constant = viewController.footerHeight
     } else {
       containerView?.sendSubviewToBack(footerView)
-      footerViewHeightConstraint.constant = 0
+      footerConstraints?.height?.constant = 0
     }
 
     if #available(iOS 15.0, *) {
@@ -366,7 +370,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    scrollableTag = tag
+    scrollView = uiManager?.view(forReactTag: tag)
   }
 
   // MARK: - Methods
@@ -388,20 +392,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     sheet.animateChanges {
       completion(sheet)
-    }
-  }
-
-  func setupScrollable() {
-    guard let contentView, let containerView, let scrollableTag else {
-      return
-    }
-
-    let scrollView = uiManager?.view(forReactTag: scrollableTag)
-
-    // Add constraints to fix weirdness and support ScrollView
-    if let scrollView {
-      contentView.pinTo(view: containerView, constraints: nil)
-      scrollView.pinTo(view: contentView, constraints: nil)
     }
   }
 
