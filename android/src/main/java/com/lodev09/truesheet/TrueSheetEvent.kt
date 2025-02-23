@@ -10,13 +10,13 @@ class TrueSheetEvent(surfaceId: Int, viewId: Int, private val name: String, priv
   override fun getEventData(): WritableMap = data ?: Arguments.createMap()
 
   companion object {
-    const val MOUNT = "mount"
-    const val PRESENT = "present"
-    const val DISMISS = "dismiss"
-    const val SIZE_CHANGE = "sizeChange"
-    const val DRAG_BEGIN = "dragBegin"
-    const val DRAG_CHANGE = "dragChange"
-    const val DRAG_END = "dragEnd"
-    const val CONTAINER_SIZE_CHANGE = "containerSizeChange"
+    const val MOUNT = "topMount"
+    const val PRESENT = "topPresent"
+    const val DISMISS = "topDismiss"
+    const val SIZE_CHANGE = "topSizeChange"
+    const val DRAG_BEGIN = "topDragBegin"
+    const val DRAG_CHANGE = "topDragChange"
+    const val DRAG_END = "topDragEnd"
+    const val CONTAINER_SIZE_CHANGE = "topContainerSizeChange"
   }
 }

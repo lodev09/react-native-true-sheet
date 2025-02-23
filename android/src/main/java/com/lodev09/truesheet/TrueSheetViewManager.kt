@@ -22,17 +22,17 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.onHostDestroy()
   }
 
-  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? =
-    MapBuilder.builder<String, Any>()
-      .put(TrueSheetEvent.MOUNT, MapBuilder.of("registrationName", "onMount"))
-      .put(TrueSheetEvent.PRESENT, MapBuilder.of("registrationName", "onPresent"))
-      .put(TrueSheetEvent.DISMISS, MapBuilder.of("registrationName", "onDismiss"))
-      .put(TrueSheetEvent.SIZE_CHANGE, MapBuilder.of("registrationName", "onSizeChange"))
-      .put(TrueSheetEvent.DRAG_BEGIN, MapBuilder.of("registrationName", "onDragBegin"))
-      .put(TrueSheetEvent.DRAG_CHANGE, MapBuilder.of("registrationName", "onDragChange"))
-      .put(TrueSheetEvent.DRAG_END, MapBuilder.of("registrationName", "onDragEnd"))
-      .put(TrueSheetEvent.CONTAINER_SIZE_CHANGE, MapBuilder.of("registrationName", "onContainerSizeChange"))
-      .build()
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
+    mutableMapOf(
+      TrueSheetEvent.MOUNT to MapBuilder.of("registrationName", "onMount"),
+      TrueSheetEvent.PRESENT to MapBuilder.of("registrationName", "onPresent"),
+      TrueSheetEvent.DISMISS to MapBuilder.of("registrationName", "onDismiss"),
+      TrueSheetEvent.SIZE_CHANGE to MapBuilder.of("registrationName", "onSizeChange"),
+      TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),
+      TrueSheetEvent.DRAG_CHANGE to MapBuilder.of("registrationName", "onDragChange"),
+      TrueSheetEvent.DRAG_END to MapBuilder.of("registrationName", "onDragEnd"),
+      TrueSheetEvent.CONTAINER_SIZE_CHANGE to MapBuilder.of("registrationName", "onContainerSizeChange")
+    )
 
   @ReactProp(name = "edgeToEdge")
   fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {

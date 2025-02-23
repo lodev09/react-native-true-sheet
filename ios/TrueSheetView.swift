@@ -99,7 +99,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     // Touch handler for Old Arch
     touchHandler.detach(from: subview)
-    
+
     // Touch handler that works in New Arch
     surfaceTouchHandler.detach(from: subview)
 
