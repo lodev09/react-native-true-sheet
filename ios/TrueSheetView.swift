@@ -41,17 +41,13 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   // MARK: - Content properties
 
   private var containerView: UIView?
-
   private var contentView: UIView?
   private var footerView: UIView?
+  private var scrollView: UIView?
 
-  // Reference the bottom constraint to adjust during keyboard event
-  private var footerViewBottomConstraint: NSLayoutConstraint?
-
-  // Reference height constraint during content updates
-  private var footerViewHeightConstraint: NSLayoutConstraint?
-
-  private var scrollableTag: NSNumber?
+  // Bottom: Reference the bottom constraint to adjust during keyboard event
+  // Height: Reference height constraint during content updates
+  private var footerConstraints: Constraints?
 
   private var uiManager: RCTUIManager? {
     guard let uiManager = bridge?.uiManager else { return nil }
@@ -101,12 +97,23 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     super.removeReactSubview(subview)
 
+    // Touch handler for Old Arch
     touchHandler.detach(from: subview)
+    
+    // Touch handler that works in New Arch
     surfaceTouchHandler.detach(from: subview)
+
+    // Remove all constraints
+    // Fixes New Arch weird layout issue :/
+    containerView?.unpin()
+    footerView?.unpin()
+    contentView?.unpin()
+    scrollView?.unpin()
 
     containerView = nil
     contentView = nil
     footerView = nil
+    scrollView = nil
   }
 
   override func didUpdateReactSubviews() {
@@ -131,8 +138,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
       // Set footer constraints
       if let footerView {
         footerView.pinTo(view: viewController.view, from: [.left, .right, .bottom], with: 0) { constraints in
-          self.footerViewBottomConstraint = constraints.bottom
-          self.footerViewHeightConstraint = constraints.height
+          self.footerConstraints = constraints
         }
 
         // Set initial footer height
@@ -146,16 +152,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         present(at: initialIndex, promise: nil, animated: initialIndexAnimated)
       }
 
-      dispatchEvent(name: "onMount", data: nil)
+      dispatchEvent(name: "onMount", block: onMount, data: nil)
     }
   }
 
   // MARK: - ViewController delegate
 
   func viewControllerKeyboardWillHide() {
-    guard let footerViewBottomConstraint else { return }
-
-    footerViewBottomConstraint.constant = 0
+    footerConstraints?.bottom?.constant = 0
 
     UIView.animate(withDuration: 0.3) {
       self.viewController.view.layoutIfNeeded()
@@ -163,9 +167,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat) {
-    guard let footerViewBottomConstraint else { return }
-
-    footerViewBottomConstraint.constant = -keyboardHeight
+    footerConstraints?.bottom?.constant = -keyboardHeight
 
     UIView.animate(withDuration: 0.3) {
       self.viewController.view.layoutIfNeeded()
@@ -174,7 +176,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   func viewControllerDidChangeWidth(_ width: CGFloat) {
     // We only pass width to JS since height is handled by the constraints
-    dispatchEvent(name: "onContainerSizeChange", data: ["width": width])
+    dispatchEvent(name: "onContainerSizeChange", block: onContainerSizeChange, data: ["width": width])
   }
 
   func viewControllerDidDrag(_ state: UIGestureRecognizer.State, _ height: CGFloat) {
@@ -182,24 +184,30 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     switch state {
     case .began:
-      dispatchEvent(name: "onDragBegin", data: sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onDragBegin", block: onDragBegin, data: sizeInfoData(from: sizeInfo))
     case .changed:
-      dispatchEvent(name: "onDragChange", data: sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onDragChange", block: onDragChange, data: sizeInfoData(from: sizeInfo))
     case .ended, .cancelled:
-      dispatchEvent(name: "onDragEnd", data: sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onDragEnd", block: onDragEnd, data: sizeInfoData(from: sizeInfo))
     default:
       Logger.info("Drag state is not supported")
     }
   }
 
   func viewControllerWillAppear() {
-    setupScrollable()
+    guard let contentView, let scrollView, let containerView else {
+      return
+    }
+
+    // Add constraints to fix weirdness and support ScrollView
+    contentView.pinTo(view: containerView, constraints: nil)
+    scrollView.pinTo(view: contentView, constraints: nil)
   }
 
   func viewControllerDidDismiss() {
     isPresented = false
     activeIndex = nil
-    dispatchEvent(name: "onDismiss", data: nil)
+    dispatchEvent(name: "onDismiss", block: onDismiss, data: nil)
   }
 
   func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?) {
@@ -207,7 +215,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if sizeInfo.index != activeIndex {
       activeIndex = sizeInfo.index
-      dispatchEvent(name: "onSizeChange", data: sizeInfoData(from: sizeInfo))
+      dispatchEvent(name: "onSizeChange", block: onSizeChange, data: sizeInfoData(from: sizeInfo))
     }
   }
 
@@ -257,8 +265,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   @objc
   func setFooterHeight(_ height: NSNumber) {
     let footerHeight = CGFloat(height.floatValue)
-    guard let footerView, let footerViewHeightConstraint,
-          viewController.footerHeight != footerHeight else {
+    guard let footerView, viewController.footerHeight != footerHeight else {
       return
     }
 
@@ -266,10 +273,10 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
     if footerView.subviews.first != nil {
       containerView?.bringSubviewToFront(footerView)
-      footerViewHeightConstraint.constant = viewController.footerHeight
+      footerConstraints?.height?.constant = viewController.footerHeight
     } else {
       containerView?.sendSubviewToBack(footerView)
-      footerViewHeightConstraint.constant = 0
+      footerConstraints?.height?.constant = 0
     }
 
     if #available(iOS 15.0, *) {
@@ -366,7 +373,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc
   func setScrollableHandle(_ tag: NSNumber?) {
-    scrollableTag = tag
+    scrollView = uiManager?.view(forReactTag: tag)
   }
 
   // MARK: - Methods
@@ -391,22 +398,14 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
   }
 
-  func setupScrollable() {
-    guard let contentView, let containerView, let scrollableTag else {
-      return
-    }
-
-    let scrollView = uiManager?.view(forReactTag: scrollableTag)
-
-    // Add constraints to fix weirdness and support ScrollView
-    if let scrollView {
-      contentView.pinTo(view: containerView, constraints: nil)
-      scrollView.pinTo(view: contentView, constraints: nil)
-    }
-  }
-
-  func dispatchEvent(name: String, data: [String: Any]?) {
-    eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: name, data: data))
+  func dispatchEvent(name: String, block: RCTDirectEventBlock?, data: [String: Any]?) {
+    // eventDispatcher doesn't work in New Arch so we need to call it directly :/
+    // we needed eventDispatcher for Reanimated to work on old arch.
+    #if RCT_NEW_ARCH_ENABLED
+      block?(data)
+    #else
+      eventDispatcher?.send(TrueSheetEvent(viewTag: reactTag, name: name, data: data))
+    #endif
   }
 
   func dismiss(promise: Promise) {
@@ -453,7 +452,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
           }
 
           let data = self.sizeInfoData(from: self.viewController.currentSizeInfo)
-          self.dispatchEvent(name: "onPresent", data: data)
+          self.dispatchEvent(name: "onPresent", block: self.onPresent, data: data)
           promise?.resolve(nil)
         }
       }

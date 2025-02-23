@@ -66,4 +66,9 @@ extension UIView {
       height: heightConstraint
     ))
   }
+
+  func unpin() {
+    translatesAutoresizingMaskIntoConstraints = true
+    removeConstraints(constraints)
+  }
 }
