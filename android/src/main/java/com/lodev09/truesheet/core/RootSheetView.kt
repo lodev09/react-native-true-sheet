@@ -36,14 +36,14 @@ class RootSheetView(private val context: Context?) :
 
   var eventDispatcher: EventDispatcher? = null
 
+  private val reactContext: ThemedReactContext
+    get() = context as ThemedReactContext
+
   init {
     if (ReactFeatureFlags.dispatchPointerEvents) {
       jSPointerDispatcher = JSPointerDispatcher(this)
     }
   }
-
-  private val reactContext: ThemedReactContext
-    get() = context as ThemedReactContext
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)

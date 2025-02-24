@@ -75,6 +75,7 @@ class TrueSheetView(context: Context) :
         val data = Arguments.createMap()
         data.putDouble("width", Utils.toDIP(w.toFloat()).toDouble())
         data.putDouble("height", Utils.toDIP(h.toFloat()).toDouble())
+
         dispatchEvent(TrueSheetEvent.CONTAINER_SIZE_CHANGE, data)
       }
 
@@ -97,7 +98,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onPresent event
-        dispatchEvent(TrueSheetEvent.PRESENT, sizeInfoData(sheetDialog.getSizeInfoForIndex(currentSizeIndex)))
+        dispatchEvent(TrueSheetEvent.PRESENT, sizeInfoData(getSizeInfoForIndex(currentSizeIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -118,7 +119,7 @@ class TrueSheetView(context: Context) :
       behavior.addBottomSheetCallback(
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
-            when (sheetDialog.behavior.state) {
+            when (behavior.state) {
               // For consistency with IOS, we consider SETTLING as dragging change.
               BottomSheetBehavior.STATE_DRAGGING,
               BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
@@ -172,39 +173,35 @@ class TrueSheetView(context: Context) :
     // Do nothing as we are laid out by UIManager
   }
 
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+
+    // Initialize content
+    UiThreadUtil.runOnUiThread {
+      setContentHeight(sheetDialog.contentView.height)
+      setFooterHeight(sheetDialog.footerView.height)
+
+      if (initialIndex >= 0) {
+        currentSizeIndex = initialIndex
+        sheetDialog.present(initialIndex, initialIndexAnimated)
+      }
+
+      // Dispatch onMount event
+      dispatchEvent(TrueSheetEvent.MOUNT)
+    }
+  }
+
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     sheetDialog.dismiss()
   }
 
   override fun addView(child: View, index: Int) {
+    UiThreadUtil.assertOnUiThread()
+    rootSheetView.addView(child, index)
+
     // Hide this host view
     visibility = GONE
-
-    (child as ViewGroup).let {
-      // rootView's first child is the Container View
-      rootSheetView.addView(it, index)
-
-      // Initialize content
-      UiThreadUtil.runOnUiThread {
-        // 1st child is the content view
-        val contentView = it.getChildAt(0) as ViewGroup?
-        setContentHeight(contentView?.height ?: 0)
-
-        // 2nd child is the footer view
-        val footerView = it.getChildAt(1) as ViewGroup?
-        sheetDialog.footerView = footerView
-        setFooterHeight(footerView?.height ?: 0)
-
-        if (initialIndex >= 0) {
-          currentSizeIndex = initialIndex
-          sheetDialog.present(initialIndex, initialIndexAnimated)
-        }
-
-        // Dispatch onMount event
-        dispatchEvent(TrueSheetEvent.MOUNT)
-      }
-    }
   }
 
   override fun getChildCount(): Int {
@@ -216,10 +213,13 @@ class TrueSheetView(context: Context) :
   override fun getChildAt(index: Int): View = rootSheetView.getChildAt(index)
 
   override fun removeView(child: View) {
+    UiThreadUtil.assertOnUiThread()
     rootSheetView.removeView(child)
   }
 
   override fun removeViewAt(index: Int) {
+    UiThreadUtil.assertOnUiThread()
+
     val child = getChildAt(index)
     rootSheetView.removeView(child)
   }
@@ -394,6 +394,8 @@ class TrueSheetView(context: Context) :
    * Present the sheet at given size index.
    */
   fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
+    UiThreadUtil.assertOnUiThread()
+
     currentSizeIndex = sizeIndex
 
     if (sheetDialog.isShowing) {
@@ -414,6 +416,8 @@ class TrueSheetView(context: Context) :
    * Dismisses the sheet.
    */
   fun dismiss(promiseCallback: () -> Unit) {
+    UiThreadUtil.assertOnUiThread()
+
     dismissPromise = promiseCallback
     sheetDialog.dismiss()
   }

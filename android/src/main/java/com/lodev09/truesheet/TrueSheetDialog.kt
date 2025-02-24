@@ -21,8 +21,14 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
-  private var sheetView: ViewGroup
   private var windowAnimation: Int = 0
+
+  // First child of the rootSheetView
+  private val containerView: ViewGroup
+    get() = rootSheetView.getChildAt(0) as ViewGroup
+
+  private val sheetContainerView: ViewGroup
+    get() = rootSheetView.parent as ViewGroup
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -62,17 +68,22 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   var cornerRadius: Float = 0f
   var backgroundColor: Int = Color.WHITE
-  var footerView: ViewGroup? = null
+
+  // 1st child is the content view
+  val contentView: ViewGroup
+    get() = containerView.getChildAt(0) as ViewGroup
+
+  // 2nd child is the footer view
+  val footerView: ViewGroup
+    get() = containerView.getChildAt(1) as ViewGroup
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
   init {
     setContentView(rootSheetView)
 
-    sheetView = rootSheetView.parent as ViewGroup
-
-    sheetView.setBackgroundColor(backgroundColor)
-    sheetView.clipToOutline = true
+    sheetContainerView.setBackgroundColor(backgroundColor)
+    sheetContainerView.clipToOutline = true
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {
@@ -120,7 +131,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
     // Use current background color
     background.paint.color = backgroundColor
-    sheetView.background = background
+    sheetContainerView.background = background
   }
 
   /**
@@ -185,8 +196,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   fun positionFooter() {
-    footerView?.apply {
-      y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
+    footerView.apply {
+      y = (maxScreenHeight - sheetContainerView.top - footerHeight).toFloat()
     }
   }
 
