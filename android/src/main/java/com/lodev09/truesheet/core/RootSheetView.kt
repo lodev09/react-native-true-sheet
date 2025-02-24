@@ -86,7 +86,7 @@ class RootSheetView(private val context: Context?) :
   }
 
   @Deprecated("Deprecated in Java")
-  override fun onChildStartedNativeGesture(ev: MotionEvent?) {
+  override fun onChildStartedNativeGesture(ev: MotionEvent) {
     eventDispatcher?.let {
       if (ev != null) {
         jSTouchDispatcher.onChildStartedNativeGesture(ev, it)
@@ -94,7 +94,7 @@ class RootSheetView(private val context: Context?) :
     }
   }
 
-  override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
+  override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let { jSTouchDispatcher.onChildStartedNativeGesture(ev, it) }
     jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
   }
