@@ -178,8 +178,8 @@ class TrueSheetView(context: Context) :
 
     // Initialize content
     UiThreadUtil.runOnUiThread {
-      setContentHeight(sheetDialog.contentView.height)
-      setFooterHeight(sheetDialog.footerView.height)
+      sheetDialog.contentView?.height?.let { setContentHeight(it) }
+      sheetDialog.footerView?.height?.let { setFooterHeight(it) }
 
       if (initialIndex >= 0) {
         currentSizeIndex = initialIndex
