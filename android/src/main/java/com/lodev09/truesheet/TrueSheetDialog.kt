@@ -70,12 +70,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var backgroundColor: Int = Color.WHITE
 
   // 1st child is the content view
-  val contentView: ViewGroup
-    get() = containerView.getChildAt(0) as ViewGroup
+  val contentView: ViewGroup?
+    get() = containerView.getChildAt(0) as? ViewGroup
 
   // 2nd child is the footer view
-  val footerView: ViewGroup
-    get() = containerView.getChildAt(1) as ViewGroup
+  val footerView: ViewGroup?
+    get() = containerView.getChildAt(1) as? ViewGroup
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
@@ -196,7 +196,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   fun positionFooter() {
-    footerView.apply {
+    footerView?.apply {
       y = (maxScreenHeight - sheetContainerView.top - footerHeight).toFloat()
     }
   }
