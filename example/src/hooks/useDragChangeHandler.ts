@@ -2,22 +2,17 @@ import { useEvent, useHandler } from 'react-native-reanimated'
 import type { DependencyList } from 'react-native-reanimated/lib/typescript/hook'
 import type { DragChangeEvent, SizeInfo } from '@lodev09/react-native-true-sheet'
 
-type PageScrollHandler = (sizeInfo: SizeInfo, context: unknown) => void
+type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
 
 export const useDragChangeHandler = (
-  handler: PageScrollHandler,
+  handler: DragChangeHandler,
   dependencies: DependencyList = []
 ) => {
   const handlers = {
     onDragChange: handler,
   }
 
-  const { context, doDependenciesDiffer } = useHandler(
-    {
-      onDragChange: handler,
-    },
-    dependencies
-  )
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies)
 
   return useEvent<DragChangeEvent>(
     (event) => {

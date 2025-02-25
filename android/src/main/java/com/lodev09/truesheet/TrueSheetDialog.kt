@@ -26,9 +26,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   // First child of the rootSheetView
   private val containerView: ViewGroup?
     get() = if (rootSheetView.childCount > 0) {
-        rootSheetView.getChildAt(0) as? ViewGroup
+      rootSheetView.getChildAt(0) as? ViewGroup
     } else {
-        null
+      null
     }
 
   private val sheetContainerView: ViewGroup?
@@ -201,9 +201,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   fun positionFooter() {
     footerView?.let { footer ->
-        sheetContainerView?.let { container ->
-            footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
-        }
+      sheetContainerView?.let { container ->
+        footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
+      }
     }
   }
 
