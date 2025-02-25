@@ -21,22 +21,17 @@ You can checkout [example](https://github.com/lodev09/react-native-true-sheet/tr
 ```tsx
 import { useEvent, useHandler } from 'react-native-reanimated'
 
-type PageScrollHandler = (sizeInfo: SizeInfo, context: unknown) => void
+type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
 
 export const useDragChangeHandler = (
-  handler: PageScrollHandler,
+  handler: DragChangeHandler,
   dependencies: DependencyList = []
 ) => {
   const handlers = {
     onDragChange: handler,
   }
 
-  const { context, doDependenciesDiffer } = useHandler(
-    {
-      onDragChange: handler,
-    },
-    dependencies
-  )
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies)
 
   return useEvent<DragChangeEvent>(
     (event) => {
