@@ -24,7 +24,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private var windowAnimation: Int = 0
 
   // First child of the rootSheetView
-  private val containerView: ViewGroup?
+    private val containerView: ViewGroup?
       get() = if (rootSheetView.childCount > 0) {
           rootSheetView.getChildAt(0) as? ViewGroup
       } else {
@@ -206,7 +206,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         }
     }
   }
-
 
   /**
    * Set the state based for the given size index.
