@@ -24,15 +24,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private var windowAnimation: Int = 0
 
   // First child of the rootSheetView
-    private val containerView: ViewGroup?
-      get() = if (rootSheetView.childCount > 0) {
-          rootSheetView.getChildAt(0) as? ViewGroup
-      } else {
-          null
-      }
+  private val containerView: ViewGroup?
+    get() = if (rootSheetView.childCount > 0) {
+        rootSheetView.getChildAt(0) as? ViewGroup
+    } else {
+        null
+    }
 
   private val sheetContainerView: ViewGroup?
-      get() = rootSheetView.parent?.let { it as? ViewGroup }
+    get() = rootSheetView.parent?.let { it as? ViewGroup }
 
   /**
    * Specify whether the sheet background is dimmed.
