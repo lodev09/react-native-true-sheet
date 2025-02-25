@@ -24,11 +24,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private var windowAnimation: Int = 0
 
   // First child of the rootSheetView
-  private val containerView: ViewGroup
-    get() = rootSheetView.getChildAt(0) as ViewGroup
+  private val containerView: ViewGroup?
+      get() = if (rootSheetView.childCount > 0) {
+          rootSheetView.getChildAt(0) as? ViewGroup
+      } else {
+          null
+      }
 
-  private val sheetContainerView: ViewGroup
-    get() = rootSheetView.parent as ViewGroup
+  private val sheetContainerView: ViewGroup?
+      get() = rootSheetView.parent?.let { it as? ViewGroup }
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -71,19 +75,19 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   // 1st child is the content view
   val contentView: ViewGroup?
-    get() = containerView.getChildAt(0) as? ViewGroup
+    get() = containerView?.getChildAt(0) as? ViewGroup
 
   // 2nd child is the footer view
   val footerView: ViewGroup?
-    get() = containerView.getChildAt(1) as? ViewGroup
+    get() = containerView?.getChildAt(1) as? ViewGroup
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
   init {
     setContentView(rootSheetView)
 
-    sheetContainerView.setBackgroundColor(backgroundColor)
-    sheetContainerView.clipToOutline = true
+    sheetContainerView?.setBackgroundColor(backgroundColor)
+    sheetContainerView?.clipToOutline = true
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {
@@ -131,7 +135,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
     // Use current background color
     background.paint.color = backgroundColor
-    sheetContainerView.background = background
+    sheetContainerView?.background = background
   }
 
   /**
@@ -196,10 +200,13 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   fun positionFooter() {
-    footerView?.apply {
-      y = (maxScreenHeight - sheetContainerView.top - footerHeight).toFloat()
+    footerView?.let { footer ->
+        sheetContainerView?.let { container ->
+            footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
+        }
     }
   }
+
 
   /**
    * Set the state based for the given size index.
