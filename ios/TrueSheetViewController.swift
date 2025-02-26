@@ -20,6 +20,7 @@ protocol TrueSheetViewControllerDelegate: AnyObject {
   func viewControllerDidDismiss()
   func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?)
   func viewControllerWillAppear()
+  func viewControllerWillDisappear()
   func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat)
   func viewControllerKeyboardWillHide()
   func viewControllerDidDrag(_ state: UIPanGestureRecognizer.State, _ height: CGFloat)
@@ -142,6 +143,11 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     delegate?.viewControllerWillAppear()
+  }
+
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    delegate?.viewControllerWillDisappear()
   }
 
   override func viewDidDisappear(_ animated: Bool) {

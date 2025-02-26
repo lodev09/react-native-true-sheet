@@ -45,6 +45,7 @@ RCT_EXPORT_VIEW_PROPERTY(dimmed, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(dimmedIndex, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(initialIndex, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(initialIndexAnimated, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(dimmedAlpha, CGFloat)
 
 // Internal properties
 RCT_EXPORT_VIEW_PROPERTY(contentHeight, NSNumber)

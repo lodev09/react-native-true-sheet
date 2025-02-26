@@ -25,6 +25,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc var initialIndex: NSNumber = -1
   @objc var initialIndexAnimated = true
+  @objc var dimmedAlpha: CGFloat = 0.75
 
   // MARK: - Private properties
 
@@ -202,6 +203,18 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     // Add constraints to fix weirdness and support ScrollView
     contentView.pinTo(view: containerView, constraints: nil)
     scrollView.pinTo(view: contentView, constraints: nil)
+
+    if viewController.dimmed {
+      UIView.animate(withDuration: 0.3) {
+        self.viewController.presentingViewController?.view.alpha = self.dimmedAlpha
+      }
+    }
+  }
+
+  func viewControllerWillDisappear() {
+    UIView.animate(withDuration: 0.3) {
+      self.viewController.presentingViewController?.view.alpha = 1
+    }
   }
 
   func viewControllerDidDismiss() {

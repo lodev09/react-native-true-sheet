@@ -167,6 +167,13 @@ export interface TrueSheetProps extends ViewProps {
   dimmedIndex?: number
 
   /**
+   * The alpha value of the dimmed background.
+   *
+   * @default 0.75
+   */
+  dimmedAlpha?: number
+
+  /**
    * Prevents interactive dismissal of the Sheet.
    *
    * @default true
