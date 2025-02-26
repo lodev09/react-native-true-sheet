@@ -1214,7 +1214,7 @@ PODS:
     - React-Core
   - react-native-safe-area-context (5.2.0):
     - React-Core
-  - react-native-true-sheet (2.0.1):
+  - react-native-true-sheet (2.0.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1923,7 +1923,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 72564d5469003687d39bfc4efad281df8efc0684
   react-native-maps: ee1e65647460c3d41e778071be5eda10e3da6225
   react-native-safe-area-context: 849d7df29ecb2a7155c769c0b76849ba952c2aa3
-  react-native-true-sheet: e0f2b8f0ef57709f15474aed2527ad63975e3843
+  react-native-true-sheet: 7fb131224336979607e4d81c523e07f618ae3a71
   React-nativeconfig: cb207ebba7cafce30657c7ad9f1587a8f32e4564
   React-NativeModulesApple: 82a8bee52df9f5b378195a500f22be3a6ef0f890
   React-perflogger: 8152bab3f0eb4b8751f282f9af7caed2c823a9ea
