@@ -8,6 +8,11 @@
 
 @objc(TrueSheetView)
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
+  // MARK: - Static properties
+
+  // Keep track of active sheet opacity values (stack)
+  private static var sheetOpacityStack: [CGFloat] = []
+
   // MARK: - React properties
 
   // MARK: - Events
@@ -203,17 +208,38 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     // Add constraints to fix weirdness and support ScrollView
     contentView.pinTo(view: containerView, constraints: nil)
     scrollView.pinTo(view: contentView, constraints: nil)
+  }
 
-    if viewController.dimmed {
-      UIView.animate(withDuration: 0.3) {
-        self.viewController.presentingViewController?.view.alpha = self.dimmedAlpha
+  func viewControllerDidAppear() {
+    // Add this sheet's opacity to the stack
+    TrueSheetView.sheetOpacityStack.append(dimmedAlpha)
+
+    // Dim root view controller
+    UIView.animate(withDuration: 0.3) {
+      if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+        rootViewController.view.alpha = self.dimmedAlpha
       }
     }
   }
 
   func viewControllerWillDisappear() {
-    UIView.animate(withDuration: 0.3) {
-      self.viewController.presentingViewController?.view.alpha = 1
+    if viewController.isBeingDismissed {
+      // Remove the topmost opacity value (which should be this sheet's)
+      if !TrueSheetView.sheetOpacityStack.isEmpty {
+        TrueSheetView.sheetOpacityStack.removeLast()
+      }
+
+      UIView.animate(withDuration: 0.3) {
+        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+          // If there are still active sheets, apply the alpha of the topmost one
+          if let topmostOpacity = TrueSheetView.sheetOpacityStack.last {
+            rootViewController.view.alpha = topmostOpacity
+          } else {
+            // If no sheets are left, restore alpha to 1
+            rootViewController.view.alpha = 1
+          }
+        }
+      }
     }
   }
 
