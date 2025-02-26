@@ -45,7 +45,7 @@ def supportsNamespace() {
 
 android {
   if (supportsNamespace()) {
-    namespace "com.truesheet"
+    namespace "com.lodev09.truesheet"
 
     sourceSets {
       main {
