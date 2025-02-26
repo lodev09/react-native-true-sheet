@@ -211,19 +211,22 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerDidAppear() {
-    // Add this sheet's opacity to the stack
-    TrueSheetView.sheetOpacityStack.append(dimmedAlpha)
-
-    // Dim root view controller
-    UIView.animate(withDuration: 0.3) {
-      if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
-        rootViewController.view.alpha = self.dimmedAlpha
+    // Only apply dimming if the sheet has dimmed property set to true
+    if viewController.dimmed {
+      // Add this sheet's opacity to the stack
+      TrueSheetView.sheetOpacityStack.append(dimmedAlpha)
+      
+      // Dim root view controller
+      UIView.animate(withDuration: 0.3) {
+        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+          rootViewController.view.alpha = self.dimmedAlpha
+        }
       }
     }
   }
 
   func viewControllerWillDisappear() {
-    if viewController.isBeingDismissed {
+    if viewController.isBeingDismissed && viewController.dimmed {
       // Remove the topmost opacity value (which should be this sheet's)
       if !TrueSheetView.sheetOpacityStack.isEmpty {
         TrueSheetView.sheetOpacityStack.removeLast()
