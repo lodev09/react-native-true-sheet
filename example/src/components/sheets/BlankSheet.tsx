@@ -1,5 +1,5 @@
 import { forwardRef, type Ref } from 'react'
-import { StyleSheet, Text } from 'react-native'
+import { Text, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { $WHITE_TEXT, DARK, SPACING } from '../../utils'
@@ -16,7 +16,7 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
       edgeToEdge
       backgroundColor={DARK}
       keyboardMode="pan"
-      contentContainerStyle={styles.content}
+      contentContainerStyle={$content}
       {...props}
     >
       <Text style={$WHITE_TEXT}>Blank Sheet</Text>
@@ -24,10 +24,8 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
   )
 })
 
-BlankSheet.displayName = 'BlankSheet'
+const $content: ViewStyle = {
+  padding: SPACING,
+}
 
-const styles = StyleSheet.create({
-  content: {
-    padding: SPACING,
-  },
-})
+BlankSheet.displayName = 'BlankSheet'
