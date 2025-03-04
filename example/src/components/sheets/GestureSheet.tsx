@@ -67,7 +67,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       FooterComponent={<Footer />}
       {...props}
     >
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flexGrow: 1 }}>
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.panContainer, $animatedContainer]}>
             {times(BOXES_COUNT, (i) => (

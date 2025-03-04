@@ -16,15 +16,19 @@ On Android, [RNGH does not work](https://docs.swmansion.com/react-native-gesture
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 ```
 
-```tsx
+```tsx {3-5}
 return (
   <TrueSheet ref={sheet}>
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flexGrow: 1 }}>
       <View />
     </GestureHandlerRootView>
   </TrueSheet>
 )
 ```
+
+:::info
+Note that we are using `flexGrow` instead of `flex` here. For some weird reason, `flex` does not work correctly. See [below](#weird-layout-render).
+:::
 
 ## React Navigation
 
@@ -35,7 +39,7 @@ return (
 On IOS, navigating to a screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
 
 Example:
-```tsx
+```tsx {4-5}
 const sheet = useRef<TrueSheet>(null)
 
 const navigate = async () => {
