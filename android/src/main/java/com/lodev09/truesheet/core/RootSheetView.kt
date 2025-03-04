@@ -99,9 +99,4 @@ class RootSheetView(private val context: Context?) :
     eventDispatcher?.let { jSTouchDispatcher.onChildEndedNativeGesture(ev, it) }
     jSPointerDispatcher?.onChildEndedNativeGesture()
   }
-
-  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-    // No-op - override in order to still receive events to onInterceptTouchEvent
-    // even when some other view disallow that
-  }
 }
