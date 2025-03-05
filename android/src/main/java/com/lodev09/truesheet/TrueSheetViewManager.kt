@@ -54,6 +54,11 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setDimmed(dimmed)
   }
 
+  @ReactProp(name = "dimmedAlpha")
+  fun setDimmedAlpha(view: TrueSheetView, alpha: Float) {
+    view.setDimmedAlpha(alpha)
+  }
+
   @ReactProp(name = "initialIndex")
   fun setInitialIndex(view: TrueSheetView, index: Int) {
     view.initialIndex = index
