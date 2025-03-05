@@ -9,7 +9,8 @@ cd example/android
 cd ../..
 
 echo "[Removing temp directories]"
-del-cli android/build example/android/build example/android/app/build example/ios/build lib
+del-cli android/build example/android/build example/android/app/build example/ios/build
 
 echo "[Installing pods]"
 npx pod-install example
+bob build
