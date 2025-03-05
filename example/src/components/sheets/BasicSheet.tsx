@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { StyleSheet } from 'react-native'
+import { type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { DARK, DARK_BLUE, GRABBER_COLOR, SPACING } from '../../utils'
@@ -44,7 +44,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
     <TrueSheet
       sizes={['auto', '80%', 'large']}
       ref={sheetRef}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={$content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
@@ -92,7 +92,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         ref={childSheet}
         sizes={['auto']}
         backgroundColor={DARK}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={$content}
         FooterComponent={<Footer />}
       >
         <DemoContent color={DARK_BLUE} />
@@ -104,10 +104,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   )
 })
 
-BasicSheet.displayName = 'BasicSheet'
+const $content: ViewStyle = {
+  padding: SPACING,
+}
 
-const styles = StyleSheet.create({
-  content: {
-    padding: SPACING,
-  },
-})
+BasicSheet.displayName = 'BasicSheet'

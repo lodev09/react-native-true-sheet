@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.Utils
@@ -19,7 +20,19 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
-    view.onHostDestroy()
+    view.onDropInstance()
+  }
+
+  override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
+    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
+    dispatcher?.let {
+      view.eventDispatcher = it
+    }
+  }
+
+  override fun onAfterUpdateTransaction(view: TrueSheetView) {
+    super.onAfterUpdateTransaction(view)
+    view.configureIfShowing()
   }
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
