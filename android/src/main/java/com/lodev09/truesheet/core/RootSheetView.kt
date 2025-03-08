@@ -88,7 +88,7 @@ class RootSheetView(private val context: Context?) :
     return super.onHoverEvent(event)
   }
 
-  override fun onChildStartedNativeGesture(childView: View, ev: MotionEvent) {
+  override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
       jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
