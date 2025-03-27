@@ -19,13 +19,18 @@ import com.lodev09.truesheet.core.Utils
 class TrueSheetView(context: Context) :
   ViewGroup(context),
   LifecycleEventListener {
-  private var eventDispatcher: EventDispatcher? = null
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
 
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
+
+  var eventDispatcher: EventDispatcher?
+    get() = rootSheetView.eventDispatcher
+    set(eventDispatcher) {
+      rootSheetView.eventDispatcher = eventDispatcher
+    }
 
   var initialIndex: Int = -1
   var initialIndexAnimated: Boolean = true
@@ -62,11 +67,8 @@ class TrueSheetView(context: Context) :
 
   init {
     reactContext.addLifecycleEventListener(this)
-    eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
 
     rootSheetView = RootSheetView(context)
-    rootSheetView.eventDispatcher = eventDispatcher
-
     sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
 
     // Configure Sheet Dialog
@@ -173,6 +175,13 @@ class TrueSheetView(context: Context) :
     // Do nothing as we are laid out by UIManager
   }
 
+  override fun setId(id: Int) {
+    super.setId(id)
+
+    // Forward the ID to our content view, so event dispatching behaves correctly
+    rootSheetView.id = id
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
 
@@ -193,7 +202,7 @@ class TrueSheetView(context: Context) :
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    sheetDialog.dismiss()
+    onDropInstance()
   }
 
   override fun addView(child: View, index: Int) {
@@ -219,7 +228,6 @@ class TrueSheetView(context: Context) :
 
   override fun removeViewAt(index: Int) {
     UiThreadUtil.assertOnUiThread()
-
     val child = getChildAt(index)
     rootSheetView.removeView(child)
   }
@@ -229,14 +237,12 @@ class TrueSheetView(context: Context) :
     // Those will be handled by the rootView which lives in the dialog
   }
 
-  override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean {
-    // Explicitly override this to prevent accessibility events being passed down to children
-    // Those will be handled by the rootView which lives in the dialog
-    return false
-  }
+  // Explicitly override this to prevent accessibility events being passed down to children
+  // Those will be handled by the mHostView which lives in the dialog
+  public override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
 
   override fun onHostResume() {
-    // do nothing
+    configureIfShowing()
   }
 
   override fun onHostPause() {
@@ -245,6 +251,10 @@ class TrueSheetView(context: Context) :
 
   override fun onHostDestroy() {
     // Drop the instance if the host is destroyed which will dismiss the dialog
+    onDropInstance()
+  }
+
+  fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
     sheetDialog.dismiss()
   }
@@ -310,7 +320,7 @@ class TrueSheetView(context: Context) :
     eventDispatcher?.dispatchEvent(TrueSheetEvent(surfaceId, id, name, data))
   }
 
-  private fun configureIfShowing() {
+  fun configureIfShowing() {
     if (sheetDialog.isShowing) {
       sheetDialog.configure()
       sheetDialog.positionFooter()

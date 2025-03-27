@@ -12,14 +12,14 @@
   "dependencies": {
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
-    "react": "18.3.1",
-    "react-native": "0.77.1",
+    "react": "19.0.0",
+    "react-native": "0.78.0",
     "react-native-edge-to-edge": "^1.4.3",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-maps": "^1.20.1",
-    "react-native-reanimated": "^3.16.7",
-    "react-native-safe-area-context": "^5.2.0",
-    "react-native-screens": "^4.6.0"
+    "react-native-reanimated": "^3.17.1",
+    "react-native-safe-area-context": "^5.3.0",
+    "react-native-screens": "^4.9.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -28,10 +28,10 @@
     "@react-native-community/cli": "15.0.1",
     "@react-native-community/cli-platform-android": "15.0.1",
     "@react-native-community/cli-platform-ios": "15.0.1",
-    "@react-native/babel-preset": "0.77.1",
-    "@react-native/metro-config": "0.77.1",
-    "@react-native/typescript-config": "0.77.1",
-    "react-native-builder-bob": "^0.37.0"
+    "@react-native/babel-preset": "0.78.0",
+    "@react-native/metro-config": "0.78.0",
+    "@react-native/typescript-config": "0.78.0",
+    "react-native-builder-bob": "^0.36.0"
   },
   "engines": {
     "node": ">=18"
