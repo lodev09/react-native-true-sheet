@@ -201,6 +201,18 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerWillAppear() {
+    // Only apply dimming if the sheet has dimmed property set to true
+    if viewController.dimmed {
+      let opacity = 1 - dimmedAlpha
+      // Add this sheet's opacity to the stack and dim root view controller
+      TrueSheetView.sheetOpacityStack.append(opacity)
+      UIView.animate(withDuration: 0.3) {
+        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+          rootViewController.view.alpha = opacity
+        }
+      }
+    }
+
     guard let contentView, let scrollView, let containerView else {
       return
     }
@@ -208,19 +220,6 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     // Add constraints to fix weirdness and support ScrollView
     contentView.pinTo(view: containerView, constraints: nil)
     scrollView.pinTo(view: contentView, constraints: nil)
-  }
-
-  func viewControllerDidAppear() {
-    // Only apply dimming if the sheet has dimmed property set to true
-    if viewController.dimmed {
-      // Add this sheet's opacity to the stack and dim root view controller
-      TrueSheetView.sheetOpacityStack.append(dimmedAlpha)
-      UIView.animate(withDuration: 0.3) {
-        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
-          rootViewController.view.alpha = self.dimmedAlpha
-        }
-      }
-    }
   }
 
   func viewControllerWillDisappear() {
