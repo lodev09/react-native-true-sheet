@@ -109,7 +109,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   @ReactProp(name = "background")
   fun setBackground(view: TrueSheetView, colorName: Double) {
-    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrDefault(Color.WHITE)
+    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrNull() ?: Color.WHITE
     view.setBackground(color)
   }
 
