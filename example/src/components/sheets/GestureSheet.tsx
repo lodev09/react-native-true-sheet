@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { useWindowDimensions, type ViewStyle } from 'react-native'
+import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -49,7 +49,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     <TrueSheet
       sizes={['auto']}
       ref={sheetRef}
-      contentContainerStyle={$content}
+      contentContainerStyle={styles.content}
       blurTint="dark"
       edgeToEdge
       backgroundColor={DARK}
@@ -67,11 +67,11 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       FooterComponent={<Footer />}
       {...props}
     >
-      <GestureHandlerRootView style={$gestureRoot}>
+      <GestureHandlerRootView style={styles.gestureRoot}>
         <GestureDetector gesture={pan}>
-          <Animated.View style={[$panContainer, $animatedContainer]}>
+          <Animated.View style={[styles.panContainer, $animatedContainer]}>
             {times(BOXES_COUNT, (i) => (
-              <DemoContent key={i} text={String(i + 1)} style={$box} />
+              <DemoContent key={i} text={String(i + 1)} style={styles.box} />
             ))}
           </Animated.View>
         </GestureDetector>
@@ -81,28 +81,27 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
   )
 })
 
-const $gestureRoot: ViewStyle = {
-  flexGrow: 1,
-}
-
-const $box: ViewStyle = {
-  alignItems: 'center',
-  backgroundColor: DARK_GRAY,
-  height: BOX_SIZE,
-  justifyContent: 'center',
-  width: BOX_SIZE,
-}
-
-const $content: ViewStyle = {
-  padding: SPACING,
-}
-
-const $panContainer: ViewStyle = {
-  flexDirection: 'row',
-  gap: BOX_GAP,
-  height: CONTAINER_HEIGHT,
-  marginBottom: SPACING,
-  paddingVertical: SPACING,
-}
+const styles = StyleSheet.create({
+  gestureRoot: {
+    flexGrow: 1,
+  },
+  box: {
+    alignItems: 'center',
+    backgroundColor: DARK_GRAY,
+    height: BOX_SIZE,
+    justifyContent: 'center',
+    width: BOX_SIZE,
+  },
+  content: {
+    padding: SPACING,
+  },
+  panContainer: {
+    flexDirection: 'row',
+    gap: BOX_GAP,
+    height: CONTAINER_HEIGHT,
+    marginBottom: SPACING,
+    paddingVertical: SPACING,
+  },
+})
 
 GestureSheet.displayName = 'GestureSheet'
