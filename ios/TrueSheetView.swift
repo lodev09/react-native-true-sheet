@@ -8,6 +8,11 @@
 
 @objc(TrueSheetView)
 class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
+  // MARK: - Static properties
+
+  // Keep track of active sheet opacity values (stack)
+  private static var sheetOpacityStack: [CGFloat] = []
+
   // MARK: - React properties
 
   // MARK: - Events
@@ -25,6 +30,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
 
   @objc var initialIndex: NSNumber = -1
   @objc var initialIndexAnimated = true
+  @objc var dimmedAlpha: CGFloat = 0.75
 
   // MARK: - Private properties
 
@@ -195,6 +201,18 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
   }
 
   func viewControllerWillAppear() {
+    // Only apply dimming if the sheet has dimmed property set to true
+    if viewController.dimmed {
+      let opacity = 1 - dimmedAlpha
+      // Add this sheet's opacity to the stack and dim root view controller
+      TrueSheetView.sheetOpacityStack.append(opacity)
+      UIView.animate(withDuration: 0.3) {
+        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+          rootViewController.view.alpha = opacity
+        }
+      }
+    }
+
     guard let contentView, let scrollView, let containerView else {
       return
     }
@@ -202,6 +220,26 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     // Add constraints to fix weirdness and support ScrollView
     contentView.pinTo(view: containerView, constraints: nil)
     scrollView.pinTo(view: contentView, constraints: nil)
+  }
+
+  func viewControllerWillDisappear() {
+    if viewController.isBeingDismissed && viewController.dimmed {
+      if !TrueSheetView.sheetOpacityStack.isEmpty {
+        TrueSheetView.sheetOpacityStack.removeLast()
+      }
+
+      UIView.animate(withDuration: 0.3) {
+        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+          // If there are still active sheets, apply the alpha of the topmost one
+          if let topmostOpacity = TrueSheetView.sheetOpacityStack.last {
+            rootViewController.view.alpha = topmostOpacity
+          } else {
+            // If no sheets are left, restore alpha to 1
+            rootViewController.view.alpha = 1
+          }
+        }
+      }
+    }
   }
 
   func viewControllerDidDismiss() {

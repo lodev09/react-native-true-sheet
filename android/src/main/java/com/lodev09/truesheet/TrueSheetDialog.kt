@@ -2,11 +2,13 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -22,6 +24,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
+
+  // Custom dimming overlay view
+  private var dimmingView: View? = null
 
   // First child of the rootSheetView
   private val containerView: ViewGroup?
@@ -39,12 +44,27 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Set to `false` to allow interaction with the background components.
    */
   var dimmed = true
+    set(value) {
+      field = value
+      updateDimmingView()
+    }
 
   /**
    * The size index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    */
   var dimmedIndex = 0
+
+  /**
+   * The alpha value of the dimmed background.
+   *
+   * @default 0.75f
+   */
+  var dimmedAlpha = 0.75f
+    set(value) {
+      field = value
+      updateDimmingView()
+    }
 
   /**
    * The maximum window height
@@ -93,10 +113,56 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     window?.apply {
       // Store current windowAnimation value to toggle later
       windowAnimation = attributes.windowAnimations
+
+      // Disable default dimming
+      clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
     }
+
+    // Create and add our custom dimming view
+    createDimmingView()
 
     // Update the usable sheet height
     maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
+  }
+
+  /**
+   * Create and add a custom dimming view to the dialog
+   */
+  private fun createDimmingView() {
+    // Get the content view of the dialog
+    val decorView = window?.decorView as? ViewGroup
+    val contentView = decorView?.findViewById<FrameLayout>(android.R.id.content)
+
+    // Create a new view for dimming
+    dimmingView = View(context).apply {
+      layoutParams = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.MATCH_PARENT
+      )
+      background = ColorDrawable(Color.BLACK)
+      alpha = if (dimmed) dimmedAlpha else 0f
+      visibility = if (dimmed) View.VISIBLE else View.GONE
+      elevation = -1f // Make sure it's below other content
+
+      // Add the view at index 0 so it's behind everything else
+      contentView?.addView(this, 0)
+
+      // Make sure it's behind the sheet
+      bringToFront()
+    }
+
+    // Make sure the sheet is on top of the dimming view
+    rootSheetView.bringToFront()
+  }
+
+  /**
+   * Update the dimming view based on current settings
+   */
+  private fun updateDimmingView() {
+    dimmingView?.apply {
+      alpha = if (dimmed) dimmedAlpha else 0f
+      visibility = if (dimmed) View.VISIBLE else View.GONE
+    }
   }
 
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
@@ -114,6 +180,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
       }
     }
+
+    // Make sure dimming is applied
+    updateDimmingView()
   }
 
   /**
@@ -150,11 +219,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         // Remove touch listener
         view.setOnTouchListener(null)
 
-        // Add the dimmed background
-        setFlags(
-          WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-          WindowManager.LayoutParams.FLAG_DIM_BEHIND
-        )
+        // Show dimming view with the specified alpha
+        dimmingView?.visibility = View.VISIBLE
+        dimmingView?.alpha = dimmedAlpha
 
         setCanceledOnTouchOutside(dismissible)
       } else {
@@ -165,8 +232,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           false
         }
 
-        // Remove the dimmed background
-        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        // Hide our custom dimming view
+        dimmingView?.visibility = View.GONE
 
         setCanceledOnTouchOutside(false)
       }
@@ -183,11 +250,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Present the sheet.
    */
   fun present(sizeIndex: Int, animated: Boolean = true) {
-    setupDimmedBackground(sizeIndex)
     if (isShowing) {
+      setupDimmedBackground(sizeIndex)
       setStateForSizeIndex(sizeIndex)
     } else {
       configure()
+      setupDimmedBackground(sizeIndex)
       setStateForSizeIndex(sizeIndex)
 
       if (!animated) {
@@ -196,6 +264,14 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       }
 
       show()
+
+      // Ensure dimming is applied after showing
+      if (dimmed && sizeIndex >= dimmedIndex) {
+        dimmingView?.visibility = View.VISIBLE
+        dimmingView?.alpha = dimmedAlpha
+      } else {
+        dimmingView?.visibility = View.GONE
+      }
     }
   }
 
