@@ -52,6 +52,28 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var maxScreenHeight = 0
 
   var contentHeight = 0
+    set(value) {
+      val oldValue = field
+      field = value
+      
+      // If height changed and using auto size, reconfigure
+      if (oldValue != value && sizes.size == 1 && sizes[0] == "auto" && isShowing) {        
+        // Force a layout update
+        sheetContainerView?.let { container ->
+          val params = container.layoutParams
+          params.height = value + footerHeight
+          container.layoutParams = params
+        }
+        
+        configure()
+        
+        // Force expanded state to ensure proper height
+        behavior.apply {
+          maxHeight = value + footerHeight
+          state = BottomSheetBehavior.STATE_EXPANDED
+        }
+      }
+    }
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
