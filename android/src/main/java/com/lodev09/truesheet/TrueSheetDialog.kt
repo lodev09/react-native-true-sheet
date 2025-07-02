@@ -52,6 +52,20 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var maxScreenHeight = 0
 
   var contentHeight = 0
+    set(value) {
+      val oldValue = field
+      field = value
+
+      // If height changed and using auto size, reconfigure
+      if (oldValue != value && sizes.size == 1 && sizes[0] == "auto" && isShowing) {
+        // Force expanded state to ensure proper height
+
+        behavior.apply {
+          setPeekHeight(value + footerHeight, true)
+          state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+      }
+    }
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
@@ -263,29 +277,35 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Determines the state based from the given size index.
    */
-  private fun getStateForSizeIndex(index: Int) =
-    when (sizes.size) {
-      1 -> BottomSheetBehavior.STATE_EXPANDED
+  private fun getStateForSizeIndex(index: Int): Int {
+      return when (sizes.size) {
+          1 -> {
+              if (sizes[0] == "auto") {
+                  return BottomSheetBehavior.STATE_COLLAPSED
+              }
+              return BottomSheetBehavior.STATE_EXPANDED
+          }
 
-      2 -> {
-        when (index) {
-          0 -> BottomSheetBehavior.STATE_COLLAPSED
-          1 -> BottomSheetBehavior.STATE_EXPANDED
+          2 -> {
+              when (index) {
+                  0 -> BottomSheetBehavior.STATE_COLLAPSED
+                  1 -> BottomSheetBehavior.STATE_EXPANDED
+                  else -> BottomSheetBehavior.STATE_HIDDEN
+              }
+          }
+
+          3 -> {
+              when (index) {
+                  0 -> BottomSheetBehavior.STATE_COLLAPSED
+                  1 -> BottomSheetBehavior.STATE_HALF_EXPANDED
+                  2 -> BottomSheetBehavior.STATE_EXPANDED
+                  else -> BottomSheetBehavior.STATE_HIDDEN
+              }
+          }
+
           else -> BottomSheetBehavior.STATE_HIDDEN
-        }
       }
-
-      3 -> {
-        when (index) {
-          0 -> BottomSheetBehavior.STATE_COLLAPSED
-          1 -> BottomSheetBehavior.STATE_HALF_EXPANDED
-          2 -> BottomSheetBehavior.STATE_EXPANDED
-          else -> BottomSheetBehavior.STATE_HIDDEN
-        }
-      }
-
-      else -> BottomSheetBehavior.STATE_HIDDEN
-    }
+  }
 
   /**
    * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
@@ -329,8 +349,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       when (sizes.size) {
         1 -> {
-          maxHeight = getSizeHeight(sizes[0])
-          skipCollapsed = true
+          if (sizes[0] == "auto") {
+            setPeekHeight(getSizeHeight(sizes[0]), true)
+          } else {
+            maxHeight = getSizeHeight(sizes[0])
+            skipCollapsed = true
+          }
         }
 
         2 -> {
@@ -358,6 +382,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     when (sizes.size) {
       1 -> {
         when (state) {
+          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
           BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
           else -> null
         }
