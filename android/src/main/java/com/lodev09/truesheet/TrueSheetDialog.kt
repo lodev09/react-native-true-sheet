@@ -51,6 +51,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    */
   var maxScreenHeight = 0
 
+  private var autoHeightFixCallback: BottomSheetBehavior.BottomSheetCallback =
+    object: BottomSheetBehavior.BottomSheetCallback() {
+    override fun onStateChanged(bottomSheet: View, newState: Int) {
+    }
+
+    override fun onSlide(bottomSheet: View, slideOffset: Float) {
+    }
+  }
+
   var contentHeight = 0
     set(value) {
       val oldValue = field
@@ -59,19 +68,37 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       // If height changed and using auto size, reconfigure
       if (oldValue != value && sizes.size == 1 && sizes[0] == "auto" && isShowing) {
         // Force expanded state to ensure proper height
+        behavior.removeBottomSheetCallback(autoHeightFixCallback)
+        autoHeightFixCallback = object: BottomSheetBehavior.BottomSheetCallback() {
+          var executed = false
+          override fun onStateChanged(bottomSheet: View, newState: Int) {
+          }
+          override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            if (!executed && slideOffset == 0.0f) {
+              executed = true
+              rootSheetView.let { container ->
+                val params = container.layoutParams
+                params.height = value + footerHeight
+                container.layoutParams = params
+              }
+            }
+          }
+        }
+
+        behavior.addBottomSheetCallback(autoHeightFixCallback)
 
         behavior.apply {
           setPeekHeight(value + footerHeight, true)
           state = BottomSheetBehavior.STATE_COLLAPSED
         }
 
-        rootSheetView.let { container ->
-          val params = container.layoutParams
-          // +1 is important to be just 1 pixel larger than peekheight to animate
-          params.height = value + footerHeight + 1
-          container.layoutParams = params
+        if (oldValue < value) {
+          rootSheetView.let { container ->
+            val params = container.layoutParams
+            params.height = -2
+            container.layoutParams = params
+          }
         }
-
       }
     }
   var footerHeight = 0
