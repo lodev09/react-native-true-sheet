@@ -65,6 +65,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       val oldValue = field
       field = value
 
+      val sheetDraggable = behavior.isDraggable
       // If height changed and using auto size, reconfigure
       if (oldValue != value && sizes.size == 1 && sizes[0] == "auto" && isShowing) {
         // Force expanded state to ensure proper height
@@ -76,6 +77,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           override fun onSlide(bottomSheet: View, slideOffset: Float) {
             if (!executed && slideOffset == 0.0f) {
               executed = true
+              behavior.isDraggable = sheetDraggable
               rootSheetView.let { container ->
                 val params = container.layoutParams
                 params.height = value + footerHeight
@@ -88,6 +90,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         behavior.addBottomSheetCallback(autoHeightFixCallback)
 
         behavior.apply {
+          isDraggable = false
           setPeekHeight(value + footerHeight, true)
           state = BottomSheetBehavior.STATE_COLLAPSED
         }
