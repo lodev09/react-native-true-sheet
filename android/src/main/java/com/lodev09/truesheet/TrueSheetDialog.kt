@@ -357,10 +357,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       when (sizes.size) {
         1 -> {
-          maxHeight = getSizeHeight(sizes[0])
           if (sizes[0] == "auto") {
             setPeekHeight(getSizeHeight(sizes[0]), true)
+            rootSheetView.let { container ->
+            val params = container.layoutParams
+            params.height = getSizeHeight(sizes[0])
+            container.layoutParams = params
+          }
           } else {
+            maxHeight = getSizeHeight(sizes[0])
             skipCollapsed = true
           }
         }
