@@ -61,49 +61,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   var contentHeight = 0
-    set(value) {
-      val oldValue = field
-      field = value
-
-      val sheetDraggable = behavior.isDraggable
-      // If height changed and using auto size, reconfigure
-      if (oldValue != value && sizes.size == 1 && sizes[0] == "auto" && isShowing) {
-        // Force expanded state to ensure proper height
-        behavior.removeBottomSheetCallback(autoHeightFixCallback)
-        autoHeightFixCallback = object: BottomSheetBehavior.BottomSheetCallback() {
-          var executed = false
-          override fun onStateChanged(bottomSheet: View, newState: Int) {
-          }
-          override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            if (!executed && slideOffset == 0.0f) {
-              executed = true
-              behavior.isDraggable = sheetDraggable
-              rootSheetView.let { container ->
-                val params = container.layoutParams
-                params.height = value + footerHeight
-                container.layoutParams = params
-              }
-            }
-          }
-        }
-
-        behavior.addBottomSheetCallback(autoHeightFixCallback)
-
-        behavior.apply {
-          isDraggable = false
-          setPeekHeight(value + footerHeight, true)
-          state = BottomSheetBehavior.STATE_COLLAPSED
-        }
-
-        if (oldValue < value) {
-          rootSheetView.let { container ->
-            val params = container.layoutParams
-            params.height = -2
-            container.layoutParams = params
-          }
-        }
-      }
-    }
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
@@ -262,7 +219,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Set the state based for the given size index.
    */
-  private fun setStateForSizeIndex(index: Int) {
+  fun setStateForSizeIndex(index: Int) {
     behavior.state = getStateForSizeIndex(index)
   }
 
@@ -318,9 +275,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private fun getStateForSizeIndex(index: Int): Int {
       return when (sizes.size) {
           1 -> {
-              if (sizes[0] == "auto") {
-                  return BottomSheetBehavior.STATE_COLLAPSED
-              }
               return BottomSheetBehavior.STATE_EXPANDED
           }
 
@@ -387,16 +341,16 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       when (sizes.size) {
         1 -> {
+          maxHeight = getSizeHeight(sizes[0])
+          skipCollapsed = true
+
           if (sizes[0] == "auto") {
-            setPeekHeight(getSizeHeight(sizes[0]), true)
-            rootSheetView.let { container ->
-            val params = container.layoutParams
-            params.height = getSizeHeight(sizes[0])
-            container.layoutParams = params
-          }
-          } else {
-            maxHeight = getSizeHeight(sizes[0])
-            skipCollapsed = true
+            // Force a layout update
+            sheetContainerView?.let {
+              val params = it.layoutParams
+              params.height = maxHeight
+              it.layoutParams = params
+            }
           }
         }
 

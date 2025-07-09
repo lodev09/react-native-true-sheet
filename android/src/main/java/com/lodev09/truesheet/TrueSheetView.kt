@@ -324,7 +324,11 @@ class TrueSheetView(context: Context) :
   fun configureIfShowing() {
     if (sheetDialog.isShowing) {
       sheetDialog.configure()
-      sheetDialog.positionFooter()
+      sheetDialog.setStateForSizeIndex(currentSizeIndex)
+
+      UiThreadUtil.runOnUiThread {
+        sheetDialog.positionFooter()
+      }
     }
   }
 
