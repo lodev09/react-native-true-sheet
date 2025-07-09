@@ -2,25 +2,23 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RoundRectShape
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.drawable.toDrawable
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.lodev09.truesheet.core.KeyboardManager
-import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 
 data class SizeInfo(val index: Int, val value: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
+class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: ViewGroup) :
   BottomSheetDialog(reactContext) {
 
-  private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
   // First child of the rootSheetView
@@ -31,8 +29,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       null
     }
 
-  private val sheetContainerView: ViewGroup?
-    get() = rootSheetView.parent?.let { it as? ViewGroup }
+  val sheetContainerView: ViewGroup?
+    get() = proxyView.parent?.let { it as? ViewGroup }
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -52,6 +50,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var maxScreenHeight = 0
 
   var contentHeight = 0
+  var headerHeight = 0
   var footerHeight = 0
   var maxSheetHeight: Int? = null
 
@@ -70,24 +69,25 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       behavior.isHideable = value
     }
 
-  var cornerRadius: Float = 0f
-  var backgroundColor: Int = Color.WHITE
-
-  // 1st child is the content view
-  val contentView: ViewGroup?
+  // 1st child is the header view
+  val headerView: ViewGroup?
     get() = containerView?.getChildAt(0) as? ViewGroup
 
-  // 2nd child is the footer view
-  val footerView: ViewGroup?
+  // 2nd child is the content view
+  val contentView: ViewGroup?
     get() = containerView?.getChildAt(1) as? ViewGroup
+
+  // 3rd child is the footer view
+  val footerView: ViewGroup?
+    get() = containerView?.getChildAt(2) as? ViewGroup
 
   var sizes: Array<Any> = arrayOf("medium", "large")
 
-  init {
-    setContentView(rootSheetView)
+  private val proxyView = ConstraintLayout(reactContext)
 
-    sheetContainerView?.setBackgroundColor(backgroundColor)
-    sheetContainerView?.clipToOutline = true
+  init {
+    proxyView.addView(rootSheetView)
+    setContentView(proxyView)
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {
@@ -99,43 +99,35 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
   }
 
+  fun getVisibleContentDimensions() : Rect {
+    val rect = Rect()
+    proxyView.getGlobalVisibleRect(rect)
+    return rect
+  }
+
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 
   override fun onStart() {
     super.onStart()
 
+    // We don't want any of the background to be rendered, it should be completely
+    // handled by the React side of things.
+    val transparent = Color.TRANSPARENT.toDrawable()
+    sheetContainerView?.background = transparent
+    proxyView.background = transparent
+    rootSheetView.background = transparent
+
     if (edgeToEdge) {
+      super.getEdgeToEdgeEnabled()
+
       window?.apply {
         setFlags(
           WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
           WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
-
         decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
       }
     }
-  }
-
-  /**
-   * Setup background color and corner radius.
-   */
-  fun setupBackground() {
-    val outerRadii = floatArrayOf(
-      cornerRadius,
-      cornerRadius,
-      cornerRadius,
-      cornerRadius,
-      0f,
-      0f,
-      0f,
-      0f
-    )
-
-    val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
-
-    // Use current background color
-    background.paint.color = backgroundColor
-    sheetContainerView?.background = background
   }
 
   /**
@@ -199,14 +191,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
   }
 
-  fun positionFooter() {
-    footerView?.let { footer ->
-      sheetContainerView?.let { container ->
-        footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
-      }
-    }
-  }
-
   /**
    * Set the state based for the given size index.
    */
@@ -226,7 +210,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
         is String -> {
           when (size) {
-            "auto" -> contentHeight + footerHeight
+            "auto" -> minOf(contentHeight + headerHeight + footerHeight, maxScreenHeight*10/9)
 
             "large" -> maxScreenHeight
 
@@ -288,34 +272,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
 
   /**
-   * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
-   * Also update footer's Y position.
-   */
-  fun registerKeyboardManager() {
-    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
-      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
-        maxScreenHeight = when (isVisible) {
-          true -> visibleHeight ?: 0
-          else -> Utils.screenHeight(reactContext, edgeToEdge)
-        }
-
-        positionFooter()
-      }
-    })
-  }
-
-  fun setOnSizeChangeListener(listener: (w: Int, h: Int) -> Unit) {
-    rootSheetView.sizeChangeListener = listener
-  }
-
-  /**
-   * Remove keyboard listener.
-   */
-  fun unregisterKeyboardManager() {
-    keyboardManager.unregisterKeyboardListener()
-  }
-
-  /**
    * Configure the sheet based from the size preference.
    */
   fun configure() {
@@ -344,10 +300,16 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
           setPeekHeight(getSizeHeight(sizes[0]), isShowing)
 
-          halfExpandedRatio = minOf(getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat(), 1.0f)
+          // Android crashes if 1.0f is specified for the half-expanded ratio
+          val ratio = minOf(getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat(), 0.99f)
+          halfExpandedRatio = ratio
           maxHeight = getSizeHeight(sizes[2])
         }
       }
+      // Since the React content no longer drives the height calculations, update
+      // the proxy view's height to take all the available space.
+      proxyView.minHeight = maxHeight
+      proxyView.maxHeight = maxHeight
     }
   }
 

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
 import android.view.View
+import com.facebook.react.ReactRootView
 import com.facebook.react.config.ReactFeatureFlags
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -13,27 +14,17 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * RootSheetView is the ViewGroup which contains all the children of a Modal. It gets all
- * child information forwarded from TrueSheetView and uses that to create children. It is
- * also responsible for acting as a RootView and handling touch events. It does this the same way
- * as ReactRootView.
+ * RootSheetView is the ViewGroup which contains all the children of a Modal. It now
+ * doesn't need to do any layout trickery, as it's fully handled by the TrueSheetView
+ * that sends the dimensions back to the React world.
  *
- *
- * To get layout to work properly, we need to layout all the elements within the Modal as if
- * they can fill the entire window. To do that, we need to explicitly set the styleWidth and
- * styleHeight on the LayoutShadowNode to be the window size. This is done through the
- * UIManagerModule, and will then cause the children to layout as if they can fill the window.
+ * Its only responsibility now is to dispatch the touch events.
  */
 class RootSheetView(private val context: Context?) :
-  ReactViewGroup(context),
-  RootView {
-  private var viewWidth = 0
-  private var viewHeight = 0
-
+  ReactRootView(context) {
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
 
-  var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
   var eventDispatcher: EventDispatcher? = null
 
   private val reactContext: ThemedReactContext
@@ -43,15 +34,6 @@ class RootSheetView(private val context: Context?) :
     if (ReactFeatureFlags.dispatchPointerEvents) {
       jSPointerDispatcher = JSPointerDispatcher(this)
     }
-  }
-
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
-
-    viewWidth = w
-    viewHeight = h
-
-    sizeChangeListener?.let { it(viewWidth, viewHeight) }
   }
 
   override fun handleException(t: Throwable) {

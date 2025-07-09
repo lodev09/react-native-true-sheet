@@ -4,7 +4,11 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStructure
+import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
@@ -65,30 +69,23 @@ class TrueSheetView(context: Context) :
    */
   private val rootSheetView: RootSheetView
 
+  private val layoutListener: ViewTreeObserver.OnGlobalLayoutListener
+
   init {
     reactContext.addLifecycleEventListener(this)
-
     rootSheetView = RootSheetView(context)
+
     sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
+
+    layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+      updateViewSize()
+    }
 
     // Configure Sheet Dialog
     sheetDialog.apply {
-      setOnSizeChangeListener { w, h ->
-        val data = Arguments.createMap()
-        data.putDouble("width", Utils.toDIP(w.toFloat()).toDouble())
-        data.putDouble("height", Utils.toDIP(h.toFloat()).toDouble())
-
-        dispatchEvent(TrueSheetEvent.CONTAINER_SIZE_CHANGE, data)
-      }
-
       // Setup listener when the dialog has been presented.
       setOnShowListener {
-        registerKeyboardManager()
-
-        // Initialize footer y
-        UiThreadUtil.runOnUiThread {
-          positionFooter()
-        }
+        updateViewSize()
 
         // Re-enable animation
         resetAnimation()
@@ -105,8 +102,6 @@ class TrueSheetView(context: Context) :
 
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
-        unregisterKeyboardManager()
-
         // Resolve the dismiss promise
         dismissPromise?.let { promise ->
           promise()
@@ -116,6 +111,8 @@ class TrueSheetView(context: Context) :
         // Dispatch onDismiss event
         dispatchEvent(TrueSheetEvent.DISMISS)
       }
+
+      behavior.isFitToContents = false
 
       // Configure sheet behavior events
       behavior.addBottomSheetCallback(
@@ -129,16 +126,7 @@ class TrueSheetView(context: Context) :
               else -> { }
             }
 
-            footerView?.let {
-              val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
-              if (slideOffset >= 0) {
-                // Sheet is expanding
-                it.y = y
-              } else {
-                // Sheet is collapsing
-                it.y = y - footerHeight * slideOffset
-              }
-            }
+            updateViewSize()
           }
 
           override fun onStateChanged(sheetView: View, newState: Int) {
@@ -159,6 +147,17 @@ class TrueSheetView(context: Context) :
         }
       )
     }
+  }
+
+  private fun updateViewSize() {
+    // Recompute the size of the visible area and communicate this back to the
+    // React world, so its layout engine can properly position the footer.
+    val rect = sheetDialog.getVisibleContentDimensions()
+
+    val data = Arguments.createMap()
+    data.putDouble("width", Utils.toDIP(rect.width().toFloat()).toDouble())
+    data.putDouble("height", Utils.toDIP(rect.height().toFloat()).toDouble())
+    dispatchEvent(TrueSheetEvent.CONTAINER_SIZE_CHANGE, data)
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
@@ -187,7 +186,24 @@ class TrueSheetView(context: Context) :
 
     // Initialize content
     UiThreadUtil.runOnUiThread {
+      // Respond to keyboard visibility events, we modulate the visible clipping area.
+      ViewCompat.setOnApplyWindowInsetsListener(rootSheetView.rootView) { view, insets ->
+        val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+        val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+
+        // Adjust your layout or padding/margin accordingly
+        if (imeVisible) {
+          rootSheetView.rootView.updatePadding(bottom = imeHeight)
+        } else {
+          rootSheetView.rootView.updatePadding(bottom = 0)
+        }
+        insets
+      }
+      // Recompute the visible rectangle on global layout changes (e.g. device rotation)
+      rootSheetView.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+
       sheetDialog.contentView?.height?.let { setContentHeight(it) }
+      sheetDialog.headerView?.height?.let { setHeaderHeight(it) }
       sheetDialog.footerView?.height?.let { setFooterHeight(it) }
 
       if (initialIndex >= 0) {
@@ -239,7 +255,7 @@ class TrueSheetView(context: Context) :
 
   // Explicitly override this to prevent accessibility events being passed down to children
   // Those will be handled by the mHostView which lives in the dialog
-  public override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
+  override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
 
   override fun onHostResume() {
     configureIfShowing()
@@ -255,6 +271,8 @@ class TrueSheetView(context: Context) :
   }
 
   fun onDropInstance() {
+    ViewCompat.setOnApplyWindowInsetsListener(rootSheetView.rootView, null)
+    rootSheetView.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
     reactContext.removeLifecycleEventListener(this)
     sheetDialog.dismiss()
   }
@@ -324,7 +342,6 @@ class TrueSheetView(context: Context) :
   fun configureIfShowing() {
     if (sheetDialog.isShowing) {
       sheetDialog.configure()
-      sheetDialog.positionFooter()
     }
   }
 
@@ -343,6 +360,13 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.contentHeight == height) return
 
     sheetDialog.contentHeight = height
+    configureIfShowing()
+  }
+
+  fun setHeaderHeight(height: Int) {
+    if (sheetDialog.headerHeight == height) return
+
+    sheetDialog.headerHeight = height
     configureIfShowing()
   }
 
@@ -369,20 +393,6 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.isShowing) {
       sheetDialog.setupDimmedBackground(currentSizeIndex)
     }
-  }
-
-  fun setCornerRadius(radius: Float) {
-    if (sheetDialog.cornerRadius == radius) return
-
-    sheetDialog.cornerRadius = radius
-    sheetDialog.setupBackground()
-  }
-
-  fun setBackground(color: Int) {
-    if (sheetDialog.backgroundColor == color) return
-
-    sheetDialog.backgroundColor = color
-    sheetDialog.setupBackground()
   }
 
   fun setSoftInputMode(mode: Int) {

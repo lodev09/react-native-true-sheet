@@ -9,6 +9,7 @@ interface TrueSheetState {
     containerWidth?: number;
     containerHeight?: number;
     contentHeight?: number;
+    headerHeight?: number;
     footerHeight?: number;
     scrollableHandle: number | null;
 }
@@ -41,6 +42,7 @@ export declare class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetSt
     private onSizeChange;
     private onContainerSizeChange;
     private onPresent;
+    private onHeaderLayout;
     private onFooterLayout;
     private onContentLayout;
     private onDismiss;

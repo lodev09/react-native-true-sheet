@@ -1,9 +1,7 @@
 package com.lodev09.truesheet
 
-import android.graphics.Color
 import android.util.Log
 import android.view.WindowManager
-import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
@@ -97,20 +95,14 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setContentHeight(Utils.toPixel(height).toInt())
   }
 
+  @ReactProp(name = "headerHeight")
+  fun setHeaderHeight(view: TrueSheetView, height: Double) {
+    view.setHeaderHeight(Utils.toPixel(height).toInt())
+  }
+
   @ReactProp(name = "footerHeight")
   fun setFooterHeight(view: TrueSheetView, height: Double) {
     view.setFooterHeight(Utils.toPixel(height).toInt())
-  }
-
-  @ReactProp(name = "cornerRadius")
-  fun setCornerRadius(view: TrueSheetView, radius: Double) {
-    view.setCornerRadius(Utils.toPixel(radius))
-  }
-
-  @ReactProp(name = "background")
-  fun setBackground(view: TrueSheetView, colorName: Double) {
-    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrNull() ?: Color.WHITE
-    view.setBackground(color)
   }
 
   @ReactProp(name = "sizes")
