@@ -51,15 +51,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    */
   var maxScreenHeight = 0
 
-  private var autoHeightFixCallback: BottomSheetBehavior.BottomSheetCallback =
-    object: BottomSheetBehavior.BottomSheetCallback() {
-    override fun onStateChanged(bottomSheet: View, newState: Int) {
-    }
-
-    override fun onSlide(bottomSheet: View, slideOffset: Float) {
-    }
-  }
-
   var contentHeight = 0
   var footerHeight = 0
   var maxSheetHeight: Int? = null
