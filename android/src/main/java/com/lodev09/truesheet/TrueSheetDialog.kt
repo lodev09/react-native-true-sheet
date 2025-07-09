@@ -64,6 +64,14 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           setPeekHeight(value + footerHeight, true)
           state = BottomSheetBehavior.STATE_COLLAPSED
         }
+
+        rootSheetView.let { container ->
+          val params = container.layoutParams
+          // +1 is important to be just 1 pixel larger than peekheight to animate
+          params.height = value + footerHeight + 1
+          container.layoutParams = params
+        }
+
       }
     }
   var footerHeight = 0
@@ -349,10 +357,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       when (sizes.size) {
         1 -> {
+          maxHeight = getSizeHeight(sizes[0])
           if (sizes[0] == "auto") {
             setPeekHeight(getSizeHeight(sizes[0]), true)
           } else {
-            maxHeight = getSizeHeight(sizes[0])
             skipCollapsed = true
           }
         }
