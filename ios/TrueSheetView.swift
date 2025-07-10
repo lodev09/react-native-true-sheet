@@ -443,7 +443,7 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
         }
       } else {
         // Trigger onSizeChange event when size is changed while presenting
-        viewControllerDidChangeSize(self.viewController.currentSizeInfo)
+        viewControllerDidChangeSize(viewController.currentSizeInfo)
         promise?.resolve(nil)
       }
     } else {

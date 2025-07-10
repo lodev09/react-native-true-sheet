@@ -264,30 +264,30 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Determines the state based from the given size index.
    */
   private fun getStateForSizeIndex(index: Int): Int {
-      return when (sizes.size) {
-          1 -> {
-              return BottomSheetBehavior.STATE_EXPANDED
-          }
-
-          2 -> {
-              when (index) {
-                  0 -> BottomSheetBehavior.STATE_COLLAPSED
-                  1 -> BottomSheetBehavior.STATE_EXPANDED
-                  else -> BottomSheetBehavior.STATE_HIDDEN
-              }
-          }
-
-          3 -> {
-              when (index) {
-                  0 -> BottomSheetBehavior.STATE_COLLAPSED
-                  1 -> BottomSheetBehavior.STATE_HALF_EXPANDED
-                  2 -> BottomSheetBehavior.STATE_EXPANDED
-                  else -> BottomSheetBehavior.STATE_HIDDEN
-              }
-          }
-
-          else -> BottomSheetBehavior.STATE_HIDDEN
+    return when (sizes.size) {
+      1 -> {
+        return BottomSheetBehavior.STATE_EXPANDED
       }
+
+      2 -> {
+        when (index) {
+          0 -> BottomSheetBehavior.STATE_COLLAPSED
+          1 -> BottomSheetBehavior.STATE_EXPANDED
+          else -> BottomSheetBehavior.STATE_HIDDEN
+        }
+      }
+
+      3 -> {
+        when (index) {
+          0 -> BottomSheetBehavior.STATE_COLLAPSED
+          1 -> BottomSheetBehavior.STATE_HALF_EXPANDED
+          2 -> BottomSheetBehavior.STATE_EXPANDED
+          else -> BottomSheetBehavior.STATE_HIDDEN
+        }
+      }
+
+      else -> BottomSheetBehavior.STATE_HIDDEN
+    }
   }
 
   /**
