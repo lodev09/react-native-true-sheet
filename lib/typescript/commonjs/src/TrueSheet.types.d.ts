@@ -177,6 +177,10 @@ export interface TrueSheetProps extends ViewProps {
      */
     maxHeight?: number;
     /**
+     * A component that floats at the top of the Sheet.
+     */
+    HeaderComponent?: ComponentType<unknown> | ReactElement;
+    /**
      * A component that floats at the bottom of the Sheet.
      */
     FooterComponent?: ComponentType<unknown> | ReactElement;

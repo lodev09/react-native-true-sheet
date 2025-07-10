@@ -1,28 +1,29 @@
-import { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
+import { Component, createRef, PureComponent, type ReactNode, type RefObject } from 'react'
 import {
-  requireNativeComponent,
-  Platform,
   findNodeHandle,
-  View,
-  type NativeMethods,
-  type ViewStyle,
-  type NativeSyntheticEvent,
   type LayoutChangeEvent,
-  type ProcessedColorValue,
+  type NativeMethods,
+  type NativeSyntheticEvent,
+  Platform,
   processColor,
+  type ProcessedColorValue,
+  requireNativeComponent,
+  View,
+  type ViewStyle,
 } from 'react-native'
 
 import type {
-  TrueSheetProps,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
-  SizeChangeEvent,
   PresentEvent,
+  SizeChangeEvent,
+  TrueSheetProps,
 } from './TrueSheet.types'
 import { TrueSheetModule } from './TrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
+import { TrueSheetHeader } from './TrueSheetHeader'
 
 const NATIVE_COMPONENT_NAME = 'TrueSheetView'
 const LINKING_ERROR =
@@ -35,6 +36,7 @@ export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; hei
 
 interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'backgroundColor'> {
   contentHeight?: number
+  headerHeight?: number
   footerHeight?: number
   background?: ProcessedColorValue | null
   scrollableHandle: number | null
@@ -47,6 +49,7 @@ interface TrueSheetState {
   containerWidth?: number
   containerHeight?: number
   contentHeight?: number
+  headerHeight?: number
   footerHeight?: number
   scrollableHandle: number | null
 }
@@ -80,6 +83,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
     this.onContentLayout = this.onContentLayout.bind(this)
+    this.onHeaderLayout = this.onHeaderLayout.bind(this)
     this.onFooterLayout = this.onFooterLayout.bind(this)
     this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
 
@@ -87,6 +91,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       containerWidth: undefined,
       containerHeight: undefined,
       contentHeight: undefined,
+      headerHeight: undefined,
       footerHeight: undefined,
       scrollableHandle: null,
     }
@@ -168,6 +173,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private onPresent(event: PresentEvent): void {
     this.props.onPresent?.(event)
+  }
+
+  private onHeaderLayout(event: LayoutChangeEvent): void {
+    this.setState({
+      headerHeight: event.nativeEvent.layout.height,
+    })
   }
 
   private onFooterLayout(event: LayoutChangeEvent): void {
@@ -255,6 +266,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       blurTint,
       cornerRadius,
       maxHeight,
+      HeaderComponent,
       FooterComponent,
       style,
       contentContainerStyle,
@@ -272,6 +284,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         background={processColor(backgroundColor)}
         cornerRadius={cornerRadius}
         contentHeight={this.state.contentHeight}
+        headerHeight={this.state.headerHeight}
         footerHeight={this.state.footerHeight}
         grabber={grabber}
         dimmed={dimmed}
@@ -294,29 +307,53 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         <View
           collapsable={false}
           style={[
+            $contentContainer,
             {
-              overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-
-              // Update the width on JS side.
-              // New Arch interop does not support updating it in native :/
+              // The native side communicates the available drawing area
+              // via containerWidth/containerHeight properties. We set them
+              // here and let the React layout engine handle the rest.
               width: this.state.containerWidth,
               height: this.state.containerHeight,
             },
-            style,
+            {
+              backgroundColor: Platform.select({ ios: undefined, android: backgroundColor }),
+              borderTopLeftRadius: Platform.select({ ios: undefined, android: cornerRadius }),
+              borderTopRightRadius: Platform.select({ ios: undefined, android: cornerRadius }),
+            },
+            contentContainerStyle,
           ]}
           {...rest}
         >
-          <View collapsable={false} onLayout={this.onContentLayout} style={contentContainerStyle}>
+          <View collapsable={false} onLayout={this.onHeaderLayout}>
+            <TrueSheetHeader Component={HeaderComponent} />
+          </View>
+          <View
+            collapsable={false}
+            onLayout={this.onContentLayout}
+            style={[$growableContent, style]}
+          >
             {children}
           </View>
           <View collapsable={false} onLayout={this.onFooterLayout}>
             <TrueSheetFooter Component={FooterComponent} />
           </View>
+
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
         </View>
       </TrueSheetNativeView>
     )
   }
+}
+
+const $contentContainer: ViewStyle = {
+  position: 'absolute',
+  left: 0,
+  top: 0,
+}
+
+const $growableContent: ViewStyle = {
+  flexGrow: 1,
+  flexShrink: 1,
 }
 
 const $nativeSheet: ViewStyle = {

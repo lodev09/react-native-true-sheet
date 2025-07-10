@@ -1,4 +1,10 @@
 {
   "name": "TrueSheetExample",
-  "displayName": "TrueSheetExample"
+  "displayName": "TrueSheetExample",
+  "ios" : {
+    "supportsTablet": true
+  },
+  "android": {
+    "supportsTablet": true
+  }
 }

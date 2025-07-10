@@ -16,12 +16,9 @@ struct SizeInfo {
 // MARK: - TrueSheetViewControllerDelegate
 
 protocol TrueSheetViewControllerDelegate: AnyObject {
-  func viewControllerDidChangeWidth(_ width: CGFloat)
+  func viewControllerDidChangeDimensions()
   func viewControllerDidDismiss()
   func viewControllerDidChangeSize(_ sizeInfo: SizeInfo?)
-  func viewControllerWillAppear()
-  func viewControllerKeyboardWillShow(_ keyboardHeight: CGFloat)
-  func viewControllerKeyboardWillHide()
   func viewControllerDidDrag(_ state: UIPanGestureRecognizer.State, _ height: CGFloat)
 }
 
@@ -37,14 +34,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
   private var bottomInset: CGFloat
   private var backgroundView: UIVisualEffectView
 
-  var lastViewWidth: CGFloat = 0
+  var keyboardAvoidingView: UIView
+  
   var detentValues: [String: SizeInfo] = [:]
 
   var sizes: [Any] = ["medium", "large"]
 
   var maxHeight: CGFloat?
-  var contentHeight: CGFloat = 0
-  var footerHeight: CGFloat = 0
+  var initialHeight: CGFloat = 0
 
   var backgroundColor: UIColor?
   var blurEffect: UIBlurEffect?
@@ -71,6 +68,9 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
     bottomInset = window?.safeAreaInsets.bottom ?? 0
 
+    let rect = CGRect(x: 0, y: 0, width: 0, height: 0)
+    keyboardAvoidingView = UIView(frame: rect)
+
     super.init(nibName: nil, bundle: nil)
 
     backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -78,6 +78,25 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
     view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
     view.insertSubview(backgroundView, at: 0)
+    
+    // Set up the view that properly tracks the on-screen keyboard. It will scale
+    // up and down depending on the keyboard visibility. The React content will
+    // be added to this window, allowing us to decouple the constraints-based iOS
+    // rendering and React-based layouts (that look like manual positioning from the
+    // iOS viewpoint)
+    view.addSubview(keyboardAvoidingView)
+    keyboardAvoidingView.translatesAutoresizingMaskIntoConstraints = false
+    let constraints: [NSLayoutConstraint] = [
+      view.topAnchor.constraint(equalTo: keyboardAvoidingView.topAnchor),
+      // Bottom tracks the keyboard
+      view.keyboardLayoutGuide.topAnchor.constraint(equalTo: keyboardAvoidingView.bottomAnchor),
+      view.leadingAnchor.constraint(equalTo: keyboardAvoidingView.leadingAnchor),
+      view.trailingAnchor.constraint(equalTo: keyboardAvoidingView.trailingAnchor),
+    ]
+    for c in constraints {
+      c.isActive = true
+      view.addConstraint(c)
+    }
   }
 
   deinit {
@@ -99,18 +118,6 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
-    NotificationCenter.default.addObserver(
-      self, selector: #selector(keyboardWillShow(_:)),
-      name: UIResponder.keyboardWillShowNotification,
-      object: nil
-    )
-
-    NotificationCenter.default.addObserver(
-      self, selector: #selector(keyboardWillHide(_:)),
-      name: UIResponder.keyboardWillHideNotification,
-      object: nil
-    )
   }
 
   @objc
@@ -125,39 +132,14 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     delegate?.viewControllerDidDrag(gesture.state, height)
   }
 
-  @objc
-  private func keyboardWillShow(_ notification: Notification) {
-    guard let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
-      return
-    }
-
-    delegate?.viewControllerKeyboardWillShow(keyboardSize.height)
-  }
-
-  @objc
-  private func keyboardWillHide(_: Notification) {
-    delegate?.viewControllerKeyboardWillHide()
-  }
-
-  override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
-    delegate?.viewControllerWillAppear()
-  }
-
   override func viewDidDisappear(_ animated: Bool) {
     super.viewDidDisappear(animated)
     delegate?.viewControllerDidDismiss()
   }
 
-  /// This is called multiple times while sheet is being dragged.
-  /// let's try to minimize size update by comparing last known width
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
-
-    if lastViewWidth != view.frame.width {
-      delegate?.viewControllerDidChangeWidth(view.bounds.width)
-      lastViewWidth = view.frame.width
-    }
+    delegate?.viewControllerDidChangeDimensions()
   }
 
   /// Setup background. Supports color or blur effect.
@@ -207,9 +189,7 @@ class TrueSheetViewController: UIViewController, UISheetPresentationControllerDe
     var detents: [UISheetPresentationController.Detent] = []
 
     for (index, size) in sizes.enumerated() {
-      // Exclude bottom safe area for consistency with a Scrollable content
-      let adjustedContentHeight = contentHeight - bottomInset
-      let detent = detentFor(size, with: adjustedContentHeight + footerHeight, with: maxHeight) { id, value in
+      let detent = detentFor(size, with: initialHeight, with: maxHeight) { id, value in
         self.detentValues[id] = SizeInfo(index: index, value: value)
       }
 

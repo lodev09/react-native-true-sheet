@@ -1,40 +1,44 @@
-import { forwardRef, useRef, type Ref } from 'react'
-import { FlatList, View, type ViewStyle } from 'react-native'
+import { forwardRef, type Ref } from 'react'
+import { FlatList, Text, View, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils'
+import { DARK, DARK_BLUE, DARK_GRAY, times } from '../../utils'
 import { Input } from '../Input'
 import { DemoContent } from '../DemoContent'
+import { Footer } from '../Footer'
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  const flatListRef = useRef<FlatList>(null)
-
   return (
     <TrueSheet
       ref={ref}
-      scrollRef={flatListRef}
       cornerRadius={12}
-      sizes={['medium', 'large']}
+      sizes={['small', 'medium', 'large']}
       blurTint="dark"
       backgroundColor={DARK}
       keyboardMode="pan"
-      edgeToEdge
+      FooterComponent={<Footer />}
+      HeaderComponent={
+        <View style={$header}>
+          <Text>This is a header!</Text>
+        </View>
+      }
+      edgeToEdge={true}
       onDismiss={() => console.log('Sheet FlatList dismissed!')}
       onPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <View style={$header}>
-        <Input />
-      </View>
       <FlatList<number>
-        ref={flatListRef}
-        nestedScrollEnabled
-        data={times(50, (i) => i)}
+        data={times(10, (i) => i)}
         contentContainerStyle={$content}
         indicatorStyle="black"
-        renderItem={() => <DemoContent color={DARK_GRAY} />}
+        renderItem={() => (
+          <View>
+            <DemoContent color={DARK_GRAY} />
+            <Input />
+          </View>
+        )}
       />
     </TrueSheet>
   )
@@ -42,18 +46,8 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
 
 FlatListSheet.displayName = 'FlatListSheet'
 
-const $content: ViewStyle = {
-  padding: SPACING,
-  paddingTop: INPUT_HEIGHT + SPACING * 4,
-}
+const $content: ViewStyle = {}
 
 const $header: ViewStyle = {
-  position: 'absolute',
-  left: 0,
-  right: 0,
-  top: 0,
-  backgroundColor: DARK,
-  paddingTop: SPACING * 2,
-  paddingHorizontal: SPACING,
-  zIndex: 1,
+  backgroundColor: DARK_BLUE,
 }
