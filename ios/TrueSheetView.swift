@@ -433,9 +433,15 @@ class TrueSheetView: UIView, RCTInvalidating, TrueSheetViewControllerDelegate {
     }
 
     if isPresented {
-      withPresentedSheet { sheet in
-        sheet.selectedDetentIdentifier = viewController.detentIdentifierForIndex(index)
+      if #available(iOS 15.0, *) {
+        withPresentedSheet { sheet in
+          sheet.selectedDetentIdentifier = viewController.detentIdentifierForIndex(index)
 
+          // Trigger onSizeChange event when size is changed while presenting
+          viewControllerDidChangeSize(self.viewController.currentSizeInfo)
+          promise?.resolve(nil)
+        }
+      } else {
         // Trigger onSizeChange event when size is changed while presenting
         viewControllerDidChangeSize(self.viewController.currentSizeInfo)
         promise?.resolve(nil)
