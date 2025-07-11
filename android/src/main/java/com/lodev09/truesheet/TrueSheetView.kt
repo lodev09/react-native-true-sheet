@@ -307,7 +307,6 @@ class TrueSheetView(context: Context) :
         }
 
         currentSizeIndex = it.index
-        sheetDialog.setupDimmedBackground(it.index)
 
         // Dispatch onSizeChange event
         dispatchEvent(TrueSheetEvent.SIZE_CHANGE, sizeInfoData(it))
@@ -361,9 +360,12 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.dimmed == dimmed) return
 
     sheetDialog.dimmed = dimmed
-    if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(currentSizeIndex)
-    }
+  }
+
+  fun setDimmedAlpha(alpha: Float) {
+    if (sheetDialog.dimmedAlpha == alpha) return
+
+    sheetDialog.dimmedAlpha = alpha
   }
 
   fun setDimmedIndex(index: Int) {
