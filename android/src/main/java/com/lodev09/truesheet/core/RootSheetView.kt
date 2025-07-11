@@ -60,7 +60,7 @@ class RootSheetView(private val context: Context?) :
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let { eventDispatcher ->
-      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
+      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
       jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     }
     return super.onInterceptTouchEvent(event)
@@ -69,7 +69,7 @@ class RootSheetView(private val context: Context?) :
   @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let { eventDispatcher ->
-      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
+      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher)
       jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
     }
     super.onTouchEvent(event)
