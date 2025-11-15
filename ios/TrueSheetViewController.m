@@ -126,6 +126,48 @@
 
 #pragma mark - Background Setup
 
+- (void)setBlurTint:(NSString *)blurTint {
+    _blurTint = blurTint;
+    
+    if (blurTint && blurTint.length > 0) {
+        UIBlurEffectStyle style = UIBlurEffectStyleLight;
+        
+        if ([blurTint isEqualToString:@"dark"]) {
+            style = UIBlurEffectStyleDark;
+        } else if ([blurTint isEqualToString:@"light"]) {
+            style = UIBlurEffectStyleLight;
+        } else if ([blurTint isEqualToString:@"extraLight"]) {
+            style = UIBlurEffectStyleExtraLight;
+        } else if (@available(iOS 10.0, *)) {
+            if ([blurTint isEqualToString:@"regular"]) {
+                style = UIBlurEffectStyleRegular;
+            } else if ([blurTint isEqualToString:@"prominent"]) {
+                style = UIBlurEffectStyleProminent;
+            }
+        }
+        
+        if (@available(iOS 13.0, *)) {
+            if ([blurTint isEqualToString:@"systemThinMaterial"]) {
+                style = UIBlurEffectStyleSystemThinMaterial;
+            } else if ([blurTint isEqualToString:@"systemMaterial"]) {
+                style = UIBlurEffectStyleSystemMaterial;
+            } else if ([blurTint isEqualToString:@"systemThickMaterial"]) {
+                style = UIBlurEffectStyleSystemThickMaterial;
+            } else if ([blurTint isEqualToString:@"systemChromeMaterial"]) {
+                style = UIBlurEffectStyleSystemChromeMaterial;
+            } else if ([blurTint isEqualToString:@"systemUltraThinMaterial"]) {
+                style = UIBlurEffectStyleSystemUltraThinMaterial;
+            }
+        }
+        
+        self.blurEffect = [UIBlurEffect effectWithStyle:style];
+    } else {
+        self.blurEffect = nil;
+    }
+    
+    [self setupBackground];
+}
+
 - (void)setupBackground {
     if (self.blurEffect) {
         self.backgroundView.effect = self.blurEffect;
