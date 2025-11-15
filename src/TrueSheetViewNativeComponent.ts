@@ -22,21 +22,21 @@ export interface NativeProps extends ViewProps {
   // Array properties
   sizes?: ReadonlyArray<string>
 
-  // Number properties
-  scrollableHandle?: WithDefault<Int32, null>
-  maxHeight?: WithDefault<Double, null>
-  background?: WithDefault<Int32, null>
-  cornerRadius?: WithDefault<Double, null>
-  contentHeight?: WithDefault<Double, null>
-  footerHeight?: WithDefault<Double, null>
+  // Number properties - use 0 as default to avoid nil insertion
+  scrollableHandle?: WithDefault<Int32, 0>
+  maxHeight?: WithDefault<Double, 0>
+  background?: WithDefault<Int32, 0>
+  cornerRadius?: WithDefault<Double, 0>
+  contentHeight?: WithDefault<Double, 0>
+  footerHeight?: WithDefault<Double, 0>
   initialIndex?: WithDefault<Int32, -1>
-  dimmedIndex?: WithDefault<Int32, null>
+  dimmedIndex?: WithDefault<Int32, 0>
 
-  // String properties
-  blurTint?: WithDefault<string, null>
+  // String properties - use empty string as default to avoid nil insertion
+  blurTint?: WithDefault<string, ''>
   keyboardMode?: WithDefault<'resize' | 'pan', 'resize'>
 
-  // Boolean properties
+  // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>
   dismissible?: WithDefault<boolean, true>
   dimmed?: WithDefault<boolean, true>
