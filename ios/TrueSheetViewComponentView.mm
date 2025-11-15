@@ -59,11 +59,18 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
-        
-        // Register this view with the TurboModule
-        [TrueSheetModule registerView:self withTag:@(self.tag)];
     }
     return self;
+}
+
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    
+    // Register this view with the TurboModule when added to window
+    // This ensures the tag is properly set by the framework
+    if (self.window && self.tag > 0) {
+        [TrueSheetModule registerView:self withTag:@(self.tag)];
+    }
 }
 
 - (void)dealloc {
@@ -257,6 +264,24 @@ using namespace facebook::react;
     [super updateProps:props oldProps:oldProps];
 }
 
+- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
+    [super finalizeUpdates:updateMask];
+    
+    // Apply batched updates to the view hierarchy
+    if (updateMask & RNComponentViewUpdateMaskProps) {
+        // Trigger layout update after prop changes
+        [_controller.view setNeedsLayout];
+    }
+}
+
+- (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
+    [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+    
+    // Handle layout changes if needed
+    // The sheet controller will handle its own layout through UIViewController lifecycle
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
     if (_containerView != nil) {
         NSLog(@"TrueSheet: Sheet can only have one content view.");
@@ -335,7 +360,8 @@ using namespace facebook::react;
     _isPresented = NO;
     _activeIndex = nil;
     
-    // Unregister old tag and re-register with new tag after recycle
+    // Unregister from the registry
+    // Note: Re-registration will happen automatically when the component is reused
     [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
