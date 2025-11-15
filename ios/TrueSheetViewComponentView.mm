@@ -442,17 +442,11 @@ using namespace facebook::react;
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerKeyboardWillHide {
-    _footerBottomConstraint.constant = 0;
-    [UIView animateWithDuration:0.3 animations:^{
-        [self->_controller.view layoutIfNeeded];
-    }];
+    // No longer needed - footer removed
 }
 
 - (void)viewControllerKeyboardWillShow:(CGFloat)keyboardHeight {
-    _footerBottomConstraint.constant = -keyboardHeight;
-    [UIView animateWithDuration:0.3 animations:^{
-        [self->_controller.view layoutIfNeeded];
-    }];
+    // No longer needed - footer removed
 }
 
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
