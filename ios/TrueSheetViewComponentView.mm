@@ -80,9 +80,18 @@ using namespace facebook::react;
 }
 
 - (void)invalidate {
-    if (_isPresented) {
-        [_controller dismissViewControllerAnimated:YES completion:nil];
+    if (_isPresented && _controller) {
+        // Dismiss without animation during cleanup to avoid crashes
+        [_controller dismissViewControllerAnimated:NO completion:nil];
+        _isPresented = NO;
     }
+    
+    // Clear references
+    _controller.delegate = nil;
+    _containerView = nil;
+    _contentView = nil;
+    _footerView = nil;
+    _scrollView = nil;
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -134,8 +143,11 @@ using namespace facebook::react;
     _isPresented = YES;
     _activeIndex = @(index);
     
-    [rootViewController presentViewController:_controller animated:animated completion:^{
-        [self->_controller resizeToIndex:index];
+    // Prepare the sheet with the correct initial index before presenting
+    [_controller prepareForPresentationAtIndex:index completion:^{
+        [rootViewController presentViewController:self->_controller animated:animated completion:^{
+            // Optionally resize if needed after presentation
+            // [self->_controller resizeToIndex:index];
         
         // Emit event
         if (self->_eventEmitter) {
@@ -149,10 +161,11 @@ using namespace facebook::react;
             emitter->onPresent(event);
         }
         
-        // Call completion handler
-        if (completion) {
-            completion(YES, nil);
-        }
+            // Call completion handler
+            if (completion) {
+                completion(YES, nil);
+            }
+        }];
     }];
 }
 
@@ -466,8 +479,9 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillAppear {
-    if (_contentView && _scrollView && _containerView) {
-        [self pinView:_contentView toView:_containerView edges:UIRectEdgeAll];
+    // Pin scrollView to contentView if scrollable handle is set
+    // Don't pin contentView to containerView - it's already managed by React Native
+    if (_scrollView && _contentView) {
         [self pinView:_scrollView toView:_contentView edges:UIRectEdgeAll];
     }
 }
