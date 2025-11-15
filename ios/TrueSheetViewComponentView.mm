@@ -20,6 +20,7 @@
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
 #import <React/RCTUtils.h>
+#import <React/RCTSurfaceTouchHandler.h>
 
 using namespace facebook::react;
 
@@ -48,6 +49,8 @@ using namespace facebook::react;
     
     BOOL _isPresented;
     NSNumber *_activeIndex;
+    
+    RCTSurfaceTouchHandler *_surfaceTouchHandler;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -59,6 +62,9 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
+        
+        // Initialize surface touch handler for proper touch event handling
+        _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
     }
     return self;
 }
@@ -85,6 +91,9 @@ using namespace facebook::react;
         [_controller dismissViewControllerAnimated:NO completion:nil];
         _isPresented = NO;
     }
+    
+    // Detach touch handler
+    [_surfaceTouchHandler detachFromView:_containerView];
     
     // Clear references
     _controller.delegate = nil;
@@ -306,6 +315,10 @@ using namespace facebook::react;
     // backgroundView is at index 0, so we add after it
     [_controller.view addSubview:_containerView];
     _containerView.userInteractionEnabled = YES;
+    
+    // Attach surface touch handler to enable proper touch event handling
+    // This is required because the containerView is not managed by React Native's view hierarchy
+    [_surfaceTouchHandler attachToView:_containerView];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
