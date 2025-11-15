@@ -13,12 +13,6 @@
 
 #import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTMountingManager.h>
-#import <react/renderer/uimanager/UIManager.h>
-
-#import "TrueSheetViewSpec.h"
-
-@interface TrueSheetModule () <NativeTrueSheetModuleSpec>
-@end
 
 @implementation TrueSheetModule {
     __weak RCTSurfacePresenterStub *_surfacePresenter;
@@ -75,11 +69,6 @@ RCT_EXPORT_METHOD(dismiss:(double)viewTag
             reject(@"InvalidViewType", errorMessage, nil);
         }
     });
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params {
-    return std::make_shared<facebook::react::NativeTrueSheetModuleSpecJSI>(params);
 }
 
 @end
