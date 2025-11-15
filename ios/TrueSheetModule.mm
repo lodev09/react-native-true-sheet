@@ -11,9 +11,9 @@
 #import "TrueSheetModule.h"
 #import "TrueSheetViewComponentView.h"
 
-#import <React/RCTUIManager.h>
-#import <React/RCTViewComponentView.h>
-#import <React/RCTMountingTransactionObserving.h>
+#import <React/RCTSurfacePresenterStub.h>
+#import <React/RCTMountingManager.h>
+#import <react/renderer/uimanager/UIManager.h>
 
 #import "TrueSheetViewSpec.h"
 
@@ -21,7 +21,7 @@
 @end
 
 @implementation TrueSheetModule {
-    RCTUIManager *_uiManager;
+    __weak RCTSurfacePresenterStub *_surfacePresenter;
 }
 
 RCT_EXPORT_MODULE()
@@ -32,7 +32,11 @@ RCT_EXPORT_MODULE()
 
 - (void)setBridge:(RCTBridge *)bridge {
     [super setBridge:bridge];
-    _uiManager = [bridge moduleForClass:[RCTUIManager class]];
+    _surfacePresenter = [bridge surfacePresenter];
+}
+
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter {
+    _surfacePresenter = (RCTSurfacePresenterStub *)surfacePresenter;
 }
 
 RCT_EXPORT_METHOD(present:(double)viewTag
@@ -43,10 +47,10 @@ RCT_EXPORT_METHOD(present:(double)viewTag
     NSInteger sizeIndex = (NSInteger)index;
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIView *view = [self->_uiManager viewForReactTag:@(tag)];
+        UIView<RCTComponentViewProtocol> *componentView = [self->_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
         
-        if ([view isKindOfClass:[TrueSheetViewComponentView class]]) {
-            TrueSheetViewComponentView *sheetView = (TrueSheetViewComponentView *)view;
+        if ([componentView isKindOfClass:[TrueSheetViewComponentView class]]) {
+            TrueSheetViewComponentView *sheetView = (TrueSheetViewComponentView *)componentView;
             [sheetView presentAtIndex:sizeIndex resolve:resolve reject:reject];
         } else {
             NSString *errorMessage = [NSString stringWithFormat:@"Invalid view type for tag %ld. Expected TrueSheetViewComponentView.", (long)tag];
@@ -61,10 +65,10 @@ RCT_EXPORT_METHOD(dismiss:(double)viewTag
     NSInteger tag = (NSInteger)viewTag;
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIView *view = [self->_uiManager viewForReactTag:@(tag)];
+        UIView<RCTComponentViewProtocol> *componentView = [self->_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
         
-        if ([view isKindOfClass:[TrueSheetViewComponentView class]]) {
-            TrueSheetViewComponentView *sheetView = (TrueSheetViewComponentView *)view;
+        if ([componentView isKindOfClass:[TrueSheetViewComponentView class]]) {
+            TrueSheetViewComponentView *sheetView = (TrueSheetViewComponentView *)componentView;
             [sheetView dismissWithResolve:resolve reject:reject];
         } else {
             NSString *errorMessage = [NSString stringWithFormat:@"Invalid view type for tag %ld. Expected TrueSheetViewComponentView.", (long)tag];

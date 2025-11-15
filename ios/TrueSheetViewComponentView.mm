@@ -10,7 +10,6 @@
 
 #import "TrueSheetViewComponentView.h"
 #import "TrueSheetViewController.h"
-#import "TrueSheetEvent.h"
 
 #import <react/renderer/components/TrueSheetViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetViewSpec/EventEmitters.h>
@@ -19,7 +18,7 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
-#import <React/UIView+React.h>
+#import <React/RCTUtils.h>
 
 using namespace facebook::react;
 
@@ -105,8 +104,8 @@ using namespace facebook::react;
     // Update background color
     if (oldViewProps.background != newViewProps.background) {
         if (newViewProps.background) {
-            UIColor *color = RCTUIColorFromSharedColor(newViewProps.backgroundColor);
-            _controller.sheetBackgroundColor = color;
+            UIColor *color = RCTUIColorFromSharedColor(SharedColor(*newViewProps.background));
+            _controller.backgroundColor = color;
         }
     }
     
@@ -246,7 +245,8 @@ using namespace facebook::react;
         // Emit onMount event
         if (_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-            emitter->onMount({});
+            TrueSheetViewEventEmitter::OnMount event{};
+            emitter->onMount(event);
         }
     }
 }
@@ -309,7 +309,7 @@ using namespace facebook::react;
         return;
     }
     
-    UIViewController *rootViewController = RCTPresentedViewController();
+    UIViewController *rootViewController = [self _findPresentingViewController];
     if (!rootViewController) {
         if (reject) {
             reject(@"Error", @"No root view controller found", nil);
@@ -326,9 +326,14 @@ using namespace facebook::react;
         // Emit onPresent event
         if (self->_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
+            
+            // Get the actual size value from the controller
+            NSDictionary *sizeInfo = [self->_controller currentSizeInfo];
+            CGFloat sizeValue = sizeInfo ? [sizeInfo[@"value"] doubleValue] : 0.0;
+            
             TrueSheetViewEventEmitter::OnPresent event;
-            event.index = static_cast<int>(index);
-            event.value = 0.0; // Will be updated by controller
+            event.index = static_cast<Int32>(index);
+            event.value = static_cast<Float>(sizeValue);
             emitter->onPresent(event);
         }
         
@@ -370,13 +375,13 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
-    if (_eventEmitter) {
-        auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-        TrueSheetViewEventEmitter::OnContainerSizeChange event;
-        event.width = width;
-        event.height = 0.0; // Height not tracked in this callback
-        emitter->onContainerSizeChange(event);
-    }
+    if (!_eventEmitter) return;
+    
+    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+    TrueSheetViewEventEmitter::OnContainerSizeChange event;
+    event.width = static_cast<Float>(width);
+    event.height = static_cast<Float>(_controller.view.bounds.size.height);
+    emitter->onContainerSizeChange(event);
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {
@@ -385,21 +390,29 @@ using namespace facebook::react;
     NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
     auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
     
-    TrueSheetViewEventEmitter::OnDragBegin event;
-    event.index = static_cast<int>(index);
-    event.value = height;
-    
     switch (state) {
-        case UIGestureRecognizerStateBegan:
-            emitter->onDragBegin(event);
+        case UIGestureRecognizerStateBegan: {
+            TrueSheetViewEventEmitter::OnDragBegin beginEvent;
+            beginEvent.index = static_cast<Int32>(index);
+            beginEvent.value = static_cast<Float>(height);
+            emitter->onDragBegin(beginEvent);
             break;
-        case UIGestureRecognizerStateChanged:
-            emitter->onDragChange(event);
+        }
+        case UIGestureRecognizerStateChanged: {
+            TrueSheetViewEventEmitter::OnDragChange changeEvent;
+            changeEvent.index = static_cast<Int32>(index);
+            changeEvent.value = static_cast<Float>(height);
+            emitter->onDragChange(changeEvent);
             break;
+        }
         case UIGestureRecognizerStateEnded:
-        case UIGestureRecognizerStateCancelled:
-            emitter->onDragEnd(event);
+        case UIGestureRecognizerStateCancelled: {
+            TrueSheetViewEventEmitter::OnDragEnd endEvent;
+            endEvent.index = static_cast<Int32>(index);
+            endEvent.value = static_cast<Float>(height);
+            emitter->onDragEnd(endEvent);
             break;
+        }
         default:
             break;
     }
@@ -418,7 +431,8 @@ using namespace facebook::react;
     
     if (_eventEmitter) {
         auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-        emitter->onDismiss({});
+        TrueSheetViewEventEmitter::OnDismiss event{};
+        emitter->onDismiss(event);
     }
 }
 
@@ -429,8 +443,8 @@ using namespace facebook::react;
         if (_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
             TrueSheetViewEventEmitter::OnSizeChange event;
-            event.index = static_cast<int>(index);
-            event.value = value;
+            event.index = static_cast<Int32>(index);
+            event.value = static_cast<Float>(value);
             emitter->onSizeChange(event);
         }
     }
@@ -444,6 +458,40 @@ using namespace facebook::react;
 
 - (void)setController:(TrueSheetViewController *)controller {
     _controller = controller;
+}
+
+#pragma mark - Private Helpers
+
+- (UIViewController *)_findPresentingViewController {
+    // Find the root view controller from the window
+    UIWindow *keyWindow = nil;
+    
+    // iOS 13+ compatible way to get key window
+    #if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+    if (@available(iOS 13.0, *)) {
+        NSArray<UIWindow *> *windows = [[UIApplication sharedApplication] windows];
+        for (UIWindow *window in windows) {
+            if (window.isKeyWindow) {
+                keyWindow = window;
+                break;
+            }
+        }
+    }
+    #endif
+    
+    // Fallback for older iOS versions
+    if (!keyWindow) {
+        keyWindow = [[UIApplication sharedApplication] keyWindow];
+    }
+    
+    UIViewController *rootViewController = keyWindow.rootViewController;
+    
+    // Find the top-most presented view controller
+    while (rootViewController.presentedViewController) {
+        rootViewController = rootViewController.presentedViewController;
+    }
+    
+    return rootViewController;
 }
 
 @end

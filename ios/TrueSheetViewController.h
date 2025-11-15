@@ -35,14 +35,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL grabber;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedIndex;
+@property (nonatomic, copy, nullable) NSString *blurTint;
 
 - (void)setupBackground;
+- (void)resizeToIndex:(NSInteger)index;
 - (void)setupSizes API_AVAILABLE(ios(15.0));
 - (void)setupDimmedBackground API_AVAILABLE(ios(15.0));
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion;
 - (void)observeDrag API_AVAILABLE(ios(15.0));
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index API_AVAILABLE(ios(15.0));
-- (NSDictionary * _Nullable)currentSizeInfo;
+- (nullable NSDictionary<NSString *, NSNumber *> *)currentSizeInfo;
 
 @end
 
