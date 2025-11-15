@@ -40,7 +40,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetViewComponentView {
     TrueSheetViewController *_controller;
-    UIView *_containerView;
+    TrueSheetContainerViewComponentView *_containerView;
     UIView *_contentView;
     UIView *_footerView;
     UIView *_scrollView;
@@ -337,17 +337,19 @@ using namespace facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
     if (_containerView != nil) {
-        NSLog(@"TrueSheet: Sheet can only have one content view.");
+        NSLog(@"TrueSheet: Sheet can only have one child component (TrueSheetContainerView).");
         return;
     }
     
-    _containerView = (UIView *)childComponentView;
-    // Add above the background view to ensure touch events work
-    // backgroundView is at index 0, so we add after it
+    // The child should be our custom TrueSheetContainerViewComponentView
+    _containerView = (TrueSheetContainerViewComponentView *)childComponentView;
+    
+    // Add to the sheet controller's view hierarchy
     [_controller.view addSubview:_containerView];
     
-    // Create a new touch handler if needed or attach existing one
-    // This is required because the containerView is not managed by React Native's view hierarchy
+    // Attach touch handler to enable React Native touch events
+    // This is required because the container is added to the UIViewController's view
+    // rather than being managed by React Native's normal view hierarchy
     if (!_surfaceTouchHandler) {
         _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
     }
@@ -355,8 +357,8 @@ using namespace facebook::react;
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    if ((UIView *)childComponentView != _containerView) {
-        NSLog(@"TrueSheet: Cannot remove view other than sheet view");
+    if ((TrueSheetContainerViewComponentView *)childComponentView != _containerView) {
+        NSLog(@"TrueSheet: Cannot unmount view other than the container view");
         return;
     }
     
@@ -366,11 +368,13 @@ using namespace facebook::react;
         _surfaceTouchHandler = nil;
     }
     
+    // Unpin all tracked views
     [self unpinView:_containerView];
     [self unpinView:_footerView];
     [self unpinView:_contentView];
     [self unpinView:_scrollView];
     
+    // Remove from view hierarchy and clear references
     [_containerView removeFromSuperview];
     _containerView = nil;
     _contentView = nil;
@@ -381,7 +385,11 @@ using namespace facebook::react;
 - (void)layoutSubviews {
     [super layoutSubviews];
     
+    // Initial setup: discover child views from container and configure layout
     if (_containerView != nil && _contentView == nil) {
+        // The TrueSheetContainerView has two children:
+        // 1. Content view (user's children wrapped in a View)
+        // 2. Footer view (optional footer component)
         if (_containerView.subviews.count >= 1) {
             _contentView = _containerView.subviews[0];
         }
@@ -389,20 +397,21 @@ using namespace facebook::react;
             _footerView = _containerView.subviews[1];
         }
         
+        // Pin container to fill the sheet controller's view
         [self pinView:_containerView toView:_controller.view edges:UIRectEdgeAll];
         
-        // Ensure containerView is above backgroundView for touch events
+        // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
         
+        // Measure content height for auto-sizing
         if (_contentView) {
-            // Measure content height from the view's intrinsic size
             CGSize contentSize = [_contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
             _controller.contentHeight = @(contentSize.height);
         }
         
+        // Setup footer constraints and measure its height
         if (_footerView) {
             [self setupFooterConstraints];
-            // Measure footer height from the view's intrinsic size
             CGSize footerSize = [_footerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
             _controller.footerHeight = @(footerSize.height);
         }
@@ -494,12 +503,10 @@ using namespace facebook::react;
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
     if (!_containerView) return;
     
-    // Cast to our custom container component view
-    TrueSheetContainerViewComponentView *containerComponentView = (TrueSheetContainerViewComponentView *)_containerView;
-    
-    // Update the container size - this will propagate to React's layout tree
+    // Update the container size using our custom Fabric component method
+    // This will propagate the size change through React's Fabric layout system
     CGSize newSize = CGSizeMake(width, _controller.view.bounds.size.height);
-    [containerComponentView updateSize:newSize];
+    [_containerView updateSize:newSize];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {
