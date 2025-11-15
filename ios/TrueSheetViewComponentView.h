@@ -12,18 +12,30 @@
 
 #import <UIKit/UIKit.h>
 #import <React/RCTViewComponentView.h>
+#import <React/RCTBridgeModule.h>
 
 @class TrueSheetViewController;
 
 NS_ASSUME_NONNULL_BEGIN
 
+// Completion block for async operations
+typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError * _Nullable error);
+
 @interface TrueSheetViewComponentView : RCTViewComponentView
 
 @property (nonatomic, strong, nullable) TrueSheetViewController *controller;
 
-// Methods for imperative commands
-- (void)presentAtIndex:(NSInteger)index resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
-- (void)dismissWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+// Commands (fire-and-forget, for Commands API)
+- (void)present:(NSInteger)index;
+- (void)dismiss;
+
+// Async methods (with callbacks, for TurboModule)
+- (void)presentAtIndex:(NSInteger)index 
+              animated:(BOOL)animated
+            completion:(nullable TrueSheetCompletionBlock)completion;
+
+- (void)dismissAnimated:(BOOL)animated 
+             completion:(nullable TrueSheetCompletionBlock)completion;
 
 @end
 

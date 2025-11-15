@@ -10,7 +10,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <react/renderer/components/TrueSheetViewSpec/ComponentDescriptors.h>
+#include <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 
 namespace facebook::react {
 

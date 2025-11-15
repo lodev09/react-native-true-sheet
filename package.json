@@ -200,12 +200,12 @@
     "version": "0.48.3"
   },
   "codegenConfig": {
-    "name": "TrueSheetViewSpec",
-    "type": "components",
+    "name": "TrueSheetSpec",
+    "type": "all",
     "jsSrcsDir": "src",
-    "outputDir": {
-      "ios": "ios"
+    "android": {
+      "javaPackageName": "com.lodev09.truesheet"
     },
-    "includesGeneratedCode": true
+    "ios": {}
   }
 }

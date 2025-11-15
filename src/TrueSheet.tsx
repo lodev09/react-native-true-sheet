@@ -17,6 +17,7 @@ import type {
   PresentEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
+import TrueSheetModule from './specs/NativeTrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
 
@@ -90,33 +91,65 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   /**
-   * Present the sheet by given `name`.
-   * See `name` prop.
+   * Present the sheet by given `name` (Promise-based)
+   * @param name - Sheet name (must match sheet's name prop)
+   * @param index - Size index (default: 0)
+   * @returns Promise that resolves when sheet is fully presented
+   * @throws Error if sheet not found or presentation fails
    */
-  public static async present(name: string, index: number = 0) {
+  public static async present(name: string, index: number = 0): Promise<void> {
     const ref = TrueSheet.getRef(name)
-    if (!ref) return
+    if (!ref) {
+      throw new Error(`Sheet with name "${name}" not found`)
+    }
 
-    Commands.present(ref, index)
+    const viewTag = (ref as any)._nativeTag
+    if (!viewTag) {
+      throw new Error(`Could not get native tag for sheet "${name}"`)
+    }
+
+    return TrueSheetModule.presentByRef(viewTag, index)
   }
 
   /**
-   * Dismiss the sheet by given `name`.
-   * See `name` prop.
+   * Dismiss the sheet by given `name` (Promise-based)
+   * @param name - Sheet name
+   * @returns Promise that resolves when sheet is fully dismissed
+   * @throws Error if sheet not found or dismissal fails
    */
-  public static async dismiss(name: string) {
+  public static async dismiss(name: string): Promise<void> {
     const ref = TrueSheet.getRef(name)
-    if (!ref) return
+    if (!ref) {
+      throw new Error(`Sheet with name "${name}" not found`)
+    }
 
-    Commands.dismiss(ref)
+    const viewTag = (ref as any)._nativeTag
+    if (!viewTag) {
+      throw new Error(`Could not get native tag for sheet "${name}"`)
+    }
+
+    return TrueSheetModule.dismissByRef(viewTag)
   }
 
   /**
-   * Resize the sheet by given `name`.
-   * See `name` prop.
+   * Resize the sheet by given `name` (Promise-based)
+   * @param name - Sheet name
+   * @param index - New size index
+   * @returns Promise that resolves when resize is complete
+   * @throws Error if sheet not found
    */
-  public static async resize(name: string, index: number) {
-    await TrueSheet.present(name, index)
+  public static async resize(name: string, index: number): Promise<void> {
+    const ref = TrueSheet.getRef(name)
+    if (!ref) {
+      throw new Error(`Sheet with name "${name}" not found`)
+    }
+
+    const viewTag = (ref as any)._nativeTag
+    if (!viewTag) {
+      throw new Error(`Could not get native tag for sheet "${name}"`)
+    }
+
+    return TrueSheetModule.resizeByRef(viewTag, index)
   }
 
   private updateState(): void {

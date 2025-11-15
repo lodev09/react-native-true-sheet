@@ -10,11 +10,12 @@
 
 #import "TrueSheetViewComponentView.h"
 #import "TrueSheetViewController.h"
+#import "TrueSheetModule.h"
 
-#import <react/renderer/components/TrueSheetViewSpec/ComponentDescriptors.h>
-#import <react/renderer/components/TrueSheetViewSpec/EventEmitters.h>
-#import <react/renderer/components/TrueSheetViewSpec/Props.h>
-#import <react/renderer/components/TrueSheetViewSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
+#import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
+#import <react/renderer/components/TrueSheetSpec/Props.h>
+#import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
@@ -58,12 +59,17 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
+        
+        // Register this view with the TurboModule
+        [TrueSheetModule registerView:self withTag:@(self.tag)];
     }
     return self;
 }
 
 - (void)dealloc {
     [self invalidate];
+    // Unregister this view from the TurboModule
+    [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
 - (void)invalidate {
@@ -81,11 +87,83 @@ using namespace facebook::react;
 #pragma mark - RCTTrueSheetViewViewProtocol (Commands)
 
 - (void)present:(NSInteger)index {
-    [self presentAtIndex:index animated:YES resolve:nil reject:nil];
+    [self presentAtIndex:index animated:YES completion:nil];
 }
 
 - (void)dismiss {
-    [self dismissWithResolve:nil reject:nil];
+    [self dismissAnimated:YES completion:nil];
+}
+
+#pragma mark - Async Methods (For TurboModule)
+
+- (void)presentAtIndex:(NSInteger)index 
+              animated:(BOOL)animated
+            completion:(nullable TrueSheetCompletionBlock)completion {
+    
+    if (_isPresented) {
+        [_controller resizeToIndex:index];
+        if (completion) {
+            completion(YES, nil);
+        }
+        return;
+    }
+    
+    UIViewController *rootViewController = [self _findPresentingViewController];
+    if (!rootViewController) {
+        NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
+                                             code:1001
+                                         userInfo:@{
+            NSLocalizedDescriptionKey: @"No root view controller found"
+        }];
+        
+        NSLog(@"[TrueSheet] Error: No root view controller found");
+        
+        if (completion) {
+            completion(NO, error);
+        }
+        return;
+    }
+    
+    _isPresented = YES;
+    _activeIndex = @(index);
+    
+    [rootViewController presentViewController:_controller animated:animated completion:^{
+        [self->_controller resizeToIndex:index];
+        
+        // Emit event
+        if (self->_eventEmitter) {
+            auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
+            NSDictionary *sizeInfo = [self->_controller currentSizeInfo];
+            CGFloat sizeValue = sizeInfo ? [sizeInfo[@"value"] doubleValue] : 0.0;
+            
+            TrueSheetViewEventEmitter::OnPresent event;
+            event.index = static_cast<int>(index);
+            event.value = static_cast<double>(sizeValue);
+            emitter->onPresent(event);
+        }
+        
+        // Call completion handler
+        if (completion) {
+            completion(YES, nil);
+        }
+    }];
+}
+
+- (void)dismissAnimated:(BOOL)animated 
+             completion:(nullable TrueSheetCompletionBlock)completion {
+    
+    if (!_isPresented) {
+        if (completion) {
+            completion(YES, nil);
+        }
+        return;
+    }
+    
+    [_controller dismissViewControllerAnimated:animated completion:^{
+        if (completion) {
+            completion(YES, nil);
+        }
+    }];
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
@@ -103,8 +181,8 @@ using namespace facebook::react;
     
     // Update background color
     if (oldViewProps.background != newViewProps.background) {
-        if (newViewProps.background) {
-            UIColor *color = RCTUIColorFromSharedColor(SharedColor(*newViewProps.background));
+        if (newViewProps.background != 0) {
+            UIColor *color = RCTUIColorFromSharedColor(SharedColor(newViewProps.background));
             _controller.backgroundColor = color;
         }
     }
@@ -118,15 +196,15 @@ using namespace facebook::react;
     
     // Update corner radius
     if (oldViewProps.cornerRadius != newViewProps.cornerRadius) {
-        if (newViewProps.cornerRadius) {
-            _controller.cornerRadius = @(*newViewProps.cornerRadius);
+        if (newViewProps.cornerRadius != 0.0) {
+            _controller.cornerRadius = @(newViewProps.cornerRadius);
         }
     }
     
     // Update max height
     if (oldViewProps.maxHeight != newViewProps.maxHeight) {
-        if (newViewProps.maxHeight) {
-            _controller.maxHeight = @(*newViewProps.maxHeight);
+        if (newViewProps.maxHeight != 0.0) {
+            _controller.maxHeight = @(newViewProps.maxHeight);
         }
     }
     
@@ -147,29 +225,29 @@ using namespace facebook::react;
     
     // Update dimmedIndex
     if (oldViewProps.dimmedIndex != newViewProps.dimmedIndex) {
-        if (newViewProps.dimmedIndex) {
-            _controller.dimmedIndex = @(*newViewProps.dimmedIndex);
+        if (newViewProps.dimmedIndex >= 0) {
+            _controller.dimmedIndex = @(newViewProps.dimmedIndex);
         }
     }
     
     // Update content height
     if (oldViewProps.contentHeight != newViewProps.contentHeight) {
-        if (newViewProps.contentHeight) {
-            _controller.contentHeight = @(*newViewProps.contentHeight);
+        if (newViewProps.contentHeight != 0.0) {
+            _controller.contentHeight = @(newViewProps.contentHeight);
         }
     }
     
     // Update footer height
     if (oldViewProps.footerHeight != newViewProps.footerHeight) {
-        if (newViewProps.footerHeight) {
-            _controller.footerHeight = @(*newViewProps.footerHeight);
+        if (newViewProps.footerHeight != 0.0) {
+            _controller.footerHeight = @(newViewProps.footerHeight);
         }
     }
     
     // Update scrollable handle
     if (oldViewProps.scrollableHandle != newViewProps.scrollableHandle) {
-        if (newViewProps.scrollableHandle) {
-            UIView *scrollView = [self.superview viewWithTag:*newViewProps.scrollableHandle];
+        if (newViewProps.scrollableHandle > 0) {
+            UIView *scrollView = [self.superview viewWithTag:newViewProps.scrollableHandle];
             if (scrollView) {
                 _scrollView = scrollView;
             }
@@ -222,16 +300,16 @@ using namespace facebook::react;
         
         if (_contentView) {
             const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-            if (props.contentHeight) {
-                _controller.contentHeight = @(*props.contentHeight);
+            if (props.contentHeight != 0.0) {
+                _controller.contentHeight = @(props.contentHeight);
             }
         }
         
         if (_footerView) {
             [self setupFooterConstraints];
             const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-            if (props.footerHeight) {
-                _controller.footerHeight = @(*props.footerHeight);
+            if (props.footerHeight != 0.0) {
+                _controller.footerHeight = @(props.footerHeight);
             }
         }
         
@@ -239,7 +317,7 @@ using namespace facebook::react;
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
         if (props.initialIndex >= 0) {
             BOOL animated = props.initialIndexAnimated;
-            [self presentAtIndex:props.initialIndex animated:animated resolve:nil reject:nil];
+            [self presentAtIndex:props.initialIndex animated:animated completion:nil];
         }
         
         // Emit onMount event
@@ -256,6 +334,9 @@ using namespace facebook::react;
     [self invalidate];
     _isPresented = NO;
     _activeIndex = nil;
+    
+    // Unregister old tag and re-register with new tag after recycle
+    [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
 #pragma mark - Layout Helpers
@@ -296,67 +377,7 @@ using namespace facebook::react;
 
 #pragma mark - Public Methods
 
-- (void)presentAtIndex:(NSInteger)index resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self presentAtIndex:index animated:YES resolve:resolve reject:reject];
-}
 
-- (void)presentAtIndex:(NSInteger)index animated:(BOOL)animated resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    if (_isPresented) {
-        [_controller resizeToIndex:index];
-        if (resolve) {
-            resolve(nil);
-        }
-        return;
-    }
-    
-    UIViewController *rootViewController = [self _findPresentingViewController];
-    if (!rootViewController) {
-        if (reject) {
-            reject(@"Error", @"No root view controller found", nil);
-        }
-        return;
-    }
-    
-    _isPresented = YES;
-    _activeIndex = @(index);
-    
-    [rootViewController presentViewController:_controller animated:animated completion:^{
-        [self->_controller resizeToIndex:index];
-        
-        // Emit onPresent event
-        if (self->_eventEmitter) {
-            auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
-            
-            // Get the actual size value from the controller
-            NSDictionary *sizeInfo = [self->_controller currentSizeInfo];
-            CGFloat sizeValue = sizeInfo ? [sizeInfo[@"value"] doubleValue] : 0.0;
-            
-            TrueSheetViewEventEmitter::OnPresent event;
-            event.index = static_cast<Int32>(index);
-            event.value = static_cast<Float>(sizeValue);
-            emitter->onPresent(event);
-        }
-        
-        if (resolve) {
-            resolve(nil);
-        }
-    }];
-}
-
-- (void)dismissWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    if (!_isPresented) {
-        if (resolve) {
-            resolve(nil);
-        }
-        return;
-    }
-    
-    [_controller dismissViewControllerAnimated:YES completion:^{
-        if (resolve) {
-            resolve(nil);
-        }
-    }];
-}
 
 #pragma mark - TrueSheetViewControllerDelegate
 
@@ -379,8 +400,8 @@ using namespace facebook::react;
     
     auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
     TrueSheetViewEventEmitter::OnContainerSizeChange event;
-    event.width = static_cast<Float>(width);
-    event.height = static_cast<Float>(_controller.view.bounds.size.height);
+    event.width = static_cast<double>(width);
+    event.height = static_cast<double>(_controller.view.bounds.size.height);
     emitter->onContainerSizeChange(event);
 }
 
@@ -393,23 +414,23 @@ using namespace facebook::react;
     switch (state) {
         case UIGestureRecognizerStateBegan: {
             TrueSheetViewEventEmitter::OnDragBegin beginEvent;
-            beginEvent.index = static_cast<Int32>(index);
-            beginEvent.value = static_cast<Float>(height);
+            beginEvent.index = static_cast<int>(index);
+            beginEvent.value = static_cast<double>(height);
             emitter->onDragBegin(beginEvent);
             break;
         }
         case UIGestureRecognizerStateChanged: {
             TrueSheetViewEventEmitter::OnDragChange changeEvent;
-            changeEvent.index = static_cast<Int32>(index);
-            changeEvent.value = static_cast<Float>(height);
+            changeEvent.index = static_cast<int>(index);
+            changeEvent.value = static_cast<double>(height);
             emitter->onDragChange(changeEvent);
             break;
         }
         case UIGestureRecognizerStateEnded:
         case UIGestureRecognizerStateCancelled: {
             TrueSheetViewEventEmitter::OnDragEnd endEvent;
-            endEvent.index = static_cast<Int32>(index);
-            endEvent.value = static_cast<Float>(height);
+            endEvent.index = static_cast<int>(index);
+            endEvent.value = static_cast<double>(height);
             emitter->onDragEnd(endEvent);
             break;
         }
@@ -443,8 +464,8 @@ using namespace facebook::react;
         if (_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
             TrueSheetViewEventEmitter::OnSizeChange event;
-            event.index = static_cast<Int32>(index);
-            event.value = static_cast<Float>(value);
+            event.index = static_cast<int>(index);
+            event.value = static_cast<double>(value);
             emitter->onSizeChange(event);
         }
     }
