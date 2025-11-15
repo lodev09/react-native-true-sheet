@@ -84,3 +84,6 @@ android/generated
 
 # Misc
 .xcode.env.local
+
+# Lib
+lib
