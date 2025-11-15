@@ -26,7 +26,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       <ScrollView
         nestedScrollEnabled
         ref={scrollViewRef}
-        contentContainerStyle={$content}
+        style={$content}
         indicatorStyle="black"
       >
         {times(25, (i) => (

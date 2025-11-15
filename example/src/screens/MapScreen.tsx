@@ -89,7 +89,7 @@ export const MapScreen = () => {
         blurTint="dark"
         backgroundColor={DARK}
         edgeToEdge
-        contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
+        style={{ padding: SPACING, paddingBottom: SPACING * 3 }}
         dimmedIndex={2}
         dismissible={false}
         cornerRadius={12}

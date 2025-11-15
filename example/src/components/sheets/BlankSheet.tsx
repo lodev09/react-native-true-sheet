@@ -16,7 +16,7 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
       edgeToEdge
       backgroundColor={DARK}
       keyboardMode="pan"
-      contentContainerStyle={styles.content}
+      style={styles.content}
       {...props}
     >
       <Text style={$WHITE_TEXT}>Blank Sheet</Text>

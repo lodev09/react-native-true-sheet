@@ -212,11 +212,6 @@ export interface TrueSheetProps extends ViewProps {
   blurTint?: BlurTint
 
   /**
-   * Optional content container styles.
-   */
-  contentContainerStyle?: StyleProp<ViewStyle>
-
-  /**
    * The main scrollable ref that Sheet should handle on IOS.
    *
    * @platform ios

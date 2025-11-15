@@ -39,7 +39,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       edgeToEdge
       name="prompt-sheet"
       sizes={['auto']}
-      contentContainerStyle={styles.content}
+      style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}

@@ -44,7 +44,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
     <TrueSheet
       sizes={['auto', '80%', 'large']}
       ref={sheetRef}
-      contentContainerStyle={styles.content}
+      style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
@@ -92,7 +92,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         ref={childSheet}
         sizes={['auto']}
         backgroundColor={DARK}
-        contentContainerStyle={styles.content}
+        style={styles.content}
         FooterComponent={<Footer />}
       >
         <DemoContent color={DARK_BLUE} />
