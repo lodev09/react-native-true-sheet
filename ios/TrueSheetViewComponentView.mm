@@ -210,6 +210,9 @@ using namespace facebook::react;
     const auto &oldViewProps = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
     const auto &newViewProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
     
+    BOOL needsSetupSizes = NO;
+    BOOL needsSetupDimmed = NO;
+    
     // Update sizes
     if (oldViewProps.sizes != newViewProps.sizes) {
         NSMutableArray *sizes = [NSMutableArray new];
@@ -217,6 +220,7 @@ using namespace facebook::react;
             [sizes addObject:RCTNSStringFromString(size)];
         }
         _controller.sizes = sizes;
+        needsSetupSizes = YES;
     }
     
     // Update background color
@@ -261,6 +265,7 @@ using namespace facebook::react;
     // Update dimmed
     if (oldViewProps.dimmed != newViewProps.dimmed) {
         _controller.dimmed = newViewProps.dimmed;
+        needsSetupDimmed = YES;
     }
     
     // Update dimmedIndex
@@ -268,6 +273,7 @@ using namespace facebook::react;
         if (newViewProps.dimmedIndex >= 0) {
             _controller.dimmedIndex = @(newViewProps.dimmedIndex);
         }
+        needsSetupDimmed = YES;
     }
     
     // Update content height
@@ -295,6 +301,16 @@ using namespace facebook::react;
     }
     
     [super updateProps:props oldProps:oldProps];
+    
+    // Apply changes to presented sheet if needed
+    if (_isPresented && _controller.presentingViewController) {
+        if (needsSetupSizes) {
+            [_controller setupSizes];
+        }
+        if (needsSetupDimmed) {
+            [_controller setupDimmedBackground];
+        }
+    }
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
