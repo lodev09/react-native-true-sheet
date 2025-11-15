@@ -41,12 +41,7 @@ using namespace facebook::react;
 @implementation TrueSheetViewComponentView {
     TrueSheetViewController *_controller;
     TrueSheetContainerViewComponentView *_containerView;
-    UIView *_contentView;
-    UIView *_footerView;
     UIView *_scrollView;
-    
-    NSLayoutConstraint *_footerBottomConstraint;
-    NSLayoutConstraint *_footerHeightConstraint;
     
     BOOL _isPresented;
     NSNumber *_activeIndex;
@@ -111,8 +106,6 @@ using namespace facebook::react;
     
     // Clear child view references (will be reassigned on remount)
     _containerView = nil;
-    _contentView = nil;
-    _footerView = nil;
     _scrollView = nil;
 }
 
@@ -370,56 +363,24 @@ using namespace facebook::react;
     
     // Unpin all tracked views
     [self unpinView:_containerView];
-    [self unpinView:_footerView];
-    [self unpinView:_contentView];
     [self unpinView:_scrollView];
     
     // Remove from view hierarchy and clear references
     [_containerView removeFromSuperview];
     _containerView = nil;
-    _contentView = nil;
-    _footerView = nil;
     _scrollView = nil;
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     
-    // Initial setup: discover child views from container and configure layout
-    if (_containerView != nil && _contentView == nil) {
-        // The TrueSheetContainerView has two children:
-        // 1. Content view (user's children wrapped in a View)
-        // 2. Footer view (optional footer component)
-        if (_containerView.subviews.count >= 1) {
-            _contentView = _containerView.subviews[0];
-        }
-        if (_containerView.subviews.count >= 2) {
-            _footerView = _containerView.subviews[1];
-        }
-        
+    // Initial setup: configure container layout
+    if (_containerView != nil) {
         // Pin container to fill the sheet controller's view
         [self pinView:_containerView toView:_controller.view edges:UIRectEdgeAll];
         
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
-        
-        // Measure content height for auto-sizing and set initial width
-        if (_contentView) {
-            // Set content view width to match container width
-            CGRect contentFrame = _contentView.frame;
-            contentFrame.size.width = _containerView.bounds.size.width;
-            _contentView.frame = contentFrame;
-            
-            CGSize contentSize = [_contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-            _controller.contentHeight = @(contentSize.height);
-        }
-        
-        // Setup footer constraints and measure its height
-        if (_footerView) {
-            [self setupFooterConstraints];
-            CGSize footerSize = [_footerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-            _controller.footerHeight = @(footerSize.height);
-        }
         
         // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
@@ -468,17 +429,6 @@ using namespace facebook::react;
     }
 }
 
-- (void)setupFooterConstraints {
-    if (!_footerView) return;
-    
-    _footerView.translatesAutoresizingMaskIntoConstraints = NO;
-    [_footerView.leadingAnchor constraintEqualToAnchor:_controller.view.leadingAnchor].active = YES;
-    [_footerView.trailingAnchor constraintEqualToAnchor:_controller.view.trailingAnchor].active = YES;
-    
-    _footerBottomConstraint = [_footerView.bottomAnchor constraintEqualToAnchor:_controller.view.bottomAnchor];
-    _footerBottomConstraint.active = YES;
-}
-
 - (void)unpinView:(UIView *)view {
     if (!view) return;
     view.translatesAutoresizingMaskIntoConstraints = YES;
@@ -506,16 +456,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
-    if (!_contentView) return;
-    
-    // Manually update content view width to match new sheet width
-    CGRect contentFrame = _contentView.frame;
-    contentFrame.size.width = width;
-    _contentView.frame = contentFrame;
-    
-    // Force layout
-    [_contentView setNeedsLayout];
-    [_contentView layoutIfNeeded];
+    // Container is pinned with Auto Layout, so it automatically resizes
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {
@@ -555,8 +496,8 @@ using namespace facebook::react;
 - (void)viewControllerWillAppear {
     // Pin scrollView to contentView if scrollable handle is set
     // Don't pin contentView to containerView - it's already managed by React Native
-    if (_scrollView && _contentView) {
-        [self pinView:_scrollView toView:_contentView edges:UIRectEdgeAll];
+    if (_scrollView && _containerView) {
+        [self pinView:_scrollView toView:_containerView edges:UIRectEdgeAll];
     }
 }
 

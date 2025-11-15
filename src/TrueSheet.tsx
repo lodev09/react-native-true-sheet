@@ -17,8 +17,6 @@ import type {
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
-import { TrueSheetGrabber } from './TrueSheetGrabber'
-import { TrueSheetFooter } from './TrueSheetFooter'
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -263,13 +261,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       keyboardMode = 'resize',
       initialIndex,
       dimmedIndex,
-      grabberProps,
       blurTint,
       cornerRadius,
       maxHeight,
-      FooterComponent,
       style,
-      contentContainerStyle,
       children,
       ...rest
     } = this.props
@@ -301,13 +296,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragEnd={this.onDragEnd}
       >
         <TrueSheetContainerViewNativeComponent style={style} {...rest}>
-          <View collapsable={false} style={contentContainerStyle}>
-            {children}
-          </View>
-          <View collapsable={false}>
-            <TrueSheetFooter Component={FooterComponent} />
-          </View>
-          {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
+          {children}
         </TrueSheetContainerViewNativeComponent>
       </TrueSheetViewNativeComponent>
     )
