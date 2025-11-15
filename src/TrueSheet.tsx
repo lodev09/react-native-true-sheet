@@ -47,13 +47,9 @@ const getTurboModule = () => {
   return TrueSheetModule
 }
 
-export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
-
 type NativeRef = React.ElementRef<typeof TrueSheetViewNativeComponent>
 
 interface TrueSheetState {
-  containerWidth?: number
-  containerHeight?: number
   scrollableHandle: number | null
 }
 
@@ -79,11 +75,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
-    this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
 
     this.state = {
-      containerWidth: undefined,
-      containerHeight: undefined,
       scrollableHandle: null,
     }
   }
@@ -191,13 +184,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private onSizeChange(event: SizeChangeEvent): void {
     this.props.onSizeChange?.(event)
-  }
-
-  private onContainerSizeChange(event: ContainerSizeChangeEvent): void {
-    this.setState({
-      containerWidth: event.nativeEvent.width,
-      containerHeight: event.nativeEvent.height,
-    })
   }
 
   private onPresent(event: PresentEvent): void {
@@ -313,7 +299,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragBegin={this.onDragBegin}
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
-        onContainerSizeChange={this.onContainerSizeChange}
       >
         <TrueSheetContainerViewNativeComponent style={style} {...rest}>
           <View collapsable={false} style={contentContainerStyle}>

@@ -13,11 +13,6 @@ export interface SizeInfo {
   value: Double
 }
 
-export interface ContainerSize {
-  width: Double
-  height: Double
-}
-
 export interface NativeProps extends ViewProps {
   // Array properties
   sizes?: ReadonlyArray<string>
@@ -51,7 +46,6 @@ export interface NativeProps extends ViewProps {
   onDragBegin?: DirectEventHandler<SizeInfo>
   onDragChange?: DirectEventHandler<SizeInfo>
   onDragEnd?: DirectEventHandler<SizeInfo>
-  onContainerSizeChange?: DirectEventHandler<ContainerSize>
 }
 
 export interface NativeCommands {
