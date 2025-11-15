@@ -51,6 +51,7 @@ using namespace facebook::react;
     NSNumber *_activeIndex;
     
     RCTSurfaceTouchHandler *_surfaceTouchHandler;
+    NSInteger _presentRetryCount;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -62,6 +63,7 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
+        _presentRetryCount = 0;
         
         // Touch handler will be created lazily when mounting child view
         _surfaceTouchHandler = nil;
@@ -80,17 +82,30 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+    NSLog(@"[TrueSheet] dealloc: _isPresented=%d, presentingViewController=%@", _isPresented, _controller.presentingViewController);
+    
+    // Dismiss the sheet if it's currently being presented (with animation for better UX)
+    if (_controller && _controller.presentingViewController) {
+        NSLog(@"[TrueSheet] dealloc: Dismissing controller");
+        [_controller dismissViewControllerAnimated:YES completion:nil];
+    }
+    
     [self invalidate];
+    
+    // Clean up controller
+    _controller.delegate = nil;
+    _controller = nil;
+    
+    _isPresented = NO;
+    _activeIndex = nil;
+    
     // Unregister this view from the TurboModule
     [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
 - (void)invalidate {
-    if (_isPresented && _controller) {
-        // Dismiss without animation during cleanup to avoid crashes
-        [_controller dismissViewControllerAnimated:NO completion:nil];
-        _isPresented = NO;
-    }
+    // Don't dismiss the sheet during hot reload - only clean up touch handler
+    // The sheet will remain presented and content will be remounted
     
     // Detach touch handler only if containerView exists
     if (_containerView && _surfaceTouchHandler) {
@@ -98,8 +113,7 @@ using namespace facebook::react;
         _surfaceTouchHandler = nil;
     }
     
-    // Clear references
-    _controller.delegate = nil;
+    // Clear child view references (will be reassigned on remount)
     _containerView = nil;
     _contentView = nil;
     _footerView = nil;
@@ -128,7 +142,10 @@ using namespace facebook::react;
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
     
+    NSLog(@"[TrueSheet] presentAtIndex: index=%ld, _isPresented=%d, presentingViewController=%@", (long)index, _isPresented, _controller.presentingViewController);
+    
     if (_isPresented) {
+        NSLog(@"[TrueSheet] presentAtIndex: Already presented, resizing to index %ld", (long)index);
         [_controller resizeToIndex:index];
         if (completion) {
             completion(YES, nil);
@@ -137,6 +154,7 @@ using namespace facebook::react;
     }
     
     UIViewController *rootViewController = [self _findPresentingViewController];
+    
     if (!rootViewController) {
         NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                              code:1001
@@ -332,6 +350,12 @@ using namespace facebook::react;
         return;
     }
     
+    // Detach touch handler before unmounting
+    if (_surfaceTouchHandler && _containerView) {
+        [_surfaceTouchHandler detachFromView:_containerView];
+        _surfaceTouchHandler = nil;
+    }
+    
     [self unpinView:_containerView];
     [self unpinView:_footerView];
     [self unpinView:_contentView];
@@ -348,6 +372,8 @@ using namespace facebook::react;
     [super layoutSubviews];
     
     if (_containerView != nil && _contentView == nil) {
+        NSLog(@"[TrueSheet] layoutSubviews: Setting up content, _isPresented=%d", _isPresented);
+        
         if (_containerView.subviews.count >= 1) {
             _contentView = _containerView.subviews[0];
         }
@@ -375,9 +401,11 @@ using namespace facebook::react;
             }
         }
         
-        // Handle initial presentation
+        // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-        if (props.initialIndex >= 0) {
+        NSLog(@"[TrueSheet] layoutSubviews: initialIndex=%ld, _isPresented=%d", (long)props.initialIndex, _isPresented);
+        if (props.initialIndex >= 0 && !_isPresented) {
+            NSLog(@"[TrueSheet] layoutSubviews: Calling presentAtIndex");
             BOOL animated = props.initialIndexAnimated;
             [self presentAtIndex:props.initialIndex animated:animated completion:nil];
         }
@@ -394,8 +422,9 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
     [super prepareForRecycle];
     [self invalidate];
-    _isPresented = NO;
-    _activeIndex = nil;
+    
+    // Don't reset _isPresented and _activeIndex during recycle
+    // The sheet should remain presented during hot reload
     
     // Unregister from the registry
     // Note: Re-registration will happen automatically when the component is reused
@@ -568,9 +597,18 @@ using namespace facebook::react;
     
     // Find the top-most presented view controller
     while (rootViewController.presentedViewController) {
-        rootViewController = rootViewController.presentedViewController;
+        UIViewController *presented = rootViewController.presentedViewController;
+        
+        // Skip TrueSheetViewController if it's being dismissed
+        if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
+            NSLog(@"[TrueSheet] _findPresentingViewController: Skipping sheet being dismissed");
+            break;
+        }
+        
+        rootViewController = presented;
     }
     
+    NSLog(@"[TrueSheet] _findPresentingViewController: %@", rootViewController);
     return rootViewController;
 }
 
