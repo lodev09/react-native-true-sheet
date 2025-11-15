@@ -403,8 +403,13 @@ using namespace facebook::react;
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
         
-        // Measure content height for auto-sizing
+        // Measure content height for auto-sizing and set initial width
         if (_contentView) {
+            // Set content view width to match container width
+            CGRect contentFrame = _contentView.frame;
+            contentFrame.size.width = _containerView.bounds.size.width;
+            _contentView.frame = contentFrame;
+            
             CGSize contentSize = [_contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
             _controller.contentHeight = @(contentSize.height);
         }
@@ -501,12 +506,16 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
-    if (!_containerView) return;
+    if (!_contentView) return;
     
-    // Update the container size using our custom Fabric component method
-    // This will propagate the size change through React's Fabric layout system
-    CGSize newSize = CGSizeMake(width, _controller.view.bounds.size.height);
-    [_containerView updateSize:newSize];
+    // Manually update content view width to match new sheet width
+    CGRect contentFrame = _contentView.frame;
+    contentFrame.size.width = width;
+    _contentView.frame = contentFrame;
+    
+    // Force layout
+    [_contentView setNeedsLayout];
+    [_contentView layoutIfNeeded];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {

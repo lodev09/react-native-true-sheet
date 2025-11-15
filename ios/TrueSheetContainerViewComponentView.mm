@@ -39,13 +39,7 @@ using namespace facebook::react;
 }
 
 - (void)updateSize:(CGSize)size {
-    auto layoutMetrics = _layoutMetrics;
-    auto oldLayoutMetrics = layoutMetrics;
-    
-    layoutMetrics.frame.size.width = size.width;
-    layoutMetrics.frame.size.height = size.height;
-    
-    [self updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+    // No longer needed - width is updated directly on _contentView
 }
 
 @end
