@@ -92,8 +92,10 @@ using namespace facebook::react;
         _isPresented = NO;
     }
     
-    // Detach touch handler
-    [_surfaceTouchHandler detachFromView:_containerView];
+    // Detach touch handler only if containerView exists
+    if (_containerView) {
+        [_surfaceTouchHandler detachFromView:_containerView];
+    }
     
     // Clear references
     _controller.delegate = nil;
