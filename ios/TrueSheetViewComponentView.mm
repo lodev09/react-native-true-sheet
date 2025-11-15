@@ -302,7 +302,10 @@ using namespace facebook::react;
     }
     
     _containerView = (UIView *)childComponentView;
+    // Add above the background view to ensure touch events work
+    // backgroundView is at index 0, so we add after it
     [_controller.view addSubview:_containerView];
+    _containerView.userInteractionEnabled = YES;
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -336,7 +339,11 @@ using namespace facebook::react;
         
         [self pinView:_containerView toView:_controller.view edges:UIRectEdgeAll];
         
+        // Ensure containerView is above backgroundView for touch events
+        [_controller.view bringSubviewToFront:_containerView];
+        
         if (_contentView) {
+            _contentView.userInteractionEnabled = YES;
             const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
             if (props.contentHeight != 0.0) {
                 _controller.contentHeight = @(props.contentHeight);
