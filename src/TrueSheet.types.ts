@@ -103,7 +103,7 @@ export type SheetSize =
    */
   | 'large'
 
-export interface TrueSheetProps extends ViewProps {
+export interface TrueSheetProps extends Omit<ViewProps, 'style'> {
   /**
    * The name to reference this sheet. It has to be unique.
    * You can then present this sheet globally using its `name`.

@@ -264,7 +264,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       blurTint,
       cornerRadius,
       maxHeight,
-      style,
       children,
       ...rest
     } = this.props
@@ -295,7 +294,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
       >
-        <TrueSheetContainerViewNativeComponent style={style} {...rest}>
+        <TrueSheetContainerViewNativeComponent {...rest}>
           {children}
         </TrueSheetContainerViewNativeComponent>
       </TrueSheetViewNativeComponent>
