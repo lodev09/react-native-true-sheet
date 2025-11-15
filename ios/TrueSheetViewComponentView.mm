@@ -63,8 +63,8 @@ using namespace facebook::react;
         _isPresented = NO;
         _activeIndex = nil;
         
-        // Initialize surface touch handler for proper touch event handling
-        _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
+        // Touch handler will be created lazily when mounting child view
+        _surfaceTouchHandler = nil;
     }
     return self;
 }
@@ -93,8 +93,9 @@ using namespace facebook::react;
     }
     
     // Detach touch handler only if containerView exists
-    if (_containerView) {
+    if (_containerView && _surfaceTouchHandler) {
         [_surfaceTouchHandler detachFromView:_containerView];
+        _surfaceTouchHandler = nil;
     }
     
     // Clear references
@@ -317,8 +318,11 @@ using namespace facebook::react;
     // backgroundView is at index 0, so we add after it
     [_controller.view addSubview:_containerView];
     
-    // Attach surface touch handler to enable proper touch event handling
+    // Create a new touch handler if needed or attach existing one
     // This is required because the containerView is not managed by React Native's view hierarchy
+    if (!_surfaceTouchHandler) {
+        _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
+    }
     [_surfaceTouchHandler attachToView:_containerView];
 }
 

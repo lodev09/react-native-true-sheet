@@ -2,7 +2,7 @@
   "file_scan_exclusions": [
     "**/.git",
     "**/node_modules",
-    "**/lib",
+    // "**/lib",
     "**/.DS_Store"
   ]
 }

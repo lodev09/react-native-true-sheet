@@ -108,7 +108,7 @@ export const MapScreen = () => {
           <Text style={$title}>True Sheet 💩</Text>
           <Text style={$subtitle}>The true native bottom sheet experience.</Text>
         </View>
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+        <Button text="TrueSheet Viesssssssw" onPress={() => presentBasicSheet(0)} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
