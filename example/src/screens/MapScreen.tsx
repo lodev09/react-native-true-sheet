@@ -86,11 +86,11 @@ export const MapScreen = () => {
       <AnimatedTrueSheet
         sizes={['15%', 'auto', 'large']}
         ref={sheetRef}
-        blurTint="dark"
+        // blurTint="dark"
         backgroundColor={DARK}
         edgeToEdge
         contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
-        dimmedIndex={1}
+        dimmedIndex={2}
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}

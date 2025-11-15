@@ -163,6 +163,20 @@ using namespace facebook::react;
     _isPresented = YES;
     _activeIndex = @(index);
     
+    // Apply initial props before presenting
+    const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
+    
+    // Set background color
+    if (props.background != 0) {
+        UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
+        _controller.backgroundColor = color;
+    }
+    
+    // Set blur tint
+    if (!props.blurTint.empty()) {
+        _controller.blurTint = RCTNSStringFromString(props.blurTint);
+    }
+    
     // Prepare the sheet with the correct initial index before presenting
     [_controller prepareForPresentationAtIndex:index completion:^{
         [rootViewController presentViewController:self->_controller animated:animated completion:^{
@@ -228,14 +242,14 @@ using namespace facebook::react;
         if (newViewProps.background != 0) {
             UIColor *color = RCTUIColorFromSharedColor(SharedColor(newViewProps.background));
             _controller.backgroundColor = color;
+            [_controller setupBackground];
         }
     }
     
     // Update blur tint
     if (oldViewProps.blurTint != newViewProps.blurTint) {
-        if (!newViewProps.blurTint.empty()) {
-            _controller.blurTint = RCTNSStringFromString(newViewProps.blurTint);
-        }
+        // Set to nil if empty, otherwise convert string
+        _controller.blurTint = !newViewProps.blurTint.empty() ? RCTNSStringFromString(newViewProps.blurTint) : nil;
     }
     
     // Update corner radius
