@@ -6,21 +6,54 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-#import <React/RCTViewManager.h>
+#import "TrueSheetViewManager.h"
+#import "TrueSheetView.h"
+#import <React/RCTUIManager.h>
 
-@interface RCT_EXTERN_REMAP_MODULE (TrueSheetView, TrueSheetViewManager, RCTViewManager)
+@implementation TrueSheetViewManager
 
-// Module Functions
+RCT_EXPORT_MODULE(TrueSheetView)
 
-/// Presents the sheet controller
-RCT_EXTERN_METHOD(present:(nonnull NSNumber*)tag
-                  index:(int)index
++ (BOOL)requiresMainQueueSetup {
+    return YES;
+}
+
+- (dispatch_queue_t)methodQueue {
+    return dispatch_get_main_queue();
+}
+
+- (UIView *)view {
+    return [[TrueSheetView alloc] initWithBridge:self.bridge];
+}
+
+// MARK: - React Functions
+
+RCT_EXPORT_METHOD(present:(nonnull NSNumber *)tag
+                  index:(NSInteger)index
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject) {
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        TrueSheetView *view = (TrueSheetView *)viewRegistry[tag];
+        if ([view isKindOfClass:[TrueSheetView class]]) {
+            [view presentAtIndex:index resolve:resolve reject:reject];
+        } else {
+            reject(@"Error", @"Invalid view type", nil);
+        }
+    }];
+}
 
-RCT_EXTERN_METHOD(dismiss:(nonnull NSNumber*)tag
+RCT_EXPORT_METHOD(dismiss:(nonnull NSNumber *)tag
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject) {
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        TrueSheetView *view = (TrueSheetView *)viewRegistry[tag];
+        if ([view isKindOfClass:[TrueSheetView class]]) {
+            [view dismissWithResolve:resolve reject:reject];
+        } else {
+            reject(@"Error", @"Invalid view type", nil);
+        }
+    }];
+}
 
 // Events
 RCT_EXPORT_VIEW_PROPERTY(onMount, RCTDirectEventBlock)

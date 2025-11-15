@@ -1832,7 +1832,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - SocketRocket (0.7.1)
-  - TrueSheet (2.0.5):
+  - TrueSheet (2.0.6):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2103,9 +2103,9 @@ SPEC CHECKSUMS:
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 15c28682af535aa55b9b31e64deff54b7ed7d453
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
-  glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
+  glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 8b5a5eb386b990287d072fd7b6f6ebd9544dd251
-  RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
+  RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: 0418ac97b9f53b2e37f473da1663ef3061e46beb
   RCTRequired: b9fde7f981b11aa898f03a70d3d4d36b80f1b16d
   RCTTypeSafety: 397515ea9a8122b62a7a310adf30205f0a5e3bfc
@@ -2173,7 +2173,7 @@ SPEC CHECKSUMS:
   RNReanimated: a07f1786938e6bcdaf0f0c7699aeb5b4d5eaa797
   RNScreens: 4d015e7315a074b0ddd616ecf23482880c7862cb
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  TrueSheet: a417943f904b7044a63f5d3336b820c7fd735674
+  TrueSheet: ecbcf7c8f0d7072c9aeb2d76ac7e0d94af1beca8
   Yoga: a6cb833e04fb8c59a012b49fb1d040fcb0cbb633
 
 PODFILE CHECKSUM: 5dbbcc0cfcda0cab7578273e6496d6337b5b0f73

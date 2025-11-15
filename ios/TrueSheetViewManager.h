@@ -6,9 +6,8 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-#import <React/RCTBridgeModule.h>
 #import <React/RCTViewManager.h>
-#import <React/RCTUIManager.h>
-#import <React/RCTTouchHandler.h>
-#import <React/RCTSurfaceTouchHandler.h>
-#import <React/RCTScrollView.h>
+
+@interface TrueSheetViewManager : RCTViewManager
+
+@end
