@@ -4,7 +4,6 @@ import {
   View,
   type ViewStyle,
   type NativeSyntheticEvent,
-  type LayoutChangeEvent,
   processColor,
 } from 'react-native'
 
@@ -54,8 +53,6 @@ type NativeRef = React.ElementRef<typeof TrueSheetViewNativeComponent>
 interface TrueSheetState {
   containerWidth?: number
   containerHeight?: number
-  contentHeight?: number
-  footerHeight?: number
   scrollableHandle: number | null
 }
 
@@ -81,15 +78,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
-    this.onContentLayout = this.onContentLayout.bind(this)
-    this.onFooterLayout = this.onFooterLayout.bind(this)
     this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
 
     this.state = {
       containerWidth: undefined,
       containerHeight: undefined,
-      contentHeight: undefined,
-      footerHeight: undefined,
       scrollableHandle: null,
     }
   }
@@ -210,18 +203,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onPresent?.(event)
   }
 
-  private onFooterLayout(event: LayoutChangeEvent): void {
-    this.setState({
-      footerHeight: event.nativeEvent.layout.height,
-    })
-  }
-
-  private onContentLayout(event: LayoutChangeEvent): void {
-    this.setState({
-      contentHeight: event.nativeEvent.layout.height,
-    })
-  }
-
   private onDismiss(): void {
     this.props.onDismiss?.()
   }
@@ -315,8 +296,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         blurTint={blurTint}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
-        contentHeight={this.state.contentHeight ?? 0}
-        footerHeight={this.state.footerHeight ?? 0}
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
@@ -350,10 +329,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           ]}
           {...rest}
         >
-          <View collapsable={false} onLayout={this.onContentLayout} style={contentContainerStyle}>
+          <View collapsable={false} style={contentContainerStyle}>
             {children}
           </View>
-          <View collapsable={false} onLayout={this.onFooterLayout}>
+          <View collapsable={false}>
             <TrueSheetFooter Component={FooterComponent} />
           </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}

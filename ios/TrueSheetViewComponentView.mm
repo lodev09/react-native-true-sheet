@@ -290,19 +290,8 @@ using namespace facebook::react;
         needsSetupDimmed = YES;
     }
     
-    // Update content height
-    if (oldViewProps.contentHeight != newViewProps.contentHeight) {
-        if (newViewProps.contentHeight != 0.0) {
-            _controller.contentHeight = @(newViewProps.contentHeight);
-        }
-    }
-    
-    // Update footer height
-    if (oldViewProps.footerHeight != newViewProps.footerHeight) {
-        if (newViewProps.footerHeight != 0.0) {
-            _controller.footerHeight = @(newViewProps.footerHeight);
-        }
-    }
+    // Content height and footer height are measured directly from views in layoutSubviews
+    // No need to update from props
     
     // Update scrollable handle
     if (oldViewProps.scrollableHandle != newViewProps.scrollableHandle) {
@@ -405,18 +394,16 @@ using namespace facebook::react;
         [_controller.view bringSubviewToFront:_containerView];
         
         if (_contentView) {
-            const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-            if (props.contentHeight != 0.0) {
-                _controller.contentHeight = @(props.contentHeight);
-            }
+            // Measure content height from the view's intrinsic size
+            CGSize contentSize = [_contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+            _controller.contentHeight = @(contentSize.height);
         }
         
         if (_footerView) {
             [self setupFooterConstraints];
-            const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-            if (props.footerHeight != 0.0) {
-                _controller.footerHeight = @(props.footerHeight);
-            }
+            // Measure footer height from the view's intrinsic size
+            CGSize footerSize = [_footerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+            _controller.footerHeight = @(footerSize.height);
         }
         
         // Handle initial presentation - present if not already presented and initialIndex is valid

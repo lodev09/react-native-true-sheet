@@ -10,7 +10,6 @@
 
 @interface TrueSheetViewController ()
 
-@property (nonatomic, assign) CGFloat bottomInset;
 @property (nonatomic, strong) UIVisualEffectView *backgroundView;
 @property (nonatomic, assign) CGFloat lastViewWidth;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSDictionary *> *detentValues;
@@ -32,13 +31,6 @@
         
         _backgroundView = [[UIVisualEffectView alloc] init];
         _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        
-        UIWindow *window = [UIApplication sharedApplication].windows.firstObject;
-        if (window.isKeyWindow) {
-            _bottomInset = window.safeAreaInsets.bottom;
-        } else {
-            _bottomInset = 0;
-        }
     }
     return self;
 }
@@ -117,7 +109,7 @@
     
     CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
     CGFloat sheetY = view.frame.origin.y;
-    CGFloat height = screenHeight - self.bottomInset - sheetY;
+    CGFloat height = screenHeight - sheetY;
     
     if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:)]) {
         [self.delegate viewControllerDidDrag:gesture.state height:height];
@@ -205,8 +197,8 @@
     [self.detentValues removeAllObjects];
     NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
     
-    CGFloat adjustedContentHeight = [self.contentHeight floatValue] - self.bottomInset;
-    CGFloat totalHeight = adjustedContentHeight + [self.footerHeight floatValue];
+    // Don't subtract bottomInset - the sheet controller handles safe area automatically
+    CGFloat totalHeight = [self.contentHeight floatValue] + [self.footerHeight floatValue];
     
     for (NSInteger index = 0; index < self.sizes.count; index++) {
         id size = self.sizes[index];
