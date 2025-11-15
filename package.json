@@ -198,5 +198,14 @@
     "type": "legacy-view",
     "languages": "kotlin-swift",
     "version": "0.48.3"
+  },
+  "codegenConfig": {
+    "name": "TrueSheetViewSpec",
+    "type": "components",
+    "jsSrcsDir": "src",
+    "outputDir": {
+      "ios": "ios"
+    },
+    "includesGeneratedCode": true
   }
 }

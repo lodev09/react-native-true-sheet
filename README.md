@@ -6,18 +6,31 @@
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
+> **⚡ New Architecture (Fabric) Only**  
+> Version 3.0+ requires React Native's new architecture. For the old architecture, use version 2.x.  
+> [📖 Migration Guide](docs/FABRIC_MIGRATION.md) | [🔧 Implementation Details](docs/FABRIC_IMPLEMENTATION.md)
+
 <img alt="React Native True Sheet - IOS" src="docs/static/img/preview.gif" width="300" height="600" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-2.gif" width="300" height="600" />
 
 ## Features
 
-* Implemented in the native realm.
-* Clean, fast, and lightweight.
-* Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods).
-* Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
+* ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
+* 🎯 **Type-safe** - Full TypeScript support with Codegen-generated native interfaces
+* 🚀 **Blazing fast** - Direct C++ communication, no bridge overhead
+* 🎨 Implemented in the native realm
+* 🪶 Clean, fast, and lightweight
+* 🔄 Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods)
+* ✨ Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
 
 ## Installation
 
-You can install the package by using either `yarn` or `npm`.
+### Prerequisites
+
+- React Native >= 0.71.0
+- New Architecture enabled (`RCT_NEW_ARCH_ENABLED=1` for iOS, `newArchEnabled=true` for Android)
+- iOS >= 13.4
+
+### Install
 
 ```sh
 yarn add @lodev09/react-native-true-sheet
@@ -26,11 +39,16 @@ yarn add @lodev09/react-native-true-sheet
 npm i @lodev09/react-native-true-sheet
 ```
 
-Next, run the following to install it on IOS.
+### iOS Setup
 
 ```sh
 cd ios && pod install
 ```
+
+> **Note:** If you need old architecture support, use version 2.x:
+> ```sh
+> yarn add @lodev09/react-native-true-sheet@^2.0.0
+> ```
 
 ## Documentation
 
@@ -38,6 +56,8 @@ cd ios && pod install
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
+- [Fabric Migration Guide](docs/FABRIC_MIGRATION.md) 📖
+- [Fabric Implementation Details](docs/FABRIC_IMPLEMENTATION.md) 🔧
 
 ## Usage
 

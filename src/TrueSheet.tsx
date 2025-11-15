@@ -1,14 +1,10 @@
-import { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
+import { PureComponent, type RefObject, createRef, type ReactNode } from 'react'
 import {
-  requireNativeComponent,
   Platform,
-  findNodeHandle,
   View,
-  type NativeMethods,
   type ViewStyle,
   type NativeSyntheticEvent,
   type LayoutChangeEvent,
-  type ProcessedColorValue,
   processColor,
 } from 'react-native'
 
@@ -20,28 +16,25 @@ import type {
   SizeChangeEvent,
   PresentEvent,
 } from './TrueSheet.types'
-import { TrueSheetModule } from './TrueSheetModule'
+import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
 
-const NATIVE_COMPONENT_NAME = 'TrueSheetView'
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n'
+  '- You are not using Expo Go\n' +
+  '- You are using the new architecture (Fabric)\n'
+
+// Validate that Commands are available
+if (!Commands) {
+  throw new Error(LINKING_ERROR)
+}
 
 export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
 
-interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'backgroundColor'> {
-  contentHeight?: number
-  footerHeight?: number
-  background?: ProcessedColorValue | null
-  scrollableHandle: number | null
-  onContainerSizeChange: (event: ContainerSizeChangeEvent) => void
-}
-
-type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
+type NativeRef = React.ElementRef<typeof TrueSheetViewNativeComponent>
 
 interface TrueSheetState {
   containerWidth?: number
@@ -51,21 +44,15 @@ interface TrueSheetState {
   scrollableHandle: number | null
 }
 
-const TrueSheetNativeView = requireNativeComponent<TrueSheetNativeViewProps>(NATIVE_COMPONENT_NAME)
-
-if (!TrueSheetNativeView) {
-  throw new Error(LINKING_ERROR)
-}
-
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet'
 
   private readonly ref: RefObject<NativeRef>
 
   /**
-   * Map of sheet names against their handle.
+   * Map of sheet names against their ref.
    */
-  private static readonly handles: { [name: string]: number } = {}
+  private static readonly refs: { [name: string]: NativeRef } = {}
 
   constructor(props: TrueSheetProps) {
     super(props)
@@ -92,14 +79,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     }
   }
 
-  private static getHandle(name: string) {
-    const handle = TrueSheet.handles[name]
-    if (!handle) {
-      console.warn(`Could not get native view tag from "${name}". Check your name prop.`)
+  private static getRef(name: string) {
+    const ref = TrueSheet.refs[name]
+    if (!ref) {
+      console.warn(`Could not get sheet ref from "${name}". Check your name prop.`)
       return
     }
 
-    return handle
+    return ref
   }
 
   /**
@@ -107,10 +94,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * See `name` prop.
    */
   public static async present(name: string, index: number = 0) {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) return
+    const ref = TrueSheet.getRef(name)
+    if (!ref) return
 
-    await TrueSheetModule.present(handle, index)
+    Commands.present(ref, index)
   }
 
   /**
@@ -118,10 +105,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * See `name` prop.
    */
   public static async dismiss(name: string) {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) return
+    const ref = TrueSheet.getRef(name)
+    if (!ref) return
 
-    await TrueSheetModule.dismiss(handle)
+    Commands.dismiss(ref)
   }
 
   /**
@@ -132,22 +119,13 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     await TrueSheet.present(name, index)
   }
 
-  private get handle(): number {
-    const nodeHandle = findNodeHandle(this.ref.current)
-    if (nodeHandle == null || nodeHandle === -1) {
-      throw new Error('Could not get native view tag')
-    }
-
-    return nodeHandle
-  }
-
   private updateState(): void {
     const scrollableHandle = this.props.scrollRef?.current
-      ? findNodeHandle(this.props.scrollRef.current)
+      ? (this.props.scrollRef.current as any)._nativeTag || null
       : null
 
-    if (this.props.name) {
-      TrueSheet.handles[this.props.name] = this.handle
+    if (this.props.name && this.ref.current) {
+      TrueSheet.refs[this.props.name] = this.ref.current
     }
 
     this.setState({
@@ -207,7 +185,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * See `sizes` prop
    */
   public async present(index: number = 0): Promise<void> {
-    await TrueSheetModule.present(this.handle, index)
+    if (this.ref.current) {
+      Commands.present(this.ref.current, index)
+    }
   }
 
   /**
@@ -222,7 +202,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * Dismisses the Sheet
    */
   public async dismiss(): Promise<void> {
-    await TrueSheetModule.dismiss(this.handle)
+    if (this.ref.current) {
+      Commands.dismiss(this.ref.current)
+    }
   }
 
   componentDidMount(): void {
@@ -263,25 +245,25 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     } = this.props
 
     return (
-      <TrueSheetNativeView
+      <TrueSheetViewNativeComponent
         ref={this.ref}
         style={$nativeSheet}
-        scrollableHandle={this.state.scrollableHandle}
-        sizes={sizes}
-        blurTint={blurTint}
-        background={processColor(backgroundColor)}
-        cornerRadius={cornerRadius}
-        contentHeight={this.state.contentHeight}
-        footerHeight={this.state.footerHeight}
+        scrollableHandle={this.state.scrollableHandle ?? null}
+        sizes={sizes.map(String)}
+        blurTint={blurTint ?? null}
+        background={(processColor(backgroundColor) as number) ?? null}
+        cornerRadius={cornerRadius ?? null}
+        contentHeight={this.state.contentHeight ?? null}
+        footerHeight={this.state.footerHeight ?? null}
         grabber={grabber}
         dimmed={dimmed}
-        dimmedIndex={dimmedIndex}
+        dimmedIndex={dimmedIndex ?? null}
         edgeToEdge={edgeToEdge}
-        initialIndex={initialIndex}
+        initialIndex={initialIndex ?? -1}
         initialIndexAnimated={initialIndexAnimated}
         keyboardMode={keyboardMode}
         dismissible={dismissible}
-        maxHeight={maxHeight}
+        maxHeight={maxHeight ?? null}
         onMount={this.onMount}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
@@ -314,7 +296,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
         </View>
-      </TrueSheetNativeView>
+      </TrueSheetViewNativeComponent>
     )
   }
 }
