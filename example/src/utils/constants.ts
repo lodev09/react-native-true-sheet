@@ -21,6 +21,4 @@ export const SPRING_CONFIG: WithSpringConfig = {
   stiffness: 1000,
   mass: 3,
   overshootClamping: true,
-  restDisplacementThreshold: 10,
-  restSpeedThreshold: 10,
 }
