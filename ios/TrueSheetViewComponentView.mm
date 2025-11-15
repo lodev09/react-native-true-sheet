@@ -51,7 +51,6 @@ using namespace facebook::react;
     NSNumber *_activeIndex;
     
     RCTSurfaceTouchHandler *_surfaceTouchHandler;
-    NSInteger _presentRetryCount;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -63,7 +62,6 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
-        _presentRetryCount = 0;
         
         // Touch handler will be created lazily when mounting child view
         _surfaceTouchHandler = nil;
@@ -82,11 +80,8 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
-    NSLog(@"[TrueSheet] dealloc: _isPresented=%d, presentingViewController=%@", _isPresented, _controller.presentingViewController);
-    
     // Dismiss the sheet if it's currently being presented (with animation for better UX)
     if (_controller && _controller.presentingViewController) {
-        NSLog(@"[TrueSheet] dealloc: Dismissing controller");
         [_controller dismissViewControllerAnimated:YES completion:nil];
     }
     
@@ -142,10 +137,7 @@ using namespace facebook::react;
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
     
-    NSLog(@"[TrueSheet] presentAtIndex: index=%ld, _isPresented=%d, presentingViewController=%@", (long)index, _isPresented, _controller.presentingViewController);
-    
     if (_isPresented) {
-        NSLog(@"[TrueSheet] presentAtIndex: Already presented, resizing to index %ld", (long)index);
         [_controller resizeToIndex:index];
         if (completion) {
             completion(YES, nil);
@@ -161,8 +153,6 @@ using namespace facebook::react;
                                          userInfo:@{
             NSLocalizedDescriptionKey: @"No root view controller found"
         }];
-        
-        NSLog(@"[TrueSheet] Error: No root view controller found");
         
         if (completion) {
             completion(NO, error);
@@ -372,8 +362,6 @@ using namespace facebook::react;
     [super layoutSubviews];
     
     if (_containerView != nil && _contentView == nil) {
-        NSLog(@"[TrueSheet] layoutSubviews: Setting up content, _isPresented=%d", _isPresented);
-        
         if (_containerView.subviews.count >= 1) {
             _contentView = _containerView.subviews[0];
         }
@@ -403,9 +391,7 @@ using namespace facebook::react;
         
         // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-        NSLog(@"[TrueSheet] layoutSubviews: initialIndex=%ld, _isPresented=%d", (long)props.initialIndex, _isPresented);
         if (props.initialIndex >= 0 && !_isPresented) {
-            NSLog(@"[TrueSheet] layoutSubviews: Calling presentAtIndex");
             BOOL animated = props.initialIndexAnimated;
             [self presentAtIndex:props.initialIndex animated:animated completion:nil];
         }
@@ -601,14 +587,12 @@ using namespace facebook::react;
         
         // Skip TrueSheetViewController if it's being dismissed
         if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
-            NSLog(@"[TrueSheet] _findPresentingViewController: Skipping sheet being dismissed");
             break;
         }
         
         rootViewController = presented;
     }
     
-    NSLog(@"[TrueSheet] _findPresentingViewController: %@", rootViewController);
     return rootViewController;
 }
 

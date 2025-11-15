@@ -90,7 +90,7 @@ export const MapScreen = () => {
         backgroundColor={DARK}
         edgeToEdge
         contentContainerStyle={{ padding: SPACING, paddingBottom: SPACING * 3 }}
-        dimmedIndex={2}
+        dimmedIndex={1}
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
@@ -108,7 +108,7 @@ export const MapScreen = () => {
           <Text style={$title}>True Sheet 💩</Text>
           <Text style={$subtitle}>The true native bottom sheet experience.</Text>
         </View>
-        <Button text="TrueSheet Views" onPress={() => presentBasicSheet(0)} />
+        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
