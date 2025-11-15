@@ -303,6 +303,20 @@
     return identifier;
 }
 
+- (void)resizeToIndex:(NSInteger)index {
+    if (@available(iOS 15.0, *)) {
+        UISheetPresentationController *sheet = self.sheetPresentationController;
+        if (!sheet) return;
+        
+        UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
+        if (identifier) {
+            [sheet animateChanges:^{
+                sheet.selectedDetentIdentifier = identifier;
+            }];
+        }
+    }
+}
+
 - (UISheetPresentationControllerDetentIdentifier)identifierFromString:(NSString *)string API_AVAILABLE(ios(15.0)) {
     return string;
 }
