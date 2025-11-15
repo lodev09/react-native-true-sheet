@@ -16,27 +16,34 @@ export declare class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetSt
     displayName: string;
     private readonly ref;
     /**
-     * Map of sheet names against their handle.
+     * Map of sheet names against their ref.
      */
-    private static readonly handles;
+    private static readonly refs;
     constructor(props: TrueSheetProps);
-    private static getHandle;
+    private static getRef;
     /**
-     * Present the sheet by given `name`.
-     * See `name` prop.
+     * Present the sheet by given `name` (Promise-based)
+     * @param name - Sheet name (must match sheet's name prop)
+     * @param index - Size index (default: 0)
+     * @returns Promise that resolves when sheet is fully presented
+     * @throws Error if sheet not found or presentation fails
      */
     static present(name: string, index?: number): Promise<void>;
     /**
-     * Dismiss the sheet by given `name`.
-     * See `name` prop.
+     * Dismiss the sheet by given `name` (Promise-based)
+     * @param name - Sheet name
+     * @returns Promise that resolves when sheet is fully dismissed
+     * @throws Error if sheet not found or dismissal fails
      */
     static dismiss(name: string): Promise<void>;
     /**
-     * Resize the sheet by given `name`.
-     * See `name` prop.
+     * Resize the sheet by given `name` (Promise-based)
+     * @param name - Sheet name
+     * @param index - New size index
+     * @returns Promise that resolves when resize is complete
+     * @throws Error if sheet not found
      */
     static resize(name: string, index: number): Promise<void>;
-    private get handle();
     private updateState;
     private onSizeChange;
     private onContainerSizeChange;

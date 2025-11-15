@@ -62,7 +62,7 @@ interface TrueSheetState {
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet'
 
-  private readonly ref: RefObject<NativeRef>
+  private readonly ref: RefObject<NativeRef | null>
 
   /**
    * Map of sheet names against their ref.
