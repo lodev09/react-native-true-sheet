@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetViewComponentView.h"
+#import "TrueSheetContainerViewComponentView.h"
 #import "TrueSheetViewController.h"
 #import "TrueSheetModule.h"
 
@@ -491,13 +492,14 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeWidth:(CGFloat)width {
-    if (!_eventEmitter) return;
+    if (!_containerView) return;
     
-    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-    TrueSheetViewEventEmitter::OnContainerSizeChange event;
-    event.width = static_cast<double>(width);
-    event.height = static_cast<double>(_controller.view.bounds.size.height);
-    emitter->onContainerSizeChange(event);
+    // Cast to our custom container component view
+    TrueSheetContainerViewComponentView *containerComponentView = (TrueSheetContainerViewComponentView *)_containerView;
+    
+    // Update the container size - this will propagate to React's layout tree
+    CGSize newSize = CGSizeMake(width, _controller.view.bounds.size.height);
+    [containerComponentView updateSize:newSize];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {

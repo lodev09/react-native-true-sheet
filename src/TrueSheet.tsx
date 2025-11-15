@@ -16,6 +16,7 @@ import type {
   PresentEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
+import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
 
@@ -314,21 +315,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragEnd={this.onDragEnd}
         onContainerSizeChange={this.onContainerSizeChange}
       >
-        <View
-          collapsable={false}
-          style={[
-            {
-              overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-
-              // Update the width on JS side.
-              // New Arch interop does not support updating it in native :/
-              width: this.state.containerWidth,
-              height: this.state.containerHeight,
-            },
-            style,
-          ]}
-          {...rest}
-        >
+        <TrueSheetContainerViewNativeComponent style={style} {...rest}>
           <View collapsable={false} style={contentContainerStyle}>
             {children}
           </View>
@@ -336,7 +323,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
             <TrueSheetFooter Component={FooterComponent} />
           </View>
           {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
-        </View>
+        </TrueSheetContainerViewNativeComponent>
       </TrueSheetViewNativeComponent>
     )
   }

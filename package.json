@@ -205,6 +205,15 @@
     "android": {
       "javaPackageName": "com.lodev09.truesheet"
     },
-    "ios": {}
+    "ios": {
+      "components": {
+        "TrueSheetView": {
+          "className": "TrueSheetViewComponentView"
+        },
+        "TrueSheetContainerView": {
+          "className": "TrueSheetContainerViewComponentView"
+        }
+      }
+    }
   }
 }
