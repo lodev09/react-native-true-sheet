@@ -1,7 +1,7 @@
 /**
  * TurboModule spec for TrueSheet imperative API
  * Provides promise-based async operations with proper error handling
- * 
+ *
  * @format
  */
 
@@ -35,4 +35,4 @@ export interface Spec extends TurboModule {
   resizeByRef(viewTag: number, index: number): Promise<void>
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('TrueSheetModule')
+export default TurboModuleRegistry.get<Spec>('TrueSheetModule')

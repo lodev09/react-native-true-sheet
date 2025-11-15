@@ -17,7 +17,6 @@ import type {
   PresentEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
-import TrueSheetModule from './specs/NativeTrueSheetModule'
 import { TrueSheetGrabber } from './TrueSheetGrabber'
 import { TrueSheetFooter } from './TrueSheetFooter'
 
@@ -31,6 +30,21 @@ const LINKING_ERROR =
 // Validate that Commands are available
 if (!Commands) {
   throw new Error(LINKING_ERROR)
+}
+
+// Lazy load TurboModule to avoid initialization errors
+let TrueSheetModule: any = null
+const getTurboModule = () => {
+  if (TrueSheetModule === null) {
+    try {
+      const { default: module } = require('./specs/NativeTrueSheetModule')
+      TrueSheetModule = module
+    } catch (error) {
+      console.warn('[TrueSheet] TurboModule not available:', error)
+      TrueSheetModule = undefined
+    }
+  }
+  return TrueSheetModule
 }
 
 export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
@@ -108,7 +122,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
-    return TrueSheetModule.presentByRef(viewTag, index)
+    const module = getTurboModule()
+    if (!module) {
+      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
+    }
+
+    return module.presentByRef(viewTag, index)
   }
 
   /**
@@ -128,7 +147,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
-    return TrueSheetModule.dismissByRef(viewTag)
+    const module = getTurboModule()
+    if (!module) {
+      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
+    }
+
+    return module.dismissByRef(viewTag)
   }
 
   /**
@@ -149,7 +173,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
-    return TrueSheetModule.resizeByRef(viewTag, index)
+    const module = getTurboModule()
+    if (!module) {
+      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
+    }
+
+    return module.resizeByRef(viewTag, index)
   }
 
   private updateState(): void {

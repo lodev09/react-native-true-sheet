@@ -34,7 +34,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 }
 
 + (BOOL)requiresMainQueueSetup {
-    return YES;
+    return NO;
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -140,13 +140,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
     }
 }
 
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModuleWithJsInvoker:
-    (std::shared_ptr<facebook::react::CallInvoker>)jsInvoker {
-    return [self getTurboModule:facebook::react::ObjCTurboModule::InitParams{
-        .moduleName = "TrueSheetModule",
-        .jsInvoker = jsInvoker,
-    }];
-}
+
 
 @end
 
