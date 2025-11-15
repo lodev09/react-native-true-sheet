@@ -138,26 +138,20 @@
             style = UIBlurEffectStyleLight;
         } else if ([blurTint isEqualToString:@"extraLight"]) {
             style = UIBlurEffectStyleExtraLight;
-        } else if (@available(iOS 10.0, *)) {
-            if ([blurTint isEqualToString:@"regular"]) {
-                style = UIBlurEffectStyleRegular;
-            } else if ([blurTint isEqualToString:@"prominent"]) {
-                style = UIBlurEffectStyleProminent;
-            }
-        }
-        
-        if (@available(iOS 13.0, *)) {
-            if ([blurTint isEqualToString:@"systemThinMaterial"]) {
-                style = UIBlurEffectStyleSystemThinMaterial;
-            } else if ([blurTint isEqualToString:@"systemMaterial"]) {
-                style = UIBlurEffectStyleSystemMaterial;
-            } else if ([blurTint isEqualToString:@"systemThickMaterial"]) {
-                style = UIBlurEffectStyleSystemThickMaterial;
-            } else if ([blurTint isEqualToString:@"systemChromeMaterial"]) {
-                style = UIBlurEffectStyleSystemChromeMaterial;
-            } else if ([blurTint isEqualToString:@"systemUltraThinMaterial"]) {
-                style = UIBlurEffectStyleSystemUltraThinMaterial;
-            }
+        } else if ([blurTint isEqualToString:@"regular"]) {
+            style = UIBlurEffectStyleRegular;
+        } else if ([blurTint isEqualToString:@"prominent"]) {
+            style = UIBlurEffectStyleProminent;
+        } else if ([blurTint isEqualToString:@"systemThinMaterial"]) {
+            style = UIBlurEffectStyleSystemThinMaterial;
+        } else if ([blurTint isEqualToString:@"systemMaterial"]) {
+            style = UIBlurEffectStyleSystemMaterial;
+        } else if ([blurTint isEqualToString:@"systemThickMaterial"]) {
+            style = UIBlurEffectStyleSystemThickMaterial;
+        } else if ([blurTint isEqualToString:@"systemChromeMaterial"]) {
+            style = UIBlurEffectStyleSystemChromeMaterial;
+        } else if ([blurTint isEqualToString:@"systemUltraThinMaterial"]) {
+            style = UIBlurEffectStyleSystemUltraThinMaterial;
         }
         
         self.blurEffect = [UIBlurEffect effectWithStyle:style];
@@ -180,7 +174,7 @@
 
 #pragma mark - Sheet Configuration (iOS 15+)
 
-- (void)setupDimmedBackground API_AVAILABLE(ios(15.0)) {
+- (void)setupDimmedBackground {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     if (!sheet) return;
     
@@ -204,7 +198,7 @@
     }
 }
 
-- (void)setupSizes API_AVAILABLE(ios(15.0)) {
+- (void)setupSizes {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     if (!sheet) return;
     
@@ -229,7 +223,7 @@
 - (UISheetPresentationControllerDetent *)detentForSize:(id)size
                                             withHeight:(CGFloat)height
                                          withMaxHeight:(NSNumber *)maxHeight
-                                               atIndex:(NSInteger)index API_AVAILABLE(ios(15.0)) {
+                                               atIndex:(NSInteger)index {
     NSString *detentId = [NSString stringWithFormat:@"custom-%@", size];
     
     if ([size isKindOfClass:[NSNumber class]]) {
@@ -326,7 +320,7 @@
     return [UISheetPresentationControllerDetent mediumDetent];
 }
 
-- (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index API_AVAILABLE(ios(15.0)) {
+- (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     if (!sheet) return UISheetPresentationControllerDetentIdentifierMedium;
     
@@ -346,24 +340,22 @@
 }
 
 - (void)resizeToIndex:(NSInteger)index {
-    if (@available(iOS 15.0, *)) {
-        UISheetPresentationController *sheet = self.sheetPresentationController;
-        if (!sheet) return;
-        
-        UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
-        if (identifier) {
-            [sheet animateChanges:^{
-                sheet.selectedDetentIdentifier = identifier;
-            }];
-        }
+    UISheetPresentationController *sheet = self.sheetPresentationController;
+    if (!sheet) return;
+    
+    UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
+    if (identifier) {
+        [sheet animateChanges:^{
+            sheet.selectedDetentIdentifier = identifier;
+        }];
     }
 }
 
-- (UISheetPresentationControllerDetentIdentifier)identifierFromString:(NSString *)string API_AVAILABLE(ios(15.0)) {
+- (UISheetPresentationControllerDetentIdentifier)identifierFromString:(NSString *)string {
     return string;
 }
 
-- (void)observeDrag API_AVAILABLE(ios(15.0)) {
+- (void)observeDrag {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     UIView *presentedView = sheet.presentedView;
     if (!presentedView) return;
@@ -376,42 +368,37 @@
 }
 
 - (NSDictionary *)currentSizeInfo {
-    if (@available(iOS 15.0, *)) {
-        UISheetPresentationController *sheet = self.sheetPresentationController;
-        if (!sheet) return nil;
-        
-        UISheetPresentationControllerDetentIdentifier selectedIdentifier = sheet.selectedDetentIdentifier;
-        if (!selectedIdentifier) return nil;
-        
-        return self.detentValues[selectedIdentifier];
-    }
-    return nil;
+    UISheetPresentationController *sheet = self.sheetPresentationController;
+    if (!sheet) return nil;
+    
+    UISheetPresentationControllerDetentIdentifier selectedIdentifier = sheet.selectedDetentIdentifier;
+    if (!selectedIdentifier) return nil;
+    
+    return self.detentValues[selectedIdentifier];
 }
 
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion {
-    if (@available(iOS 15.0, *)) {
-        UISheetPresentationController *sheet = self.sheetPresentationController;
-        if (!sheet) {
-            if (completion) completion();
-            return;
-        }
-        
-        [self setupSizes];
-        [self setupDimmedBackground];
-        
-        sheet.delegate = self;
-        sheet.prefersEdgeAttachedInCompactHeight = YES;
-        sheet.prefersGrabberVisible = self.grabber;
-        sheet.preferredCornerRadius = self.cornerRadius ? [self.cornerRadius floatValue] : 0;
-        sheet.selectedDetentIdentifier = [self detentIdentifierForIndex:index];
+    UISheetPresentationController *sheet = self.sheetPresentationController;
+    if (!sheet) {
+        if (completion) completion();
+        return;
     }
+    
+    [self setupSizes];
+    [self setupDimmedBackground];
+    
+    sheet.delegate = self;
+    sheet.prefersEdgeAttachedInCompactHeight = YES;
+    sheet.prefersGrabberVisible = self.grabber;
+    sheet.preferredCornerRadius = self.cornerRadius ? [self.cornerRadius floatValue] : 0;
+    sheet.selectedDetentIdentifier = [self detentIdentifierForIndex:index];
     
     if (completion) completion();
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
 
-- (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:(UISheetPresentationController *)sheetPresentationController API_AVAILABLE(ios(15.0)) {
+- (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:(UISheetPresentationController *)sheetPresentationController {
     UISheetPresentationControllerDetentIdentifier identifier = sheetPresentationController.selectedDetentIdentifier;
     if (!identifier) return;
     

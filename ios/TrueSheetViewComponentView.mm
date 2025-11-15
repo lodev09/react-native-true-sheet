@@ -314,7 +314,6 @@ using namespace facebook::react;
     // Add above the background view to ensure touch events work
     // backgroundView is at index 0, so we add after it
     [_controller.view addSubview:_containerView];
-    _containerView.userInteractionEnabled = YES;
     
     // Attach surface touch handler to enable proper touch event handling
     // This is required because the containerView is not managed by React Native's view hierarchy
@@ -356,7 +355,6 @@ using namespace facebook::react;
         [_controller.view bringSubviewToFront:_containerView];
         
         if (_contentView) {
-            _contentView.userInteractionEnabled = YES;
             const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
             if (props.contentHeight != 0.0) {
                 _controller.contentHeight = @(props.contentHeight);
@@ -547,20 +545,15 @@ using namespace facebook::react;
     // Find the root view controller from the window
     UIWindow *keyWindow = nil;
     
-    // iOS 13+ compatible way to get key window
-    #if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
-    if (@available(iOS 13.0, *)) {
-        NSArray<UIWindow *> *windows = [[UIApplication sharedApplication] windows];
-        for (UIWindow *window in windows) {
-            if (window.isKeyWindow) {
-                keyWindow = window;
-                break;
-            }
+    // Get key window (iOS 15.1+ guaranteed)
+    NSArray<UIWindow *> *windows = [[UIApplication sharedApplication] windows];
+    for (UIWindow *window in windows) {
+        if (window.isKeyWindow) {
+            keyWindow = window;
+            break;
         }
     }
-    #endif
     
-    // Fallback for older iOS versions
     if (!keyWindow) {
         keyWindow = [[UIApplication sharedApplication] keyWindow];
     }
