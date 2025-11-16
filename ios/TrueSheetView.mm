@@ -324,8 +324,8 @@ using namespace facebook::react;
             return;
         }
         
-        // Remove from superview (cleanup handled automatically in willMoveToWindow:)
-        [_containerView removeFromSuperview];
+        // Cleanup container view (handles its own touch handler and scroll view cleanup)
+        [_containerView cleanup];
         
         // Clear reference
         _containerView = nil;
@@ -335,8 +335,8 @@ using namespace facebook::react;
             return;
         }
         
-        // Remove from superview (cleanup handled automatically in willMoveToWindow:)
-        [_footerView removeFromSuperview];
+        // Cleanup footer view (handles its own touch handler cleanup)
+        [_footerView cleanup];
         
         // Clear reference
         _footerView = nil;

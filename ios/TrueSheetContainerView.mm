@@ -45,24 +45,6 @@ using namespace facebook::react;
     [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 }
 
-- (void)willMoveToWindow:(UIWindow *)newWindow {
-    [super willMoveToWindow:newWindow];
-    
-    if (newWindow == nil) {
-        // Cleanup when being removed from window
-        if (_touchHandler) {
-            [_touchHandler detachFromView:self];
-        }
-        
-        if (_pinnedScrollView) {
-            [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
-            _pinnedScrollView = nil;
-        }
-        
-        [TrueSheetLayoutUtils unpinView:self];
-    }
-}
-
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     
@@ -128,7 +110,22 @@ using namespace facebook::react;
     return nil;
 }
 
-
+- (void)cleanup {
+    // Detach touch handler
+    if (_touchHandler) {
+        [_touchHandler detachFromView:self];
+    }
+    
+    // Unpin scroll view if exists
+    if (_pinnedScrollView) {
+        [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+        _pinnedScrollView = nil;
+    }
+    
+    // Unpin and remove from view hierarchy
+    [TrueSheetLayoutUtils unpinView:self];
+    [self removeFromSuperview];
+}
 
 @end
 
