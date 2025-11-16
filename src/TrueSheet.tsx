@@ -1,4 +1,11 @@
-import { PureComponent, type RefObject, createRef, type ReactNode, type ComponentRef } from 'react'
+import {
+  PureComponent,
+  type RefObject,
+  createRef,
+  type ReactNode,
+  type ComponentRef,
+  Component,
+} from 'react'
 
 import type {
   TrueSheetProps,
@@ -150,7 +157,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private updateState(): void {
     const scrollableHandle = this.props.scrollRef?.current
-      ? findNodeHandle(this.props.scrollRef.current)
+      ? findNodeHandle(this.props.scrollRef.current as Component<unknown>)
       : null
 
     if (this.props.name) {

@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type Ref, type Component } from 'react'
+import { forwardRef, useRef, type Ref } from 'react'
 import { FlatList, View, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
@@ -9,7 +9,7 @@ import { DemoContent } from '../DemoContent'
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  const flatListRef = useRef<Component<unknown>>(null)
+  const flatListRef = useRef<FlatList>(null)
 
   return (
     <TrueSheet
