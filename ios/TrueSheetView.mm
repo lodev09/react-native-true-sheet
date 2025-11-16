@@ -13,6 +13,7 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetViewController.h"
 #import "TrueSheetModule.h"
+#import "TrueSheetLayoutUtils.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -33,15 +34,10 @@ using namespace facebook::react;
     TrueSheetViewController *_controller;
     TrueSheetContainerView *_containerView;
     TrueSheetFooterView *_footerView;
-    UIView *_scrollView;
-    
-    NSLayoutConstraint *_footerBottomConstraint;
-    NSLayoutConstraint *_footerHeightConstraint;
     
     BOOL _isPresented;
     NSNumber *_activeIndex;
     
-    RCTSurfaceTouchHandler *_surfaceTouchHandler;
     LayoutMetrics _layoutMetrics;
 }
 
@@ -54,9 +50,6 @@ using namespace facebook::react;
         _controller.delegate = self;
         _isPresented = NO;
         _activeIndex = nil;
-        
-        // Touch handler will be created lazily when mounting child view
-        _surfaceTouchHandler = nil;
     }
     return self;
 }
@@ -91,19 +84,13 @@ using namespace facebook::react;
 }
 
 - (void)invalidate {
-    // Don't dismiss the sheet during hot reload - only clean up touch handler
+    // Don't dismiss the sheet during hot reload
     // The sheet will remain presented and content will be remounted
     
-    // Detach touch handler only if containerView exists
-    if (_containerView && _surfaceTouchHandler) {
-        [_surfaceTouchHandler detachFromView:_containerView];
-        _surfaceTouchHandler = nil;
-    }
-    
     // Clear child view references (will be reassigned on remount)
+    // Touch handlers are managed internally by the views
     _containerView = nil;
     _footerView = nil;
-    _scrollView = nil;
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -274,16 +261,6 @@ using namespace facebook::react;
     // Content height and footer height are measured directly from views in layoutSubviews
     // No need to update from props
     
-    // Update scrollable handle
-    if (oldViewProps.scrollableHandle != newViewProps.scrollableHandle) {
-        if (newViewProps.scrollableHandle > 0) {
-            UIView *scrollView = [self.superview viewWithTag:newViewProps.scrollableHandle];
-            if (scrollView) {
-                _scrollView = scrollView;
-            }
-        }
-    }
-    
     [super updateProps:props oldProps:oldProps];
     
     // Apply changes to presented sheet if needed
@@ -325,14 +302,8 @@ using namespace facebook::react;
         
         _containerView = (TrueSheetContainerView *)childComponentView;
         
-        // Add to the sheet controller's view hierarchy
-        [_controller.view addSubview:_containerView];
-        
-        // Attach touch handler to enable React Native touch events
-        if (!_surfaceTouchHandler) {
-            _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
-        }
-        [_surfaceTouchHandler attachToView:_containerView];
+        // Setup container in parent view (handles its own touch handling)
+        [_containerView setupInParentView:_controller.view];
     } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
         if (_footerView != nil) {
             NSLog(@"TrueSheet: Sheet can only have one footer component.");
@@ -341,14 +312,8 @@ using namespace facebook::react;
         
         _footerView = (TrueSheetFooterView *)childComponentView;
         
-        // Add footer to the sheet controller's view hierarchy
-        [_controller.view addSubview:_footerView];
-        
-        // Setup footer constraints to pin it to the bottom
-        [self setupFooterConstraints];
-        
-        // Bring footer to front to ensure it's above the container
-        [_controller.view bringSubviewToFront:_footerView];
+        // Setup footer in parent view (handles its own touch handling)
+        [_footerView setupInParentView:_controller.view];
     }
 }
 
@@ -359,70 +324,38 @@ using namespace facebook::react;
             return;
         }
         
-        // Detach touch handler before unmounting
-        if (_surfaceTouchHandler && _containerView) {
-            [_surfaceTouchHandler detachFromView:_containerView];
-            _surfaceTouchHandler = nil;
-        }
+        // Cleanup container view (handles its own touch handler and scroll view cleanup)
+        [_containerView cleanup];
         
-        // Unpin all tracked views
-        [self unpinView:_containerView];
-        [self unpinView:_scrollView];
-        
-        // Remove from view hierarchy and clear references
-        [_containerView removeFromSuperview];
+        // Clear reference
         _containerView = nil;
-        _scrollView = nil;
     } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
         if ((TrueSheetFooterView *)childComponentView != _footerView) {
             NSLog(@"TrueSheet: Cannot unmount unknown footer view");
             return;
         }
         
-        // Unpin footer view before removing
-        [self unpinView:_footerView];
+        // Cleanup footer view (handles its own touch handler cleanup)
+        [_footerView cleanup];
         
-        // Remove footer from view hierarchy and clear reference
-        [_footerView removeFromSuperview];
+        // Clear reference
         _footerView = nil;
-        _footerBottomConstraint = nil;
-        _footerHeightConstraint = nil;
     }
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     
-    // Initial setup: configure container layout
     if (_containerView != nil) {
-        // Measure container's content height for "auto" sizing
-        // Use the layout metrics from Fabric which contain the accurate content size
-        if (_containerView) {
-            CGFloat contentHeight = _containerView.frame.size.height;
-            if (contentHeight > 0) {
-                _controller.contentHeight = @(contentHeight);
-                
-                // If sheet is already presented, update its sizes
-                if (_isPresented && _controller.presentingViewController) {
-                    [_controller setupDetents];
-                }
+        // Measure container's content height for "auto" detent sizing
+        CGFloat contentHeight = _containerView.frame.size.height;
+        if (contentHeight > 0) {
+            _controller.contentHeight = @(contentHeight);
+            
+            // If sheet is already presented, update its detents
+            if (_isPresented && _controller.presentingViewController) {
+                [_controller setupDetents];
             }
-        }
-        
-        // Update footer height if it exists
-        if (_footerView && _footerHeightConstraint) {
-            CGFloat footerHeight = _footerView.frame.size.height;
-            if (footerHeight > 0 && _footerHeightConstraint.constant != footerHeight) {
-                _footerHeightConstraint.constant = footerHeight;
-            }
-        }
-        
-        // Ensure container is above background view for touch events
-        [_controller.view bringSubviewToFront:_containerView];
-        
-        // Ensure footer is above container if it exists
-        if (_footerView) {
-            [_controller.view bringSubviewToFront:_footerView];
         }
         
         // Handle initial presentation - present if not already presented and initialIndex is valid
@@ -432,8 +365,8 @@ using namespace facebook::react;
             [self presentAtIndex:props.initialIndex animated:animated completion:nil];
         }
         
-        // Emit onMount event
-        if (_eventEmitter) {
+        // Emit onMount event once
+        if (_eventEmitter && !_isPresented) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
             TrueSheetViewEventEmitter::OnMount event{};
             emitter->onMount(event);
@@ -453,46 +386,7 @@ using namespace facebook::react;
     [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
-#pragma mark - Layout Helpers
 
-- (void)pinView:(UIView *)view toView:(UIView *)parentView edges:(UIRectEdge)edges {
-    view.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    if (edges & UIRectEdgeTop) {
-        [view.topAnchor constraintEqualToAnchor:parentView.topAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeBottom) {
-        [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeLeft) {
-        [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeRight) {
-        [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
-    }
-}
-
-- (void)setupFooterConstraints {
-    if (!_footerView) return;
-
-    _footerView.translatesAutoresizingMaskIntoConstraints = NO;
-    [_footerView.leadingAnchor constraintEqualToAnchor:_controller.view.leadingAnchor].active = YES;
-    [_footerView.trailingAnchor constraintEqualToAnchor:_controller.view.trailingAnchor].active = YES;
-
-    _footerBottomConstraint = [_footerView.bottomAnchor constraintEqualToAnchor:_controller.view.bottomAnchor];
-    _footerBottomConstraint.active = YES;
-    
-    // Measure footer height and set height constraint
-    CGSize footerSize = [_footerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-    _footerHeightConstraint = [_footerView.heightAnchor constraintEqualToConstant:footerSize.height];
-    _footerHeightConstraint.active = YES;
-}
-
-- (void)unpinView:(UIView *)view {
-    if (!view) return;
-    view.translatesAutoresizingMaskIntoConstraints = YES;
-    [view removeConstraints:view.constraints];
-}
 
 #pragma mark - Public Methods
 
@@ -540,14 +434,6 @@ using namespace facebook::react;
         }
         default:
             break;
-    }
-}
-
-- (void)viewControllerWillAppear {
-    // Pin scrollView to contentView if scrollable handle is set
-    // Don't pin contentView to containerView - it's already managed by React Native
-    if (_scrollView && _containerView) {
-        [self pinView:_scrollView toView:_containerView edges:UIRectEdgeAll];
     }
 }
 

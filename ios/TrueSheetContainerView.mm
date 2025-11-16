@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
+#import "TrueSheetLayoutUtils.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -18,6 +19,8 @@ using namespace facebook::react;
 
 @implementation TrueSheetContainerView {
     LayoutMetrics _layoutMetrics;
+    RCTSurfaceTouchHandler *_touchHandler;
+    UIView *_pinnedScrollView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -28,6 +31,10 @@ using namespace facebook::react;
     if (self = [super initWithFrame:frame]) {
         static const auto defaultProps = std::make_shared<const TrueSheetContainerViewProps>();
         _props = defaultProps;
+        
+        // Create touch handler for React Native touch events
+        _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
+        _pinnedScrollView = nil;
     }
     return self;
 }
@@ -38,8 +45,86 @@ using namespace facebook::react;
     [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 }
 
-- (void)updateSize:(CGSize)size {
-    // No longer needed - width is updated directly on _contentView
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    
+    // Setup scroll view pinning when added to window hierarchy
+    // This ensures the view hierarchy is fully established
+    if (self.window) {
+        // Delay slightly to ensure subviews are mounted
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self setupScrollViewPinning];
+        });
+    }
+}
+
+- (void)setupInParentView:(UIView *)parentView {
+    // Add to parent view hierarchy
+    [parentView addSubview:self];
+    
+    // Pin to all edges of parent view
+    [TrueSheetLayoutUtils pinView:self toParentView:parentView edges:UIRectEdgeAll];
+    
+    // Ensure container is above background view for touch events
+    [parentView bringSubviewToFront:self];
+    
+    // Attach touch handler for React Native touch events
+    if (_touchHandler) {
+        [_touchHandler attachToView:self];
+    }
+}
+
+- (void)setupScrollViewPinning {
+    // Find scroll view in child hierarchy
+    UIView *scrollView = [self findScrollViewInView:self];
+    
+    if (scrollView && scrollView != _pinnedScrollView) {
+        // Unpin previous scroll view if exists
+        if (_pinnedScrollView) {
+            [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+        }
+        
+        // Pin the found scroll view
+        UIView *targetView = scrollView.superview;
+        if (targetView) {
+            [TrueSheetLayoutUtils pinView:scrollView toParentView:targetView edges:UIRectEdgeAll];
+            _pinnedScrollView = scrollView;
+        }
+    }
+}
+
+- (UIView *)findScrollViewInView:(UIView *)view {
+    // Check if current view is a scroll view
+    if ([view isKindOfClass:[UIScrollView class]]) {
+        return view;
+    }
+    
+    // Traverse children recursively
+    for (UIView *subview in view.subviews) {
+        UIView *found = [self findScrollViewInView:subview];
+        if (found) {
+            return found;
+        }
+    }
+    
+    return nil;
+}
+
+- (void)cleanup {
+    // Detach touch handler
+    if (_touchHandler) {
+        [_touchHandler detachFromView:self];
+    }
+    
+    // Unpin scroll view if exists
+    if (_pinnedScrollView) {
+        [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+        _pinnedScrollView = nil;
+    }
+    
+    // Unpin and remove from view hierarchy
+    [TrueSheetLayoutUtils unpinView:self];
+    [self removeFromSuperview];
 }
 
 @end

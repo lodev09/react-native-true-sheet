@@ -309,6 +309,7 @@ const $nativeSheet: ViewStyle = {
 }
 
 const $contentView: ViewStyle = {
+  backgroundColor: 'blue',
   position: 'absolute',
   left: 0,
   right: 0,

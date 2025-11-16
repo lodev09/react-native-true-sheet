@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import <React/RCTViewComponentView.h>
+#import <React/RCTSurfaceTouchHandler.h>
 #import <UIKit/UIKit.h>
 #import <react/renderer/core/LayoutMetrics.h>
 
@@ -16,7 +17,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TrueSheetContainerView : RCTViewComponentView
 
-- (void)updateSize:(CGSize)size;
+/**
+ * Sets up the container view in the parent view with touch handling
+ * @param parentView The parent view to add this container to
+ */
+- (void)setupInParentView:(UIView *)parentView;
+
+/**
+ * Cleans up the container view before removal
+ */
+- (void)cleanup;
 
 @end
 
