@@ -49,9 +49,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   private mountPromiseResolve?: () => void
 
   /**
-   * Map of sheet names against their handle.
+   * Map of sheet names against their instances.
    */
-  private static readonly handles: { [name: string]: number } = {}
+  private static readonly instances: { [name: string]: TrueSheet } = {}
 
   constructor(props: TrueSheetProps) {
     super(props)
@@ -72,14 +72,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragEnd = this.onDragEnd.bind(this)
   }
 
-  private static getHandle(name: string) {
-    const handle = TrueSheet.handles[name]
-    if (!handle) {
-      console.warn(`Could not get native view tag from "${name}". Check your name prop.`)
+  private static getInstance(name: string) {
+    const instance = TrueSheet.instances[name]
+    if (!instance) {
+      console.warn(`Could not find TrueSheet instance with name "${name}". Check your name prop.`)
       return
     }
 
-    return handle
+    return instance
   }
 
   private get handle(): number {
@@ -99,12 +99,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or presentation fails
    */
   public static async present(name: string, index: number = 0): Promise<void> {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) {
+    const instance = TrueSheet.getInstance(name)
+    if (!instance) {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    return TrueSheetModule?.presentByRef(handle, index)
+    return instance.present(index)
   }
 
   /**
@@ -114,12 +114,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or dismissal fails
    */
   public static async dismiss(name: string): Promise<void> {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) {
+    const instance = TrueSheet.getInstance(name)
+    if (!instance) {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    return TrueSheetModule?.dismissByRef(handle)
+    return instance.dismiss()
   }
 
   /**
@@ -130,17 +130,23 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found
    */
   public static async resize(name: string, index: number): Promise<void> {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) {
+    const instance = TrueSheet.getInstance(name)
+    if (!instance) {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    return TrueSheetModule?.resizeByRef(handle, index)
+    return instance.resize(index)
   }
 
-  private registerNativeHandle(): void {
-    if (this.props.name && this.state.shouldRenderNativeView) {
-      TrueSheet.handles[this.props.name] = this.handle
+  private registerInstance(): void {
+    if (this.props.name) {
+      TrueSheet.instances[this.props.name] = this
+    }
+  }
+
+  private unregisterInstance(): void {
+    if (this.props.name) {
+      delete TrueSheet.instances[this.props.name]
     }
   }
 
@@ -215,11 +221,15 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       )
     }
 
-    this.registerNativeHandle()
+    this.registerInstance()
   }
 
   componentDidUpdate(): void {
-    this.registerNativeHandle()
+    this.registerInstance()
+  }
+
+  componentWillUnmount(): void {
+    this.unregisterInstance()
   }
 
   render(): ReactNode {
