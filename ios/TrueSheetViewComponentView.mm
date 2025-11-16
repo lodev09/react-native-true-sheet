@@ -420,6 +420,11 @@ using namespace facebook::react;
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
         
+        // Ensure footer is above container if it exists
+        if (_footerView) {
+            [_controller.view bringSubviewToFront:_footerView];
+        }
+        
         // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
         if (props.initialIndex >= 0 && !_isPresented) {
