@@ -349,17 +349,11 @@ using namespace facebook::react;
     // Measure container's content height for "auto" detent sizing
     CGFloat contentHeight = _containerView.frame.size.height;
     if (contentHeight > 0) {
-      CGFloat previousHeight = [_controller.contentHeight floatValue];
       _controller.contentHeight = @(contentHeight);
 
-      // If sheet is already presented and content height changed, update its detents
-      if (_isPresented && _controller.presentingViewController && contentHeight != previousHeight) {
+      // If sheet is already presented, update its detents
+      if (_isPresented && _controller.presentingViewController) {
         [_controller setupDetents];
-        
-        // Resize to current index to reflect new auto detent height
-        if (_activeIndex) {
-          [_controller resizeToIndex:[_activeIndex integerValue]];
-        }
       }
     }
 
