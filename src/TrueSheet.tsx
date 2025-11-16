@@ -10,7 +10,7 @@ import type {
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
-import { Platform, processColor, View, type ViewStyle } from 'react-native'
+import { Platform, processColor, View, type ViewStyle, findNodeHandle } from 'react-native'
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -51,9 +51,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   private readonly ref: RefObject<NativeRef | null>
 
   /**
-   * Map of sheet names against their ref.
+   * Map of sheet names against their handle.
    */
-  private static readonly refs: { [name: string]: NativeRef } = {}
+  private static readonly handles: { [name: string]: number } = {}
 
   constructor(props: TrueSheetProps) {
     super(props)
@@ -73,14 +73,23 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     }
   }
 
-  private static getRef(name: string) {
-    const ref = TrueSheet.refs[name]
-    if (!ref) {
-      console.warn(`Could not get sheet ref from "${name}". Check your name prop.`)
+  private static getHandle(name: string) {
+    const handle = TrueSheet.handles[name]
+    if (!handle) {
+      console.warn(`Could not get native view tag from "${name}". Check your name prop.`)
       return
     }
 
-    return ref
+    return handle
+  }
+
+  private get handle(): number {
+    const nodeHandle = findNodeHandle(this.ref.current)
+    if (nodeHandle == null || nodeHandle === -1) {
+      throw new Error('Could not get native view tag')
+    }
+
+    return nodeHandle
   }
 
   /**
@@ -91,14 +100,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or presentation fails
    */
   public static async present(name: string, index: number = 0): Promise<void> {
-    const ref = TrueSheet.getRef(name)
-    if (!ref) {
+    const handle = TrueSheet.getHandle(name)
+    if (!handle) {
       throw new Error(`Sheet with name "${name}" not found`)
-    }
-
-    const viewTag = (ref as any)._nativeTag
-    if (!viewTag) {
-      throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
     const module = getTurboModule()
@@ -106,7 +110,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error('TurboModule not available. Make sure new architecture is enabled.')
     }
 
-    return module.presentByRef(viewTag, index)
+    return module.presentByRef(handle, index)
   }
 
   /**
@@ -116,14 +120,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or dismissal fails
    */
   public static async dismiss(name: string): Promise<void> {
-    const ref = TrueSheet.getRef(name)
-    if (!ref) {
+    const handle = TrueSheet.getHandle(name)
+    if (!handle) {
       throw new Error(`Sheet with name "${name}" not found`)
-    }
-
-    const viewTag = (ref as any)._nativeTag
-    if (!viewTag) {
-      throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
     const module = getTurboModule()
@@ -131,7 +130,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error('TurboModule not available. Make sure new architecture is enabled.')
     }
 
-    return module.dismissByRef(viewTag)
+    return module.dismissByRef(handle)
   }
 
   /**
@@ -142,14 +141,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found
    */
   public static async resize(name: string, index: number): Promise<void> {
-    const ref = TrueSheet.getRef(name)
-    if (!ref) {
+    const handle = TrueSheet.getHandle(name)
+    if (!handle) {
       throw new Error(`Sheet with name "${name}" not found`)
-    }
-
-    const viewTag = (ref as any)._nativeTag
-    if (!viewTag) {
-      throw new Error(`Could not get native tag for sheet "${name}"`)
     }
 
     const module = getTurboModule()
@@ -157,16 +151,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       throw new Error('TurboModule not available. Make sure new architecture is enabled.')
     }
 
-    return module.resizeByRef(viewTag, index)
+    return module.resizeByRef(handle, index)
   }
 
   private updateState(): void {
     const scrollableHandle = this.props.scrollRef?.current
-      ? (this.props.scrollRef.current as any)._nativeTag || null
+      ? findNodeHandle(this.props.scrollRef.current)
       : null
 
-    if (this.props.name && this.ref.current) {
-      TrueSheet.refs[this.props.name] = this.ref.current
+    if (this.props.name) {
+      TrueSheet.handles[this.props.name] = this.handle
     }
 
     this.setState({
