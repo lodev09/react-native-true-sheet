@@ -3,7 +3,7 @@ require "json"
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
 Pod::Spec.new do |s|
-  s.name         = "TrueSheet"
+  s.name         = "RNTrueSheet"
   s.version      = package["version"]
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
   # Require new architecture
   s.pod_target_xcconfig = {
     "DEFINES_MODULE" => "YES",
-    "SWIFT_OBJC_INTERFACE_HEADER_NAME" => "TrueSheet-Swift.h"
+    "SWIFT_OBJC_INTERFACE_HEADER_NAME" => "RNTrueSheet-Swift.h"
   }
 
   install_modules_dependencies(s)
