@@ -75,7 +75,7 @@
     "@react-native/eslint-config": "^0.73.1",
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
-    "@types/react": "^18.2.44",
+    "@types/react": "19.1.1",
     "commitlint": "^17.0.2",
     "del-cli": "^5.1.0",
     "eslint": "^8.51.0",
@@ -91,7 +91,7 @@
     "typescript": "^5.2.2"
   },
   "resolutions": {
-    "@types/react": "^19.1.1"
+    "@types/react": "19.1.1"
   },
   "peerDependencies": {
     "react": "*",
