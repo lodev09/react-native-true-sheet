@@ -57,14 +57,14 @@ RCT_EXPORT_MODULE(TrueSheetModule)
     }
 
     [trueSheetView presentAtIndex:(NSInteger)index
-                 animated:YES
-               completion:^(BOOL success, NSError *_Nullable error) {
-                 if (success) {
-                   resolve(nil);
-                 } else {
-                   reject(@"PRESENT_FAILED", error.localizedDescription ?: @"Failed to present sheet", error);
-                 }
-               }];
+                         animated:YES
+                       completion:^(BOOL success, NSError *_Nullable error) {
+                         if (success) {
+                           resolve(nil);
+                         } else {
+                           reject(@"PRESENT_FAILED", error.localizedDescription ?: @"Failed to present sheet", error);
+                         }
+                       }];
   });
 }
 
@@ -78,13 +78,13 @@ RCT_EXPORT_MODULE(TrueSheetModule)
     }
 
     [trueSheetView dismissAnimated:YES
-                completion:^(BOOL success, NSError *_Nullable error) {
-                  if (success) {
-                    resolve(nil);
-                  } else {
-                    reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheet", error);
-                  }
-                }];
+                        completion:^(BOOL success, NSError *_Nullable error) {
+                          if (success) {
+                            resolve(nil);
+                          } else {
+                            reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheet", error);
+                          }
+                        }];
   });
 }
 

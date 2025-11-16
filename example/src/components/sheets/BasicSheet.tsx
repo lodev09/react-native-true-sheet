@@ -83,6 +83,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
+      onMount={() => {
+        // sheetRef.current?.present(1)
+        console.log('BasicSheet is ready!')
+      }}
       footer={<Footer />}
       {...props}
     >

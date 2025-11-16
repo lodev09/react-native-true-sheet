@@ -37,10 +37,15 @@ if (!TrueSheetModule) {
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
 
-export class TrueSheet extends PureComponent<TrueSheetProps> {
+interface TrueSheetState {
+  shouldRenderNativeView: boolean
+}
+
+export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet'
 
   private readonly nativeRef: RefObject<NativeRef | null>
+  private mountPromiseResolve?: () => void
 
   /**
    * Map of sheet names against their handle.
@@ -51,6 +56,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
     super(props)
 
     this.nativeRef = createRef<NativeRef>()
+
+    this.state = {
+      shouldRenderNativeView: props.initialIndex !== undefined && props.initialIndex >= 0,
+    }
 
     this.onMount = this.onMount.bind(this)
     this.onDismiss = this.onDismiss.bind(this)
@@ -127,8 +136,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
     return TrueSheetModule?.resizeByRef(handle, index)
   }
 
-  private updateState(): void {
-    if (this.props.name) {
+  private registerNativeHandle(): void {
+    if (this.props.name && this.state.shouldRenderNativeView) {
       TrueSheet.handles[this.props.name] = this.handle
     }
   }
@@ -142,10 +151,13 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
   }
 
   private onDismiss(): void {
+    this.setState({ shouldRenderNativeView: false })
     this.props.onDismiss?.()
   }
 
   private onMount(): void {
+    this.mountPromiseResolve?.()
+    this.mountPromiseResolve = undefined
     this.props.onMount?.()
   }
 
@@ -166,6 +178,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
    * See `detents` prop
    */
   public async present(index: number = 0): Promise<void> {
+    if (!this.state.shouldRenderNativeView) {
+      await new Promise<void>((resolve) => {
+        this.mountPromiseResolve = resolve
+        this.setState({ shouldRenderNativeView: true })
+      })
+    }
     return TrueSheetModule?.presentByRef(this.handle, index)
   }
 
@@ -191,11 +209,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       )
     }
 
-    this.updateState()
+    this.registerNativeHandle()
   }
 
   componentDidUpdate(): void {
-    this.updateState()
+    this.registerNativeHandle()
   }
 
   render(): ReactNode {
@@ -218,6 +236,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       footer,
       ...rest
     } = this.props
+
+    if (!this.state.shouldRenderNativeView) {
+      // Return an empty View here so Reanimated wrapped sheet doesn't error.
+      return <View />
+    }
 
     return (
       <TrueSheetViewNativeComponent

@@ -9,13 +9,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetFooterView.h"
-#import "TrueSheetView.h"
-#import "TrueSheetViewController.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetLayoutUtils.h"
+#import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 
 using namespace facebook::react;
 

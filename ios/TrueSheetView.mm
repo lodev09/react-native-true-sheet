@@ -59,10 +59,36 @@ using namespace facebook::react;
 - (void)didMoveToWindow {
   [super didMoveToWindow];
 
+  if (!self.window) {
+    return;
+  }
+
   // Register this view with the TurboModule when added to window
   // This ensures the tag is properly set by the framework
-  if (self.window && self.tag > 0) {
+  if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
+  }
+
+  // Emit onMount event once
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+    TrueSheetViewEventEmitter::OnMount event{};
+    emitter->onMount(event);
+  }
+
+  if (_containerView != nil) {
+    // Measure container's content height for "auto" detent sizing
+    CGFloat contentHeight = _containerView.frame.size.height;
+    if (contentHeight > 0) {
+      _controller.contentHeight = @(contentHeight);
+    }
+
+    // Handle initial presentation - present if not already presented and initialIndex is valid
+    const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
+    if (props.initialIndex >= 0 && !_isPresented) {
+      BOOL animated = props.initialIndexAnimated;
+      [self presentAtIndex:props.initialIndex animated:animated completion:nil];
+    }
   }
 }
 
@@ -313,36 +339,10 @@ using namespace facebook::react;
     [_containerView cleanup];
     _containerView = nil;
   }
-  
+
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     [_footerView cleanup];
     _footerView = nil;
-  }
-}
-
-- (void)layoutSubviews {
-  [super layoutSubviews];
-
-  if (_containerView != nil) {
-    // Measure container's content height for "auto" detent sizing
-    CGFloat contentHeight = _containerView.frame.size.height;
-    if (contentHeight > 0) {
-      _controller.contentHeight = @(contentHeight);
-    }
-
-    // Handle initial presentation - present if not already presented and initialIndex is valid
-    const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-    if (props.initialIndex >= 0 && !_isPresented) {
-      BOOL animated = props.initialIndexAnimated;
-      [self presentAtIndex:props.initialIndex animated:animated completion:nil];
-    }
-
-    // Emit onMount event once
-    if (_eventEmitter && !_isPresented) {
-      auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-      TrueSheetViewEventEmitter::OnMount event{};
-      emitter->onMount(event);
-    }
   }
 }
 
