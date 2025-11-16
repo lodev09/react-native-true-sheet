@@ -102,13 +102,13 @@ using namespace facebook::react;
 #pragma mark - TurboModule Methods
 
 - (void)presentAtIndex:(NSInteger)index 
-       animated:(BOOL)animated
-      completion:(nullable TrueSheetCompletionBlock)completion {
+    animated:(BOOL)animated
+   completion:(nullable TrueSheetCompletionBlock)completion {
   
   if (_isPresented) {
     [_controller resizeToIndex:index];
     if (completion) {
-      completion(YES, nil);
+   completion(YES, nil);
     }
     return;
   }
@@ -117,13 +117,13 @@ using namespace facebook::react;
   
   if (!rootViewController) {
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
-                      code:1001
-                    userInfo:@{
-      NSLocalizedDescriptionKey: @"No root view controller found"
+                   code:1001
+                 userInfo:@{
+   NSLocalizedDescriptionKey: @"No root view controller found"
     }];
     
     if (completion) {
-      completion(NO, error);
+   completion(NO, error);
     }
     return;
   }
@@ -148,39 +148,39 @@ using namespace facebook::react;
   // Prepare the sheet with the correct initial index before presenting
   [_controller prepareForPresentationAtIndex:index completion:^{
     [rootViewController presentViewController:self->_controller animated:animated completion:^{
-      // Emit event
+   // Emit event
     if (self->_eventEmitter) {
-      auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
-      NSDictionary *detentInfo = [self->_controller currentDetentInfo];
-      CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
-      
-      TrueSheetViewEventEmitter::OnPresent event;
-      event.index = static_cast<int>(index);
-      event.value = static_cast<double>(detentValue);
-      emitter->onPresent(event);
+   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
+   NSDictionary *detentInfo = [self->_controller currentDetentInfo];
+   CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
+   
+   TrueSheetViewEventEmitter::OnPresent event;
+   event.index = static_cast<int>(index);
+   event.value = static_cast<double>(detentValue);
+   emitter->onPresent(event);
     }
     
-      // Call completion handler
-      if (completion) {
-        completion(YES, nil);
-      }
+   // Call completion handler
+   if (completion) {
+     completion(YES, nil);
+   }
     }];
   }];
 }
 
 - (void)dismissAnimated:(BOOL)animated 
-      completion:(nullable TrueSheetCompletionBlock)completion {
+   completion:(nullable TrueSheetCompletionBlock)completion {
   
   if (!_isPresented) {
     if (completion) {
-      completion(YES, nil);
+   completion(YES, nil);
     }
     return;
   }
   
   [_controller dismissViewControllerAnimated:animated completion:^{
     if (completion) {
-      completion(YES, nil);
+   completion(YES, nil);
     }
   }];
 }
@@ -196,7 +196,7 @@ using namespace facebook::react;
   if (oldViewProps.detents != newViewProps.detents) {
     NSMutableArray *detents = [NSMutableArray new];
     for (const auto &detent : newViewProps.detents) {
-      [detents addObject:RCTNSStringFromString(detent)];
+   [detents addObject:RCTNSStringFromString(detent)];
     }
     _controller.detents = detents;
     needsSetupSizes = YES;
@@ -205,9 +205,9 @@ using namespace facebook::react;
   // Update background color
   if (oldViewProps.background != newViewProps.background) {
     if (newViewProps.background != 0) {
-      UIColor *color = RCTUIColorFromSharedColor(SharedColor(newViewProps.background));
-      _controller.backgroundColor = color;
-      [_controller setupBackground];
+   UIColor *color = RCTUIColorFromSharedColor(SharedColor(newViewProps.background));
+   _controller.backgroundColor = color;
+   [_controller setupBackground];
     }
   }
   
@@ -220,14 +220,14 @@ using namespace facebook::react;
   // Update corner radius
   if (oldViewProps.cornerRadius != newViewProps.cornerRadius) {
     if (newViewProps.cornerRadius != 0.0) {
-      _controller.cornerRadius = @(newViewProps.cornerRadius);
+   _controller.cornerRadius = @(newViewProps.cornerRadius);
     }
   }
   
   // Update max height
   if (oldViewProps.maxHeight != newViewProps.maxHeight) {
     if (newViewProps.maxHeight != 0.0) {
-      _controller.maxHeight = @(newViewProps.maxHeight);
+   _controller.maxHeight = @(newViewProps.maxHeight);
     }
   }
   
@@ -250,7 +250,7 @@ using namespace facebook::react;
   // Update dimmedIndex
   if (oldViewProps.dimmedIndex != newViewProps.dimmedIndex) {
     if (newViewProps.dimmedIndex >= 0) {
-      _controller.dimmedIndex = @(newViewProps.dimmedIndex);
+   _controller.dimmedIndex = @(newViewProps.dimmedIndex);
     }
     needsSetupDimmed = YES;
   }
@@ -263,10 +263,10 @@ using namespace facebook::react;
   // Apply changes to presented sheet if needed
   if (_isPresented && _controller.presentingViewController) {
     if (needsSetupSizes) {
-      [_controller setupDetents];
+   [_controller setupDetents];
     }
     if (needsSetupDimmed) {
-      [_controller setupDimmedBackground];
+   [_controller setupDimmedBackground];
     }
   }
 }
@@ -282,7 +282,7 @@ using namespace facebook::react;
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
-     oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
+  oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
   
   // Store layout metrics for later use
@@ -293,8 +293,8 @@ using namespace facebook::react;
   // Check if it's a container or footer view
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
     if (_containerView != nil) {
-      NSLog(@"TrueSheet: Sheet can only have one container component.");
-      return;
+   NSLog(@"TrueSheet: Sheet can only have one container component.");
+   return;
     }
     
     _containerView = (TrueSheetContainerView *)childComponentView;
@@ -303,8 +303,8 @@ using namespace facebook::react;
     [_containerView setupInParentView:_controller.view];
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
-      NSLog(@"TrueSheet: Sheet can only have one footer component.");
-      return;
+   NSLog(@"TrueSheet: Sheet can only have one footer component.");
+   return;
     }
     
     _footerView = (TrueSheetFooterView *)childComponentView;
@@ -317,8 +317,8 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
     if ((TrueSheetContainerView *)childComponentView != _containerView) {
-      NSLog(@"TrueSheet: Cannot unmount unknown container view");
-      return;
+   NSLog(@"TrueSheet: Cannot unmount unknown container view");
+   return;
     }
     
     // Cleanup container view (handles its own touch handler and scroll view cleanup)
@@ -328,8 +328,8 @@ using namespace facebook::react;
     _containerView = nil;
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if ((TrueSheetFooterView *)childComponentView != _footerView) {
-      NSLog(@"TrueSheet: Cannot unmount unknown footer view");
-      return;
+   NSLog(@"TrueSheet: Cannot unmount unknown footer view");
+   return;
     }
     
     // Cleanup footer view (handles its own touch handler cleanup)
@@ -347,26 +347,26 @@ using namespace facebook::react;
     // Measure container's content height for "auto" detent sizing
     CGFloat contentHeight = _containerView.frame.size.height;
     if (contentHeight > 0) {
-      _controller.contentHeight = @(contentHeight);
-      
-      // If sheet is already presented, update its detents
-      if (_isPresented && _controller.presentingViewController) {
-        [_controller setupDetents];
-      }
+   _controller.contentHeight = @(contentHeight);
+   
+   // If sheet is already presented, update its detents
+   if (_isPresented && _controller.presentingViewController) {
+     [_controller setupDetents];
+   }
     }
     
     // Handle initial presentation - present if not already presented and initialIndex is valid
     const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
     if (props.initialIndex >= 0 && !_isPresented) {
-      BOOL animated = props.initialIndexAnimated;
-      [self presentAtIndex:props.initialIndex animated:animated completion:nil];
+   BOOL animated = props.initialIndexAnimated;
+   [self presentAtIndex:props.initialIndex animated:animated completion:nil];
     }
     
     // Emit onMount event once
     if (_eventEmitter && !_isPresented) {
-      auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-      TrueSheetViewEventEmitter::OnMount event{};
-      emitter->onMount(event);
+   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+   TrueSheetViewEventEmitter::OnMount event{};
+   emitter->onMount(event);
     }
   }
 }
@@ -395,29 +395,29 @@ using namespace facebook::react;
   
   switch (state) {
     case UIGestureRecognizerStateBegan: {
-      TrueSheetViewEventEmitter::OnDragBegin beginEvent;
-      beginEvent.index = static_cast<int>(index);
-      beginEvent.value = static_cast<double>(height);
-      emitter->onDragBegin(beginEvent);
-      break;
+   TrueSheetViewEventEmitter::OnDragBegin beginEvent;
+   beginEvent.index = static_cast<int>(index);
+   beginEvent.value = static_cast<double>(height);
+   emitter->onDragBegin(beginEvent);
+   break;
     }
     case UIGestureRecognizerStateChanged: {
-      TrueSheetViewEventEmitter::OnDragChange changeEvent;
-      changeEvent.index = static_cast<int>(index);
-      changeEvent.value = static_cast<double>(height);
-      emitter->onDragChange(changeEvent);
-      break;
+   TrueSheetViewEventEmitter::OnDragChange changeEvent;
+   changeEvent.index = static_cast<int>(index);
+   changeEvent.value = static_cast<double>(height);
+   emitter->onDragChange(changeEvent);
+   break;
     }
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
-      TrueSheetViewEventEmitter::OnDragEnd endEvent;
-      endEvent.index = static_cast<int>(index);
-      endEvent.value = static_cast<double>(height);
-      emitter->onDragEnd(endEvent);
-      break;
+   TrueSheetViewEventEmitter::OnDragEnd endEvent;
+   endEvent.index = static_cast<int>(index);
+   endEvent.value = static_cast<double>(height);
+   emitter->onDragEnd(endEvent);
+   break;
     }
     default:
-      break;
+   break;
   }
 }
 
@@ -437,11 +437,11 @@ using namespace facebook::react;
     _activeIndex = @(index);
     
     if (_eventEmitter) {
-      auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-      TrueSheetViewEventEmitter::OnDetentChange event;
-      event.index = static_cast<int>(index);
-      event.value = static_cast<double>(value);
-      emitter->onDetentChange(event);
+   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+   TrueSheetViewEventEmitter::OnDetentChange event;
+   event.index = static_cast<int>(index);
+   event.value = static_cast<double>(value);
+   emitter->onDetentChange(event);
     }
   }
 }
@@ -456,8 +456,8 @@ using namespace facebook::react;
   NSArray<UIWindow *> *windows = [[UIApplication sharedApplication] windows];
   for (UIWindow *window in windows) {
     if (window.isKeyWindow) {
-      keyWindow = window;
-      break;
+   keyWindow = window;
+   break;
     }
   }
   
@@ -473,7 +473,7 @@ using namespace facebook::react;
     
     // Skip TrueSheetViewController if it's being dismissed
     if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
-      break;
+   break;
     }
     
     rootViewController = presented;

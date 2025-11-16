@@ -49,9 +49,9 @@ using namespace facebook::react;
   
   // Pin to bottom, leading, and trailing edges with height constraint
   [TrueSheetLayoutUtils pinView:self 
-          toParentView:parentView 
-              edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom 
-             height:height];
+       toParentView:parentView 
+           edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom 
+          height:height];
   
   // Ensure footer is above container
   [parentView bringSubviewToFront:self];

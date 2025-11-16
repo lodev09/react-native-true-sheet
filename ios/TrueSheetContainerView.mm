@@ -40,7 +40,7 @@ using namespace facebook::react;
 }
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
-     oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
+  oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   _layoutMetrics = layoutMetrics;
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 }
@@ -69,7 +69,7 @@ using namespace facebook::react;
   if (scrollView && scrollView != _pinnedScrollView) {
     // Unpin previous scroll view if exists
     if (_pinnedScrollView) {
-      [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+   [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
     }
     
     // Pin the scroll view directly to the sheet controller's view instead of its immediate parent
@@ -91,7 +91,7 @@ using namespace facebook::react;
   // This covers common cases like <ScrollView> or <FlatList> as direct children
   for (UIView *subview in contentView.subviews) {
     if ([subview isKindOfClass:[UIScrollView class]]) {
-      return subview;
+   return subview;
     }
   }
   

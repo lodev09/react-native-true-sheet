@@ -45,65 +45,65 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 #pragma mark - TurboModule Methods
 
 - (void)presentByRef:(double)viewTag
-       index:(double)index
-      resolve:(RCTPromiseResolveBlock)resolve
-       reject:(RCTPromiseRejectBlock)reject {
+    index:(double)index
+   resolve:(RCTPromiseResolveBlock)resolve
+    reject:(RCTPromiseRejectBlock)reject {
   
   RCTExecuteOnMainQueue(^{
     TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
     
     if (!sheet) {
-      reject(@"SHEET_NOT_FOUND",
-         [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
-         nil);
-      return;
+   reject(@"SHEET_NOT_FOUND",
+      [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
+      nil);
+   return;
     }
     
     [sheet presentAtIndex:(NSInteger)index
-          animated:YES
-         completion:^(BOOL success, NSError * _Nullable error) {
-      if (success) {
-        resolve(nil);
-      } else {
-        reject(@"PRESENT_FAILED",
-           error.localizedDescription ?: @"Failed to present sheet",
-           error);
-      }
+       animated:YES
+      completion:^(BOOL success, NSError * _Nullable error) {
+   if (success) {
+     resolve(nil);
+   } else {
+     reject(@"PRESENT_FAILED",
+        error.localizedDescription ?: @"Failed to present sheet",
+        error);
+   }
     }];
   });
 }
 
 - (void)dismissByRef:(double)viewTag
-      resolve:(RCTPromiseResolveBlock)resolve
-       reject:(RCTPromiseRejectBlock)reject {
+   resolve:(RCTPromiseResolveBlock)resolve
+    reject:(RCTPromiseRejectBlock)reject {
   
   RCTExecuteOnMainQueue(^{
     TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
     
     if (!sheet) {
-      reject(@"SHEET_NOT_FOUND",
-         [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
-         nil);
-      return;
+   reject(@"SHEET_NOT_FOUND",
+      [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
+      nil);
+   return;
     }
     
     [sheet dismissAnimated:YES
-          completion:^(BOOL success, NSError * _Nullable error) {
-      if (success) {
-        resolve(nil);
-      } else {
-        reject(@"DISMISS_FAILED",
-           error.localizedDescription ?: @"Failed to dismiss sheet",
-           error);
-      }
+       completion:^(BOOL success, NSError * _Nullable error) {
+   if (success) {
+     resolve(nil);
+   } else {
+     reject(@"DISMISS_FAILED",
+        error.localizedDescription ?: @"Failed to dismiss sheet",
+        error);
+   }
     }];
   });
 }
 
 - (void)resizeByRef:(double)viewTag
-       index:(double)index
-      resolve:(RCTPromiseResolveBlock)resolve
-      reject:(RCTPromiseRejectBlock)reject {
+    index:(double)index
+   resolve:(RCTPromiseResolveBlock)resolve
+   reject:(RCTPromiseRejectBlock)reject {
   // Resize is just present with a different index
   [self presentByRef:viewTag index:index resolve:resolve reject:reject];
 }
