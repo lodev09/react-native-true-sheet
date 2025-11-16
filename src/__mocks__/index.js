@@ -2,7 +2,6 @@ import React from 'react'
 import { View } from 'react-native'
 
 export * from '../TrueSheetGrabber'
-export * from '../TrueSheetFooter'
 
 export class TrueSheet extends React.Component {
   static dismiss = jest.fn()
