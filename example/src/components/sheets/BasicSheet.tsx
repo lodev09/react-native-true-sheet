@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
+import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'react'
 import { StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
@@ -13,6 +13,7 @@ interface BasicSheetProps extends TrueSheetProps {}
 export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null)
   const childSheet = useRef<TrueSheet>(null)
+  const [contentCount, setContentCount] = useState(1)
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index)
@@ -36,6 +37,14 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
     await sheetRef.current?.dismiss()
 
     await TrueSheet.present('prompt-sheet')
+  }
+
+  const addContent = () => {
+    setContentCount((prev) => prev + 1)
+  }
+
+  const removeContent = () => {
+    setContentCount((prev) => Math.max(1, prev - 1))
   }
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
@@ -77,7 +86,12 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       FooterComponent={<Footer />}
       {...props}
     >
-      <DemoContent color={DARK_BLUE} />
+      {Array.from({ length: contentCount }, (_, i) => (
+        <DemoContent key={i} color={DARK_BLUE} />
+      ))}
+      <Button text={`Add Content (${contentCount})`} onPress={addContent} />
+      {contentCount > 1 && <Button text="Remove Content" onPress={removeContent} />}
+      <Spacer />
       <Button text="Present Large" onPress={() => resize(2)} />
       <Button text="Present 80%" onPress={() => resize(1)} />
       <Button text="Present Auto" onPress={() => resize(0)} />
