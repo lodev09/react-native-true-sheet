@@ -17,7 +17,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TrueSheetViewComponentView;
+@class TrueSheetView;
 
 /**
  * TurboModule for TrueSheet imperative API
@@ -28,19 +28,19 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Get a sheet component view by its React tag
  * @param reactTag - The React native tag of the view
- * @return The TrueSheetViewComponentView instance, or nil if not found
+ * @return The TrueSheetView instance, or nil if not found
  */
-+ (nullable TrueSheetViewComponentView *)getSheetByTag:(NSNumber *)reactTag;
++ (nullable TrueSheetView *)getSheetByTag:(NSNumber *)reactTag;
 
 /**
  * Register a sheet component view with its React tag
- * Called automatically by TrueSheetViewComponentView during initialization
+ * Called automatically by TrueSheetView during initialization
  */
-+ (void)registerView:(TrueSheetViewComponentView *)view withTag:(NSNumber *)tag;
++ (void)registerView:(TrueSheetView *)view withTag:(NSNumber *)tag;
 
 /**
  * Unregister a sheet component view
- * Called automatically by TrueSheetViewComponentView during dealloc
+ * Called automatically by TrueSheetView during dealloc
  */
 + (void)unregisterViewWithTag:(NSNumber *)tag;
 

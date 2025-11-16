@@ -12,13 +12,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetModule.h"
-#import "TrueSheetViewComponentView.h"
+#import "TrueSheetView.h"
 #import <React/RCTUtils.h>
 
 #import <TrueSheetSpec/TrueSheetSpec.h>
 
 // Static registry to store view references by tag
-static NSMutableDictionary<NSNumber *, TrueSheetViewComponentView *> *viewRegistry;
+static NSMutableDictionary<NSNumber *, TrueSheetView *> *viewRegistry;
 
 @interface TrueSheetModule () <NativeTrueSheetModuleSpec>
 @end
@@ -50,7 +50,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
               reject:(RCTPromiseRejectBlock)reject {
     
     RCTExecuteOnMainQueue(^{
-        TrueSheetViewComponentView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
+        TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
         
         if (!sheet) {
             reject(@"SHEET_NOT_FOUND",
@@ -78,7 +78,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
               reject:(RCTPromiseRejectBlock)reject {
     
     RCTExecuteOnMainQueue(^{
-        TrueSheetViewComponentView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
+        TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
         
         if (!sheet) {
             reject(@"SHEET_NOT_FOUND",
@@ -110,7 +110,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 
 #pragma mark - Helper Methods
 
-+ (nullable TrueSheetViewComponentView *)getSheetByTag:(NSNumber *)reactTag {
++ (nullable TrueSheetView *)getSheetByTag:(NSNumber *)reactTag {
     if (!reactTag) {
         return nil;
     }
@@ -120,7 +120,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
     }
 }
 
-+ (void)registerView:(TrueSheetViewComponentView *)view withTag:(NSNumber *)tag {
++ (void)registerView:(TrueSheetView *)view withTag:(NSNumber *)tag {
     if (!tag || !view) {
         return;
     }

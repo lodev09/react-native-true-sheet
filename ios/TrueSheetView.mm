@@ -8,9 +8,9 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "TrueSheetViewComponentView.h"
-#import "TrueSheetContainerViewComponentView.h"
-#import "TrueSheetFooterViewComponentView.h"
+#import "TrueSheetView.h"
+#import "TrueSheetContainerView.h"
+#import "TrueSheetFooterView.h"
 #import "TrueSheetViewController.h"
 #import "TrueSheetModule.h"
 
@@ -26,13 +26,13 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetViewComponentView () <TrueSheetViewControllerDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate>
 @end
 
-@implementation TrueSheetViewComponentView {
+@implementation TrueSheetView {
     TrueSheetViewController *_controller;
-    TrueSheetContainerViewComponentView *_containerView;
-    TrueSheetFooterViewComponentView *_footerView;
+    TrueSheetContainerView *_containerView;
+    TrueSheetFooterView *_footerView;
     UIView *_scrollView;
     
     NSLayoutConstraint *_footerBottomConstraint;
@@ -317,13 +317,13 @@ using namespace facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
     // Check if it's a container or footer view
-    if ([childComponentView isKindOfClass:[TrueSheetContainerViewComponentView class]]) {
+    if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
         if (_containerView != nil) {
             NSLog(@"TrueSheet: Sheet can only have one container component.");
             return;
         }
         
-        _containerView = (TrueSheetContainerViewComponentView *)childComponentView;
+        _containerView = (TrueSheetContainerView *)childComponentView;
         
         // Add to the sheet controller's view hierarchy
         [_controller.view addSubview:_containerView];
@@ -333,13 +333,13 @@ using namespace facebook::react;
             _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
         }
         [_surfaceTouchHandler attachToView:_containerView];
-    } else if ([childComponentView isKindOfClass:[TrueSheetFooterViewComponentView class]]) {
+    } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
         if (_footerView != nil) {
             NSLog(@"TrueSheet: Sheet can only have one footer component.");
             return;
         }
         
-        _footerView = (TrueSheetFooterViewComponentView *)childComponentView;
+        _footerView = (TrueSheetFooterView *)childComponentView;
         
         // Add footer to the sheet controller's view hierarchy
         [_controller.view addSubview:_footerView];
@@ -353,8 +353,8 @@ using namespace facebook::react;
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    if ([childComponentView isKindOfClass:[TrueSheetContainerViewComponentView class]]) {
-        if ((TrueSheetContainerViewComponentView *)childComponentView != _containerView) {
+    if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
+        if ((TrueSheetContainerView *)childComponentView != _containerView) {
             NSLog(@"TrueSheet: Cannot unmount unknown container view");
             return;
         }
@@ -373,8 +373,8 @@ using namespace facebook::react;
         [_containerView removeFromSuperview];
         _containerView = nil;
         _scrollView = nil;
-    } else if ([childComponentView isKindOfClass:[TrueSheetFooterViewComponentView class]]) {
-        if ((TrueSheetFooterViewComponentView *)childComponentView != _footerView) {
+    } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
+        if ((TrueSheetFooterView *)childComponentView != _footerView) {
             NSLog(@"TrueSheet: Cannot unmount unknown footer view");
             return;
         }
@@ -625,7 +625,7 @@ using namespace facebook::react;
 @end
 
 Class<RCTComponentViewProtocol> TrueSheetViewCls(void) {
-    return TrueSheetViewComponentView.class;
+    return TrueSheetView.class;
 }
 
 #endif // RCT_NEW_ARCH_ENABLED

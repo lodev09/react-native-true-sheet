@@ -8,7 +8,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "TrueSheetContainerViewComponentView.h"
+#import "TrueSheetFooterView.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -16,30 +16,21 @@
 
 using namespace facebook::react;
 
-@implementation TrueSheetContainerViewComponentView {
-    LayoutMetrics _layoutMetrics;
-}
+@implementation TrueSheetFooterView
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-    return concreteComponentDescriptorProvider<TrueSheetContainerViewComponentDescriptor>();
+    return concreteComponentDescriptorProvider<TrueSheetFooterViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
-        static const auto defaultProps = std::make_shared<const TrueSheetContainerViewProps>();
+        static const auto defaultProps = std::make_shared<const TrueSheetFooterViewProps>();
         _props = defaultProps;
+        
+        // Set background color to clear by default
+        self.backgroundColor = [UIColor clearColor];
     }
     return self;
-}
-
-- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
-           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
-    _layoutMetrics = layoutMetrics;
-    [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-}
-
-- (void)updateSize:(CGSize)size {
-    // No longer needed - width is updated directly on _contentView
 }
 
 @end

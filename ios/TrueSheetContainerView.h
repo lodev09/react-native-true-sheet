@@ -10,10 +10,13 @@
 
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
+#import <react/renderer/core/LayoutMetrics.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TrueSheetFooterViewComponentView : RCTViewComponentView
+@interface TrueSheetContainerView : RCTViewComponentView
+
+- (void)updateSize:(CGSize)size;
 
 @end
 

@@ -208,13 +208,13 @@
     "ios": {
       "components": {
         "TrueSheetView": {
-          "className": "TrueSheetViewComponentView"
+          "className": "TrueSheetView"
         },
         "TrueSheetContainerView": {
-          "className": "TrueSheetContainerViewComponentView"
+          "className": "TrueSheetContainerView"
         },
         "TrueSheetFooterView": {
-          "className": "TrueSheetFooterViewComponentView"
+          "className": "TrueSheetFooterView"
         }
       }
     }

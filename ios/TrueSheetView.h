@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Completion block for async operations
 typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError * _Nullable error);
 
-@interface TrueSheetViewComponentView : RCTViewComponentView
+@interface TrueSheetView : RCTViewComponentView
 
 @property (nonatomic, strong, nullable) TrueSheetViewController *controller;
 
