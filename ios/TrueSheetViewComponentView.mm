@@ -35,6 +35,8 @@ using namespace facebook::react;
     TrueSheetFooterViewComponentView *_footerView;
     UIView *_scrollView;
     
+    NSLayoutConstraint *_footerBottomConstraint;
+    
     BOOL _isPresented;
     NSNumber *_activeIndex;
     
@@ -341,6 +343,9 @@ using namespace facebook::react;
         // Add footer to the sheet controller's view hierarchy
         [_controller.view addSubview:_footerView];
         
+        // Setup footer constraints to pin it to the bottom
+        [self setupFooterConstraints];
+        
         // Bring footer to front to ensure it's above the container
         [_controller.view bringSubviewToFront:_footerView];
     }
@@ -373,9 +378,13 @@ using namespace facebook::react;
             return;
         }
         
+        // Unpin footer view before removing
+        [self unpinView:_footerView];
+        
         // Remove footer from view hierarchy and clear reference
         [_footerView removeFromSuperview];
         _footerView = nil;
+        _footerBottomConstraint = nil;
     }
 }
 
@@ -400,11 +409,6 @@ using namespace facebook::react;
         
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
-        
-        // Ensure footer is above container if it exists
-        if (_footerView) {
-            [_controller.view bringSubviewToFront:_footerView];
-        }
         
         // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
@@ -451,6 +455,17 @@ using namespace facebook::react;
     if (edges & UIRectEdgeRight) {
         [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
     }
+}
+
+- (void)setupFooterConstraints {
+    if (!_footerView) return;
+
+    _footerView.translatesAutoresizingMaskIntoConstraints = NO;
+    [_footerView.leadingAnchor constraintEqualToAnchor:_controller.view.leadingAnchor].active = YES;
+    [_footerView.trailingAnchor constraintEqualToAnchor:_controller.view.trailingAnchor].active = YES;
+
+    _footerBottomConstraint = [_footerView.bottomAnchor constraintEqualToAnchor:_controller.view.bottomAnchor];
+    _footerBottomConstraint.active = YES;
 }
 
 - (void)unpinView:(UIView *)view {
