@@ -10,6 +10,7 @@
 
 #import "TrueSheetViewComponentView.h"
 #import "TrueSheetContainerViewComponentView.h"
+#import "TrueSheetFooterViewComponentView.h"
 #import "TrueSheetViewController.h"
 #import "TrueSheetModule.h"
 
@@ -31,6 +32,7 @@ using namespace facebook::react;
 @implementation TrueSheetViewComponentView {
     TrueSheetViewController *_controller;
     TrueSheetContainerViewComponentView *_containerView;
+    TrueSheetFooterViewComponentView *_footerView;
     UIView *_scrollView;
     
     BOOL _isPresented;
@@ -97,6 +99,7 @@ using namespace facebook::react;
     
     // Clear child view references (will be reassigned on remount)
     _containerView = nil;
+    _footerView = nil;
     _scrollView = nil;
 }
 
@@ -310,46 +313,70 @@ using namespace facebook::react;
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    if (_containerView != nil) {
-        NSLog(@"TrueSheet: Sheet can only have one child component (TrueSheetContainerView).");
-        return;
+    // Check if it's a container or footer view
+    if ([childComponentView isKindOfClass:[TrueSheetContainerViewComponentView class]]) {
+        if (_containerView != nil) {
+            NSLog(@"TrueSheet: Sheet can only have one container component.");
+            return;
+        }
+        
+        _containerView = (TrueSheetContainerViewComponentView *)childComponentView;
+        
+        // Add to the sheet controller's view hierarchy
+        [_controller.view addSubview:_containerView];
+        
+        // Attach touch handler to enable React Native touch events
+        if (!_surfaceTouchHandler) {
+            _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
+        }
+        [_surfaceTouchHandler attachToView:_containerView];
+    } else if ([childComponentView isKindOfClass:[TrueSheetFooterViewComponentView class]]) {
+        if (_footerView != nil) {
+            NSLog(@"TrueSheet: Sheet can only have one footer component.");
+            return;
+        }
+        
+        _footerView = (TrueSheetFooterViewComponentView *)childComponentView;
+        
+        // Add footer to the sheet controller's view hierarchy
+        [_controller.view addSubview:_footerView];
+        
+        // Bring footer to front to ensure it's above the container
+        [_controller.view bringSubviewToFront:_footerView];
     }
-    
-    // The child should be our custom TrueSheetContainerViewComponentView
-    _containerView = (TrueSheetContainerViewComponentView *)childComponentView;
-    
-    // Add to the sheet controller's view hierarchy
-    [_controller.view addSubview:_containerView];
-    
-    // Attach touch handler to enable React Native touch events
-    // This is required because the container is added to the UIViewController's view
-    // rather than being managed by React Native's normal view hierarchy
-    if (!_surfaceTouchHandler) {
-        _surfaceTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    }
-    [_surfaceTouchHandler attachToView:_containerView];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    if ((TrueSheetContainerViewComponentView *)childComponentView != _containerView) {
-        NSLog(@"TrueSheet: Cannot unmount view other than the container view");
-        return;
+    if ([childComponentView isKindOfClass:[TrueSheetContainerViewComponentView class]]) {
+        if ((TrueSheetContainerViewComponentView *)childComponentView != _containerView) {
+            NSLog(@"TrueSheet: Cannot unmount unknown container view");
+            return;
+        }
+        
+        // Detach touch handler before unmounting
+        if (_surfaceTouchHandler && _containerView) {
+            [_surfaceTouchHandler detachFromView:_containerView];
+            _surfaceTouchHandler = nil;
+        }
+        
+        // Unpin all tracked views
+        [self unpinView:_containerView];
+        [self unpinView:_scrollView];
+        
+        // Remove from view hierarchy and clear references
+        [_containerView removeFromSuperview];
+        _containerView = nil;
+        _scrollView = nil;
+    } else if ([childComponentView isKindOfClass:[TrueSheetFooterViewComponentView class]]) {
+        if ((TrueSheetFooterViewComponentView *)childComponentView != _footerView) {
+            NSLog(@"TrueSheet: Cannot unmount unknown footer view");
+            return;
+        }
+        
+        // Remove footer from view hierarchy and clear reference
+        [_footerView removeFromSuperview];
+        _footerView = nil;
     }
-    
-    // Detach touch handler before unmounting
-    if (_surfaceTouchHandler && _containerView) {
-        [_surfaceTouchHandler detachFromView:_containerView];
-        _surfaceTouchHandler = nil;
-    }
-    
-    // Unpin all tracked views
-    [self unpinView:_containerView];
-    [self unpinView:_scrollView];
-    
-    // Remove from view hierarchy and clear references
-    [_containerView removeFromSuperview];
-    _containerView = nil;
-    _scrollView = nil;
 }
 
 - (void)layoutSubviews {
@@ -373,6 +400,11 @@ using namespace facebook::react;
         
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
+        
+        // Ensure footer is above container if it exists
+        if (_footerView) {
+            [_controller.view bringSubviewToFront:_footerView];
+        }
         
         // Handle initial presentation - present if not already presented and initialIndex is valid
         const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);

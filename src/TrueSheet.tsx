@@ -5,6 +5,8 @@ import {
   type ReactNode,
   type ComponentRef,
   Component,
+  isValidElement,
+  createElement,
 } from 'react'
 
 import type {
@@ -17,6 +19,7 @@ import type {
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
+import TrueSheetFooterViewNativeComponent from './TrueSheetFooterViewNativeComponent'
 import { Platform, processColor, View, type ViewStyle, findNodeHandle } from 'react-native'
 
 const LINKING_ERROR =
@@ -253,6 +256,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       maxHeight,
       children,
       style,
+      FooterComponent,
       ...rest
     } = this.props
 
@@ -287,6 +291,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
             {children}
           </View>
         </TrueSheetContainerViewNativeComponent>
+        {FooterComponent && (
+          <TrueSheetFooterViewNativeComponent collapsable={false}>
+            {isValidElement(FooterComponent) ? FooterComponent : createElement(FooterComponent)}
+          </TrueSheetFooterViewNativeComponent>
+        )}
       </TrueSheetViewNativeComponent>
     )
   }
