@@ -45,25 +45,13 @@ using namespace facebook::react;
     [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 }
 
-- (void)didMoveToWindow {
-    [super didMoveToWindow];
-    
-    // Setup scroll view pinning when added to window hierarchy
-    // This ensures the view hierarchy is fully established
-    if (self.window) {
-        // Delay slightly to ensure subviews are mounted
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self setupScrollViewPinning];
-        });
-    }
-}
-
 - (void)setupInParentView:(UIView *)parentView {
     // Add to parent view hierarchy
     [parentView addSubview:self];
     
-    // Pin to all edges of parent view
-    [TrueSheetLayoutUtils pinView:self toParentView:parentView edges:UIRectEdgeAll];
+    // Auto-detect and pin scroll views to enable proper scrolling behavior
+    // This happens immediately instead of waiting for didMoveToWindow to ensure the view hierarchy is ready
+    [self setupScrollViewPinning:parentView];
     
     // Ensure container is above background view for touch events
     [parentView bringSubviewToFront:self];
@@ -74,16 +62,9 @@ using namespace facebook::react;
     }
 }
 
-- (void)setupScrollViewPinning {
-    // Get the first child - this is the React component's root view
-    if (self.subviews.count == 0) {
-        return;
-    }
-    
-    UIView *contentView = self.subviews[0];
-    
+- (void)setupScrollViewPinning:(UIView *)parentView {
     // Find scroll view in content view hierarchy
-    UIView *scrollView = [self findScrollViewInView:contentView];
+    UIView *scrollView = [self findScrollView];
     
     if (scrollView && scrollView != _pinnedScrollView) {
         // Unpin previous scroll view if exists
@@ -91,26 +72,26 @@ using namespace facebook::react;
             [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
         }
         
-        // Pin the scroll view to its parent (content view)
-        UIView *scrollViewParent = scrollView.superview;
-        if (scrollViewParent) {
-            [TrueSheetLayoutUtils pinView:scrollView toParentView:scrollViewParent edges:UIRectEdgeAll];
-            _pinnedScrollView = scrollView;
-        }
+        // Pin the scroll view directly to the sheet controller's view instead of its immediate parent
+        // This ensures the scroll view fills the entire sheet area for proper scrolling behavior
+        [TrueSheetLayoutUtils pinView:scrollView toParentView:parentView edges:UIRectEdgeAll];
+        _pinnedScrollView = scrollView;
     }
 }
 
-- (UIView *)findScrollViewInView:(UIView *)view {
-    // Check if current view is a scroll view
-    if ([view isKindOfClass:[UIScrollView class]]) {
-        return view;
+- (UIView *)findScrollView {
+    // Get the first child - this is the React component's root view
+    if (self.subviews.count == 0) {
+        return nil;
     }
     
-    // Traverse children recursively
-    for (UIView *subview in view.subviews) {
-        UIView *found = [self findScrollViewInView:subview];
-        if (found) {
-            return found;
+    UIView *contentView = self.subviews[0];
+    
+    // Check first-level children only (non-recursive) for scroll views
+    // This covers common cases like <ScrollView> or <FlatList> as direct children
+    for (UIView *subview in contentView.subviews) {
+        if ([subview isKindOfClass:[UIScrollView class]]) {
+            return subview;
         }
     }
     

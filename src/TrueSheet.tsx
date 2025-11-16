@@ -268,7 +268,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
       >
-        <TrueSheetContainerViewNativeComponent style={$contentView} collapsable={false}>
+        <TrueSheetContainerViewNativeComponent style={$containerView} collapsable={false}>
           <View style={style} {...rest}>
             {children}
           </View>
@@ -290,7 +290,7 @@ const $nativeSheet: ViewStyle = {
   right: 0,
 }
 
-const $contentView: ViewStyle = {
+const $containerView: ViewStyle = {
   position: 'absolute',
   left: 0,
   right: 0,
