@@ -11,7 +11,7 @@ Props available for `TrueSheet`. Extends `ViewProps`.
 ```tsx {2-5}
 <TrueSheet
   ref={sheet}
-  detents={['auto', '80%', 'large']}
+  detents={['auto', 0.8, 1]}
   backgroundColor="#696969"
   // ...
 >
@@ -198,11 +198,11 @@ const App = () => {
   }
 
   const handleOnPresent = (e: PresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, value: 69 }
+    console.log(e.nativeEvent) // { index: 0, value: 420 }
   }
 
   const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent) // { index: 1, value: 247 }
+    console.log(e.nativeEvent) // { index: 1, value: 680 }
   }
 
   return (
@@ -210,7 +210,7 @@ const App = () => {
       <Button title="Present" onPress={() => sheet.current?.present()} />
       <TrueSheet
         ref={sheet}
-        detents={[69, 247]}
+        detents={[0.5, 0.8]}
         onPresent={handleOnPresent}
         onDetentChange={handleDetentChange}
         onDismiss={handleDismiss}
