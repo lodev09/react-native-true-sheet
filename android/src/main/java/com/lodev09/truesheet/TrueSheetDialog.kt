@@ -228,7 +228,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           when (size) {
             "auto" -> contentHeight + footerHeight
 
-            else -> (maxScreenHeight * 0.5).toInt()
+            else -> {
+              // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
+              val fraction = size.toDoubleOrNull()
+              if (fraction != null) {
+                (fraction * maxScreenHeight).toInt()
+              } else {
+                (maxScreenHeight * 0.5).toInt()
+              }
+            }
           }
         }
 

@@ -251,6 +251,21 @@
                     return value;
                 }];
             }
+        } else {
+            // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
+            CGFloat fraction = [stringSize floatValue];
+            if (fraction > 0.0) {
+                if (@available(iOS 16.0, *)) {
+                    return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
+                                                                                  resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                        CGFloat maxDetent = context.maximumDetentValue;
+                        CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
+                        CGFloat value = MIN(fraction * maxDetent, maxValue);
+                        self.detentValues[detentId] = @{@"index": @(index), @"value": @(value)};
+                        return value;
+                    }];
+                }
+            }
         }
     }
     
