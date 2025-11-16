@@ -12,15 +12,17 @@
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 
+@class TrueSheetView;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TrueSheetFooterView : RCTViewComponentView
 
 /**
- * Sets up the footer view in the parent view with touch handling
- * @param parentView The parent view to add this footer to
+ * Sets up the footer view in the sheet view with touch handling
+ * @param sheetView The TrueSheetView parent to setup in
  */
-- (void)setupInParentView:(UIView *)parentView;
+- (void)setupInSheetView:(TrueSheetView *)sheetView;
 
 /**
  * Cleans up the footer view before removal

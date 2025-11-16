@@ -12,15 +12,8 @@ import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
 
-import {
-  BasicSheet,
-  BlankSheet,
-  FlatListSheet,
-  GestureSheet,
-  PromptSheet,
-  ScrollViewSheet,
-} from '../components/sheets'
-import { Button, Spacer } from '../components'
+
+import { Button, Footer, Spacer } from '../components'
 import { BLUE, DARK, DARK_BLUE, GRAY, SPACING, SPRING_CONFIG } from '../utils'
 import { useDragChangeHandler } from '../hooks'
 
@@ -103,6 +96,7 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!')
         }}
+        footer={<Footer />}
       >
         <View style={$heading}>
           <Text style={$title}>True Sheet 💩</Text>
@@ -119,12 +113,12 @@ export const MapScreen = () => {
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(1)} />
 
-        <BasicSheet ref={basicSheet} />
+        {/*<BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
-        <BlankSheet ref={blankSheet} />
+        <BlankSheet ref={blankSheet} />*/}
       </AnimatedTrueSheet>
     </View>
   )

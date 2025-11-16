@@ -41,6 +41,8 @@ using namespace facebook::react;
   LayoutMetrics _layoutMetrics;
 }
 
+@synthesize controller = _controller;
+
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetViewProps>();
@@ -289,8 +291,8 @@ using namespace facebook::react;
     // Set delegate to listen for size changes
     _containerView.delegate = self;
 
-    // Setup container in parent view (handles its own touch handling)
-    [_containerView setupInParentView:_controller.view];
+    // Setup container in sheet view (handles reference and touch handling)
+    [_containerView setupInSheetView:self];
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
       NSLog(@"TrueSheet: Sheet can only have one footer component.");
@@ -299,20 +301,20 @@ using namespace facebook::react;
 
     _footerView = (TrueSheetFooterView *)childComponentView;
 
-    // Setup footer in parent view (handles its own touch handling)
-    [_footerView setupInParentView:_controller.view];
+    // Setup footer in sheet view (handles reference and touch handling)
+    [_footerView setupInSheetView:self];
   }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
-    // Cleanup container view (handles its own touch handler and scroll view cleanup)
+    // Cleanup container view (handles clearing reference, touch handler, and scroll view cleanup)
     [_containerView cleanup];
 
     // Clear reference
     _containerView = nil;
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
-    // Cleanup footer view (handles its own touch handler cleanup)
+    // Cleanup footer view (handles clearing reference and touch handler cleanup)
     [_footerView cleanup];
 
     // Clear reference

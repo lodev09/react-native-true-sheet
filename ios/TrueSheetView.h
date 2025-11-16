@@ -23,6 +23,8 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 @interface TrueSheetView : RCTViewComponentView
 
+@property (nonatomic, strong, readonly) TrueSheetViewController *controller;
+
 // TurboModule methods
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated

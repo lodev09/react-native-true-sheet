@@ -9,6 +9,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
+#import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -21,6 +23,7 @@ using namespace facebook::react;
   RCTSurfaceTouchHandler *_touchHandler;
   UIView *_pinnedScrollView;
   CGSize _lastSize;
+  __weak TrueSheetView *_sheetView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -36,6 +39,7 @@ using namespace facebook::react;
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
     _pinnedScrollView = nil;
     _lastSize = CGSizeZero;
+    _sheetView = nil;
   }
   return self;
 }
@@ -54,7 +58,13 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupInParentView:(UIView *)parentView {
+- (void)setupInSheetView:(TrueSheetView *)sheetView {
+  // Store reference to sheet view
+  _sheetView = sheetView;
+
+  // Get the controller's view as the parent view
+  UIView *parentView = sheetView.controller.view;
+
   // Add to parent view hierarchy
   [parentView addSubview:self];
 
@@ -122,6 +132,9 @@ using namespace facebook::react;
   // Unpin and remove from view hierarchy
   [TrueSheetLayoutUtils unpinView:self];
   [self removeFromSuperview];
+
+  // Clear reference to sheet view
+  _sheetView = nil;
 }
 
 @end
