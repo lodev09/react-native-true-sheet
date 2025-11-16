@@ -150,7 +150,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private updateState(): void {
     const scrollableHandle = this.props.scrollRef?.current
-      ? (findNodeHandle(this.props.scrollRef.current as any) ?? null)
+      ? findNodeHandle(this.props.scrollRef.current)
       : null
 
     if (this.props.name) {
