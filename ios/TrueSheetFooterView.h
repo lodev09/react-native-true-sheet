@@ -22,11 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setupInParentView:(UIView *)parentView;
 
-/**
- * Cleans up the footer view before removal
- */
-- (void)cleanup;
-
 @end
 
 NS_ASSUME_NONNULL_END

@@ -39,6 +39,19 @@ using namespace facebook::react;
     return self;
 }
 
+- (void)willMoveToWindow:(UIWindow *)newWindow {
+    [super willMoveToWindow:newWindow];
+    
+    if (newWindow == nil) {
+        // Cleanup when being removed from window
+        if (_touchHandler) {
+            [_touchHandler detachFromView:self];
+        }
+        
+        [TrueSheetLayoutUtils unpinView:self];
+    }
+}
+
 - (void)setupInParentView:(UIView *)parentView {
     // Add to parent view hierarchy
     [parentView addSubview:self];
@@ -62,16 +75,7 @@ using namespace facebook::react;
     }
 }
 
-- (void)cleanup {
-    // Detach touch handler
-    if (_touchHandler) {
-        [_touchHandler detachFromView:self];
-    }
-    
-    // Unpin and remove from view hierarchy
-    [TrueSheetLayoutUtils unpinView:self];
-    [self removeFromSuperview];
-}
+
 
 @end
 
