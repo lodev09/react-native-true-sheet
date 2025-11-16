@@ -302,7 +302,7 @@ using namespace facebook::react;
     _containerView = (TrueSheetContainerView *)childComponentView;
 
     // Set delegate to listen for size changes
-    _containerView.sizeDelegate = self;
+    _containerView.delegate = self;
 
     // Setup container in parent view (handles its own touch handling)
     [_containerView setupInParentView:_controller.view];

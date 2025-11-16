@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TrueSheetContainerView : RCTViewComponentView
 
-@property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> sizeDelegate;
+@property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
  * Sets up the container view in the parent view with touch handling

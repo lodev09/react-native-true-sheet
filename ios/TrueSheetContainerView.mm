@@ -18,7 +18,6 @@
 using namespace facebook::react;
 
 @implementation TrueSheetContainerView {
-  LayoutMetrics _layoutMetrics;
   RCTSurfaceTouchHandler *_touchHandler;
   UIView *_pinnedScrollView;
   CGSize _lastSize;
@@ -43,15 +42,14 @@ using namespace facebook::react;
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
-  _layoutMetrics = layoutMetrics;
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
   // Notify delegate when size changes
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
-    if ([self.sizeDelegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
-      [self.sizeDelegate containerViewDidChangeSize:newSize];
+    if ([self.delegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
+      [self.delegate containerViewDidChangeSize:newSize];
     }
   }
 }
