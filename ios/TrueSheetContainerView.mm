@@ -41,22 +41,19 @@ using namespace facebook::react;
   return self;
 }
 
-- (void)layoutSubviews {
-  [super layoutSubviews];
-
-  // Notify delegate when size changes
-  if (!CGSizeEqualToSize(self.frame.size, _lastSize)) {
-    _lastSize = self.frame.size;
-    if ([self.sizeDelegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
-      [self.sizeDelegate containerViewDidChangeSize:self.frame.size];
-    }
-  }
-}
-
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   _layoutMetrics = layoutMetrics;
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
+  // Notify delegate when size changes
+  CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
+  if (!CGSizeEqualToSize(newSize, _lastSize)) {
+    _lastSize = newSize;
+    if ([self.sizeDelegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
+      [self.sizeDelegate containerViewDidChangeSize:newSize];
+    }
+  }
 }
 
 - (void)setupInParentView:(UIView *)parentView {
