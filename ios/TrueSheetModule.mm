@@ -49,14 +49,14 @@ RCT_EXPORT_MODULE(TrueSheetModule)
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
-    TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
+    TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
 
-    if (!sheet) {
+    if (!trueSheetView) {
       reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
       return;
     }
 
-    [sheet presentAtIndex:(NSInteger)index
+    [trueSheetView presentAtIndex:(NSInteger)index
                  animated:YES
                completion:^(BOOL success, NSError *_Nullable error) {
                  if (success) {
@@ -70,14 +70,14 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 
 - (void)dismissByRef:(double)viewTag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
-    TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
+    TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
 
-    if (!sheet) {
+    if (!trueSheetView) {
       reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
       return;
     }
 
-    [sheet dismissAnimated:YES
+    [trueSheetView dismissAnimated:YES
                 completion:^(BOOL success, NSError *_Nullable error) {
                   if (success) {
                     resolve(nil);
@@ -98,7 +98,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 
 #pragma mark - Helper Methods
 
-+ (nullable TrueSheetView *)getSheetByTag:(NSNumber *)reactTag {
++ (nullable TrueSheetView *)getTrueSheetViewByTag:(NSNumber *)reactTag {
   if (!reactTag) {
     return nil;
   }

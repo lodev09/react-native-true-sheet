@@ -70,8 +70,6 @@ using namespace facebook::react;
     [_controller dismissViewControllerAnimated:YES completion:nil];
   }
 
-  [self invalidate];
-
   // Clean up controller
   _controller.delegate = nil;
   _controller = nil;
@@ -81,16 +79,6 @@ using namespace facebook::react;
 
   // Unregister this view from the TurboModule
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
-}
-
-- (void)invalidate {
-  // Don't dismiss the sheet during hot reload
-  // The sheet will remain presented and content will be remounted
-
-  // Clear child view references (will be reassigned on remount)
-  // Touch handlers are managed internally by the views
-  _containerView = nil;
-  _footerView = nil;
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -257,9 +245,6 @@ using namespace facebook::react;
     needsSetupDimmed = YES;
   }
 
-  // Content height and footer height are measured directly from views in layoutSubviews
-  // No need to update from props
-
   [super updateProps:props oldProps:oldProps];
 
   // Apply changes to presented sheet if needed
@@ -321,22 +306,12 @@ using namespace facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
-    if ((TrueSheetContainerView *)childComponentView != _containerView) {
-      NSLog(@"TrueSheet: Cannot unmount unknown container view");
-      return;
-    }
-
     // Cleanup container view (handles its own touch handler and scroll view cleanup)
     [_containerView cleanup];
 
     // Clear reference
     _containerView = nil;
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
-    if ((TrueSheetFooterView *)childComponentView != _footerView) {
-      NSLog(@"TrueSheet: Cannot unmount unknown footer view");
-      return;
-    }
-
     // Cleanup footer view (handles its own touch handler cleanup)
     [_footerView cleanup];
 
@@ -374,9 +349,6 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   [self invalidate];
-
-  // Don't reset _isPresented and _activeIndex during recycle
-  // The sheet should remain presented during hot reload
 
   // Unregister from the registry
   // Note: Re-registration will happen automatically when the component is reused
