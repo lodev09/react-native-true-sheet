@@ -15,7 +15,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       detents={[0.8]}
       cornerRadius={12}
       onDismiss={() => console.log('Sheet ScrollView dismissed!')}
-      onPresent={() => console.log(`Sheet ScrollView presented!`)}
+      onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       footer={<Footer />}
       edgeToEdge
       {...props}

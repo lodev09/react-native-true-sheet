@@ -19,7 +19,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       keyboardMode="pan"
       edgeToEdge
       onDismiss={() => console.log('Sheet FlatList dismissed!')}
-      onPresent={() => console.log(`Sheet FlatList presented!`)}
+      onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
       <View style={styles.header}>

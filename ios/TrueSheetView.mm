@@ -166,17 +166,17 @@ using namespace facebook::react;
                            presentViewController:self->_controller
                                         animated:animated
                                       completion:^{
-                                        // Emit event
+                                        // Emit onDidPresent event after presenting
                                         if (self->_eventEmitter) {
                                           auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(
                                             self->_eventEmitter);
                                           NSDictionary *detentInfo = [self->_controller currentDetentInfo];
                                           CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
 
-                                          TrueSheetViewEventEmitter::OnPresent event;
+                                          TrueSheetViewEventEmitter::OnDidPresent event;
                                           event.index = static_cast<int>(index);
                                           event.value = static_cast<double>(detentValue);
-                                          emitter->onPresent(event);
+                                          emitter->onDidPresent(event);
                                         }
 
                                         // Call completion handler
@@ -356,6 +356,14 @@ using namespace facebook::react;
 }
 
 #pragma mark - TrueSheetViewControllerDelegate
+
+- (void)viewControllerWillAppear {
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+    TrueSheetViewEventEmitter::OnWillPresent event{};
+    emitter->onWillPresent(event);
+  }
+}
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {
   if (!_eventEmitter)

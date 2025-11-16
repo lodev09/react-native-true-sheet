@@ -47,6 +47,13 @@
   [self.view insertSubview:self->_backgroundView atIndex:0];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+  [super viewWillAppear:animated];
+  if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
+    [self.delegate viewControllerWillAppear];
+  }
+}
+
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {

@@ -14,7 +14,8 @@ import type {
   DragChangeEvent,
   DragEndEvent,
   DetentChangeEvent,
-  PresentEvent,
+  WillPresentEvent,
+  DidPresentEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
@@ -63,7 +64,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.onMount = this.onMount.bind(this)
     this.onDismiss = this.onDismiss.bind(this)
-    this.onPresent = this.onPresent.bind(this)
+    this.onWillPresent = this.onWillPresent.bind(this)
+    this.onDidPresent = this.onDidPresent.bind(this)
     this.onDetentChange = this.onDetentChange.bind(this)
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
@@ -146,8 +148,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDetentChange?.(event)
   }
 
-  private onPresent(event: PresentEvent): void {
-    this.props.onPresent?.(event)
+  private onWillPresent(event: WillPresentEvent): void {
+    this.props.onWillPresent?.(event)
+  }
+
+  private onDidPresent(event: DidPresentEvent): void {
+    this.props.onDidPresent?.(event)
   }
 
   private onDismiss(): void {
@@ -260,7 +266,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         dismissible={dismissible}
         maxHeight={maxHeight}
         onMount={this.onMount}
-        onPresent={this.onPresent}
+        onWillPresent={this.onWillPresent}
+        onDidPresent={this.onDidPresent}
         onDismiss={this.onDismiss}
         onDetentChange={this.onDetentChange}
         onDragBegin={this.onDragBegin}

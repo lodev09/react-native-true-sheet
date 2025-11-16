@@ -75,7 +75,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         )
       }
       onDismiss={() => console.log('Basic sheet dismissed!')}
-      onPresent={(e) =>
+      onDidPresent={(e) =>
         console.log(
           `Basic sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
         )

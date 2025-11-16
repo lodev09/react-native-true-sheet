@@ -11,7 +11,8 @@ class TrueSheetEvent(surfaceId: Int, viewId: Int, private val name: String, priv
 
   companion object {
     const val MOUNT = "topMount"
-    const val PRESENT = "topPresent"
+    const val WILL_PRESENT = "topWillPresent"
+    const val DID_PRESENT = "topDidPresent"
     const val DISMISS = "topDismiss"
     const val DETENT_CHANGE = "topDetentChange"
     const val DRAG_BEGIN = "topDragBegin"

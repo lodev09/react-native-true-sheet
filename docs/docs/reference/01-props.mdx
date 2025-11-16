@@ -197,7 +197,11 @@ const App = () => {
     console.log('Bye bye 👋')
   }
 
-  const handleOnPresent = (e: PresentEvent) => {
+  const handleOnWillPresent = () => {
+    console.log('Sheet is about to be presented')
+  }
+
+  const handleOnDidPresent = (e: DidPresentEvent) => {
     console.log(e.nativeEvent) // { index: 0, value: 420 }
   }
 
@@ -211,7 +215,8 @@ const App = () => {
       <TrueSheet
         ref={sheet}
         detents={[0.5, 0.8]}
-        onPresent={handleOnPresent}
+        onWillPresent={handleOnWillPresent}
+        onDidPresent={handleOnDidPresent}
         onDetentChange={handleDetentChange}
         onDismiss={handleDismiss}
       >
@@ -227,7 +232,11 @@ const App = () => {
 
 This is called when the sheet has been mounted and is ready to present.
 
-### `onPresent`
+### `onWillPresent`
+
+This is called when the sheet is about to be presented.
+
+### `onDidPresent`
 
 Comes with [`DetentInfo`](/reference/types#detentinfo).
 

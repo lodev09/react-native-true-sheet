@@ -99,8 +99,8 @@ class TrueSheetView(context: Context) :
           presentPromise = null
         }
 
-        // Dispatch onPresent event
-        dispatchEvent(TrueSheetEvent.PRESENT, detentInfoData(getDetentInfoForIndex(currentDetentIndex)))
+        // Dispatch onDidPresent event
+        dispatchEvent(TrueSheetEvent.DID_PRESENT, detentInfoData(getDetentInfoForIndex(currentDetentIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -421,6 +421,8 @@ class TrueSheetView(context: Context) :
       promiseCallback()
     } else {
       presentPromise = promiseCallback
+      // Dispatch onWillPresent event before showing
+      dispatchEvent(TrueSheetEvent.WILL_PRESENT, null)
     }
 
     sheetDialog.present(detentIndex)

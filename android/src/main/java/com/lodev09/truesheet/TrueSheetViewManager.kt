@@ -38,7 +38,8 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
     mutableMapOf(
       TrueSheetEvent.MOUNT to MapBuilder.of("registrationName", "onMount"),
-      TrueSheetEvent.PRESENT to MapBuilder.of("registrationName", "onPresent"),
+      TrueSheetEvent.WILL_PRESENT to MapBuilder.of("registrationName", "onWillPresent"),
+      TrueSheetEvent.DID_PRESENT to MapBuilder.of("registrationName", "onDidPresent"),
       TrueSheetEvent.DISMISS to MapBuilder.of("registrationName", "onDismiss"),
       TrueSheetEvent.DETENT_CHANGE to MapBuilder.of("registrationName", "onDetentChange"),
       TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),

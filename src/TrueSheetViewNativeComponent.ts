@@ -38,7 +38,8 @@ export interface NativeProps extends ViewProps {
 
   // Event handlers
   onMount?: DirectEventHandler<null>
-  onPresent?: DirectEventHandler<DetentInfo>
+  onWillPresent?: DirectEventHandler<null>
+  onDidPresent?: DirectEventHandler<DetentInfo>
   onDismiss?: DirectEventHandler<null>
   onDetentChange?: DirectEventHandler<DetentInfo>
   onDragBegin?: DirectEventHandler<DetentInfo>

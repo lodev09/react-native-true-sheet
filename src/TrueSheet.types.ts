@@ -9,7 +9,8 @@ export interface DetentInfo {
 }
 
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
-export type PresentEvent = NativeSyntheticEvent<DetentInfo>
+export type WillPresentEvent = NativeSyntheticEvent<null>
+export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
@@ -207,10 +208,15 @@ export interface TrueSheetProps extends ViewProps {
   onMount?: () => void
 
   /**
+   * Called when the Sheet is about to be presented.
+   */
+  onWillPresent?: (event: WillPresentEvent) => void
+
+  /**
    * Called when the Sheet has been presented.
    * Comes with the detent info.
    */
-  onPresent?: (event: PresentEvent) => void
+  onDidPresent?: (event: DidPresentEvent) => void
 
   /**
    * Called when the Sheet has been dismissed
