@@ -43,7 +43,7 @@
     "typecheck": "tsc",
     "lint": "eslint --fix \"**/*.{ts,tsx}\"",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/swiftlint.sh && scripts/ktlint.sh",
+    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objc-lint.sh && scripts/ktlint.sh",
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
     "release": "yarn tidy && release-it"
