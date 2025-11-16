@@ -18,59 +18,59 @@
 using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
-    RCTSurfaceTouchHandler *_touchHandler;
+  RCTSurfaceTouchHandler *_touchHandler;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-    return concreteComponentDescriptorProvider<TrueSheetFooterViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<TrueSheetFooterViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) {
-        static const auto defaultProps = std::make_shared<const TrueSheetFooterViewProps>();
-        _props = defaultProps;
-        
-        // Set background color to clear by default
-        self.backgroundColor = [UIColor clearColor];
-        
-        // Create touch handler for React Native touch events
-        _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    }
-    return self;
+  if (self = [super initWithFrame:frame]) {
+    static const auto defaultProps = std::make_shared<const TrueSheetFooterViewProps>();
+    _props = defaultProps;
+    
+    // Set background color to clear by default
+    self.backgroundColor = [UIColor clearColor];
+    
+    // Create touch handler for React Native touch events
+    _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
+  }
+  return self;
 }
 
 - (void)setupInParentView:(UIView *)parentView {
-    // Add to parent view hierarchy
-    [parentView addSubview:self];
-    
-    // Measure footer height
-    CGSize footerSize = [self systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-    CGFloat height = footerSize.height > 0 ? footerSize.height : 0;
-    
-    // Pin to bottom, leading, and trailing edges with height constraint
-    [TrueSheetLayoutUtils pinView:self 
-                     toParentView:parentView 
-                            edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom 
-                           height:height];
-    
-    // Ensure footer is above container
-    [parentView bringSubviewToFront:self];
-    
-    // Attach touch handler for React Native touch events
-    if (_touchHandler) {
-        [_touchHandler attachToView:self];
-    }
+  // Add to parent view hierarchy
+  [parentView addSubview:self];
+  
+  // Measure footer height
+  CGSize footerSize = [self systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+  CGFloat height = footerSize.height > 0 ? footerSize.height : 0;
+  
+  // Pin to bottom, leading, and trailing edges with height constraint
+  [TrueSheetLayoutUtils pinView:self 
+          toParentView:parentView 
+              edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom 
+             height:height];
+  
+  // Ensure footer is above container
+  [parentView bringSubviewToFront:self];
+  
+  // Attach touch handler for React Native touch events
+  if (_touchHandler) {
+    [_touchHandler attachToView:self];
+  }
 }
 
 - (void)cleanup {
-    // Detach touch handler
-    if (_touchHandler) {
-        [_touchHandler detachFromView:self];
-    }
-    
-    // Unpin and remove from view hierarchy
-    [TrueSheetLayoutUtils unpinView:self];
-    [self removeFromSuperview];
+  // Detach touch handler
+  if (_touchHandler) {
+    [_touchHandler detachFromView:self];
+  }
+  
+  // Unpin and remove from view hierarchy
+  [TrueSheetLayoutUtils unpinView:self];
+  [self removeFromSuperview];
 }
 
 @end

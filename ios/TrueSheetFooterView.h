@@ -17,14 +17,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetFooterView : RCTViewComponentView
 
 /**
- * Sets up the footer view in the parent view with touch handling
- * @param parentView The parent view to add this footer to
- */
+* Sets up the footer view in the parent view with touch handling
+* @param parentView The parent view to add this footer to
+*/
 - (void)setupInParentView:(UIView *)parentView;
 
 /**
- * Cleans up the footer view before removal
- */
+* Cleans up the footer view before removal
+*/
 - (void)cleanup;
 
 @end

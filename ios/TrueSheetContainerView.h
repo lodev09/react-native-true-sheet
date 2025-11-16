@@ -18,14 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetContainerView : RCTViewComponentView
 
 /**
- * Sets up the container view in the parent view with touch handling
- * @param parentView The parent view to add this container to
- */
+* Sets up the container view in the parent view with touch handling
+* @param parentView The parent view to add this container to
+*/
 - (void)setupInParentView:(UIView *)parentView;
 
 /**
- * Cleans up the container view before removal
- */
+* Cleans up the container view before removal
+*/
 - (void)cleanup;
 
 @end

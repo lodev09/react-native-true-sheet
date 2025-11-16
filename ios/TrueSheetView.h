@@ -23,15 +23,13 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError * _Nullable error
 
 @interface TrueSheetView : RCTViewComponentView
 
-@property (nonatomic, strong, nullable) TrueSheetViewController *controller;
-
 // TurboModule methods
 - (void)presentAtIndex:(NSInteger)index 
-              animated:(BOOL)animated
-            completion:(nullable TrueSheetCompletionBlock)completion;
+       animated:(BOOL)animated
+      completion:(nullable TrueSheetCompletionBlock)completion;
 
 - (void)dismissAnimated:(BOOL)animated 
-             completion:(nullable TrueSheetCompletionBlock)completion;
+      completion:(nullable TrueSheetCompletionBlock)completion;
 
 @end
 

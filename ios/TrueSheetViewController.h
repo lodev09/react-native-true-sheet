@@ -14,9 +14,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)viewControllerDidDismiss;
 - (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value;
-- (void)viewControllerWillAppear;
-- (void)viewControllerKeyboardWillShow:(CGFloat)keyboardHeight;
-- (void)viewControllerKeyboardWillHide;
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height;
 
 @end

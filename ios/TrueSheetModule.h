@@ -20,28 +20,28 @@ NS_ASSUME_NONNULL_BEGIN
 @class TrueSheetView;
 
 /**
- * TurboModule for TrueSheet imperative API
- * Provides promise-based async operations using view references
- */
+* TurboModule for TrueSheet imperative API
+* Provides promise-based async operations using view references
+*/
 @interface TrueSheetModule : NSObject <RCTBridgeModule>
 
 /**
- * Get a sheet component view by its React tag
- * @param reactTag - The React native tag of the view
- * @return The TrueSheetView instance, or nil if not found
- */
+* Get a sheet component view by its React tag
+* @param reactTag - The React native tag of the view
+* @return The TrueSheetView instance, or nil if not found
+*/
 + (nullable TrueSheetView *)getSheetByTag:(NSNumber *)reactTag;
 
 /**
- * Register a sheet component view with its React tag
- * Called automatically by TrueSheetView during initialization
- */
+* Register a sheet component view with its React tag
+* Called automatically by TrueSheetView during initialization
+*/
 + (void)registerView:(TrueSheetView *)view withTag:(NSNumber *)tag;
 
 /**
- * Unregister a sheet component view
- * Called automatically by TrueSheetView during dealloc
- */
+* Unregister a sheet component view
+* Called automatically by TrueSheetView during dealloc
+*/
 + (void)unregisterViewWithTag:(NSNumber *)tag;
 
 @end

@@ -13,35 +13,35 @@
 @implementation TrueSheetLayoutUtils
 
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges {
-    [self pinView:view toParentView:parentView edges:edges height:0];
+  [self pinView:view toParentView:parentView edges:edges height:0];
 }
 
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges height:(CGFloat)height {
-    view.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    if (edges & UIRectEdgeTop) {
-        [view.topAnchor constraintEqualToAnchor:parentView.topAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeBottom) {
-        [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeLeft) {
-        [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
-    }
-    if (edges & UIRectEdgeRight) {
-        [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
-    }
-    
-    // Apply height constraint if provided
-    if (height > 0) {
-        [view.heightAnchor constraintEqualToConstant:height].active = YES;
-    }
+  view.translatesAutoresizingMaskIntoConstraints = NO;
+  
+  if (edges & UIRectEdgeTop) {
+    [view.topAnchor constraintEqualToAnchor:parentView.topAnchor].active = YES;
+  }
+  if (edges & UIRectEdgeBottom) {
+    [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor].active = YES;
+  }
+  if (edges & UIRectEdgeLeft) {
+    [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
+  }
+  if (edges & UIRectEdgeRight) {
+    [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
+  }
+  
+  // Apply height constraint if provided
+  if (height > 0) {
+    [view.heightAnchor constraintEqualToConstant:height].active = YES;
+  }
 }
 
 + (void)unpinView:(UIView *)view {
-    if (!view) return;
-    view.translatesAutoresizingMaskIntoConstraints = YES;
-    [view removeConstraints:view.constraints];
+  if (!view) return;
+  view.translatesAutoresizingMaskIntoConstraints = YES;
+  [view removeConstraints:view.constraints];
 }
 
 @end
