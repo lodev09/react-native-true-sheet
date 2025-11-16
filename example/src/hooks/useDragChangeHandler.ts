@@ -1,6 +1,6 @@
 import { useEvent, useHandler } from 'react-native-reanimated'
-import type { DependencyList } from 'react-native-reanimated/lib/typescript/hook'
 import type { DragChangeEvent, SizeInfo } from '@lodev09/react-native-true-sheet'
+import type { DependencyList } from 'react'
 
 type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
 
@@ -12,7 +12,7 @@ export const useDragChangeHandler = (
     onDragChange: handler,
   }
 
-  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies)
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies as any)
 
   return useEvent<DragChangeEvent>(
     (event) => {

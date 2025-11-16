@@ -9,7 +9,7 @@ import { DemoContent } from '../DemoContent'
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  const flatListRef = useRef<FlatList>(null)
+  const flatListRef = useRef<FlatList<number>>(null)
 
   return (
     <TrueSheet
@@ -28,7 +28,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       <View style={$header}>
         <Input />
       </View>
-      <FlatList<number>
+      <FlatList
         ref={flatListRef}
         nestedScrollEnabled
         data={times(50, (i) => i)}

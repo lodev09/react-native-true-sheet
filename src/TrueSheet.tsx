@@ -1,4 +1,4 @@
-import { PureComponent, type RefObject, createRef, type ReactNode } from 'react'
+import { PureComponent, type RefObject, createRef, type ReactNode, type ComponentRef } from 'react'
 
 import type {
   TrueSheetProps,
@@ -39,7 +39,7 @@ const getTurboModule = () => {
   return TrueSheetModule
 }
 
-type NativeRef = React.ElementRef<typeof TrueSheetViewNativeComponent>
+type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
 
 interface TrueSheetState {
   scrollableHandle: number | null
