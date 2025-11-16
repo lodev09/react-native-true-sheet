@@ -182,7 +182,7 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * A component that floats at the bottom of the Sheet.
    */
-  FooterComponent?: ComponentType<unknown> | ReactElement
+  footer?: ComponentType<unknown> | ReactElement
 
   /**
    * Determines how the software keyboard will impact the layout of the sheet.

@@ -1,7 +1,7 @@
 import type { TrueSheetProps } from './TrueSheet.types'
 
 interface TrueSheetFooterProps {
-  Component?: TrueSheetProps['FooterComponent']
+  Component?: TrueSheetProps['footer']
 }
 
 export const TrueSheetFooter = (props: TrueSheetFooterProps) => {

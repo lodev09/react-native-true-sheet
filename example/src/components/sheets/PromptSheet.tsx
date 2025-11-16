@@ -53,7 +53,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
-      FooterComponent={<Footer />}
+      footer={<Footer />}
       {...props}
     >
       <DemoContent color={DARK_BLUE} />

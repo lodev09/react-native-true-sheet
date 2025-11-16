@@ -64,7 +64,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
-      FooterComponent={<Footer />}
+      footer={<Footer />}
       {...props}
     >
       <GestureHandlerRootView style={styles.gestureRoot}>

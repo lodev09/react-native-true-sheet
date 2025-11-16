@@ -83,7 +83,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
-      FooterComponent={<Footer />}
+      footer={<Footer />}
       {...props}
     >
       {Array.from({ length: contentCount }, (_, i) => (
@@ -107,7 +107,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         detents={['auto']}
         backgroundColor={DARK}
         style={styles.content}
-        FooterComponent={<Footer />}
+        footer={<Footer />}
       >
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />

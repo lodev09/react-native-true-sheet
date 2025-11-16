@@ -239,7 +239,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       maxHeight,
       children,
       style,
-      FooterComponent,
+      footer,
       ...rest
     } = this.props
 
@@ -273,9 +273,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
             {children}
           </View>
         </TrueSheetContainerViewNativeComponent>
-        {FooterComponent && (
+        {footer && (
           <TrueSheetFooterViewNativeComponent collapsable={false}>
-            {isValidElement(FooterComponent) ? FooterComponent : createElement(FooterComponent)}
+            {isValidElement(footer) ? footer : createElement(footer)}
           </TrueSheetFooterViewNativeComponent>
         )}
       </TrueSheetViewNativeComponent>

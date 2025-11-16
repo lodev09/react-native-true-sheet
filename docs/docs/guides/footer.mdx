@@ -22,12 +22,12 @@ const SomeFooter = () => {
 }
 ```
 
-Stick it in the [`FooterComponent`](/reference/props#footercomponent).
+Stick it in the [`footer`](/reference/props#footercomponent).
 
 ```tsx {3}
 const App = () => {
   return (
-    <TrueSheet FooterComponent={SomeFooter}>
+    <TrueSheet footer={SomeFooter}>
       <View />
     </TrueSheet>
   )
@@ -42,7 +42,7 @@ const App = () => {
   return (
     <TrueSheet
       ref={sheet}
-      FooterComponent={
+      footer={
         <View>
           <Text>My Foot-er is more awesome.</Text>
         </View>
