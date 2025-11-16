@@ -47,6 +47,7 @@ using namespace facebook::react;
     NSNumber *_activeIndex;
     
     RCTSurfaceTouchHandler *_surfaceTouchHandler;
+    LayoutMetrics _layoutMetrics;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -324,8 +325,8 @@ using namespace facebook::react;
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
     [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
     
-    // Handle layout changes if needed
-    // The sheet controller will handle its own layout through UIViewController lifecycle
+    // Store layout metrics for later use
+    _layoutMetrics = layoutMetrics;
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -376,8 +377,19 @@ using namespace facebook::react;
     
     // Initial setup: configure container layout
     if (_containerView != nil) {
-        // Pin container to fill the sheet controller's view
-        [self pinView:_containerView toView:_controller.view edges:UIRectEdgeAll];
+        // Measure container's content height for "auto" sizing
+        // Use the layout metrics from Fabric which contain the accurate content size
+        if (_containerView) {
+            CGFloat contentHeight = _containerView.frame.size.height;
+            if (contentHeight > 0) {
+                _controller.contentHeight = @(contentHeight);
+                
+                // If sheet is already presented, update its sizes
+                if (_isPresented && _controller.presentingViewController) {
+                    [_controller setupSizes];
+                }
+            }
+        }
         
         // Ensure container is above background view for touch events
         [_controller.view bringSubviewToFront:_containerView];
@@ -449,9 +461,6 @@ using namespace facebook::react;
     // No longer needed - footer removed
 }
 
-- (void)viewControllerDidChangeWidth:(CGFloat)width {
-    // Container is pinned with Auto Layout, so it automatically resizes
-}
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height {
     if (!_eventEmitter) return;

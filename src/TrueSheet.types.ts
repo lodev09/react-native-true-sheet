@@ -1,11 +1,5 @@
 import type { Component, ComponentType, ReactElement, RefObject } from 'react'
-import type {
-  ColorValue,
-  NativeSyntheticEvent,
-  StyleProp,
-  ViewProps,
-  ViewStyle,
-} from 'react-native'
+import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native'
 
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
@@ -103,7 +97,7 @@ export type SheetSize =
    */
   | 'large'
 
-export interface TrueSheetProps extends Omit<ViewProps, 'style'> {
+export interface TrueSheetProps extends ViewProps {
   /**
    * The name to reference this sheet. It has to be unique.
    * You can then present this sheet globally using its `name`.

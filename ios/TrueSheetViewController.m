@@ -74,11 +74,13 @@
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     
+    // Detect width changes (e.g., device rotation) and trigger size recalculation
+    // This is essential for "auto" sizing to work correctly
     if (self.lastViewWidth != self.view.frame.size.width) {
-        if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeWidth:)]) {
-            [self.delegate viewControllerDidChangeWidth:self.view.bounds.size.width];
-        }
         self.lastViewWidth = self.view.frame.size.width;
+        
+        // Recalculate detents with new width
+        [self setupSizes];
     }
 }
 

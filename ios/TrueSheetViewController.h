@@ -12,7 +12,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
-- (void)viewControllerDidChangeWidth:(CGFloat)width;
 - (void)viewControllerDidDismiss;
 - (void)viewControllerDidChangeSize:(NSInteger)index value:(CGFloat)value;
 - (void)viewControllerWillAppear;

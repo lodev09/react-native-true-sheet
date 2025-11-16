@@ -1,11 +1,4 @@
 import { PureComponent, type RefObject, createRef, type ReactNode } from 'react'
-import {
-  Platform,
-  View,
-  type ViewStyle,
-  type NativeSyntheticEvent,
-  processColor,
-} from 'react-native'
 
 import type {
   TrueSheetProps,
@@ -17,6 +10,7 @@ import type {
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
+import { Platform, processColor, View, type ViewStyle } from 'react-native'
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -265,6 +259,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       cornerRadius,
       maxHeight,
       children,
+      style,
       ...rest
     } = this.props
 
@@ -294,8 +289,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
       >
-        <TrueSheetContainerViewNativeComponent {...rest}>
-          {children}
+        <TrueSheetContainerViewNativeComponent style={$contentView} collapsable={false}>
+          <View style={style} {...rest}>
+            {children}
+          </View>
         </TrueSheetContainerViewNativeComponent>
       </TrueSheetViewNativeComponent>
     )
@@ -304,7 +301,13 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const $nativeSheet: ViewStyle = {
   position: 'absolute',
-  width: '100%',
-  left: -9999,
-  zIndex: -9999,
+  top: 0,
+  left: 0,
+  right: 0,
+}
+
+const $contentView: ViewStyle = {
+  position: 'absolute',
+  left: 0,
+  right: 0,
 }
