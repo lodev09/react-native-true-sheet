@@ -20,7 +20,6 @@ using namespace facebook::react;
 @implementation TrueSheetContainerView {
     LayoutMetrics _layoutMetrics;
     RCTSurfaceTouchHandler *_touchHandler;
-    UIView *_contentView;
     UIView *_pinnedScrollView;
 }
 
@@ -76,18 +75,15 @@ using namespace facebook::react;
 }
 
 - (void)setupScrollViewPinning {
-    // Get the first child (content view) - this is the React component's root view
+    // Get the first child - this is the React component's root view
     if (self.subviews.count == 0) {
         return;
     }
     
-    _contentView = self.subviews[0];
-    
-    // Pin content view to container
-    [TrueSheetLayoutUtils pinView:_contentView toParentView:self edges:UIRectEdgeAll];
+    UIView *contentView = self.subviews[0];
     
     // Find scroll view in content view hierarchy
-    UIView *scrollView = [self findScrollViewInView:_contentView];
+    UIView *scrollView = [self findScrollViewInView:contentView];
     
     if (scrollView && scrollView != _pinnedScrollView) {
         // Unpin previous scroll view if exists
@@ -95,9 +91,12 @@ using namespace facebook::react;
             [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
         }
         
-        // Pin the scroll view to content view
-        [TrueSheetLayoutUtils pinView:scrollView toParentView:_contentView edges:UIRectEdgeAll];
-        _pinnedScrollView = scrollView;
+        // Pin the scroll view to its parent (content view)
+        UIView *scrollViewParent = scrollView.superview;
+        if (scrollViewParent) {
+            [TrueSheetLayoutUtils pinView:scrollView toParentView:scrollViewParent edges:UIRectEdgeAll];
+            _pinnedScrollView = scrollView;
+        }
     }
 }
 
@@ -128,12 +127,6 @@ using namespace facebook::react;
     if (_pinnedScrollView) {
         [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
         _pinnedScrollView = nil;
-    }
-    
-    // Unpin content view if exists
-    if (_contentView) {
-        [TrueSheetLayoutUtils unpinView:_contentView];
-        _contentView = nil;
     }
     
     // Unpin and remove from view hierarchy
