@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { View, type ViewStyle } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import type { TrueSheet } from '@lodev09/react-native-true-sheet'
 
 import { BLUE, SPACING } from '../utils'
@@ -12,7 +12,7 @@ export const ChildScreen = () => {
   const scrollViewSheet = useRef<TrueSheet>(null)
 
   return (
-    <View style={$container}>
+    <View style={styles.container}>
       <Button text="TrueSheet View" onPress={() => basicSheet.current?.present()} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
       <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
@@ -24,9 +24,11 @@ export const ChildScreen = () => {
   )
 }
 
-const $container: ViewStyle = {
-  backgroundColor: BLUE,
-  justifyContent: 'center',
-  flex: 1,
-  padding: SPACING,
-}
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: BLUE,
+    justifyContent: 'center',
+    flex: 1,
+    padding: SPACING,
+  },
+})

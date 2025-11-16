@@ -1,4 +1,4 @@
-import type { TextStyle } from 'react-native'
+import { StyleSheet } from 'react-native'
 import type { WithSpringConfig } from 'react-native-reanimated'
 
 export const SPACING = 16
@@ -14,7 +14,9 @@ export const LIGHT_GRAY = '#ebedf1'
 export const BLUE = '#3784d7'
 export const DARK_BLUE = '#1f64ae'
 
-export const $WHITE_TEXT: TextStyle = { color: 'white' }
+export const styles = StyleSheet.create({
+  whiteText: { color: 'white' },
+})
 
 export const SPRING_CONFIG: WithSpringConfig = {
   damping: 500,

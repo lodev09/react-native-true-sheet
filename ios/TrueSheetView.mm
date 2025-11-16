@@ -68,7 +68,7 @@ using namespace facebook::react;
 
 - (void)dealloc {
   // Dismiss the sheet if it's currently being presented (with animation for better UX)
-  if (_controller && _controller.presentingViewController) {
+  if (_controller) {
     [_controller dismissViewControllerAnimated:YES completion:nil];
   }
 
@@ -308,16 +308,12 @@ using namespace facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
-    // Cleanup container view (handles clearing reference, touch handler, and scroll view cleanup)
     [_containerView cleanup];
-
-    // Clear reference
     _containerView = nil;
-  } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
-    // Cleanup footer view (handles clearing reference and touch handler cleanup)
+  }
+  
+  if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     [_footerView cleanup];
-
-    // Clear reference
     _footerView = nil;
   }
 }

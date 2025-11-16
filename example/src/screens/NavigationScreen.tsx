@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Text, View, type TextStyle, type ViewStyle } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 
 import {
@@ -30,10 +30,10 @@ export const NavigationScreen = () => {
   }
 
   return (
-    <View style={$container}>
-      <View style={$heading}>
-        <Text style={$title}>True Sheet 💩</Text>
-        <Text style={$subtitle}>The true native bottom sheet experience.</Text>
+    <View style={styles.container}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>True Sheet 💩</Text>
+        <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
       </View>
 
       <Button text="Navigate to Screen" onPress={() => navigation.navigate('Child')} />
@@ -56,25 +56,24 @@ export const NavigationScreen = () => {
   )
 }
 
-const $container: ViewStyle = {
-  backgroundColor: BLUE,
-  justifyContent: 'center',
-  flex: 1,
-  padding: SPACING,
-}
-
-const $heading: ViewStyle = {
-  marginBottom: SPACING * 2,
-}
-
-const $title: TextStyle = {
-  fontSize: 24,
-  lineHeight: 30,
-  fontWeight: 500,
-  color: 'white',
-}
-
-const $subtitle: TextStyle = {
-  lineHeight: 24,
-  color: LIGHT_GRAY,
-}
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: BLUE,
+    justifyContent: 'center',
+    flex: 1,
+    padding: SPACING,
+  },
+  heading: {
+    marginBottom: SPACING * 2,
+  },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: 500,
+    color: 'white',
+  },
+  subtitle: {
+    lineHeight: 24,
+    color: LIGHT_GRAY,
+  },
+})

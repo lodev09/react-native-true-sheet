@@ -1,5 +1,5 @@
 import { forwardRef, type Ref } from 'react'
-import { ScrollView, type ViewStyle } from 'react-native'
+import { StyleSheet, ScrollView } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
 import { FOOTER_HEIGHT, SPACING, times } from '../../utils'
@@ -20,7 +20,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       edgeToEdge
       {...props}
     >
-      <ScrollView nestedScrollEnabled style={$content} indicatorStyle="black">
+      <ScrollView nestedScrollEnabled style={styles.content} indicatorStyle="black">
         {times(25, (i) => (
           <DemoContent key={i} />
         ))}
@@ -31,7 +31,9 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
 
 ScrollViewSheet.displayName = 'ScrollViewSheet'
 
-const $content: ViewStyle = {
-  padding: SPACING,
-  paddingBottom: FOOTER_HEIGHT + SPACING,
-}
+const styles = StyleSheet.create({
+  content: {
+    padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
+  },
+})
