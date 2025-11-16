@@ -10,13 +10,13 @@
 
 @interface TrueSheetViewController ()
 
-@property (nonatomic, strong) UIVisualEffectView *backgroundView;
-@property (nonatomic, assign) CGFloat lastViewWidth;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, NSDictionary *> *detentValues;
-
 @end
 
-@implementation TrueSheetViewController
+@implementation TrueSheetViewController {
+  CGFloat _lastViewWidth;
+  UIVisualEffectView *_backgroundView;
+  NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
+}
 
 - (instancetype)init {
   if (self = [super initWithNibName:nil bundle:nil]) {
@@ -43,8 +43,8 @@
   [super viewDidLoad];
 
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-  self.backgroundView.frame = self.view.bounds;
-  [self.view insertSubview:self.backgroundView atIndex:0];
+  _backgroundView.frame = self.view.bounds;
+  [self.view insertSubview:self->_backgroundView atIndex:0];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -59,8 +59,8 @@
 
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
-  if (self.lastViewWidth != self.view.frame.size.width) {
-    self.lastViewWidth = self.view.frame.size.width;
+  if (_lastViewWidth != self.view.frame.size.width) {
+    _lastViewWidth = self.view.frame.size.width;
 
     // Recalculate detents with new width
     [self setupDetents];
@@ -123,11 +123,11 @@
 
 - (void)setupBackground {
   if (self.blurEffect) {
-    self.backgroundView.effect = self.blurEffect;
-    self.backgroundView.backgroundColor = nil;
+    _backgroundView.effect = self.blurEffect;
+    _backgroundView.backgroundColor = nil;
   } else {
-    self.backgroundView.backgroundColor = self.backgroundColor;
-    self.backgroundView.effect = nil;
+    _backgroundView.backgroundColor = self.backgroundColor;
+    _backgroundView.effect = nil;
   }
 }
 
@@ -163,7 +163,7 @@
   if (!sheet)
     return;
 
-  [self.detentValues removeAllObjects];
+  [_detentValues removeAllObjects];
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
   // Don't subtract bottomInset - the sheet controller handles safe area automatically
@@ -198,11 +198,11 @@
                             CGFloat maxDetent = context.maximumDetentValue;
                             CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
                             CGFloat value = MIN(fraction * maxDetent, maxValue);
-                            self.detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
+                            self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                             return value;
                           }];
     } else {
-      self.detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
+      _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
         @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -219,7 +219,7 @@
                               CGFloat maxDetent = context.maximumDetentValue;
                               CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
                               CGFloat value = MIN(height, maxValue);
-                              self.detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
+                              self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                               return value;
                             }];
       }
@@ -234,7 +234,7 @@
                                 CGFloat maxDetent = context.maximumDetentValue;
                                 CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
                                 CGFloat value = MIN(fraction * maxDetent, maxValue);
-                                self.detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
+                                self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                                 return value;
                               }];
         }
@@ -242,7 +242,7 @@
     }
   }
 
-  self.detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
+  _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
     @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
   return [UISheetPresentationControllerDetent mediumDetent];
 }
@@ -306,7 +306,7 @@
   if (!selectedIdentifier)
     return nil;
 
-  return self.detentValues[selectedIdentifier];
+  return _detentValues[selectedIdentifier];
 }
 
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion {
@@ -338,7 +338,7 @@
   if (!identifier)
     return;
 
-  NSDictionary *detentInfo = self.detentValues[identifier];
+  NSDictionary *detentInfo = _detentValues[identifier];
   if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:)]) {
     NSInteger index = [detentInfo[@"index"] integerValue];
     CGFloat value = [detentInfo[@"value"] floatValue];
