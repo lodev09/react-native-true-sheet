@@ -14,7 +14,7 @@ import type {
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
-  SizeChangeEvent,
+  DetentChangeEvent,
   PresentEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
@@ -67,7 +67,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onMount = this.onMount.bind(this)
     this.onDismiss = this.onDismiss.bind(this)
     this.onPresent = this.onPresent.bind(this)
-    this.onSizeChange = this.onSizeChange.bind(this)
+    this.onDetentChange = this.onDetentChange.bind(this)
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
@@ -99,7 +99,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   /**
    * Present the sheet by given `name` (Promise-based)
    * @param name - Sheet name (must match sheet's name prop)
-   * @param index - Size index (default: 0)
+   * @param index - Detent index (default: 0)
    * @returns Promise that resolves when sheet is fully presented
    * @throws Error if sheet not found or presentation fails
    */
@@ -140,7 +140,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   /**
    * Resize the sheet by given `name` (Promise-based)
    * @param name - Sheet name
-   * @param index - New size index
+   * @param index - New detent index
    * @returns Promise that resolves when resize is complete
    * @throws Error if sheet not found
    */
@@ -172,8 +172,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     })
   }
 
-  private onSizeChange(event: SizeChangeEvent): void {
-    this.props.onSizeChange?.(event)
+  private onDetentChange(event: DetentChangeEvent): void {
+    this.props.onDetentChange?.(event)
   }
 
   private onPresent(event: PresentEvent): void {
@@ -201,8 +201,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   /**
-   * Present the sheet. Optionally accepts a size `index`.
-   * See `sizes` prop
+   * Present the sheet. Optionally accepts a detent `index`.
+   * See `detents` prop
    */
   public async present(index: number = 0): Promise<void> {
     const module = getTurboModule()
@@ -226,9 +226,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   componentDidMount(): void {
-    if (this.props.sizes && this.props.sizes.length > 3) {
+    if (this.props.detents && this.props.detents.length > 3) {
       console.warn(
-        'TrueSheet only supports a maximum of 3 sizes; collapsed, half-expanded and expanded. Check your `sizes` prop.'
+        'TrueSheet only supports a maximum of 3 detents; collapsed, half-expanded and expanded. Check your `detents` prop.'
       )
     }
 
@@ -241,7 +241,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   render(): ReactNode {
     const {
-      sizes = [0.5, 1],
+      detents = [0.5, 1],
       backgroundColor = 'white',
       dismissible = true,
       grabber = true,
@@ -265,7 +265,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         ref={this.ref}
         style={$nativeSheet}
         scrollableHandle={this.state.scrollableHandle ?? 0}
-        sizes={sizes.map(String)}
+        detents={detents.map(String)}
         blurTint={blurTint}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
@@ -281,7 +281,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onMount={this.onMount}
         onPresent={this.onPresent}
         onDismiss={this.onDismiss}
-        onSizeChange={this.onSizeChange}
+        onDetentChange={this.onDetentChange}
         onDragBegin={this.onDragBegin}
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}

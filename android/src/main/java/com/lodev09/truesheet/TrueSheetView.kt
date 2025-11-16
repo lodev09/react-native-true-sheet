@@ -43,7 +43,7 @@ class TrueSheetView(context: Context) :
   /**
    * Current activeIndex.
    */
-  private var currentSizeIndex: Int = -1
+  private var currentDetentIndex: Int = -1
 
   /**
    * Promise callback to be invoked after `present` is called.
@@ -73,7 +73,7 @@ class TrueSheetView(context: Context) :
 
     // Configure Sheet Dialog
     sheetDialog.apply {
-      setOnSizeChangeListener { w, h ->
+      setOnDetentChangeListener { w, h ->
         val data = Arguments.createMap()
         data.putDouble("width", Utils.toDIP(w.toFloat()).toDouble())
         data.putDouble("height", Utils.toDIP(h.toFloat()).toDouble())
@@ -100,7 +100,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onPresent event
-        dispatchEvent(TrueSheetEvent.PRESENT, sizeInfoData(getSizeInfoForIndex(currentSizeIndex)))
+        dispatchEvent(TrueSheetEvent.PRESENT, detentInfoData(getDetentInfoForIndex(currentDetentIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -191,7 +191,7 @@ class TrueSheetView(context: Context) :
       sheetDialog.footerView?.height?.let { setFooterHeight(it) }
 
       if (initialIndex >= 0) {
-        currentSizeIndex = initialIndex
+        currentDetentIndex = initialIndex
         sheetDialog.present(initialIndex, initialIndexAnimated)
       }
 
@@ -259,24 +259,24 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismiss()
   }
 
-  private fun sizeInfoData(sizeInfo: SizeInfo): WritableMap {
+  private fun detentInfoData(detentInfo: DetentInfo): WritableMap {
     val data = Arguments.createMap()
-    data.putInt("index", sizeInfo.index)
-    data.putDouble("value", sizeInfo.value.toDouble())
+    data.putInt("index", detentInfo.index)
+    data.putDouble("value", detentInfo.value.toDouble())
 
     return data
   }
 
-  private fun getCurrentSizeInfo(sheetView: View): SizeInfo {
+  private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val height = sheetDialog.maxScreenHeight - sheetView.top
-    val currentSizeInfo = SizeInfo(currentSizeIndex, Utils.toDIP(height.toFloat()))
+    val currentDetentInfo = DetentInfo(currentDetentIndex, Utils.toDIP(height.toFloat()))
 
-    return currentSizeInfo
+    return currentDetentInfo
   }
 
   private fun handleDragBegin(sheetView: View) {
     // Dispatch drag started event
-    dispatchEvent(TrueSheetEvent.DRAG_BEGIN, sizeInfoData(getCurrentSizeInfo(sheetView)))
+    dispatchEvent(TrueSheetEvent.DRAG_BEGIN, detentInfoData(getCurrentDetentInfo(sheetView)))
     // Flag sheet is being dragged
     isDragging = true
   }
@@ -285,7 +285,7 @@ class TrueSheetView(context: Context) :
     if (!isDragging) return
 
     // Dispatch drag change event
-    dispatchEvent(TrueSheetEvent.DRAG_CHANGE, sizeInfoData(getCurrentSizeInfo(sheetView)))
+    dispatchEvent(TrueSheetEvent.DRAG_CHANGE, detentInfoData(getCurrentDetentInfo(sheetView)))
   }
 
   private fun handleDragEnd(state: Int) {
@@ -294,23 +294,23 @@ class TrueSheetView(context: Context) :
     // For consistency with IOS,
     // we only handle state changes after dragging.
     //
-    // Changing size programmatically is handled via the present method.
-    val sizeInfo = sheetDialog.getSizeInfoForState(state)
-    sizeInfo?.let {
+    // Changing detent programmatically is handled via the present method.
+    val detentInfo = sheetDialog.getDetentInfoForState(state)
+    detentInfo?.let {
       // Dispatch drag ended after dragging
-      dispatchEvent(TrueSheetEvent.DRAG_END, sizeInfoData(it))
-      if (it.index != currentSizeIndex) {
+      dispatchEvent(TrueSheetEvent.DRAG_END, detentInfoData(it))
+      if (it.index != currentDetentIndex) {
         // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->
           promise()
           presentPromise = null
         }
 
-        currentSizeIndex = it.index
+        currentDetentIndex = it.index
         sheetDialog.setupDimmedBackground(it.index)
 
-        // Dispatch onSizeChange event
-        dispatchEvent(TrueSheetEvent.SIZE_CHANGE, sizeInfoData(it))
+        // Dispatch onDetentChange event
+        dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(it))
       }
     }
 
@@ -324,7 +324,7 @@ class TrueSheetView(context: Context) :
   fun configureIfShowing() {
     if (sheetDialog.isShowing) {
       sheetDialog.configure()
-      sheetDialog.setStateForSizeIndex(currentSizeIndex)
+      sheetDialog.setStateForDetentIndex(currentDetentIndex)
 
       UiThreadUtil.runOnUiThread {
         sheetDialog.positionFooter()
@@ -362,7 +362,7 @@ class TrueSheetView(context: Context) :
 
     sheetDialog.dimmed = dimmed
     if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(currentSizeIndex)
+      sheetDialog.setupDimmedBackground(currentDetentIndex)
     }
   }
 
@@ -371,7 +371,7 @@ class TrueSheetView(context: Context) :
 
     sheetDialog.dimmedIndex = index
     if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(currentSizeIndex)
+      sheetDialog.setupDimmedBackground(currentDetentIndex)
     }
   }
 
@@ -399,31 +399,31 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismissible = dismissible
   }
 
-  fun setSizes(newSizes: Array<Any>) {
-    sheetDialog.sizes = newSizes
+  fun setDetents(newDetents: Array<Any>) {
+    sheetDialog.detents = newDetents
     configureIfShowing()
   }
 
   /**
-   * Present the sheet at given size index.
+   * Present the sheet at given detent index.
    */
-  fun present(sizeIndex: Int, promiseCallback: () -> Unit) {
+  fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    currentSizeIndex = sizeIndex
+    currentDetentIndex = detentIndex
 
     if (sheetDialog.isShowing) {
       // For consistency with IOS, we are not waiting
-      // for the state to change before dispatching onSizeChange event.
-      val sizeInfo = sheetDialog.getSizeInfoForIndex(sizeIndex)
-      dispatchEvent(TrueSheetEvent.SIZE_CHANGE, sizeInfoData(sizeInfo))
+      // for the state to change before dispatching onDetentChange event.
+      val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
+      dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(detentInfo))
 
       promiseCallback()
     } else {
       presentPromise = promiseCallback
     }
 
-    sheetDialog.present(sizeIndex)
+    sheetDialog.present(detentIndex)
   }
 
   /**

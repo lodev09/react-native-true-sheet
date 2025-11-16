@@ -7,7 +7,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native'
-import { TrueSheet, type SizeInfo } from '@lodev09/react-native-true-sheet'
+import { TrueSheet, type DetentInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
@@ -40,9 +40,9 @@ export const MapScreen = () => {
   const insets = useSafeAreaInsets()
   const buttonY = useSharedValue(0)
 
-  const dragChangeHandler = useDragChangeHandler((sizeInfo: SizeInfo) => {
+  const dragChangeHandler = useDragChangeHandler((detentInfo: DetentInfo) => {
     'worklet'
-    buttonY.value = -sizeInfo.value
+    buttonY.value = -detentInfo.value
   })
 
   const presentBasicSheet = async (index = 0) => {
@@ -58,8 +58,8 @@ export const MapScreen = () => {
     })),
   ]
 
-  const animateButton = (sizeInfo: SizeInfo) => {
-    buttonY.value = withSpring(-sizeInfo.value, SPRING_CONFIG)
+  const animateButton = (detentInfo: DetentInfo) => {
+    buttonY.value = withSpring(-detentInfo.value, SPRING_CONFIG)
   }
 
   return (
@@ -84,7 +84,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <AnimatedTrueSheet
-        sizes={[0.15, 'auto', 1]}
+        detents={[0.15, 'auto', 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
@@ -96,7 +96,7 @@ export const MapScreen = () => {
         initialIndex={1}
         onDragChange={dragChangeHandler}
         onPresent={(e) => animateButton(e.nativeEvent)}
-        onSizeChange={(e) => animateButton(e.nativeEvent)}
+        onDetentChange={(e) => animateButton(e.nativeEvent)}
         onDragEnd={(e) => animateButton(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {

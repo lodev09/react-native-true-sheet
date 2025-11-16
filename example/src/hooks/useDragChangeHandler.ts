@@ -1,8 +1,8 @@
 import { useEvent, useHandler } from 'react-native-reanimated'
-import type { DragChangeEvent, SizeInfo } from '@lodev09/react-native-true-sheet'
+import type { DragChangeEvent, DetentInfo } from '@lodev09/react-native-true-sheet'
 import type { DependencyList } from 'react'
 
-type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
+type DragChangeHandler = (detentInfo: DetentInfo, context: unknown) => void
 
 export const useDragChangeHandler = (
   handler: DragChangeHandler,

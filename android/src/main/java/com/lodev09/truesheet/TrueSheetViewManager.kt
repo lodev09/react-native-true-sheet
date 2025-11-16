@@ -40,7 +40,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       TrueSheetEvent.MOUNT to MapBuilder.of("registrationName", "onMount"),
       TrueSheetEvent.PRESENT to MapBuilder.of("registrationName", "onPresent"),
       TrueSheetEvent.DISMISS to MapBuilder.of("registrationName", "onDismiss"),
-      TrueSheetEvent.SIZE_CHANGE to MapBuilder.of("registrationName", "onSizeChange"),
+      TrueSheetEvent.DETENT_CHANGE to MapBuilder.of("registrationName", "onDetentChange"),
       TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),
       TrueSheetEvent.DRAG_CHANGE to MapBuilder.of("registrationName", "onDragChange"),
       TrueSheetEvent.DRAG_END to MapBuilder.of("registrationName", "onDragEnd"),
@@ -113,24 +113,24 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.setBackground(color)
   }
 
-  @ReactProp(name = "sizes")
-  fun setSizes(view: TrueSheetView, sizes: ReadableArray) {
+  @ReactProp(name = "detents")
+  fun setDetents(view: TrueSheetView, detents: ReadableArray) {
     val result = ArrayList<Any>()
-    for (i in 0 until minOf(sizes.size(), 3)) {
-      when (sizes.getType(i)) {
-        ReadableType.Number -> result.add(sizes.getDouble(i))
+    for (i in 0 until minOf(detents.size(), 3)) {
+      when (detents.getType(i)) {
+        ReadableType.Number -> result.add(detents.getDouble(i))
 
         // React Native < 0.77 used String for getString, but 0.77
         // changed it to String?. Suppress the error for older APIs.
         @Suppress("UNNECESSARY_SAFE_CALL")
         ReadableType.String
-        -> sizes.getString(i)?.let { result.add(it) }
+        -> detents.getString(i)?.let { result.add(it) }
 
         else -> Log.d(TAG, "Invalid type")
       }
     }
 
-    view.setSizes(result.toArray())
+    view.setDetents(result.toArray())
   }
 
   companion object {

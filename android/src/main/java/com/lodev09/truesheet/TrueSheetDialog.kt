@@ -14,7 +14,7 @@ import com.lodev09.truesheet.core.KeyboardManager
 import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 
-data class SizeInfo(val index: Int, val value: Float)
+data class DetentInfo(val index: Int, val value: Float)
 
 @SuppressLint("ClickableViewAccessibility")
 class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
@@ -41,7 +41,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var dimmed = true
 
   /**
-   * The size index that the sheet should start to dim the background.
+   * The detent index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    */
   var dimmedIndex = 0
@@ -81,7 +81,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   val footerView: ViewGroup?
     get() = containerView?.getChildAt(1) as? ViewGroup
 
-  var sizes: Array<Any> = arrayOf("medium", "large")
+  var detents: Array<Any> = arrayOf("medium", "large")
 
   init {
     setContentView(rootSheetView)
@@ -208,29 +208,29 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Set the state based for the given size index.
+   * Set the state based for the given detent index.
    */
-  fun setStateForSizeIndex(index: Int) {
-    behavior.state = getStateForSizeIndex(index)
+  fun setStateForDetentIndex(index: Int) {
+    behavior.state = getStateForDetentIndex(index)
   }
 
   /**
-   * Get the height value based on the size config value.
+   * Get the height value based on the detent config value.
    */
-  private fun getSizeHeight(size: Any): Int {
+  private fun getDetentHeight(detent: Any): Int {
     val height: Int =
-      when (size) {
-        is Double -> (size * maxScreenHeight).toInt()
+      when (detent) {
+        is Double -> (detent * maxScreenHeight).toInt()
 
-        is Int -> (size.toDouble() * maxScreenHeight).toInt()
+        is Int -> (detent.toDouble() * maxScreenHeight).toInt()
 
         is String -> {
-          when (size) {
+          when (detent) {
             "auto" -> contentHeight + footerHeight
 
             else -> {
               // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
-              val fraction = size.toDoubleOrNull()
+              val fraction = detent.toDoubleOrNull()
               if (fraction != null) {
                 (fraction * maxScreenHeight).toInt()
               } else {
@@ -247,10 +247,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Determines the state based from the given size index.
+   * Determines the state based from the given detent index.
    */
-  private fun getStateForSizeIndex(index: Int): Int {
-    return when (sizes.size) {
+  private fun getStateForDetentIndex(index: Int): Int {
+    return when (detents.size) {
       1 -> {
         return BottomSheetBehavior.STATE_EXPANDED
       }
@@ -293,8 +293,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     })
   }
 
-  fun setOnSizeChangeListener(listener: (w: Int, h: Int) -> Unit) {
-    rootSheetView.sizeChangeListener = listener
+  fun setOnDetentChangeListener(listener: (w: Int, h: Int) -> Unit) {
+    rootSheetView.detentChangeListener = listener
   }
 
   /**
@@ -350,36 +350,36 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Get the SizeInfo data by state.
+   * Get the DetentInfo data by state.
    */
-  fun getSizeInfoForState(state: Int): SizeInfo? =
-    when (sizes.size) {
+  fun getDetentInfoForState(state: Int): DetentInfo? =
+    when (detents.size) {
       1 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(0, Utils.toDIP(behavior.maxHeight.toFloat()))
           else -> null
         }
       }
 
       2 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(1, Utils.toDIP(behavior.maxHeight.toFloat()))
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(1, Utils.toDIP(behavior.maxHeight.toFloat()))
           else -> null
         }
       }
 
       3 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> SizeInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, Utils.toDIP(behavior.peekHeight.toFloat()))
 
           BottomSheetBehavior.STATE_HALF_EXPANDED -> {
             val height = behavior.halfExpandedRatio * maxScreenHeight
-            SizeInfo(1, Utils.toDIP(height))
+            DetentInfo(1, Utils.toDIP(height))
           }
 
-          BottomSheetBehavior.STATE_EXPANDED -> SizeInfo(2, Utils.toDIP(behavior.maxHeight.toFloat()))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(2, Utils.toDIP(behavior.maxHeight.toFloat()))
 
           else -> null
         }
@@ -389,9 +389,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
 
   /**
-   * Get SizeInfo data for given size index.
+   * Get DetentInfo data for given detent index.
    */
-  fun getSizeInfoForIndex(index: Int) = getSizeInfoForState(getStateForSizeIndex(index)) ?: SizeInfo(0, 0f)
+  fun getDetentInfoForIndex(index: Int) = getDetentInfoForState(getStateForDetentIndex(index)) ?: DetentInfo(0, 0f)
 
   companion object {
     const val TAG = "TrueSheetView"

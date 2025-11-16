@@ -14,7 +14,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
   return (
     <TrueSheet
       ref={ref}
-      sizes={[0.8]}
+      detents={[0.8]}
       scrollRef={scrollViewRef}
       cornerRadius={12}
       onDismiss={() => console.log('Sheet ScrollView dismissed!')}

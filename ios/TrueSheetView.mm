@@ -167,12 +167,12 @@ using namespace facebook::react;
         // Emit event
         if (self->_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(self->_eventEmitter);
-            NSDictionary *sizeInfo = [self->_controller currentSizeInfo];
-            CGFloat sizeValue = sizeInfo ? [sizeInfo[@"value"] doubleValue] : 0.0;
+            NSDictionary *detentInfo = [self->_controller currentDetentInfo];
+            CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
             
             TrueSheetViewEventEmitter::OnPresent event;
             event.index = static_cast<int>(index);
-            event.value = static_cast<double>(sizeValue);
+            event.value = static_cast<double>(detentValue);
             emitter->onPresent(event);
         }
         
@@ -208,13 +208,13 @@ using namespace facebook::react;
     BOOL needsSetupSizes = NO;
     BOOL needsSetupDimmed = NO;
     
-    // Update sizes
-    if (oldViewProps.sizes != newViewProps.sizes) {
-        NSMutableArray *sizes = [NSMutableArray new];
-        for (const auto &size : newViewProps.sizes) {
-            [sizes addObject:RCTNSStringFromString(size)];
+    // Update detents
+    if (oldViewProps.detents != newViewProps.detents) {
+        NSMutableArray *detents = [NSMutableArray new];
+        for (const auto &detent : newViewProps.detents) {
+            [detents addObject:RCTNSStringFromString(detent)];
         }
-        _controller.sizes = sizes;
+        _controller.detents = detents;
         needsSetupSizes = YES;
     }
     
@@ -289,7 +289,7 @@ using namespace facebook::react;
     // Apply changes to presented sheet if needed
     if (_isPresented && _controller.presentingViewController) {
         if (needsSetupSizes) {
-            [_controller setupSizes];
+            [_controller setupDetents];
         }
         if (needsSetupDimmed) {
             [_controller setupDimmedBackground];
@@ -404,7 +404,7 @@ using namespace facebook::react;
                 
                 // If sheet is already presented, update its sizes
                 if (_isPresented && _controller.presentingViewController) {
-                    [_controller setupSizes];
+                    [_controller setupDetents];
                 }
             }
         }
@@ -562,16 +562,16 @@ using namespace facebook::react;
     }
 }
 
-- (void)viewControllerDidChangeSize:(NSInteger)index value:(CGFloat)value {
+- (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value {
     if (!_activeIndex || [_activeIndex integerValue] != index) {
         _activeIndex = @(index);
         
         if (_eventEmitter) {
             auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-            TrueSheetViewEventEmitter::OnSizeChange event;
+            TrueSheetViewEventEmitter::OnDetentChange event;
             event.index = static_cast<int>(index);
             event.value = static_cast<double>(value);
-            emitter->onSizeChange(event);
+            emitter->onDetentChange(event);
         }
     }
 }

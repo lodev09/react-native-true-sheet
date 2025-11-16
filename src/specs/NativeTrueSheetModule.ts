@@ -12,7 +12,7 @@ export interface Spec extends TurboModule {
   /**
    * Present a sheet by reference
    * @param viewTag - Native view tag of the sheet component
-   * @param index - Size index to present at
+   * @param index - Detent index to present at
    * @returns Promise that resolves when sheet is fully presented
    * @throws PRESENT_FAILED if presentation fails
    */
@@ -29,7 +29,7 @@ export interface Spec extends TurboModule {
   /**
    * Resize a sheet to a different index by reference
    * @param viewTag - Native view tag of the sheet component
-   * @param index - New size index
+   * @param index - New detent index
    * @returns Promise that resolves when resize is complete
    */
   resizeByRef(viewTag: number, index: number): Promise<void>

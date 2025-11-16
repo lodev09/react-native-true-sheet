@@ -7,14 +7,14 @@ import type {
 } from 'react-native/Libraries/Types/CodegenTypes'
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent'
 
-export interface SizeInfo {
+export interface DetentInfo {
   index: Int32
   value: Double
 }
 
 export interface NativeProps extends ViewProps {
   // Array properties
-  sizes?: ReadonlyArray<string>
+  detents?: ReadonlyArray<string>
 
   // Number properties - use 0 as default to avoid nil insertion
   scrollableHandle?: WithDefault<Int32, 0>
@@ -39,12 +39,12 @@ export interface NativeProps extends ViewProps {
 
   // Event handlers
   onMount?: DirectEventHandler<null>
-  onPresent?: DirectEventHandler<SizeInfo>
+  onPresent?: DirectEventHandler<DetentInfo>
   onDismiss?: DirectEventHandler<null>
-  onSizeChange?: DirectEventHandler<SizeInfo>
-  onDragBegin?: DirectEventHandler<SizeInfo>
-  onDragChange?: DirectEventHandler<SizeInfo>
-  onDragEnd?: DirectEventHandler<SizeInfo>
+  onDetentChange?: DirectEventHandler<DetentInfo>
+  onDragBegin?: DirectEventHandler<DetentInfo>
+  onDragChange?: DirectEventHandler<DetentInfo>
+  onDragEnd?: DirectEventHandler<DetentInfo>
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

@@ -10,7 +10,7 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
   return (
     <TrueSheet
       ref={ref}
-      sizes={[0.5, 1]}
+      detents={[0.5, 1]}
       blurTint="dark"
       cornerRadius={12}
       edgeToEdge

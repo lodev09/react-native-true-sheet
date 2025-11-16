@@ -13,7 +13,7 @@ class TrueSheetEvent(surfaceId: Int, viewId: Int, private val name: String, priv
     const val MOUNT = "topMount"
     const val PRESENT = "topPresent"
     const val DISMISS = "topDismiss"
-    const val SIZE_CHANGE = "topSizeChange"
+    const val DETENT_CHANGE = "topDetentChange"
     const val DRAG_BEGIN = "topDragBegin"
     const val DRAG_CHANGE = "topDragChange"
     const val DRAG_END = "topDragEnd"

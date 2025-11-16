@@ -38,7 +38,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       grabber={false}
       edgeToEdge
       name="prompt-sheet"
-      sizes={['auto']}
+      detents={['auto']}
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
@@ -50,7 +50,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           `Sheet prompt presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
         )
       }
-      onSizeChange={(e) =>
+      onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
       FooterComponent={<Footer />}

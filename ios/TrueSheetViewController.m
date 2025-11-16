@@ -20,7 +20,7 @@
 
 - (instancetype)init {
     if (self = [super initWithNibName:nil bundle:nil]) {
-        _sizes = @[@"medium", @"large"];
+        _detents = @[@0.5, @1];
         _contentHeight = @(0);
         _footerHeight = @(0);
         _grabber = YES;
@@ -80,7 +80,7 @@
         self.lastViewWidth = self.view.frame.size.width;
         
         // Recalculate detents with new width
-        [self setupSizes];
+        [self setupDetents];
     }
 }
 
@@ -192,7 +192,7 @@
     }
 }
 
-- (void)setupSizes {
+- (void)setupDetents {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     if (!sheet) return;
     
@@ -202,26 +202,26 @@
     // Don't subtract bottomInset - the sheet controller handles safe area automatically
     CGFloat totalHeight = [self.contentHeight floatValue] + [self.footerHeight floatValue];
     
-    for (NSInteger index = 0; index < self.sizes.count; index++) {
-        id size = self.sizes[index];
-        UISheetPresentationControllerDetent *detent = [self detentForSize:size
-                                                               withHeight:totalHeight
-                                                            withMaxHeight:self.maxHeight
-                                                                  atIndex:index];
-        [detents addObject:detent];
+    for (NSInteger index = 0; index < self.detents.count; index++) {
+        id detent = self.detents[index];
+        UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
+                                                                     withHeight:totalHeight
+                                                                  withMaxHeight:self.maxHeight
+                                                                        atIndex:index];
+        [detents addObject:sheetDetent];
     }
     
     sheet.detents = detents;
 }
 
-- (UISheetPresentationControllerDetent *)detentForSize:(id)size
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
                                             withHeight:(CGFloat)height
                                          withMaxHeight:(NSNumber *)maxHeight
                                                atIndex:(NSInteger)index {
-    NSString *detentId = [NSString stringWithFormat:@"custom-%@", size];
+    NSString *detentId = [NSString stringWithFormat:@"custom-%@", detent];
     
-    if ([size isKindOfClass:[NSNumber class]]) {
-        CGFloat fraction = [size floatValue];
+    if ([detent isKindOfClass:[NSNumber class]]) {
+        CGFloat fraction = [detent floatValue];
         if (@available(iOS 16.0, *)) {
             return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
                                                                           resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
@@ -237,10 +237,10 @@
         }
     }
     
-    if ([size isKindOfClass:[NSString class]]) {
-        NSString *stringSize = (NSString *)size;
+    if ([detent isKindOfClass:[NSString class]]) {
+        NSString *stringDetent = (NSString *)detent;
         
-        if ([stringSize isEqualToString:@"auto"]) {
+        if ([stringDetent isEqualToString:@"auto"]) {
             if (@available(iOS 16.0, *)) {
                 return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
                                                                               resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
@@ -253,7 +253,7 @@
             }
         } else {
             // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
-            CGFloat fraction = [stringSize floatValue];
+            CGFloat fraction = [stringDetent floatValue];
             if (fraction > 0.0) {
                 if (@available(iOS 16.0, *)) {
                     return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
@@ -320,7 +320,7 @@
     }
 }
 
-- (NSDictionary *)currentSizeInfo {
+- (NSDictionary *)currentDetentInfo {
     UISheetPresentationController *sheet = self.sheetPresentationController;
     if (!sheet) return nil;
     
@@ -355,11 +355,11 @@
     UISheetPresentationControllerDetentIdentifier identifier = sheetPresentationController.selectedDetentIdentifier;
     if (!identifier) return;
     
-    NSDictionary *sizeInfo = self.detentValues[identifier];
-    if (sizeInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:value:)]) {
-        NSInteger index = [sizeInfo[@"index"] integerValue];
-        CGFloat value = [sizeInfo[@"value"] floatValue];
-        [self.delegate viewControllerDidChangeSize:index value:value];
+    NSDictionary *detentInfo = self.detentValues[identifier];
+    if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:)]) {
+        NSInteger index = [detentInfo[@"index"] integerValue];
+        CGFloat value = [detentInfo[@"value"] floatValue];
+        [self.delegate viewControllerDidChangeDetent:index value:value];
     }
 }
 

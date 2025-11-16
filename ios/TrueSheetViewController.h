@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
 - (void)viewControllerDidDismiss;
-- (void)viewControllerDidChangeSize:(NSInteger)index value:(CGFloat)value;
+- (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value;
 - (void)viewControllerWillAppear;
 - (void)viewControllerKeyboardWillShow:(CGFloat)keyboardHeight;
 - (void)viewControllerKeyboardWillHide;
@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate>
 
 @property (nonatomic, weak, nullable) id<TrueSheetViewControllerDelegate> delegate;
-@property (nonatomic, strong) NSArray *sizes;
+@property (nonatomic, strong) NSArray *detents;
 @property (nonatomic, strong, nullable) NSNumber *maxHeight;
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
@@ -38,12 +38,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setupBackground;
 - (void)resizeToIndex:(NSInteger)index;
-- (void)setupSizes;
+- (void)setupDetents;
 - (void)setupDimmedBackground;
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion;
 - (void)observeDrag;
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index;
-- (nullable NSDictionary<NSString *, NSNumber *> *)currentSizeInfo;
+- (nullable NSDictionary<NSString *, NSNumber *> *)currentDetentInfo;
 
 @end
 

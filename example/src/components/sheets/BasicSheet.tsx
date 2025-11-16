@@ -42,7 +42,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
   return (
     <TrueSheet
-      sizes={['auto', 0.8, 1]}
+      detents={['auto', 0.8, 1]}
       ref={sheetRef}
       style={styles.content}
       blurTint="dark"
@@ -71,7 +71,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
           `Basic sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
         )
       }
-      onSizeChange={(e) =>
+      onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
       FooterComponent={<Footer />}
@@ -90,7 +90,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
       <TrueSheet
         ref={childSheet}
-        sizes={['auto']}
+        detents={['auto']}
         backgroundColor={DARK}
         style={styles.content}
         FooterComponent={<Footer />}

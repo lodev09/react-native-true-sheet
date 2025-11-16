@@ -33,7 +33,7 @@ class RootSheetView(private val context: Context?) :
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
 
-  var sizeChangeListener: ((w: Int, h: Int) -> Unit)? = null
+  var detentChangeListener: ((w: Int, h: Int) -> Unit)? = null
   var eventDispatcher: EventDispatcher? = null
 
   private val reactContext: ThemedReactContext
@@ -51,7 +51,7 @@ class RootSheetView(private val context: Context?) :
     viewWidth = w
     viewHeight = h
 
-    sizeChangeListener?.let { it(viewWidth, viewHeight) }
+    detentChangeListener?.let { it(viewWidth, viewHeight) }
   }
 
   override fun handleException(t: Throwable) {

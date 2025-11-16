@@ -47,7 +47,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   return (
     <TrueSheet
-      sizes={['auto']}
+      detents={['auto']}
       ref={sheetRef}
       style={styles.content}
       blurTint="dark"
@@ -61,7 +61,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
           `Gesture sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
         )
       }
-      onSizeChange={(e) =>
+      onDetentChange={(e) =>
         console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
       }
       FooterComponent={<Footer />}

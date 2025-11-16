@@ -3,16 +3,16 @@ import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native'
 
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
-export interface SizeInfo {
+export interface DetentInfo {
   index: number
   value: number
 }
 
-export type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
-export type PresentEvent = NativeSyntheticEvent<SizeInfo>
-export type DragBeginEvent = NativeSyntheticEvent<SizeInfo>
-export type DragChangeEvent = NativeSyntheticEvent<SizeInfo>
-export type DragEndEvent = NativeSyntheticEvent<SizeInfo>
+export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
+export type PresentEvent = NativeSyntheticEvent<DetentInfo>
+export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
+export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
+export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
 
 /**
  * Blur style mapped to native values in IOS.
@@ -43,12 +43,12 @@ export type BlurTint =
   | 'systemChromeMaterialDark'
 
 /**
- * Supported Sheet size.
+ * Supported Sheet detent.
  *
  * @platform android
  * @platform ios 15+
  */
-export type SheetSize =
+export type SheetDetent =
   /**
    * Auto resize based on content height
    *
@@ -83,17 +83,17 @@ export interface TrueSheetProps extends ViewProps {
    */
   name?: string
   /**
-   * The sizes you want the Sheet to support.
-   * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
+   * The detents you want the Sheet to support.
+   * Maximum of 3 detents only; collapsed, half-expanded, expanded.
    *
    * Example:
    * ```ts
-   * sizes={['auto', 0.6, 1]}
+   * detents={['auto', 0.6, 1]}
    * ```
    *
    * @default [0.5, 1]
    */
-  sizes?: SheetSize[]
+  detents?: SheetDetent[]
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -106,7 +106,7 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean
 
   /**
-   * Initially present the sheet, after mounting, at a given size index.
+   * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.
    * @default -1
@@ -122,7 +122,7 @@ export interface TrueSheetProps extends ViewProps {
   initialIndexAnimated?: boolean
 
   /**
-   * The size index that the sheet should start to dim the background.
+   * The detent index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    *
    * @default 0
@@ -215,7 +215,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the Sheet has been presented.
-   * Comes with the size info.
+   * Comes with the detent info.
    */
   onPresent?: (event: PresentEvent) => void
 
@@ -225,14 +225,14 @@ export interface TrueSheetProps extends ViewProps {
   onDismiss?: () => void
 
   /**
-   * Called when the size of the sheet has changed.
+   * Called when the detent of the sheet has changed.
    * Either by dragging or programatically.
    */
-  onSizeChange?: (event: SizeChangeEvent) => void
+  onDetentChange?: (event: DetentChangeEvent) => void
 
   /**
    * Called when the sheet has began dragging.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
@@ -241,7 +241,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the sheet is being dragged.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
@@ -250,7 +250,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the sheet dragging has ended.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
