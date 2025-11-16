@@ -6,7 +6,6 @@ import type {
   WithDefault,
 } from 'react-native/Libraries/Types/CodegenTypes'
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent'
-import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands'
 
 export interface SizeInfo {
   index: Int32
@@ -47,15 +46,6 @@ export interface NativeProps extends ViewProps {
   onDragChange?: DirectEventHandler<SizeInfo>
   onDragEnd?: DirectEventHandler<SizeInfo>
 }
-
-export interface NativeCommands {
-  present: (viewRef: React.ElementRef<HostComponent<NativeProps>>, index: Int32) => void
-  dismiss: (viewRef: React.ElementRef<HostComponent<NativeProps>>) => void
-}
-
-export const Commands = codegenNativeCommands<NativeCommands>({
-  supportedCommands: ['present', 'dismiss'],
-})
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {
   excludedPlatforms: ['android'],

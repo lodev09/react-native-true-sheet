@@ -25,17 +25,7 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetViewComponentView () <RCTTrueSheetViewViewProtocol, TrueSheetViewControllerDelegate>
-@end
-
-// MARK: - Commands Handler
-
-@implementation TrueSheetViewComponentView (Commands)
-
-- (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
-    RCTTrueSheetViewHandleCommand(self, commandName, args);
-}
-
+@interface TrueSheetViewComponentView () <TrueSheetViewControllerDelegate>
 @end
 
 @implementation TrueSheetViewComponentView {
@@ -116,17 +106,7 @@ using namespace facebook::react;
     return concreteComponentDescriptorProvider<TrueSheetViewComponentDescriptor>();
 }
 
-#pragma mark - RCTTrueSheetViewViewProtocol (Commands)
-
-- (void)present:(NSInteger)index {
-    [self presentAtIndex:index animated:YES completion:nil];
-}
-
-- (void)dismiss {
-    [self dismissAnimated:YES completion:nil];
-}
-
-#pragma mark - Async Methods (For TurboModule)
+#pragma mark - TurboModule Methods
 
 - (void)presentAtIndex:(NSInteger)index 
               animated:(BOOL)animated

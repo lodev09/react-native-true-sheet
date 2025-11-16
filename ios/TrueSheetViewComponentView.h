@@ -25,11 +25,7 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError * _Nullable error
 
 @property (nonatomic, strong, nullable) TrueSheetViewController *controller;
 
-// Commands (fire-and-forget, for Commands API)
-- (void)present:(NSInteger)index;
-- (void)dismiss;
-
-// Async methods (with callbacks, for TurboModule)
+// TurboModule methods
 - (void)presentAtIndex:(NSInteger)index 
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion;
