@@ -19,6 +19,9 @@ import type {
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
 import TrueSheetFooterViewNativeComponent from './TrueSheetFooterViewNativeComponent'
+
+import TrueSheetModule from './specs/NativeTrueSheetModule'
+
 import { Platform, processColor, StyleSheet, View, findNodeHandle } from 'react-native'
 
 const LINKING_ERROR =
@@ -28,18 +31,8 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n' +
   '- You are using the new architecture (Fabric)\n'
 
-// Lazy load TurboModule
-let TrueSheetModule: any = null
-const getTurboModule = () => {
-  if (TrueSheetModule === null) {
-    try {
-      const { default: module } = require('./specs/NativeTrueSheetModule')
-      TrueSheetModule = module
-    } catch (error) {
-      throw new Error(LINKING_ERROR)
-    }
-  }
-  return TrueSheetModule
+if (!TrueSheetModule) {
+  throw new Error(LINKING_ERROR)
 }
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
@@ -47,7 +40,7 @@ type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
 export class TrueSheet extends PureComponent<TrueSheetProps> {
   displayName = 'TrueSheet'
 
-  private readonly ref: RefObject<NativeRef | null>
+  private readonly nativeRef: RefObject<NativeRef | null>
 
   /**
    * Map of sheet names against their handle.
@@ -57,7 +50,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
   constructor(props: TrueSheetProps) {
     super(props)
 
-    this.ref = createRef<NativeRef>()
+    this.nativeRef = createRef<NativeRef>()
 
     this.onMount = this.onMount.bind(this)
     this.onDismiss = this.onDismiss.bind(this)
@@ -79,7 +72,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
   }
 
   private get handle(): number {
-    const nodeHandle = findNodeHandle(this.ref.current)
+    const nodeHandle = findNodeHandle(this.nativeRef.current)
     if (nodeHandle == null || nodeHandle === -1) {
       throw new Error('Could not get native view tag')
     }
@@ -100,12 +93,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    const module = getTurboModule()
-    if (!module) {
-      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
-    }
-
-    return module.presentByRef(handle, index)
+    return TrueSheetModule?.presentByRef(handle, index)
   }
 
   /**
@@ -120,12 +108,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    const module = getTurboModule()
-    if (!module) {
-      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
-    }
-
-    return module.dismissByRef(handle)
+    return TrueSheetModule?.dismissByRef(handle)
   }
 
   /**
@@ -141,12 +124,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
       throw new Error(`Sheet with name "${name}" not found`)
     }
 
-    const module = getTurboModule()
-    if (!module) {
-      throw new Error('TurboModule not available. Make sure new architecture is enabled.')
-    }
-
-    return module.resizeByRef(handle, index)
+    return TrueSheetModule?.resizeByRef(handle, index)
   }
 
   private updateState(): void {
@@ -188,8 +166,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
    * See `detents` prop
    */
   public async present(index: number = 0): Promise<void> {
-    const module = getTurboModule()
-    return module.presentByRef(this.handle, index)
+    return TrueSheetModule?.presentByRef(this.handle, index)
   }
 
   /**
@@ -204,8 +181,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
    * Dismisses the Sheet
    */
   public async dismiss(): Promise<void> {
-    const module = getTurboModule()
-    return module.dismissByRef(this.handle)
+    return TrueSheetModule?.dismissByRef(this.handle)
   }
 
   componentDidMount(): void {
@@ -245,7 +221,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps> {
 
     return (
       <TrueSheetViewNativeComponent
-        ref={this.ref}
+        ref={this.nativeRef}
         style={styles.nativeSheet}
         detents={detents.map(String)}
         blurTint={blurTint}

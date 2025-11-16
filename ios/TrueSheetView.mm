@@ -293,7 +293,9 @@ using namespace facebook::react;
 
     // Setup container in sheet view (handles reference and touch handling)
     [_containerView setupInSheetView:self];
-  } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
+  }
+
+  if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
       NSLog(@"TrueSheet: Sheet can only have one footer component.");
       return;
