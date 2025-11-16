@@ -13,7 +13,7 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "TrueSheetLayoutUtils.h"
+#import "utils/LayoutUtil.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 
@@ -54,12 +54,12 @@ using namespace facebook::react;
   UIView *parentView = _sheetView.controller.view;
 
   // Unpin existing constraints first
-  [TrueSheetLayoutUtils unpinView:self];
+  [LayoutUtil unpinView:self];
 
   // Pin to bottom, leading, and trailing edges with height constraint
-  [TrueSheetLayoutUtils pinView:self
-                   toParentView:parentView
-                          edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
+  [LayoutUtil pinView:self
+         toParentView:parentView
+                edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
                          height:height];
 
   // Update cached height
@@ -114,7 +114,7 @@ using namespace facebook::react;
   }
 
   // Unpin and remove from view hierarchy
-  [TrueSheetLayoutUtils unpinView:self];
+  [LayoutUtil unpinView:self];
   [self removeFromSuperview];
 
   // Clear reference to sheet view

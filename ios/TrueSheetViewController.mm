@@ -7,6 +7,7 @@
 //
 
 #import "TrueSheetViewController.h"
+#import "utils/WindowUtil.h"
 
 @interface TrueSheetViewController ()
 
@@ -34,21 +35,7 @@
     
     // Get bottom safe area inset from the window's safe area
     // The sheet's view has smaller insets, so we need the actual device insets
-    UIWindow *window = nil;
-
-    for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
-        if ([scene isKindOfClass:[UIWindowScene class]]) {
-            UIWindowScene *windowScene = (UIWindowScene *)scene;
-            for (UIWindow *w in windowScene.windows) {
-                if (w.isKeyWindow) {
-                    window = w;
-                    break;
-                }
-            }
-            if (window) break;
-        }
-    }
-
+    UIWindow *window = [WindowUtil keyWindow];
     _bottomInset = window ? window.safeAreaInsets.bottom : 0;
   }
   return self;

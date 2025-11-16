@@ -8,9 +8,9 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "TrueSheetLayoutUtils.h"
+#import "LayoutUtil.h"
 
-@implementation TrueSheetLayoutUtils
+@implementation LayoutUtil
 
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges {
   [self pinView:view toParentView:parentView edges:edges height:0];

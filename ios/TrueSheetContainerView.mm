@@ -13,7 +13,7 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "TrueSheetLayoutUtils.h"
+#import "utils/LayoutUtil.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 
@@ -88,12 +88,12 @@ using namespace facebook::react;
   if (scrollView && scrollView != _pinnedScrollView) {
     // Unpin previous scroll view if exists
     if (_pinnedScrollView) {
-      [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+      [LayoutUtil unpinView:_pinnedScrollView];
     }
 
     // Pin the scroll view directly to the sheet controller's view instead of its immediate parent
     // This ensures the scroll view fills the entire sheet area for proper scrolling behavior
-    [TrueSheetLayoutUtils pinView:scrollView toParentView:parentView edges:UIRectEdgeAll];
+    [LayoutUtil pinView:scrollView toParentView:parentView edges:UIRectEdgeAll];
     _pinnedScrollView = scrollView;
   }
 }
@@ -125,12 +125,12 @@ using namespace facebook::react;
 
   // Unpin scroll view if exists
   if (_pinnedScrollView) {
-    [TrueSheetLayoutUtils unpinView:_pinnedScrollView];
+    [LayoutUtil unpinView:_pinnedScrollView];
     _pinnedScrollView = nil;
   }
 
   // Unpin and remove from view hierarchy
-  [TrueSheetLayoutUtils unpinView:self];
+  [LayoutUtil unpinView:self];
   [self removeFromSuperview];
 
   // Clear reference to sheet view

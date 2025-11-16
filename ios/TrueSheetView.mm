@@ -11,7 +11,8 @@
 #import "TrueSheetView.h"
 #import "TrueSheetContainerView.h"
 #import "TrueSheetFooterView.h"
-#import "TrueSheetLayoutUtils.h"
+#import "utils/LayoutUtil.h"
+#import "utils/WindowUtil.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
 
@@ -440,36 +441,26 @@ using namespace facebook::react;
 #pragma mark - Private Helpers
 
 - (UIViewController *)_findPresentingViewController {
-  // Find the root view controller from the window
-  UIWindow *keyWindow = nil;
-
-  // Get key window (iOS 15.1+ guaranteed)
-  NSArray<UIWindow *> *windows = [[UIApplication sharedApplication] windows];
-  for (UIWindow *window in windows) {
-    if (window.isKeyWindow) {
-      keyWindow = window;
-      break;
-    }
-  }
-
+  UIWindow *keyWindow = [WindowUtil keyWindow];
+  
   if (!keyWindow) {
-    keyWindow = [[UIApplication sharedApplication] keyWindow];
+    return nil;
   }
-
+  
   UIViewController *rootViewController = keyWindow.rootViewController;
-
+  
   // Find the top-most presented view controller
   while (rootViewController.presentedViewController) {
     UIViewController *presented = rootViewController.presentedViewController;
-
+    
     // Skip TrueSheetViewController if it's being dismissed
     if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
       break;
     }
-
+    
     rootViewController = presented;
   }
-
+  
   return rootViewController;
 }
 
