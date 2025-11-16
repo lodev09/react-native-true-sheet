@@ -11,7 +11,7 @@ Props available for `TrueSheet`. Extends `ViewProps`.
 ```tsx {2-5}
 <TrueSheet
   ref={sheet}
-  sizes={['auto', '80%', 'large']}
+  detents={['auto', '80%', 'large']}
   backgroundColor="#696969"
   // ...
 >
@@ -23,16 +23,16 @@ Props available for `TrueSheet`. Extends `ViewProps`.
 
 We use `ref` to reference our sheet and call the [component methods](/reference/methods). Learn more about refs [here](https://react.dev/learn/referencing-values-with-refs).
 
-### `sizes`
+### `detents`
 
-Array of sizes you want the sheet to support. See [this guide](/guides/resizing) for example.
+Array of detents you want the sheet to support. See [this guide](/guides/resizing) for example.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
-| [`SheetSize[]`](/reference/types#sheetsize) | `["medium", "large"]` | ✅ | ✅ |
+| [`SheetDetent[]`](/reference/types#sheetdetent) | `[0.5, 1]` | ✅ | ✅ |
 
 :::info
-A sheet can only support up to **3** sizes only! AKA **_collapsed_**, **_half-expanded_**, and **_expanded_**.
+A sheet can only support up to **3** detents only! AKA **_collapsed_**, **_half-expanded_**, and **_expanded_**.
 :::
 
 ### `name`
@@ -89,7 +89,7 @@ This property is only used during the initial mount.
 
 ### `dimmedIndex`
 
-The size index that the sheet should start to dim the background.
+The detent index that the sheet should start to dim the background.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
@@ -101,7 +101,7 @@ This is ignored if `dimmed` is set to `false`.
 
 ### `initialIndex`
 
-Initially present the sheet, after mounting, at a given size index.
+Initially present the sheet, after mounting, at a given detent index.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
@@ -201,7 +201,7 @@ const App = () => {
     console.log(e.nativeEvent) // { index: 0, value: 69 }
   }
 
-  const handleSizeChange = (e: SizeChangeEvent) => {
+  const handleDetentChange = (e: DetentChangeEvent) => {
     console.log(e.nativeEvent) // { index: 1, value: 247 }
   }
 
@@ -210,9 +210,9 @@ const App = () => {
       <Button title="Present" onPress={() => sheet.current?.present()} />
       <TrueSheet
         ref={sheet}
-        sizes={[69, 247]}
+        detents={[69, 247]}
         onPresent={handleOnPresent}
-        onSizeChange={handleSizeChange}
+        onDetentChange={handleDetentChange}
         onDismiss={handleDismiss}
       >
         <Button title="Resize" onPress={() => sheet.current?.resize(1)} />
@@ -229,34 +229,34 @@ This is called when the sheet has been mounted and is ready to present.
 
 ### `onPresent`
 
-Comes with [`SizeInfo`](/reference/types#sizeinfo).
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
-This is called when the sheet has been presented, providing the size `index` and `value`.
+This is called when the sheet has been presented, providing the detent `index` and `value`.
 
 ### `onDismiss`
 
 This is called when the sheet has been dismissed.
 
-### `onSizeChange`
+### `onDetentChange`
 
-Comes with [`SizeInfo`](/reference/types#sizeinfo).
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
-This is called when the size of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
+This is called when the detent of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
 
 ### `onDragBegin`
 
-Comes with [`SizeInfo`](/reference/types#sizeinfo).
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet has began dragging.
 
 ### `onDragChange`
 
-Comes with [`SizeInfo`](/reference/types#sizeinfo).
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet is being dragged.
 
 ### `onDragEnd`
 
-Comes with [`SizeInfo`](/reference/types#sizeinfo).
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet dragging has ended.

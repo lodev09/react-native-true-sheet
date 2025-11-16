@@ -1,12 +1,12 @@
 ---
 title: Resizing Programmatically
-description: Programmatically resize the bottom sheet and listen for size changes.
-keywords: [bottom sheet resizing, bottom sheet sizes, bottom sheet auto resizing]
+description: Programmatically resize the bottom sheet and listen for detent changes.
+keywords: [bottom sheet resizing, bottom sheet detents, bottom sheet auto resizing]
 ---
 
 import resizing from './resizing.gif'
 
-`TrueSheet` has a main prop called [`sizes`](/reference/props#sizes) which allows you to define the sizes that the sheet can support. This is an array of [`SheetSize`](/reference/types#sheetsize) that supports sizes like `"auto"`, `"medium"`, `"large"`, etc.
+`TrueSheet` has a main prop called [`detents`](/reference/props#detents) which allows you to define the detents that the sheet can support. This is an array of [`SheetDetent`](/reference/types#sheetdetent) that supports values like `"auto"` or fractional numbers (0-1).
 
 In some cases, you may want to resize the sheet programmatically for a better experience.
 
@@ -29,7 +29,7 @@ const App = () => {
   }
 
   return (
-    <TrueSheet name="resizing-sheet" ref={sheet} sizes={['auto', '69%', 'large']}>
+    <TrueSheet name="resizing-sheet" ref={sheet} detents={['auto', 0.69, 1]}>
       <Button onPress={resize} title="Resize" />
     </TrueSheet>
   )
@@ -45,15 +45,15 @@ TrueSheet.resize('resizing-sheet', 1)
 :::
 
 :::info
-`sizes` can only support up to 3 sizes. **_collapsed_**, **_half-expanded_**, and **_expanded_**.
+`detents` can only support up to 3 detents. **_collapsed_**, **_half-expanded_**, and **_expanded_**.
 :::
 
 
-### Listening to Size Change
+### Listening to Detent Change
 
-For some reason, if you want to get the resolved size, you can listen to size changes by providing the [`onSizeChange`](/reference/props#onsizechange) event.
+For some reason, if you want to get the resolved detent, you can listen to detent changes by providing the [`onDetentChange`](/reference/props#ondetentchange) event.
 
-The event comes with the [`SizeInfo`](/reference/types#sizeinfo) that you can use to get the size `value`.
+The event comes with the [`DetentInfo`](/reference/types#detentinfo) that you can use to get the detent `value`.
 
 ```tsx {9-11,17-17}
 const App = () => {
@@ -64,15 +64,15 @@ const App = () => {
     await sheet.current?.resize(1)
   }
 
-  const handleSizeChange = (e: SizeChangeEvent) => {
-    console.log(e.nativeEvent.index, e.nativeEvent.value) // Do whatever you need from this size ✅
+  const handleDetentChange = (e: DetentChangeEvent) => {
+    console.log(e.nativeEvent.index, e.nativeEvent.value) // Do whatever you need from this detent ✅
   }
 
   return (
     <TrueSheet
       ref={sheet}
-      sizes={['auto', '69%', 'large']}
-      onSizeChange={handleSizeChange}
+      detents={['auto', 0.69, 1]}
+      onDetentChange={handleDetentChange}
     >
       <Button onPress={resize} title="Resize" />
     </TrueSheet>
@@ -81,5 +81,5 @@ const App = () => {
 ```
 
 :::info
-The event will also trigger when the user drags the sheet into a size.
+The event will also trigger when the user drags the sheet into a detent.
 :::

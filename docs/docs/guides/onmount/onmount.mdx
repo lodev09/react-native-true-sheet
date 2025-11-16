@@ -12,13 +12,13 @@ Sometimes, you may want to present the sheet directly during mount. For example,
 
 ## How?
 
-You can do this by setting [`initialIndex`](/reference/props#initialindex) prop. It accepts the [`size`](/reference/types#sheetsize) `index` that your sheet is configured with. See [sizes](/reference/props#sizes) prop for more information.
+You can do this by setting [`initialIndex`](/reference/props#initialindex) prop. It accepts the [`detent`](/reference/types#sheetdetent) `index` that your sheet is configured with. See [detents](/reference/props#detents) prop for more information.
 
 ```tsx {5-6}
 const App = () => {
   return (
     <TrueSheet
-      sizes={['auto', '69%', 'large']}
+      detents={['auto', 0.69, 1]}
       initialIndex={1}
       initialindexanimated
     >

@@ -12,7 +12,7 @@ Yes! `TrueSheet` does support [react-native-reanimated](https://docs.swmansion.c
 
 ## How?
 
-In this example, we will use the [`onDragChange`](/reference/props#ondragchange) event to listen to size changes while dragging.
+In this example, we will use the [`onDragChange`](/reference/props#ondragchange) event to listen to detent changes while dragging.
 
 You can checkout [example](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for the complete implementation.
 
@@ -21,7 +21,7 @@ You can checkout [example](https://github.com/lodev09/react-native-true-sheet/tr
 ```tsx
 import { useEvent, useHandler } from 'react-native-reanimated'
 
-type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
+type DragChangeHandler = (detentInfo: DetentInfo, context: unknown) => void
 
 export const useDragChangeHandler = (
   handler: DragChangeHandler,
@@ -58,9 +58,9 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
 const App = () => {
   const buttonY = useSharedValue(0)
 
-  const dragChangeHandler = useDragChangeHandler((sizeInfo: SizeInfo) => {
+  const dragChangeHandler = useDragChangeHandler((detentInfo: DetentInfo) => {
     'worklet'
-    buttonY.value = -sizeInfo.value
+    buttonY.value = -detentInfo.value
   })
 
   const $animatedStyle: ViewStyle = useAnimatedStyle(() => ({
@@ -71,7 +71,7 @@ const App = () => {
     <View>
       <AnimatedButton style={$animatedStyle} />
       <AnimatedTrueSheet
-        sizes={['auto', '69%', 'large']}
+        detents={['auto', 0.69, 1]}
         onDragChange={dragChangeHandler}
       >
         <View />

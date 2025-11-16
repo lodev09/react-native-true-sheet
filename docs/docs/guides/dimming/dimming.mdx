@@ -20,7 +20,7 @@ You can easily disable the dimmed background of the sheet by setting [`dimmed`](
 export const App = () => {
   return (
     <TrueSheet
-      sizes={['auto', '69%', 'large']}
+      detents={['auto', 0.69, 1]}
       dimmed={false}
     >
       <View />
@@ -29,15 +29,15 @@ export const App = () => {
 }
 ```
 
-### Dimmed by Size Index
+### Dimmed by Detent Index
 
-To further customize the dimming behavior, [`dimmedIndex`](/reference/props#dimmedindex) is also available. Set the [size](/reference/props#sizes) `index` at which you want the sheet to start dimming.
+To further customize the dimming behavior, [`dimmedIndex`](/reference/props#dimmedindex) is also available. Set the [detent](/reference/props#detents) `index` at which you want the sheet to start dimming.
 
 ```tsx {5}
 export const App = () => {
   return (
     <TrueSheet
-      sizes={['auto', '69%', 'large']}
+      detents={['auto', 0.69, 1]}
       dimmedIndex={1} // Dim will start at 69% ✅
     >
       <View />

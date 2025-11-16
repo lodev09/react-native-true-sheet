@@ -13,7 +13,7 @@ Define the sheet and provide a `ref`. We will be using the `sheet` to access the
 const sheet = useRef<TrueSheet>(null)
 
 return (
-  <TrueSheet ref={sheet} sizes={['auto', '80%']}>
+  <TrueSheet ref={sheet} detents={['auto', 0.8]}>
     <View />
   </TrueSheet>
 )
@@ -21,7 +21,7 @@ return (
 
 ### `present`
 
-Present the sheet. Optionally accepts a size `index`. See [`sizes`](/reference/props#sizes) prop.
+Present the sheet. Optionally accepts a detent `index`. See [`detents`](/reference/props#detents) prop.
 
 | Parameters | Required |
 | - | - |
@@ -64,7 +64,7 @@ In the example below, we provide `"my-sheet"` as the `name` of our sheet.
 const sheet = useRef<TrueSheet>(null)
 
 return (
-  <TrueSheet name="my-sheet" sizes={['auto', '80%']}>
+  <TrueSheet name="my-sheet" detents={['auto', 0.8]}>
     <View />
   </TrueSheet>
 )

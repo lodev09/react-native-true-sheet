@@ -4,10 +4,10 @@ description: True Native Bottom Sheet type reference.
 keywords: [bottom sheet types, bottom sheet typescript, bottom sheet definitions]
 ---
 
-## `SheetSize`
+## `SheetDetent`
 
 ```tsx
-<TrueSheet sizes={['auto', '80%', 'large']}>
+<TrueSheet detents={['auto', 0.8, 1]}>
   <View />
 </TrueSheet>
 ```
@@ -15,11 +15,7 @@ keywords: [bottom sheet types, bottom sheet typescript, bottom sheet definitions
 | Value | Description | 🍎 | 🤖 |
 | - | - | - | - |
 | `"auto"` | Auto resize based on content height. | **_16+_** | ✅ |
-| `"small"` | Translates to 25% | **_16+_** | ✅ |
-| `"medium"` | Translates to 50% | **_15+_** | ✅ |
-| `"large"` | Translates to 100% | ✅ | ✅ |
-| `"${number}%"` | Fixed height in % | **_16+_** | ✅ |
-| `number` | Fixed height | **_16+_** | ✅ |
+| `number` | Fractional height (0-1) representing percentage of screen height. | **_15+_** | ✅ |
 
 ## `TrueSheetGrabberProps`
 
@@ -67,7 +63,7 @@ Blur tint that is mapped into native values in IOS.
 | `"systemThickMaterialDark"` |
 | `"systemChromeMaterialDark"` |
 
-## `SizeInfo`
+## `DetentInfo`
 
 `Object` that comes with some events.
 
@@ -80,5 +76,5 @@ Blur tint that is mapped into native values in IOS.
 
 | Property | Type | Description |
 | - | - | - |
-| index | `number` | The size index from the provided sizes. See `sizes` prop. |
-| value | `number` | The actual height value of the size. |
+| index | `number` | The detent index from the provided detents. See `detents` prop. |
+| value | `number` | The actual height value of the detent. |
