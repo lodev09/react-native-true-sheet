@@ -10,29 +10,28 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <UIKit/UIKit.h>
-#import <React/RCTViewComponentView.h>
 #import <React/RCTBridgeModule.h>
+#import <React/RCTViewComponentView.h>
+#import <UIKit/UIKit.h>
 
 @class TrueSheetViewController;
 
 NS_ASSUME_NONNULL_BEGIN
 
 // Completion block for async operations
-typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError * _Nullable error);
+typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error);
 
 @interface TrueSheetView : RCTViewComponentView
 
 // TurboModule methods
-- (void)presentAtIndex:(NSInteger)index 
-       animated:(BOOL)animated
-      completion:(nullable TrueSheetCompletionBlock)completion;
+- (void)presentAtIndex:(NSInteger)index
+              animated:(BOOL)animated
+            completion:(nullable TrueSheetCompletionBlock)completion;
 
-- (void)dismissAnimated:(BOOL)animated 
-      completion:(nullable TrueSheetCompletionBlock)completion;
+- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
 
 @end
 
 NS_ASSUME_NONNULL_END
 
-#endif // RCT_NEW_ARCH_ENABLED
+#endif  // RCT_NEW_ARCH_ENABLED

@@ -9,11 +9,11 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetFooterView.h"
-#import "TrueSheetLayoutUtils.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import "TrueSheetLayoutUtils.h"
 
 using namespace facebook::react;
 
@@ -29,10 +29,10 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetFooterViewProps>();
     _props = defaultProps;
-    
+
     // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
-    
+
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
   }
@@ -42,20 +42,20 @@ using namespace facebook::react;
 - (void)setupInParentView:(UIView *)parentView {
   // Add to parent view hierarchy
   [parentView addSubview:self];
-  
+
   // Measure footer height
   CGSize footerSize = [self systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
   CGFloat height = footerSize.height > 0 ? footerSize.height : 0;
-  
+
   // Pin to bottom, leading, and trailing edges with height constraint
-  [TrueSheetLayoutUtils pinView:self 
-          toParentView:parentView 
-              edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom 
-             height:height];
-  
+  [TrueSheetLayoutUtils pinView:self
+                   toParentView:parentView
+                          edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
+                         height:height];
+
   // Ensure footer is above container
   [parentView bringSubviewToFront:self];
-  
+
   // Attach touch handler for React Native touch events
   if (_touchHandler) {
     [_touchHandler attachToView:self];
@@ -67,7 +67,7 @@ using namespace facebook::react;
   if (_touchHandler) {
     [_touchHandler detachFromView:self];
   }
-  
+
   // Unpin and remove from view hierarchy
   [TrueSheetLayoutUtils unpinView:self];
   [self removeFromSuperview];

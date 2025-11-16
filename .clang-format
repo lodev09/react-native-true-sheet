@@ -1,0 +1,14 @@
+---
+BasedOnStyle: Google
+IndentWidth: 2
+ColumnLimit: 120
+ContinuationIndentWidth: 2
+AlignAfterOpenBracket: DontAlign
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: true
+ObjCSpaceBeforeProtocolList: true
+PointerAlignment: Right
+SpaceBeforeParens: ControlStatements

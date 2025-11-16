@@ -12,8 +12,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetModule.h"
-#import "TrueSheetView.h"
 #import <React/RCTUtils.h>
+#import "TrueSheetView.h"
 
 #import <TrueSheetSpec/TrueSheetSpec.h>
 
@@ -45,65 +45,53 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 #pragma mark - TurboModule Methods
 
 - (void)presentByRef:(double)viewTag
-       index:(double)index
-      resolve:(RCTPromiseResolveBlock)resolve
-       reject:(RCTPromiseRejectBlock)reject {
-  
+               index:(double)index
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
-    
+
     if (!sheet) {
-      reject(@"SHEET_NOT_FOUND",
-         [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
-         nil);
+      reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
       return;
     }
-    
+
     [sheet presentAtIndex:(NSInteger)index
-          animated:YES
-         completion:^(BOOL success, NSError * _Nullable error) {
-      if (success) {
-        resolve(nil);
-      } else {
-        reject(@"PRESENT_FAILED",
-           error.localizedDescription ?: @"Failed to present sheet",
-           error);
-      }
-    }];
+                 animated:YES
+               completion:^(BOOL success, NSError *_Nullable error) {
+                 if (success) {
+                   resolve(nil);
+                 } else {
+                   reject(@"PRESENT_FAILED", error.localizedDescription ?: @"Failed to present sheet", error);
+                 }
+               }];
   });
 }
 
-- (void)dismissByRef:(double)viewTag
-      resolve:(RCTPromiseResolveBlock)resolve
-       reject:(RCTPromiseRejectBlock)reject {
-  
+- (void)dismissByRef:(double)viewTag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     TrueSheetView *sheet = [TrueSheetModule getSheetByTag:@((NSInteger)viewTag)];
-    
+
     if (!sheet) {
-      reject(@"SHEET_NOT_FOUND",
-         [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag],
-         nil);
+      reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
       return;
     }
-    
+
     [sheet dismissAnimated:YES
-          completion:^(BOOL success, NSError * _Nullable error) {
-      if (success) {
-        resolve(nil);
-      } else {
-        reject(@"DISMISS_FAILED",
-           error.localizedDescription ?: @"Failed to dismiss sheet",
-           error);
-      }
-    }];
+                completion:^(BOOL success, NSError *_Nullable error) {
+                  if (success) {
+                    resolve(nil);
+                  } else {
+                    reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheet", error);
+                  }
+                }];
   });
 }
 
 - (void)resizeByRef:(double)viewTag
-       index:(double)index
-      resolve:(RCTPromiseResolveBlock)resolve
-      reject:(RCTPromiseRejectBlock)reject {
+              index:(double)index
+            resolve:(RCTPromiseResolveBlock)resolve
+             reject:(RCTPromiseRejectBlock)reject {
   // Resize is just present with a different index
   [self presentByRef:viewTag index:index resolve:resolve reject:reject];
 }
@@ -114,8 +102,8 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   if (!reactTag) {
     return nil;
   }
-  
-  @synchronized (viewRegistry) {
+
+  @synchronized(viewRegistry) {
     return viewRegistry[reactTag];
   }
 }
@@ -124,8 +112,8 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   if (!tag || !view) {
     return;
   }
-  
-  @synchronized (viewRegistry) {
+
+  @synchronized(viewRegistry) {
     viewRegistry[tag] = view;
   }
 }
@@ -134,14 +122,12 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   if (!tag) {
     return;
   }
-  
-  @synchronized (viewRegistry) {
+
+  @synchronized(viewRegistry) {
     [viewRegistry removeObjectForKey:tag];
   }
 }
 
-
-
 @end
 
-#endif // RCT_NEW_ARCH_ENABLED
+#endif  // RCT_NEW_ARCH_ENABLED

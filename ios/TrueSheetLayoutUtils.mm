@@ -18,7 +18,7 @@
 
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges height:(CGFloat)height {
   view.translatesAutoresizingMaskIntoConstraints = NO;
-  
+
   if (edges & UIRectEdgeTop) {
     [view.topAnchor constraintEqualToAnchor:parentView.topAnchor].active = YES;
   }
@@ -31,7 +31,7 @@
   if (edges & UIRectEdgeRight) {
     [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
   }
-  
+
   // Apply height constraint if provided
   if (height > 0) {
     [view.heightAnchor constraintEqualToConstant:height].active = YES;
@@ -39,7 +39,8 @@
 }
 
 + (void)unpinView:(UIView *)view {
-  if (!view) return;
+  if (!view)
+    return;
   view.translatesAutoresizingMaskIntoConstraints = YES;
   [view removeConstraints:view.constraints];
 }

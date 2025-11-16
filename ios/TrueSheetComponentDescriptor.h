@@ -15,10 +15,10 @@
 namespace facebook::react {
 
 class TrueSheetComponentDescriptor final : public ConcreteComponentDescriptor<TrueSheetViewComponentDescriptor> {
-public:
+ public:
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react
 
-#endif // RCT_NEW_ARCH_ENABLED
+#endif  // RCT_NEW_ARCH_ENABLED
