@@ -17,7 +17,6 @@ export interface NativeProps extends ViewProps {
   detents?: ReadonlyArray<string>
 
   // Number properties - use 0 as default to avoid nil insertion
-  scrollableHandle?: WithDefault<Int32, 0>
   maxHeight?: WithDefault<Double, 0>
   background?: WithDefault<Int32, 0>
   cornerRadius?: WithDefault<Double, 0>

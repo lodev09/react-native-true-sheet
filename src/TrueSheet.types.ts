@@ -1,4 +1,4 @@
-import type { ComponentType, ReactElement, RefObject } from 'react'
+import type { ComponentType, ReactElement } from 'react'
 import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native'
 
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
@@ -173,13 +173,6 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios
    */
   blurTint?: BlurTint
-
-  /**
-   * The main scrollable ref that Sheet should handle on IOS.
-   *
-   * @platform ios
-   */
-  scrollRef?: RefObject<unknown>
 
   /**
    * Overrides `large` or `100%` height.

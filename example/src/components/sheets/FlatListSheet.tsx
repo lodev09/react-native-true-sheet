@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type Ref } from 'react'
+import { forwardRef, type Ref } from 'react'
 import { FlatList, View, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
@@ -9,12 +9,9 @@ import { DemoContent } from '../DemoContent'
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  const flatListRef = useRef<FlatList>(null)
-
   return (
     <TrueSheet
       ref={ref}
-      scrollRef={flatListRef}
       cornerRadius={12}
       detents={[0.5, 1]}
       blurTint="dark"
@@ -29,7 +26,6 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         <Input />
       </View>
       <FlatList
-        ref={flatListRef}
         nestedScrollEnabled
         data={times(50, (i) => i)}
         style={$content}

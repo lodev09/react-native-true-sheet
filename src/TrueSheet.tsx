@@ -4,7 +4,6 @@ import {
   createRef,
   type ReactNode,
   type ComponentRef,
-  Component,
   isValidElement,
   createElement,
 } from 'react'
@@ -45,11 +44,7 @@ const getTurboModule = () => {
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
 
-interface TrueSheetState {
-  scrollableHandle: number | null
-}
-
-export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
+export class TrueSheet extends PureComponent<TrueSheetProps> {
   displayName = 'TrueSheet'
 
   private readonly ref: RefObject<NativeRef | null>
@@ -71,10 +66,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
-
-    this.state = {
-      scrollableHandle: null,
-    }
   }
 
   private static getHandle(name: string) {
@@ -159,17 +150,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private updateState(): void {
-    const scrollableHandle = this.props.scrollRef?.current
-      ? findNodeHandle(this.props.scrollRef.current as Component<unknown>)
-      : null
-
     if (this.props.name) {
       TrueSheet.handles[this.props.name] = this.handle
     }
-
-    this.setState({
-      scrollableHandle,
-    })
   }
 
   private onDetentChange(event: DetentChangeEvent): void {
@@ -264,7 +247,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       <TrueSheetViewNativeComponent
         ref={this.ref}
         style={$nativeSheet}
-        scrollableHandle={this.state.scrollableHandle ?? 0}
         detents={detents.map(String)}
         blurTint={blurTint}
         background={(processColor(backgroundColor) as number) ?? 0}

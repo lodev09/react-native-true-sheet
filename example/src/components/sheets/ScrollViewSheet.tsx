@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type Ref } from 'react'
+import { forwardRef, type Ref } from 'react'
 import { ScrollView, type ViewStyle } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
@@ -9,13 +9,10 @@ import { DemoContent } from '../DemoContent'
 interface ScrollViewSheetProps extends TrueSheetProps {}
 
 export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref<TrueSheet>) => {
-  const scrollViewRef = useRef<ScrollView>(null)
-
   return (
     <TrueSheet
       ref={ref}
       detents={[0.8]}
-      scrollRef={scrollViewRef}
       cornerRadius={12}
       onDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onPresent={() => console.log(`Sheet ScrollView presented!`)}
@@ -23,7 +20,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       edgeToEdge
       {...props}
     >
-      <ScrollView nestedScrollEnabled ref={scrollViewRef} style={$content} indicatorStyle="black">
+      <ScrollView nestedScrollEnabled style={$content} indicatorStyle="black">
         {times(25, (i) => (
           <DemoContent key={i} />
         ))}
