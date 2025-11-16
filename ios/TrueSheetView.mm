@@ -27,7 +27,7 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView () <TrueSheetViewControllerDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContainerViewDelegate>
 @end
 
 @implementation TrueSheetView {
@@ -301,6 +301,9 @@ using namespace facebook::react;
 
     _containerView = (TrueSheetContainerView *)childComponentView;
 
+    // Set delegate to listen for size changes
+    _containerView.sizeDelegate = self;
+
     // Setup container in parent view (handles its own touch handling)
     [_containerView setupInParentView:_controller.view];
   } else if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
@@ -443,6 +446,23 @@ using namespace facebook::react;
       event.index = static_cast<int>(index);
       event.value = static_cast<double>(value);
       emitter->onDetentChange(event);
+    }
+  }
+}
+
+#pragma mark - TrueSheetContainerViewDelegate
+
+- (void)containerViewDidChangeSize:(CGSize)newSize {
+  // Update content height when container size changes
+  _controller.contentHeight = @(newSize.height);
+
+  // If sheet is already presented, update its detents and resize
+  if (_isPresented && _controller.presentingViewController) {
+    [_controller setupDetents];
+
+    // Resize to current index to reflect new auto detent height
+    if (_activeIndex) {
+      [_controller resizeToIndex:[_activeIndex integerValue]];
     }
   }
 }

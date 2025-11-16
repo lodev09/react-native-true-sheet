@@ -21,6 +21,7 @@ using namespace facebook::react;
   LayoutMetrics _layoutMetrics;
   RCTSurfaceTouchHandler *_touchHandler;
   UIView *_pinnedScrollView;
+  CGSize _lastSize;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -35,8 +36,21 @@ using namespace facebook::react;
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
     _pinnedScrollView = nil;
+    _lastSize = CGSizeZero;
   }
   return self;
+}
+
+- (void)layoutSubviews {
+  [super layoutSubviews];
+
+  // Notify delegate when size changes
+  if (!CGSizeEqualToSize(self.frame.size, _lastSize)) {
+    _lastSize = self.frame.size;
+    if ([self.sizeDelegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
+      [self.sizeDelegate containerViewDidChangeSize:self.frame.size];
+    }
+  }
 }
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
