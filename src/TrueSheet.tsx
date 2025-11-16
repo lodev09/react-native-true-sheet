@@ -8,7 +8,7 @@ import type {
   SizeChangeEvent,
   PresentEvent,
 } from './TrueSheet.types'
-import TrueSheetViewNativeComponent, { Commands } from './TrueSheetViewNativeComponent'
+import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
 import { Platform, processColor, View, type ViewStyle, findNodeHandle } from 'react-native'
 
@@ -19,12 +19,7 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n' +
   '- You are using the new architecture (Fabric)\n'
 
-// Validate that Commands are available
-if (!Commands) {
-  throw new Error(LINKING_ERROR)
-}
-
-// Lazy load TurboModule to avoid initialization errors
+// Lazy load TurboModule
 let TrueSheetModule: any = null
 const getTurboModule = () => {
   if (TrueSheetModule === null) {
@@ -32,8 +27,7 @@ const getTurboModule = () => {
       const { default: module } = require('./specs/NativeTrueSheetModule')
       TrueSheetModule = module
     } catch (error) {
-      console.warn('[TrueSheet] TurboModule not available:', error)
-      TrueSheetModule = undefined
+      throw new Error(LINKING_ERROR)
     }
   }
   return TrueSheetModule
@@ -201,9 +195,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * See `sizes` prop
    */
   public async present(index: number = 0): Promise<void> {
-    if (this.ref.current) {
-      Commands.present(this.ref.current, index)
-    }
+    const module = getTurboModule()
+    return module.presentByRef(this.handle, index)
   }
 
   /**
@@ -218,9 +211,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * Dismisses the Sheet
    */
   public async dismiss(): Promise<void> {
-    if (this.ref.current) {
-      Commands.dismiss(this.ref.current)
-    }
+    const module = getTurboModule()
+    return module.dismissByRef(this.handle)
   }
 
   componentDidMount(): void {
