@@ -337,7 +337,7 @@
         return;
     }
     
-    [self setupSizes];
+    [self setupDetents];
     [self setupDimmedBackground];
     
     sheet.delegate = self;
