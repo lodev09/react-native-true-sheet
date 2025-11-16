@@ -36,6 +36,7 @@ using namespace facebook::react;
     UIView *_scrollView;
     
     NSLayoutConstraint *_footerBottomConstraint;
+    NSLayoutConstraint *_footerHeightConstraint;
     
     BOOL _isPresented;
     NSNumber *_activeIndex;
@@ -385,6 +386,7 @@ using namespace facebook::react;
         [_footerView removeFromSuperview];
         _footerView = nil;
         _footerBottomConstraint = nil;
+        _footerHeightConstraint = nil;
     }
 }
 
@@ -404,6 +406,14 @@ using namespace facebook::react;
                 if (_isPresented && _controller.presentingViewController) {
                     [_controller setupSizes];
                 }
+            }
+        }
+        
+        // Update footer height if it exists
+        if (_footerView && _footerHeightConstraint) {
+            CGFloat footerHeight = _footerView.frame.size.height;
+            if (footerHeight > 0 && _footerHeightConstraint.constant != footerHeight) {
+                _footerHeightConstraint.constant = footerHeight;
             }
         }
         
@@ -466,6 +476,11 @@ using namespace facebook::react;
 
     _footerBottomConstraint = [_footerView.bottomAnchor constraintEqualToAnchor:_controller.view.bottomAnchor];
     _footerBottomConstraint.active = YES;
+    
+    // Measure footer height and set height constraint
+    CGSize footerSize = [_footerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    _footerHeightConstraint = [_footerView.heightAnchor constraintEqualToConstant:footerSize.height];
+    _footerHeightConstraint.active = YES;
 }
 
 - (void)unpinView:(UIView *)view {
