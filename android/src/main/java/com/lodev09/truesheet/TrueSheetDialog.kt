@@ -220,37 +220,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private fun getSizeHeight(size: Any): Int {
     val height: Int =
       when (size) {
-        is Double -> Utils.toPixel(size).toInt()
+        is Double -> (size * maxScreenHeight).toInt()
 
-        is Int -> Utils.toPixel(size.toDouble()).toInt()
+        is Int -> (size.toDouble() * maxScreenHeight).toInt()
 
         is String -> {
           when (size) {
             "auto" -> contentHeight + footerHeight
 
-            "large" -> maxScreenHeight
-
-            "medium" -> (maxScreenHeight * 0.50).toInt()
-
-            "small" -> (maxScreenHeight * 0.25).toInt()
-
-            else -> {
-              if (size.endsWith('%')) {
-                val percent = size.trim('%').toDoubleOrNull()
-                if (percent == null) {
-                  0
-                } else {
-                  ((percent / 100) * maxScreenHeight).toInt()
-                }
-              } else {
-                val fixedHeight = size.toDoubleOrNull()
-                if (fixedHeight == null) {
-                  0
-                } else {
-                  Utils.toPixel(fixedHeight).toInt()
-                }
-              }
-            }
+            else -> (maxScreenHeight * 0.5).toInt()
           }
         }
 

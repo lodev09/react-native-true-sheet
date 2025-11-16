@@ -58,44 +58,13 @@ export type SheetSize =
   | 'auto'
 
   /**
-   * Fixed height
+   * Relative height as a fraction (0-1) of the available height.
+   * For example, 0.5 represents 50% of the available height.
    *
    * @platform android
    * @platform ios 16+
    */
   | number
-
-  /**
-   * Fixed height in %
-   *
-   * @platform android
-   * @platform ios 16+
-   */
-  | `${number}%`
-
-  /**
-   * Translates to 25%
-   *
-   * @platform android
-   * @platform ios 16+
-   */
-  | 'small'
-
-  /**
-   * Translates to 50%
-   *
-   * @platform android
-   * @platform ios 15+
-   */
-  | 'medium'
-
-  /**
-   * Translates to 100%
-   *
-   * @platform android
-   * @platform ios 15+
-   */
-  | 'large'
 
 export interface TrueSheetProps extends ViewProps {
   /**
@@ -119,10 +88,10 @@ export interface TrueSheetProps extends ViewProps {
    *
    * Example:
    * ```ts
-   * size={['auto', '60%', 'large']}
+   * sizes={['auto', 0.6, 1]}
    * ```
    *
-   * @default ['medium', 'large']
+   * @default [0.5, 1]
    */
   sizes?: SheetSize[]
 

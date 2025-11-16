@@ -221,13 +221,13 @@
     NSString *detentId = [NSString stringWithFormat:@"custom-%@", size];
     
     if ([size isKindOfClass:[NSNumber class]]) {
-        CGFloat floatSize = [size floatValue];
+        CGFloat fraction = [size floatValue];
         if (@available(iOS 16.0, *)) {
             return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
                                                                           resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                 CGFloat maxDetent = context.maximumDetentValue;
                 CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                CGFloat value = MIN(floatSize, maxValue);
+                CGFloat value = MIN(fraction * maxDetent, maxValue);
                 self.detentValues[detentId] = @{@"index": @(index), @"value": @(value)};
                 return value;
             }];
@@ -240,48 +240,7 @@
     if ([size isKindOfClass:[NSString class]]) {
         NSString *stringSize = (NSString *)size;
         
-        if ([stringSize isEqualToString:@"small"]) {
-            if (@available(iOS 16.0, *)) {
-                return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:@"small"]
-                                                                              resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                    CGFloat maxDetent = context.maximumDetentValue;
-                    CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                    CGFloat value = MIN(0.25 * maxDetent, maxValue);
-                    self.detentValues[@"small"] = @{@"index": @(index), @"value": @(value)};
-                    return value;
-                }];
-            }
-        } else if ([stringSize isEqualToString:@"medium"]) {
-            if (@available(iOS 16.0, *)) {
-                return [UISheetPresentationControllerDetent customDetentWithIdentifier:UISheetPresentationControllerDetentIdentifierMedium
-                                                                              resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                    CGFloat mediumValue = [[UISheetPresentationControllerDetent mediumDetent] resolvedValueInContext:context];
-                    CGFloat maxDetent = context.maximumDetentValue;
-                    CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                    CGFloat value = MIN(mediumValue, maxValue);
-                    self.detentValues[UISheetPresentationControllerDetentIdentifierMedium] = @{@"index": @(index), @"value": @(value)};
-                    return value;
-                }];
-            } else {
-                self.detentValues[UISheetPresentationControllerDetentIdentifierMedium] = @{@"index": @(index), @"value": @(self.view.frame.size.height / 2)};
-                return [UISheetPresentationControllerDetent mediumDetent];
-            }
-        } else if ([stringSize isEqualToString:@"large"]) {
-            if (@available(iOS 16.0, *)) {
-                return [UISheetPresentationControllerDetent customDetentWithIdentifier:UISheetPresentationControllerDetentIdentifierLarge
-                                                                              resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                    CGFloat largeValue = [[UISheetPresentationControllerDetent largeDetent] resolvedValueInContext:context];
-                    CGFloat maxDetent = context.maximumDetentValue;
-                    CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                    CGFloat value = MIN(largeValue, maxValue);
-                    self.detentValues[UISheetPresentationControllerDetentIdentifierLarge] = @{@"index": @(index), @"value": @(value)};
-                    return value;
-                }];
-            } else {
-                self.detentValues[UISheetPresentationControllerDetentIdentifierLarge] = @{@"index": @(index), @"value": @(self.view.frame.size.height)};
-                return [UISheetPresentationControllerDetent largeDetent];
-            }
-        } else if ([stringSize isEqualToString:@"auto"]) {
+        if ([stringSize isEqualToString:@"auto"]) {
             if (@available(iOS 16.0, *)) {
                 return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
                                                                               resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
@@ -291,21 +250,6 @@
                     self.detentValues[detentId] = @{@"index": @(index), @"value": @(value)};
                     return value;
                 }];
-            }
-        } else if ([stringSize containsString:@"%"]) {
-            if (@available(iOS 16.0, *)) {
-                NSString *percentString = [stringSize stringByReplacingOccurrencesOfString:@"%" withString:@""];
-                CGFloat percent = [percentString floatValue];
-                if (percent > 0.0) {
-                    return [UISheetPresentationControllerDetent customDetentWithIdentifier:[self identifierFromString:detentId]
-                                                                                  resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                        CGFloat maxDetent = context.maximumDetentValue;
-                        CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                        CGFloat value = MIN((percent / 100.0) * maxDetent, maxValue);
-                        self.detentValues[detentId] = @{@"index": @(index), @"value": @(value)};
-                        return value;
-                    }];
-                }
             }
         }
     }

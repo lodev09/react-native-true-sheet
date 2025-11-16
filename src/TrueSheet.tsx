@@ -241,7 +241,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   render(): ReactNode {
     const {
-      sizes = ['medium', 'large'],
+      sizes = [0.5, 1],
       backgroundColor = 'white',
       dismissible = true,
       grabber = true,

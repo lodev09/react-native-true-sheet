@@ -42,7 +42,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
   return (
     <TrueSheet
-      sizes={['auto', '80%', 'large']}
+      sizes={['auto', 0.8, 1]}
       ref={sheetRef}
       style={styles.content}
       blurTint="dark"

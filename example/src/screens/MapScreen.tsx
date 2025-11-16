@@ -84,7 +84,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <AnimatedTrueSheet
-        sizes={['15%', 'auto', 'large']}
+        sizes={[0.15, 'auto', 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
