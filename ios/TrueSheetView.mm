@@ -353,11 +353,6 @@ using namespace facebook::react;
     CGFloat contentHeight = _containerView.frame.size.height;
     if (contentHeight > 0) {
       _controller.contentHeight = @(contentHeight);
-
-      // If sheet is already presented, update its detents
-      if (_isPresented && _controller.presentingViewController) {
-        [_controller setupDetents];
-      }
     }
 
     // Handle initial presentation - present if not already presented and initialIndex is valid
@@ -459,11 +454,6 @@ using namespace facebook::react;
   // If sheet is already presented, update its detents and resize
   if (_isPresented && _controller.presentingViewController) {
     [_controller setupDetents];
-
-    // Resize to current index to reflect new auto detent height
-    if (_activeIndex) {
-      [_controller resizeToIndex:[_activeIndex integerValue]];
-    }
   }
 }
 

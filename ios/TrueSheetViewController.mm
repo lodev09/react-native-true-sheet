@@ -178,7 +178,9 @@
     [detents addObject:sheetDetent];
   }
 
-  sheet.detents = detents;
+  [sheet animateChanges:^{
+    sheet.detents = detents;
+  }];
 }
 
 - (UISheetPresentationControllerDetent *)detentForValue:(id)detent
