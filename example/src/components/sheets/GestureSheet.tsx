@@ -4,7 +4,7 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 
-import { DARK, DARK_GRAY, GRABBER_COLOR, SPACING, times } from '../../utils'
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, GRABBER_COLOR, SPACING, times } from '../../utils'
 import { Footer } from '../Footer'
 import { Button } from '../Button'
 import { DemoContent } from '../DemoContent'
@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   panContainer: {
     flexDirection: 'row',

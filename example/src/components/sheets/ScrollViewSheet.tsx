@@ -20,7 +20,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       edgeToEdge
       {...props}
     >
-      <ScrollView nestedScrollEnabled style={styles.content} indicatorStyle="black">
+      <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">
         {times(25, (i) => (
           <DemoContent key={i} />
         ))}

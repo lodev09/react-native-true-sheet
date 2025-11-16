@@ -28,7 +28,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       <FlatList
         nestedScrollEnabled
         data={times(50, (i) => i)}
-        style={styles.content}
+        contentContainerStyle={styles.content}
         indicatorStyle="black"
         renderItem={() => <DemoContent color={DARK_GRAY} />}
       />

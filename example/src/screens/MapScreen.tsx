@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
 
 import { Button, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GRAY, SPACING, SPRING_CONFIG } from '../utils'
 import { useDragChangeHandler } from '../hooks'
 import {
   BasicSheet,
@@ -89,7 +89,7 @@ export const MapScreen = () => {
         blurTint="dark"
         backgroundColor={DARK}
         edgeToEdge
-        style={{ padding: SPACING, paddingBottom: SPACING * 3 }}
+        style={styles.content}
         dimmedIndex={2}
         dismissible={false}
         cornerRadius={12}
@@ -151,6 +151,10 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  content: {
+    padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {
     marginBottom: SPACING * 2,

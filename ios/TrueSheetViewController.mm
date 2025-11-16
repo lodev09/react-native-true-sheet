@@ -16,13 +16,13 @@
   CGFloat _lastViewWidth;
   UIVisualEffectView *_backgroundView;
   NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
+  CGFloat _bottomInset;
 }
 
 - (instancetype)init {
   if (self = [super initWithNibName:nil bundle:nil]) {
     _detents = @[ @0.5, @1 ];
     _contentHeight = @(0);
-    _footerHeight = @(0);
     _grabber = YES;
     _dimmed = YES;
     _dimmedIndex = @(0);
@@ -31,6 +31,25 @@
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    // Get bottom safe area inset from the window's safe area
+    // The sheet's view has smaller insets, so we need the actual device insets
+    UIWindow *window = nil;
+
+    for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if ([scene isKindOfClass:[UIWindowScene class]]) {
+            UIWindowScene *windowScene = (UIWindowScene *)scene;
+            for (UIWindow *w in windowScene.windows) {
+                if (w.isKeyWindow) {
+                    window = w;
+                    break;
+                }
+            }
+            if (window) break;
+        }
+    }
+
+    _bottomInset = window ? window.safeAreaInsets.bottom : 0;
   }
   return self;
 }
@@ -173,8 +192,10 @@
   [_detentValues removeAllObjects];
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
-  // Don't subtract bottomInset - the sheet controller handles safe area automatically
-  CGFloat totalHeight = [self.contentHeight floatValue] + [self.footerHeight floatValue];
+  // Subtract bottomInset from content height to account for safe area
+  // This prevents iOS from adding extra bottom insets automatically
+  CGFloat adjustedContentHeight = [self.contentHeight floatValue] - _bottomInset;
+  CGFloat totalHeight = adjustedContentHeight;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
