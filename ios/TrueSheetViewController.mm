@@ -32,7 +32,7 @@
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    
+
     // Get bottom safe area inset from the window's safe area
     // The sheet's view has smaller insets, so we need the actual device insets
     UIWindow *window = [WindowUtil keyWindow];
@@ -62,7 +62,7 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
     [self.delegate viewControllerWillAppear];
   }
-  
+
   [self setupGestureRecognizer];
 }
 
@@ -75,7 +75,7 @@
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
-  
+
   UIView *presentedView = self.presentedView;
   NSLog(@"layout: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
 
@@ -103,8 +103,12 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
     [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
   }
-  
+
+  // Emit position change event continuously during drag
   if (gesture.state == UIGestureRecognizerStateChanged) {
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
+      [self.delegate viewControllerDidChangePosition:height position:sheetY];
+    }
     NSLog(@"drag: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
   }
 }
@@ -210,12 +214,12 @@
 }
 
 - (UISheetPresentationControllerDetent *)detentForFraction:(CGFloat)fraction
-                                             withHeight:(CGFloat)height
-                                                atIndex:(NSInteger)index {
+                                                withHeight:(CGFloat)height
+                                                   atIndex:(NSInteger)index {
   // Fraction should only be > 0 and <= 1
   CGFloat resolvedFraction = fraction <= 0 ? 0.1 : MIN(1, fraction);
   NSString *detentId = [NSString stringWithFormat:@"custom-%f", resolvedFraction];
-  
+
   if (@available(iOS 16.0, *)) {
     return [UISheetPresentationControllerDetent
       customDetentWithIdentifier:[self identifierFromString:detentId]
@@ -233,10 +237,7 @@
   }
 }
 
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
-                                             withHeight:(CGFloat)height
-                                                atIndex:(NSInteger)index {
-
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent withHeight:(CGFloat)height atIndex:(NSInteger)index {
   if ([detent isKindOfClass:[NSNumber class]]) {
     CGFloat fraction = [detent floatValue];
     return [self detentForFraction:fraction withHeight:height atIndex:index];
@@ -250,7 +251,8 @@
           customDetentWithIdentifier:[self identifierFromString:detentId]
                             resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                               CGFloat maxDetent = context.maximumDetentValue;
-                              CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
+                              CGFloat maxValue =
+                                self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
                               CGFloat value = MIN(height, maxValue);
                               self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                               return value;
@@ -309,7 +311,7 @@
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
-  
+
   for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
     if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
       UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;

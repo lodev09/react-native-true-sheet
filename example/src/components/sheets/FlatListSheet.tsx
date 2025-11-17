@@ -33,7 +33,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         data={times(50, (i) => i)}
         contentContainerStyle={styles.content}
         indicatorStyle="black"
-        ItemSeparatorComponent={() => <Spacer />}
+        ItemSeparatorComponent={Spacer}
         contentInset={{ top: TOP_INSET }}
         scrollIndicatorInsets={{ top: TOP_INSET }}
         renderItem={() => <DemoContent color={DARK_GRAY} />}

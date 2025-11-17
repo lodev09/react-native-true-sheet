@@ -24,6 +24,7 @@ export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
+export type PositionChangeEvent = NativeSyntheticEvent<DetentInfo>
 
 /**
  * Blur style mapped to native values in IOS.
@@ -269,4 +270,14 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios 15+
    */
   onDragEnd?: (event: DragEndEvent) => void
+
+  /**
+   * Called when the sheet's position changes.
+   * This fires continuously during drag operations.
+   * Comes with the detent info.
+   *
+   * @platform android
+   * @platform ios 15+
+   */
+  onPositionChange?: (event: PositionChangeEvent) => void
 }

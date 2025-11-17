@@ -45,6 +45,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),
       TrueSheetEvent.DRAG_CHANGE to MapBuilder.of("registrationName", "onDragChange"),
       TrueSheetEvent.DRAG_END to MapBuilder.of("registrationName", "onDragEnd"),
+      TrueSheetEvent.POSITION_CHANGE to MapBuilder.of("registrationName", "onPositionChange"),
       TrueSheetEvent.CONTAINER_SIZE_CHANGE to MapBuilder.of("registrationName", "onContainerSizeChange")
     )
 

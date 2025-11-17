@@ -16,6 +16,7 @@ import type {
   DetentChangeEvent,
   WillPresentEvent,
   DidPresentEvent,
+  PositionChangeEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
@@ -70,6 +71,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragBegin = this.onDragBegin.bind(this)
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
+    this.onPositionChange = this.onPositionChange.bind(this)
   }
 
   private static getInstance(name: string) {
@@ -185,6 +187,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDragEnd?.(event)
   }
 
+  private onPositionChange(event: PositionChangeEvent): void {
+    this.props.onPositionChange?.(event)
+  }
+
   /**
    * Present the sheet. Optionally accepts a detent `index`.
    * See `detents` prop
@@ -283,6 +289,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragBegin={this.onDragBegin}
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
+        onPositionChange={this.onPositionChange}
       >
         <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
           <View style={style} {...rest}>

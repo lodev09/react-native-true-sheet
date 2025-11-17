@@ -18,6 +18,7 @@ class TrueSheetEvent(surfaceId: Int, viewId: Int, private val name: String, priv
     const val DRAG_BEGIN = "topDragBegin"
     const val DRAG_CHANGE = "topDragChange"
     const val DRAG_END = "topDragEnd"
+    const val POSITION_CHANGE = "topPositionChange"
     const val CONTAINER_SIZE_CHANGE = "topContainerSizeChange"
   }
 }

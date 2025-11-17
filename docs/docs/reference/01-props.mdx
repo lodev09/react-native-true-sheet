@@ -269,3 +269,13 @@ This is called when the sheet is being dragged.
 Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet dragging has ended.
+
+### `onPositionChange`
+
+Comes with [`DetentInfo`](/reference/types#detentinfo).
+
+This is called continuously when the sheet's position changes during drag operations. This event fires more frequently than `onDragChange` and provides real-time position updates.
+
+:::tip
+Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.
+:::

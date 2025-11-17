@@ -129,6 +129,9 @@ class TrueSheetView(context: Context) :
               else -> { }
             }
 
+            // Emit position change event continuously during slide
+            dispatchEvent(TrueSheetEvent.POSITION_CHANGE, detentInfoData(getCurrentDetentInfo(sheetView)))
+
             footerView?.let {
               val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
               if (slideOffset >= 0) {

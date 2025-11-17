@@ -11,10 +11,10 @@
 #import "TrueSheetView.h"
 #import "TrueSheetContainerView.h"
 #import "TrueSheetFooterView.h"
-#import "utils/LayoutUtil.h"
-#import "utils/WindowUtil.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
+#import "utils/LayoutUtil.h"
+#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -435,6 +435,20 @@ using namespace facebook::react;
   }
 }
 
+- (void)viewControllerDidChangePosition:(CGFloat)height position:(CGFloat)position {
+  if (!_eventEmitter)
+    return;
+
+  NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
+  auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
+
+  TrueSheetViewEventEmitter::OnPositionChange event;
+  event.index = static_cast<int>(index);
+  event.value = static_cast<double>(height);
+  event.position = static_cast<double>(position);
+  emitter->onPositionChange(event);
+}
+
 #pragma mark - TrueSheetContainerViewDelegate
 
 - (void)containerViewDidChangeSize:(CGSize)newSize {
@@ -451,25 +465,25 @@ using namespace facebook::react;
 
 - (UIViewController *)_findPresentingViewController {
   UIWindow *keyWindow = [WindowUtil keyWindow];
-  
+
   if (!keyWindow) {
     return nil;
   }
-  
+
   UIViewController *rootViewController = keyWindow.rootViewController;
-  
+
   // Find the top-most presented view controller
   while (rootViewController.presentedViewController) {
     UIViewController *presented = rootViewController.presentedViewController;
-    
+
     // Skip TrueSheetViewController if it's being dismissed
     if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
       break;
     }
-    
+
     rootViewController = presented;
   }
-  
+
   return rootViewController;
 }
 

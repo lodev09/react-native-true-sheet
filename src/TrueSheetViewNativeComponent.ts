@@ -46,6 +46,7 @@ export interface NativeProps extends ViewProps {
   onDragBegin?: DirectEventHandler<DetentInfo>
   onDragChange?: DirectEventHandler<DetentInfo>
   onDragEnd?: DirectEventHandler<DetentInfo>
+  onPositionChange?: DirectEventHandler<DetentInfo>
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

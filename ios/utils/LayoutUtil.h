@@ -37,8 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)unpinView:(UIView *)view;
 
-
-
 @end
 
 NS_ASSUME_NONNULL_END

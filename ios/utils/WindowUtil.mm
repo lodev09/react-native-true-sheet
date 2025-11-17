@@ -14,18 +14,18 @@
 
 + (nullable UIWindow *)keyWindow {
   NSSet<UIScene *> *connectedScenes = [UIApplication sharedApplication].connectedScenes;
-  
+
   for (UIScene *scene in connectedScenes) {
     if ([scene isKindOfClass:[UIWindowScene class]]) {
       UIWindowScene *windowScene = (UIWindowScene *)scene;
-      
+
       if (windowScene.activationState == UISceneActivationStateForegroundActive) {
         for (UIWindow *window in windowScene.windows) {
           if (window.isKeyWindow) {
             return window;
           }
         }
-        
+
         // If no key window found, return the first window
         if (windowScene.windows.count > 0) {
           return windowScene.windows.firstObject;
@@ -33,7 +33,7 @@
       }
     }
   }
-  
+
   return nil;
 }
 

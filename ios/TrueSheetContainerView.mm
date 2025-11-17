@@ -13,9 +13,9 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "utils/LayoutUtil.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
+#import "utils/LayoutUtil.h"
 
 using namespace facebook::react;
 

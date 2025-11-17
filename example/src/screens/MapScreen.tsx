@@ -14,7 +14,7 @@ import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-na
 
 import { Button, Footer, Spacer } from '../components'
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING, SPRING_CONFIG } from '../utils'
-import { useDragChangeHandler } from '../hooks'
+import { usePositionChangeHandler } from '../hooks'
 import {
   BasicSheet,
   BlankSheet,
@@ -40,7 +40,7 @@ export const MapScreen = () => {
   const insets = useSafeAreaInsets()
   const buttonY = useSharedValue(0)
 
-  const dragChangeHandler = useDragChangeHandler((detentInfo: DetentInfo) => {
+  const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
     'worklet'
     buttonY.value = -detentInfo.value
   })
@@ -94,16 +94,11 @@ export const MapScreen = () => {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        // onDragChange={dragChangeHandler}
+        onPositionChange={positionChangeHandler}
         onDidPresent={(e) => {
           // console.log('present:', e.nativeEvent.value);
           animateButton(e.nativeEvent)
         }}
-        onDetentChange={(e) => {
-          // console.log('detent:', e.nativeEvent.value);
-          animateButton(e.nativeEvent)
-        }}
-        // onDragEnd={(e) => animateButton(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
