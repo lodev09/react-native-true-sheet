@@ -100,7 +100,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onDidPresent event
-        dispatchEvent(TrueSheetEvent.DID_PRESENT, detentInfoData(getDetentInfoForIndex(currentDetentIndex)))
+        dispatchEvent(TrueSheetEvent.DID_PRESENT, detentInfoData(sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -263,13 +263,15 @@ class TrueSheetView(context: Context) :
     val data = Arguments.createMap()
     data.putInt("index", detentInfo.index)
     data.putDouble("value", detentInfo.value.toDouble())
+    data.putDouble("position", detentInfo.position.toDouble())
 
     return data
   }
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val height = sheetDialog.maxScreenHeight - sheetView.top
-    val currentDetentInfo = DetentInfo(currentDetentIndex, Utils.toDIP(height.toFloat()))
+    val position = Utils.toDIP(sheetView.top.toFloat())
+    val currentDetentInfo = DetentInfo(currentDetentIndex, Utils.toDIP(height.toFloat()), position)
 
     return currentDetentInfo
   }
@@ -415,7 +417,7 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.isShowing) {
       // For consistency with IOS, we are not waiting
       // for the state to change before dispatching onDetentChange event.
-      val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
+      val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(detentIndex)
       dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(detentInfo))
 
       promiseCallback()
