@@ -14,8 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)viewControllerWillAppear;
 - (void)viewControllerDidDismiss;
-- (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value;
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height;
+- (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position;
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position;
 
 @end
 
@@ -38,9 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupDetents;
 - (void)setupDimmedBackground;
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion;
-- (void)observeDrag;
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index;
 - (nullable NSDictionary<NSString *, NSNumber *> *)currentDetentInfo;
+- (CGFloat)position;
 
 @end
 

@@ -12,6 +12,10 @@ export interface DetentInfo {
    * The resolved height value of the detent.
    */
   value: number
+  /**
+   * The Y position of the sheet relative to the screen.
+   */
+  position: number
 }
 
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>

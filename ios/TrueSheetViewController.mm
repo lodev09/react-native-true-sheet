@@ -98,8 +98,8 @@
   CGFloat sheetY = view.frame.origin.y;
   CGFloat height = screenHeight - sheetY;
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state height:height];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
+    [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
   }
 }
 
@@ -330,6 +330,14 @@
   return _detentValues[selectedIdentifier];
 }
 
+- (CGFloat)position {
+  UIView *presentedView = self.presentedView;
+  if (!presentedView) {
+    return 0.0;
+  }
+  return presentedView.frame.origin.y;
+}
+
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet) {
@@ -363,10 +371,10 @@
     return;
 
   NSDictionary *detentInfo = _detentValues[identifier];
-  if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:)]) {
+  if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:position:)]) {
     NSInteger index = [detentInfo[@"index"] integerValue];
     CGFloat value = [detentInfo[@"value"] floatValue];
-    [self.delegate viewControllerDidChangeDetent:index value:value];
+    [self.delegate viewControllerDidChangeDetent:index value:value position:self.position];
   }
 }
 
