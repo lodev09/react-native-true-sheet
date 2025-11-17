@@ -5,6 +5,9 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils'
 import { Input } from '../Input'
 import { DemoContent } from '../DemoContent'
+import { Spacer } from '../Spacer'
+
+const TOP_INSET = INPUT_HEIGHT + SPACING * 2 + SPACING
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
@@ -30,6 +33,9 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         data={times(50, (i) => i)}
         contentContainerStyle={styles.content}
         indicatorStyle="black"
+        ItemSeparatorComponent={() => <Spacer />}
+        contentInset={{ top: TOP_INSET }}
+        scrollIndicatorInsets={{ top: TOP_INSET }}
         renderItem={() => <DemoContent color={DARK_GRAY} />}
       />
     </TrueSheet>
@@ -41,7 +47,6 @@ FlatListSheet.displayName = 'FlatListSheet'
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    paddingTop: INPUT_HEIGHT + SPACING * 4,
   },
   header: {
     position: 'absolute',

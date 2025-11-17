@@ -255,7 +255,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     if (!this.state.shouldRenderNativeView) {
       // Return an empty View here so Reanimated wrapped sheet doesn't error.
-      return <View />
+      return null
     }
 
     return (

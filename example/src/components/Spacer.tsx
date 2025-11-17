@@ -1,12 +1,12 @@
 import { View, type ViewProps } from 'react-native'
 
-import { SPACING } from '../utils'
+import { GAP } from '../utils'
 
 interface SpacerProps extends ViewProps {
   space?: number
 }
 
 export const Spacer = (props: SpacerProps) => {
-  const { space = SPACING, style: $styleOverride, ...rest } = props
+  const { space = GAP, style: $styleOverride, ...rest } = props
   return <View style={[{ height: space }, $styleOverride]} {...rest} />
 }

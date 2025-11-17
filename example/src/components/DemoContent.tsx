@@ -22,7 +22,6 @@ export const DemoContent = (props: DemoContentProps) => {
 const styles = StyleSheet.create({
   content: {
     height: 100,
-    marginBottom: 16,
     padding: SPACING / 2,
     alignItems: 'center',
   },

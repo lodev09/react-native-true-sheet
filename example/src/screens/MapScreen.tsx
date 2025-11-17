@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
 
 import { Button, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING, SPRING_CONFIG } from '../utils'
 import { useDragChangeHandler } from '../hooks'
 import {
   BasicSheet,
@@ -52,7 +52,7 @@ export const MapScreen = () => {
 
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
-    { bottom: insets.bottom + SPACING },
+    { bottom: insets.bottom },
     useAnimatedStyle(() => ({
       transform: [{ translateY: buttonY.value }],
     })),
@@ -84,7 +84,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <AnimatedTrueSheet
-        detents={[0.25, 'auto', 1]}
+        detents={[0.25, 0.5, 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    gap: GAP,
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {

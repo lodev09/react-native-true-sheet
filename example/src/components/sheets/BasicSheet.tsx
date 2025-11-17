@@ -2,7 +2,7 @@ import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'rea
 import { StyleSheet } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GRABBER_COLOR, SPACING } from '../../utils'
+import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING } from '../../utils'
 import { DemoContent } from '../DemoContent'
 import { Footer } from '../Footer'
 import { Button } from '../Button'
@@ -110,7 +110,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text="Present Child Sheet" onPress={presentChild} />
       <Button text="Present PromptSheet" onPress={presentPromptSheet} />
       <Spacer />
-      <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
 
       <TrueSheet
@@ -133,6 +132,7 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
+    gap: GAP,
   },
 })
 

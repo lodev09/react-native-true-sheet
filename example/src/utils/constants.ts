@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native'
 import type { WithSpringConfig } from 'react-native-reanimated'
 
 export const SPACING = 16
+export const GAP = 12
 export const INPUT_HEIGHT = SPACING * 3
 export const FOOTER_HEIGHT = SPACING * 6
 export const BORDER_RADIUS = 4

@@ -4,14 +4,13 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 
-import { DARK, DARK_GRAY, FOOTER_HEIGHT, GRABBER_COLOR, SPACING, times } from '../../utils'
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING, times } from '../../utils'
 import { Footer } from '../Footer'
 import { Button } from '../Button'
 import { DemoContent } from '../DemoContent'
 
 const BOXES_COUNT = 20
 const CONTAINER_HEIGHT = 200
-const BOX_GAP = SPACING
 const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2
 
 interface GestureSheetProps extends TrueSheetProps {}
@@ -38,7 +37,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       scrollX.value = withDecay({
         velocity: e.velocityX,
         rubberBandEffect: true,
-        clamp: [-((BOX_SIZE + BOX_GAP) * BOXES_COUNT) + dimensions.width - SPACING, 0],
+        clamp: [-((BOX_SIZE + GAP) * BOXES_COUNT) + dimensions.width - SPACING, 0],
       })
     })
     .activeOffsetX([-10, 10])
@@ -98,9 +97,8 @@ const styles = StyleSheet.create({
   },
   panContainer: {
     flexDirection: 'row',
-    gap: BOX_GAP,
+    gap: GAP,
     height: CONTAINER_HEIGHT,
-    marginBottom: SPACING,
     paddingVertical: SPACING,
   },
 })

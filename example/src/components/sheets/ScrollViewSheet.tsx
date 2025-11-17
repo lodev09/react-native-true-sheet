@@ -2,7 +2,7 @@ import { forwardRef, type Ref } from 'react'
 import { StyleSheet, ScrollView } from 'react-native'
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
 
-import { FOOTER_HEIGHT, SPACING, times } from '../../utils'
+import { FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils'
 import { Footer } from '../Footer'
 import { DemoContent } from '../DemoContent'
 
@@ -35,5 +35,6 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
+    gap: GAP,
   },
 })
