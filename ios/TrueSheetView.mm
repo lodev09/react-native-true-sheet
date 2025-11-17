@@ -13,7 +13,15 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
-#import "events/TrueSheetEvents.h"
+#import "events/OnMountEvent.h"
+#import "events/OnWillPresentEvent.h"
+#import "events/OnDidPresentEvent.h"
+#import "events/OnDismissEvent.h"
+#import "events/OnDetentChangeEvent.h"
+#import "events/OnDragBeginEvent.h"
+#import "events/OnDragChangeEvent.h"
+#import "events/OnDragEndEvent.h"
+#import "events/OnPositionChangeEvent.h"
 #import "utils/LayoutUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -72,7 +80,7 @@ using namespace facebook::react;
   }
 
   // Emit onMount event once
-  [TrueSheetEvents emitOnMount:_eventEmitter];
+  [OnMountEvent emit:_eventEmitter];
 
   if (_containerView != nil) {
     // Measure container's content height for "auto" detent sizing
@@ -169,10 +177,10 @@ using namespace facebook::react;
                                         CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
                                         CGFloat position = self->_controller.position;
 
-                                        [TrueSheetEvents emitOnDidPresent:self->_eventEmitter
-                                                                    index:index
-                                                                    value:detentValue
-                                                                 position:position];
+                                        [OnDidPresentEvent emit:self->_eventEmitter
+                                                          index:index
+                                                          value:detentValue
+                                                       position:position];
 
                                         // Call completion handler
                                         if (completion) {
@@ -356,7 +364,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillAppear {
-  [TrueSheetEvents emitOnWillPresent:_eventEmitter];
+  [OnWillPresentEvent emit:_eventEmitter];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position {
@@ -364,16 +372,16 @@ using namespace facebook::react;
 
   switch (state) {
     case UIGestureRecognizerStateBegan:
-      [TrueSheetEvents emitOnDragBegin:_eventEmitter index:index value:height position:position];
+      [OnDragBeginEvent emit:_eventEmitter index:index value:height position:position];
       break;
 
     case UIGestureRecognizerStateChanged:
-      [TrueSheetEvents emitOnDragChange:_eventEmitter index:index value:height position:position];
+      [OnDragChangeEvent emit:_eventEmitter index:index value:height position:position];
       break;
 
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-      [TrueSheetEvents emitOnDragEnd:_eventEmitter index:index value:height position:position];
+      [OnDragEndEvent emit:_eventEmitter index:index value:height position:position];
       break;
 
     default:
@@ -385,21 +393,21 @@ using namespace facebook::react;
   _isPresented = NO;
   _activeIndex = nil;
 
-  [TrueSheetEvents emitOnDismiss:_eventEmitter];
+  [OnDismissEvent emit:_eventEmitter];
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position {
   if (!_activeIndex || [_activeIndex integerValue] != index) {
     _activeIndex = @(index);
 
-    [TrueSheetEvents emitOnDetentChange:_eventEmitter index:index value:value position:position];
+    [OnDetentChangeEvent emit:_eventEmitter index:index value:value position:position];
   }
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)height position:(CGFloat)position {
   NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
 
-  [TrueSheetEvents emitOnPositionChange:_eventEmitter index:index value:height position:position];
+  [OnPositionChangeEvent emit:_eventEmitter index:index value:height position:position];
 }
 
 #pragma mark - TrueSheetContainerViewDelegate
