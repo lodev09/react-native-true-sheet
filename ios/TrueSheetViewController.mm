@@ -62,6 +62,8 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
     [self.delegate viewControllerWillAppear];
   }
+  
+  [self setupGestureRecognizer];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -75,7 +77,7 @@
   [super viewDidLayoutSubviews];
   
   UIView *presentedView = self.presentedView;
-  NSLog(@"%f", presentedView.frame.origin.y);
+//  NSLog(@"%f", presentedView.frame.origin.y);
 
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
@@ -90,13 +92,13 @@
 #pragma mark - Gesture Handling
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
-  UIView *view = gesture.view;
-  if (!view)
+  UIView *presentedView = self.presentedView;
+  if (!presentedView)
     return;
 
   CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
-  CGFloat sheetY = view.frame.origin.y;
-  CGFloat height = screenHeight - sheetY;
+  CGFloat sheetY = presentedView.frame.origin.y;
+  CGFloat height = screenHeight - sheetY - _bottomInset;
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
     [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
@@ -306,14 +308,15 @@
   return string;
 }
 
-- (void)observeDrag {
+- (void)setupGestureRecognizer {
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
-
-  for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers) {
+  
+  for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
     if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-      [recognizer addTarget:self action:@selector(handlePanGesture:)];
+      UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
+      [panGesture addTarget:self action:@selector(handlePanGesture:)];
     }
   }
 }
