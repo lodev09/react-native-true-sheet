@@ -19,6 +19,7 @@
   UIVisualEffectView *_backgroundView;
   NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
   CGFloat _bottomInset;
+  BOOL _isTransitioning;
 }
 
 - (instancetype)init {
@@ -61,11 +62,25 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+  
   if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
     [self.delegate viewControllerWillAppear];
   }
 
   [self setupGestureRecognizer];
+  [self setupTransitionPositionTracking];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+
+  [self stopTransitionPositionTracking];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+  [super viewWillDisappear:animated];
+  
+  [self setupTransitionPositionTracking];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -73,28 +88,19 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
+  
+  [self stopTransitionPositionTracking];
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+  
+  if (!_isTransitioning)
+    [self emitChangePositionDelegate];
 
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
-  
-  CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
-  CGFloat sheetY = presentedView.frame.origin.y;
-  
-  if (_lastPosition != sheetY) {
-    _lastPosition = sheetY;
-    
-    CGFloat height = screenHeight - sheetY - _bottomInset;
-
-    // Emit position change delegate
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
-      [self.delegate viewControllerDidChangePosition:height position:sheetY];
-    }
-  }
   
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
@@ -109,17 +115,35 @@
 #pragma mark - Gesture Handling
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
-  UIView *presentedView = self.presentedView;
-  if (!presentedView)
-    return;
-
-  CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
-  CGFloat sheetY = presentedView.frame.origin.y;
-  CGFloat height = screenHeight - sheetY - _bottomInset;
-
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
+    [self.delegate viewControllerDidDrag:gesture.state height:self.currentHeight position:self.currentPosition];
   }
+}
+
+#pragma mark - Position Tracking
+
+- (void)emitChangePositionDelegate {
+  if (_lastPosition != self.currentPosition) {
+    _lastPosition = self.currentPosition;
+
+    // Emit position change delegate
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
+      [self.delegate viewControllerDidChangePosition:self.currentHeight position:self.currentPosition];
+    }
+  }
+}
+
+- (void)setupTransitionPositionTracking {
+  _isTransitioning = YES;
+  NSLog(@"%f", self.currentPosition);
+
+  // TODO: emit viewControllerDidChangePosition
+}
+
+- (void)stopTransitionPositionTracking {
+  _isTransitioning = NO;
+
+  // TODO: stop tracking
 }
 
 #pragma mark - Background Setup
@@ -333,12 +357,24 @@
   return _detentValues[selectedIdentifier];
 }
 
-- (CGFloat)position {
+- (CGFloat)currentPosition {
   UIView *presentedView = self.presentedView;
-  if (!presentedView) {
+  if (!presentedView)
     return 0.0;
-  }
+  
   return presentedView.frame.origin.y;
+}
+
+- (CGFloat)currentHeight {
+  return self.containerHeight - self.currentPosition - _bottomInset;
+}
+
+- (CGFloat)containerHeight {
+  UIView *containerView = self.sheetPresentationController.containerView;
+  if (!containerView)
+    return 0.0;
+  
+  return containerView.frame.size.height;
 }
 
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion {
@@ -377,7 +413,8 @@
   if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:position:)]) {
     NSInteger index = [detentInfo[@"index"] integerValue];
     CGFloat value = [detentInfo[@"value"] floatValue];
-    [self.delegate viewControllerDidChangeDetent:index value:value position:self.position];
+    
+    [self.delegate viewControllerDidChangeDetent:index value:value position:self.currentPosition];
   }
 }
 

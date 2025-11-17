@@ -41,7 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion;
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index;
 - (nullable NSDictionary<NSString *, NSNumber *> *)currentDetentInfo;
-- (CGFloat)position;
+- (CGFloat)currentPosition;
+- (CGFloat)currentHeight;
 
 @end
 

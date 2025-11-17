@@ -44,6 +44,7 @@ export const MapScreen = () => {
 
   const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
     'worklet'
+    console.log(detentInfo.position)
     buttonY.value = -detentInfo.value
   })
 

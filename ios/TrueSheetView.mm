@@ -178,7 +178,7 @@ using namespace facebook::react;
                                         // Emit onDidPresent event after presenting
                                         NSDictionary *detentInfo = self->_controller.currentDetentInfo;
                                         CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
-                                        CGFloat position = self->_controller.position;
+                                        CGFloat position = self->_controller.currentPosition;
 
                                         [OnDidPresentEvent emit:self->_eventEmitter
                                                           index:index
