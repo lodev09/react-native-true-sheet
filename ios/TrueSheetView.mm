@@ -127,14 +127,17 @@ using namespace facebook::react;
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
   if (_isPresented) {
-    [_controller resizeToIndex:index];
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller resizeToIndex:index];
+    }];
+
     if (completion) {
       completion(YES, nil);
     }
     return;
   }
 
-  UIViewController *rootViewController = [self _findPresentingViewController];
+  UIViewController *rootViewController = [self findPresentingViewController];
 
   if (!rootViewController) {
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
@@ -210,7 +213,7 @@ using namespace facebook::react;
   const auto &oldViewProps = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
   const auto &newViewProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
 
-  BOOL needsSetupSizes = NO;
+  BOOL needsSetupDetents = NO;
   BOOL needsSetupDimmed = NO;
 
   // Update detents
@@ -220,7 +223,8 @@ using namespace facebook::react;
       [detents addObject:RCTNSStringFromString(detent)];
     }
     _controller.detents = detents;
-    needsSetupSizes = YES;
+    needsSetupDetents = YES;
+    needsSetupDimmed = YES;
   }
 
   // Update background color
@@ -282,13 +286,16 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 
   // Apply changes to presented sheet if needed
-  if (_isPresented && _controller.presentingViewController) {
-    if (needsSetupSizes) {
-      [_controller setupDetents];
-    }
-    if (needsSetupDimmed) {
-      [_controller setupDimmedBackground];
-    }
+  if (_isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      if (needsSetupDetents) {
+        [_controller setupDetents];
+        [_controller resizeToIndex:[_activeIndex integerValue]];
+      }
+
+      if (needsSetupDimmed)
+        [_controller setupDimmedBackground];
+    }];
   }
 }
 
@@ -417,14 +424,16 @@ using namespace facebook::react;
   _controller.contentHeight = @(newSize.height);
 
   // If sheet is already presented, update its detents and resize
-  if (_isPresented && _controller.presentingViewController) {
-    [_controller setupDetents];
+  if (_isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller setupDetents];
+    }];
   }
 }
 
 #pragma mark - Private Helpers
 
-- (UIViewController *)_findPresentingViewController {
+- (UIViewController *)findPresentingViewController {
   UIWindow *keyWindow = [WindowUtil keyWindow];
 
   if (!keyWindow) {

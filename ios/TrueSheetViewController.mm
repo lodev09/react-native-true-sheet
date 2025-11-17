@@ -15,6 +15,7 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastViewWidth;
+  CGFloat _lastPosition;
   UIVisualEffectView *_backgroundView;
   NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
   CGFloat _bottomInset;
@@ -28,6 +29,7 @@
     _dimmed = YES;
     _dimmedIndex = @(0);
     _lastViewWidth = 0;
+    _lastPosition = 0;
     _detentValues = [NSMutableDictionary dictionary];
 
     _backgroundView = [[UIVisualEffectView alloc] init];
@@ -77,8 +79,23 @@
   [super viewDidLayoutSubviews];
 
   UIView *presentedView = self.presentedView;
-  NSLog(@"layout: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
+  if (!presentedView)
+    return;
+  
+  CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
+  CGFloat sheetY = presentedView.frame.origin.y;
+  
+  if (_lastPosition != sheetY) {
+    _lastPosition = sheetY;
+    
+    CGFloat height = screenHeight - sheetY - _bottomInset;
 
+    // Emit position change delegate
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
+      [self.delegate viewControllerDidChangePosition:height position:sheetY];
+    }
+  }
+  
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
   if (_lastViewWidth != presentedView.frame.size.width) {
@@ -102,14 +119,6 @@
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
     [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
-  }
-
-  // Emit position change event continuously during drag
-  if (gesture.state == UIGestureRecognizerStateChanged) {
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
-      [self.delegate viewControllerDidChangePosition:height position:sheetY];
-    }
-    NSLog(@"drag: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
   }
 }
 
@@ -208,9 +217,7 @@
     [detents addObject:sheetDetent];
   }
 
-  [sheet animateChanges:^{
-    sheet.detents = detents;
-  }];
+  sheet.detents = detents;
 }
 
 - (UISheetPresentationControllerDetent *)detentForFraction:(CGFloat)fraction
@@ -222,7 +229,7 @@
 
   if (@available(iOS 16.0, *)) {
     return [UISheetPresentationControllerDetent
-      customDetentWithIdentifier:[self identifierFromString:detentId]
+      customDetentWithIdentifier:detentId
                         resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                           CGFloat maxDetent = context.maximumDetentValue;
                           CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
@@ -248,7 +255,7 @@
       if (@available(iOS 16.0, *)) {
         NSString *detentId = @"custom-auto";
         return [UISheetPresentationControllerDetent
-          customDetentWithIdentifier:[self identifierFromString:detentId]
+          customDetentWithIdentifier:detentId
                             resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                               CGFloat maxDetent = context.maximumDetentValue;
                               CGFloat maxValue =
@@ -297,14 +304,8 @@
 
   UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
   if (identifier) {
-    [sheet animateChanges:^{
-      sheet.selectedDetentIdentifier = identifier;
-    }];
+    sheet.selectedDetentIdentifier = identifier;
   }
-}
-
-- (UISheetPresentationControllerDetentIdentifier)identifierFromString:(NSString *)string {
-  return string;
 }
 
 - (void)setupGestureRecognizer {

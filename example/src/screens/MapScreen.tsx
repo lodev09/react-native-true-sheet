@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   StyleSheet,
   Text,
@@ -10,10 +10,10 @@ import {
 import { TrueSheet, type DetentInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated'
 
-import { Button, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING, SPRING_CONFIG } from '../utils'
+import { Button, DemoContent, Footer, Spacer } from '../components'
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils'
 import { usePositionChangeHandler } from '../hooks'
 import {
   BasicSheet,
@@ -37,6 +37,8 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null)
   const blankSheet = useRef<TrueSheet>(null)
 
+  const [contentCount, setContentCount] = useState(0)
+
   const insets = useSafeAreaInsets()
   const buttonY = useSharedValue(0)
 
@@ -52,14 +54,18 @@ export const MapScreen = () => {
 
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
-    { bottom: insets.bottom },
+    { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
       transform: [{ translateY: buttonY.value }],
     })),
   ]
 
-  const animateButton = (detentInfo: DetentInfo) => {
-    buttonY.value = withSpring(-detentInfo.value, SPRING_CONFIG)
+  const addContent = () => {
+    setContentCount((prev) => prev + 1)
+  }
+
+  const removeContent = () => {
+    setContentCount((prev) => Math.max(0, prev - 1))
   }
 
   return (
@@ -84,7 +90,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <AnimatedTrueSheet
-        detents={[0.25, 0.8, 1]}
+        detents={[0.25, 'auto', 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
@@ -95,9 +101,8 @@ export const MapScreen = () => {
         cornerRadius={12}
         initialIndex={1}
         onPositionChange={positionChangeHandler}
-        onDidPresent={(e) => {
-          // console.log('present:', e.nativeEvent.value);
-          animateButton(e.nativeEvent)
+        onDidPresent={() => {
+          console.log('Sheet is presented')
         }}
         // initialIndexAnimated={false}
         onMount={() => {
@@ -110,6 +115,9 @@ export const MapScreen = () => {
           <Text style={styles.title}>True Sheet 💩</Text>
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
+        {Array.from({ length: contentCount }, (_, i) => (
+          <DemoContent key={i} color={DARK_BLUE} />
+        ))}
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
@@ -117,9 +125,12 @@ export const MapScreen = () => {
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
+        <Button text={`Add Content (${contentCount})`} onPress={addContent} />
+        {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
+
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(1)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />

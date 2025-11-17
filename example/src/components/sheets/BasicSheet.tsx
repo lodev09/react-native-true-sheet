@@ -13,7 +13,7 @@ interface BasicSheetProps extends TrueSheetProps {}
 export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null)
   const childSheet = useRef<TrueSheet>(null)
-  const [contentCount, setContentCount] = useState(1)
+  const [contentCount, setContentCount] = useState(0)
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index)
@@ -44,7 +44,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   }
 
   const removeContent = () => {
-    setContentCount((prev) => Math.max(1, prev - 1))
+    setContentCount((prev) => Math.max(0, prev - 1))
   }
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
@@ -101,7 +101,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <DemoContent key={i} color={DARK_BLUE} />
       ))}
       <Button text={`Add Content (${contentCount})`} onPress={addContent} />
-      {contentCount > 1 && <Button text="Remove Content" onPress={removeContent} />}
+      {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
       <Spacer />
       <Button text="Present Large" onPress={() => resize(2)} />
       <Button text="Present 80%" onPress={() => resize(1)} />
