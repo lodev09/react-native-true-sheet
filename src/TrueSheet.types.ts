@@ -147,6 +147,10 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * The sheet corner radius.
    *
+   * - `undefined` (not provided): Uses system default corner radius
+   * - `0`: Sharp corners (no rounding)
+   * - `> 0`: Custom corner radius value
+   *
    * @platform android
    * @platform ios 15+
    */

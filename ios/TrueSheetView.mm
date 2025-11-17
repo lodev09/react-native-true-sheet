@@ -238,7 +238,10 @@ using namespace facebook::react;
 
   // Update corner radius
   if (oldViewProps.cornerRadius != newViewProps.cornerRadius) {
-    if (newViewProps.cornerRadius != 0.0) {
+    // -1 = use system default (nil), 0 = sharp corners, >0 = custom value
+    if (newViewProps.cornerRadius < 0) {
+      _controller.cornerRadius = nil;
+    } else {
       _controller.cornerRadius = @(newViewProps.cornerRadius);
     }
   }

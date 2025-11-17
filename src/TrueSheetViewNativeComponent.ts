@@ -19,7 +19,7 @@ export interface NativeProps extends ViewProps {
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>
   background?: WithDefault<Int32, 0>
-  cornerRadius?: WithDefault<Double, 0>
+  cornerRadius?: WithDefault<Double, -1>
   contentHeight?: WithDefault<Double, 0>
   footerHeight?: WithDefault<Double, 0>
   initialIndex?: WithDefault<Int32, -1>

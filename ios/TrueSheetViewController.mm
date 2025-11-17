@@ -338,7 +338,10 @@
   sheet.delegate = self;
   sheet.prefersEdgeAttachedInCompactHeight = YES;
   sheet.prefersGrabberVisible = self.grabber;
-  sheet.preferredCornerRadius = self.cornerRadius ? [self.cornerRadius floatValue] : 0;
+  // Only set preferredCornerRadius if explicitly provided, otherwise use system default
+  if (self.cornerRadius) {
+    sheet.preferredCornerRadius = [self.cornerRadius floatValue];
+  }
   sheet.selectedDetentIdentifier = [self detentIdentifierForIndex:index];
 
   if (completion)
