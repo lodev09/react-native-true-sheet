@@ -4,7 +4,13 @@ import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native'
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
 export interface DetentInfo {
+  /**
+   * The index position from the provided `detents`.
+   */
   index: number
+  /**
+   * The resolved height value of the detent.
+   */
   value: number
 }
 

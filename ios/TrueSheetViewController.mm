@@ -45,6 +45,10 @@
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+- (UIView *)presentedView {
+  return self.sheetPresentationController.presentedView;
+}
+
 - (void)viewDidLoad {
   [super viewDidLoad];
 
@@ -69,11 +73,14 @@
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+  
+  UIView *presentedView = self.presentedView;
+  NSLog(@"%f", presentedView.frame.origin.y);
 
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
-  if (_lastViewWidth != self.view.frame.size.width) {
-    _lastViewWidth = self.view.frame.size.width;
+  if (_lastViewWidth != presentedView.frame.size.width) {
+    _lastViewWidth = presentedView.frame.size.width;
 
     // Recalculate detents with new width
     [self setupDetents];
@@ -300,8 +307,7 @@
 }
 
 - (void)observeDrag {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
-  UIView *presentedView = sheet.presentedView;
+  UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
 
