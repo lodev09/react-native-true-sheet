@@ -202,11 +202,11 @@ const App = () => {
   }
 
   const handleOnDidPresent = (e: DidPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, value: 420 }
+    console.log(e.nativeEvent) // { index: 0, value: 420, position: 123.5 }
   }
 
   const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent) // { index: 1, value: 680 }
+    console.log(e.nativeEvent) // { index: 1, value: 680, position: 234.5 }
   }
 
   return (
