@@ -13,6 +13,7 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
+#import "events/TrueSheetEvents.h"
 #import "utils/LayoutUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -71,11 +72,7 @@ using namespace facebook::react;
   }
 
   // Emit onMount event once
-  if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-    TrueSheetViewEventEmitter::OnMount event{};
-    emitter->onMount(event);
-  }
+  [TrueSheetEvents emitOnMount:_eventEmitter];
 
   if (_containerView != nil) {
     // Measure container's content height for "auto" detent sizing
@@ -168,19 +165,14 @@ using namespace facebook::react;
                                         animated:animated
                                       completion:^{
                                         // Emit onDidPresent event after presenting
-                                        if (self->_eventEmitter) {
-                                          auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(
-                                            self->_eventEmitter);
-                                          NSDictionary *detentInfo = self->_controller.currentDetentInfo;
-                                          CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
-                                          CGFloat position = self->_controller.position;
+                                        NSDictionary *detentInfo = self->_controller.currentDetentInfo;
+                                        CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
+                                        CGFloat position = self->_controller.position;
 
-                                          TrueSheetViewEventEmitter::OnDidPresent event;
-                                          event.index = static_cast<int>(index);
-                                          event.value = static_cast<double>(detentValue);
-                                          event.position = static_cast<double>(position);
-                                          emitter->onDidPresent(event);
-                                        }
+                                        [TrueSheetEvents emitOnDidPresent:self->_eventEmitter
+                                                                    index:index
+                                                                    value:detentValue
+                                                                 position:position];
 
                                         // Call completion handler
                                         if (completion) {
@@ -364,46 +356,26 @@ using namespace facebook::react;
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillAppear {
-  if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-    TrueSheetViewEventEmitter::OnWillPresent event{};
-    emitter->onWillPresent(event);
-  }
+  [TrueSheetEvents emitOnWillPresent:_eventEmitter];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position {
-  if (!_eventEmitter)
-    return;
-
   NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
-  auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
 
   switch (state) {
-    case UIGestureRecognizerStateBegan: {
-      TrueSheetViewEventEmitter::OnDragBegin beginEvent;
-      beginEvent.index = static_cast<int>(index);
-      beginEvent.value = static_cast<double>(height);
-      beginEvent.position = static_cast<double>(position);
-      emitter->onDragBegin(beginEvent);
+    case UIGestureRecognizerStateBegan:
+      [TrueSheetEvents emitOnDragBegin:_eventEmitter index:index value:height position:position];
       break;
-    }
-    case UIGestureRecognizerStateChanged: {
-      TrueSheetViewEventEmitter::OnDragChange changeEvent;
-      changeEvent.index = static_cast<int>(index);
-      changeEvent.value = static_cast<double>(height);
-      changeEvent.position = static_cast<double>(position);
-      emitter->onDragChange(changeEvent);
+
+    case UIGestureRecognizerStateChanged:
+      [TrueSheetEvents emitOnDragChange:_eventEmitter index:index value:height position:position];
       break;
-    }
+
     case UIGestureRecognizerStateEnded:
-    case UIGestureRecognizerStateCancelled: {
-      TrueSheetViewEventEmitter::OnDragEnd endEvent;
-      endEvent.index = static_cast<int>(index);
-      endEvent.value = static_cast<double>(height);
-      endEvent.position = static_cast<double>(position);
-      emitter->onDragEnd(endEvent);
+    case UIGestureRecognizerStateCancelled:
+      [TrueSheetEvents emitOnDragEnd:_eventEmitter index:index value:height position:position];
       break;
-    }
+
     default:
       break;
   }
@@ -413,40 +385,21 @@ using namespace facebook::react;
   _isPresented = NO;
   _activeIndex = nil;
 
-  if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-    TrueSheetViewEventEmitter::OnDismiss event{};
-    emitter->onDismiss(event);
-  }
+  [TrueSheetEvents emitOnDismiss:_eventEmitter];
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position {
   if (!_activeIndex || [_activeIndex integerValue] != index) {
     _activeIndex = @(index);
 
-    if (_eventEmitter) {
-      auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
-      TrueSheetViewEventEmitter::OnDetentChange event;
-      event.index = static_cast<int>(index);
-      event.value = static_cast<double>(value);
-      event.position = static_cast<double>(position);
-      emitter->onDetentChange(event);
-    }
+    [TrueSheetEvents emitOnDetentChange:_eventEmitter index:index value:value position:position];
   }
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)height position:(CGFloat)position {
-  if (!_eventEmitter)
-    return;
-
   NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
-  auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(_eventEmitter);
 
-  TrueSheetViewEventEmitter::OnPositionChange event;
-  event.index = static_cast<int>(index);
-  event.value = static_cast<double>(height);
-  event.position = static_cast<double>(position);
-  emitter->onPositionChange(event);
+  [TrueSheetEvents emitOnPositionChange:_eventEmitter index:index value:height position:position];
 }
 
 #pragma mark - TrueSheetContainerViewDelegate
