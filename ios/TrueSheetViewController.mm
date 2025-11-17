@@ -77,7 +77,7 @@
   [super viewDidLayoutSubviews];
   
   UIView *presentedView = self.presentedView;
-//  NSLog(@"%f", presentedView.frame.origin.y);
+  NSLog(@"layout: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
 
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
@@ -102,6 +102,10 @@
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
     [self.delegate viewControllerDidDrag:gesture.state height:height position:sheetY];
+  }
+  
+  if (gesture.state == UIGestureRecognizerStateChanged) {
+    NSLog(@"drag: %f %f", presentedView.frame.origin.y, presentedView.frame.size.height);
   }
 }
 
@@ -190,14 +194,12 @@
 
   // Subtract bottomInset from content height to account for safe area
   // This prevents iOS from adding extra bottom insets automatically
-  CGFloat adjustedContentHeight = [self.contentHeight floatValue] - _bottomInset;
-  CGFloat totalHeight = adjustedContentHeight;
+  CGFloat totalHeight = [self.contentHeight floatValue] - _bottomInset;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
     UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
                                                                  withHeight:totalHeight
-                                                              withMaxHeight:self.maxHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
   }
@@ -207,41 +209,48 @@
   }];
 }
 
+- (UISheetPresentationControllerDetent *)detentForFraction:(CGFloat)fraction
+                                             withHeight:(CGFloat)height
+                                                atIndex:(NSInteger)index {
+  // Fraction should only be > 0 and <= 1
+  CGFloat resolvedFraction = fraction <= 0 ? 0.1 : MIN(1, fraction);
+  NSString *detentId = [NSString stringWithFormat:@"custom-%f", resolvedFraction];
+  
+  if (@available(iOS 16.0, *)) {
+    return [UISheetPresentationControllerDetent
+      customDetentWithIdentifier:[self identifierFromString:detentId]
+                        resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                          CGFloat maxDetent = context.maximumDetentValue;
+                          CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
+                          CGFloat value = MIN(resolvedFraction * maxDetent, maxValue);
+                          self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
+                          return value;
+                        }];
+  } else {
+    _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
+      @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
+    return [UISheetPresentationControllerDetent mediumDetent];
+  }
+}
+
 - (UISheetPresentationControllerDetent *)detentForValue:(id)detent
                                              withHeight:(CGFloat)height
-                                          withMaxHeight:(NSNumber *)maxHeight
                                                 atIndex:(NSInteger)index {
-  NSString *detentId = [NSString stringWithFormat:@"custom-%@", detent];
 
   if ([detent isKindOfClass:[NSNumber class]]) {
     CGFloat fraction = [detent floatValue];
-    if (@available(iOS 16.0, *)) {
-      return [UISheetPresentationControllerDetent
-        customDetentWithIdentifier:[self identifierFromString:detentId]
-                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetent = context.maximumDetentValue;
-                            CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                            CGFloat value = MIN(fraction * maxDetent, maxValue);
-                            self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
-                            return value;
-                          }];
-    } else {
-      _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
-        @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
-      return [UISheetPresentationControllerDetent mediumDetent];
-    }
-  }
-
-  if ([detent isKindOfClass:[NSString class]]) {
+    return [self detentForFraction:fraction withHeight:height atIndex:index];
+  } else if ([detent isKindOfClass:[NSString class]]) {
     NSString *stringDetent = (NSString *)detent;
 
     if ([stringDetent isEqualToString:@"auto"]) {
       if (@available(iOS 16.0, *)) {
+        NSString *detentId = @"custom-auto";
         return [UISheetPresentationControllerDetent
           customDetentWithIdentifier:[self identifierFromString:detentId]
                             resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                               CGFloat maxDetent = context.maximumDetentValue;
-                              CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
+                              CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
                               CGFloat value = MIN(height, maxValue);
                               self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                               return value;
@@ -250,19 +259,7 @@
     } else {
       // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
       CGFloat fraction = [stringDetent floatValue];
-      if (fraction > 0.0) {
-        if (@available(iOS 16.0, *)) {
-          return [UISheetPresentationControllerDetent
-            customDetentWithIdentifier:[self identifierFromString:detentId]
-                              resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                                CGFloat maxDetent = context.maximumDetentValue;
-                                CGFloat maxValue = maxHeight ? MIN(maxDetent, [maxHeight floatValue]) : maxDetent;
-                                CGFloat value = MIN(fraction * maxDetent, maxValue);
-                                self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
-                                return value;
-                              }];
-        }
-      }
+      return [self detentForFraction:fraction withHeight:height atIndex:index];
     }
   }
 

@@ -15,7 +15,9 @@ export const Footer = () => {
 const styles = StyleSheet.create({
   footer: {
     height: FOOTER_HEIGHT,
-    backgroundColor: DARK_GRAY,
+    // backgroundColor: DARK_GRAY,
+    borderWidth: 2,
+    borderColor: 'red',
     alignItems: 'center',
     justifyContent: 'center',
   },

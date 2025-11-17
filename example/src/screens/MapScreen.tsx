@@ -84,7 +84,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <AnimatedTrueSheet
-        detents={[0.25, 0.5, 1]}
+        detents={[0.25, 0.8, 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
@@ -94,10 +94,16 @@ export const MapScreen = () => {
         dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onDragChange={dragChangeHandler}
-        onDidPresent={(e) => animateButton(e.nativeEvent)}
-        onDetentChange={(e) => animateButton(e.nativeEvent)}
-        onDragEnd={(e) => animateButton(e.nativeEvent)}
+        // onDragChange={dragChangeHandler}
+        onDidPresent={(e) => {
+          // console.log('present:', e.nativeEvent.value);
+          animateButton(e.nativeEvent)
+        }}
+        onDetentChange={(e) => {
+          // console.log('detent:', e.nativeEvent.value);
+          animateButton(e.nativeEvent)
+        }}
+        // onDragEnd={(e) => animateButton(e.nativeEvent)}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)

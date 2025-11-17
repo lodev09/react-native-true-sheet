@@ -307,6 +307,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   containerView: {
+    backgroundColor: 'blue',
     position: 'absolute',
     left: 0,
     right: 0,
