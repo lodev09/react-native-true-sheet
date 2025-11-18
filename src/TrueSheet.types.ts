@@ -3,7 +3,7 @@ import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native'
 
 import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
 
-export interface DetentInfo {
+export interface DetentInfoEventPayload {
   /**
    * The index position from the provided `detents`.
    */
@@ -14,17 +14,23 @@ export interface DetentInfo {
   position: number
 }
 
-export type PositionChangeEventPayload = DetentInfo & { transitioning: boolean }
+export interface PositionChangeEventPayload extends DetentInfoEventPayload {
+  /**
+   * Whether the sheet is currently transitioning (presenting or dismissing).
+   * When true, position updates are animated on iOS.
+   */
+  transitioning: boolean
+}
 
 export type MountEvent = NativeSyntheticEvent<null>
-export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
-export type WillPresentEvent = NativeSyntheticEvent<DetentInfo>
-export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
+export type DetentChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>
+export type WillPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>
+export type DidPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>
 export type WillDismissEvent = NativeSyntheticEvent<null>
 export type DidDismissEvent = NativeSyntheticEvent<null>
-export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
-export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
-export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
+export type DragBeginEvent = NativeSyntheticEvent<DetentInfoEventPayload>
+export type DragChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>
+export type DragEndEvent = NativeSyntheticEvent<DetentInfoEventPayload>
 export type PositionChangeEvent = NativeSyntheticEvent<PositionChangeEventPayload>
 
 /**

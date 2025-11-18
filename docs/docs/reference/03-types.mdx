@@ -63,9 +63,9 @@ Blur tint that is mapped into native values in IOS.
 | `"systemThickMaterialDark"` |
 | `"systemChromeMaterialDark"` |
 
-## `DetentInfo`
+## `DetentInfoEventPayload`
 
-`Object` that comes with some events.
+`Object` that comes with most sheet events.
 
 ```tsx
 {
@@ -78,3 +78,21 @@ Blur tint that is mapped into native values in IOS.
 | - | - | - |
 | index | `number` | The detent index from the provided detents. See `detents` prop. |
 | position | `number` | The Y position of the sheet relative to the screen. |
+
+## `PositionChangeEventPayload`
+
+`Object` that comes with the `onPositionChange` event. Extends [`DetentInfoEventPayload`](#detentinfoeventpayload).
+
+```tsx
+{
+  index: 1,
+  position: 123.5,
+  transitioning: false
+}
+```
+
+| Property | Type | Description |
+| - | - | - |
+| index | `number` | The detent index from the provided detents. See `detents` prop. |
+| position | `number` | The Y position of the sheet relative to the screen. |
+| transitioning | `boolean` | Whether the sheet is currently transitioning (presenting or dismissing). When `true`, position updates are animated on iOS. |

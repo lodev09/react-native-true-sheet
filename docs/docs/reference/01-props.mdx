@@ -236,13 +236,13 @@ This is called when the sheet has been mounted and is ready to present.
 
 ### `onWillPresent`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the sheet is about to be presented.
 
 ### `onDidPresent`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the sheet has been presented, providing the detent `index` and `position`.
 
@@ -256,33 +256,35 @@ This is called when the sheet has been dismissed.
 
 ### `onDetentChange`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the detent of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
 
 ### `onDragBegin`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the sheet has began dragging.
 
 ### `onDragChange`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the sheet is being dragged.
 
 ### `onDragEnd`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
 
 This is called when the sheet dragging has ended.
 
 ### `onPositionChange`
 
-Comes with [`DetentInfo`](/reference/types#detentinfo).
+Comes with [`PositionChangeEventPayload`](/reference/types#positionchangeeventpayload).
 
-This is called continuously when the sheet's position changes during drag operations. This event fires more frequently than `onDragChange` and provides real-time position updates.
+This is called continuously when the sheet's position changes during drag operations or transitions. This event fires more frequently than `onDragChange` and provides real-time position updates.
+
+The `transitioning` property indicates whether the sheet is currently presenting or dismissing. On iOS, when `transitioning` is `true`, the position should be animated (ReanimatedTrueSheet handles this automatically).
 
 :::tip
 Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.

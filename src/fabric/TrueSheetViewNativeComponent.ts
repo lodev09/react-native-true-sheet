@@ -7,7 +7,7 @@ import type {
 } from 'react-native/Libraries/Types/CodegenTypes'
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent'
 
-export interface DetentInfo {
+export interface DetentInfoEventPayload {
   index: Int32
   position: Double
 }
@@ -44,14 +44,14 @@ export interface NativeProps extends ViewProps {
 
   // Event handlers
   onMount?: DirectEventHandler<null>
-  onWillPresent?: DirectEventHandler<DetentInfo>
-  onDidPresent?: DirectEventHandler<DetentInfo>
+  onWillPresent?: DirectEventHandler<DetentInfoEventPayload>
+  onDidPresent?: DirectEventHandler<DetentInfoEventPayload>
   onWillDismiss?: DirectEventHandler<null>
   onDidDismiss?: DirectEventHandler<null>
-  onDetentChange?: DirectEventHandler<DetentInfo>
-  onDragBegin?: DirectEventHandler<DetentInfo>
-  onDragChange?: DirectEventHandler<DetentInfo>
-  onDragEnd?: DirectEventHandler<DetentInfo>
+  onDetentChange?: DirectEventHandler<DetentInfoEventPayload>
+  onDragBegin?: DirectEventHandler<DetentInfoEventPayload>
+  onDragChange?: DirectEventHandler<DetentInfoEventPayload>
+  onDragEnd?: DirectEventHandler<DetentInfoEventPayload>
   onPositionChange?: DirectEventHandler<PositionChangeEventPayload>
 }
 
