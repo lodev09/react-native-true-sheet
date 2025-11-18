@@ -19,7 +19,7 @@ import type {
   PositionChangeEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
-import TrueSheetContainerViewNativeComponent from './TrueSheetContainerViewNativeComponent'
+import TrueSheetContentViewNativeComponent from './TrueSheetContentViewNativeComponent'
 import TrueSheetFooterViewNativeComponent from './TrueSheetFooterViewNativeComponent'
 
 import TrueSheetModule from './specs/NativeTrueSheetModule'
@@ -291,11 +291,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
       >
-        <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
+        <TrueSheetContentViewNativeComponent style={styles.containerView} collapsable={false}>
           <View style={style} {...rest}>
             {children}
           </View>
-        </TrueSheetContainerViewNativeComponent>
+        </TrueSheetContentViewNativeComponent>
         {footer && (
           <TrueSheetFooterViewNativeComponent collapsable={false}>
             {isValidElement(footer) ? footer : createElement(footer)}

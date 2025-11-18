@@ -8,7 +8,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "TrueSheetContainerView.h"
+#import "TrueSheetContentView.h"
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -19,7 +19,7 @@
 
 using namespace facebook::react;
 
-@implementation TrueSheetContainerView {
+@implementation TrueSheetContentView {
   RCTSurfaceTouchHandler *_touchHandler;
   UIView *_pinnedScrollView;
   CGSize _lastSize;
@@ -27,12 +27,12 @@ using namespace facebook::react;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<TrueSheetContainerViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<TrueSheetContentViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
-    static const auto defaultProps = std::make_shared<const TrueSheetContainerViewProps>();
+    static const auto defaultProps = std::make_shared<const TrueSheetContentViewProps>();
     _props = defaultProps;
 
     // Create touch handler for React Native touch events

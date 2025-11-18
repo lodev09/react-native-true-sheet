@@ -6,6 +6,6 @@ export interface NativeProps extends ViewProps {
 }
 
 export default codegenNativeComponent<NativeProps>(
-  'TrueSheetContainerView',
+  'TrueSheetContentView',
   {}
 ) as HostComponent<NativeProps>

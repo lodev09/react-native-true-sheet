@@ -9,7 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetView.h"
-#import "TrueSheetContainerView.h"
+#import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
@@ -37,12 +37,12 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContainerViewDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContentViewDelegate>
 @end
 
 @implementation TrueSheetView {
   TrueSheetViewController *_controller;
-  TrueSheetContainerView *_containerView;
+  TrueSheetContentView *_containerView;
   TrueSheetFooterView *_footerView;
 
   BOOL _isPresented;
@@ -309,13 +309,13 @@ using namespace facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   // Check if it's a container or footer view
-  if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
+  if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
     if (_containerView != nil) {
       NSLog(@"TrueSheet: Sheet can only have one container component.");
       return;
     }
 
-    _containerView = (TrueSheetContainerView *)childComponentView;
+    _containerView = (TrueSheetContentView *)childComponentView;
 
     // Set delegate to listen for size changes
     _containerView.delegate = self;
@@ -338,7 +338,7 @@ using namespace facebook::react;
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
+  if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
     [_containerView cleanup];
     _containerView = nil;
   }
@@ -423,7 +423,7 @@ using namespace facebook::react;
   [OnPositionChangeEvent emit:_eventEmitter index:index value:height position:position];
 }
 
-#pragma mark - TrueSheetContainerViewDelegate
+#pragma mark - TrueSheetContentViewDelegate
 
 - (void)containerViewDidChangeSize:(CGSize)newSize {
   // Update content height when container size changes
