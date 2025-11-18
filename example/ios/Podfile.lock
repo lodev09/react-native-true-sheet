@@ -47,7 +47,6 @@ PODS:
     - React-RCTText (= 0.82.1)
     - React-RCTVibration (= 0.82.1)
   - React-callinvoker (0.82.1)
-  - React-Codegen (0.1.0)
   - React-Core (0.82.1):
     - boost
     - DoubleConversion
@@ -2658,7 +2657,6 @@ PODS:
     - RCT-Folly/Fabric
     - RCTRequired
     - RCTTypeSafety
-    - React-Codegen
     - React-Core
     - React-debug
     - React-Fabric
@@ -2854,7 +2852,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - React-Codegen
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -3034,7 +3031,6 @@ SPEC CHECKSUMS:
   RCTTypeSafety: c693294e3993056955c3010eb1ebc574f1fcded6
   React: aeece948ccf155182ea86a2395786ed31cf21c61
   React-callinvoker: 05ad789505922d68c06cde1c8060e734df9fe182
-  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 956ac86b4d9b0c0fd9a14b9cc533aa297bb501c0
   React-CoreModules: 3a8d39778cf9eeca40e419814e875da1a8e29855
   React-cxxreact: db275765e1eb08f038599fb44114cf57ee0d18cd
@@ -3099,7 +3095,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: e1cf8ef3f11045536eed6bd4f132b003ef5f9a5f
   RNReanimated: ac06da53579693ab451941ef89f5a55afeab0dd9
   RNScreens: d821082c6dd1cb397cc0c98b026eeafaa68be479
-  RNTrueSheet: 1141085626751912041ee11d9546c5d0833a7914
+  RNTrueSheet: b6a4f37f66d34d55f4ae0cc6f62ca8cae7c54209
   RNWorklets: ab618bf7d1c7fd2cb793b9f0f39c3e29274b3ebf
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 689c8e04277f3ad631e60fe2a08e41d411daf8eb

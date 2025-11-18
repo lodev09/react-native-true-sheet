@@ -10,25 +10,11 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "13.4" }
+  s.platforms    = { :ios => min_ios_version_supported }
   s.source       = { :git => "https://github.com/lodev09/react-native-true-sheet.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm}"
-  
-  # Require new architecture
-  s.pod_target_xcconfig = {
-    "DEFINES_MODULE" => "YES",
-    "SWIFT_OBJC_INTERFACE_HEADER_NAME" => "RNTrueSheet-Swift.h"
-  }
+  s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
+  s.private_header_files = "ios/**/*.h"
 
   install_modules_dependencies(s)
-  
-  # Configure Codegen
-  s.dependency "React-Core"
-  s.dependency "React-RCTFabric"
-  s.dependency "React-Codegen"
-  s.dependency "RCT-Folly"
-  s.dependency "RCTRequired"
-  s.dependency "RCTTypeSafety"
-  s.dependency "ReactCommon/turbomodule/core"
 end
