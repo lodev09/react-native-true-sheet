@@ -16,12 +16,12 @@ export interface DetentInfo {
 
 export type PositionChangeEventPayload = DetentInfo & { transitioning: boolean }
 
-export type MountEvent = NativeSyntheticEvent<{}>
+export type MountEvent = NativeSyntheticEvent<null>
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type WillPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
-export type WillDismissEvent = NativeSyntheticEvent<{}>
-export type DidDismissEvent = NativeSyntheticEvent<{}>
+export type WillDismissEvent = NativeSyntheticEvent<null>
+export type DidDismissEvent = NativeSyntheticEvent<null>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type DragEndEvent = NativeSyntheticEvent<DetentInfo>

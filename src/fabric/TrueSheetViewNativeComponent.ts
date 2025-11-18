@@ -12,7 +12,11 @@ export interface DetentInfo {
   position: Double
 }
 
-type PositionChangeEventPayload = DetentInfo & { transitioning: boolean }
+export interface PositionChangeEventPayload {
+  index: Int32
+  position: Double
+  transitioning: boolean
+}
 
 export interface NativeProps extends ViewProps {
   // Array properties
@@ -39,11 +43,11 @@ export interface NativeProps extends ViewProps {
   edgeToEdge?: WithDefault<boolean, false>
 
   // Event handlers
-  onMount?: DirectEventHandler<{}>
+  onMount?: DirectEventHandler<null>
   onWillPresent?: DirectEventHandler<DetentInfo>
   onDidPresent?: DirectEventHandler<DetentInfo>
-  onWillDismiss?: DirectEventHandler<{}>
-  onDidDismiss?: DirectEventHandler<{}>
+  onWillDismiss?: DirectEventHandler<null>
+  onDidDismiss?: DirectEventHandler<null>
   onDetentChange?: DirectEventHandler<DetentInfo>
   onDragBegin?: DirectEventHandler<DetentInfo>
   onDragChange?: DirectEventHandler<DetentInfo>
