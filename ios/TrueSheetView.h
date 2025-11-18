@@ -33,11 +33,10 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 - (void)notifyDidPresent;
 - (void)notifyDidDrag:(UIGestureRecognizerState)state
                 index:(NSInteger)index
-               height:(CGFloat)height
              position:(CGFloat)position;
 - (void)notifyDidDismiss;
-- (void)notifyDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position;
-- (void)notifyDidChangePosition:(NSInteger)index height:(CGFloat)height position:(CGFloat)position;
+- (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position;
+- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position;
 
 @end
 
