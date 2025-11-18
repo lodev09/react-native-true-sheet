@@ -17,6 +17,9 @@ import type {
   WillPresentEvent,
   DidPresentEvent,
   PositionChangeEvent,
+  DidDismissEvent,
+  WillDismissEvent,
+  MountEvent,
 } from './TrueSheet.types'
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent'
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent'
@@ -202,19 +205,19 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDidPresent?.(event)
   }
 
-  private onWillDismiss(): void {
-    this.props.onWillDismiss?.()
+  private onWillDismiss(event: WillDismissEvent): void {
+    this.props.onWillDismiss?.(event)
   }
 
-  private onDidDismiss(): void {
+  private onDidDismiss(event: DidDismissEvent): void {
     this.setState({ shouldRenderNativeView: false })
-    this.props.onDidDismiss?.()
+    this.props.onDidDismiss?.(event)
   }
 
-  private onMount(): void {
+  private onMount(event: MountEvent): void {
     this.mountPromiseResolve?.()
     this.mountPromiseResolve = undefined
-    this.props.onMount?.()
+    this.props.onMount?.(event)
   }
 
   private onDragBegin(event: DragBeginEvent): void {

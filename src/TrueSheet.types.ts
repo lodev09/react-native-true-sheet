@@ -14,11 +14,12 @@ export interface DetentInfo {
   position: number
 }
 
+export type MountEvent = NativeSyntheticEvent<{}>
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type WillPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
-export type WillDismissEvent = NativeSyntheticEvent<null>
-export type DidDismissEvent = NativeSyntheticEvent<null>
+export type WillDismissEvent = NativeSyntheticEvent<{}>
+export type DidDismissEvent = NativeSyntheticEvent<{}>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
@@ -218,7 +219,7 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * This is called when the sheet is ready to present.
    */
-  onMount?: () => void
+  onMount?: (event: MountEvent) => void
 
   /**
    * Called when the Sheet is about to be presented.
@@ -234,12 +235,12 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * Called when the Sheet is about to be dismissed
    */
-  onWillDismiss?: () => void
+  onWillDismiss?: (event: WillDismissEvent) => void
 
   /**
    * Called when the Sheet has been dismissed
    */
-  onDidDismiss?: () => void
+  onDidDismiss?: (event: DidDismissEvent) => void
 
   /**
    * Called when the detent of the sheet has changed.

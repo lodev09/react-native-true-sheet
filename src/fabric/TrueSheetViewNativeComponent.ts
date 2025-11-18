@@ -37,11 +37,11 @@ export interface NativeProps extends ViewProps {
   edgeToEdge?: WithDefault<boolean, false>
 
   // Event handlers
-  onMount?: DirectEventHandler<null>
+  onMount?: DirectEventHandler<{}>
   onWillPresent?: DirectEventHandler<DetentInfo>
   onDidPresent?: DirectEventHandler<DetentInfo>
-  onWillDismiss?: DirectEventHandler<null>
-  onDidDismiss?: DirectEventHandler<null>
+  onWillDismiss?: DirectEventHandler<{}>
+  onDidDismiss?: DirectEventHandler<{}>
   onDetentChange?: DirectEventHandler<DetentInfo>
   onDragBegin?: DirectEventHandler<DetentInfo>
   onDragChange?: DirectEventHandler<DetentInfo>
