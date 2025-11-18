@@ -9,6 +9,8 @@
 #import "TrueSheetViewController.h"
 #import "utils/WindowUtil.h"
 
+#import <React/RCTLog.h>
+
 @interface TrueSheetViewController ()
 
 @end
@@ -232,12 +234,38 @@
   sheet.detents = detents;
 }
 
-- (UISheetPresentationControllerDetent *)detentForFraction:(CGFloat)fraction
-                                                withHeight:(CGFloat)height
-                                                   atIndex:(NSInteger)index {
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent withHeight:(CGFloat)height atIndex:(NSInteger)index {
+  if (![detent isKindOfClass:[NSNumber class]]) {
+    return [UISheetPresentationControllerDetent mediumDetent];
+  }
+
+  CGFloat value = [detent floatValue];
+
+  // -1 represents "auto"
+  if (value == -1) {
+    if (@available(iOS 16.0, *)) {
+      NSString *detentId = @"custom-auto";
+      return [UISheetPresentationControllerDetent
+        customDetentWithIdentifier:detentId
+                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                            CGFloat maxDetent = context.maximumDetentValue;
+                            CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
+                            CGFloat resolvedValue = MIN(height, maxValue);
+                            return resolvedValue;
+                          }];
+    } else {
+      return [UISheetPresentationControllerDetent mediumDetent];
+    }
+  }
+
+  // Handle fraction (0-1)
   // Fraction should only be > 0 and <= 1
-  CGFloat resolvedFraction = fraction <= 0 ? 0.1 : MIN(1, fraction);
-  NSString *detentId = [NSString stringWithFormat:@"custom-%f", resolvedFraction];
+  if (value <= 0 || value > 1) {
+    RCTLogError(@"TrueSheet: detent fraction (%f) must be between 0 and 1", value);
+    return [UISheetPresentationControllerDetent mediumDetent];
+  }
+
+  NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
 
   if (@available(iOS 16.0, *)) {
     return [UISheetPresentationControllerDetent
@@ -245,42 +273,12 @@
                         resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                           CGFloat maxDetent = context.maximumDetentValue;
                           CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
-                          CGFloat value = MIN(resolvedFraction * maxDetent, maxValue);
-                          return value;
+                          CGFloat resolvedValue = MIN(value * maxDetent, maxValue);
+                          return resolvedValue;
                         }];
   } else {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
-}
-
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent withHeight:(CGFloat)height atIndex:(NSInteger)index {
-  if ([detent isKindOfClass:[NSNumber class]]) {
-    CGFloat fraction = [detent floatValue];
-    return [self detentForFraction:fraction withHeight:height atIndex:index];
-  } else if ([detent isKindOfClass:[NSString class]]) {
-    NSString *stringDetent = (NSString *)detent;
-
-    if ([stringDetent isEqualToString:@"auto"]) {
-      if (@available(iOS 16.0, *)) {
-        NSString *detentId = @"custom-auto";
-        return [UISheetPresentationControllerDetent
-          customDetentWithIdentifier:detentId
-                            resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                              CGFloat maxDetent = context.maximumDetentValue;
-                              CGFloat maxValue =
-                                self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
-                              CGFloat value = MIN(height, maxValue);
-                              return value;
-                            }];
-      }
-    } else {
-      // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
-      CGFloat fraction = [stringDetent floatValue];
-      return [self detentForFraction:fraction withHeight:height atIndex:index];
-    }
-  }
-
-  return [UISheetPresentationControllerDetent mediumDetent];
 }
 
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index {
@@ -339,8 +337,18 @@
   // Find the index by matching the identifier in the detents array
   NSArray<UISheetPresentationControllerDetent *> *detents = sheet.detents;
   for (NSInteger i = 0; i < detents.count; i++) {
-    if ([detents[i].identifier isEqualToString:selectedIdentifier]) {
-      return i;
+    if (@available(iOS 16.0, *)) {
+      if ([detents[i].identifier isEqualToString:selectedIdentifier]) {
+        return i;
+      }
+    } else {
+      // For iOS 15, we only support system detents (medium/large)
+      // Return the index based on the selected identifier
+      if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierMedium]) {
+        return 0;
+      } else if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierLarge]) {
+        return detents.count - 1;
+      }
     }
   }
 

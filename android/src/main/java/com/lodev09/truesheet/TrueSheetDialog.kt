@@ -220,27 +220,31 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private fun getDetentHeight(detent: Any): Int {
     val height: Int =
       when (detent) {
-        is Double -> (detent * maxScreenHeight).toInt()
-
-        is Int -> (detent.toDouble() * maxScreenHeight).toInt()
-
-        is String -> {
-          when (detent) {
-            "auto" -> contentHeight + footerHeight
-
-            else -> {
-              // Try to parse as a numeric fraction (e.g., "0.5", "0.8")
-              val fraction = detent.toDoubleOrNull()
-              if (fraction != null) {
-                (fraction * maxScreenHeight).toInt()
-              } else {
-                (maxScreenHeight * 0.5).toInt()
-              }
+        is Double -> {
+          if (detent == -1.0) {
+            // -1 represents "auto"
+            contentHeight + footerHeight
+          } else {
+            if (detent <= 0.0 || detent > 1.0) {
+              throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
             }
+            (detent * maxScreenHeight).toInt()
           }
         }
 
-        else -> (maxScreenHeight * 0.5).toInt()
+        is Int -> {
+          if (detent == -1) {
+            // -1 represents "auto"
+            contentHeight + footerHeight
+          } else {
+            if (detent <= 0 || detent > 1) {
+              throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
+            }
+            (detent.toDouble() * maxScreenHeight).toInt()
+          }
+        }
+
+        else -> throw IllegalArgumentException("TrueSheet: invalid detent type ${detent::class.simpleName}")
       }
 
     return maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)

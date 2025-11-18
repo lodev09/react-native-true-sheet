@@ -10,7 +10,6 @@ import {
 import {
   TrueSheet,
   ReanimatedTrueSheet,
-  ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
@@ -30,7 +29,7 @@ import {
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
 
-const MapScreenContent = () => {
+export const MapScreen = () => {
   const sheetRef = useRef<TrueSheet>(null)
 
   const basicSheet = useRef<TrueSheet>(null)
@@ -141,14 +140,6 @@ const MapScreenContent = () => {
         <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
     </View>
-  )
-}
-
-export const MapScreen = () => {
-  return (
-    <ReanimatedTrueSheetProvider>
-      <MapScreenContent />
-    </ReanimatedTrueSheetProvider>
   )
 }
 

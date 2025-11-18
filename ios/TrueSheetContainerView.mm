@@ -178,11 +178,12 @@ using namespace facebook::react;
   // Get props from the sheet view
   const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_sheetView.props);
 
-  // Update detents
+  // Update detents - pass numbers directly (-1 represents "auto")
   NSMutableArray *detents = [NSMutableArray new];
   for (const auto &detent : props.detents) {
-    [detents addObject:RCTNSStringFromString(detent)];
+    [detents addObject:@(detent)];
   }
+
   _controller.detents = detents;
 
   // Update background color

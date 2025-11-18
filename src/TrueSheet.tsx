@@ -60,6 +60,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.nativeRef = createRef<NativeRef>()
 
+    this.validateDetents()
+
     this.state = {
       shouldRenderNativeView: props.initialIndex !== undefined && props.initialIndex >= 0,
     }
@@ -73,6 +75,40 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragChange = this.onDragChange.bind(this)
     this.onDragEnd = this.onDragEnd.bind(this)
     this.onPositionChange = this.onPositionChange.bind(this)
+  }
+
+  private validateDetents(): void {
+    const { detents, initialIndex } = this.props
+
+    // Warn if detents length exceeds 3
+    if (detents && detents.length > 3) {
+      console.warn(
+        `TrueSheet: detents array has ${detents.length} items but maximum is 3. Only the first 3 will be used.`
+      )
+    }
+
+    // Warn for invalid detent fractions
+    if (detents) {
+      detents.forEach((detent, index) => {
+        if (detent !== 'auto' && typeof detent === 'number') {
+          if (detent <= 0 || detent > 1) {
+            console.warn(
+              `TrueSheet: detent at index ${index} (${detent}) should be between 0 and 1. It will be clamped.`
+            )
+          }
+        }
+      })
+    }
+
+    // Validate initialIndex bounds
+    if (initialIndex !== undefined && initialIndex >= 0) {
+      const detentsLength = Math.min(detents?.length ?? 2, 3) // Max 3 detents
+      if (initialIndex >= detentsLength) {
+        throw new Error(
+          `TrueSheet: initialIndex (${initialIndex}) is out of bounds. detents array has ${detentsLength} item(s)`
+        )
+      }
+    }
   }
 
   private static getInstance(name: string) {
@@ -193,10 +229,17 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   /**
-   * Present the sheet. Optionally accepts a detent `index`.
-   * See `detents` prop
+   * Present the Sheet by `index` (Promise-based)
+   * @param index - Detent index (default: 0)
    */
   public async present(index: number = 0): Promise<void> {
+    const detentsLength = Math.min(this.props.detents?.length ?? 2, 3) // Max 3 detents
+    if (index < 0 || index >= detentsLength) {
+      throw new Error(
+        `TrueSheet: present index (${index}) is out of bounds. detents array has ${detentsLength} item(s)`
+      )
+    }
+
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
         this.mountPromiseResolve = resolve
@@ -222,17 +265,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   componentDidMount(): void {
-    if (this.props.detents && this.props.detents.length > 3) {
-      console.warn(
-        'TrueSheet only supports a maximum of 3 detents; collapsed, half-expanded and expanded. Check your `detents` prop.'
-      )
-    }
-
     this.registerInstance()
   }
 
-  componentDidUpdate(): void {
+  componentDidUpdate(prevProps: TrueSheetProps): void {
     this.registerInstance()
+
+    // Validate when detents prop changes
+    if (prevProps.detents !== this.props.detents) {
+      this.validateDetents()
+    }
   }
 
   componentWillUnmount(): void {
@@ -258,11 +300,22 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       ...rest
     } = this.props
 
+    // Trim to max 3 detents and clamp fractions
+    const resolvedDetents = detents.slice(0, 3).map((detent) => {
+      if (detent === 'auto') return -1
+
+      // Default to 0.1 if exactly zero
+      if (detent === 0) return 0.1
+
+      // Clamp to maximum of 1
+      return Math.min(1, detent)
+    })
+
     return (
       <TrueSheetViewNativeComponent
         ref={this.nativeRef}
         style={styles.nativeSheet}
-        detents={detents.map(String)}
+        detents={resolvedDetents}
         blurTint={blurTint}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}

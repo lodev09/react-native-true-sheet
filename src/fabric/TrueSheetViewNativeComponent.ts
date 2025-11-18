@@ -14,7 +14,7 @@ export interface DetentInfo {
 
 export interface NativeProps extends ViewProps {
   // Array properties
-  detents?: ReadonlyArray<string>
+  detents?: ReadonlyArray<number>
 
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>

@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.graphics.Color
-import android.util.Log
 import android.view.WindowManager
 import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
@@ -118,17 +117,9 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   @ReactProp(name = "detents")
   fun setDetents(view: TrueSheetView, detents: ReadableArray) {
     val result = ArrayList<Any>()
-    for (i in 0 until minOf(detents.size(), 3)) {
-      when (detents.getType(i)) {
-        ReadableType.Number -> result.add(detents.getDouble(i))
-
-        // React Native < 0.77 used String for getString, but 0.77
-        // changed it to String?. Suppress the error for older APIs.
-        @Suppress("UNNECESSARY_SAFE_CALL")
-        ReadableType.String
-        -> detents.getString(i)?.let { result.add(it) }
-
-        else -> Log.d(TAG, "Invalid type")
+    for (i in 0 until detents.size()) {
+      if (detents.getType(i) == ReadableType.Number) {
+        result.add(detents.getDouble(i))
       }
     }
 
