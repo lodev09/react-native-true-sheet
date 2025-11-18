@@ -7,14 +7,18 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native'
-import { TrueSheet, type DetentInfo } from '@lodev09/react-native-true-sheet'
+import {
+  TrueSheet,
+  ReanimatedTrueSheet,
+  ReanimatedTrueSheetProvider,
+  useReanimatedTrueSheet,
+} from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 
 import { Button, DemoContent, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING, SPRING_CONFIG } from '../utils'
-import { usePositionChangeHandler } from '../hooks'
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils'
 import {
   BasicSheet,
   BlankSheet,
@@ -25,9 +29,8 @@ import {
 } from '../components/sheets'
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
-const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
 
-export const MapScreen = () => {
+const MapScreenContent = () => {
   const sheetRef = useRef<TrueSheet>(null)
 
   const basicSheet = useRef<TrueSheet>(null)
@@ -40,12 +43,7 @@ export const MapScreen = () => {
   const [contentCount, setContentCount] = useState(0)
 
   const insets = useSafeAreaInsets()
-  const buttonY = useSharedValue(0)
-
-  const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
-    'worklet'
-    buttonY.value = detentInfo.value
-  })
+  const { position } = useReanimatedTrueSheet()
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
@@ -56,7 +54,7 @@ export const MapScreen = () => {
     styles.floatingButton,
     { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
-      transform: [{ translateY: -buttonY.value }],
+      transform: [{ translateY: -position.value }],
     })),
   ]
 
@@ -89,7 +87,7 @@ export const MapScreen = () => {
         style={$floatingButtonStyles}
         onPress={() => sheetRef.current?.resize(1)}
       />
-      <AnimatedTrueSheet
+      <ReanimatedTrueSheet
         detents={[0.25, 'auto', 1]}
         ref={sheetRef}
         blurTint="dark"
@@ -100,11 +98,9 @@ export const MapScreen = () => {
         // dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onPositionChange={positionChangeHandler}
         onWillPresent={(e) => {
-          const { index, position, value } = e.nativeEvent
-          buttonY.value = withSpring(value, SPRING_CONFIG)
-          console.log(`Sheet will present to index: ${index} (${value}) at ${position}`)
+          const { index, position: yPosition, value } = e.nativeEvent
+          console.log(`Sheet will present to index: ${index} (${value}) at ${yPosition}`)
         }}
         onDidPresent={() => {
           console.log('Sheet is presented')
@@ -143,8 +139,16 @@ export const MapScreen = () => {
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
         <BlankSheet ref={blankSheet} />
-      </AnimatedTrueSheet>
+      </ReanimatedTrueSheet>
     </View>
+  )
+}
+
+export const MapScreen = () => {
+  return (
+    <ReanimatedTrueSheetProvider>
+      <MapScreenContent />
+    </ReanimatedTrueSheetProvider>
   )
 }
 

@@ -1,3 +1,6 @@
 export * from './TrueSheet'
 export * from './TrueSheet.types'
 export * from './TrueSheetGrabber'
+export * from './ReanimatedTrueSheetProvider'
+export * from './ReanimatedTrueSheet'
+export * from './hooks'

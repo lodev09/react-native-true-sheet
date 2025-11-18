@@ -1,8 +1,8 @@
 import { useEvent, useHandler } from 'react-native-reanimated'
-import type { PositionChangeEvent, DetentInfo } from '@lodev09/react-native-true-sheet'
-import type { DependencyList } from 'react'
+import type { PositionChangeEvent, DetentInfo } from '../TrueSheet.types'
+import type { DependencyList } from 'react-native-reanimated/lib/typescript/hook/commonTypes'
 
-type PositionChangeHandler = (detentInfo: DetentInfo, context: unknown) => void
+type PositionChangeHandler = (detentInfo: DetentInfo, context: Record<string, unknown>) => void
 
 export const usePositionChangeHandler = (
   handler: PositionChangeHandler,
@@ -12,7 +12,7 @@ export const usePositionChangeHandler = (
     onPositionChange: handler,
   }
 
-  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies as any)
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies)
 
   return useEvent<PositionChangeEvent>(
     (event) => {
