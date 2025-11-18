@@ -1,35 +1,35 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react'
-import { StyleSheet } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
+import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING } from '../../utils'
-import { DemoContent } from '../DemoContent'
-import { Input } from '../Input'
-import { Button } from '../Button'
-import { Footer } from '../Footer'
+import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING } from '../../utils';
+import { DemoContent } from '../DemoContent';
+import { Input } from '../Input';
+import { Button } from '../Button';
+import { Footer } from '../Footer';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
-  const sheetRef = useRef<TrueSheet>(null)
+  const sheetRef = useRef<TrueSheet>(null);
 
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleDismiss = () => {
-    setIsSubmitted(false)
-    console.log('Sheet prompt dismissed!')
-  }
+    setIsSubmitted(false);
+    console.log('Sheet prompt dismissed!');
+  };
 
   const dismiss = async () => {
-    await sheetRef.current?.dismiss()
-    console.log('Sheet prompt dismiss asynced')
-  }
+    await sheetRef.current?.dismiss();
+    console.log('Sheet prompt dismiss asynced');
+  };
 
   const submit = async () => {
-    setIsSubmitted(true)
-  }
+    setIsSubmitted(true);
+  };
 
-  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
+  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
 
   return (
     <TrueSheet
@@ -67,8 +67,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       <Button text="Submit" onPress={submit} />
       <Button text="Dismis" onPress={dismiss} />
     </TrueSheet>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   content: {
@@ -76,6 +76,6 @@ const styles = StyleSheet.create({
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
-})
+});
 
-PromptSheet.displayName = 'PromptSheet'
+PromptSheet.displayName = 'PromptSheet';

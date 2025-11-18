@@ -1,13 +1,13 @@
-import { forwardRef, type Ref } from 'react'
-import { StyleSheet, FlatList, View } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
+import { forwardRef, type Ref } from 'react';
+import { StyleSheet, FlatList, View } from 'react-native';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils'
-import { Input } from '../Input'
-import { DemoContent } from '../DemoContent'
-import { Spacer } from '../Spacer'
+import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils';
+import { Input } from '../Input';
+import { DemoContent } from '../DemoContent';
+import { Spacer } from '../Spacer';
 
-const TOP_INSET = INPUT_HEIGHT + SPACING * 2 + SPACING
+const TOP_INSET = INPUT_HEIGHT + SPACING * 2 + SPACING;
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
@@ -39,10 +39,10 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         renderItem={() => <DemoContent color={DARK_GRAY} />}
       />
     </TrueSheet>
-  )
-})
+  );
+});
 
-FlatListSheet.displayName = 'FlatListSheet'
+FlatListSheet.displayName = 'FlatListSheet';
 
 const styles = StyleSheet.create({
   content: {
@@ -58,4 +58,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING,
     zIndex: 1,
   },
-})
+});

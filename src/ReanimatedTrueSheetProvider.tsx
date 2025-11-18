@@ -1,18 +1,18 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { useWindowDimensions } from 'react-native'
-import { useSharedValue, type SharedValue } from 'react-native-reanimated'
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useWindowDimensions } from 'react-native';
+import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 export interface ReanimatedTrueSheetContextValue {
   /**
    * Shared value representing the current sheet position (Y offset from bottom)
    */
-  position: SharedValue<number>
+  position: SharedValue<number>;
 }
 
-const ReanimatedTrueSheetContext = createContext<ReanimatedTrueSheetContextValue | null>(null)
+const ReanimatedTrueSheetContext = createContext<ReanimatedTrueSheetContextValue | null>(null);
 
 export interface ReanimatedTrueSheetProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -33,22 +33,22 @@ export interface ReanimatedTrueSheetProviderProps {
  * ```
  */
 export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetProviderProps) => {
-  const { height } = useWindowDimensions()
-  const position = useSharedValue(height)
+  const { height } = useWindowDimensions();
+  const position = useSharedValue(height);
 
   const value = useMemo(
     () => ({
       position,
     }),
     [position]
-  )
+  );
 
   return (
     <ReanimatedTrueSheetContext.Provider value={value}>
       {children}
     </ReanimatedTrueSheetContext.Provider>
-  )
-}
+  );
+};
 
 /**
  * Hook to access the Reanimated TrueSheet context.
@@ -73,14 +73,14 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
  * ```
  */
 export const useReanimatedTrueSheet = (): ReanimatedTrueSheetContextValue => {
-  const context = useContext(ReanimatedTrueSheetContext)
+  const context = useContext(ReanimatedTrueSheetContext);
 
   if (!context) {
     throw new Error(
       'useReanimatedTrueSheet must be used within a ReanimatedTrueSheetProvider. ' +
         'Make sure to wrap your component tree with <ReanimatedTrueSheetProvider>.'
-    )
+    );
   }
 
-  return context
-}
+  return context;
+};

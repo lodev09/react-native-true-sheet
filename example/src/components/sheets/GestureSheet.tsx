@@ -1,48 +1,48 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
-import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
+import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
+import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING, times } from '../../utils'
-import { Footer } from '../Footer'
-import { Button } from '../Button'
-import { DemoContent } from '../DemoContent'
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING, times } from '../../utils';
+import { Footer } from '../Footer';
+import { Button } from '../Button';
+import { DemoContent } from '../DemoContent';
 
-const BOXES_COUNT = 20
-const CONTAINER_HEIGHT = 200
-const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2
+const BOXES_COUNT = 20;
+const CONTAINER_HEIGHT = 200;
+const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2;
 
 interface GestureSheetProps extends TrueSheetProps {}
 
 export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueSheet>) => {
-  const sheetRef = useRef<TrueSheet>(null)
+  const sheetRef = useRef<TrueSheet>(null);
 
-  const scrollX = useSharedValue(0)
-  const dimensions = useWindowDimensions()
+  const scrollX = useSharedValue(0);
+  const dimensions = useWindowDimensions();
 
   const dismiss = async () => {
-    await sheetRef.current?.dismiss()
-  }
+    await sheetRef.current?.dismiss();
+  };
 
   const $animatedContainer: ViewStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
-  }))
+  }));
 
   const pan = Gesture.Pan()
     .onChange((e) => {
-      scrollX.value += e.changeX
+      scrollX.value += e.changeX;
     })
     .onFinalize((e) => {
       scrollX.value = withDecay({
         velocity: e.velocityX,
         rubberBandEffect: true,
         clamp: [-((BOX_SIZE + GAP) * BOXES_COUNT) + dimensions.width - SPACING, 0],
-      })
+      });
     })
-    .activeOffsetX([-10, 10])
+    .activeOffsetX([-10, 10]);
 
-  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
+  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
 
   return (
     <TrueSheet
@@ -82,8 +82,8 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
         <Button text="Dismis" onPress={dismiss} />
       </GestureHandlerRootView>
     </TrueSheet>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   gestureRoot: {
@@ -106,6 +106,6 @@ const styles = StyleSheet.create({
     height: CONTAINER_HEIGHT,
     paddingVertical: SPACING,
   },
-})
+});
 
-GestureSheet.displayName = 'GestureSheet'
+GestureSheet.displayName = 'GestureSheet';

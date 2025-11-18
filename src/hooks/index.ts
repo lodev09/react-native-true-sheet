@@ -1,1 +1,1 @@
-export * from './usePositionChangeHandler'
+export * from './usePositionChangeHandler';

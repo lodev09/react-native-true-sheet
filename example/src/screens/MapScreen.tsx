@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,18 +7,18 @@ import {
   View,
   type StyleProp,
   type ViewStyle,
-} from 'react-native'
+} from 'react-native';
 import {
   TrueSheet,
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
   type WillPresentEvent,
-} from '@lodev09/react-native-true-sheet'
-import MapView from 'react-native-maps'
-import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+} from '@lodev09/react-native-true-sheet';
+import MapView from 'react-native-maps';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, DemoContent, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils'
+import { Button, DemoContent, Footer, Spacer } from '../components';
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 import {
   BasicSheet,
   BlankSheet,
@@ -26,51 +26,51 @@ import {
   GestureSheet,
   PromptSheet,
   ScrollViewSheet,
-} from '../components/sheets'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+} from '../components/sheets';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
+const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
-  const insets = useSafeAreaInsets()
-  const { height } = useWindowDimensions()
-  const { position } = useReanimatedTrueSheet()
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const { position } = useReanimatedTrueSheet();
 
-  const sheetRef = useRef<TrueSheet>(null)
+  const sheetRef = useRef<TrueSheet>(null);
 
-  const basicSheet = useRef<TrueSheet>(null)
-  const promptSheet = useRef<TrueSheet>(null)
-  const scrollViewSheet = useRef<TrueSheet>(null)
-  const flatListSheet = useRef<TrueSheet>(null)
-  const gestureSheet = useRef<TrueSheet>(null)
-  const blankSheet = useRef<TrueSheet>(null)
+  const basicSheet = useRef<TrueSheet>(null);
+  const promptSheet = useRef<TrueSheet>(null);
+  const scrollViewSheet = useRef<TrueSheet>(null);
+  const flatListSheet = useRef<TrueSheet>(null);
+  const gestureSheet = useRef<TrueSheet>(null);
+  const blankSheet = useRef<TrueSheet>(null);
 
-  const [contentCount, setContentCount] = useState(0)
+  const [contentCount, setContentCount] = useState(0);
 
   const presentBasicSheet = async (index = 0) => {
-    await basicSheet.current?.present(index)
-    console.log('Sheet 1 present async')
-  }
+    await basicSheet.current?.present(index);
+    console.log('Sheet 1 present async');
+  };
 
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
     useAnimatedStyle(() => ({
       transform: [{ translateY: Math.min(-insets.bottom, -(height - position.value)) }],
     })),
-  ]
+  ];
 
   const addContent = () => {
-    setContentCount((prev) => prev + 1)
-  }
+    setContentCount((prev) => prev + 1);
+  };
 
   const removeContent = () => {
-    setContentCount((prev) => Math.max(0, prev - 1))
-  }
+    setContentCount((prev) => Math.max(0, prev - 1));
+  };
 
   const handleWillPresent = (e: WillPresentEvent) => {
-    const { index, position: yPosition } = e.nativeEvent
-    console.log(`Sheet will present to index: ${index} at position ${yPosition}`)
-  }
+    const { index, position: yPosition } = e.nativeEvent;
+    console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
+  };
 
   return (
     <View style={styles.container}>
@@ -106,12 +106,12 @@ export const MapScreen = () => {
         initialIndex={1}
         onWillPresent={handleWillPresent}
         onDidPresent={() => {
-          console.log('Sheet is presented')
+          console.log('Sheet is presented');
         }}
         // initialIndexAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
-          console.log('Sheet is ready!')
+          console.log('Sheet is ready!');
         }}
         footer={<Footer />}
       >
@@ -144,8 +144,8 @@ export const MapScreen = () => {
         <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   floatingButton: {
@@ -187,4 +187,4 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: GRAY,
   },
-})
+});

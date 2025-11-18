@@ -1,15 +1,15 @@
-import { useRef } from 'react'
-import { StyleSheet, View } from 'react-native'
-import type { TrueSheet } from '@lodev09/react-native-true-sheet'
+import { useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { TrueSheet } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, SPACING } from '../utils'
-import { Button } from '../components'
-import { BasicSheet, PromptSheet, ScrollViewSheet } from '../components/sheets'
+import { BLUE, SPACING } from '../utils';
+import { Button } from '../components';
+import { BasicSheet, PromptSheet, ScrollViewSheet } from '../components/sheets';
 
 export const ChildScreen = () => {
-  const basicSheet = useRef<TrueSheet>(null)
-  const promptSheet = useRef<TrueSheet>(null)
-  const scrollViewSheet = useRef<TrueSheet>(null)
+  const basicSheet = useRef<TrueSheet>(null);
+  const promptSheet = useRef<TrueSheet>(null);
+  const scrollViewSheet = useRef<TrueSheet>(null);
 
   return (
     <View style={styles.container}>
@@ -21,8 +21,8 @@ export const ChildScreen = () => {
       <PromptSheet ref={promptSheet} />
       <ScrollViewSheet ref={scrollViewSheet} />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -31,4 +31,4 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: SPACING,
   },
-})
+});

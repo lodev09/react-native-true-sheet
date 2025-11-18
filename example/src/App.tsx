@@ -1,11 +1,11 @@
-import { NavigationContainer } from '@react-navigation/native'
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, NavigationScreen, ChildScreen } from './screens'
-import type { AppStackParamList } from './types'
-import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet'
+import { MapScreen, NavigationScreen, ChildScreen } from './screens';
+import type { AppStackParamList } from './types';
+import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
-const Stack = createNativeStackNavigator<AppStackParamList>()
+const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const App = () => {
   return (
@@ -25,7 +25,7 @@ const App = () => {
         </Stack.Navigator>
       </NavigationContainer>
     </ReanimatedTrueSheetProvider>
-  )
-}
+  );
+};
 
-export default App
+export default App;

@@ -1,6 +1,6 @@
-import { useRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
+import { useRef } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import {
   BasicSheet,
@@ -9,25 +9,25 @@ import {
   GestureSheet,
   PromptSheet,
   ScrollViewSheet,
-} from '../components/sheets'
-import { Button, Spacer } from '../components'
-import { BLUE, LIGHT_GRAY, SPACING } from '../utils'
-import { useAppNavigation } from '../hooks'
+} from '../components/sheets';
+import { Button, Spacer } from '../components';
+import { BLUE, LIGHT_GRAY, SPACING } from '../utils';
+import { useAppNavigation } from '../hooks';
 
 export const NavigationScreen = () => {
-  const basicSheet = useRef<TrueSheet>(null)
-  const promptSheet = useRef<TrueSheet>(null)
-  const scrollViewSheet = useRef<TrueSheet>(null)
-  const flatListSheet = useRef<TrueSheet>(null)
-  const gestureSheet = useRef<TrueSheet>(null)
-  const blankSheet = useRef<TrueSheet>(null)
+  const basicSheet = useRef<TrueSheet>(null);
+  const promptSheet = useRef<TrueSheet>(null);
+  const scrollViewSheet = useRef<TrueSheet>(null);
+  const flatListSheet = useRef<TrueSheet>(null);
+  const gestureSheet = useRef<TrueSheet>(null);
+  const blankSheet = useRef<TrueSheet>(null);
 
-  const navigation = useAppNavigation()
+  const navigation = useAppNavigation();
 
   const presentBasicSheet = async (index = 0) => {
-    await basicSheet.current?.present(index)
-    console.log('Sheet 1 present async')
-  }
+    await basicSheet.current?.present(index);
+    console.log('Sheet 1 present async');
+  };
 
   return (
     <View style={styles.container}>
@@ -53,8 +53,8 @@ export const NavigationScreen = () => {
       <GestureSheet ref={gestureSheet} />
       <BlankSheet ref={blankSheet} />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -76,4 +76,4 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: LIGHT_GRAY,
   },
-})
+});

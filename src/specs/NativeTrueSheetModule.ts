@@ -5,8 +5,8 @@
  * @format
  */
 
-import type { TurboModule } from 'react-native'
-import { TurboModuleRegistry } from 'react-native'
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
 
 interface Spec extends TurboModule {
   /**
@@ -16,7 +16,7 @@ interface Spec extends TurboModule {
    * @returns Promise that resolves when sheet is fully presented
    * @throws PRESENT_FAILED if presentation fails
    */
-  presentByRef(viewTag: number, index: number): Promise<void>
+  presentByRef(viewTag: number, index: number): Promise<void>;
 
   /**
    * Dismiss a sheet by reference
@@ -24,7 +24,7 @@ interface Spec extends TurboModule {
    * @returns Promise that resolves when sheet is fully dismissed
    * @throws DISMISS_FAILED if dismissal fails
    */
-  dismissByRef(viewTag: number): Promise<void>
+  dismissByRef(viewTag: number): Promise<void>;
 
   /**
    * Resize a sheet to a different index by reference
@@ -32,7 +32,7 @@ interface Spec extends TurboModule {
    * @param index - New detent index
    * @returns Promise that resolves when resize is complete
    */
-  resizeByRef(viewTag: number, index: number): Promise<void>
+  resizeByRef(viewTag: number, index: number): Promise<void>;
 }
 
-export default TurboModuleRegistry.get<Spec>('TrueSheetModule')
+export default TurboModuleRegistry.get<Spec>('TrueSheetModule');

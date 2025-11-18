@@ -1,21 +1,21 @@
-import { forwardRef } from 'react'
-import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated'
+import { forwardRef } from 'react';
+import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated';
 
-import { TrueSheet } from './TrueSheet'
-import type { TrueSheetProps, PositionChangeEvent } from './TrueSheet.types'
-import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider'
-import { usePositionChangeHandler } from './hooks'
-import { scheduleOnRN } from 'react-native-worklets'
+import { TrueSheet } from './TrueSheet';
+import type { TrueSheetProps, PositionChangeEvent } from './TrueSheet.types';
+import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
+import { usePositionChangeHandler } from './hooks';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const SPRING_CONFIG: WithSpringConfig = {
   damping: 500,
   stiffness: 1000,
   mass: 3,
   overshootClamping: true,
-}
+};
 
 // Create animated version of TrueSheet
-const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
+const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 
 /**
  * Reanimated-enabled version of TrueSheet that automatically syncs position with the provider's shared value.
@@ -45,28 +45,28 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
  * ```
  */
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
-  const { onPositionChange, ...rest } = props
+  const { onPositionChange, ...rest } = props;
 
-  const { position } = useReanimatedTrueSheet()
+  const { position } = useReanimatedTrueSheet();
 
   const positionChangeHandler = usePositionChangeHandler((payload) => {
-    'worklet'
+    'worklet';
 
     // This is used on IOS to tell us that we have to manually animate the value
     // because since IOS 26, transitioning no longer sends real-time position during
     // transition.
     if (payload.transitioning) {
-      position.value = withSpring(payload.position, SPRING_CONFIG)
+      position.value = withSpring(payload.position, SPRING_CONFIG);
     } else {
-      position.value = payload.position
+      position.value = payload.position;
     }
 
     if (onPositionChange) {
       scheduleOnRN(onPositionChange, {
         nativeEvent: payload,
-      } as PositionChangeEvent)
+      } as PositionChangeEvent);
     }
-  })
+  });
 
-  return <AnimatedTrueSheet ref={ref} onPositionChange={positionChangeHandler} {...rest} />
-})
+  return <AnimatedTrueSheet ref={ref} onPositionChange={positionChangeHandler} {...rest} />;
+});

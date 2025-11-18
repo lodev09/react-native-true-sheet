@@ -1,5 +1,5 @@
-import type { HostComponent, ViewProps } from 'react-native'
-import { codegenNativeComponent } from 'react-native'
+import type { HostComponent, ViewProps } from 'react-native';
+import { codegenNativeComponent } from 'react-native';
 
 export interface NativeProps extends ViewProps {
   // No props needed - size will be controlled by parent
@@ -8,4 +8,4 @@ export interface NativeProps extends ViewProps {
 export default codegenNativeComponent<NativeProps>(
   'TrueSheetContentView',
   {}
-) as HostComponent<NativeProps>
+) as HostComponent<NativeProps>;

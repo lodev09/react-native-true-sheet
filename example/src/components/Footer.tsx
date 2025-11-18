@@ -1,6 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { styles as constantStyles, DARK_GRAY, FOOTER_HEIGHT } from '../utils'
+import { styles as constantStyles, DARK_GRAY, FOOTER_HEIGHT } from '../utils';
 
 export const Footer = () => {
   return (
@@ -9,8 +9,8 @@ export const Footer = () => {
         <Text style={constantStyles.whiteText}>FOOTER</Text>
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   footer: {
@@ -19,4 +19,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
+});

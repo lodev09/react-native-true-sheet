@@ -29,7 +29,6 @@ export default defineConfig([
           trailingComma: 'es5',
           useTabs: false,
           printWidth: 100,
-          semi: false,
         },
       ],
     },

@@ -6,7 +6,7 @@ import {
   type ComponentRef,
   isValidElement,
   createElement,
-} from 'react'
+} from 'react';
 
 import type {
   TrueSheetProps,
@@ -20,75 +20,75 @@ import type {
   DidDismissEvent,
   WillDismissEvent,
   MountEvent,
-} from './TrueSheet.types'
-import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent'
-import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent'
-import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent'
-import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent'
+} from './TrueSheet.types';
+import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
+import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
+import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent';
+import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
-import TrueSheetModule from './specs/NativeTrueSheetModule'
+import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, processColor, StyleSheet, View, findNodeHandle } from 'react-native'
+import { Platform, processColor, StyleSheet, View, findNodeHandle } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n' +
-  '- You are using the new architecture (Fabric)\n'
+  '- You are using the new architecture (Fabric)\n';
 
 if (!TrueSheetModule) {
-  throw new Error(LINKING_ERROR)
+  throw new Error(LINKING_ERROR);
 }
 
-type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>
+type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
 
 interface TrueSheetState {
-  shouldRenderNativeView: boolean
+  shouldRenderNativeView: boolean;
 }
 
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
-  displayName = 'TrueSheet'
+  displayName = 'TrueSheet';
 
-  private readonly nativeRef: RefObject<NativeRef | null>
-  private mountPromiseResolve?: () => void
+  private readonly nativeRef: RefObject<NativeRef | null>;
+  private mountPromiseResolve?: () => void;
 
   /**
    * Map of sheet names against their instances.
    */
-  private static readonly instances: { [name: string]: TrueSheet } = {}
+  private static readonly instances: { [name: string]: TrueSheet } = {};
 
   constructor(props: TrueSheetProps) {
-    super(props)
+    super(props);
 
-    this.nativeRef = createRef<NativeRef>()
+    this.nativeRef = createRef<NativeRef>();
 
-    this.validateDetents()
+    this.validateDetents();
 
     this.state = {
       shouldRenderNativeView: props.initialIndex !== undefined && props.initialIndex >= 0,
-    }
+    };
 
-    this.onMount = this.onMount.bind(this)
-    this.onWillDismiss = this.onWillDismiss.bind(this)
-    this.onDidDismiss = this.onDidDismiss.bind(this)
-    this.onWillPresent = this.onWillPresent.bind(this)
-    this.onDidPresent = this.onDidPresent.bind(this)
-    this.onDetentChange = this.onDetentChange.bind(this)
-    this.onDragBegin = this.onDragBegin.bind(this)
-    this.onDragChange = this.onDragChange.bind(this)
-    this.onDragEnd = this.onDragEnd.bind(this)
-    this.onPositionChange = this.onPositionChange.bind(this)
+    this.onMount = this.onMount.bind(this);
+    this.onWillDismiss = this.onWillDismiss.bind(this);
+    this.onDidDismiss = this.onDidDismiss.bind(this);
+    this.onWillPresent = this.onWillPresent.bind(this);
+    this.onDidPresent = this.onDidPresent.bind(this);
+    this.onDetentChange = this.onDetentChange.bind(this);
+    this.onDragBegin = this.onDragBegin.bind(this);
+    this.onDragChange = this.onDragChange.bind(this);
+    this.onDragEnd = this.onDragEnd.bind(this);
+    this.onPositionChange = this.onPositionChange.bind(this);
   }
 
   private validateDetents(): void {
-    const { detents, initialIndex } = this.props
+    const { detents, initialIndex } = this.props;
 
     // Warn if detents length exceeds 3
     if (detents && detents.length > 3) {
       console.warn(
         `TrueSheet: detents array has ${detents.length} items but maximum is 3. Only the first 3 will be used.`
-      )
+      );
     }
 
     // Warn for invalid detent fractions
@@ -98,40 +98,40 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           if (detent <= 0 || detent > 1) {
             console.warn(
               `TrueSheet: detent at index ${index} (${detent}) should be between 0 and 1. It will be clamped.`
-            )
+            );
           }
         }
-      })
+      });
     }
 
     // Validate initialIndex bounds
     if (initialIndex !== undefined && initialIndex >= 0) {
-      const detentsLength = Math.min(detents?.length ?? 2, 3) // Max 3 detents
+      const detentsLength = Math.min(detents?.length ?? 2, 3); // Max 3 detents
       if (initialIndex >= detentsLength) {
         throw new Error(
           `TrueSheet: initialIndex (${initialIndex}) is out of bounds. detents array has ${detentsLength} item(s)`
-        )
+        );
       }
     }
   }
 
   private static getInstance(name: string) {
-    const instance = TrueSheet.instances[name]
+    const instance = TrueSheet.instances[name];
     if (!instance) {
-      console.warn(`Could not find TrueSheet instance with name "${name}". Check your name prop.`)
-      return
+      console.warn(`Could not find TrueSheet instance with name "${name}". Check your name prop.`);
+      return;
     }
 
-    return instance
+    return instance;
   }
 
   private get handle(): number {
-    const nodeHandle = findNodeHandle(this.nativeRef.current)
+    const nodeHandle = findNodeHandle(this.nativeRef.current);
     if (nodeHandle == null || nodeHandle === -1) {
-      throw new Error('Could not get native view tag')
+      throw new Error('Could not get native view tag');
     }
 
-    return nodeHandle
+    return nodeHandle;
   }
 
   /**
@@ -142,12 +142,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or presentation fails
    */
   public static async present(name: string, index: number = 0): Promise<void> {
-    const instance = TrueSheet.getInstance(name)
+    const instance = TrueSheet.getInstance(name);
     if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`)
+      throw new Error(`Sheet with name "${name}" not found`);
     }
 
-    return instance.present(index)
+    return instance.present(index);
   }
 
   /**
@@ -157,12 +157,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found or dismissal fails
    */
   public static async dismiss(name: string): Promise<void> {
-    const instance = TrueSheet.getInstance(name)
+    const instance = TrueSheet.getInstance(name);
     if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`)
+      throw new Error(`Sheet with name "${name}" not found`);
     }
 
-    return instance.dismiss()
+    return instance.dismiss();
   }
 
   /**
@@ -173,67 +173,67 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @throws Error if sheet not found
    */
   public static async resize(name: string, index: number): Promise<void> {
-    const instance = TrueSheet.getInstance(name)
+    const instance = TrueSheet.getInstance(name);
     if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`)
+      throw new Error(`Sheet with name "${name}" not found`);
     }
 
-    return instance.resize(index)
+    return instance.resize(index);
   }
 
   private registerInstance(): void {
     if (this.props.name) {
-      TrueSheet.instances[this.props.name] = this
+      TrueSheet.instances[this.props.name] = this;
     }
   }
 
   private unregisterInstance(): void {
     if (this.props.name) {
-      delete TrueSheet.instances[this.props.name]
+      delete TrueSheet.instances[this.props.name];
     }
   }
 
   private onDetentChange(event: DetentChangeEvent): void {
-    this.props.onDetentChange?.(event)
+    this.props.onDetentChange?.(event);
   }
 
   private onWillPresent(event: WillPresentEvent): void {
-    this.props.onWillPresent?.(event)
+    this.props.onWillPresent?.(event);
   }
 
   private onDidPresent(event: DidPresentEvent): void {
-    this.props.onDidPresent?.(event)
+    this.props.onDidPresent?.(event);
   }
 
   private onWillDismiss(event: WillDismissEvent): void {
-    this.props.onWillDismiss?.(event)
+    this.props.onWillDismiss?.(event);
   }
 
   private onDidDismiss(event: DidDismissEvent): void {
-    this.setState({ shouldRenderNativeView: false })
-    this.props.onDidDismiss?.(event)
+    this.setState({ shouldRenderNativeView: false });
+    this.props.onDidDismiss?.(event);
   }
 
   private onMount(event: MountEvent): void {
-    this.mountPromiseResolve?.()
-    this.mountPromiseResolve = undefined
-    this.props.onMount?.(event)
+    this.mountPromiseResolve?.();
+    this.mountPromiseResolve = undefined;
+    this.props.onMount?.(event);
   }
 
   private onDragBegin(event: DragBeginEvent): void {
-    this.props.onDragBegin?.(event)
+    this.props.onDragBegin?.(event);
   }
 
   private onDragChange(event: DragChangeEvent): void {
-    this.props.onDragChange?.(event)
+    this.props.onDragChange?.(event);
   }
 
   private onDragEnd(event: DragEndEvent): void {
-    this.props.onDragEnd?.(event)
+    this.props.onDragEnd?.(event);
   }
 
   private onPositionChange(event: PositionChangeEvent): void {
-    this.props.onPositionChange?.(event)
+    this.props.onPositionChange?.(event);
   }
 
   /**
@@ -241,20 +241,20 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * @param index - Detent index (default: 0)
    */
   public async present(index: number = 0): Promise<void> {
-    const detentsLength = Math.min(this.props.detents?.length ?? 2, 3) // Max 3 detents
+    const detentsLength = Math.min(this.props.detents?.length ?? 2, 3); // Max 3 detents
     if (index < 0 || index >= detentsLength) {
       throw new Error(
         `TrueSheet: present index (${index}) is out of bounds. detents array has ${detentsLength} item(s)`
-      )
+      );
     }
 
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
-        this.mountPromiseResolve = resolve
-        this.setState({ shouldRenderNativeView: true })
-      })
+        this.mountPromiseResolve = resolve;
+        this.setState({ shouldRenderNativeView: true });
+      });
     }
-    return TrueSheetModule?.presentByRef(this.handle, index)
+    return TrueSheetModule?.presentByRef(this.handle, index);
   }
 
   /**
@@ -262,31 +262,31 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * This is an alias of the `present(index)` method.
    */
   public async resize(index: number): Promise<void> {
-    await this.present(index)
+    await this.present(index);
   }
 
   /**
    * Dismisses the Sheet
    */
   public async dismiss(): Promise<void> {
-    return TrueSheetModule?.dismissByRef(this.handle)
+    return TrueSheetModule?.dismissByRef(this.handle);
   }
 
   componentDidMount(): void {
-    this.registerInstance()
+    this.registerInstance();
   }
 
   componentDidUpdate(prevProps: TrueSheetProps): void {
-    this.registerInstance()
+    this.registerInstance();
 
     // Validate when detents prop changes
     if (prevProps.detents !== this.props.detents) {
-      this.validateDetents()
+      this.validateDetents();
     }
   }
 
   componentWillUnmount(): void {
-    this.unregisterInstance()
+    this.unregisterInstance();
   }
 
   render(): ReactNode {
@@ -306,18 +306,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       style,
       footer,
       ...rest
-    } = this.props
+    } = this.props;
 
     // Trim to max 3 detents and clamp fractions
     const resolvedDetents = detents.slice(0, 3).map((detent) => {
-      if (detent === 'auto') return -1
+      if (detent === 'auto') return -1;
 
       // Default to 0.1 if exactly zero
-      if (detent === 0) return 0.1
+      if (detent === 0) return 0.1;
 
       // Clamp to maximum of 1
-      return Math.min(1, detent)
-    })
+      return Math.min(1, detent);
+    });
 
     return (
       <TrueSheetViewNativeComponent
@@ -360,7 +360,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           </TrueSheetContainerViewNativeComponent>
         )}
       </TrueSheetViewNativeComponent>
-    )
+    );
   }
 }
 
@@ -384,4 +384,4 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-})
+});

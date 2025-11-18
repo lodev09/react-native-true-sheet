@@ -1,19 +1,19 @@
-import { StyleSheet, Text, TouchableOpacity, type TouchableOpacityProps } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, type TouchableOpacityProps } from 'react-native';
 
-import { styles as constantStyles, BORDER_RADIUS, DARK_BLUE } from '../utils'
+import { styles as constantStyles, BORDER_RADIUS, DARK_BLUE } from '../utils';
 
 interface ButtonProps extends TouchableOpacityProps {
-  text: string
+  text: string;
 }
 
 export const Button = (props: ButtonProps) => {
-  const { text, style: $styleOverride, ...rest } = props
+  const { text, style: $styleOverride, ...rest } = props;
   return (
     <TouchableOpacity activeOpacity={0.6} style={[styles.button, $styleOverride]} {...rest}>
       <Text style={constantStyles.whiteText}>{text}</Text>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   button: {
@@ -23,4 +23,4 @@ const styles = StyleSheet.create({
     backgroundColor: DARK_BLUE,
     alignItems: 'center',
   },
-})
+});

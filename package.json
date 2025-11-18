@@ -161,8 +161,7 @@
     "tabWidth": 2,
     "trailingComma": "es5",
     "useTabs": false,
-    "printWidth": 100,
-    "semi": false
+    "printWidth": 100
   },
   "react-native-builder-bob": {
     "exclude": "**/{__tests__,__fixtures__}/**",

@@ -1,30 +1,30 @@
-import { useRef } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useRef } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
   type TrueSheet,
-} from '@lodev09/react-native-true-sheet'
-import Animated, { useAnimatedStyle } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+} from '@lodev09/react-native-true-sheet';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, DemoContent } from '.'
-import { BLUE, DARK_BLUE, GAP, SPACING } from '../utils'
+import { Button, DemoContent } from '.';
+import { BLUE, DARK_BLUE, GAP, SPACING } from '../utils';
 
-const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
+const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const ReanimatedExample = () => {
-  const sheetRef = useRef<TrueSheet>(null)
-  const insets = useSafeAreaInsets()
-  const { position } = useReanimatedTrueSheet()
+  const sheetRef = useRef<TrueSheet>(null);
+  const insets = useSafeAreaInsets();
+  const { position } = useReanimatedTrueSheet();
 
   const floatingButtonStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -position.value }],
-  }))
+  }));
 
   const headerStyle = useAnimatedStyle(() => ({
     opacity: Math.max(0, 1 - position.value / 300),
-  }))
+  }));
 
   return (
     <View style={styles.container}>
@@ -63,8 +63,8 @@ export const ReanimatedExample = () => {
         </View>
       </ReanimatedTrueSheet>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -121,4 +121,4 @@ const styles = StyleSheet.create({
     color: '#aaa',
     marginBottom: SPACING,
   },
-})
+});

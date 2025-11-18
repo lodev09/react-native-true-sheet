@@ -1,1 +1,1 @@
-export * from './useAppNavigation'
+export * from './useAppNavigation';

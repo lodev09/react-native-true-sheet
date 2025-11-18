@@ -1,6 +1,6 @@
-import { StyleSheet, TextInput, View } from 'react-native'
+import { StyleSheet, TextInput, View } from 'react-native';
 
-import { BORDER_RADIUS, GRAY, INPUT_HEIGHT, SPACING } from '../utils'
+import { BORDER_RADIUS, GRAY, INPUT_HEIGHT, SPACING } from '../utils';
 
 export const Input = () => {
   return (
@@ -11,8 +11,8 @@ export const Input = () => {
         placeholderTextColor={GRAY}
       />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   inputContainer: {
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: INPUT_HEIGHT,
   },
-})
+});
