@@ -84,7 +84,7 @@ export const App = () => {
       <Button onPress={present} title="Present" />
       <TrueSheet
         ref={sheet}
-        sizes={['auto', 'large']}
+        detents={['auto', 1]}
         cornerRadius={24}
       >
         <Button onPress={dismiss} title="Dismiss" />

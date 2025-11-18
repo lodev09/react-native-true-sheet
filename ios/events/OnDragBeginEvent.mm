@@ -14,7 +14,6 @@
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
        index:(NSInteger)index
-       value:(CGFloat)value
     position:(CGFloat)position {
   if (!eventEmitter)
     return;
@@ -22,7 +21,6 @@
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
   TrueSheetViewEventEmitter::OnDragBegin event;
   event.index = static_cast<int>(index);
-  event.value = static_cast<double>(value);
   event.position = static_cast<double>(position);
   emitter->onDragBegin(event);
 }

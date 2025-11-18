@@ -198,16 +198,16 @@ const App = () => {
   }
 
   const handleOnWillPresent = (e: WillPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, value: 420, position: 123.5 }
+    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
     console.log('Sheet is about to be presented')
   }
 
   const handleOnDidPresent = (e: DidPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, value: 420, position: 123.5 }
+    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
   }
 
   const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent) // { index: 1, value: 680, position: 234.5 }
+    console.log(e.nativeEvent) // { index: 1, position: 234.5 }
   }
 
   return (
@@ -243,7 +243,7 @@ This is called when the sheet is about to be presented.
 
 Comes with [`DetentInfo`](/reference/types#detentinfo).
 
-This is called when the sheet has been presented, providing the detent `index` and `value`.
+This is called when the sheet has been presented, providing the detent `index` and `position`.
 
 ### `onDismiss`
 

@@ -322,11 +322,10 @@ using namespace facebook::react;
   }
 }
 
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position {
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
   // Notify sheet view to emit event
   if (_sheetView) {
-    NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
-    [_sheetView notifyDidDrag:state index:index height:height position:position];
+    [_sheetView notifyDidDrag:state index:index position:position];
   }
 }
 
@@ -340,22 +339,21 @@ using namespace facebook::react;
   }
 }
 
-- (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position {
+- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
   if (!_activeIndex || [_activeIndex integerValue] != index) {
     _activeIndex = @(index);
 
     // Notify sheet view to emit event
     if (_sheetView) {
-      [_sheetView notifyDidChangeDetent:index value:value position:position];
+      [_sheetView notifyDidChangeDetent:index position:position];
     }
   }
 }
 
-- (void)viewControllerDidChangePosition:(CGFloat)height position:(CGFloat)position {
+- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position {
   // Notify sheet view to emit event
   if (_sheetView) {
-    NSInteger index = _activeIndex ? [_activeIndex integerValue] : 0;
-    [_sheetView notifyDidChangePosition:index height:height position:position];
+    [_sheetView notifyDidChangePosition:index position:position];
   }
 }
 

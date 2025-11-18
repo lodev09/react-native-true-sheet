@@ -51,9 +51,13 @@ TrueSheet.resize('resizing-sheet', 1)
 
 ### Listening to Detent Change
 
-For some reason, if you want to get the resolved detent, you can listen to detent changes by providing the [`onDetentChange`](/reference/props#ondetentchange) event.
+If you want to get the active detent information, you can listen to detent changes by providing the [`onDetentChange`](/reference/props#ondetentchange) event.
 
-The event comes with the [`DetentInfo`](/reference/types#detentinfo) that you can use to get the detent `value`.
+The event comes with the [`DetentInfo`](/reference/types#detentinfo) that provides the detent `index` and `position` (Y position on screen).
+
+:::tip
+Use the `index` to reference the detent from your `detents` array. For example, if `detents={['auto', 0.69, 1]}` and `index` is `1`, the active detent is `0.69`.
+:::
 
 ```tsx {9-11,17-17}
 const App = () => {
@@ -65,7 +69,8 @@ const App = () => {
   }
 
   const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent.index, e.nativeEvent.value) // Do whatever you need from this detent ✅
+    const { index, position } = e.nativeEvent
+    console.log('Detent index:', index, 'position:', position) ✅
   }
 
   return (

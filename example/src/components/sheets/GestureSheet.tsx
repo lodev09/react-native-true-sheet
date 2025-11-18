@@ -57,11 +57,16 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       onDismiss={() => console.log('Gesture sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(
-          `Gesture sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+          `Gesture sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDetentChange={(e) =>
-        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+        console.log(
+          `Detent changed to index:`,
+          e.nativeEvent.index,
+          'position:',
+          e.nativeEvent.position
+        )
       }
       footer={<Footer />}
       {...props}

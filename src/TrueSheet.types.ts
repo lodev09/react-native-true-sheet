@@ -9,10 +9,6 @@ export interface DetentInfo {
    */
   index: number
   /**
-   * The resolved height value of the detent.
-   */
-  value: number
-  /**
    * The Y position of the sheet relative to the screen.
    */
   position: number

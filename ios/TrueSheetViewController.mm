@@ -17,7 +17,6 @@
   CGFloat _lastViewWidth;
   CGFloat _lastPosition;
   UIVisualEffectView *_backgroundView;
-  NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
   CGFloat _bottomInset;
   BOOL _isPresenting;
 }
@@ -31,7 +30,6 @@
     _dimmedIndex = @(0);
     _lastViewWidth = 0;
     _lastPosition = 0;
-    _detentValues = [NSMutableDictionary dictionary];
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -115,8 +113,10 @@
 #pragma mark - Gesture Handling
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:height:position:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state height:self.currentHeight position:self.currentPosition];
+  NSInteger index = [self currentDetentIndex];
+
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:)]) {
+    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition];
   }
 }
 
@@ -127,8 +127,10 @@
     _lastPosition = self.currentPosition;
 
     // Emit position change delegate
+    NSInteger index = [self currentDetentIndex];
+
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
-      [self.delegate viewControllerDidChangePosition:self.currentHeight position:self.currentPosition];
+      [self.delegate viewControllerDidChangePosition:index position:self.currentPosition];
     }
   }
 }
@@ -213,7 +215,6 @@
   if (!sheet)
     return;
 
-  [_detentValues removeAllObjects];
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
   // Subtract bottomInset from content height to account for safe area
@@ -245,12 +246,9 @@
                           CGFloat maxDetent = context.maximumDetentValue;
                           CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
                           CGFloat value = MIN(resolvedFraction * maxDetent, maxValue);
-                          self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                           return value;
                         }];
   } else {
-    _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
-      @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
     return [UISheetPresentationControllerDetent mediumDetent];
   }
 }
@@ -272,7 +270,6 @@
                               CGFloat maxValue =
                                 self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
                               CGFloat value = MIN(height, maxValue);
-                              self->_detentValues[detentId] = @{@"index" : @(index), @"value" : @(value)};
                               return value;
                             }];
       }
@@ -283,8 +280,6 @@
     }
   }
 
-  _detentValues[UISheetPresentationControllerDetentIdentifierMedium] =
-    @{@"index" : @(index), @"value" : @(self.view.frame.size.height / 2)};
   return [UISheetPresentationControllerDetent mediumDetent];
 }
 
@@ -332,16 +327,24 @@
   }
 }
 
-- (NSDictionary *)currentDetentInfo {
+- (NSInteger)currentDetentIndex {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
-    return @{@"index" : @(-1), @"value" : @(0)};
+    return -1;
 
   UISheetPresentationControllerDetentIdentifier selectedIdentifier = sheet.selectedDetentIdentifier;
   if (!selectedIdentifier)
-    return @{@"index" : @(-1), @"value" : @(0)};
+    return -1;
 
-  return _detentValues[selectedIdentifier];
+  // Find the index by matching the identifier in the detents array
+  NSArray<UISheetPresentationControllerDetent *> *detents = sheet.detents;
+  for (NSInteger i = 0; i < detents.count; i++) {
+    if ([detents[i].identifier isEqualToString:selectedIdentifier]) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 - (CGFloat)currentPosition {
@@ -392,16 +395,9 @@
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
-  UISheetPresentationControllerDetentIdentifier identifier = sheetPresentationController.selectedDetentIdentifier;
-  if (!identifier)
-    return;
-
-  NSDictionary *detentInfo = _detentValues[identifier];
-  if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:position:)]) {
-    NSInteger index = [detentInfo[@"index"] integerValue];
-    CGFloat value = [detentInfo[@"value"] floatValue];
-
-    [self.delegate viewControllerDidChangeDetent:index value:value position:self.currentPosition];
+  NSInteger index = [self currentDetentIndex];
+  if (index >= 0 && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:)]) {
+    [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition];
   }
 }
 

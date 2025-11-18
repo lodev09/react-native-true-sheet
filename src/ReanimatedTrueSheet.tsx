@@ -45,7 +45,7 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>(
     const positionChangeHandler = usePositionChangeHandler(
       (detentInfo: DetentInfo) => {
         'worklet'
-        position.value = detentInfo.value
+        position.value = detentInfo.position
 
         // Call user's onPositionChange handler if provided
         onPositionChange?.({

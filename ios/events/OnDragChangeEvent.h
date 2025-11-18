@@ -19,7 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
        index:(NSInteger)index
-       value:(CGFloat)value
     position:(CGFloat)position;
 
 @end

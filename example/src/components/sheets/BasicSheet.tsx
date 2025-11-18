@@ -61,30 +61,28 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       grabberProps={{ color: GRABBER_COLOR }}
       onDragChange={(e) =>
         console.log(
-          `drag changed with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+          `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDragBegin={(e) =>
         console.log(
-          `drag began with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+          `drag began at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDragEnd={(e) =>
         console.log(
-          `drag ended with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+          `drag ended at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDismiss={() => console.log('Basic sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(
-          `Basic sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+          `Basic sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDetentChange={(e) =>
         console.log(
-          `Resized to:`,
-          e.nativeEvent.value,
-          'at index:',
+          `Detent changed to index:`,
           e.nativeEvent.index,
           'position:',
           e.nativeEvent.position

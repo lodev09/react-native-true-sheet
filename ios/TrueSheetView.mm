@@ -186,44 +186,35 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
-  NSDictionary *detentInfo = _containerView.controller.currentDetentInfo;
+  NSInteger index = [_containerView.controller currentDetentIndex];
   CGFloat position = _containerView.controller.currentPosition;
 
-  [OnWillPresentEvent emit:_eventEmitter
-                     index:[detentInfo[@"index"] intValue]
-                     value:[detentInfo[@"value"] doubleValue]
-                  position:position];
+  [OnWillPresentEvent emit:_eventEmitter index:index position:position];
 }
 
 - (void)notifyDidPresent {
   if (!_containerView)
     return;
 
-  NSDictionary *detentInfo = _containerView.controller.currentDetentInfo;
+  NSInteger index = [_containerView.controller currentDetentIndex];
   CGFloat position = _containerView.controller.currentPosition;
 
-  [OnDidPresentEvent emit:_eventEmitter
-                    index:[detentInfo[@"index"] intValue]
-                    value:[detentInfo[@"value"] doubleValue]
-                 position:position];
+  [OnDidPresentEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidDrag:(UIGestureRecognizerState)state
-                index:(NSInteger)index
-               height:(CGFloat)height
-             position:(CGFloat)position {
+- (void)notifyDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
   switch (state) {
     case UIGestureRecognizerStateBegan:
-      [OnDragBeginEvent emit:_eventEmitter index:index value:height position:position];
+      [OnDragBeginEvent emit:_eventEmitter index:index position:position];
       break;
 
     case UIGestureRecognizerStateChanged:
-      [OnDragChangeEvent emit:_eventEmitter index:index value:height position:position];
+      [OnDragChangeEvent emit:_eventEmitter index:index position:position];
       break;
 
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-      [OnDragEndEvent emit:_eventEmitter index:index value:height position:position];
+      [OnDragEndEvent emit:_eventEmitter index:index position:position];
       break;
 
     default:
@@ -235,12 +226,12 @@ using namespace facebook::react;
   [OnDismissEvent emit:_eventEmitter];
 }
 
-- (void)notifyDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position {
-  [OnDetentChangeEvent emit:_eventEmitter index:index value:value position:position];
+- (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position {
+  [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidChangePosition:(NSInteger)index height:(CGFloat)height position:(CGFloat)position {
-  [OnPositionChangeEvent emit:_eventEmitter index:index value:height position:position];
+- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position {
+  [OnPositionChangeEvent emit:_eventEmitter index:index position:position];
 }
 
 #pragma mark - Private Helpers

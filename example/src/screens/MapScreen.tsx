@@ -99,8 +99,8 @@ const MapScreenContent = () => {
         cornerRadius={12}
         initialIndex={1}
         onWillPresent={(e) => {
-          const { index, position: yPosition, value } = e.nativeEvent
-          console.log(`Sheet will present to index: ${index} (${value}) at ${yPosition}`)
+          const { index, position: yPosition } = e.nativeEvent
+          console.log(`Sheet will present to index: ${index} at position ${yPosition}`)
         }}
         onDidPresent={() => {
           console.log('Sheet is presented')

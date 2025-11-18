@@ -265,16 +265,14 @@ class TrueSheetView(context: Context) :
   private fun detentInfoData(detentInfo: DetentInfo): WritableMap {
     val data = Arguments.createMap()
     data.putInt("index", detentInfo.index)
-    data.putDouble("value", detentInfo.value.toDouble())
     data.putDouble("position", detentInfo.position.toDouble())
 
     return data
   }
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val height = sheetDialog.maxScreenHeight - sheetView.top
     val position = Utils.toDIP(sheetView.top.toFloat())
-    val currentDetentInfo = DetentInfo(currentDetentIndex, Utils.toDIP(height.toFloat()), position)
+    val currentDetentInfo = DetentInfo(currentDetentIndex, position)
 
     return currentDetentInfo
   }

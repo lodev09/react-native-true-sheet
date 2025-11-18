@@ -47,11 +47,16 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       onDismiss={handleDismiss}
       onDidPresent={(e) =>
         console.log(
-          `Sheet prompt presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+          `Sheet prompt presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
       onDetentChange={(e) =>
-        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+        console.log(
+          `Detent changed to index:`,
+          e.nativeEvent.index,
+          'position:',
+          e.nativeEvent.position
+        )
       }
       footer={<Footer />}
       {...props}
