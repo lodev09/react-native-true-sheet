@@ -1,10 +1,24 @@
-import { forwardRef, type ForwardedRef } from 'react'
-import Animated from 'react-native-reanimated'
+import { forwardRef } from 'react'
+import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated'
 
 import { TrueSheet } from './TrueSheet'
-import type { TrueSheetProps, DetentInfo, PositionChangeEvent } from './TrueSheet.types'
+import type {
+  TrueSheetProps,
+  DetentInfo,
+  PositionChangeEvent,
+  WillPresentEvent,
+} from './TrueSheet.types'
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider'
-import { usePositionChangeHandler } from './hooks'
+import { usePositionChangeHandler, useWillPresentHandler } from './hooks'
+import { Platform } from 'react-native'
+import { scheduleOnRN } from 'react-native-worklets'
+
+const SPRING_CONFIG: WithSpringConfig = {
+  damping: 500,
+  stiffness: 1000,
+  mass: 3,
+  overshootClamping: true,
+}
 
 // Create animated version of TrueSheet
 const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
@@ -36,25 +50,42 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
  * }
  * ```
  */
-export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>(
-  (props, ref: ForwardedRef<TrueSheet>) => {
-    const { onPositionChange, ...rest } = props
+export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
+  const { onPositionChange, onWillPresent, ...rest } = props
 
-    const { position } = useReanimatedTrueSheet()
+  const { position } = useReanimatedTrueSheet()
 
-    const positionChangeHandler = usePositionChangeHandler(
-      (detentInfo: DetentInfo) => {
-        'worklet'
-        position.value = detentInfo.position
+  const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
+    'worklet'
+    position.value = detentInfo.position
 
-        // Call user's onPositionChange handler if provided
-        onPositionChange?.({
-          nativeEvent: detentInfo,
-        } as PositionChangeEvent)
-      },
-      [onPositionChange, position]
-    )
+    if (onPositionChange) {
+      scheduleOnRN(onPositionChange, {
+        nativeEvent: detentInfo,
+      } as PositionChangeEvent)
+    }
+  })
 
-    return <AnimatedTrueSheet ref={ref} onPositionChange={positionChangeHandler} {...rest} />
-  }
-)
+  const willPresentHandler = useWillPresentHandler((detentInfo: DetentInfo) => {
+    'worklet'
+    // On IOS, animate to target position since this is not supported during transition.
+    if (Platform.OS === 'ios') {
+      position.value = withSpring(detentInfo.position, SPRING_CONFIG)
+    }
+
+    if (onWillPresent) {
+      scheduleOnRN(onWillPresent, {
+        nativeEvent: detentInfo,
+      } as WillPresentEvent)
+    }
+  })
+
+  return (
+    <AnimatedTrueSheet
+      ref={ref}
+      onPositionChange={positionChangeHandler}
+      onWillPresent={willPresentHandler}
+      {...rest}
+    />
+  )
+})

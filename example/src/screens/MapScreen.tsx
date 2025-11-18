@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
@@ -11,9 +12,9 @@ import {
   TrueSheet,
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
+  type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 
 import { Button, DemoContent, Footer, Spacer } from '../components'
@@ -30,6 +31,9 @@ import {
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
 
 export const MapScreen = () => {
+  const { height } = useWindowDimensions()
+  const { position } = useReanimatedTrueSheet()
+
   const sheetRef = useRef<TrueSheet>(null)
 
   const basicSheet = useRef<TrueSheet>(null)
@@ -41,9 +45,6 @@ export const MapScreen = () => {
 
   const [contentCount, setContentCount] = useState(0)
 
-  const insets = useSafeAreaInsets()
-  const { position } = useReanimatedTrueSheet()
-
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index)
     console.log('Sheet 1 present async')
@@ -51,9 +52,8 @@ export const MapScreen = () => {
 
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
-    { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
-      transform: [{ translateY: -position.value }],
+      transform: [{ translateY: -(height - position.value) }],
     })),
   ]
 
@@ -63,6 +63,11 @@ export const MapScreen = () => {
 
   const removeContent = () => {
     setContentCount((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleWillPresent = (e: WillPresentEvent) => {
+    const { index, position: yPosition } = e.nativeEvent
+    console.log(`Sheet will present to index: ${index} at position ${yPosition}`)
   }
 
   return (
@@ -97,10 +102,7 @@ export const MapScreen = () => {
         // dismissible={false}
         cornerRadius={12}
         initialIndex={1}
-        onWillPresent={(e) => {
-          const { index, position: yPosition } = e.nativeEvent
-          console.log(`Sheet will present to index: ${index} at position ${yPosition}`)
-        }}
+        onWillPresent={handleWillPresent}
         onDidPresent={() => {
           console.log('Sheet is presented')
         }}
@@ -147,6 +149,7 @@ const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
     right: SPACING,
+    bottom: SPACING,
     height: SPACING * 3,
     width: SPACING * 3,
     borderRadius: (SPACING * 3) / 2,

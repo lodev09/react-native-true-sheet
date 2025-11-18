@@ -31,9 +31,7 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 // Event notification methods (called by container)
 - (void)notifyWillPresent;
 - (void)notifyDidPresent;
-- (void)notifyDidDrag:(UIGestureRecognizerState)state
-                index:(NSInteger)index
-             position:(CGFloat)position;
+- (void)notifyDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position;
 - (void)notifyDidDismiss;
 - (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position;
 - (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position;

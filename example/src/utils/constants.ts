@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native'
-import type { WithSpringConfig } from 'react-native-reanimated'
 
 export const SPACING = 16
 export const GAP = 12
@@ -18,10 +17,3 @@ export const DARK_BLUE = '#1f64ae'
 export const styles = StyleSheet.create({
   whiteText: { color: 'white' },
 })
-
-export const SPRING_CONFIG: WithSpringConfig = {
-  damping: 500,
-  stiffness: 1000,
-  mass: 3,
-  overshootClamping: true,
-}
