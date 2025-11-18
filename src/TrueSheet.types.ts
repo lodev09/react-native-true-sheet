@@ -19,7 +19,7 @@ export interface DetentInfo {
 }
 
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
-export type WillPresentEvent = NativeSyntheticEvent<null>
+export type WillPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DidPresentEvent = NativeSyntheticEvent<DetentInfo>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>

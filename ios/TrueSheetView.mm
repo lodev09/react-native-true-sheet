@@ -175,16 +175,6 @@ using namespace facebook::react;
                            presentViewController:self->_controller
                                         animated:animated
                                       completion:^{
-                                        // Emit onDidPresent event after presenting
-                                        NSDictionary *detentInfo = self->_controller.currentDetentInfo;
-                                        CGFloat detentValue = detentInfo ? [detentInfo[@"value"] doubleValue] : 0.0;
-                                        CGFloat position = self->_controller.currentPosition;
-
-                                        [OnDidPresentEvent emit:self->_eventEmitter
-                                                          index:index
-                                                          value:detentValue
-                                                       position:position];
-
                                         // Call completion handler
                                         if (completion) {
                                           completion(YES, nil);
@@ -371,7 +361,23 @@ using namespace facebook::react;
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillAppear {
-  [OnWillPresentEvent emit:_eventEmitter];
+  NSDictionary *detentInfo = self->_controller.currentDetentInfo;
+  CGFloat position = self->_controller.currentPosition;
+  
+  [OnWillPresentEvent emit:self->_eventEmitter
+                    index:[detentInfo[@"index"] intValue]
+                    value:[detentInfo[@"value"] doubleValue]
+                 position:position];
+}
+
+- (void)viewControllerDidAppear {
+  NSDictionary *detentInfo = self->_controller.currentDetentInfo;
+  CGFloat position = self->_controller.currentPosition;
+
+  [OnDidPresentEvent emit:self->_eventEmitter
+                    index:[detentInfo[@"index"] intValue]
+                    value:[detentInfo[@"value"] doubleValue]
+                 position:position];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position {

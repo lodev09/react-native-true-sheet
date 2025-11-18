@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
 - (void)viewControllerWillAppear;
+- (void)viewControllerDidAppear;
 - (void)viewControllerDidDismiss;
 - (void)viewControllerDidChangeDetent:(NSInteger)index value:(CGFloat)value position:(CGFloat)position;
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state height:(CGFloat)height position:(CGFloat)position;

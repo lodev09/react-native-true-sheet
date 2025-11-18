@@ -19,7 +19,7 @@
   UIVisualEffectView *_backgroundView;
   NSMutableDictionary<NSString *, NSDictionary *> *_detentValues;
   CGFloat _bottomInset;
-  BOOL _isTransitioning;
+  BOOL _isPresenting;
 }
 
 - (instancetype)init {
@@ -68,19 +68,21 @@
   }
 
   [self setupGestureRecognizer];
-  [self setupTransitionPositionTracking];
+  _isPresenting = YES;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
+  
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidAppear)]) {
+    [self.delegate viewControllerDidAppear];
+  }
 
-  [self stopTransitionPositionTracking];
+  _isPresenting = NO;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
-  
-  [self setupTransitionPositionTracking];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -88,14 +90,12 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
-  
-  [self stopTransitionPositionTracking];
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
   
-  if (!_isTransitioning)
+  if (!_isPresenting)
     [self emitChangePositionDelegate];
 
   UIView *presentedView = self.presentedView;
@@ -131,19 +131,6 @@
       [self.delegate viewControllerDidChangePosition:self.currentHeight position:self.currentPosition];
     }
   }
-}
-
-- (void)setupTransitionPositionTracking {
-  _isTransitioning = YES;
-  NSLog(@"%f", self.currentPosition);
-
-  // TODO: emit viewControllerDidChangePosition
-}
-
-- (void)stopTransitionPositionTracking {
-  _isTransitioning = NO;
-
-  // TODO: stop tracking
 }
 
 #pragma mark - Background Setup
@@ -348,11 +335,11 @@
 - (NSDictionary *)currentDetentInfo {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
-    return nil;
+    return @{@"index" : @(-1), @"value" : @(0)};
 
   UISheetPresentationControllerDetentIdentifier selectedIdentifier = sheet.selectedDetentIdentifier;
   if (!selectedIdentifier)
-    return nil;
+    return @{@"index" : @(-1), @"value" : @(0)};
 
   return _detentValues[selectedIdentifier];
 }

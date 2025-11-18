@@ -10,10 +10,10 @@ import {
 import { TrueSheet, type DetentInfo } from '@lodev09/react-native-true-sheet'
 import MapView from 'react-native-maps'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated'
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 
 import { Button, DemoContent, Footer, Spacer } from '../components'
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils'
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING, SPRING_CONFIG } from '../utils'
 import { usePositionChangeHandler } from '../hooks'
 import {
   BasicSheet,
@@ -44,8 +44,7 @@ export const MapScreen = () => {
 
   const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
     'worklet'
-    console.log(detentInfo.position)
-    buttonY.value = -detentInfo.value
+    buttonY.value = detentInfo.value
   })
 
   const presentBasicSheet = async (index = 0) => {
@@ -57,7 +56,7 @@ export const MapScreen = () => {
     styles.floatingButton,
     { bottom: insets.bottom + SPACING },
     useAnimatedStyle(() => ({
-      transform: [{ translateY: buttonY.value }],
+      transform: [{ translateY: -buttonY.value }],
     })),
   ]
 
@@ -88,7 +87,7 @@ export const MapScreen = () => {
       <AnimatedButton
         activeOpacity={0.6}
         style={$floatingButtonStyles}
-        onPress={() => sheetRef.current?.resize(0)}
+        onPress={() => sheetRef.current?.resize(1)}
       />
       <AnimatedTrueSheet
         detents={[0.25, 'auto', 1]}
@@ -98,10 +97,15 @@ export const MapScreen = () => {
         edgeToEdge
         style={styles.content}
         dimmedIndex={2}
-        dismissible={false}
+        // dismissible={false}
         cornerRadius={12}
         initialIndex={1}
         onPositionChange={positionChangeHandler}
+        onWillPresent={(e) => {
+          const { index, position, value } = e.nativeEvent
+          buttonY.value = withSpring(value, SPRING_CONFIG)
+          console.log(`Sheet will present to index: ${index} (${value}) at ${position}`)
+        }}
         onDidPresent={() => {
           console.log('Sheet is presented')
         }}
@@ -131,7 +135,7 @@ export const MapScreen = () => {
 
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />

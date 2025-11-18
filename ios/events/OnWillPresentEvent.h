@@ -17,7 +17,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OnWillPresentEvent : NSObject
 
-+ (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
++ (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
+       index:(NSInteger)index
+       value:(CGFloat)value
+    position:(CGFloat)position;
 
 @end
 

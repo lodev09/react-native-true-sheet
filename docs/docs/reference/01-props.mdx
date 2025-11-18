@@ -197,7 +197,8 @@ const App = () => {
     console.log('Bye bye 👋')
   }
 
-  const handleOnWillPresent = () => {
+  const handleOnWillPresent = (e: WillPresentEvent) => {
+    console.log(e.nativeEvent) // { index: 0, value: 420, position: 123.5 }
     console.log('Sheet is about to be presented')
   }
 
@@ -233,6 +234,8 @@ const App = () => {
 This is called when the sheet has been mounted and is ready to present.
 
 ### `onWillPresent`
+
+Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet is about to be presented.
 
