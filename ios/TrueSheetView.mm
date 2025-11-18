@@ -68,9 +68,6 @@ using namespace facebook::react;
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
-
-  // Emit onMount event once
-  [OnMountEvent emit:_eventEmitter];
 }
 
 - (void)handleInitialPresentation {
@@ -172,6 +169,9 @@ using namespace facebook::react;
 
     // Setup container in sheet view (handles reference and touch handling)
     [_containerView setupInSheetView:self];
+    
+    // Emit onMount event when container is mounted
+    [OnMountEvent emit:_eventEmitter];
     
     // Trigger initial presentation now that container is ready
     [self handleInitialPresentation];
