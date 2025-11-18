@@ -74,7 +74,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
           `drag ended at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
-      onDismiss={() => console.log('Basic sheet dismissed!')}
+      onDidDismiss={() => console.log('Basic sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(
           `Basic sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

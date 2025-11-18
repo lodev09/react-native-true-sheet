@@ -8,16 +8,16 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "OnDismissEvent.h"
+#import "OnWillDismissEvent.h"
 
-@implementation OnDismissEvent
+@implementation OnWillDismissEvent
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter {
   if (!eventEmitter)
     return;
 
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
-  emitter->onDismiss({});
+  emitter->onWillDismiss({});
 }
 
 @end

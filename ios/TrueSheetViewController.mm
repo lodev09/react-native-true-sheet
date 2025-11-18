@@ -83,6 +83,9 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+  if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+    [self.delegate viewControllerWillDismiss];
+  }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {

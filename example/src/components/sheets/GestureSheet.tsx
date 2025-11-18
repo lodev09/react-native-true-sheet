@@ -54,7 +54,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
-      onDismiss={() => console.log('Gesture sheet dismissed!')}
+      onDidDismiss={() => console.log('Gesture sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(
           `Gesture sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

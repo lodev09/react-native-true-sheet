@@ -44,7 +44,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
-      onDismiss={handleDismiss}
+      onDidDismiss={handleDismiss}
       onDidPresent={(e) =>
         console.log(
           `Sheet prompt presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

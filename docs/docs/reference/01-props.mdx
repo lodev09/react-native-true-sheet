@@ -219,7 +219,8 @@ const App = () => {
         onWillPresent={handleOnWillPresent}
         onDidPresent={handleOnDidPresent}
         onDetentChange={handleDetentChange}
-        onDismiss={handleDismiss}
+        onWillDismiss={handleOnWillDismiss}
+        onDidDismiss={handleOnDidDismiss}
       >
         <Button title="Resize" onPress={() => sheet.current?.resize(1)} />
         <Button title="Dismiss" onPress={() => sheet.current?.dismiss(1)} />
@@ -245,7 +246,11 @@ Comes with [`DetentInfo`](/reference/types#detentinfo).
 
 This is called when the sheet has been presented, providing the detent `index` and `position`.
 
-### `onDismiss`
+### `onWillDismiss`
+
+This is called when the sheet is about to be dismissed.
+
+### `onDidDismiss`
 
 This is called when the sheet has been dismissed.
 

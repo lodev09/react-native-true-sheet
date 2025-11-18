@@ -330,6 +330,13 @@ using namespace facebook::react;
   }
 }
 
+- (void)viewControllerWillDismiss {
+  // Notify sheet view to emit event
+  if (_sheetView) {
+    [_sheetView notifyWillDismiss];
+  }
+}
+
 - (void)viewControllerDidDismiss {
   _isPresented = NO;
   _activeIndex = nil;

@@ -230,9 +230,14 @@ export interface TrueSheetProps extends ViewProps {
   onDidPresent?: (event: DidPresentEvent) => void
 
   /**
+   * Called when the Sheet is about to be dismissed
+   */
+  onWillDismiss?: () => void
+
+  /**
    * Called when the Sheet has been dismissed
    */
-  onDismiss?: () => void
+  onDidDismiss?: () => void
 
   /**
    * Called when the detent of the sheet has changed.

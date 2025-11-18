@@ -16,7 +16,8 @@
 #import "TrueSheetViewController.h"
 #import "events/OnDetentChangeEvent.h"
 #import "events/OnDidPresentEvent.h"
-#import "events/OnDismissEvent.h"
+#import "events/OnWillDismissEvent.h"
+#import "events/OnDidDismissEvent.h"
 #import "events/OnDragBeginEvent.h"
 #import "events/OnDragChangeEvent.h"
 #import "events/OnDragEndEvent.h"
@@ -222,8 +223,12 @@ using namespace facebook::react;
   }
 }
 
+- (void)notifyWillDismiss {
+  [OnWillDismissEvent emit:_eventEmitter];
+}
+
 - (void)notifyDidDismiss {
-  [OnDismissEvent emit:_eventEmitter];
+  [OnDidDismissEvent emit:_eventEmitter];
 }
 
 - (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position {

@@ -103,6 +103,12 @@ class TrueSheetView(context: Context) :
         dispatchEvent(TrueSheetEvent.DID_PRESENT, detentInfoData(sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)))
       }
 
+      // Setup listener when the dialog is about to be dismissed.
+      setOnCancelListener {
+        // Dispatch onWillDismiss event
+        dispatchEvent(TrueSheetEvent.WILL_DISMISS)
+      }
+
       // Setup listener when the dialog has been dismissed.
       setOnDismissListener {
         unregisterKeyboardManager()
@@ -113,8 +119,8 @@ class TrueSheetView(context: Context) :
           dismissPromise = null
         }
 
-        // Dispatch onDismiss event
-        dispatchEvent(TrueSheetEvent.DISMISS)
+        // Dispatch onDidDismiss event
+        dispatchEvent(TrueSheetEvent.DID_DISMISS)
       }
 
       // Configure sheet behavior events
