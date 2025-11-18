@@ -13,10 +13,10 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "TrueSheetView.h"
-#import "TrueSheetViewController.h"
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
+#import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
 #import <React/RCTConversions.h>
@@ -31,7 +31,7 @@ using namespace facebook::react;
   TrueSheetViewController *_controller;
   TrueSheetContentView *_contentView;
   TrueSheetFooterView *_footerView;
-  
+
   BOOL _isPresented;
   NSNumber *_activeIndex;
 }
@@ -49,11 +49,11 @@ using namespace facebook::react;
 
     // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
-    
+
     // Initialize controller
     _controller = [[TrueSheetViewController alloc] init];
     _controller.delegate = self;
-    
+
     _sheetView = nil;
     _contentView = nil;
     _footerView = nil;
@@ -96,7 +96,7 @@ using namespace facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
-  
+
   // Check if it's a content or footer view
   if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
     if (_contentView != nil) {
@@ -108,12 +108,12 @@ using namespace facebook::react;
 
     // Set delegate to listen for size changes
     _contentView.delegate = self;
-    
+
     // Set initial content height from mounted view's frame
     if (_contentView.frame.size.height > 0) {
       _controller.contentHeight = @(_contentView.frame.size.height);
     }
-    
+
     // Setup content view with controller
     [_contentView setupWithController:_controller];
   }
@@ -125,7 +125,7 @@ using namespace facebook::react;
     }
 
     _footerView = (TrueSheetFooterView *)childComponentView;
-    
+
     // Setup footer view with controller
     [_footerView setupWithController:_controller];
   }
@@ -141,7 +141,7 @@ using namespace facebook::react;
     [_footerView cleanup];
     _footerView = nil;
   }
-  
+
   [super unmountChildComponentView:childComponentView index:index];
 }
 
@@ -151,7 +151,7 @@ using namespace facebook::react;
     [_contentView cleanup];
     _contentView = nil;
   }
-  
+
   if (_footerView) {
     [_footerView cleanup];
     _footerView = nil;
@@ -235,9 +235,9 @@ using namespace facebook::react;
 #pragma mark - Presentation Methods
 
 - (void)presentAtIndex:(NSInteger)index
-              animated:(BOOL)animated
-   presentingViewController:(UIViewController *)presentingViewController
-            completion:(nullable TrueSheetCompletionBlock)completion {
+                  animated:(BOOL)animated
+  presentingViewController:(UIViewController *)presentingViewController
+                completion:(nullable TrueSheetCompletionBlock)completion {
   if (_isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
       [_controller resizeToIndex:index];
@@ -267,19 +267,17 @@ using namespace facebook::react;
   [self applyPropsFromSheetView];
 
   // Prepare the sheet with the correct initial index before presenting
-  [_controller
-    prepareForPresentationAtIndex:index
-                       completion:^{
-                        [presentingViewController
-                           presentViewController:self->_controller
-                                        animated:animated
-                                      completion:^{
-                                        // Call completion handler
-                                        if (completion) {
-                                          completion(YES, nil);
-                                        }
-                                      }];
-                       }];
+  [_controller prepareForPresentationAtIndex:index
+                                  completion:^{
+                                    [presentingViewController presentViewController:self->_controller
+                                                                           animated:animated
+                                                                         completion:^{
+                                                                           // Call completion handler
+                                                                           if (completion) {
+                                                                             completion(YES, nil);
+                                                                           }
+                                                                         }];
+                                  }];
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
@@ -300,7 +298,7 @@ using namespace facebook::react;
 
 - (void)resizeToIndex:(NSInteger)index {
   _activeIndex = @(index);
-  
+
   if (_isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
       [_controller resizeToIndex:index];
@@ -366,7 +364,7 @@ using namespace facebook::react;
 - (void)containerViewDidChangeSize:(CGSize)newSize {
   // Update controller's content height
   _controller.contentHeight = @(newSize.height);
-  
+
   // Update detents if sheet is already presented
   if (_isPresented) {
     [_controller.sheetPresentationController animateChanges:^{

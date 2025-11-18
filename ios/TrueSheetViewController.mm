@@ -62,7 +62,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
-  
+
   if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
     [self.delegate viewControllerWillAppear];
   }
@@ -73,7 +73,7 @@
 
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
-  
+
   if ([self.delegate respondsToSelector:@selector(viewControllerDidAppear)]) {
     [self.delegate viewControllerDidAppear];
   }
@@ -94,14 +94,14 @@
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
-  
+
   if (!_isPresenting)
     [self emitChangePositionDelegate];
 
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
-  
+
   // Detect width changes (e.g., device rotation) and trigger size recalculation
   // This is essential for "auto" sizing to work correctly
   if (_lastViewWidth != presentedView.frame.size.width) {
@@ -348,7 +348,7 @@
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return 0.0;
-  
+
   return presentedView.frame.origin.y;
 }
 
@@ -360,7 +360,7 @@
   UIView *containerView = self.sheetPresentationController.containerView;
   if (!containerView)
     return 0.0;
-  
+
   return containerView.frame.size.height;
 }
 
@@ -400,7 +400,7 @@
   if (detentInfo && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:value:position:)]) {
     NSInteger index = [detentInfo[@"index"] integerValue];
     CGFloat value = [detentInfo[@"value"] floatValue];
-    
+
     [self.delegate viewControllerDidChangeDetent:index value:value position:self.currentPosition];
   }
 }

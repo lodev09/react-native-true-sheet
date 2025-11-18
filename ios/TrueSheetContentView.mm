@@ -60,7 +60,7 @@ using namespace facebook::react;
   if (_touchHandler) {
     [_touchHandler attachToView:self];
   }
-  
+
   // Auto-detect and pin scroll views to container for proper scrolling behavior
   [self setupScrollViewPinning];
 }

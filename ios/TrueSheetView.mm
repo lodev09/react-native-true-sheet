@@ -14,15 +14,15 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
-#import "events/OnMountEvent.h"
-#import "events/OnWillPresentEvent.h"
+#import "events/OnDetentChangeEvent.h"
 #import "events/OnDidPresentEvent.h"
 #import "events/OnDismissEvent.h"
-#import "events/OnDetentChangeEvent.h"
 #import "events/OnDragBeginEvent.h"
 #import "events/OnDragChangeEvent.h"
 #import "events/OnDragEndEvent.h"
+#import "events/OnMountEvent.h"
 #import "events/OnPositionChangeEvent.h"
+#import "events/OnWillPresentEvent.h"
 #import "utils/LayoutUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -44,6 +44,7 @@ using namespace facebook::react;
 @implementation TrueSheetView {
   TrueSheetContainerView *_containerView;
   LayoutMetrics _layoutMetrics;
+  BOOL _hasHandledInitialPresentation;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -52,6 +53,7 @@ using namespace facebook::react;
     _props = defaultProps;
 
     _containerView = nil;
+    _hasHandledInitialPresentation = NO;
   }
   return self;
 }
@@ -67,32 +69,6 @@ using namespace facebook::react;
   // This ensures the tag is properly set by the framework
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
-  }
-}
-
-- (void)handleInitialPresentation {
-  // Handle initial presentation after container is mounted and view is in window
-  if (!_containerView) {
-    return;
-  }
-  
-  if (!self.window) {
-    // Defer until view is in window
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self handleInitialPresentation];
-    });
-    return;
-  }
-  
-  const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-  
-  if (props.initialIndex >= 0) {
-    BOOL animated = props.initialIndexAnimated;
-    UIViewController *presentingViewController = [self findPresentingViewController];
-    [_containerView presentAtIndex:props.initialIndex 
-                          animated:animated 
-          presentingViewController:presentingViewController
-                        completion:nil];
   }
 }
 
@@ -123,8 +99,8 @@ using namespace facebook::react;
   }
 
   UIViewController *presentingViewController = [self findPresentingViewController];
-  [_containerView presentAtIndex:index 
-                        animated:animated 
+  [_containerView presentAtIndex:index
+                        animated:animated
         presentingViewController:presentingViewController
                       completion:completion];
 }
@@ -142,10 +118,23 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
-  
+
+  const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
+
   // Notify container to apply updated props
   if (_containerView) {
     [_containerView applyPropsFromSheetView];
+
+    // Handle initial presentation
+    if (!_hasHandledInitialPresentation && newProps.initialIndex >= 0) {
+      UIViewController *presentingViewController = [self findPresentingViewController];
+      [_containerView presentAtIndex:newProps.initialIndex
+                            animated:newProps.initialIndexAnimated
+            presentingViewController:presentingViewController
+                          completion:nil];
+
+      _hasHandledInitialPresentation = YES;
+    }
   }
 }
 
@@ -169,12 +158,9 @@ using namespace facebook::react;
 
     // Setup container in sheet view (handles reference and touch handling)
     [_containerView setupInSheetView:self];
-    
+
     // Emit onMount event when container is mounted
     [OnMountEvent emit:_eventEmitter];
-    
-    // Trigger initial presentation now that container is ready
-    [self handleInitialPresentation];
   }
 }
 
@@ -197,20 +183,22 @@ using namespace facebook::react;
 #pragma mark - Event Notification Methods (called by container)
 
 - (void)notifyWillPresent {
-  if (!_containerView) return;
-  
+  if (!_containerView)
+    return;
+
   NSDictionary *detentInfo = _containerView.controller.currentDetentInfo;
   CGFloat position = _containerView.controller.currentPosition;
-  
+
   [OnWillPresentEvent emit:_eventEmitter
-                    index:[detentInfo[@"index"] intValue]
-                    value:[detentInfo[@"value"] doubleValue]
-                 position:position];
+                     index:[detentInfo[@"index"] intValue]
+                     value:[detentInfo[@"value"] doubleValue]
+                  position:position];
 }
 
 - (void)notifyDidPresent {
-  if (!_containerView) return;
-  
+  if (!_containerView)
+    return;
+
   NSDictionary *detentInfo = _containerView.controller.currentDetentInfo;
   CGFloat position = _containerView.controller.currentPosition;
 
@@ -220,9 +208,9 @@ using namespace facebook::react;
                  position:position];
 }
 
-- (void)notifyDidDrag:(UIGestureRecognizerState)state 
-                index:(NSInteger)index 
-               height:(CGFloat)height 
+- (void)notifyDidDrag:(UIGestureRecognizerState)state
+                index:(NSInteger)index
+               height:(CGFloat)height
              position:(CGFloat)position {
   switch (state) {
     case UIGestureRecognizerStateBegan:

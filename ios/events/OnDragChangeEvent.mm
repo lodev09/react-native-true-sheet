@@ -16,8 +16,9 @@
        index:(NSInteger)index
        value:(CGFloat)value
     position:(CGFloat)position {
-  if (!eventEmitter) return;
-  
+  if (!eventEmitter)
+    return;
+
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
   TrueSheetViewEventEmitter::OnDragChange event;
   event.index = static_cast<int>(index);

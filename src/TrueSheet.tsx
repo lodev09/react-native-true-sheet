@@ -246,8 +246,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dismissible = true,
       grabber = true,
       dimmed = true,
+      initialIndex = -1,
       initialIndexAnimated = true,
-      initialIndex,
       dimmedIndex,
       blurTint,
       cornerRadius,
@@ -257,11 +257,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       footer,
       ...rest
     } = this.props
-
-    if (!this.state.shouldRenderNativeView) {
-      // Return an empty View here so Reanimated wrapped sheet doesn't error.
-      return null
-    }
 
     return (
       <TrueSheetViewNativeComponent
@@ -274,7 +269,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        initialIndex={initialIndex ?? -1}
+        initialIndex={initialIndex}
         initialIndexAnimated={initialIndexAnimated}
         dismissible={dismissible}
         maxHeight={maxHeight}
@@ -288,18 +283,20 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
       >
-        <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
-          <TrueSheetContentViewNativeComponent style={styles.contentView} collapsable={false}>
-            <View style={style} {...rest}>
-              {children}
-            </View>
-          </TrueSheetContentViewNativeComponent>
-          {footer && (
-            <TrueSheetFooterViewNativeComponent collapsable={false}>
-              {isValidElement(footer) ? footer : createElement(footer)}
-            </TrueSheetFooterViewNativeComponent>
-          )}
-        </TrueSheetContainerViewNativeComponent>
+        {this.state.shouldRenderNativeView && (
+          <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
+            <TrueSheetContentViewNativeComponent style={styles.contentView} collapsable={false}>
+              <View style={style} {...rest}>
+                {children}
+              </View>
+            </TrueSheetContentViewNativeComponent>
+            {footer && (
+              <TrueSheetFooterViewNativeComponent collapsable={false}>
+                {isValidElement(footer) ? footer : createElement(footer)}
+              </TrueSheetFooterViewNativeComponent>
+            )}
+          </TrueSheetContainerViewNativeComponent>
+        )}
       </TrueSheetViewNativeComponent>
     )
   }

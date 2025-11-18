@@ -44,9 +44,9 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
  * @param completion Optional completion handler
  */
 - (void)presentAtIndex:(NSInteger)index
-              animated:(BOOL)animated
-   presentingViewController:(UIViewController *)presentingViewController
-            completion:(nullable TrueSheetCompletionBlock)completion;
+                  animated:(BOOL)animated
+  presentingViewController:(UIViewController *)presentingViewController
+                completion:(nullable TrueSheetCompletionBlock)completion;
 
 /**
  * Dismisses the sheet

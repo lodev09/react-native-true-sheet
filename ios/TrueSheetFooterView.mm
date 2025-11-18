@@ -100,7 +100,7 @@ using namespace facebook::react;
 
   // Unpin constraints (view removal handled by React Native)
   [LayoutUtil unpinView:self];
-  
+
   // Clear reference to controller
   _controller = nil;
   _lastHeight = 0;

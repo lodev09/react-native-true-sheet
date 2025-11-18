@@ -13,8 +13,9 @@
 @implementation OnDismissEvent
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter {
-  if (!eventEmitter) return;
-  
+  if (!eventEmitter)
+    return;
+
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
   emitter->onDismiss({});
 }
