@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 #import <react/renderer/core/LayoutMetrics.h>
 
-@class TrueSheetView;
+@class TrueSheetViewController;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,13 +28,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 
 /**
- * Sets up the container view in the sheet view with touch handling
- * @param sheetView The TrueSheetView parent to setup in
+ * Sets up the content view with touch handling and scroll view detection
+ * @param controller The TrueSheetViewController that owns the view
  */
-- (void)setupInSheetView:(TrueSheetView *)sheetView;
+- (void)setupWithController:(TrueSheetViewController *)controller;
 
 /**
- * Cleans up the container view before removal
+ * Cleans up the content view before removal
  */
 - (void)cleanup;
 

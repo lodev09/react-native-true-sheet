@@ -18,9 +18,10 @@ import type {
   DidPresentEvent,
   PositionChangeEvent,
 } from './TrueSheet.types'
-import TrueSheetViewNativeComponent from './TrueSheetViewNativeComponent'
-import TrueSheetContentViewNativeComponent from './TrueSheetContentViewNativeComponent'
-import TrueSheetFooterViewNativeComponent from './TrueSheetFooterViewNativeComponent'
+import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent'
+import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent'
+import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent'
+import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent'
 
 import TrueSheetModule from './specs/NativeTrueSheetModule'
 
@@ -246,8 +247,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       grabber = true,
       dimmed = true,
       initialIndexAnimated = true,
-      edgeToEdge = false,
-      keyboardMode = 'resize',
       initialIndex,
       dimmedIndex,
       blurTint,
@@ -275,10 +274,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        edgeToEdge={edgeToEdge}
         initialIndex={initialIndex ?? -1}
         initialIndexAnimated={initialIndexAnimated}
-        keyboardMode={keyboardMode}
         dismissible={dismissible}
         maxHeight={maxHeight}
         onMount={this.onMount}
@@ -291,16 +288,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
       >
-        <TrueSheetContentViewNativeComponent style={styles.containerView} collapsable={false}>
-          <View style={style} {...rest}>
-            {children}
-          </View>
-        </TrueSheetContentViewNativeComponent>
-        {footer && (
-          <TrueSheetFooterViewNativeComponent collapsable={false}>
-            {isValidElement(footer) ? footer : createElement(footer)}
-          </TrueSheetFooterViewNativeComponent>
-        )}
+        <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
+          <TrueSheetContentViewNativeComponent style={styles.contentView} collapsable={false}>
+            <View style={style} {...rest}>
+              {children}
+            </View>
+          </TrueSheetContentViewNativeComponent>
+          {footer && (
+            <TrueSheetFooterViewNativeComponent collapsable={false}>
+              {isValidElement(footer) ? footer : createElement(footer)}
+            </TrueSheetFooterViewNativeComponent>
+          )}
+        </TrueSheetContainerViewNativeComponent>
       </TrueSheetViewNativeComponent>
     )
   }
@@ -314,6 +313,13 @@ const styles = StyleSheet.create({
     right: 0,
   },
   containerView: {
+    backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  contentView: {
     backgroundColor: 'blue',
     position: 'absolute',
     left: 0,

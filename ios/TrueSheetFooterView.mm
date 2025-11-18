@@ -13,7 +13,6 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
@@ -21,7 +20,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
   RCTSurfaceTouchHandler *_touchHandler;
-  __weak TrueSheetView *_sheetView;
+  __weak TrueSheetViewController *_controller;
   CGFloat _lastHeight;
 }
 
@@ -39,24 +38,24 @@ using namespace facebook::react;
 
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    _sheetView = nil;
+    _controller = nil;
     _lastHeight = 0;
   }
   return self;
 }
 
 - (void)setupConstraintsWithHeight:(CGFloat)height {
-  if (!_sheetView) {
+  // Get parent view (container)
+  UIView *parentView = self.superview;
+  if (!parentView) {
     return;
   }
-
-  // Get parent view
-  UIView *parentView = _sheetView.controller.view;
 
   // Unpin existing constraints first
   [LayoutUtil unpinView:self];
 
   // Pin to bottom, leading, and trailing edges with height constraint
+  // Pin to container (parent) which already fills the controller's view
   [LayoutUtil pinView:self
          toParentView:parentView
                 edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
@@ -66,37 +65,23 @@ using namespace facebook::react;
   _lastHeight = height;
 }
 
-- (void)setupInSheetView:(TrueSheetView *)sheetView {
-  // Store reference to sheet view
-  _sheetView = sheetView;
-
-  // Get the controller's view as the parent view
-  UIView *parentView = sheetView.controller.view;
-
-  // Add to parent view hierarchy
-  [parentView addSubview:self];
-
-  // Setup initial constraints with current frame height
-  CGFloat initialHeight = self.frame.size.height;
-  [self setupConstraintsWithHeight:initialHeight];
-
-  // Ensure footer is above container
-  [parentView bringSubviewToFront:self];
+- (void)setupWithController:(TrueSheetViewController *)controller {
+  // Store reference to controller (kept for potential future use)
+  _controller = controller;
 
   // Attach touch handler for React Native touch events
   if (_touchHandler) {
     [_touchHandler attachToView:self];
   }
+
+  // Setup initial constraints with current frame height
+  CGFloat initialHeight = self.frame.size.height;
+  [self setupConstraintsWithHeight:initialHeight];
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-
-  // Only update constraints if the view has been added to sheet view
-  if (!_sheetView) {
-    return;
-  }
 
   // Get the height from layout metrics
   CGFloat height = layoutMetrics.frame.size.height;
@@ -113,12 +98,11 @@ using namespace facebook::react;
     [_touchHandler detachFromView:self];
   }
 
-  // Unpin and remove from view hierarchy
+  // Unpin constraints (view removal handled by React Native)
   [LayoutUtil unpinView:self];
-  [self removeFromSuperview];
-
-  // Clear reference to sheet view
-  _sheetView = nil;
+  
+  // Clear reference to controller
+  _controller = nil;
   _lastHeight = 0;
 }
 

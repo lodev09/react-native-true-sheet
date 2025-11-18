@@ -13,7 +13,6 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
@@ -23,7 +22,6 @@ using namespace facebook::react;
   RCTSurfaceTouchHandler *_touchHandler;
   UIView *_pinnedScrollView;
   CGSize _lastSize;
-  __weak TrueSheetView *_sheetView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -39,7 +37,6 @@ using namespace facebook::react;
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
     _pinnedScrollView = nil;
     _lastSize = CGSizeZero;
-    _sheetView = nil;
   }
   return self;
 }
@@ -58,30 +55,17 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupInSheetView:(TrueSheetView *)sheetView {
-  // Store reference to sheet view
-  _sheetView = sheetView;
-
-  // Get the controller's view as the parent view
-  UIView *parentView = sheetView.controller.view;
-
-  // Add to parent view hierarchy
-  [parentView addSubview:self];
-
-  // Auto-detect and pin scroll views to enable proper scrolling behavior
-  // This happens immediately instead of waiting for didMoveToWindow to ensure the view hierarchy is ready
-  [self setupScrollViewPinning:parentView];
-
-  // Ensure container is above background view for touch events
-  [parentView bringSubviewToFront:self];
-
+- (void)setupWithController:(TrueSheetViewController *)controller {
   // Attach touch handler for React Native touch events
   if (_touchHandler) {
     [_touchHandler attachToView:self];
   }
+  
+  // Auto-detect and pin scroll views to container for proper scrolling behavior
+  [self setupScrollViewPinning];
 }
 
-- (void)setupScrollViewPinning:(UIView *)parentView {
+- (void)setupScrollViewPinning {
   // Find scroll view in content view hierarchy
   UIView *scrollView = [self findScrollView];
 
@@ -91,10 +75,14 @@ using namespace facebook::react;
       [LayoutUtil unpinView:_pinnedScrollView];
     }
 
-    // Pin the scroll view directly to the sheet controller's view instead of its immediate parent
-    // This ensures the scroll view fills the entire sheet area for proper scrolling behavior
-    [LayoutUtil pinView:scrollView toParentView:parentView edges:UIRectEdgeAll];
-    _pinnedScrollView = scrollView;
+    // Get container view (self.superview)
+    UIView *containerView = self.superview;
+    if (containerView) {
+      // Pin the scroll view to the container view
+      // This ensures the scroll view fills the entire sheet area for proper scrolling behavior
+      [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
+      _pinnedScrollView = scrollView;
+    }
   }
 }
 
@@ -129,12 +117,7 @@ using namespace facebook::react;
     _pinnedScrollView = nil;
   }
 
-  // Unpin and remove from view hierarchy
-  [LayoutUtil unpinView:self];
-  [self removeFromSuperview];
-
-  // Clear reference to sheet view
-  _sheetView = nil;
+  // Note: View removal is handled by React Native
 }
 
 @end

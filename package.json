@@ -210,6 +210,9 @@
         "TrueSheetView": {
           "className": "TrueSheetView"
         },
+        "TrueSheetContainerView": {
+          "className": "TrueSheetContainerView"
+        },
         "TrueSheetContentView": {
           "className": "TrueSheetContentView"
         },
