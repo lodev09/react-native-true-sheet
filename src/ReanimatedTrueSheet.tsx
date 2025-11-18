@@ -9,7 +9,7 @@ import type {
   WillPresentEvent,
 } from './TrueSheet.types'
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider'
-import { usePositionChangeHandler, useWillPresentHandler } from './hooks'
+import { usePositionChangeHandler, useWillPresentHandler, useWillDismissHandler } from './hooks'
 import { Platform } from 'react-native'
 import { scheduleOnRN } from 'react-native-worklets'
 
@@ -51,7 +51,7 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
  * ```
  */
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
-  const { onPositionChange, onWillPresent, ...rest } = props
+  const { onPositionChange, onWillPresent, onWillDismiss, ...rest } = props
 
   const { position } = useReanimatedTrueSheet()
 
@@ -80,11 +80,24 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props,
     }
   })
 
+  const willDismissHandler = useWillDismissHandler(() => {
+    'worklet'
+    // On iOS, animate to 0 since this is not supported during transition.
+    if (Platform.OS === 'ios') {
+      position.value = withSpring(0, SPRING_CONFIG)
+    }
+
+    if (onWillDismiss) {
+      scheduleOnRN(onWillDismiss)
+    }
+  })
+
   return (
     <AnimatedTrueSheet
       ref={ref}
       onPositionChange={positionChangeHandler}
       onWillPresent={willPresentHandler}
+      onWillDismiss={willDismissHandler as unknown as (() => void) | undefined}
       {...rest}
     />
   )
