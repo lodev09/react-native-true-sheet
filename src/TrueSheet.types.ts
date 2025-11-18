@@ -14,6 +14,8 @@ export interface DetentInfo {
   position: number
 }
 
+export type PositionChangeEventPayload = DetentInfo & { transitioning: boolean }
+
 export type MountEvent = NativeSyntheticEvent<{}>
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type WillPresentEvent = NativeSyntheticEvent<DetentInfo>
@@ -23,7 +25,7 @@ export type DidDismissEvent = NativeSyntheticEvent<{}>
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfo>
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfo>
 export type DragEndEvent = NativeSyntheticEvent<DetentInfo>
-export type PositionChangeEvent = NativeSyntheticEvent<DetentInfo>
+export type PositionChangeEvent = NativeSyntheticEvent<PositionChangeEventPayload>
 
 /**
  * Blur style mapped to native values in IOS.

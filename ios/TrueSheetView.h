@@ -35,7 +35,7 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 - (void)notifyWillDismiss;
 - (void)notifyDidDismiss;
 - (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position;
-- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position;
+- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning;
 
 @end
 

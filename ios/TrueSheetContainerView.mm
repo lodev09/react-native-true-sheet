@@ -358,10 +358,10 @@ using namespace facebook::react;
   }
 }
 
-- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position {
+- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
   // Notify sheet view to emit event
   if (_sheetView) {
-    [_sheetView notifyDidChangePosition:index position:position];
+    [_sheetView notifyDidChangePosition:index position:position transitioning:transitioning];
   }
 }
 

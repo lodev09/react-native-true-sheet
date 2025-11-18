@@ -12,6 +12,8 @@ export interface DetentInfo {
   position: Double
 }
 
+type PositionChangeEventPayload = DetentInfo & { transitioning: boolean }
+
 export interface NativeProps extends ViewProps {
   // Array properties
   detents?: ReadonlyArray<number>
@@ -46,7 +48,7 @@ export interface NativeProps extends ViewProps {
   onDragBegin?: DirectEventHandler<DetentInfo>
   onDragChange?: DirectEventHandler<DetentInfo>
   onDragEnd?: DirectEventHandler<DetentInfo>
-  onPositionChange?: DirectEventHandler<DetentInfo>
+  onPositionChange?: DirectEventHandler<PositionChangeEventPayload>
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

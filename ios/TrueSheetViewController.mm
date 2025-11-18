@@ -20,7 +20,10 @@
   CGFloat _lastPosition;
   UIVisualEffectView *_backgroundView;
   CGFloat _bottomInset;
-  BOOL _isPresenting;
+  BOOL _isTransitioning;
+  BOOL _isDragging;
+  BOOL _isTrackingPositionFromLayout;
+  CADisplayLink *_transitionTimer;
 }
 
 - (instancetype)init {
@@ -32,6 +35,9 @@
     _dimmedIndex = @(0);
     _lastViewWidth = 0;
     _lastPosition = 0;
+    _isTransitioning = NO;
+    _isDragging = NO;
+    _isTrackingPositionFromLayout = NO;
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -68,7 +74,7 @@
   }
 
   [self setupGestureRecognizer];
-  _isPresenting = YES;
+  [self setupTransitionPositionTracking];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -77,15 +83,17 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidAppear)]) {
     [self.delegate viewControllerDidAppear];
   }
-
-  _isPresenting = NO;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+
   if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
     [self.delegate viewControllerWillDismiss];
   }
+
+  [self setupTransitionPositionTracking];
+  _isTrackingPositionFromLayout = NO;
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -93,13 +101,17 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
+
+  _isTrackingPositionFromLayout = NO;
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  if (!_isPresenting)
-    [self emitChangePositionDelegate];
+  if (!_isTransitioning) {
+    _isTrackingPositionFromLayout = YES;
+    [self emitChangePositionDelegate:NO];
+  }
 
   UIView *presentedView = self.presentedView;
   if (!presentedView)
@@ -123,20 +135,60 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:)]) {
     [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition];
   }
+
+  switch (gesture.state) {
+    case UIGestureRecognizerStateBegan:
+      _isDragging = YES;
+      break;
+    case UIGestureRecognizerStateChanged:
+      if (!_isTrackingPositionFromLayout)
+        [self emitChangePositionDelegate:NO];
+      break;
+    case UIGestureRecognizerStateEnded:
+    case UIGestureRecognizerStateCancelled:
+      _isDragging = NO;
+      break;
+
+    default:
+      break;
+  }
 }
 
 #pragma mark - Position Tracking
 
-- (void)emitChangePositionDelegate {
+- (void)emitChangePositionDelegate:(BOOL)transitioning {
   if (_lastPosition != self.currentPosition) {
     _lastPosition = self.currentPosition;
 
     // Emit position change delegate
     NSInteger index = [self currentDetentIndex];
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:self.currentPosition];
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:transitioning:)]) {
+      [self.delegate viewControllerDidChangePosition:index position:self.currentPosition transitioning:transitioning];
     }
+  }
+}
+
+- (void)setupTransitionPositionTracking {
+  if (self.transitionCoordinator != nil) {
+    _isTransitioning = YES;
+    auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+      self->_transitionTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionAnimation)];
+      [self->_transitionTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    };
+
+    [self.transitionCoordinator
+      animateAlongsideTransition:animation
+                      completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+                        [self->_transitionTimer invalidate];
+                        self->_isTransitioning = NO;
+                      }];
+  }
+}
+
+- (void)handleTransitionAnimation {
+  if (!_isDragging) {
+    [self emitChangePositionDelegate:YES];
   }
 }
 

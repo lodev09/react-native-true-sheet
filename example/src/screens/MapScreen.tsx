@@ -27,10 +27,12 @@ import {
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
 
 export const MapScreen = () => {
+  const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
   const { position } = useReanimatedTrueSheet()
 
@@ -53,7 +55,7 @@ export const MapScreen = () => {
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
     useAnimatedStyle(() => ({
-      transform: [{ translateY: -(height - position.value) }],
+      transform: [{ translateY: Math.min(-insets.bottom, -(height - position.value)) }],
     })),
   ]
 

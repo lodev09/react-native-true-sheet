@@ -235,8 +235,8 @@ using namespace facebook::react;
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position {
-  [OnPositionChangeEvent emit:_eventEmitter index:index position:position];
+- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
+  [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
 }
 
 #pragma mark - Private Helpers

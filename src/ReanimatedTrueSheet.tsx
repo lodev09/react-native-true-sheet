@@ -2,16 +2,9 @@ import { forwardRef } from 'react'
 import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated'
 
 import { TrueSheet } from './TrueSheet'
-import type {
-  TrueSheetProps,
-  DetentInfo,
-  PositionChangeEvent,
-  WillPresentEvent,
-  WillDismissEvent,
-} from './TrueSheet.types'
+import type { TrueSheetProps, PositionChangeEvent } from './TrueSheet.types'
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider'
-import { usePositionChangeHandler, useWillPresentHandler, useWillDismissHandler } from './hooks'
-import { Platform, useWindowDimensions } from 'react-native'
+import { usePositionChangeHandler } from './hooks'
 import { scheduleOnRN } from 'react-native-worklets'
 
 const SPRING_CONFIG: WithSpringConfig = {
@@ -52,55 +45,28 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
  * ```
  */
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
-  const { onPositionChange, onWillPresent, onWillDismiss, ...rest } = props
+  const { onPositionChange, ...rest } = props
 
-  const { height } = useWindowDimensions()
   const { position } = useReanimatedTrueSheet()
 
-  const positionChangeHandler = usePositionChangeHandler((detentInfo: DetentInfo) => {
+  const positionChangeHandler = usePositionChangeHandler((payload) => {
     'worklet'
-    position.value = detentInfo.position
+
+    // This is used on IOS to tell us that we have to manually animate the value
+    // because since IOS 26, transitioning no longer sends real-time position during
+    // transition.
+    if (payload.transitioning) {
+      position.value = withSpring(payload.position, SPRING_CONFIG)
+    } else {
+      position.value = payload.position
+    }
 
     if (onPositionChange) {
       scheduleOnRN(onPositionChange, {
-        nativeEvent: detentInfo,
+        nativeEvent: payload,
       } as PositionChangeEvent)
     }
   })
 
-  const willPresentHandler = useWillPresentHandler((detentInfo: DetentInfo) => {
-    'worklet'
-    // On IOS, animate to target position since this is not supported during transition.
-    if (Platform.OS === 'ios') {
-      position.value = withSpring(detentInfo.position, SPRING_CONFIG)
-    }
-
-    if (onWillPresent) {
-      scheduleOnRN(onWillPresent, {
-        nativeEvent: detentInfo,
-      } as WillPresentEvent)
-    }
-  })
-
-  const willDismissHandler = useWillDismissHandler(() => {
-    'worklet'
-    // On iOS, animate to 0 since this is not supported during transition.
-    if (Platform.OS === 'ios') {
-      position.value = withSpring(height, SPRING_CONFIG)
-    }
-
-    if (onWillDismiss) {
-      scheduleOnRN(onWillDismiss, {} as WillDismissEvent)
-    }
-  })
-
-  return (
-    <AnimatedTrueSheet
-      ref={ref}
-      onPositionChange={positionChangeHandler}
-      onWillPresent={willPresentHandler}
-      onWillDismiss={willDismissHandler}
-      {...rest}
-    />
-  )
+  return <AnimatedTrueSheet ref={ref} onPositionChange={positionChangeHandler} {...rest} />
 })
