@@ -136,9 +136,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun removeView(child: View?) {
-    if (child is TrueSheetContainerView && child == containerView) {
-      child.cleanup()
-      containerView = null
+    if (child is TrueSheetContainerView) {
+      if (child == containerView) {
+        child.cleanup()
+        containerView = null
+      }
       return
     }
 

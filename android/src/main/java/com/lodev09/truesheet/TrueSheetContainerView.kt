@@ -228,6 +228,10 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
   }
 
 
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+    cleanup()
+  }
 
   /**
    * Cleanup when container is unmounted
