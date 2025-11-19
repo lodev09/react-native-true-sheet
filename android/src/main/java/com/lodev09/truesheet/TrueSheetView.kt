@@ -44,6 +44,11 @@ class TrueSheetView(context: Context) :
   var containerView: TrueSheetContainerView? = null
     private set
 
+  /**
+   * Track if initial presentation has been handled
+   */
+  private var hasHandledInitialPresentation = false
+
   init {
     reactContext.addLifecycleEventListener(this)
   }
@@ -81,11 +86,29 @@ class TrueSheetView(context: Context) :
 
     // Emit onMount event when container is ready
     containerView?.let {
+      val surfaceId = UIManagerHelper.getSurfaceId(this)
+      dispatcher?.dispatchEvent(
+        com.lodev09.truesheet.events.MountEvent(surfaceId, id)
+      )
+    }
+  }
+
+  /**
+   * Show or update the sheet. Called after all properties are set.
+   * Similar to ReactModalHostView.showOrUpdate()
+   */
+  fun showOrUpdate() {
+    UiThreadUtil.assertOnUiThread()
+
+    // Handle initial presentation if needed and not yet done
+    if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
+      hasHandledInitialPresentation = true
+      
+      // Use post to ensure children are mounted and measured
       post {
-        val surfaceId = UIManagerHelper.getSurfaceId(this)
-        dispatcher?.dispatchEvent(
-          com.lodev09.truesheet.events.MountEvent(surfaceId, id)
-        )
+        containerView?.let { container ->
+          container.present(initialDetentIndex) { }
+        }
       }
     }
   }
