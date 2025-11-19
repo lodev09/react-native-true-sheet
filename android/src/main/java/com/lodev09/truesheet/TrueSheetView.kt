@@ -41,7 +41,7 @@ class TrueSheetView(context: Context) :
     }
 
   var initialDetentIndex: Int = -1
-  var initialIndexAnimated: Boolean = true
+  var initialDetentAnimated: Boolean = true
 
   /**
    * Determines if the sheet is being dragged by the user.
@@ -227,7 +227,7 @@ class TrueSheetView(context: Context) :
     post {
       if (initialDetentIndex >= 0) {
         currentDetentIndex = initialDetentIndex
-        sheetDialog.present(initialDetentIndex, initialIndexAnimated)
+        sheetDialog.present(initialDetentIndex, initialDetentAnimated)
       }
 
       // Dispatch onMount event

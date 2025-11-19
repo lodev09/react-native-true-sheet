@@ -126,9 +126,9 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     view.initialDetentIndex = index
   }
 
-  @ReactProp(name = "initialIndexAnimated", defaultBoolean = true)
-  fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
-    view.initialIndexAnimated = animate
+  @ReactProp(name = "initialDetentAnimated", defaultBoolean = true)
+  fun setInitialDetentAnimated(view: TrueSheetView, animate: Boolean) {
+    view.initialDetentAnimated = animate
   }
 
   @ReactProp(name = "maxHeight", defaultDouble = 0.0)

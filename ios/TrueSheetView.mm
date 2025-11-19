@@ -130,7 +130,7 @@ using namespace facebook::react;
     if (!_hasHandledInitialPresentation && newProps.initialDetentIndex >= 0) {
       UIViewController *presentingViewController = [self findPresentingViewController];
       [_containerView presentAtIndex:newProps.initialDetentIndex
-                            animated:newProps.initialIndexAnimated
+                            animated:newProps.initialDetentAnimated
             presentingViewController:presentingViewController
                           completion:nil];
 

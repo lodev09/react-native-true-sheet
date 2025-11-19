@@ -108,7 +108,7 @@ export const MapScreen = () => {
         onDidPresent={() => {
           console.log('Sheet is presented');
         }}
-        // initialIndexAnimated={false}
+        // initialDetentAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');

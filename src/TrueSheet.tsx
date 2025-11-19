@@ -298,7 +298,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       grabber = true,
       dimmed = true,
       initialDetentIndex = -1,
-      initialIndexAnimated = true,
+      initialDetentAnimated = true,
       dimmedIndex,
       blurTint,
       cornerRadius,
@@ -332,7 +332,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
         initialDetentIndex={initialDetentIndex}
-        initialIndexAnimated={initialIndexAnimated}
+        initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         maxHeight={maxHeight}
         onMount={this.onMount}

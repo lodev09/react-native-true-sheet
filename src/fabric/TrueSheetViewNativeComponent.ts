@@ -39,7 +39,7 @@ export interface NativeProps extends ViewProps {
   grabber?: WithDefault<boolean, true>;
   dismissible?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
-  initialIndexAnimated?: WithDefault<boolean, true>;
+  initialDetentAnimated?: WithDefault<boolean, true>;
   edgeToEdge?: WithDefault<boolean, false>;
 
   // Event handlers
