@@ -66,7 +66,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.validateDetents();
 
     this.state = {
-      shouldRenderNativeView: props.initialIndex !== undefined && props.initialIndex >= 0,
+      shouldRenderNativeView:
+        props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -82,7 +83,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private validateDetents(): void {
-    const { detents, initialIndex } = this.props;
+    const { detents, initialDetentIndex } = this.props;
 
     // Warn if detents length exceeds 3
     if (detents && detents.length > 3) {
@@ -104,12 +105,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       });
     }
 
-    // Validate initialIndex bounds
-    if (initialIndex !== undefined && initialIndex >= 0) {
+    // Validate initialDetentIndex bounds
+    if (initialDetentIndex !== undefined && initialDetentIndex >= 0) {
       const detentsLength = Math.min(detents?.length ?? 2, 3); // Max 3 detents
-      if (initialIndex >= detentsLength) {
+      if (initialDetentIndex >= detentsLength) {
         throw new Error(
-          `TrueSheet: initialIndex (${initialIndex}) is out of bounds. detents array has ${detentsLength} item(s)`
+          `TrueSheet: initialDetentIndex (${initialDetentIndex}) is out of bounds. detents array has ${detentsLength} item(s)`
         );
       }
     }
@@ -296,7 +297,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dismissible = true,
       grabber = true,
       dimmed = true,
-      initialIndex = -1,
+      initialDetentIndex = -1,
       initialIndexAnimated = true,
       dimmedIndex,
       blurTint,
@@ -330,7 +331,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        initialIndex={initialIndex}
+        initialDetentIndex={initialDetentIndex}
         initialIndexAnimated={initialIndexAnimated}
         dismissible={dismissible}
         maxHeight={maxHeight}

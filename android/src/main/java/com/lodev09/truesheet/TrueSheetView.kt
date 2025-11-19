@@ -40,7 +40,7 @@ class TrueSheetView(context: Context) :
       rootSheetView.stateWrapper = stateWrapper
     }
 
-  var initialIndex: Int = -1
+  var initialDetentIndex: Int = -1
   var initialIndexAnimated: Boolean = true
 
   /**
@@ -225,9 +225,9 @@ class TrueSheetView(context: Context) :
 
     // Initialize after layout
     post {
-      if (initialIndex >= 0) {
-        currentDetentIndex = initialIndex
-        sheetDialog.present(initialIndex, initialIndexAnimated)
+      if (initialDetentIndex >= 0) {
+        currentDetentIndex = initialDetentIndex
+        sheetDialog.present(initialDetentIndex, initialIndexAnimated)
       }
 
       // Dispatch onMount event

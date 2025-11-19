@@ -127,9 +127,9 @@ using namespace facebook::react;
     [_containerView applyPropsFromSheetView];
 
     // Handle initial presentation
-    if (!_hasHandledInitialPresentation && newProps.initialIndex >= 0) {
+    if (!_hasHandledInitialPresentation && newProps.initialDetentIndex >= 0) {
       UIViewController *presentingViewController = [self findPresentingViewController];
-      [_containerView presentAtIndex:newProps.initialIndex
+      [_containerView presentAtIndex:newProps.initialDetentIndex
                             animated:newProps.initialIndexAnimated
             presentingViewController:presentingViewController
                           completion:nil];

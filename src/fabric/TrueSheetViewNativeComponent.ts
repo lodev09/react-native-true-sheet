@@ -28,7 +28,7 @@ export interface NativeProps extends ViewProps {
   cornerRadius?: WithDefault<Double, -1>;
   contentHeight?: WithDefault<Double, 0>;
   footerHeight?: WithDefault<Double, 0>;
-  initialIndex?: WithDefault<Int32, -1>;
+  initialDetentIndex?: WithDefault<Int32, -1>;
   dimmedIndex?: WithDefault<Int32, 0>;
 
   // String properties - use empty string as default to avoid nil insertion

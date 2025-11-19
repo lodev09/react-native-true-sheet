@@ -43,7 +43,7 @@ export const ReanimatedExample = () => {
       <ReanimatedTrueSheet
         ref={sheetRef}
         detents={[0.3, 0.6, 1]}
-        initialIndex={1}
+        initialDetentIndex={1}
         backgroundColor={DARK_BLUE}
         cornerRadius={16}
         dimmedIndex={2}

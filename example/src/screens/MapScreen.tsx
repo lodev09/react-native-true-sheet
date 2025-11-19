@@ -103,7 +103,7 @@ export const MapScreen = () => {
         dimmedIndex={2}
         // dismissible={false}
         cornerRadius={12}
-        initialIndex={1}
+        initialDetentIndex={1}
         onWillPresent={handleWillPresent}
         onDidPresent={() => {
           console.log('Sheet is presented');

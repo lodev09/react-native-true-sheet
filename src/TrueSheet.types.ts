@@ -130,11 +130,11 @@ export interface TrueSheetProps extends ViewProps {
    * @note This property is only used during the initial mount.
    * @default -1
    */
-  initialIndex?: number;
+  initialDetentIndex?: number;
 
   /**
    * Specify whether the sheet should animate after mounting.
-   * Used with `initialIndex`.
+   * Used with `initialDetentIndex`.
    *
    * @default true
    */

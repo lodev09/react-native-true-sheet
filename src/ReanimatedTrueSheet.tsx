@@ -34,7 +34,7 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
  *         <ReanimatedTrueSheet
  *           ref={sheetRef}
  *           detents={[0.25, 0.5, 1]}
- *           initialIndex={1}
+ *           initialDetentIndex={1}
  *         >
  *           <Text>Sheet Content</Text>
  *         </ReanimatedTrueSheet>
