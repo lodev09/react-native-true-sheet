@@ -32,7 +32,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun onAfterUpdateTransaction(view: TrueSheetView) {
     super.onAfterUpdateTransaction(view)
-    view.configureIfShowing()
+    view.applyPropsToContainer()
   }
 
   override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {

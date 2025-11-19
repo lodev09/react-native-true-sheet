@@ -18,21 +18,16 @@ import com.lodev09.truesheet.utils.ScreenUtils
 data class DetentInfo(val index: Int, val position: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: TrueSheetRootView) :
-  BottomSheetDialog(reactContext) {
+class TrueSheetDialog(
+  private val reactContext: ThemedReactContext,
+  private val rootSheetView: TrueSheetRootView,
+  private val containerView: TrueSheetContainerView
+) : BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
-  /**
-   * First child of the rootSheetView
-   */
-  private val containerView: TrueSheetContainerView?
-    get() = if (rootSheetView.childCount > 0 && rootSheetView.getChildAt(0) is TrueSheetContainerView) {
-      rootSheetView.getChildAt(0) as TrueSheetContainerView
-    } else {
-      null
-    }
+
 
   /**
    * The sheet container view from Material BottomSheetDialog
@@ -44,13 +39,13 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Content view from the container
    */
   private val sheetContentView: TrueSheetContentView?
-    get() = containerView?.contentView
+    get() = containerView.contentView
 
   /**
    * Footer view from the container
    */
   private val footerView: TrueSheetFooterView?
-    get() = containerView?.footerView
+    get() = containerView.footerView
 
   /**
    * Wrapper view that contains rootSheetView
@@ -233,7 +228,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   fun positionFooter() {
     footerView?.let { footer ->
       sheetContainerView?.let { container ->
-        val footerHeight = containerView?.footerHeight ?: 0
+        val footerHeight = containerView.footerHeight
         footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
       }
     }
@@ -255,7 +250,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Double -> {
           if (detent == -1.0) {
             // -1 represents "auto"
-            containerView?.contentHeight ?: 0
+            containerView.contentHeight
           } else {
             if (detent <= 0.0 || detent > 1.0) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -267,7 +262,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Int -> {
           if (detent == -1) {
             // -1 represents "auto"
-            containerView?.contentHeight ?: 0
+            containerView.contentHeight
           } else {
             if (detent <= 0 || detent > 1) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")

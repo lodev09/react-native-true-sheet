@@ -10,13 +10,11 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.events.*
-import com.lodev09.truesheet.utils.PixelUtils
 
 /**
- * Main TrueSheet view component for Fabric architecture
- * Manages the bottom sheet dialog and contains TrueSheetContainerView
+ * Main TrueSheet host view for Fabric architecture.
+ * Similar to iOS TrueSheetView, this is a simple host that holds a reference to the container.
+ * The container manages the actual sheet presentation logic.
  */
 class TrueSheetView(context: Context) :
   ViewGroup(context),
@@ -25,168 +23,29 @@ class TrueSheetView(context: Context) :
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
 
-  private val surfaceId: Int
-    get() = UIManagerHelper.getSurfaceId(this)
-
-  var eventDispatcher: EventDispatcher?
-    get() = rootSheetView.eventDispatcher
-    set(eventDispatcher) {
-      rootSheetView.eventDispatcher = eventDispatcher
+  var eventDispatcher: EventDispatcher? = null
+    set(value) {
+      field = value
+      containerView?.eventDispatcher = value
     }
 
-  var stateWrapper: StateWrapper?
-    get() = rootSheetView.stateWrapper
-    set(stateWrapper) {
-      rootSheetView.stateWrapper = stateWrapper
+  var stateWrapper: StateWrapper? = null
+    set(value) {
+      field = value
+      containerView?.stateWrapper = value
     }
 
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
   /**
-   * Determines if the sheet is being dragged by the user.
+   * Container view (first child) that manages the dialog
    */
-  private var isDragging = false
-
-  /**
-   * Current active detent index.
-   */
-  private var currentDetentIndex: Int = -1
-
-  /**
-   * Promise callback to be invoked after `present` is called.
-   */
-  private var presentPromise: (() -> Unit)? = null
-
-  /**
-   * Promise callback to be invoked after `dismiss` is called.
-   */
-  private var dismissPromise: (() -> Unit)? = null
-
-  /**
-   * The main BottomSheetDialog instance.
-   */
-  private val sheetDialog: TrueSheetDialog
-
-  /**
-   * React root view wrapper - this is what gets set as the dialog content
-   */
-  private val rootSheetView: TrueSheetRootView
-
-  /**
-   * Container view (first child) that holds content and footer
-   */
-  val containerView: TrueSheetContainerView?
-    get() = if (rootSheetView.childCount > 0 && rootSheetView.getChildAt(0) is TrueSheetContainerView) {
-      rootSheetView.getChildAt(0) as TrueSheetContainerView
-    } else {
-      null
-    }
+  var containerView: TrueSheetContainerView? = null
+    private set
 
   init {
     reactContext.addLifecycleEventListener(this)
-
-    rootSheetView = TrueSheetRootView(context)
-    sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
-
-    // Configure Sheet Dialog
-    sheetDialog.apply {
-      // Setup listener when the dialog has been presented.
-      setOnShowListener {
-        registerKeyboardManager()
-
-        // Initialize footer position
-        UiThreadUtil.runOnUiThread {
-          positionFooter()
-        }
-
-        // Re-enable animation
-        resetAnimation()
-
-        // Resolve the present promise
-        presentPromise?.let { promise ->
-          promise()
-          presentPromise = null
-        }
-
-        // Dispatch onDidPresent event with detent info
-        val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)
-        rootSheetView.eventDispatcher?.dispatchEvent(
-          DidPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
-        )
-      }
-
-      // Setup listener when the dialog is about to be dismissed.
-      setOnCancelListener {
-        // Dispatch onWillDismiss event
-        rootSheetView.eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
-      }
-
-      // Setup listener when the dialog has been dismissed.
-      setOnDismissListener {
-        unregisterKeyboardManager()
-
-        // Resolve the dismiss promise
-        dismissPromise?.let { promise ->
-          promise()
-          dismissPromise = null
-        }
-
-        // Dispatch onDidDismiss event
-        rootSheetView.eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
-      }
-
-      // Configure sheet behavior events
-      behavior.addBottomSheetCallback(
-        object : BottomSheetBehavior.BottomSheetCallback() {
-          override fun onSlide(sheetView: View, slideOffset: Float) {
-            when (behavior.state) {
-              // For consistency with iOS, we consider SETTLING as dragging change.
-              BottomSheetBehavior.STATE_DRAGGING,
-              BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
-
-              else -> { }
-            }
-
-            // Emit position change event continuously during slide
-            val detentInfo = getCurrentDetentInfo(sheetView)
-            rootSheetView.eventDispatcher?.dispatchEvent(
-              PositionChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position, isDragging)
-            )
-
-            // Update footer position during slide
-            containerView?.footerView?.let { footer ->
-              val footerHeight = containerView?.footerHeight ?: 0
-              val y = (sheetDialog.maxScreenHeight - sheetView.top - footerHeight).toFloat()
-
-              if (slideOffset >= 0) {
-                // Sheet is expanding
-                footer.y = y
-              } else {
-                // Sheet is collapsing
-                footer.y = y - footerHeight * slideOffset
-              }
-            }
-          }
-
-          override fun onStateChanged(sheetView: View, newState: Int) {
-            if (!isShowing) return
-
-            when (newState) {
-              // When changed to dragging, we know that the drag has started
-              BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
-
-              // Either of the following state determines drag end
-              BottomSheetBehavior.STATE_EXPANDED,
-              BottomSheetBehavior.STATE_COLLAPSED,
-              BottomSheetBehavior.STATE_HALF_EXPANDED -> handleDragEnd(newState)
-
-              else -> { }
-            }
-          }
-        }
-      )
-    }
   }
 
   override fun onLayout(
@@ -196,21 +55,18 @@ class TrueSheetView(context: Context) :
     r: Int,
     b: Int
   ) {
-    // Do nothing - rootSheetView is in the dialog, not a child of this view
+    // Do nothing - container is in the dialog, not a child of this view
     // This is how ReactModalHostView works in React Native
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     // Do nothing - we are laid out by UIManager
-    // rootSheetView is in the dialog and measured by the dialog's layout system
+    // Container is in the dialog and measured by the dialog's layout system
     setMeasuredDimension(0, 0)
   }
 
   override fun setId(id: Int) {
     super.setId(id)
-
-    // Forward the ID to rootSheetView for proper event dispatching
-    rootSheetView.id = id
 
     // Register this view with the module for ref-based access
     TrueSheetModule.registerView(this, id)
@@ -219,19 +75,18 @@ class TrueSheetView(context: Context) :
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
 
-    // Get event dispatcher and set it on root sheet view
+    // Get event dispatcher and set it on container if available
     val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
-    rootSheetView.eventDispatcher = dispatcher
+    eventDispatcher = dispatcher
 
-    // Initialize after layout
-    post {
-      if (initialDetentIndex >= 0) {
-        currentDetentIndex = initialDetentIndex
-        sheetDialog.present(initialDetentIndex, initialDetentAnimated)
+    // Emit onMount event when container is ready
+    containerView?.let {
+      post {
+        val surfaceId = UIManagerHelper.getSurfaceId(this)
+        dispatcher?.dispatchEvent(
+          com.lodev09.truesheet.events.MountEvent(surfaceId, id)
+        )
       }
-
-      // Dispatch onMount event
-      rootSheetView.eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
     }
   }
 
@@ -246,31 +101,48 @@ class TrueSheetView(context: Context) :
 
     // When layout is requested, update the sheet configuration
     post {
-      sheetDialog.configure()
+      containerView?.configureIfShowing()
     }
   }
 
   // ==================== View Management ====================
 
   override fun addView(child: View?, index: Int) {
-    // Forward children to root sheet view
-    rootSheetView.addView(child, index)
+    // Check if it's a container view
+    if (child is TrueSheetContainerView) {
+      if (containerView != null) {
+        throw IllegalStateException("TrueSheet: Sheet can only have one container component.")
+      }
+
+      containerView = child
+      
+      // Setup container in sheet view
+      child.setupInSheetView(this)
+      
+      // Don't add as child - container manages its own view hierarchy
+      return
+    }
+
+    super.addView(child, index)
   }
 
-  override fun getChildCount(): Int = rootSheetView.childCount
-
-  override fun getChildAt(index: Int): View? = rootSheetView.getChildAt(index)
-
   override fun removeView(child: View?) {
-    rootSheetView.removeView(child)
+    if (child is TrueSheetContainerView && child == containerView) {
+      child.cleanup()
+      containerView = null
+      return
+    }
+
+    super.removeView(child)
   }
 
   override fun removeViewAt(index: Int) {
-    rootSheetView.removeViewAt(index)
+    val child = getChildAt(index)
+    removeView(child)
   }
 
   override fun onHostResume() {
-    configureIfShowing()
+    containerView?.configureIfShowing()
   }
 
   override fun onHostPause() {
@@ -285,130 +157,45 @@ class TrueSheetView(context: Context) :
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
-    sheetDialog.dismiss()
+    containerView?.cleanup()
   }
 
-  private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val position = PixelUtils.toDIP(sheetView.top.toFloat())
-    return DetentInfo(currentDetentIndex, position)
+  // ==================== Property Setters (forward to container) ====================
+
+  fun applyPropsToContainer() {
+    containerView?.applyPropsFromSheetView()
   }
-
-  private fun handleDragBegin(sheetView: View) {
-    // Dispatch drag started event
-    val detentInfo = getCurrentDetentInfo(sheetView)
-    rootSheetView.eventDispatcher?.dispatchEvent(
-      DragBeginEvent(surfaceId, id, detentInfo.index, detentInfo.position)
-    )
-    // Flag sheet is being dragged
-    isDragging = true
-  }
-
-  private fun handleDragChange(sheetView: View) {
-    if (!isDragging) return
-
-    // Dispatch drag change event
-    val detentInfo = getCurrentDetentInfo(sheetView)
-    rootSheetView.eventDispatcher?.dispatchEvent(
-      DragChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
-    )
-  }
-
-  private fun handleDragEnd(state: Int) {
-    if (!isDragging) return
-
-    // For consistency with iOS,
-    // we only handle state changes after dragging.
-    //
-    // Changing detent programmatically is handled via the present method.
-    val detentInfo = sheetDialog.getDetentInfoForState(state)
-    detentInfo?.let {
-      // Dispatch drag ended after dragging
-      rootSheetView.eventDispatcher?.dispatchEvent(
-        DragEndEvent(surfaceId, id, it.index, it.position)
-      )
-
-      if (it.index != currentDetentIndex) {
-        // Invoke promise when sheet resized programmatically
-        presentPromise?.let { promise ->
-          promise()
-          presentPromise = null
-        }
-
-        currentDetentIndex = it.index
-        sheetDialog.setupDimmedBackground(it.index)
-
-        // Dispatch onDetentChange event
-        rootSheetView.eventDispatcher?.dispatchEvent(
-          DetentChangeEvent(surfaceId, id, it.index, it.position)
-        )
-      }
-    }
-
-    isDragging = false
-  }
-
-  fun configureIfShowing() {
-    if (sheetDialog.isShowing) {
-      sheetDialog.configure()
-      sheetDialog.setStateForDetentIndex(currentDetentIndex)
-
-      UiThreadUtil.runOnUiThread {
-        sheetDialog.positionFooter()
-      }
-    }
-  }
-
-  // ==================== Property Setters ====================
 
   fun setEdgeToEdge(edgeToEdge: Boolean) {
-    sheetDialog.edgeToEdge = edgeToEdge
+    containerView?.setEdgeToEdge(edgeToEdge)
   }
 
   fun setMaxHeight(height: Int) {
-    if (sheetDialog.maxSheetHeight == height) return
-
-    sheetDialog.maxSheetHeight = height
-    configureIfShowing()
+    containerView?.setMaxHeight(height)
   }
 
   fun setDimmed(dimmed: Boolean) {
-    if (sheetDialog.dimmed == dimmed) return
-
-    sheetDialog.dimmed = dimmed
-    if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(currentDetentIndex)
-    }
+    containerView?.setDimmed(dimmed)
   }
 
   fun setDimmedIndex(index: Int) {
-    if (sheetDialog.dimmedIndex == index) return
-
-    sheetDialog.dimmedIndex = index
-    if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(currentDetentIndex)
-    }
+    containerView?.setDimmedIndex(index)
   }
 
   fun setCornerRadius(radius: Float) {
-    if (sheetDialog.cornerRadius == radius) return
-
-    sheetDialog.cornerRadius = radius
-    sheetDialog.setupBackground()
+    containerView?.setCornerRadius(radius)
   }
 
   fun setBackground(color: Int) {
-    if (sheetDialog.backgroundColor == color) return
-
-    sheetDialog.backgroundColor = color
-    sheetDialog.setupBackground()
+    containerView?.setBackground(color)
   }
 
   fun setSoftInputMode(mode: Int) {
-    sheetDialog.window?.setSoftInputMode(mode)
+    containerView?.setSoftInputMode(mode)
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog.dismissible = dismissible
+    containerView?.setDismissible(dismissible)
   }
 
   fun setGrabber(grabber: Boolean) {
@@ -418,8 +205,7 @@ class TrueSheetView(context: Context) :
   }
 
   fun setDetents(newDetents: Array<Any>) {
-    sheetDialog.detents = newDetents
-    configureIfShowing()
+    containerView?.setDetents(newDetents)
   }
 
   fun setBlurTint(tint: String?) {
@@ -442,27 +228,10 @@ class TrueSheetView(context: Context) :
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    currentDetentIndex = detentIndex
-
-    if (sheetDialog.isShowing) {
-      // For consistency with iOS, we are not waiting
-      // for the state to change before dispatching onDetentChange event.
-      val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(detentIndex)
-      rootSheetView.eventDispatcher?.dispatchEvent(
-        DetentChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
-      )
-
+    containerView?.present(detentIndex, promiseCallback) ?: run {
+      // Container not ready, fail the promise
       promiseCallback()
-    } else {
-      presentPromise = promiseCallback
-      // Dispatch onWillPresent event before showing with detent info
-      val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
-      rootSheetView.eventDispatcher?.dispatchEvent(
-        WillPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
-      )
     }
-
-    sheetDialog.present(detentIndex)
   }
 
   /**
@@ -474,7 +243,9 @@ class TrueSheetView(context: Context) :
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    dismissPromise = promiseCallback
-    sheetDialog.dismiss()
+    containerView?.dismiss(promiseCallback) ?: run {
+      // Container not ready, just invoke callback
+      promiseCallback()
+    }
   }
 }
