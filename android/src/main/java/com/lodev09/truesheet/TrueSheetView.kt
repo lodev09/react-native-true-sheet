@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -31,6 +32,12 @@ class TrueSheetView(context: Context) :
     get() = rootSheetView.eventDispatcher
     set(eventDispatcher) {
       rootSheetView.eventDispatcher = eventDispatcher
+    }
+
+  var stateWrapper: StateWrapper?
+    get() = rootSheetView.stateWrapper
+    set(stateWrapper) {
+      rootSheetView.stateWrapper = stateWrapper
     }
 
   var initialIndex: Int = -1
