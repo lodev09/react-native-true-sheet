@@ -9,6 +9,7 @@ import androidx.annotation.UiThread
 import com.facebook.react.R
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.config.ReactFeatureFlags
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -116,6 +117,8 @@ class TrueSheetRootView(private val context: Context?) :
     return super.onHoverEvent(event)
   }
 
+  @OptIn(UnstableReactNativeAPI::class)
+  @Suppress("DEPRECATION")
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher, reactContext)
@@ -132,4 +135,6 @@ class TrueSheetRootView(private val context: Context?) :
     // No-op - override in order to still receive events to onInterceptTouchEvent
     // even when some other view disallow that
   }
+
+
 }

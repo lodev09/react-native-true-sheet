@@ -38,12 +38,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * The sheet container view from Material BottomSheetDialog
    */
   private val sheetContainerView: ViewGroup?
-    get() = trueSheetView.parent?.let { it as? ViewGroup }
+    get() = wrapperView?.parent?.let { it as? ViewGroup }
 
   /**
    * Content view from the container
    */
-  private val contentView: TrueSheetContentView?
+  private val sheetContentView: TrueSheetContentView?
     get() = containerView?.contentView
 
   /**
@@ -51,6 +51,11 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    */
   private val footerView: TrueSheetFooterView?
     get() = containerView?.footerView
+
+  /**
+   * Wrapper view that contains rootSheetView
+   */
+  private var wrapperView: FrameLayout? = null
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -94,7 +99,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   init {
     // Set content view with RootSheetView wrapped in FrameLayout
     // This follows React Native Modal pattern for proper system insets handling
-    setContentView(contentView)
+    wrapperView = createDialogContentView()
+    setContentView(wrapperView!!)
 
     sheetContainerView?.setBackgroundColor(backgroundColor)
     sheetContainerView?.clipToOutline = true
@@ -110,13 +116,20 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Returns the content view for the dialog.
+   * Creates the content view for the dialog.
    * Wraps RootSheetView in a FrameLayout following React Native Modal pattern.
    */
-  private val contentView: View
-    get() = FrameLayout(reactContext).apply {
-      addView(rootSheetView)
+  private fun createDialogContentView(): FrameLayout {
+    return FrameLayout(reactContext).apply {
+      addView(
+        rootSheetView,
+        FrameLayout.LayoutParams(
+          FrameLayout.LayoutParams.MATCH_PARENT,
+          FrameLayout.LayoutParams.MATCH_PARENT
+        )
+      )
     }
+  }
 
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 

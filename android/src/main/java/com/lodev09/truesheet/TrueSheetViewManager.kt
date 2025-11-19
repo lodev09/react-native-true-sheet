@@ -45,7 +45,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     return null
   }
 
-  override fun needsCustomLayoutForChildren(): Boolean = true
+  override fun needsCustomLayoutForChildren(): Boolean = false
 
   /**
    * Export custom direct event types for Fabric

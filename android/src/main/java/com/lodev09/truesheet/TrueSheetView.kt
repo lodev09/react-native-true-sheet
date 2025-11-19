@@ -196,25 +196,21 @@ class TrueSheetView(context: Context) :
     r: Int,
     b: Int
   ) {
-    // Layout the root sheet view to fill this view
-    rootSheetView.layout(0, 0, r - l, b - t)
+    // Do nothing - rootSheetView is in the dialog, not a child of this view
+    // This is how ReactModalHostView works in React Native
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    val width = MeasureSpec.getSize(widthMeasureSpec)
-    val height = MeasureSpec.getSize(heightMeasureSpec)
-
-    // Measure root sheet view to fill available space
-    rootSheetView.measure(
-      MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-      MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-    )
-
-    setMeasuredDimension(width, height)
+    // Do nothing - we are laid out by UIManager
+    // rootSheetView is in the dialog and measured by the dialog's layout system
+    setMeasuredDimension(0, 0)
   }
 
   override fun setId(id: Int) {
     super.setId(id)
+
+    // Forward the ID to rootSheetView for proper event dispatching
+    rootSheetView.id = id
 
     // Register this view with the module for ref-based access
     TrueSheetModule.registerView(this, id)
@@ -250,13 +246,6 @@ class TrueSheetView(context: Context) :
 
     // When layout is requested, update the sheet configuration
     post {
-      measure(
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-      )
-      layout(left, top, right, bottom)
-
-      // Update sheet dialog configuration
       sheetDialog.configure()
     }
   }
