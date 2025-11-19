@@ -233,7 +233,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   fun positionFooter() {
     footerView?.let { footer ->
       sheetContainerView?.let { container ->
-        val footerHeight = containerView?.getFooterHeight() ?: 0
+        val footerHeight = containerView?.footerHeight ?: 0
         footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
       }
     }
@@ -255,7 +255,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Double -> {
           if (detent == -1.0) {
             // -1 represents "auto"
-            containerView?.getTotalContentHeight() ?: 0
+            containerView?.contentHeight ?: 0
           } else {
             if (detent <= 0.0 || detent > 1.0) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -267,7 +267,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Int -> {
           if (detent == -1) {
             // -1 represents "auto"
-            containerView?.getTotalContentHeight() ?: 0
+            containerView?.contentHeight ?: 0
           } else {
             if (detent <= 0 || detent > 1) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")

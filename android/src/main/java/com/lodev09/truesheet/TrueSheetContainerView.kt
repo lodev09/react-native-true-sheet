@@ -40,22 +40,14 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
   }
 
   /**
-   * Get the total content height (content + footer)
+   * The content view height
    */
-  fun getTotalContentHeight(): Int {
-    var height = 0
-    contentView?.let { height += it.measuredHeight }
-    footerView?.let { height += it.measuredHeight }
-    return height
-  }
+  val contentHeight: Int
+    get() = contentView?.height ?: 0
 
   /**
-   * Get only the content view height (excluding footer)
+   * The footer view height
    */
-  fun getContentHeight(): Int = contentView?.measuredHeight ?: 0
-
-  /**
-   * Get only the footer view height
-   */
-  fun getFooterHeight(): Int = footerView?.measuredHeight ?: 0
+  val footerHeight: Int
+    get() = footerView?.height ?: 0
 }

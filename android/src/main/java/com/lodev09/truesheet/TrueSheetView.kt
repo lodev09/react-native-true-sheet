@@ -156,7 +156,7 @@ class TrueSheetView(context: Context) :
 
             // Update footer position during slide
             containerView?.footerView?.let { footer ->
-              val footerHeight = containerView?.getFooterHeight() ?: 0
+              val footerHeight = containerView?.footerHeight ?: 0
               val y = (sheetDialog.maxScreenHeight - sheetView.top - footerHeight).toFloat()
 
               if (slideOffset >= 0) {

@@ -115,7 +115,11 @@ export const MapScreen = () => {
         }}
         footer={<Footer />}
       >
-        <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
+        <ScrollView
+          nestedScrollEnabled
+          style={{ backgroundColor: 'red' }}
+          contentContainerStyle={styles.content}
+        >
           <View style={styles.heading}>
             <Text style={styles.title}>True Sheet 💩</Text>
             <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
