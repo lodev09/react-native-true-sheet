@@ -62,7 +62,7 @@
   if (!self.isViewLoaded || self.view.window == nil) {
     return NO;
   }
-  
+
   // Check if another controller is presented on top of this sheet
   return self.presentedViewController == nil;
 }
@@ -136,7 +136,7 @@
       [self setupDetents];
     }
   }
-  
+
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;
@@ -144,7 +144,7 @@
     // If another controller is presented on top, treat position changes as transitioning
     // This prevents incorrect position notifications when overlays adjust our size
     [self emitChangePositionDelegate:_layoutTransitioning || !self.isTopmostPresentedController];
-    
+
     // Reset layout transitioning after sending notification
     _layoutTransitioning = NO;
   }

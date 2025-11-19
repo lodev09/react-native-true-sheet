@@ -9,11 +9,11 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContentView.h"
+#import <React/RCTScrollViewComponentView.h>
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import <React/RCTScrollViewComponentView.h>
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
@@ -102,7 +102,7 @@ using namespace facebook::react;
       return static_cast<RCTScrollViewComponentView *>(subview);
     }
   }
-  
+
   return nil;
 }
 
