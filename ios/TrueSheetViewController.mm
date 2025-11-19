@@ -38,6 +38,7 @@
     _isTransitioning = NO;
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
+    _layoutTransitioning = NO;
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -108,22 +109,26 @@
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  if (!_isTransitioning) {
-    _isTrackingPositionFromLayout = YES;
-    [self emitChangePositionDelegate:NO];
-  }
-
   UIView *presentedView = self.presentedView;
-  if (!presentedView)
-    return;
+  if (presentedView) {
+    // Detect width changes (e.g., device rotation) and trigger size recalculation
+    // This is essential for "auto" sizing to work correctly
+    if (_lastViewWidth != presentedView.frame.size.width) {
+      _lastViewWidth = presentedView.frame.size.width;
 
-  // Detect width changes (e.g., device rotation) and trigger size recalculation
-  // This is essential for "auto" sizing to work correctly
-  if (_lastViewWidth != presentedView.frame.size.width) {
-    _lastViewWidth = presentedView.frame.size.width;
+      // Recalculate detents with new width
+      [self setupDetents];
+    }
+  }
+  
+  if (!_isTransitioning) {
+    // Flag that we are tracking position from layout
+    _isTrackingPositionFromLayout = YES;
 
-    // Recalculate detents with new width
-    [self setupDetents];
+    [self emitChangePositionDelegate:_layoutTransitioning];
+    
+    // Reset layout transitioning after sending notification
+    _layoutTransitioning = NO;
   }
 }
 

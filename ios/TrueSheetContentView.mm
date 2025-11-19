@@ -49,8 +49,8 @@ using namespace facebook::react;
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
-    if ([self.delegate respondsToSelector:@selector(containerViewDidChangeSize:)]) {
-      [self.delegate containerViewDidChangeSize:newSize];
+    if ([self.delegate respondsToSelector:@selector(contentViewDidChangeSize:)]) {
+      [self.delegate contentViewDidChangeSize:newSize];
     }
   }
 }

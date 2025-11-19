@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedIndex;
 @property (nonatomic, copy, nullable) NSString *blurTint;
+@property (nonatomic, assign) BOOL layoutTransitioning;
 
 - (void)setupBackground;
 - (void)resizeToIndex:(NSInteger)index;

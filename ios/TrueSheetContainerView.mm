@@ -367,12 +367,16 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetContentViewDelegate
 
-- (void)containerViewDidChangeSize:(CGSize)newSize {
+- (void)contentViewDidChangeSize:(CGSize)newSize {
   // Update controller's content height
   _controller.contentHeight = @(newSize.height);
 
   // Update detents if sheet is already presented
   if (_isPresented) {
+    // Tell controller that we are transitioning from layout changes.
+    // Controller viewDidLayoutSubviews will handle position notification.
+    _controller.layoutTransitioning = YES;
+
     [_controller.sheetPresentationController animateChanges:^{
       [_controller setupDetents];
     }];

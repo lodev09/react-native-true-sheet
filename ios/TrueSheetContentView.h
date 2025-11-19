@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetContentViewDelegate <NSObject>
 
-- (void)containerViewDidChangeSize:(CGSize)newSize;
+- (void)contentViewDidChangeSize:(CGSize)newSize;
 
 @end
 
