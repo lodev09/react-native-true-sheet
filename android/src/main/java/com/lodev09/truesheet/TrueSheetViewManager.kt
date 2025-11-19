@@ -11,8 +11,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.lodev09.truesheet.core.Utils
 import com.lodev09.truesheet.events.*
+import com.lodev09.truesheet.utils.PixelUtils
 
 /**
  * ViewManager for TrueSheetView - Fabric architecture
@@ -99,7 +99,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
   fun setCornerRadius(view: TrueSheetView, radius: Double) {
     if (radius >= 0) {
-      view.setCornerRadius(Utils.toPixel(radius))
+      view.setCornerRadius(PixelUtils.toPixel(radius))
     }
   }
 
@@ -136,7 +136,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   @ReactProp(name = "maxHeight", defaultDouble = 0.0)
   fun setMaxHeight(view: TrueSheetView, height: Double) {
     if (height > 0) {
-      view.setMaxHeight(Utils.toPixel(height).toInt())
+      view.setMaxHeight(PixelUtils.toPixel(height).toInt())
     }
   }
 

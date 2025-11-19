@@ -1,4 +1,4 @@
-package com.lodev09.truesheet.core
+package com.lodev09.truesheet.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,17 +6,25 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowInsets
 import android.view.WindowManager
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.PixelUtil
 
-object Utils {
+/**
+ * Utility object for screen dimension calculations
+ */
+object ScreenUtils {
   @SuppressLint("DiscouragedApi")
   private fun getIdentifierHeight(context: ReactContext, name: String): Int =
     context.resources.getDimensionPixelSize(
       context.resources.getIdentifier(name, "dimen", "android")
     ).takeIf { it > 0 } ?: 0
 
+  /**
+   * Calculate the screen height accounting for edge-to-edge mode and system bars
+   *
+   * @param context React context
+   * @param edgeToEdge Whether to include system bars in the height calculation
+   * @return Screen height in pixels
+   */
   @SuppressLint("InternalInsetResource", "DiscouragedApi")
   fun screenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -54,19 +62,6 @@ object Utils {
       }
     } else {
       screenHeight - statusBarHeight - navigationBarHeight
-    }
-  }
-
-  fun toDIP(value: Float): Float = PixelUtil.toDIPFromPixel(value)
-  fun toPixel(value: Double): Float = PixelUtil.toPixelFromDIP(value)
-
-  fun withPromise(promise: Promise, closure: () -> Any?) {
-    try {
-      val result = closure()
-      promise.resolve(result)
-    } catch (e: Throwable) {
-      e.printStackTrace()
-      promise.reject("Error", e.message, e.cause)
     }
   }
 }

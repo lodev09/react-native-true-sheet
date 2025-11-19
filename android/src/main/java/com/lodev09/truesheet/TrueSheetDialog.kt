@@ -11,14 +11,14 @@ import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.lodev09.truesheet.core.KeyboardManager
-import com.lodev09.truesheet.core.RootSheetView
-import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.utils.KeyboardManager
+import com.lodev09.truesheet.utils.PixelUtils
+import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
+class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: TrueSheetRootView) :
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
@@ -74,7 +74,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var edgeToEdge: Boolean = false
     set(value) {
       field = value
-      maxScreenHeight = Utils.screenHeight(reactContext, value)
+      maxScreenHeight = ScreenUtils.screenHeight(reactContext, value)
     }
 
   var dismissible: Boolean = true
@@ -106,7 +106,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     }
 
     // Update the usable sheet height
-    maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
+    maxScreenHeight = ScreenUtils.screenHeight(reactContext, edgeToEdge)
   }
 
   /**
@@ -308,7 +308,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> Utils.screenHeight(reactContext, edgeToEdge)
+          else -> ScreenUtils.screenHeight(reactContext, edgeToEdge)
         }
 
         positionFooter()
@@ -333,7 +333,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       isFitToContents = true
 
       // m3 max width 640dp
-      maxWidth = Utils.toPixel(640.0).toInt()
+      maxWidth = PixelUtils.toPixel(640.0).toInt()
 
       when (detents.size) {
         1 -> {
@@ -421,7 +421,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    */
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
-    val position = sheetContainerView?.top?.let { Utils.toDIP(it.toFloat()) } ?: 0f
+    val position = sheetContainerView?.top?.let { PixelUtils.toDIP(it.toFloat()) } ?: 0f
     return baseInfo.copy(position = position)
   }
 

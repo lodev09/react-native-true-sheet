@@ -1,4 +1,4 @@
-package com.lodev09.truesheet.core
+package com.lodev09.truesheet.utils
 
 import android.content.Context
 import android.view.View
@@ -29,7 +29,7 @@ class KeyboardManager(reactContext: ReactContext) {
 
         override fun onGlobalLayout() {
           val heightDiff = rootView.height - height
-          if (heightDiff > Utils.toPixel(200.0)) {
+          if (heightDiff > PixelUtils.toPixel(200.0)) {
             // Will ask InputMethodManager.isAcceptingText() to detect if keyboard appeared or not.
             val inputManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             if (height != previousHeight && inputManager.isAcceptingText()) {

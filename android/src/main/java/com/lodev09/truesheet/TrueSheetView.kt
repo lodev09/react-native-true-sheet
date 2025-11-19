@@ -10,9 +10,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.core.RootSheetView
-import com.lodev09.truesheet.core.Utils
 import com.lodev09.truesheet.events.*
+import com.lodev09.truesheet.utils.PixelUtils
 
 /**
  * Main TrueSheet view component for Fabric architecture
@@ -71,7 +70,7 @@ class TrueSheetView(context: Context) :
   /**
    * React root view wrapper - this is what gets set as the dialog content
    */
-  private val rootSheetView: RootSheetView
+  private val rootSheetView: TrueSheetRootView
 
   /**
    * Container view (first child) that holds content and footer
@@ -86,7 +85,7 @@ class TrueSheetView(context: Context) :
   init {
     reactContext.addLifecycleEventListener(this)
 
-    rootSheetView = RootSheetView(context)
+    rootSheetView = TrueSheetRootView(context)
     sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
 
     // Configure Sheet Dialog
@@ -300,7 +299,7 @@ class TrueSheetView(context: Context) :
   }
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val position = Utils.toDIP(sheetView.top.toFloat())
+    val position = PixelUtils.toDIP(sheetView.top.toFloat())
     return DetentInfo(currentDetentIndex, position)
   }
 

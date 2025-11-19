@@ -1,4 +1,4 @@
-package com.lodev09.truesheet.core
+package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -20,14 +20,14 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * RootSheetView is the ViewGroup which contains all the children of a TrueSheet. It gets all
+ * TrueSheetRootView is the ViewGroup which contains all the children of a TrueSheet. It gets all
  * child information forwarded from TrueSheetView and uses that to create children. It is
  * also responsible for acting as a RootView and handling touch events. It does this the same way
  * as DialogRootViewGroup in React Native Modal.
  *
  * This implementation is Fabric-only and does not support the legacy architecture.
  */
-class RootSheetView(private val context: Context?) :
+class TrueSheetRootView(private val context: Context?) :
   ReactViewGroup(context),
   RootView {
 
