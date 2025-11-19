@@ -122,6 +122,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       // Setup container in sheet view
       child.setupInSheetView(this)
       
+      // Trigger initial presentation after container is ready
+      showOrUpdate()
+      
       // Don't add as child - container manages its own view hierarchy
       return
     }
