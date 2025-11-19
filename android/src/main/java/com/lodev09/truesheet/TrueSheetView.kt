@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.StateWrapper
