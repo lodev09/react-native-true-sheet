@@ -3,16 +3,14 @@ package com.lodev09.truesheet
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.UiThread
-import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.*
 
 /**
  * Main TrueSheet view component for Fabric architecture
@@ -94,16 +92,16 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onDidPresent event with detent info
-        dispatchEvent(
-          TrueSheetEvent.DID_PRESENT,
-          detentInfoData(sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex))
+        val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)
+        eventDispatcher?.dispatchEvent(
+          DidPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
         )
       }
 
       // Setup listener when the dialog is about to be dismissed.
       setOnCancelListener {
         // Dispatch onWillDismiss event
-        dispatchEvent(TrueSheetEvent.WILL_DISMISS)
+        eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -117,7 +115,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onDidDismiss event
-        dispatchEvent(TrueSheetEvent.DID_DISMISS)
+        eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
       }
 
       // Configure sheet behavior events
@@ -134,12 +132,9 @@ class TrueSheetView(context: Context) :
 
             // Emit position change event continuously during slide
             val detentInfo = getCurrentDetentInfo(sheetView)
-            val positionData = Arguments.createMap().apply {
-              putInt("index", detentInfo.index)
-              putDouble("position", detentInfo.position.toDouble())
-              putBoolean("transitioning", isDragging)
-            }
-            dispatchEvent(TrueSheetEvent.POSITION_CHANGE, positionData)
+            eventDispatcher?.dispatchEvent(
+              PositionChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position, isDragging)
+            )
 
             // Update footer position during slide
             containerView?.footerView?.let { footer ->
@@ -228,7 +223,7 @@ class TrueSheetView(context: Context) :
       }
 
       // Dispatch onMount event
-      dispatchEvent(TrueSheetEvent.MOUNT)
+      eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
     }
   }
 
@@ -273,14 +268,6 @@ class TrueSheetView(context: Context) :
     sheetDialog.dismiss()
   }
 
-  private fun detentInfoData(detentInfo: DetentInfo): WritableMap {
-    val data = Arguments.createMap()
-    data.putInt("index", detentInfo.index)
-    data.putDouble("position", detentInfo.position.toDouble())
-
-    return data
-  }
-
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val position = Utils.toDIP(sheetView.top.toFloat())
     return DetentInfo(currentDetentIndex, position)
@@ -288,7 +275,10 @@ class TrueSheetView(context: Context) :
 
   private fun handleDragBegin(sheetView: View) {
     // Dispatch drag started event
-    dispatchEvent(TrueSheetEvent.DRAG_BEGIN, detentInfoData(getCurrentDetentInfo(sheetView)))
+    val detentInfo = getCurrentDetentInfo(sheetView)
+    eventDispatcher?.dispatchEvent(
+      DragBeginEvent(surfaceId, id, detentInfo.index, detentInfo.position)
+    )
     // Flag sheet is being dragged
     isDragging = true
   }
@@ -297,7 +287,10 @@ class TrueSheetView(context: Context) :
     if (!isDragging) return
 
     // Dispatch drag change event
-    dispatchEvent(TrueSheetEvent.DRAG_CHANGE, detentInfoData(getCurrentDetentInfo(sheetView)))
+    val detentInfo = getCurrentDetentInfo(sheetView)
+    eventDispatcher?.dispatchEvent(
+      DragChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
+    )
   }
 
   private fun handleDragEnd(state: Int) {
@@ -310,8 +303,10 @@ class TrueSheetView(context: Context) :
     val detentInfo = sheetDialog.getDetentInfoForState(state)
     detentInfo?.let {
       // Dispatch drag ended after dragging
-      dispatchEvent(TrueSheetEvent.DRAG_END, detentInfoData(it))
-
+      eventDispatcher?.dispatchEvent(
+        DragEndEvent(surfaceId, id, it.index, it.position)
+      )
+      
       if (it.index != currentDetentIndex) {
         // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->
@@ -323,15 +318,13 @@ class TrueSheetView(context: Context) :
         sheetDialog.setupDimmedBackground(it.index)
 
         // Dispatch onDetentChange event
-        dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(it))
+        eventDispatcher?.dispatchEvent(
+          DetentChangeEvent(surfaceId, id, it.index, it.position)
+        )
       }
     }
 
     isDragging = false
-  }
-
-  private fun dispatchEvent(name: String, data: WritableMap? = null) {
-    eventDispatcher?.dispatchEvent(TrueSheetEvent(surfaceId, id, name, data))
   }
 
   fun configureIfShowing() {
@@ -435,14 +428,18 @@ class TrueSheetView(context: Context) :
       // For consistency with iOS, we are not waiting
       // for the state to change before dispatching onDetentChange event.
       val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(detentIndex)
-      dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(detentInfo))
+      eventDispatcher?.dispatchEvent(
+        DetentChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
+      )
 
       promiseCallback()
     } else {
       presentPromise = promiseCallback
       // Dispatch onWillPresent event before showing with detent info
       val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
-      dispatchEvent(TrueSheetEvent.WILL_PRESENT, detentInfoData(detentInfo))
+      eventDispatcher?.dispatchEvent(
+        WillPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
+      )
     }
 
     sheetDialog.present(detentIndex)

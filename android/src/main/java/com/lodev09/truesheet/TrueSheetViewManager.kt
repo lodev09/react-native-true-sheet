@@ -4,12 +4,12 @@ import android.graphics.Color
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
-import com.facebook.react.common.MapBuilder
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.Utils
+import com.lodev09.truesheet.events.*
 
 /**
  * ViewManager for TrueSheetView - Fabric architecture
@@ -34,19 +34,24 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun needsCustomLayoutForChildren(): Boolean = true
 
-  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
-    mutableMapOf(
-      TrueSheetEvent.MOUNT to MapBuilder.of("registrationName", "onMount"),
-      TrueSheetEvent.WILL_PRESENT to MapBuilder.of("registrationName", "onWillPresent"),
-      TrueSheetEvent.DID_PRESENT to MapBuilder.of("registrationName", "onDidPresent"),
-      TrueSheetEvent.WILL_DISMISS to MapBuilder.of("registrationName", "onWillDismiss"),
-      TrueSheetEvent.DID_DISMISS to MapBuilder.of("registrationName", "onDidDismiss"),
-      TrueSheetEvent.DETENT_CHANGE to MapBuilder.of("registrationName", "onDetentChange"),
-      TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),
-      TrueSheetEvent.DRAG_CHANGE to MapBuilder.of("registrationName", "onDragChange"),
-      TrueSheetEvent.DRAG_END to MapBuilder.of("registrationName", "onDragEnd"),
-      TrueSheetEvent.POSITION_CHANGE to MapBuilder.of("registrationName", "onPositionChange")
+  /**
+   * Export custom direct event types for Fabric
+   * Uses Kotlin native collections with decoupled event classes
+   */
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> {
+    return mutableMapOf(
+      MountEvent.EVENT_NAME to hashMapOf("registrationName" to MountEvent.REGISTRATION_NAME),
+      WillPresentEvent.EVENT_NAME to hashMapOf("registrationName" to WillPresentEvent.REGISTRATION_NAME),
+      DidPresentEvent.EVENT_NAME to hashMapOf("registrationName" to DidPresentEvent.REGISTRATION_NAME),
+      WillDismissEvent.EVENT_NAME to hashMapOf("registrationName" to WillDismissEvent.REGISTRATION_NAME),
+      DidDismissEvent.EVENT_NAME to hashMapOf("registrationName" to DidDismissEvent.REGISTRATION_NAME),
+      DetentChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DetentChangeEvent.REGISTRATION_NAME),
+      DragBeginEvent.EVENT_NAME to hashMapOf("registrationName" to DragBeginEvent.REGISTRATION_NAME),
+      DragChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DragChangeEvent.REGISTRATION_NAME),
+      DragEndEvent.EVENT_NAME to hashMapOf("registrationName" to DragEndEvent.REGISTRATION_NAME),
+      PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME)
     )
+  }
 
   // ==================== Props ====================
 
