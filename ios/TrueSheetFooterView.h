@@ -20,9 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Sets up the footer view with touch handling and constraints
- * @param controller The TrueSheetViewController that owns the view
  */
-- (void)setupWithController:(TrueSheetViewController *)controller;
+- (void)setup;
 
 /**
  * Cleans up the footer view before removal

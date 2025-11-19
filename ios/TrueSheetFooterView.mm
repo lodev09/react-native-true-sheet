@@ -20,7 +20,6 @@ using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
   RCTSurfaceTouchHandler *_touchHandler;
-  __weak TrueSheetViewController *_controller;
   CGFloat _lastHeight;
 }
 
@@ -38,7 +37,6 @@ using namespace facebook::react;
 
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    _controller = nil;
     _lastHeight = 0;
   }
   return self;
@@ -65,10 +63,8 @@ using namespace facebook::react;
   _lastHeight = height;
 }
 
-- (void)setupWithController:(TrueSheetViewController *)controller {
-  // Store reference to controller (kept for potential future use)
-  _controller = controller;
-
+// TODO: maybe put this on init?
+- (void)setup {
   // Attach touch handler for React Native touch events
   if (_touchHandler) {
     [_touchHandler attachToView:self];
@@ -101,8 +97,6 @@ using namespace facebook::react;
   // Unpin constraints (view removal handled by React Native)
   [LayoutUtil unpinView:self];
 
-  // Clear reference to controller
-  _controller = nil;
   _lastHeight = 0;
 }
 

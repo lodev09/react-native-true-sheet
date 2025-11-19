@@ -39,18 +39,16 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView () <TrueSheetViewControllerDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContainerViewDelegate>
 @end
 
 @implementation TrueSheetView {
   TrueSheetContainerView *_containerView;
-  LayoutMetrics _layoutMetrics;
-  BOOL _hasHandledInitialPresentation;
+  TrueSheetViewController *_controller;
+  NSNumber *_activeDetentIndex;
+  BOOL _isPresented;
+  BOOL _hasInitiallyPresented;
 }
-
-@synthesize controller = _controller;
-@synthesize isPresented = _isPresented;
-@synthesize activeIndex = _activeIndex;
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
@@ -62,9 +60,10 @@ using namespace facebook::react;
     _controller.delegate = self;
 
     _containerView = nil;
-    _hasHandledInitialPresentation = NO;
     _isPresented = NO;
-    _activeIndex = nil;
+    _activeDetentIndex = nil;
+
+    _hasInitiallyPresented = NO;
   }
   return self;
 }
@@ -108,10 +107,7 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
-  NSLog(@"TrueSheetView presentAtIndex: %ld, isPresented: %d", (long)index, _isPresented);
-
   if (_isPresented) {
-    NSLog(@"TrueSheetView presentAtIndex: Already presented, resizing");
     [_controller.sheetPresentationController animateChanges:^{
       [_controller resizeToIndex:index];
     }];
@@ -123,10 +119,8 @@ using namespace facebook::react;
   }
 
   UIViewController *presentingViewController = [self findPresentingViewController];
-  NSLog(@"TrueSheetView presentAtIndex: presentingViewController: %@", presentingViewController);
 
   if (!presentingViewController) {
-    NSLog(@"TrueSheetView presentAtIndex: No presenting view controller!");
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                          code:1001
                                      userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
@@ -137,22 +131,17 @@ using namespace facebook::react;
     return;
   }
 
-  NSLog(@"TrueSheetView presentAtIndex: Preparing to present...");
-
   // Prepare the sheet with the correct initial index before presenting
   [_controller prepareForPresentationAtIndex:index
                                   completion:^{
-                                    NSLog(@"TrueSheetView presentAtIndex: Presenting controller...");
-                                    [presentingViewController
-                                      presentViewController:self->_controller
-                                                   animated:animated
-                                                 completion:^{
-                                                   NSLog(@"TrueSheetView presentAtIndex: Presentation complete");
-                                                   // Call completion handler
-                                                   if (completion) {
-                                                     completion(YES, nil);
-                                                   }
-                                                 }];
+                                    [presentingViewController presentViewController:self->_controller
+                                                                           animated:animated
+                                                                         completion:^{
+                                                                           // Call completion handler
+                                                                           if (completion) {
+                                                                             completion(YES, nil);
+                                                                           }
+                                                                         }];
                                   }];
 }
 
@@ -236,26 +225,15 @@ using namespace facebook::react;
     [_controller.sheetPresentationController animateChanges:^{
       [_controller setupDetents];
       [_controller setupDimmedBackground];
-      [_controller resizeToIndex:[self->_activeIndex integerValue]];
+      [_controller resizeToIndex:[self->_activeDetentIndex integerValue]];
     }];
   }
 
-  // Handle initial presentation
-  if (_containerView && !_hasHandledInitialPresentation && newProps.initialDetentIndex >= 0) {
-    _hasHandledInitialPresentation = YES;
-
-    [self presentAtIndex:newProps.initialDetentIndex
-                animated:newProps.initialDetentAnimated
-              completion:nil];
+  // Present sheet if initial detent index is set, only once
+  if (!_hasInitiallyPresented && newProps.initialDetentIndex >= 0 && !_isPresented) {
+    _hasInitiallyPresented = YES;
+    [self presentAtIndex:newProps.initialDetentIndex animated:newProps.initialDetentAnimated completion:nil];
   }
-}
-
-- (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
-           oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
-  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-
-  // Store layout metrics for later use
-  _layoutMetrics = layoutMetrics;
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -268,8 +246,23 @@ using namespace facebook::react;
 
     _containerView = (TrueSheetContainerView *)childComponentView;
 
-    // Setup container in sheet view
-    [_containerView setupInSheetView:self];
+    // Set this view as the container's delegate
+    _containerView.delegate = self;
+
+    // Add to parent view hierarchy
+    [_controller.view addSubview:_containerView];
+
+    // Pin container to fill the entire parent view
+    [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
+
+    // Ensure container is above background view
+    [_controller.view bringSubviewToFront:_containerView];
+
+    // Get initial content height from container
+    CGFloat contentHeight = [_containerView contentHeight];
+    if (contentHeight > 0) {
+      _controller.contentHeight = @(contentHeight);
+    }
 
     // Emit onMount event when container is mounted
     [OnMountEvent emit:_eventEmitter];
@@ -278,6 +271,12 @@ using namespace facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
+    _containerView.delegate = nil;
+
+    // Unpin and remove from view hierarchy
+    [LayoutUtil unpinView:_containerView];
+    [_containerView removeFromSuperview];
+
     [_containerView cleanup];
     _containerView = nil;
   }
@@ -292,19 +291,33 @@ using namespace facebook::react;
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
+#pragma mark - TrueSheetContainerViewDelegate
+
+- (void)containerViewContentDidChangeSize:(CGSize)newSize {
+  // Update controller's content height
+  _controller.contentHeight = @(newSize.height);
+
+  // Update detents if sheet is already presented
+  if (_isPresented) {
+    // Tell controller that we are transitioning from layout changes.
+    // Controller viewDidLayoutSubviews will handle position notification.
+    _controller.layoutTransitioning = YES;
+
+    [_controller.sheetPresentationController animateChanges:^{
+      [self->_controller setupDetents];
+    }];
+  }
+}
+
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillAppear {
-  NSLog(@"TrueSheetView viewControllerWillAppear");
-
   NSInteger index = [_controller currentDetentIndex];
   CGFloat position = _controller.currentPosition;
 
   // Set presentation state when presenting
   _isPresented = YES;
-  _activeIndex = @(index);
-
-  NSLog(@"TrueSheetView viewControllerWillAppear: Set isPresented=YES, activeIndex=%ld", (long)index);
+  _activeDetentIndex = @(index);
 
   [OnWillPresentEvent emit:_eventEmitter index:index position:position];
 }
@@ -342,14 +355,14 @@ using namespace facebook::react;
 
 - (void)viewControllerDidDismiss {
   _isPresented = NO;
-  _activeIndex = nil;
+  _activeDetentIndex = nil;
 
   [OnDidDismissEvent emit:_eventEmitter];
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
-  if (!_activeIndex || [_activeIndex integerValue] != index) {
-    _activeIndex = @(index);
+  if (!_activeDetentIndex || [_activeDetentIndex integerValue] != index) {
+    _activeDetentIndex = @(index);
   }
 
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];

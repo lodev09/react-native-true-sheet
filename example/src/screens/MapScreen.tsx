@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,6 +20,8 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import { Button, DemoContent, Footer, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BasicSheet,
   BlankSheet,
@@ -27,7 +30,6 @@ import {
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -115,32 +117,32 @@ export const MapScreen = () => {
         }}
         footer={<Footer />}
       >
-        {/*<ScrollView
+        <ScrollView
           nestedScrollEnabled
           style={{ backgroundColor: 'red' }}
           contentContainerStyle={styles.content}
-        >*/}
-        <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet 💩</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
-        {Array.from({ length: contentCount }, (_, i) => (
-          <DemoContent key={i} color={DARK_BLUE} />
-        ))}
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+        >
+          <View style={styles.heading}>
+            <Text style={styles.title}>True Sheet 💩</Text>
+            <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+          </View>
+          {Array.from({ length: contentCount }, (_, i) => (
+            <DemoContent key={i} color={DARK_BLUE} />
+          ))}
+          <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+          <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+          <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+          <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+          <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+          <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
-        <Button text={`Add Content (${contentCount})`} onPress={addContent} />
-        {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
+          <Button text={`Add Content (${contentCount})`} onPress={addContent} />
+          {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
 
-        <Spacer />
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
-        {/*</ScrollView>*/}
+          <Spacer />
+          <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        </ScrollView>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

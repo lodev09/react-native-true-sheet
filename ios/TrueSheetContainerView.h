@@ -11,20 +11,29 @@
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 
-@class TrueSheetView;
-@class TrueSheetViewController;
-
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error);
+@protocol TrueSheetContainerViewDelegate <NSObject>
+
+/**
+ * Called when the container's content size changes
+ * @param newSize The new size of the content
+ */
+- (void)containerViewContentDidChangeSize:(CGSize)newSize;
+
+@end
 
 @interface TrueSheetContainerView : RCTViewComponentView
 
 /**
- * Sets up the container view in the sheet view
- * @param sheetView The TrueSheetView parent to setup in
+ * Delegate to notify when content is ready
  */
-- (void)setupInSheetView:(TrueSheetView *)sheetView;
+@property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
+
+/**
+ * Returns the current content height
+ */
+- (CGFloat)contentHeight;
 
 /**
  * Cleans up the container view before removal

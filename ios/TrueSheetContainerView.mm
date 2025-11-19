@@ -15,9 +15,6 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
-#import "TrueSheetView.h"
-#import "TrueSheetViewController.h"
-#import "utils/LayoutUtil.h"
 
 #import <React/RCTConversions.h>
 
@@ -27,7 +24,6 @@ using namespace facebook::react;
 @end
 
 @implementation TrueSheetContainerView {
-  __weak TrueSheetView *_sheetView;
   TrueSheetContentView *_contentView;
   TrueSheetFooterView *_footerView;
 }
@@ -44,7 +40,6 @@ using namespace facebook::react;
     // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
 
-    _sheetView = nil;
     _contentView = nil;
     _footerView = nil;
   }
@@ -54,21 +49,8 @@ using namespace facebook::react;
 - (void)dealloc {
 }
 
-- (void)setupInSheetView:(TrueSheetView *)sheetView {
-  // Store reference to sheet view
-  _sheetView = sheetView;
-
-  // Get the controller's view as the parent view
-  UIView *parentView = _sheetView.controller.view;
-
-  // Add to parent view hierarchy
-  [parentView addSubview:self];
-
-  // Pin container to fill the entire parent view
-  [LayoutUtil pinView:self toParentView:parentView edges:UIRectEdgeAll];
-
-  // Ensure container is above background view
-  [parentView bringSubviewToFront:self];
+- (CGFloat)contentHeight {
+  return _contentView ? _contentView.frame.size.height : 0;
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -86,13 +68,8 @@ using namespace facebook::react;
     // Set delegate to listen for size changes
     _contentView.delegate = self;
 
-    // Set initial content height from mounted view's frame
-    if (_contentView.frame.size.height > 0) {
-      _sheetView.controller.contentHeight = @(_contentView.frame.size.height);
-    }
-
-    // Setup content view with controller
-    [_contentView setupWithController:_sheetView.controller];
+    // Setup content view
+    [_contentView setup];
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
@@ -103,8 +80,8 @@ using namespace facebook::react;
 
     _footerView = (TrueSheetFooterView *)childComponentView;
 
-    // Setup footer view with controller
-    [_footerView setupWithController:_sheetView.controller];
+    // Setup footer view
+    [_footerView setup];
   }
 }
 
@@ -133,13 +110,6 @@ using namespace facebook::react;
     [_footerView cleanup];
     _footerView = nil;
   }
-
-  // Unpin and remove from view hierarchy
-  [LayoutUtil unpinView:self];
-  [self removeFromSuperview];
-
-  // Clear reference to sheet view
-  _sheetView = nil;
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
@@ -149,20 +119,9 @@ using namespace facebook::react;
 #pragma mark - TrueSheetContentViewDelegate
 
 - (void)contentViewDidChangeSize:(CGSize)newSize {
-  TrueSheetViewController *controller = _sheetView.controller;
-
-  // Update controller's content height
-  controller.contentHeight = @(newSize.height);
-
-  // Update detents if sheet is already presented
-  if (_sheetView.isPresented) {
-    // Tell controller that we are transitioning from layout changes.
-    // Controller viewDidLayoutSubviews will handle position notification.
-    controller.layoutTransitioning = YES;
-
-    [controller.sheetPresentationController animateChanges:^{
-      [controller setupDetents];
-    }];
+  // Notify delegate of size change
+  if ([self.delegate respondsToSelector:@selector(containerViewContentDidChangeSize:)]) {
+    [self.delegate containerViewContentDidChangeSize:newSize];
   }
 }
 

@@ -29,9 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Sets up the content view with touch handling and scroll view detection
- * @param controller The TrueSheetViewController that owns the view
  */
-- (void)setupWithController:(TrueSheetViewController *)controller;
+- (void)setup;
 
 /**
  * Cleans up the content view before removal

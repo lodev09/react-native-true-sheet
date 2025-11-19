@@ -56,7 +56,8 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupWithController:(TrueSheetViewController *)controller {
+// TODO: maybe put this on init?
+- (void)setup {
   // Attach touch handler for React Native touch events
   if (_touchHandler) {
     [_touchHandler attachToView:self];
