@@ -1,6 +1,6 @@
 package com.lodev09.truesheet
 
-import android.content.Context
+import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
@@ -8,4 +8,4 @@ import com.facebook.react.views.view.ReactViewGroup
  * This is the second child of TrueSheetContainerView
  * Positioned absolutely at the bottom of the sheet
  */
-class TrueSheetFooterView(context: Context) : ReactViewGroup(context)
+class TrueSheetFooterView(context: ThemedReactContext) : ReactViewGroup(context)

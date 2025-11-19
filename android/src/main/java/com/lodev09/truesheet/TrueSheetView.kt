@@ -2,7 +2,6 @@ package com.lodev09.truesheet
 
 import android.content.Context
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
@@ -10,18 +9,16 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.facebook.react.views.view.ReactViewGroup
 
 /**
  * Main TrueSheet host view for Fabric architecture.
  * Similar to iOS TrueSheetView, this is a simple host that holds a reference to the container.
  * The container manages the actual sheet presentation logic.
  */
-class TrueSheetView(context: Context) :
-  ViewGroup(context),
+class TrueSheetView(private val reactContext: ThemedReactContext) :
+  ReactViewGroup(reactContext),
   LifecycleEventListener {
-
-  private val reactContext: ThemedReactContext
-    get() = context as ThemedReactContext
 
   var eventDispatcher: EventDispatcher? = null
     set(value) {
@@ -51,23 +48,6 @@ class TrueSheetView(context: Context) :
 
   init {
     reactContext.addLifecycleEventListener(this)
-  }
-
-  override fun onLayout(
-    changed: Boolean,
-    l: Int,
-    t: Int,
-    r: Int,
-    b: Int
-  ) {
-    // Do nothing - container is in the dialog, not a child of this view
-    // This is how ReactModalHostView works in React Native
-  }
-
-  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    // Do nothing - we are laid out by UIManager
-    // Container is in the dialog and measured by the dialog's layout system
-    setMeasuredDimension(0, 0)
   }
 
   override fun setId(id: Int) {

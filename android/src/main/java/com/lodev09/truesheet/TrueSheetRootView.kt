@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.view.MotionEvent
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
@@ -28,8 +27,8 @@ import com.facebook.react.views.view.ReactViewGroup
  *
  * This implementation is Fabric-only and does not support the legacy architecture.
  */
-class TrueSheetRootView(private val context: Context?) :
-  ReactViewGroup(context),
+class TrueSheetRootView(private val reactContext: ThemedReactContext) :
+  ReactViewGroup(reactContext),
   RootView {
 
   internal var stateWrapper: StateWrapper? = null
@@ -41,9 +40,6 @@ class TrueSheetRootView(private val context: Context?) :
   private var jSPointerDispatcher: JSPointerDispatcher? = null
 
   var detentChangeListener: ((w: Int, h: Int) -> Unit)? = null
-
-  private val reactContext: ThemedReactContext
-    get() = context as ThemedReactContext
 
   init {
     if (ReactFeatureFlags.dispatchPointerEvents) {

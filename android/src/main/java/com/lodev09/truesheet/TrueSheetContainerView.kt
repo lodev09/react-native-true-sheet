@@ -17,10 +17,7 @@ import com.lodev09.truesheet.utils.PixelUtils
  * Container view that manages the bottom sheet dialog and holds content and footer views.
  * Similar to iOS TrueSheetContainerView, this handles the actual sheet presentation logic.
  */
-class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
-
-  private val reactContext: ThemedReactContext
-    get() = context as ThemedReactContext
+class TrueSheetContainerView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
   /**
    * Reference to the parent TrueSheetView (host view)
@@ -119,7 +116,7 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
     this.sheetView = sheetView
 
     // Initialize dialog
-    rootSheetView = TrueSheetRootView(context)
+    rootSheetView = TrueSheetRootView(reactContext)
     rootSheetView?.id = sheetView.id
     rootSheetView?.eventDispatcher = eventDispatcher
     rootSheetView?.stateWrapper = stateWrapper
