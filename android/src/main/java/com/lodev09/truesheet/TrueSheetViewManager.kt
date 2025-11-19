@@ -81,6 +81,14 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
           result.add(value)
         }
 
+        ReadableType.String -> {
+          val value = detents.getString(i)
+          if (value == "auto") {
+            result.add(-1.0)
+          }
+          // Skip other string values
+        }
+
         else -> {
           // Skip invalid types
         }

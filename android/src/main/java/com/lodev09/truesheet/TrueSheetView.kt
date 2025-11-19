@@ -81,15 +81,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     UiThreadUtil.assertOnUiThread()
 
     // Handle initial presentation if needed and not yet done
-    if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
+    if (!hasHandledInitialPresentation && initialDetentIndex >= 0 && containerView != null) {
       hasHandledInitialPresentation = true
       
-      // Use post to ensure children are mounted and measured
-      post {
-        containerView?.let { container ->
-          container.present(initialDetentIndex) { }
+      // Wait for container to be laid out before presenting
+      containerView?.viewTreeObserver?.addOnGlobalLayoutListener(
+        object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+          override fun onGlobalLayout() {
+            containerView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
+            // Present after layout is complete
+            containerView?.present(initialDetentIndex) { }
+          }
         }
-      }
+      )
     }
   }
 
