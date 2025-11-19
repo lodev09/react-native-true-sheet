@@ -11,28 +11,42 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.KeyboardManager
-import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 
 data class DetentInfo(val index: Int, val position: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
-  BottomSheetDialog(reactContext) {
+class TrueSheetDialog(
+  private val reactContext: ThemedReactContext,
+  private val trueSheetView: TrueSheetView
+) : BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
-  // First child of the rootSheetView
-  private val containerView: ViewGroup?
-    get() = if (rootSheetView.childCount > 0) {
-      rootSheetView.getChildAt(0) as? ViewGroup
-    } else {
-      null
-    }
+  /**
+   * Container view from TrueSheetView hierarchy
+   */
+  private val containerView: TrueSheetContainerView?
+    get() = trueSheetView.containerView
 
+  /**
+   * The sheet container view from Material BottomSheetDialog
+   */
   private val sheetContainerView: ViewGroup?
-    get() = rootSheetView.parent?.let { it as? ViewGroup }
+    get() = trueSheetView.parent?.let { it as? ViewGroup }
+
+  /**
+   * Content view from the container
+   */
+  private val contentView: TrueSheetContentView?
+    get() = containerView?.contentView
+
+  /**
+   * Footer view from the container
+   */
+  private val footerView: TrueSheetFooterView?
+    get() = containerView?.footerView
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -51,8 +65,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    */
   var maxScreenHeight = 0
 
-  var contentHeight = 0
-  var footerHeight = 0
   var maxSheetHeight: Int? = null
 
   var edgeToEdge: Boolean = false
@@ -73,18 +85,10 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var cornerRadius: Float = 0f
   var backgroundColor: Int = Color.WHITE
 
-  // 1st child is the content view
-  val contentView: ViewGroup?
-    get() = containerView?.getChildAt(0) as? ViewGroup
-
-  // 2nd child is the footer view
-  val footerView: ViewGroup?
-    get() = containerView?.getChildAt(1) as? ViewGroup
-
-  var detents: Array<Any> = arrayOf("medium", "large")
+  var detents: Array<Any> = arrayOf(0.5, 1.0)
 
   init {
-    setContentView(rootSheetView)
+    setContentView(trueSheetView)
 
     sheetContainerView?.setBackgroundColor(backgroundColor)
     sheetContainerView?.clipToOutline = true
@@ -142,11 +146,11 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Setup dimmed sheet.
    * `dimmedIndex` will further customize the dimming behavior.
    */
-  fun setupDimmedBackground(sizeIndex: Int) {
+  fun setupDimmedBackground(detentIndex: Int) {
     window?.apply {
       val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
 
-      if (dimmed && sizeIndex >= dimmedIndex) {
+      if (dimmed && detentIndex >= dimmedIndex) {
         // Remove touch listener
         view.setOnTouchListener(null)
 
@@ -182,13 +186,13 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * Present the sheet.
    */
-  fun present(sizeIndex: Int, animated: Boolean = true) {
-    setupDimmedBackground(sizeIndex)
+  fun present(detentIndex: Int, animated: Boolean = true) {
+    setupDimmedBackground(detentIndex)
     if (isShowing) {
-      setStateForSizeIndex(sizeIndex)
+      setStateForDetentIndex(detentIndex)
     } else {
       configure()
-      setStateForSizeIndex(sizeIndex)
+      setStateForDetentIndex(detentIndex)
 
       if (!animated) {
         // Disable animation
@@ -202,6 +206,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   fun positionFooter() {
     footerView?.let { footer ->
       sheetContainerView?.let { container ->
+        val footerHeight = containerView?.getFooterHeight() ?: 0
         footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
       }
     }
@@ -223,7 +228,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Double -> {
           if (detent == -1.0) {
             // -1 represents "auto"
-            contentHeight + footerHeight
+            containerView?.getTotalContentHeight() ?: 0
           } else {
             if (detent <= 0.0 || detent > 1.0) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -235,7 +240,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         is Int -> {
           if (detent == -1) {
             // -1 represents "auto"
-            contentHeight + footerHeight
+            containerView?.getTotalContentHeight() ?: 0
           } else {
             if (detent <= 0 || detent > 1) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -256,7 +261,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private fun getStateForDetentIndex(index: Int): Int {
     return when (detents.size) {
       1 -> {
-        return BottomSheetBehavior.STATE_EXPANDED
+        BottomSheetBehavior.STATE_EXPANDED
       }
 
       2 -> {
@@ -297,10 +302,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     })
   }
 
-  fun setOnDetentChangeListener(listener: (w: Int, h: Int) -> Unit) {
-    rootSheetView.detentChangeListener = listener
-  }
-
   /**
    * Remove keyboard listener.
    */
@@ -309,7 +310,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   /**
-   * Configure the sheet based from the size preference.
+   * Configure the sheet based from the detent preference.
    */
   fun configure() {
     // Configure sheet sizes
@@ -320,13 +321,13 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
       // m3 max width 640dp
       maxWidth = Utils.toPixel(640.0).toInt()
 
-      when (sizes.size) {
+      when (detents.size) {
         1 -> {
-          maxHeight = getSizeHeight(sizes[0])
+          maxHeight = getDetentHeight(detents[0])
           skipCollapsed = true
 
-          if (sizes[0] == "auto") {
-            // Force a layout update
+          if (detents[0] == -1.0 || detents[0] == -1) {
+            // Force a layout update for auto height
             sheetContainerView?.let {
               val params = it.layoutParams
               params.height = maxHeight
@@ -336,18 +337,18 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         }
 
         2 -> {
-          setPeekHeight(getSizeHeight(sizes[0]), isShowing)
-          maxHeight = getSizeHeight(sizes[1])
+          setPeekHeight(getDetentHeight(detents[0]), isShowing)
+          maxHeight = getDetentHeight(detents[1])
         }
 
         3 -> {
           // Enables half expanded
           isFitToContents = false
 
-          setPeekHeight(getSizeHeight(sizes[0]), isShowing)
+          setPeekHeight(getDetentHeight(detents[0]), isShowing)
 
-          halfExpandedRatio = minOf(getSizeHeight(sizes[1]).toFloat() / maxScreenHeight.toFloat(), 1.0f)
-          maxHeight = getSizeHeight(sizes[2])
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / maxScreenHeight.toFloat(), 1.0f)
+          maxHeight = getDetentHeight(detents[2])
         }
       }
     }
@@ -401,6 +402,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   companion object {
-    const val TAG = "TrueSheetView"
+    const val TAG = "TrueSheetDialog"
   }
 }

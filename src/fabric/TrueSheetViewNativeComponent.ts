@@ -56,6 +56,5 @@ export interface NativeProps extends ViewProps {
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {
-  excludedPlatforms: ['android'],
   interfaceOnly: false,
 }) as HostComponent<NativeProps>;

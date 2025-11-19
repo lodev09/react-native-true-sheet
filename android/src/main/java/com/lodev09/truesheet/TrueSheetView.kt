@@ -3,8 +3,7 @@ package com.lodev09.truesheet
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewStructure
-import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.UiThread
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
@@ -13,9 +12,12 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 
+/**
+ * Main TrueSheet view component for Fabric architecture
+ * Manages the bottom sheet dialog and contains TrueSheetContainerView
+ */
 class TrueSheetView(context: Context) :
   ViewGroup(context),
   LifecycleEventListener {
@@ -26,11 +28,7 @@ class TrueSheetView(context: Context) :
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
 
-  var eventDispatcher: EventDispatcher?
-    get() = rootSheetView.eventDispatcher
-    set(eventDispatcher) {
-      rootSheetView.eventDispatcher = eventDispatcher
-    }
+  private var eventDispatcher: EventDispatcher? = null
 
   var initialIndex: Int = -1
   var initialIndexAnimated: Boolean = true
@@ -41,7 +39,7 @@ class TrueSheetView(context: Context) :
   private var isDragging = false
 
   /**
-   * Current activeIndex.
+   * Current active detent index.
    */
   private var currentDetentIndex: Int = -1
 
@@ -61,31 +59,25 @@ class TrueSheetView(context: Context) :
   private val sheetDialog: TrueSheetDialog
 
   /**
-   * React root view placeholder.
+   * Container view (first child) that holds content and footer
    */
-  private val rootSheetView: RootSheetView
+  val containerView: TrueSheetContainerView?
+    get() = if (childCount > 0 && getChildAt(0) is TrueSheetContainerView) {
+      getChildAt(0) as TrueSheetContainerView
+    } else null
 
   init {
     reactContext.addLifecycleEventListener(this)
 
-    rootSheetView = RootSheetView(context)
-    sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
+    sheetDialog = TrueSheetDialog(reactContext, this)
 
     // Configure Sheet Dialog
     sheetDialog.apply {
-      setOnDetentChangeListener { w, h ->
-        val data = Arguments.createMap()
-        data.putDouble("width", Utils.toDIP(w.toFloat()).toDouble())
-        data.putDouble("height", Utils.toDIP(h.toFloat()).toDouble())
-
-        dispatchEvent(TrueSheetEvent.CONTAINER_SIZE_CHANGE, data)
-      }
-
       // Setup listener when the dialog has been presented.
       setOnShowListener {
         registerKeyboardManager()
 
-        // Initialize footer y
+        // Initialize footer position
         UiThreadUtil.runOnUiThread {
           positionFooter()
         }
@@ -99,8 +91,11 @@ class TrueSheetView(context: Context) :
           presentPromise = null
         }
 
-        // Dispatch onDidPresent event
-        dispatchEvent(TrueSheetEvent.DID_PRESENT, detentInfoData(sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)))
+        // Dispatch onDidPresent event with detent info
+        dispatchEvent(
+          TrueSheetEvent.DID_PRESENT,
+          detentInfoData(sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex))
+        )
       }
 
       // Setup listener when the dialog is about to be dismissed.
@@ -128,7 +123,7 @@ class TrueSheetView(context: Context) :
         object : BottomSheetBehavior.BottomSheetCallback() {
           override fun onSlide(sheetView: View, slideOffset: Float) {
             when (behavior.state) {
-              // For consistency with IOS, we consider SETTLING as dragging change.
+              // For consistency with iOS, we consider SETTLING as dragging change.
               BottomSheetBehavior.STATE_DRAGGING,
               BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
 
@@ -136,16 +131,25 @@ class TrueSheetView(context: Context) :
             }
 
             // Emit position change event continuously during slide
-            dispatchEvent(TrueSheetEvent.POSITION_CHANGE, detentInfoData(getCurrentDetentInfo(sheetView)))
+            val detentInfo = getCurrentDetentInfo(sheetView)
+            val positionData = Arguments.createMap().apply {
+              putInt("index", detentInfo.index)
+              putDouble("position", detentInfo.position.toDouble())
+              putBoolean("transitioning", isDragging)
+            }
+            dispatchEvent(TrueSheetEvent.POSITION_CHANGE, positionData)
 
-            footerView?.let {
-              val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
+            // Update footer position during slide
+            containerView?.footerView?.let { footer ->
+              val footerHeight = containerView?.getFooterHeight() ?: 0
+              val y = (sheetDialog.maxScreenHeight - sheetView.top - footerHeight).toFloat()
+              
               if (slideOffset >= 0) {
                 // Sheet is expanding
-                it.y = y
+                footer.y = y
               } else {
                 // Sheet is collapsing
-                it.y = y - footerHeight * slideOffset
+                footer.y = y - footerHeight * slideOffset
               }
             }
           }
@@ -170,35 +174,46 @@ class TrueSheetView(context: Context) :
     }
   }
 
-  override fun dispatchProvideStructure(structure: ViewStructure) {
-    rootSheetView.dispatchProvideStructure(structure)
+  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+    // Layout the container view if it exists
+    containerView?.let { container ->
+      container.layout(0, 0, r - l, container.measuredHeight)
+    }
   }
 
-  override fun onLayout(
-    changed: Boolean,
-    l: Int,
-    t: Int,
-    r: Int,
-    b: Int
-  ) {
-    // Do nothing as we are laid out by UIManager
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    val width = MeasureSpec.getSize(widthMeasureSpec)
+    var height = 0
+
+    // Measure container view
+    containerView?.let { container ->
+      measureChild(
+        container,
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+      )
+      height = container.measuredHeight
+    }
+
+    setMeasuredDimension(width, height)
   }
 
   override fun setId(id: Int) {
     super.setId(id)
-
-    // Forward the ID to our content view, so event dispatching behaves correctly
-    rootSheetView.id = id
+    
+    // Register this view with the module for ref-based access
+    TrueSheetModule.registerView(this, id)
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
 
-    // Initialize content
-    UiThreadUtil.runOnUiThread {
-      sheetDialog.contentView?.height?.let { setContentHeight(it) }
-      sheetDialog.footerView?.height?.let { setFooterHeight(it) }
+    // Get event dispatcher
+    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
+    eventDispatcher = dispatcher
 
+    // Initialize after layout
+    post {
       if (initialIndex >= 0) {
         currentDetentIndex = initialIndex
         sheetDialog.present(initialIndex, initialIndexAnimated)
@@ -211,44 +226,25 @@ class TrueSheetView(context: Context) :
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
+    TrueSheetModule.unregisterView(id)
     onDropInstance()
   }
 
-  override fun addView(child: View, index: Int) {
-    UiThreadUtil.assertOnUiThread()
-    rootSheetView.addView(child, index)
+  override fun requestLayout() {
+    super.requestLayout()
 
-    // Hide this host view
-    visibility = GONE
+    // When layout is requested, update the sheet configuration
+    post {
+      measure(
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+      )
+      layout(left, top, right, bottom)
+      
+      // Reconfigure sheet if showing
+      configureIfShowing()
+    }
   }
-
-  override fun getChildCount(): Int {
-    // This method may be called by the parent constructor
-    // before rootView is initialized.
-    return rootSheetView.childCount
-  }
-
-  override fun getChildAt(index: Int): View = rootSheetView.getChildAt(index)
-
-  override fun removeView(child: View) {
-    UiThreadUtil.assertOnUiThread()
-    rootSheetView.removeView(child)
-  }
-
-  override fun removeViewAt(index: Int) {
-    UiThreadUtil.assertOnUiThread()
-    val child = getChildAt(index)
-    rootSheetView.removeView(child)
-  }
-
-  override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
-    // Explicitly override this to prevent accessibility events being passed down to children
-    // Those will be handled by the rootView which lives in the dialog
-  }
-
-  // Explicitly override this to prevent accessibility events being passed down to children
-  // Those will be handled by the mHostView which lives in the dialog
-  public override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
 
   override fun onHostResume() {
     configureIfShowing()
@@ -265,6 +261,7 @@ class TrueSheetView(context: Context) :
 
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
+    TrueSheetModule.unregisterView(id)
     sheetDialog.dismiss()
   }
 
@@ -278,9 +275,7 @@ class TrueSheetView(context: Context) :
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val position = Utils.toDIP(sheetView.top.toFloat())
-    val currentDetentInfo = DetentInfo(currentDetentIndex, position)
-
-    return currentDetentInfo
+    return DetentInfo(currentDetentIndex, position)
   }
 
   private fun handleDragBegin(sheetView: View) {
@@ -300,7 +295,7 @@ class TrueSheetView(context: Context) :
   private fun handleDragEnd(state: Int) {
     if (!isDragging) return
 
-    // For consistency with IOS,
+    // For consistency with iOS,
     // we only handle state changes after dragging.
     //
     // Changing detent programmatically is handled via the present method.
@@ -308,6 +303,7 @@ class TrueSheetView(context: Context) :
     detentInfo?.let {
       // Dispatch drag ended after dragging
       dispatchEvent(TrueSheetEvent.DRAG_END, detentInfoData(it))
+      
       if (it.index != currentDetentIndex) {
         // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->
@@ -341,6 +337,8 @@ class TrueSheetView(context: Context) :
     }
   }
 
+  // ==================== Property Setters ====================
+
   fun setEdgeToEdge(edgeToEdge: Boolean) {
     sheetDialog.edgeToEdge = edgeToEdge
   }
@@ -349,20 +347,6 @@ class TrueSheetView(context: Context) :
     if (sheetDialog.maxSheetHeight == height) return
 
     sheetDialog.maxSheetHeight = height
-    configureIfShowing()
-  }
-
-  fun setContentHeight(height: Int) {
-    if (sheetDialog.contentHeight == height) return
-
-    sheetDialog.contentHeight = height
-    configureIfShowing()
-  }
-
-  fun setFooterHeight(height: Int) {
-    if (sheetDialog.footerHeight == height) return
-
-    sheetDialog.footerHeight = height
     configureIfShowing()
   }
 
@@ -399,13 +383,17 @@ class TrueSheetView(context: Context) :
   }
 
   fun setSoftInputMode(mode: Int) {
-    sheetDialog.window?.apply {
-      this.setSoftInputMode(mode)
-    }
+    sheetDialog.window?.setSoftInputMode(mode)
   }
 
   fun setDismissible(dismissible: Boolean) {
     sheetDialog.dismissible = dismissible
+  }
+
+  fun setGrabber(grabber: Boolean) {
+    // Note: Android Material Bottom Sheet doesn't have a built-in grabber
+    // This would need custom implementation if required
+    // For now, we accept the prop but don't implement it
   }
 
   fun setDetents(newDetents: Array<Any>) {
@@ -413,16 +401,30 @@ class TrueSheetView(context: Context) :
     configureIfShowing()
   }
 
+  fun setBlurTint(tint: String?) {
+    // Note: BlurTint is iOS-specific feature
+    // Android doesn't have native blur support in the same way
+    // This is a no-op on Android, accepting the prop for cross-platform compatibility
+  }
+
+  fun setKeyboardMode(mode: String) {
+    // Already handled via setSoftInputMode
+  }
+
   /**
    * Present the sheet at given detent index.
+   *
+   * @param detentIndex The detent index to present at
+   * @param promiseCallback Callback invoked when presentation completes
    */
+  @UiThread
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
     currentDetentIndex = detentIndex
 
     if (sheetDialog.isShowing) {
-      // For consistency with IOS, we are not waiting
+      // For consistency with iOS, we are not waiting
       // for the state to change before dispatching onDetentChange event.
       val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(detentIndex)
       dispatchEvent(TrueSheetEvent.DETENT_CHANGE, detentInfoData(detentInfo))
@@ -430,8 +432,9 @@ class TrueSheetView(context: Context) :
       promiseCallback()
     } else {
       presentPromise = promiseCallback
-      // Dispatch onWillPresent event before showing
-      dispatchEvent(TrueSheetEvent.WILL_PRESENT, null)
+      // Dispatch onWillPresent event before showing with detent info
+      val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
+      dispatchEvent(TrueSheetEvent.WILL_PRESENT, detentInfoData(detentInfo))
     }
 
     sheetDialog.present(detentIndex)
@@ -439,7 +442,10 @@ class TrueSheetView(context: Context) :
 
   /**
    * Dismisses the sheet.
+   *
+   * @param promiseCallback Callback invoked when dismissal completes
    */
+  @UiThread
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 

@@ -2,37 +2,39 @@ package com.lodev09.truesheet
 
 import android.graphics.Color
 import android.view.WindowManager
-import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.common.MapBuilder
+import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.lodev09.truesheet.core.Utils
 
+/**
+ * ViewManager for TrueSheetView - Fabric architecture
+ * Main sheet component that manages the bottom sheet dialog
+ */
+@ReactModule(name = TrueSheetViewManager.REACT_CLASS)
 class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
-  override fun getName() = TAG
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView = TrueSheetView(reactContext)
+  override fun getName(): String = REACT_CLASS
+
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
+    return TrueSheetView(reactContext)
+  }
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
     view.onDropInstance()
   }
 
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
-    val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
-    dispatcher?.let {
-      view.eventDispatcher = it
-    }
-  }
-
   override fun onAfterUpdateTransaction(view: TrueSheetView) {
     super.onAfterUpdateTransaction(view)
     view.configureIfShowing()
   }
+
+  override fun needsCustomLayoutForChildren(): Boolean = true
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
     mutableMapOf(
@@ -45,89 +47,104 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       TrueSheetEvent.DRAG_BEGIN to MapBuilder.of("registrationName", "onDragBegin"),
       TrueSheetEvent.DRAG_CHANGE to MapBuilder.of("registrationName", "onDragChange"),
       TrueSheetEvent.DRAG_END to MapBuilder.of("registrationName", "onDragEnd"),
-      TrueSheetEvent.POSITION_CHANGE to MapBuilder.of("registrationName", "onPositionChange"),
-      TrueSheetEvent.CONTAINER_SIZE_CHANGE to MapBuilder.of("registrationName", "onContainerSizeChange")
+      TrueSheetEvent.POSITION_CHANGE to MapBuilder.of("registrationName", "onPositionChange")
     )
 
-  @ReactProp(name = "edgeToEdge")
-  fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
-    view.setEdgeToEdge(edgeToEdge)
+  // ==================== Props ====================
+
+  @ReactProp(name = "detents")
+  fun setDetents(view: TrueSheetView, detents: ReadableArray?) {
+    if (detents == null) {
+      view.setDetents(arrayOf(0.5, 1.0))
+      return
+    }
+
+    val result = ArrayList<Any>()
+    for (i in 0 until detents.size()) {
+      when (detents.getType(i)) {
+        ReadableType.Number -> {
+          val value = detents.getDouble(i)
+          result.add(value)
+        }
+        else -> {
+          // Skip invalid types
+        }
+      }
+    }
+
+    view.setDetents(result.toTypedArray())
   }
 
-  @ReactProp(name = "maxHeight")
-  fun setMaxHeight(view: TrueSheetView, height: Double) {
-    view.setMaxHeight(Utils.toPixel(height).toInt())
+  @ReactProp(name = "background", defaultInt = Color.WHITE)
+  fun setBackground(view: TrueSheetView, color: Int) {
+    view.setBackground(color)
   }
 
-  @ReactProp(name = "dismissible")
+  @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
+  fun setCornerRadius(view: TrueSheetView, radius: Double) {
+    if (radius >= 0) {
+      view.setCornerRadius(Utils.toPixel(radius))
+    }
+  }
+
+  @ReactProp(name = "grabber", defaultBoolean = true)
+  fun setGrabber(view: TrueSheetView, grabber: Boolean) {
+    view.setGrabber(grabber)
+  }
+
+  @ReactProp(name = "dismissible", defaultBoolean = true)
   fun setDismissible(view: TrueSheetView, dismissible: Boolean) {
     view.setDismissible(dismissible)
   }
 
-  @ReactProp(name = "dimmed")
+  @ReactProp(name = "dimmed", defaultBoolean = true)
   fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)
   }
 
-  @ReactProp(name = "initialIndex")
-  fun setInitialIndex(view: TrueSheetView, index: Int) {
-    view.initialIndex = index
-  }
-
-  @ReactProp(name = "initialIndexAnimated")
-  fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
-    view.initialIndexAnimated = animate
-  }
-
-  @ReactProp(name = "keyboardMode")
-  fun setKeyboardMode(view: TrueSheetView, mode: String) {
-    val softInputMode = when (mode) {
-      "pan" -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
-      else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-    }
-
-    view.setSoftInputMode(softInputMode)
-  }
-
-  @ReactProp(name = "dimmedIndex")
+  @ReactProp(name = "dimmedIndex", defaultInt = 0)
   fun setDimmedIndex(view: TrueSheetView, index: Int) {
     view.setDimmedIndex(index)
   }
 
-  @ReactProp(name = "contentHeight")
-  fun setContentHeight(view: TrueSheetView, height: Double) {
-    view.setContentHeight(Utils.toPixel(height).toInt())
+  @ReactProp(name = "initialIndex", defaultInt = -1)
+  fun setInitialIndex(view: TrueSheetView, index: Int) {
+    view.initialIndex = index
   }
 
-  @ReactProp(name = "footerHeight")
-  fun setFooterHeight(view: TrueSheetView, height: Double) {
-    view.setFooterHeight(Utils.toPixel(height).toInt())
+  @ReactProp(name = "initialIndexAnimated", defaultBoolean = true)
+  fun setInitialIndexAnimated(view: TrueSheetView, animate: Boolean) {
+    view.initialIndexAnimated = animate
   }
 
-  @ReactProp(name = "cornerRadius")
-  fun setCornerRadius(view: TrueSheetView, radius: Double) {
-    view.setCornerRadius(Utils.toPixel(radius))
-  }
-
-  @ReactProp(name = "background")
-  fun setBackground(view: TrueSheetView, colorName: Double) {
-    val color = runCatching { ColorPropConverter.getColor(colorName, view.context) }.getOrNull() ?: Color.WHITE
-    view.setBackground(color)
-  }
-
-  @ReactProp(name = "detents")
-  fun setDetents(view: TrueSheetView, detents: ReadableArray) {
-    val result = ArrayList<Any>()
-    for (i in 0 until detents.size()) {
-      if (detents.getType(i) == ReadableType.Number) {
-        result.add(detents.getDouble(i))
-      }
+  @ReactProp(name = "maxHeight", defaultDouble = 0.0)
+  fun setMaxHeight(view: TrueSheetView, height: Double) {
+    if (height > 0) {
+      view.setMaxHeight(Utils.toPixel(height).toInt())
     }
+  }
 
-    view.setDetents(result.toArray())
+  @ReactProp(name = "edgeToEdge", defaultBoolean = false)
+  fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
+    view.setEdgeToEdge(edgeToEdge)
+  }
+
+  @ReactProp(name = "keyboardMode")
+  fun setKeyboardMode(view: TrueSheetView, mode: String?) {
+    val softInputMode = when (mode) {
+      "pan" -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+      else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+    }
+    view.setSoftInputMode(softInputMode)
+  }
+
+  @ReactProp(name = "blurTint")
+  fun setBlurTint(view: TrueSheetView, tint: String?) {
+    // iOS-specific prop - no-op on Android
+    view.setBlurTint(tint)
   }
 
   companion object {
-    const val TAG = "TrueSheetView"
+    const val REACT_CLASS = "TrueSheetView"
   }
 }
