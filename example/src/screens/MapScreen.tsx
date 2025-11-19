@@ -100,7 +100,6 @@ export const MapScreen = () => {
         blurTint="dark"
         backgroundColor={DARK}
         edgeToEdge
-        style={styles.content}
         dimmedIndex={2}
         // dismissible={false}
         cornerRadius={12}
@@ -116,7 +115,7 @@ export const MapScreen = () => {
         }}
         footer={<Footer />}
       >
-        <ScrollView nestedScrollEnabled>
+        <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
           <View style={styles.heading}>
             <Text style={styles.title}>True Sheet 💩</Text>
             <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
@@ -138,7 +137,6 @@ export const MapScreen = () => {
           <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
           <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         </ScrollView>
-
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

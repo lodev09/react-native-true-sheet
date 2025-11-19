@@ -348,7 +348,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={styles.containerView} collapsable={false}>
             <TrueSheetContentViewNativeComponent style={styles.contentView} collapsable={false}>
-              <View style={style} {...rest}>
+              <View style={style} collapsable={false} {...rest}>
                 {children}
               </View>
             </TrueSheetContentViewNativeComponent>

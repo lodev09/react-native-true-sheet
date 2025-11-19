@@ -13,6 +13,7 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <React/RCTScrollViewComponentView.h>
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
@@ -20,7 +21,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetContentView {
   RCTSurfaceTouchHandler *_touchHandler;
-  UIView *_pinnedScrollView;
+  RCTScrollViewComponentView *_pinnedScrollView;
   CGSize _lastSize;
 }
 
@@ -67,7 +68,7 @@ using namespace facebook::react;
 
 - (void)setupScrollViewPinning {
   // Find scroll view in content view hierarchy
-  UIView *scrollView = [self findScrollView];
+  RCTScrollViewComponentView *scrollView = [self findScrollView];
 
   if (scrollView && scrollView != _pinnedScrollView) {
     // Unpin previous scroll view if exists
@@ -86,7 +87,7 @@ using namespace facebook::react;
   }
 }
 
-- (UIView *)findScrollView {
+- (RCTScrollViewComponentView *)findScrollView {
   // Get the first child - this is the React component's root view
   if (self.subviews.count == 0) {
     return nil;
@@ -97,11 +98,11 @@ using namespace facebook::react;
   // Check first-level children only (non-recursive) for scroll views
   // This covers common cases like <ScrollView> or <FlatList> as direct children
   for (UIView *subview in contentView.subviews) {
-    if ([subview isKindOfClass:[UIScrollView class]]) {
-      return subview;
+    if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
+      return static_cast<RCTScrollViewComponentView *>(subview);
     }
   }
-
+  
   return nil;
 }
 
