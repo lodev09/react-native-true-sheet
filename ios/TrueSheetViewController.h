@@ -29,7 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *maxHeight;
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
-@property (nonatomic, strong, nullable) UIBlurEffect *blurEffect;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
 @property (nonatomic, assign) BOOL dimmed;

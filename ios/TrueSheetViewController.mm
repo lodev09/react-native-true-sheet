@@ -217,49 +217,39 @@
 
 #pragma mark - Background Setup
 
-- (void)setBlurTint:(NSString *)blurTint {
-  _blurTint = blurTint;
-
-  if (blurTint && blurTint.length > 0) {
+- (void)setupBackground {
+  // Setup blur effect if blurTint is provided
+  if (self.blurTint && self.blurTint.length > 0) {
     UIBlurEffectStyle style = UIBlurEffectStyleLight;
 
-    if ([blurTint isEqualToString:@"dark"]) {
+    if ([self.blurTint isEqualToString:@"dark"]) {
       style = UIBlurEffectStyleDark;
-    } else if ([blurTint isEqualToString:@"light"]) {
+    } else if ([self.blurTint isEqualToString:@"light"]) {
       style = UIBlurEffectStyleLight;
-    } else if ([blurTint isEqualToString:@"extraLight"]) {
+    } else if ([self.blurTint isEqualToString:@"extraLight"]) {
       style = UIBlurEffectStyleExtraLight;
-    } else if ([blurTint isEqualToString:@"regular"]) {
+    } else if ([self.blurTint isEqualToString:@"regular"]) {
       style = UIBlurEffectStyleRegular;
-    } else if ([blurTint isEqualToString:@"prominent"]) {
+    } else if ([self.blurTint isEqualToString:@"prominent"]) {
       style = UIBlurEffectStyleProminent;
-    } else if ([blurTint isEqualToString:@"systemThinMaterial"]) {
+    } else if ([self.blurTint isEqualToString:@"systemThinMaterial"]) {
       style = UIBlurEffectStyleSystemThinMaterial;
-    } else if ([blurTint isEqualToString:@"systemMaterial"]) {
+    } else if ([self.blurTint isEqualToString:@"systemMaterial"]) {
       style = UIBlurEffectStyleSystemMaterial;
-    } else if ([blurTint isEqualToString:@"systemThickMaterial"]) {
+    } else if ([self.blurTint isEqualToString:@"systemThickMaterial"]) {
       style = UIBlurEffectStyleSystemThickMaterial;
-    } else if ([blurTint isEqualToString:@"systemChromeMaterial"]) {
+    } else if ([self.blurTint isEqualToString:@"systemChromeMaterial"]) {
       style = UIBlurEffectStyleSystemChromeMaterial;
-    } else if ([blurTint isEqualToString:@"systemUltraThinMaterial"]) {
+    } else if ([self.blurTint isEqualToString:@"systemUltraThinMaterial"]) {
       style = UIBlurEffectStyleSystemUltraThinMaterial;
     }
 
-    self.blurEffect = [UIBlurEffect effectWithStyle:style];
-  } else {
-    self.blurEffect = nil;
-  }
-
-  [self setupBackground];
-}
-
-- (void)setupBackground {
-  if (self.blurEffect) {
-    _backgroundView.effect = self.blurEffect;
+    _backgroundView.effect = [UIBlurEffect effectWithStyle:style];
     _backgroundView.backgroundColor = nil;
   } else {
-    _backgroundView.backgroundColor = self.backgroundColor;
+    // No blur effect, use solid background color
     _backgroundView.effect = nil;
+    _backgroundView.backgroundColor = self.backgroundColor;
   }
 }
 

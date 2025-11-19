@@ -186,16 +186,12 @@ using namespace facebook::react;
 
   _controller.detents = detents;
 
-  // Update background color
-  if (props.background != 0) {
-    UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
-    _controller.backgroundColor = color;
-  }
+  // Update background color - always set it, even if 0 (which could be a valid color like black)
+  UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
+  _controller.backgroundColor = color;
 
-  // Update blur tint
-  if (!props.blurTint.empty()) {
-    _controller.blurTint = RCTNSStringFromString(props.blurTint);
-  }
+  // Update blur tint - always set it to clear when removed
+  _controller.blurTint = !props.blurTint.empty() ? RCTNSStringFromString(props.blurTint) : nil;
 
   // Update corner radius
   if (props.cornerRadius < 0) {
@@ -222,6 +218,9 @@ using namespace facebook::react;
   if (props.dimmedIndex >= 0) {
     _controller.dimmedIndex = @(props.dimmedIndex);
   }
+
+  // Apply background after setting backgroundColor and blurTint
+  [_controller setupBackground];
 
   // Apply changes to presented sheet if needed
   if (_isPresented) {
