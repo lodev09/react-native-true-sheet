@@ -13,9 +13,7 @@ class TrueSheetContentViewManager : ViewGroupManager<TrueSheetContentView>() {
 
   override fun getName(): String = REACT_CLASS
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContentView {
-    return TrueSheetContentView(reactContext)
-  }
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContentView = TrueSheetContentView(reactContext)
 
   override fun needsCustomLayoutForChildren(): Boolean = false
 

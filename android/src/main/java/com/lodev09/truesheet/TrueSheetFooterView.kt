@@ -21,7 +21,13 @@ class TrueSheetFooterView(context: Context) : ViewGroup(context) {
   private val reactFooterView: View?
     get() = if (childCount > 0) getChildAt(0) else null
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    l: Int,
+    t: Int,
+    r: Int,
+    b: Int
+  ) {
     // Layout the React footer view to fill this container
     reactFooterView?.let { footer ->
       footer.layout(0, 0, r - l, b - t)

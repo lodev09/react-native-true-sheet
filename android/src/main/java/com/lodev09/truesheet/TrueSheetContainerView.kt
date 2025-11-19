@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.uimanager.ThemedReactContext
 
@@ -20,7 +19,9 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
   val contentView: TrueSheetContentView?
     get() = if (childCount > 0 && getChildAt(0) is TrueSheetContentView) {
       getChildAt(0) as TrueSheetContentView
-    } else null
+    } else {
+      null
+    }
 
   /**
    * Reference to footer view (second child)
@@ -28,7 +29,9 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
   val footerView: TrueSheetFooterView?
     get() = if (childCount > 1 && getChildAt(1) is TrueSheetFooterView) {
       getChildAt(1) as TrueSheetFooterView
-    } else null
+    } else {
+      null
+    }
 
   init {
     // Container should not clip children to allow footer to position absolutely
@@ -36,7 +39,13 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
     clipToPadding = false
   }
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    l: Int,
+    t: Int,
+    r: Int,
+    b: Int
+  ) {
     // Content view fills the container
     contentView?.let { content ->
       val contentWidth = r - l
@@ -93,14 +102,10 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
   /**
    * Get only the content view height (excluding footer)
    */
-  fun getContentHeight(): Int {
-    return contentView?.measuredHeight ?: 0
-  }
+  fun getContentHeight(): Int = contentView?.measuredHeight ?: 0
 
   /**
    * Get only the footer view height
    */
-  fun getFooterHeight(): Int {
-    return footerView?.measuredHeight ?: 0
-  }
+  fun getFooterHeight(): Int = footerView?.measuredHeight ?: 0
 }

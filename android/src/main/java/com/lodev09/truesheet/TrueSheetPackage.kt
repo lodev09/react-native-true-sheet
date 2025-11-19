@@ -5,7 +5,6 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
-import com.facebook.react.turbomodule.core.interfaces.TurboModule
 import com.facebook.react.uimanager.ViewManager
 
 /**
@@ -14,35 +13,32 @@ import com.facebook.react.uimanager.ViewManager
  */
 class TrueSheetPackage : TurboReactPackage() {
 
-  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-    return when (name) {
+  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? =
+    when (name) {
       TrueSheetModule.NAME -> TrueSheetModule(reactContext)
       else -> null
     }
-  }
 
-  override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
-    return ReactModuleInfoProvider {
+  override fun getReactModuleInfoProvider(): ReactModuleInfoProvider =
+    ReactModuleInfoProvider {
       mapOf(
         TrueSheetModule.NAME to ReactModuleInfo(
           TrueSheetModule.NAME,
           TrueSheetModule::class.java.name,
           false, // canOverrideExistingModule
           false, // needsEagerInit
-          true,  // hasConstants
+          true, // hasConstants
           false, // isCxxModule
-          true   // isTurboModule
+          true // isTurboModule
         )
       )
     }
-  }
 
-  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return listOf(
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
+    listOf(
       TrueSheetViewManager(),
       TrueSheetContainerViewManager(),
       TrueSheetContentViewManager(),
       TrueSheetFooterViewManager()
     )
-  }
 }

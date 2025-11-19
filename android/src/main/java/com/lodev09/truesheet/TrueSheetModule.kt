@@ -5,7 +5,6 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.turbomodule.core.interfaces.TurboModule
 import com.facebook.react.uimanager.UIManagerHelper
 import java.util.concurrent.ConcurrentHashMap
@@ -15,8 +14,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Provides promise-based async operations using view references
  */
 @ReactModule(name = TrueSheetModule.NAME)
-class TrueSheetModule(reactContext: ReactApplicationContext) : 
-  com.facebook.react.bridge.ReactContextBaseJavaModule(reactContext), TurboModule {
+class TrueSheetModule(reactContext: ReactApplicationContext) :
+  com.facebook.react.bridge.ReactContextBaseJavaModule(reactContext),
+  TurboModule {
 
   override fun getName(): String = NAME
 
@@ -93,23 +93,19 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   /**
    * Helper method to get TrueSheetView by tag and execute closure
    */
-  private fun withTrueSheetView(
-    tag: Int,
-    promise: Promise,
-    closure: (view: TrueSheetView) -> Unit
-  ) {
+  private fun withTrueSheetView(tag: Int, promise: Promise, closure: (view: TrueSheetView) -> Unit) {
     UiThreadUtil.runOnUiThread {
       try {
         // First try to get from registry (faster)
         val view = getSheetByTag(tag)
-        
+
         if (view != null) {
           closure(view)
         } else {
           // Fallback to UIManager resolution
           val manager = UIManagerHelper.getUIManagerForReactTag(reactApplicationContext, tag)
           val resolvedView = manager?.resolveView(tag)
-          
+
           if (resolvedView == null) {
             promise.reject("VIEW_NOT_FOUND", "TrueSheetView with tag $tag not found")
             return@runOnUiThread
@@ -163,8 +159,6 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
      * @return The TrueSheetView instance, or null if not found
      */
     @JvmStatic
-    fun getSheetByTag(tag: Int): TrueSheetView? {
-      return viewRegistry[tag]
-    }
+    fun getSheetByTag(tag: Int): TrueSheetView? = viewRegistry[tag]
   }
 }

@@ -64,7 +64,9 @@ class TrueSheetView(context: Context) :
   val containerView: TrueSheetContainerView?
     get() = if (childCount > 0 && getChildAt(0) is TrueSheetContainerView) {
       getChildAt(0) as TrueSheetContainerView
-    } else null
+    } else {
+      null
+    }
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -143,7 +145,7 @@ class TrueSheetView(context: Context) :
             containerView?.footerView?.let { footer ->
               val footerHeight = containerView?.getFooterHeight() ?: 0
               val y = (sheetDialog.maxScreenHeight - sheetView.top - footerHeight).toFloat()
-              
+
               if (slideOffset >= 0) {
                 // Sheet is expanding
                 footer.y = y
@@ -174,7 +176,13 @@ class TrueSheetView(context: Context) :
     }
   }
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    l: Int,
+    t: Int,
+    r: Int,
+    b: Int
+  ) {
     // Layout the container view if it exists
     containerView?.let { container ->
       container.layout(0, 0, r - l, container.measuredHeight)
@@ -200,7 +208,7 @@ class TrueSheetView(context: Context) :
 
   override fun setId(id: Int) {
     super.setId(id)
-    
+
     // Register this view with the module for ref-based access
     TrueSheetModule.registerView(this, id)
   }
@@ -240,7 +248,7 @@ class TrueSheetView(context: Context) :
         MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
       )
       layout(left, top, right, bottom)
-      
+
       // Reconfigure sheet if showing
       configureIfShowing()
     }
@@ -303,7 +311,7 @@ class TrueSheetView(context: Context) :
     detentInfo?.let {
       // Dispatch drag ended after dragging
       dispatchEvent(TrueSheetEvent.DRAG_END, detentInfoData(it))
-      
+
       if (it.index != currentDetentIndex) {
         // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->

@@ -20,9 +20,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun getName(): String = REACT_CLASS
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
-    return TrueSheetView(reactContext)
-  }
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView = TrueSheetView(reactContext)
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
@@ -66,6 +64,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
           val value = detents.getDouble(i)
           result.add(value)
         }
+
         else -> {
           // Skip invalid types
         }

@@ -16,10 +16,8 @@ import com.lodev09.truesheet.core.Utils
 data class DetentInfo(val index: Int, val position: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(
-  private val reactContext: ThemedReactContext,
-  private val trueSheetView: TrueSheetView
-) : BottomSheetDialog(reactContext) {
+class TrueSheetDialog(private val reactContext: ThemedReactContext, private val trueSheetView: TrueSheetView) :
+  BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
@@ -258,8 +256,8 @@ class TrueSheetDialog(
   /**
    * Determines the state based from the given detent index.
    */
-  private fun getStateForDetentIndex(index: Int): Int {
-    return when (detents.size) {
+  private fun getStateForDetentIndex(index: Int): Int =
+    when (detents.size) {
       1 -> {
         BottomSheetBehavior.STATE_EXPANDED
       }
@@ -283,7 +281,6 @@ class TrueSheetDialog(
 
       else -> BottomSheetBehavior.STATE_HIDDEN
     }
-  }
 
   /**
    * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.

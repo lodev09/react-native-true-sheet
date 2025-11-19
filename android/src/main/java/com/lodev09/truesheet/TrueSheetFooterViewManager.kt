@@ -13,9 +13,7 @@ class TrueSheetFooterViewManager : ViewGroupManager<TrueSheetFooterView>() {
 
   override fun getName(): String = REACT_CLASS
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetFooterView {
-    return TrueSheetFooterView(reactContext)
-  }
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetFooterView = TrueSheetFooterView(reactContext)
 
   override fun needsCustomLayoutForChildren(): Boolean = false
 

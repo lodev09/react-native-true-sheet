@@ -20,7 +20,13 @@ class TrueSheetContentView(context: Context) : ViewGroup(context) {
   private val reactContentView: View?
     get() = if (childCount > 0) getChildAt(0) else null
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    l: Int,
+    t: Int,
+    r: Int,
+    b: Int
+  ) {
     // Layout the React content view to fill this container
     reactContentView?.let { content ->
       content.layout(0, 0, r - l, b - t)
