@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -115,26 +116,28 @@ export const MapScreen = () => {
         }}
         footer={<Footer />}
       >
-        <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet 💩</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
-        {Array.from({ length: contentCount }, (_, i) => (
-          <DemoContent key={i} color={DARK_BLUE} />
-        ))}
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+        <ScrollView nestedScrollEnabled>
+          <View style={styles.heading}>
+            <Text style={styles.title}>True Sheet 💩</Text>
+            <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+          </View>
+          {Array.from({ length: contentCount }, (_, i) => (
+            <DemoContent key={i} color={DARK_BLUE} />
+          ))}
+          <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+          <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+          <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+          <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+          <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+          <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
-        <Button text={`Add Content (${contentCount})`} onPress={addContent} />
-        {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
+          <Button text={`Add Content (${contentCount})`} onPress={addContent} />
+          {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
 
-        <Spacer />
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+          <Spacer />
+          <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        </ScrollView>
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />

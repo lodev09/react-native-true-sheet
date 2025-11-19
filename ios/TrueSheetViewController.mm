@@ -55,6 +55,22 @@
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+#pragma mark - Presentation State
+
+- (BOOL)isTopmostPresentedController {
+  // Check if we're in the window hierarchy and visible
+  if (!self.isViewLoaded || self.view.window == nil) {
+    return NO;
+  }
+  
+  // Check if another controller is presented on top of this sheet
+  return self.presentedViewController == nil;
+}
+
+- (BOOL)isActiveAndVisible {
+  return self.isViewLoaded && self.view.window != nil && !self.isBeingDismissed;
+}
+
 - (UIView *)presentedView {
   return self.sheetPresentationController.presentedView;
 }
@@ -121,11 +137,13 @@
     }
   }
   
-  if (!_isTransitioning) {
+  if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;
 
-    [self emitChangePositionDelegate:_layoutTransitioning];
+    // If another controller is presented on top, treat position changes as transitioning
+    // This prevents incorrect position notifications when overlays adjust our size
+    [self emitChangePositionDelegate:_layoutTransitioning || !self.isTopmostPresentedController];
     
     // Reset layout transitioning after sending notification
     _layoutTransitioning = NO;
