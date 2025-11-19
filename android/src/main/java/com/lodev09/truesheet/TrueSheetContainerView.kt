@@ -237,7 +237,8 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
    * Cleanup when container is unmounted
    */
   fun cleanup() {
-    sheetDialog?.dismiss()
+    // Don't dismiss here - causes crash during unmount
+    // sheetDialog?.dismiss()
     sheetDialog = null
     rootSheetView = null
     sheetView = null
