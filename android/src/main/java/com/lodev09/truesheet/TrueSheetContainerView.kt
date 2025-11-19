@@ -228,11 +228,20 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
     // Add this container to the root sheet view
     // Container's children (content/footer) stay as its children
     rootSheetView?.addView(this)
+  }
 
-    // Handle initial presentation if needed
-    sheetView.initialDetentIndex.takeIf { it >= 0 }?.let { index ->
-      currentDetentIndex = index
-      sheetDialog?.present(index, sheetView.initialDetentAnimated)
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+
+    // Handle initial presentation after view is attached and layout is ready
+    // Use post to ensure children are mounted and measured
+    sheetView?.let { view ->
+      post {
+        view.initialDetentIndex.takeIf { it >= 0 }?.let { index ->
+          currentDetentIndex = index
+          sheetDialog?.present(index, view.initialDetentAnimated)
+        }
+      }
     }
   }
 
