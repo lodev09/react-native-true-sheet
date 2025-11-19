@@ -186,20 +186,8 @@ using namespace facebook::react;
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
 
-  const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
-
   // Apply updated props to controller
   [self applyPropsToController];
-
-  // Notify container if it exists
-  if (_containerView) {
-    // Handle initial presentation
-    if (!_hasHandledInitialPresentation && newProps.initialDetentIndex >= 0) {
-      [self presentAtIndex:newProps.initialDetentIndex animated:newProps.initialDetentAnimated completion:nil];
-
-      _hasHandledInitialPresentation = YES;
-    }
-  }
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
@@ -225,6 +213,19 @@ using namespace facebook::react;
 
     // Emit onMount event when container is mounted
     [OnMountEvent emit:_eventEmitter];
+
+    // Handle initial presentation when container is mounted
+    const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
+    if (!_hasHandledInitialPresentation && props.initialDetentIndex >= 0) {
+      _hasHandledInitialPresentation = YES;
+    
+      // Present on next run loop to ensure views are fully mounted
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self presentAtIndex:props.initialDetentIndex
+                    animated:props.initialDetentAnimated
+                  completion:nil];
+      });
+    }
   }
 }
 
