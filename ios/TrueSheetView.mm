@@ -39,7 +39,7 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView ()
+@interface TrueSheetView () <TrueSheetViewControllerDelegate>
 @end
 
 @implementation TrueSheetView {
@@ -48,13 +48,23 @@ using namespace facebook::react;
   BOOL _hasHandledInitialPresentation;
 }
 
+@synthesize controller = _controller;
+@synthesize isPresented = _isPresented;
+@synthesize activeIndex = _activeIndex;
+
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetViewProps>();
     _props = defaultProps;
 
+    // Initialize controller - persists across container lifecycle
+    _controller = [[TrueSheetViewController alloc] init];
+    _controller.delegate = self;
+
     _containerView = nil;
     _hasHandledInitialPresentation = NO;
+    _isPresented = NO;
+    _activeIndex = nil;
   }
   return self;
 }
@@ -74,6 +84,15 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+  // Dismiss controller if presented
+  if (_controller && _controller.presentingViewController) {
+    [_controller dismissViewControllerAnimated:NO completion:nil];
+  }
+
+  // Clean up controller
+  _controller.delegate = nil;
+  _controller = nil;
+
   // Unregister this view from the TurboModule
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
@@ -89,32 +108,79 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
-  if (!_containerView) {
-    NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
-                                         code:1002
-                                     userInfo:@{NSLocalizedDescriptionKey : @"Container view not mounted"}];
-    if (completion) {
-      completion(NO, error);
-    }
-    return;
-  }
+  NSLog(@"TrueSheetView presentAtIndex: %ld, isPresented: %d", (long)index, _isPresented);
 
-  UIViewController *presentingViewController = [self findPresentingViewController];
-  [_containerView presentAtIndex:index
-                        animated:animated
-        presentingViewController:presentingViewController
-                      completion:completion];
-}
+  if (_isPresented) {
+    NSLog(@"TrueSheetView presentAtIndex: Already presented, resizing");
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller resizeToIndex:index];
+    }];
 
-- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  if (!_containerView) {
     if (completion) {
       completion(YES, nil);
     }
     return;
   }
 
-  [_containerView dismissAnimated:animated completion:completion];
+  UIViewController *presentingViewController = [self findPresentingViewController];
+  NSLog(@"TrueSheetView presentAtIndex: presentingViewController: %@", presentingViewController);
+
+  if (!presentingViewController) {
+    NSLog(@"TrueSheetView presentAtIndex: No presenting view controller!");
+    NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
+                                         code:1001
+                                     userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
+
+    if (completion) {
+      completion(NO, error);
+    }
+    return;
+  }
+
+  NSLog(@"TrueSheetView presentAtIndex: Preparing to present...");
+
+  // Apply props before presenting
+  [self applyPropsToController];
+
+  // Prepare the sheet with the correct initial index before presenting
+  [_controller prepareForPresentationAtIndex:index
+                                  completion:^{
+                                    NSLog(@"TrueSheetView presentAtIndex: Presenting controller...");
+                                    [presentingViewController
+                                      presentViewController:self->_controller
+                                                   animated:animated
+                                                 completion:^{
+                                                   NSLog(@"TrueSheetView presentAtIndex: Presentation complete");
+                                                   // Call completion handler
+                                                   if (completion) {
+                                                     completion(YES, nil);
+                                                   }
+                                                 }];
+                                  }];
+}
+
+- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  if (!_isPresented) {
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
+  [_controller dismissViewControllerAnimated:animated
+                                  completion:^{
+                                    if (completion) {
+                                      completion(YES, nil);
+                                    }
+                                  }];
+}
+
+- (void)resizeToIndex:(NSInteger)index {
+  if (_isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller resizeToIndex:index];
+    }];
+  }
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
@@ -122,17 +188,14 @@ using namespace facebook::react;
 
   const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
 
-  // Notify container to apply updated props
-  if (_containerView) {
-    [_containerView applyPropsFromSheetView];
+  // Apply updated props to controller
+  [self applyPropsToController];
 
+  // Notify container if it exists
+  if (_containerView) {
     // Handle initial presentation
     if (!_hasHandledInitialPresentation && newProps.initialDetentIndex >= 0) {
-      UIViewController *presentingViewController = [self findPresentingViewController];
-      [_containerView presentAtIndex:newProps.initialDetentIndex
-                            animated:newProps.initialDetentAnimated
-            presentingViewController:presentingViewController
-                          completion:nil];
+      [self presentAtIndex:newProps.initialDetentIndex animated:newProps.initialDetentAnimated completion:nil];
 
       _hasHandledInitialPresentation = YES;
     }
@@ -157,7 +220,7 @@ using namespace facebook::react;
 
     _containerView = (TrueSheetContainerView *)childComponentView;
 
-    // Setup container in sheet view (handles reference and touch handling)
+    // Setup container in sheet view
     [_containerView setupInSheetView:self];
 
     // Emit onMount event when container is mounted
@@ -181,29 +244,31 @@ using namespace facebook::react;
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
-#pragma mark - Event Notification Methods (called by container)
+#pragma mark - TrueSheetViewControllerDelegate
 
-- (void)notifyWillPresent {
-  if (!_containerView)
-    return;
+- (void)viewControllerWillAppear {
+  NSLog(@"TrueSheetView viewControllerWillAppear");
 
-  NSInteger index = [_containerView.controller currentDetentIndex];
-  CGFloat position = _containerView.controller.currentPosition;
+  NSInteger index = [_controller currentDetentIndex];
+  CGFloat position = _controller.currentPosition;
+
+  // Set presentation state when presenting
+  _isPresented = YES;
+  _activeIndex = @(index);
+
+  NSLog(@"TrueSheetView viewControllerWillAppear: Set isPresented=YES, activeIndex=%ld", (long)index);
 
   [OnWillPresentEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidPresent {
-  if (!_containerView)
-    return;
-
-  NSInteger index = [_containerView.controller currentDetentIndex];
-  CGFloat position = _containerView.controller.currentPosition;
+- (void)viewControllerDidAppear {
+  NSInteger index = [_controller currentDetentIndex];
+  CGFloat position = _controller.currentPosition;
 
   [OnDidPresentEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
   switch (state) {
     case UIGestureRecognizerStateBegan:
       [OnDragBeginEvent emit:_eventEmitter index:index position:position];
@@ -223,20 +288,86 @@ using namespace facebook::react;
   }
 }
 
-- (void)notifyWillDismiss {
+- (void)viewControllerWillDismiss {
   [OnWillDismissEvent emit:_eventEmitter];
 }
 
-- (void)notifyDidDismiss {
+- (void)viewControllerDidDismiss {
+  _isPresented = NO;
+  _activeIndex = nil;
+
   [OnDidDismissEvent emit:_eventEmitter];
 }
 
-- (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position {
+- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
+  if (!_activeIndex || [_activeIndex integerValue] != index) {
+    _activeIndex = @(index);
+  }
+
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
+- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
+}
+
+#pragma mark - Props Application
+
+- (void)applyPropsToController {
+  const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
+
+  // Update detents - pass numbers directly (-1 represents "auto")
+  NSMutableArray *detents = [NSMutableArray new];
+  for (const auto &detent : props.detents) {
+    [detents addObject:@(detent)];
+  }
+
+  _controller.detents = detents;
+
+  // Update background color - always set it, even if 0 (which could be a valid color like black)
+  UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
+  _controller.backgroundColor = color;
+
+  // Update blur tint - always set it to clear when removed
+  _controller.blurTint = !props.blurTint.empty() ? RCTNSStringFromString(props.blurTint) : nil;
+
+  // Update corner radius
+  if (props.cornerRadius < 0) {
+    _controller.cornerRadius = nil;
+  } else {
+    _controller.cornerRadius = @(props.cornerRadius);
+  }
+
+  // Update max height
+  if (props.maxHeight != 0.0) {
+    _controller.maxHeight = @(props.maxHeight);
+  }
+
+  // Update grabber
+  _controller.grabber = props.grabber;
+
+  // Update dismissible
+  _controller.modalInPresentation = !props.dismissible;
+
+  // Update dimmed
+  _controller.dimmed = props.dimmed;
+
+  // Update dimmedIndex
+  if (props.dimmedIndex >= 0) {
+    _controller.dimmedIndex = @(props.dimmedIndex);
+  }
+
+  // Apply background after setting backgroundColor and blurTint
+  [_controller setupBackground];
+
+  // Apply changes to presented sheet if needed
+  if (_isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller setupDetents];
+      [_controller setupDimmedBackground];
+      [_controller resizeToIndex:[self->_activeIndex integerValue]];
+    }];
+  }
 }
 
 #pragma mark - Private Helpers

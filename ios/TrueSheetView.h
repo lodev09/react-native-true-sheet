@@ -14,6 +14,8 @@
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 
+@class TrueSheetViewController;
+
 NS_ASSUME_NONNULL_BEGIN
 
 // Completion block for async operations
@@ -21,21 +23,28 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 @interface TrueSheetView : RCTViewComponentView
 
+/**
+ * The view controller managing the sheet presentation
+ * Exposed so container can access it
+ */
+@property (nonatomic, readonly, strong) TrueSheetViewController *controller;
+
+/**
+ * Whether the sheet is currently presented
+ */
+@property (nonatomic, readonly) BOOL isPresented;
+
+/**
+ * The currently active detent index
+ */
+@property (nonatomic, readonly, strong, nullable) NSNumber *activeIndex;
+
 // TurboModule methods
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion;
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
-
-// Event notification methods (called by container)
-- (void)notifyWillPresent;
-- (void)notifyDidPresent;
-- (void)notifyDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position;
-- (void)notifyWillDismiss;
-- (void)notifyDidDismiss;
-- (void)notifyDidChangeDetent:(NSInteger)index position:(CGFloat)position;
-- (void)notifyDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning;
 
 @end
 

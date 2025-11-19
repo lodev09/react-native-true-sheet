@@ -21,11 +21,6 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 @interface TrueSheetContainerView : RCTViewComponentView
 
 /**
- * The view controller managing the sheet presentation
- */
-@property (nonatomic, readonly, strong) TrueSheetViewController *controller;
-
-/**
  * Sets up the container view in the sheet view
  * @param sheetView The TrueSheetView parent to setup in
  */
@@ -35,37 +30,6 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
  * Cleans up the container view before removal
  */
 - (void)cleanup;
-
-/**
- * Presents the sheet at the specified index
- * @param index The detent index to present at
- * @param animated Whether to animate the presentation
- * @param presentingViewController The view controller to present from
- * @param completion Optional completion handler
- */
-- (void)presentAtIndex:(NSInteger)index
-                  animated:(BOOL)animated
-  presentingViewController:(UIViewController *)presentingViewController
-                completion:(nullable TrueSheetCompletionBlock)completion;
-
-/**
- * Dismisses the sheet
- * @param animated Whether to animate the dismissal
- * @param completion Optional completion handler
- */
-- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
-
-/**
- * Resizes the sheet to the specified index
- * @param index The detent index to resize to
- */
-- (void)resizeToIndex:(NSInteger)index;
-
-/**
- * Applies props from the parent sheet view to the controller
- * Should be called when sheet view props change
- */
-- (void)applyPropsFromSheetView;
 
 @end
 

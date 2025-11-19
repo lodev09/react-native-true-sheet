@@ -23,20 +23,14 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetViewControllerDelegate>
+@interface TrueSheetContainerView () <TrueSheetContentViewDelegate>
 @end
 
 @implementation TrueSheetContainerView {
   __weak TrueSheetView *_sheetView;
-  TrueSheetViewController *_controller;
   TrueSheetContentView *_contentView;
   TrueSheetFooterView *_footerView;
-
-  BOOL _isPresented;
-  NSNumber *_activeIndex;
 }
-
-@synthesize controller = _controller;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<TrueSheetContainerViewComponentDescriptor>();
@@ -50,31 +44,14 @@ using namespace facebook::react;
     // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
 
-    // Initialize controller
-    _controller = [[TrueSheetViewController alloc] init];
-    _controller.delegate = self;
-
     _sheetView = nil;
     _contentView = nil;
     _footerView = nil;
-    _isPresented = NO;
-    _activeIndex = nil;
   }
   return self;
 }
 
 - (void)dealloc {
-  // Dismiss the sheet if it's currently being presented
-  if (_controller && _isPresented) {
-    [_controller dismissViewControllerAnimated:NO completion:nil];
-  }
-
-  // Clean up controller
-  _controller.delegate = nil;
-  _controller = nil;
-
-  _isPresented = NO;
-  _activeIndex = nil;
 }
 
 - (void)setupInSheetView:(TrueSheetView *)sheetView {
@@ -82,7 +59,7 @@ using namespace facebook::react;
   _sheetView = sheetView;
 
   // Get the controller's view as the parent view
-  UIView *parentView = _controller.view;
+  UIView *parentView = _sheetView.controller.view;
 
   // Add to parent view hierarchy
   [parentView addSubview:self];
@@ -111,11 +88,11 @@ using namespace facebook::react;
 
     // Set initial content height from mounted view's frame
     if (_contentView.frame.size.height > 0) {
-      _controller.contentHeight = @(_contentView.frame.size.height);
+      _sheetView.controller.contentHeight = @(_contentView.frame.size.height);
     }
 
     // Setup content view with controller
-    [_contentView setupWithController:_controller];
+    [_contentView setupWithController:_sheetView.controller];
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
@@ -127,7 +104,7 @@ using namespace facebook::react;
     _footerView = (TrueSheetFooterView *)childComponentView;
 
     // Setup footer view with controller
-    [_footerView setupWithController:_controller];
+    [_footerView setupWithController:_sheetView.controller];
   }
 }
 
@@ -167,217 +144,24 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
-  // Props are accessed from the sheet view when needed
-}
-
-- (void)applyPropsFromSheetView {
-  if (!_sheetView) {
-    return;
-  }
-
-  // Get props from the sheet view
-  const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_sheetView.props);
-
-  // Update detents - pass numbers directly (-1 represents "auto")
-  NSMutableArray *detents = [NSMutableArray new];
-  for (const auto &detent : props.detents) {
-    [detents addObject:@(detent)];
-  }
-
-  _controller.detents = detents;
-
-  // Update background color - always set it, even if 0 (which could be a valid color like black)
-  UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
-  _controller.backgroundColor = color;
-
-  // Update blur tint - always set it to clear when removed
-  _controller.blurTint = !props.blurTint.empty() ? RCTNSStringFromString(props.blurTint) : nil;
-
-  // Update corner radius
-  if (props.cornerRadius < 0) {
-    _controller.cornerRadius = nil;
-  } else {
-    _controller.cornerRadius = @(props.cornerRadius);
-  }
-
-  // Update max height
-  if (props.maxHeight != 0.0) {
-    _controller.maxHeight = @(props.maxHeight);
-  }
-
-  // Update grabber
-  _controller.grabber = props.grabber;
-
-  // Update dismissible
-  _controller.modalInPresentation = !props.dismissible;
-
-  // Update dimmed
-  _controller.dimmed = props.dimmed;
-
-  // Update dimmedIndex
-  if (props.dimmedIndex >= 0) {
-    _controller.dimmedIndex = @(props.dimmedIndex);
-  }
-
-  // Apply background after setting backgroundColor and blurTint
-  [_controller setupBackground];
-
-  // Apply changes to presented sheet if needed
-  if (_isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller setupDetents];
-      [_controller setupDimmedBackground];
-      [_controller resizeToIndex:[_activeIndex integerValue]];
-    }];
-  }
-}
-
-#pragma mark - Presentation Methods
-
-- (void)presentAtIndex:(NSInteger)index
-                  animated:(BOOL)animated
-  presentingViewController:(UIViewController *)presentingViewController
-                completion:(nullable TrueSheetCompletionBlock)completion {
-  if (_isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller resizeToIndex:index];
-    }];
-
-    if (completion) {
-      completion(YES, nil);
-    }
-    return;
-  }
-
-  if (!presentingViewController) {
-    NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
-                                         code:1001
-                                     userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
-
-    if (completion) {
-      completion(NO, error);
-    }
-    return;
-  }
-
-  _isPresented = YES;
-  _activeIndex = @(index);
-
-  // Apply initial props from sheet view before presenting
-  [self applyPropsFromSheetView];
-
-  // Prepare the sheet with the correct initial index before presenting
-  [_controller prepareForPresentationAtIndex:index
-                                  completion:^{
-                                    [presentingViewController presentViewController:self->_controller
-                                                                           animated:animated
-                                                                         completion:^{
-                                                                           // Call completion handler
-                                                                           if (completion) {
-                                                                             completion(YES, nil);
-                                                                           }
-                                                                         }];
-                                  }];
-}
-
-- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  if (!_isPresented) {
-    if (completion) {
-      completion(YES, nil);
-    }
-    return;
-  }
-
-  [_controller dismissViewControllerAnimated:animated
-                                  completion:^{
-                                    if (completion) {
-                                      completion(YES, nil);
-                                    }
-                                  }];
-}
-
-- (void)resizeToIndex:(NSInteger)index {
-  _activeIndex = @(index);
-
-  if (_isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller resizeToIndex:index];
-    }];
-  }
-}
-
-#pragma mark - TrueSheetViewControllerDelegate
-
-- (void)viewControllerWillAppear {
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyWillPresent];
-  }
-}
-
-- (void)viewControllerDidAppear {
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyDidPresent];
-  }
-}
-
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyDidDrag:state index:index position:position];
-  }
-}
-
-- (void)viewControllerWillDismiss {
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyWillDismiss];
-  }
-}
-
-- (void)viewControllerDidDismiss {
-  _isPresented = NO;
-  _activeIndex = nil;
-
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyDidDismiss];
-  }
-}
-
-- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
-  if (!_activeIndex || [_activeIndex integerValue] != index) {
-    _activeIndex = @(index);
-
-    // Notify sheet view to emit event
-    if (_sheetView) {
-      [_sheetView notifyDidChangeDetent:index position:position];
-    }
-  }
-}
-
-- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
-  // Notify sheet view to emit event
-  if (_sheetView) {
-    [_sheetView notifyDidChangePosition:index position:position transitioning:transitioning];
-  }
 }
 
 #pragma mark - TrueSheetContentViewDelegate
 
 - (void)contentViewDidChangeSize:(CGSize)newSize {
+  TrueSheetViewController *controller = _sheetView.controller;
+
   // Update controller's content height
-  _controller.contentHeight = @(newSize.height);
+  controller.contentHeight = @(newSize.height);
 
   // Update detents if sheet is already presented
-  if (_isPresented) {
+  if (_sheetView.isPresented) {
     // Tell controller that we are transitioning from layout changes.
     // Controller viewDidLayoutSubviews will handle position notification.
-    _controller.layoutTransitioning = YES;
+    controller.layoutTransitioning = YES;
 
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller setupDetents];
+    [controller.sheetPresentationController animateChanges:^{
+      [controller setupDetents];
     }];
   }
 }
