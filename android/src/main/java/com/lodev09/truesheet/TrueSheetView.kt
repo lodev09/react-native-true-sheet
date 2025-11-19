@@ -111,6 +111,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun addView(child: View?, index: Int) {
     // Check if it's a container view
     if (child is TrueSheetContainerView) {
+      // If it's the same container, skip (Fabric might re-add during updates)
+      if (containerView === child) {
+        return
+      }
+      
       if (containerView != null) {
         throw IllegalStateException("TrueSheet: Sheet can only have one container component.")
       }
