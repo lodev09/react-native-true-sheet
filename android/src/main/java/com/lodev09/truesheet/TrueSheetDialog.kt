@@ -7,26 +7,32 @@ import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.KeyboardManager
+import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 
 data class DetentInfo(val index: Int, val position: Float)
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(private val reactContext: ThemedReactContext, private val trueSheetView: TrueSheetView) :
+class TrueSheetDialog(private val reactContext: ThemedReactContext, private val rootSheetView: RootSheetView) :
   BottomSheetDialog(reactContext) {
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
   /**
-   * Container view from TrueSheetView hierarchy
+   * First child of the rootSheetView
    */
   private val containerView: TrueSheetContainerView?
-    get() = trueSheetView.containerView
+    get() = if (rootSheetView.childCount > 0 && rootSheetView.getChildAt(0) is TrueSheetContainerView) {
+      rootSheetView.getChildAt(0) as TrueSheetContainerView
+    } else {
+      null
+    }
 
   /**
    * The sheet container view from Material BottomSheetDialog
@@ -86,7 +92,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var detents: Array<Any> = arrayOf(0.5, 1.0)
 
   init {
-    setContentView(trueSheetView)
+    // Set content view with RootSheetView wrapped in FrameLayout
+    // This follows React Native Modal pattern for proper system insets handling
+    setContentView(contentView)
 
     sheetContainerView?.setBackgroundColor(backgroundColor)
     sheetContainerView?.clipToOutline = true
@@ -100,6 +108,15 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
     // Update the usable sheet height
     maxScreenHeight = Utils.screenHeight(reactContext, edgeToEdge)
   }
+
+  /**
+   * Returns the content view for the dialog.
+   * Wraps RootSheetView in a FrameLayout following React Native Modal pattern.
+   */
+  private val contentView: View
+    get() = FrameLayout(reactContext).apply {
+      addView(rootSheetView)
+    }
 
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 
@@ -344,7 +361,17 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
           setPeekHeight(getDetentHeight(detents[0]), isShowing)
 
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / maxScreenHeight.toFloat(), 1.0f)
+          // Calculate half expanded ratio, ensuring it's valid (> 0 and <= 1)
+          val middleDetentHeight = getDetentHeight(detents[1])
+          if (middleDetentHeight > 0 && maxScreenHeight > 0) {
+            val ratio = middleDetentHeight.toFloat() / maxScreenHeight.toFloat()
+            // Clamp ratio to valid range: (0, 1]
+            halfExpandedRatio = ratio.coerceIn(0.01f, 1.0f)
+          } else {
+            // Default to 0.5 if content isn't measured yet
+            halfExpandedRatio = 0.5f
+          }
+
           maxHeight = getDetentHeight(detents[2])
         }
       }

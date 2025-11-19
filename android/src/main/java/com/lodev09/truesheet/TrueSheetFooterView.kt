@@ -36,19 +36,22 @@ class TrueSheetFooterView(context: Context) : ViewGroup(context) {
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     val width = MeasureSpec.getSize(widthMeasureSpec)
-    var maxHeight = 0
+    val maxHeight = MeasureSpec.getSize(heightMeasureSpec).takeIf { it > 0 }
+      ?: (parent as? ViewGroup)?.height
+      ?: resources.displayMetrics.heightPixels
+    var measuredHeight = 0
 
-    // Measure the React footer view
+    // Measure the React footer view with explicit dimensions
     reactFooterView?.let { footer ->
       measureChild(
         footer,
         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
       )
-      maxHeight = footer.measuredHeight
+      measuredHeight = footer.measuredHeight
     }
 
-    setMeasuredDimension(width, maxHeight)
+    setMeasuredDimension(width, measuredHeight)
   }
 
   /**
@@ -59,9 +62,11 @@ class TrueSheetFooterView(context: Context) : ViewGroup(context) {
 
     // Propagate layout request up the hierarchy
     post {
+      val maxHeight = (parent as? ViewGroup)?.height
+        ?: resources.displayMetrics.heightPixels
       measure(
         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
       )
       layout(left, top, right, bottom)
 

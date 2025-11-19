@@ -64,24 +64,28 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     val width = MeasureSpec.getSize(widthMeasureSpec)
+    val maxHeight = MeasureSpec.getSize(heightMeasureSpec).takeIf { it > 0 }
+      ?: (parent as? ViewGroup)?.height
+      ?: context.resources.displayMetrics.heightPixels
     var totalHeight = 0
 
-    // Measure content view
+    // Measure content view with explicit dimensions
     contentView?.let { content ->
       measureChild(
         content,
         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
       )
       totalHeight += content.measuredHeight
     }
 
-    // Measure footer view
+    // Measure footer view with explicit dimensions
     footerView?.let { footer ->
+      val remainingHeight = (maxHeight - totalHeight).coerceAtLeast(0)
       measureChild(
         footer,
         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        MeasureSpec.makeMeasureSpec(remainingHeight, MeasureSpec.AT_MOST)
       )
       totalHeight += footer.measuredHeight
     }

@@ -18,13 +18,12 @@ class PositionChangeEvent(
 
   override fun getEventName(): String = EVENT_NAME
 
-  override fun getEventData(): WritableMap {
-    return Arguments.createMap().apply {
+  override fun getEventData(): WritableMap =
+    Arguments.createMap().apply {
       putInt("index", index)
       putDouble("position", position.toDouble())
       putBoolean("transitioning", transitioning)
     }
-  }
 
   companion object {
     const val EVENT_NAME = "topPositionChange"

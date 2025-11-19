@@ -7,10 +7,7 @@ import com.facebook.react.uimanager.events.Event
 /**
  * Fired when the sheet component is mounted and ready
  */
-class MountEvent(
-  surfaceId: Int,
-  viewId: Int
-) : Event<MountEvent>(surfaceId, viewId) {
+class MountEvent(surfaceId: Int, viewId: Int) : Event<MountEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 

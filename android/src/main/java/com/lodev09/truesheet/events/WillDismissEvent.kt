@@ -7,10 +7,7 @@ import com.facebook.react.uimanager.events.Event
 /**
  * Fired before the sheet is dismissed
  */
-class WillDismissEvent(
-  surfaceId: Int,
-  viewId: Int
-) : Event<WillDismissEvent>(surfaceId, viewId) {
+class WillDismissEvent(surfaceId: Int, viewId: Int) : Event<WillDismissEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 

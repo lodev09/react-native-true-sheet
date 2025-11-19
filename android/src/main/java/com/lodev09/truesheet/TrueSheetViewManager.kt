@@ -38,8 +38,8 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
    * Export custom direct event types for Fabric
    * Uses Kotlin native collections with decoupled event classes
    */
-  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> {
-    return mutableMapOf(
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
+    mutableMapOf(
       MountEvent.EVENT_NAME to hashMapOf("registrationName" to MountEvent.REGISTRATION_NAME),
       WillPresentEvent.EVENT_NAME to hashMapOf("registrationName" to WillPresentEvent.REGISTRATION_NAME),
       DidPresentEvent.EVENT_NAME to hashMapOf("registrationName" to DidPresentEvent.REGISTRATION_NAME),
@@ -51,7 +51,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
       DragEndEvent.EVENT_NAME to hashMapOf("registrationName" to DragEndEvent.REGISTRATION_NAME),
       PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME)
     )
-  }
 
   // ==================== Props ====================
 

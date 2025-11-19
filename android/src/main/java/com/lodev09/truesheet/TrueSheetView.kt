@@ -9,6 +9,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.RootSheetView
 import com.lodev09.truesheet.core.Utils
 import com.lodev09.truesheet.events.*
 
@@ -26,7 +27,11 @@ class TrueSheetView(context: Context) :
   private val surfaceId: Int
     get() = UIManagerHelper.getSurfaceId(this)
 
-  private var eventDispatcher: EventDispatcher? = null
+  var eventDispatcher: EventDispatcher?
+    get() = rootSheetView.eventDispatcher
+    set(eventDispatcher) {
+      rootSheetView.eventDispatcher = eventDispatcher
+    }
 
   var initialIndex: Int = -1
   var initialIndexAnimated: Boolean = true
@@ -57,11 +62,16 @@ class TrueSheetView(context: Context) :
   private val sheetDialog: TrueSheetDialog
 
   /**
+   * React root view wrapper - this is what gets set as the dialog content
+   */
+  private val rootSheetView: RootSheetView
+
+  /**
    * Container view (first child) that holds content and footer
    */
   val containerView: TrueSheetContainerView?
-    get() = if (childCount > 0 && getChildAt(0) is TrueSheetContainerView) {
-      getChildAt(0) as TrueSheetContainerView
+    get() = if (rootSheetView.childCount > 0 && rootSheetView.getChildAt(0) is TrueSheetContainerView) {
+      rootSheetView.getChildAt(0) as TrueSheetContainerView
     } else {
       null
     }
@@ -69,7 +79,8 @@ class TrueSheetView(context: Context) :
   init {
     reactContext.addLifecycleEventListener(this)
 
-    sheetDialog = TrueSheetDialog(reactContext, this)
+    rootSheetView = RootSheetView(context)
+    sheetDialog = TrueSheetDialog(reactContext, rootSheetView)
 
     // Configure Sheet Dialog
     sheetDialog.apply {
@@ -93,7 +104,7 @@ class TrueSheetView(context: Context) :
 
         // Dispatch onDidPresent event with detent info
         val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(currentDetentIndex)
-        eventDispatcher?.dispatchEvent(
+        rootSheetView.eventDispatcher?.dispatchEvent(
           DidPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
         )
       }
@@ -101,7 +112,7 @@ class TrueSheetView(context: Context) :
       // Setup listener when the dialog is about to be dismissed.
       setOnCancelListener {
         // Dispatch onWillDismiss event
-        eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
+        rootSheetView.eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
       }
 
       // Setup listener when the dialog has been dismissed.
@@ -115,7 +126,7 @@ class TrueSheetView(context: Context) :
         }
 
         // Dispatch onDidDismiss event
-        eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
+        rootSheetView.eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
       }
 
       // Configure sheet behavior events
@@ -132,7 +143,7 @@ class TrueSheetView(context: Context) :
 
             // Emit position change event continuously during slide
             val detentInfo = getCurrentDetentInfo(sheetView)
-            eventDispatcher?.dispatchEvent(
+            rootSheetView.eventDispatcher?.dispatchEvent(
               PositionChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position, isDragging)
             )
 
@@ -178,25 +189,19 @@ class TrueSheetView(context: Context) :
     r: Int,
     b: Int
   ) {
-    // Layout the container view if it exists
-    containerView?.let { container ->
-      container.layout(0, 0, r - l, container.measuredHeight)
-    }
+    // Layout the root sheet view to fill this view
+    rootSheetView.layout(0, 0, r - l, b - t)
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     val width = MeasureSpec.getSize(widthMeasureSpec)
-    var height = 0
+    val height = MeasureSpec.getSize(heightMeasureSpec)
 
-    // Measure container view
-    containerView?.let { container ->
-      measureChild(
-        container,
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-      )
-      height = container.measuredHeight
-    }
+    // Measure root sheet view to fill available space
+    rootSheetView.measure(
+      MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+      MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+    )
 
     setMeasuredDimension(width, height)
   }
@@ -211,9 +216,9 @@ class TrueSheetView(context: Context) :
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
 
-    // Get event dispatcher
+    // Get event dispatcher and set it on root sheet view
     val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
-    eventDispatcher = dispatcher
+    rootSheetView.eventDispatcher = dispatcher
 
     // Initialize after layout
     post {
@@ -223,7 +228,7 @@ class TrueSheetView(context: Context) :
       }
 
       // Dispatch onMount event
-      eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
+      rootSheetView.eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
     }
   }
 
@@ -240,13 +245,32 @@ class TrueSheetView(context: Context) :
     post {
       measure(
         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
       )
       layout(left, top, right, bottom)
 
-      // Reconfigure sheet if showing
-      configureIfShowing()
+      // Update sheet dialog configuration
+      sheetDialog.configure()
     }
+  }
+
+  // ==================== View Management ====================
+
+  override fun addView(child: View?, index: Int) {
+    // Forward children to root sheet view
+    rootSheetView.addView(child, index)
+  }
+
+  override fun getChildCount(): Int = rootSheetView.childCount
+
+  override fun getChildAt(index: Int): View? = rootSheetView.getChildAt(index)
+
+  override fun removeView(child: View?) {
+    rootSheetView.removeView(child)
+  }
+
+  override fun removeViewAt(index: Int) {
+    rootSheetView.removeViewAt(index)
   }
 
   override fun onHostResume() {
@@ -276,7 +300,7 @@ class TrueSheetView(context: Context) :
   private fun handleDragBegin(sheetView: View) {
     // Dispatch drag started event
     val detentInfo = getCurrentDetentInfo(sheetView)
-    eventDispatcher?.dispatchEvent(
+    rootSheetView.eventDispatcher?.dispatchEvent(
       DragBeginEvent(surfaceId, id, detentInfo.index, detentInfo.position)
     )
     // Flag sheet is being dragged
@@ -288,7 +312,7 @@ class TrueSheetView(context: Context) :
 
     // Dispatch drag change event
     val detentInfo = getCurrentDetentInfo(sheetView)
-    eventDispatcher?.dispatchEvent(
+    rootSheetView.eventDispatcher?.dispatchEvent(
       DragChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
     )
   }
@@ -303,10 +327,10 @@ class TrueSheetView(context: Context) :
     val detentInfo = sheetDialog.getDetentInfoForState(state)
     detentInfo?.let {
       // Dispatch drag ended after dragging
-      eventDispatcher?.dispatchEvent(
+      rootSheetView.eventDispatcher?.dispatchEvent(
         DragEndEvent(surfaceId, id, it.index, it.position)
       )
-      
+
       if (it.index != currentDetentIndex) {
         // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->
@@ -318,7 +342,7 @@ class TrueSheetView(context: Context) :
         sheetDialog.setupDimmedBackground(it.index)
 
         // Dispatch onDetentChange event
-        eventDispatcher?.dispatchEvent(
+        rootSheetView.eventDispatcher?.dispatchEvent(
           DetentChangeEvent(surfaceId, id, it.index, it.position)
         )
       }
@@ -428,7 +452,7 @@ class TrueSheetView(context: Context) :
       // For consistency with iOS, we are not waiting
       // for the state to change before dispatching onDetentChange event.
       val detentInfo = sheetDialog.getDetentInfoForIndexWithPosition(detentIndex)
-      eventDispatcher?.dispatchEvent(
+      rootSheetView.eventDispatcher?.dispatchEvent(
         DetentChangeEvent(surfaceId, id, detentInfo.index, detentInfo.position)
       )
 
@@ -437,7 +461,7 @@ class TrueSheetView(context: Context) :
       presentPromise = promiseCallback
       // Dispatch onWillPresent event before showing with detent info
       val detentInfo = sheetDialog.getDetentInfoForIndex(detentIndex)
-      eventDispatcher?.dispatchEvent(
+      rootSheetView.eventDispatcher?.dispatchEvent(
         WillPresentEvent(surfaceId, id, detentInfo.index, detentInfo.position)
       )
     }
