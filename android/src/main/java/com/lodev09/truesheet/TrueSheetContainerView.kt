@@ -225,12 +225,9 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
       )
     }
 
-    // Move this container's children to the root sheet view
-    while (childCount > 0) {
-      val child = getChildAt(0)
-      removeViewAt(0)
-      rootSheetView?.addView(child)
-    }
+    // Add this container to the root sheet view
+    // Container's children (content/footer) stay as its children
+    rootSheetView?.addView(this)
 
     // Handle initial presentation if needed
     sheetView.initialDetentIndex.takeIf { it >= 0 }?.let { index ->
@@ -249,24 +246,7 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
     sheetView = null
   }
 
-  override fun addView(child: View?, index: Int) {
-    // Forward children to root sheet view if dialog is initialized
-    rootSheetView?.let {
-      it.addView(child, index)
-    } ?: super.addView(child, index)
-  }
 
-  override fun getChildCount(): Int = rootSheetView?.childCount ?: super.getChildCount()
-
-  override fun getChildAt(index: Int): View? = rootSheetView?.getChildAt(index) ?: super.getChildAt(index)
-
-  override fun removeView(child: View?) {
-    rootSheetView?.removeView(child) ?: super.removeView(child)
-  }
-
-  override fun removeViewAt(index: Int) {
-    rootSheetView?.removeViewAt(index) ?: super.removeViewAt(index)
-  }
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val position = PixelUtils.toDIP(sheetView.top.toFloat())
