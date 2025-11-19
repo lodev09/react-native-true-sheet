@@ -119,8 +119,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
    * Creates the content view for the dialog.
    * Wraps RootSheetView in a FrameLayout following React Native Modal pattern.
    */
-  private fun createDialogContentView(): FrameLayout {
-    return FrameLayout(reactContext).apply {
+  private fun createDialogContentView(): FrameLayout =
+    FrameLayout(reactContext).apply {
       addView(
         rootSheetView,
         FrameLayout.LayoutParams(
@@ -129,7 +129,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         )
       )
     }
-  }
 
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 

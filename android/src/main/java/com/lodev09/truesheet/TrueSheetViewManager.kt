@@ -45,8 +45,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
     return null
   }
 
-  override fun needsCustomLayoutForChildren(): Boolean = false
-
   /**
    * Export custom direct event types for Fabric
    * Uses Kotlin native collections with decoupled event classes

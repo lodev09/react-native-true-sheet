@@ -15,8 +15,6 @@ class TrueSheetContainerViewManager : ViewGroupManager<TrueSheetContainerView>()
 
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContainerView = TrueSheetContainerView(reactContext)
 
-  override fun needsCustomLayoutForChildren(): Boolean = true
-
   companion object {
     const val REACT_CLASS = "TrueSheetContainerView"
   }

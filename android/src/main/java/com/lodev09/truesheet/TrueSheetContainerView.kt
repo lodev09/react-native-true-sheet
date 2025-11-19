@@ -1,14 +1,14 @@
 package com.lodev09.truesheet
 
 import android.content.Context
-import android.view.ViewGroup
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.views.view.ReactViewGroup
 
 /**
  * Container view that holds content and footer views
  * This is the first child of TrueSheetView and manages layout of content/footer
  */
-class TrueSheetContainerView(context: Context) : ViewGroup(context) {
+class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
 
   private val reactContext: ThemedReactContext
     get() = context as ThemedReactContext
@@ -37,60 +37,6 @@ class TrueSheetContainerView(context: Context) : ViewGroup(context) {
     // Container should not clip children to allow footer to position absolutely
     clipChildren = false
     clipToPadding = false
-  }
-
-  override fun onLayout(
-    changed: Boolean,
-    l: Int,
-    t: Int,
-    r: Int,
-    b: Int
-  ) {
-    // Content view fills the container
-    contentView?.let { content ->
-      val contentWidth = r - l
-      val contentHeight = content.measuredHeight
-      content.layout(0, 0, contentWidth, contentHeight)
-    }
-
-    // Footer is positioned absolutely by TrueSheetDialog
-    footerView?.let { footer ->
-      val footerWidth = r - l
-      val footerHeight = footer.measuredHeight
-      // Initial layout at bottom, actual position set by TrueSheetDialog
-      footer.layout(0, 0, footerWidth, footerHeight)
-    }
-  }
-
-  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    val width = MeasureSpec.getSize(widthMeasureSpec)
-    val maxHeight = MeasureSpec.getSize(heightMeasureSpec).takeIf { it > 0 }
-      ?: (parent as? ViewGroup)?.height
-      ?: context.resources.displayMetrics.heightPixels
-    var totalHeight = 0
-
-    // Measure content view with explicit dimensions
-    contentView?.let { content ->
-      measureChild(
-        content,
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
-      )
-      totalHeight += content.measuredHeight
-    }
-
-    // Measure footer view with explicit dimensions
-    footerView?.let { footer ->
-      val remainingHeight = (maxHeight - totalHeight).coerceAtLeast(0)
-      measureChild(
-        footer,
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(remainingHeight, MeasureSpec.AT_MOST)
-      )
-      totalHeight += footer.measuredHeight
-    }
-
-    setMeasuredDimension(width, totalHeight)
   }
 
   /**

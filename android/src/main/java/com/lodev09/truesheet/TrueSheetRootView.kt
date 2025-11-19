@@ -135,6 +135,4 @@ class TrueSheetRootView(private val context: Context?) :
     // No-op - override in order to still receive events to onInterceptTouchEvent
     // even when some other view disallow that
   }
-
-
 }
