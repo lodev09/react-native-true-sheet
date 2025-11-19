@@ -1,6 +1,5 @@
 package com.lodev09.truesheet
 
-import android.content.Context
 import android.view.View
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.UiThreadUtil
@@ -14,8 +13,8 @@ import com.lodev09.truesheet.events.*
 import com.lodev09.truesheet.utils.PixelUtils
 
 /**
- * Container view that manages the bottom sheet dialog and holds content and footer views.
- * Similar to iOS TrueSheetContainerView, this handles the actual sheet presentation logic.
+ * Container view that manages the bottom sheet content and holds content and footer views.
+ * The dialog is passed from TrueSheetView and persists across container lifecycle.
  */
 class TrueSheetContainerView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
@@ -26,14 +25,9 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
     private set
 
   /**
-   * The main BottomSheetDialog instance
+   * The main BottomSheetDialog instance - passed from TrueSheetView
    */
   private var sheetDialog: TrueSheetDialog? = null
-
-  /**
-   * React root view wrapper - this is what gets set as the dialog content
-   */
-  private var rootSheetView: TrueSheetRootView? = null
 
   /**
    * Determines if the sheet is being dragged by the user
@@ -43,7 +37,8 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
   /**
    * Current active detent index
    */
-  private var currentDetentIndex: Int = -1
+  var currentDetentIndex: Int = -1
+    private set
 
   /**
    * Promise callback to be invoked after `present` is called
@@ -90,7 +85,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
   /**
    * Check if sheet is currently showing
    */
-  val isShowing: Boolean
+  private val isShowing: Boolean
     get() = sheetDialog?.isShowing == true
 
   private val surfaceId: Int
@@ -109,19 +104,12 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
   }
 
   /**
-   * Setup this container in the parent sheet view.
-   * Called when container is mounted as a child of TrueSheetView.
+   * Setup this container in the parent sheet view with the provided dialog.
+   * Called when container is created.
    */
-  fun setupInSheetView(sheetView: TrueSheetView) {
+  fun setupInSheetView(sheetView: TrueSheetView, dialog: TrueSheetDialog) {
     this.sheetView = sheetView
-
-    // Initialize dialog
-    rootSheetView = TrueSheetRootView(reactContext)
-    rootSheetView?.id = sheetView.id
-    rootSheetView?.eventDispatcher = eventDispatcher
-    rootSheetView?.stateWrapper = stateWrapper
-
-    sheetDialog = TrueSheetDialog(reactContext, rootSheetView!!, this)
+    this.sheetDialog = dialog
 
     // Configure Sheet Dialog
     sheetDialog?.apply {
@@ -204,6 +192,13 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
           }
 
           override fun onStateChanged(sheetView: View, newState: Int) {
+            // Handle STATE_HIDDEN before checking isShowing
+            // This ensures we can dismiss even if dialog state gets out of sync
+            if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+              sheetDialog?.dismiss()
+              return
+            }
+
             if (!isShowing) return
 
             when (newState) {
@@ -221,30 +216,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
         }
       )
     }
-
-    // Add this container to the root sheet view
-    // Container's children (content/footer) stay as its children
-    rootSheetView?.addView(this)
   }
-
-
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-    cleanup()
-  }
-
-  /**
-   * Cleanup when container is unmounted
-   */
-  fun cleanup() {
-    // Don't dismiss here - causes crash during unmount
-    // sheetDialog?.dismiss()
-    sheetDialog = null
-    rootSheetView = null
-    sheetView = null
-  }
-
-
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     val position = PixelUtils.toDIP(sheetView.top.toFloat())
@@ -286,7 +258,6 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
       )
 
       if (it.index != currentDetentIndex) {
-        // Invoke promise when sheet resized programmatically
         presentPromise?.let { promise ->
           promise()
           presentPromise = null
@@ -303,80 +274,6 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
     }
 
     isDragging = false
-  }
-
-  fun configureIfShowing() {
-    if (sheetDialog?.isShowing == true) {
-      sheetDialog?.configure()
-      sheetDialog?.setStateForDetentIndex(currentDetentIndex)
-
-      UiThreadUtil.runOnUiThread {
-        sheetDialog?.positionFooter()
-      }
-    }
-  }
-
-  // ==================== Dialog Configuration Methods ====================
-
-  fun applyPropsFromSheetView() {
-    // Called when props are updated on the sheet view
-    configureIfShowing()
-  }
-
-  fun setEdgeToEdge(edgeToEdge: Boolean) {
-    sheetDialog?.edgeToEdge = edgeToEdge
-  }
-
-  fun setMaxHeight(height: Int) {
-    if (sheetDialog?.maxSheetHeight == height) return
-
-    sheetDialog?.maxSheetHeight = height
-    configureIfShowing()
-  }
-
-  fun setDimmed(dimmed: Boolean) {
-    if (sheetDialog?.dimmed == dimmed) return
-
-    sheetDialog?.dimmed = dimmed
-    if (isShowing) {
-      sheetDialog?.setupDimmedBackground(currentDetentIndex)
-    }
-  }
-
-  fun setDimmedIndex(index: Int) {
-    if (sheetDialog?.dimmedIndex == index) return
-
-    sheetDialog?.dimmedIndex = index
-    if (isShowing) {
-      sheetDialog?.setupDimmedBackground(currentDetentIndex)
-    }
-  }
-
-  fun setCornerRadius(radius: Float) {
-    if (sheetDialog?.cornerRadius == radius) return
-
-    sheetDialog?.cornerRadius = radius
-    sheetDialog?.setupBackground()
-  }
-
-  fun setBackground(color: Int) {
-    if (sheetDialog?.backgroundColor == color) return
-
-    sheetDialog?.backgroundColor = color
-    sheetDialog?.setupBackground()
-  }
-
-  fun setSoftInputMode(mode: Int) {
-    sheetDialog?.window?.setSoftInputMode(mode)
-  }
-
-  fun setDismissible(dismissible: Boolean) {
-    sheetDialog?.dismissible = dismissible
-  }
-
-  fun setDetents(newDetents: Array<Any>) {
-    sheetDialog?.detents = newDetents
-    configureIfShowing()
   }
 
   /**
@@ -399,6 +296,8 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
       }
 
       promiseCallback()
+      // Resize to new detent when already showing
+      sheetDialog?.setStateForDetentIndex(detentIndex)
     } else {
       presentPromise = promiseCallback
       // Dispatch onWillPresent event before showing with detent info
@@ -408,9 +307,9 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
           WillPresentEvent(surfaceId, viewId, it.index, it.position)
         )
       }
+      // Present the sheet - configure is called inside present()
+      sheetDialog?.present(detentIndex)
     }
-
-    sheetDialog?.present(detentIndex)
   }
 
   /**
@@ -425,7 +324,6 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
   }
 
   // Helper methods that delegate to dialog
-  private fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
-    return sheetDialog?.getDetentInfoForIndexWithPosition(index) ?: DetentInfo(0, 0f)
-  }
+  private fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo =
+    sheetDialog?.getDetentInfoForIndexWithPosition(index) ?: DetentInfo(0, 0f)
 }

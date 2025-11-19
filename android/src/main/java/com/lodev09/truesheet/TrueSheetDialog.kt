@@ -27,8 +27,6 @@ class TrueSheetDialog(
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
-
-
   /**
    * The sheet container view from Material BottomSheetDialog
    */

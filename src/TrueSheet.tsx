@@ -51,7 +51,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet';
 
   private readonly nativeRef: RefObject<NativeRef | null>;
-  private mountPromiseResolve?: () => void;
 
   /**
    * Map of sheet names against their instances.
@@ -216,8 +215,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onMount(event: MountEvent): void {
-    this.mountPromiseResolve?.();
-    this.mountPromiseResolve = undefined;
     this.props.onMount?.(event);
   }
 
@@ -251,8 +248,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
-        this.mountPromiseResolve = resolve;
-        this.setState({ shouldRenderNativeView: true });
+        this.setState({ shouldRenderNativeView: true }, () => {
+          // Resolve immediately after setState completes
+          // Native side handles the rest since dialog persists
+          resolve();
+        });
       });
     }
     return TrueSheetModule?.presentByRef(this.handle, index);
