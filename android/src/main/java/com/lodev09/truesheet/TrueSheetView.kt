@@ -84,16 +84,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!hasHandledInitialPresentation && initialDetentIndex >= 0 && containerView != null) {
       hasHandledInitialPresentation = true
       
-      // Wait for container to be laid out before presenting
-      containerView?.viewTreeObserver?.addOnGlobalLayoutListener(
-        object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
-          override fun onGlobalLayout() {
-            containerView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
-            // Present after layout is complete
-            containerView?.present(initialDetentIndex) { }
-          }
-        }
-      )
+      // Present directly - auto detent parsing should handle the timing
+      post {
+        containerView?.present(initialDetentIndex) { }
+      }
     }
   }
 
