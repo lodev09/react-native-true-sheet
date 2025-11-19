@@ -120,6 +120,7 @@ class TrueSheetContainerView(context: Context) : ReactViewGroup(context) {
 
     // Initialize dialog
     rootSheetView = TrueSheetRootView(context)
+    rootSheetView?.id = sheetView.id
     rootSheetView?.eventDispatcher = eventDispatcher
     rootSheetView?.stateWrapper = stateWrapper
 
