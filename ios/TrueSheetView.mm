@@ -139,9 +139,6 @@ using namespace facebook::react;
 
   NSLog(@"TrueSheetView presentAtIndex: Preparing to present...");
 
-  // Apply props before presenting
-  [self applyPropsToController];
-
   // Prepare the sheet with the correct initial index before presenting
   [_controller prepareForPresentationAtIndex:index
                                   completion:^{
@@ -187,7 +184,60 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 
   // Apply updated props to controller
-  [self applyPropsToController];
+  const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
+
+  // Update detents - pass numbers directly (-1 represents "auto")
+  NSMutableArray *detents = [NSMutableArray new];
+  for (const auto &detent : newProps.detents) {
+    [detents addObject:@(detent)];
+  }
+
+  _controller.detents = detents;
+
+  // Update background color - always set it, even if 0 (which could be a valid color like black)
+  UIColor *color = RCTUIColorFromSharedColor(SharedColor(newProps.background));
+  _controller.backgroundColor = color;
+
+  // Update blur tint - always set it to clear when removed
+  _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
+
+  // Update corner radius
+  if (newProps.cornerRadius < 0) {
+    _controller.cornerRadius = nil;
+  } else {
+    _controller.cornerRadius = @(newProps.cornerRadius);
+  }
+
+  // Update max height
+  if (newProps.maxHeight != 0.0) {
+    _controller.maxHeight = @(newProps.maxHeight);
+  }
+
+  // Update grabber
+  _controller.grabber = newProps.grabber;
+
+  // Update dismissible
+  _controller.modalInPresentation = !newProps.dismissible;
+
+  // Update dimmed
+  _controller.dimmed = newProps.dimmed;
+
+  // Update dimmedIndex
+  if (newProps.dimmedIndex >= 0) {
+    _controller.dimmedIndex = @(newProps.dimmedIndex);
+  }
+
+  // Apply background after setting backgroundColor and blurTint
+  [_controller setupBackground];
+
+  // Apply changes to presented sheet if needed
+  if (_isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      [_controller setupDetents];
+      [_controller setupDimmedBackground];
+      [_controller resizeToIndex:[self->_activeIndex integerValue]];
+    }];
+  }
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
@@ -310,65 +360,6 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
-}
-
-#pragma mark - Props Application
-
-- (void)applyPropsToController {
-  const auto &props = *std::static_pointer_cast<TrueSheetViewProps const>(_props);
-
-  // Update detents - pass numbers directly (-1 represents "auto")
-  NSMutableArray *detents = [NSMutableArray new];
-  for (const auto &detent : props.detents) {
-    [detents addObject:@(detent)];
-  }
-
-  _controller.detents = detents;
-
-  // Update background color - always set it, even if 0 (which could be a valid color like black)
-  UIColor *color = RCTUIColorFromSharedColor(SharedColor(props.background));
-  _controller.backgroundColor = color;
-
-  // Update blur tint - always set it to clear when removed
-  _controller.blurTint = !props.blurTint.empty() ? RCTNSStringFromString(props.blurTint) : nil;
-
-  // Update corner radius
-  if (props.cornerRadius < 0) {
-    _controller.cornerRadius = nil;
-  } else {
-    _controller.cornerRadius = @(props.cornerRadius);
-  }
-
-  // Update max height
-  if (props.maxHeight != 0.0) {
-    _controller.maxHeight = @(props.maxHeight);
-  }
-
-  // Update grabber
-  _controller.grabber = props.grabber;
-
-  // Update dismissible
-  _controller.modalInPresentation = !props.dismissible;
-
-  // Update dimmed
-  _controller.dimmed = props.dimmed;
-
-  // Update dimmedIndex
-  if (props.dimmedIndex >= 0) {
-    _controller.dimmedIndex = @(props.dimmedIndex);
-  }
-
-  // Apply background after setting backgroundColor and blurTint
-  [_controller setupBackground];
-
-  // Apply changes to presented sheet if needed
-  if (_isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller setupDetents];
-      [_controller setupDimmedBackground];
-      [_controller resizeToIndex:[self->_activeIndex integerValue]];
-    }];
-  }
 }
 
 #pragma mark - Private Helpers
