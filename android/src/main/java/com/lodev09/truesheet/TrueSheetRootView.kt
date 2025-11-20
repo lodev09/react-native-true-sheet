@@ -27,6 +27,7 @@ import com.facebook.react.views.view.ReactViewGroup
  *
  * This implementation is Fabric-only and does not support the legacy architecture.
  */
+@SuppressLint("ViewConstructor")
 class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   RootView {

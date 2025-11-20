@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.annotation.SuppressLint
 import android.view.View
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
@@ -9,15 +10,17 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
+import com.lodev09.truesheet.events.*
 
 /**
- * Main TrueSheet host view for Fabric architecture.
- * Similar to iOS TrueSheetView, this is a simple host that holds a reference to the container.
- * The dialog lives here and persists across container mount/unmount cycles.
+ * Main TrueSheet host view.
+ * Manages the sheet dialog and container, and dispatches events to JavaScript.
  */
+@SuppressLint("ViewConstructor")
 class TrueSheetView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
-  LifecycleEventListener {
+  LifecycleEventListener,
+  TrueSheetDialogDelegate {
 
   var eventDispatcher: EventDispatcher? = null
 
@@ -27,61 +30,54 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentAnimated: Boolean = true
 
   /**
-   * Track if initial presentation has been handled
+   * Tracks if initial presentation has been handled
    */
   private var hasHandledInitialPresentation = false
 
   /**
-   * Container view that manages the content - can be added/removed from dialog
+   * Container view that holds the sheet content.
+   * All child views added to TrueSheetView are forwarded to this container.
    */
-  private val dialogContainer: TrueSheetContainerView = TrueSheetContainerView(reactContext)
+  private val containerView: TrueSheetContainerView = TrueSheetContainerView(reactContext)
 
   /**
-   * React root view wrapper - this is what gets set as the dialog content
+   * Root view wrapper that gets set as the dialog content
    */
   private var rootSheetView: TrueSheetRootView? = null
 
   /**
-   * The main BottomSheetDialog instance - persists across container lifecycle
+   * The BottomSheetDialog instance
    */
   private var sheetDialog: TrueSheetDialog? = null
 
   init {
     reactContext.addLifecycleEventListener(this)
 
-    // Initialize dialog and root view
     rootSheetView = TrueSheetRootView(reactContext)
     rootSheetView?.eventDispatcher = eventDispatcher
     rootSheetView?.stateWrapper = stateWrapper
 
-    sheetDialog = TrueSheetDialog(reactContext, rootSheetView!!, dialogContainer)
+    sheetDialog = TrueSheetDialog(reactContext, rootSheetView!!, containerView)
 
-    // Setup container with the dialog
-    dialogContainer.setupInSheetView(this, sheetDialog!!)
-    dialogContainer.eventDispatcher = eventDispatcher;
+    sheetDialog?.delegate = this
 
-    // Add container to the root sheet view
-    rootSheetView?.addView(dialogContainer)
+    rootSheetView?.addView(containerView)
   }
 
   override fun setId(id: Int) {
     super.setId(id)
 
-    // Update root view ID to match
     rootSheetView?.id = id
 
-    // Register this view with the module for ref-based access
     TrueSheetModule.registerView(this, id)
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
 
-    // Get event dispatcher and set it on container if available
     val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
     eventDispatcher = dispatcher
 
-    // Dispatch onMount event when attached
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     dispatcher?.dispatchEvent(
       com.lodev09.truesheet.events.MountEvent(surfaceId, id)
@@ -89,8 +85,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   /**
-   * Show or update the sheet. Called after all properties are set.
-   * Similar to ReactModalHostView.showOrUpdate()
+   * Shows or updates the sheet after all properties are set.
    */
   fun showOrUpdate() {
     UiThreadUtil.assertOnUiThread()
@@ -99,9 +94,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
       hasHandledInitialPresentation = true
 
-      // Present directly - auto detent parsing should handle the timing
       post {
-        dialogContainer.present(initialDetentIndex) { }
+        present(initialDetentIndex) { }
       }
     }
   }
@@ -115,7 +109,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun requestLayout() {
     super.requestLayout()
 
-    // When layout is requested, update the sheet configuration
     post {
       configureIfShowing()
     }
@@ -125,7 +118,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     sheetDialog?.let { dialog ->
       if (dialog.isShowing) {
         dialog.configure()
-        dialog.setStateForDetentIndex(dialogContainer.currentDetentIndex)
+        dialog.setStateForDetentIndex(dialog.currentDetentIndex)
 
         UiThreadUtil.runOnUiThread {
           dialog.positionFooter()
@@ -138,38 +131,36 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun addView(child: View?, index: Int) {
     UiThreadUtil.assertOnUiThread()
-    // Forward all children to the container (like Modal forwards to dialogRootViewGroup)
-    dialogContainer.addView(child, index)
+
+    containerView.addView(child, index)
   }
 
   override fun removeView(child: View?) {
     UiThreadUtil.assertOnUiThread()
 
     if (child != null) {
-      dialogContainer.removeView(child)
+      containerView.removeView(child)
     }
   }
 
   override fun removeViewAt(index: Int) {
     UiThreadUtil.assertOnUiThread()
     val child = getChildAt(index)
-    dialogContainer.removeView(child)
+    containerView.removeView(child)
   }
 
-  override fun getChildCount(): Int = dialogContainer.childCount
+  override fun getChildCount(): Int = containerView.childCount
 
-  override fun getChildAt(index: Int): View? = dialogContainer.getChildAt(index)
+  override fun getChildAt(index: Int): View? = containerView.getChildAt(index)
 
   override fun onHostResume() {
     configureIfShowing()
   }
 
   override fun onHostPause() {
-    // do nothing
   }
 
   override fun onHostDestroy() {
-    // Drop the instance if the host is destroyed which will dismiss the dialog
     onDropInstance()
   }
 
@@ -177,17 +168,82 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
-    // Cleanup dialog when view is actually dropped
     sheetDialog?.let { dialog ->
       if (dialog.isShowing) {
         dialog.dismiss()
       }
+      dialog.delegate = null
     }
     sheetDialog = null
     rootSheetView = null
   }
 
-  // ==================== Property Setters (forward to container) ====================
+  // ==================== TrueSheetDialogDelegate Implementation ====================
+
+  override fun dialogWillPresent(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      WillPresentEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogDidPresent(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DidPresentEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogWillDismiss() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      WillDismissEvent(surfaceId, id)
+    )
+  }
+
+  override fun dialogDidDismiss() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DidDismissEvent(surfaceId, id)
+    )
+  }
+
+  override fun dialogDidChangeDetent(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DetentChangeEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogDidDragBegin(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DragBeginEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogDidDragChange(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DragChangeEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogDidDragEnd(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      DragEndEvent(surfaceId, id, index, position)
+    )
+  }
+
+  override fun dialogDidChangePosition(index: Int, position: Float) {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      PositionChangeEvent(surfaceId, id, index, position)
+    )
+  }
+
+  // ==================== Property Setters (forward to dialog) ====================
 
   fun applyPropsToContainer() {
     configureIfShowing()
@@ -210,7 +266,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (dialog.dimmed == dimmed) return
       dialog.dimmed = dimmed
       if (dialog.isShowing) {
-        dialog.setupDimmedBackground(dialogContainer.currentDetentIndex)
+        dialog.setupDimmedBackground(dialog.currentDetentIndex)
       }
     }
   }
@@ -220,7 +276,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (dialog.dimmedIndex == index) return
       dialog.dimmedIndex = index
       if (dialog.isShowing) {
-        dialog.setupDimmedBackground(dialogContainer.currentDetentIndex)
+        dialog.setupDimmedBackground(dialog.currentDetentIndex)
       }
     }
   }
@@ -261,7 +317,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setBlurTint(tint: String?) {}
 
   /**
-   * Present the sheet at given detent index.
+   * Presents the sheet at the given detent index.
    *
    * @param detentIndex The detent index to present at
    * @param promiseCallback Callback invoked when presentation completes
@@ -269,7 +325,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
-    dialogContainer.present(detentIndex, promiseCallback)
+
+    sheetDialog?.let { dialog ->
+      dialog.presentPromise = promiseCallback
+      dialog.present(detentIndex)
+    }
   }
 
   /**
@@ -280,6 +340,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
-    dialogContainer.dismiss(promiseCallback)
+
+    sheetDialog?.let { dialog ->
+      dialog.dismissPromise = promiseCallback
+      dialog.dismiss()
+    }
   }
 }

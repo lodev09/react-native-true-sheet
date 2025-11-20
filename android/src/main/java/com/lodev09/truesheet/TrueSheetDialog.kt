@@ -17,6 +17,22 @@ import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
 
+/**
+ * Delegate protocol for TrueSheetDialog lifecycle and interaction events.
+ * Similar to iOS TrueSheetViewControllerDelegate pattern.
+ */
+interface TrueSheetDialogDelegate {
+  fun dialogWillPresent(index: Int, position: Float)
+  fun dialogDidPresent(index: Int, position: Float)
+  fun dialogWillDismiss()
+  fun dialogDidDismiss()
+  fun dialogDidChangeDetent(index: Int, position: Float)
+  fun dialogDidDragBegin(index: Int, position: Float)
+  fun dialogDidDragChange(index: Int, position: Float)
+  fun dialogDidDragEnd(index: Int, position: Float)
+  fun dialogDidChangePosition(index: Int, position: Float)
+}
+
 @SuppressLint("ClickableViewAccessibility")
 class TrueSheetDialog(
   private val reactContext: ThemedReactContext,
@@ -24,8 +40,34 @@ class TrueSheetDialog(
   private val containerView: TrueSheetContainerView
 ) : BottomSheetDialog(reactContext) {
 
+  /**
+   * Delegate for handling dialog events
+   */
+  var delegate: TrueSheetDialogDelegate? = null
+
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
+
+  /**
+   * Track if the dialog is currently being dragged
+   */
+  private var isDragging = false
+
+  /**
+   * Current active detent index
+   */
+  var currentDetentIndex: Int = -1
+    private set
+
+  /**
+   * Promise callback to be invoked after present is called
+   */
+  var presentPromise: (() -> Unit)? = null
+
+  /**
+   * Promise callback to be invoked after dismiss is called
+   */
+  var dismissPromise: (() -> Unit)? = null
 
   /**
    * The sheet container view from Material BottomSheetDialog
@@ -106,6 +148,177 @@ class TrueSheetDialog(
 
     // Update the usable sheet height
     maxScreenHeight = ScreenUtils.screenHeight(reactContext, edgeToEdge)
+
+    // Setup dialog lifecycle listeners
+    setupDialogListeners()
+
+    // Setup bottom sheet behavior callbacks
+    setupBottomSheetBehavior()
+  }
+
+  /**
+   * Setup dialog lifecycle listeners
+   */
+  private fun setupDialogListeners() {
+    // Setup listener when the dialog has been presented
+    setOnShowListener {
+      registerKeyboardManager()
+
+      // Initialize footer position
+      positionFooter()
+
+      // Re-enable animation
+      resetAnimation()
+
+      // Resolve the present promise
+      presentPromise?.let { promise ->
+        promise()
+        presentPromise = null
+      }
+
+      // Notify delegate
+      val detentInfo = getDetentInfoForIndexWithPosition(currentDetentIndex)
+      delegate?.dialogDidPresent(detentInfo.index, detentInfo.position)
+    }
+
+    // Setup listener when the dialog is about to be dismissed
+    setOnCancelListener {
+      // Notify delegate
+      delegate?.dialogWillDismiss()
+    }
+
+    // Setup listener when the dialog has been dismissed
+    setOnDismissListener {
+      unregisterKeyboardManager()
+
+      // Resolve the dismiss promise
+      dismissPromise?.let { promise ->
+        promise()
+        dismissPromise = null
+      }
+
+      // Notify delegate
+      delegate?.dialogDidDismiss()
+    }
+  }
+
+  /**
+   * Setup bottom sheet behavior callbacks
+   */
+  private fun setupBottomSheetBehavior() {
+    behavior.addBottomSheetCallback(
+      object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(sheetView: View, slideOffset: Float) {
+          when (behavior.state) {
+            // For consistency with iOS, we consider SETTLING as dragging change
+            BottomSheetBehavior.STATE_DRAGGING,
+            BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
+
+            else -> { }
+          }
+
+          // Emit position change event continuously during slide
+          val detentInfo = getCurrentDetentInfo(sheetView)
+          delegate?.dialogDidChangePosition(detentInfo.index, detentInfo.position)
+
+          // Update footer position during slide
+          footerView?.let { footer ->
+            val footerHeight = containerView.footerHeight
+            val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
+
+            if (slideOffset >= 0) {
+              // Sheet is expanding
+              footer.y = y
+            } else {
+              // Sheet is collapsing
+              footer.y = y - footerHeight * slideOffset
+            }
+          }
+        }
+
+        override fun onStateChanged(sheetView: View, newState: Int) {
+          // Handle STATE_HIDDEN before checking isShowing
+          // This ensures we can dismiss even if dialog state gets out of sync
+          if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+            dismiss()
+            return
+          }
+
+          if (!isShowing) return
+
+          when (newState) {
+            // When changed to dragging, we know that the drag has started
+            BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
+
+            // Either of the following state determines drag end
+            BottomSheetBehavior.STATE_EXPANDED,
+            BottomSheetBehavior.STATE_COLLAPSED,
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> handleDragEnd(newState)
+
+            else -> { }
+          }
+        }
+      }
+    )
+  }
+
+  /**
+   * Get current detent info from sheet view position
+   */
+  private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
+    val position = PixelUtils.toDIP(sheetView.top.toFloat())
+    return DetentInfo(currentDetentIndex, position)
+  }
+
+  /**
+   * Handle drag begin
+   */
+  private fun handleDragBegin(sheetView: View) {
+    val detentInfo = getCurrentDetentInfo(sheetView)
+    delegate?.dialogDidDragBegin(detentInfo.index, detentInfo.position)
+    isDragging = true
+  }
+
+  /**
+   * Handle drag change
+   */
+  private fun handleDragChange(sheetView: View) {
+    if (!isDragging) return
+
+    val detentInfo = getCurrentDetentInfo(sheetView)
+    delegate?.dialogDidDragChange(detentInfo.index, detentInfo.position)
+  }
+
+  /**
+   * Handle drag end
+   */
+  private fun handleDragEnd(state: Int) {
+    if (!isDragging) return
+
+    // For consistency with iOS,
+    // we only handle state changes after dragging.
+    //
+    // Changing detent programmatically is handled via the present method.
+    val detentInfo = getDetentInfoForState(state)
+    detentInfo?.let {
+      // Notify delegate of drag end
+      delegate?.dialogDidDragEnd(it.index, it.position)
+
+      if (it.index != currentDetentIndex) {
+        presentPromise?.let { promise ->
+          promise()
+          presentPromise = null
+        }
+
+        currentDetentIndex = it.index
+        setupDimmedBackground(it.index)
+
+        // Notify delegate of detent change
+        delegate?.dialogDidChangeDetent(it.index, it.position)
+      }
+    }
+
+    isDragging = false
   }
 
   /**
@@ -207,12 +420,23 @@ class TrueSheetDialog(
    * Present the sheet.
    */
   fun present(detentIndex: Int, animated: Boolean = true) {
+    currentDetentIndex = detentIndex
     setupDimmedBackground(detentIndex)
+
     if (isShowing) {
+      // For consistency with iOS, we notify detent change immediately
+      // when already showing (not waiting for state to change)
+      val detentInfo = getDetentInfoForIndexWithPosition(detentIndex)
+      delegate?.dialogDidChangeDetent(detentInfo.index, detentInfo.position)
+
       setStateForDetentIndex(detentIndex)
     } else {
       configure()
       setStateForDetentIndex(detentIndex)
+
+      // Notify delegate before showing
+      val detentInfo = getDetentInfoForIndex(detentIndex)
+      delegate?.dialogWillPresent(detentInfo.index, detentInfo.position)
 
       if (!animated) {
         // Disable animation
