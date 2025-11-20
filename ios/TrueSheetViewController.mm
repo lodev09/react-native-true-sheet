@@ -97,25 +97,31 @@
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
-    [self.delegate viewControllerWillPresent];
-  }
+  // Only trigger willPresent on the initial presentation, not on repositioning
+  if (!_isPresented) {
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
+      [self.delegate viewControllerWillPresent];
+    }
 
-  [self setupTransitionPositionTracking];
+    // Setup transition position tracking
+    [self setupTransitionPositionTracking];
+  }
 }
 
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
 
   // Only trigger didPresent on the initial presentation, not on repositioning
-  if (!_isPresented && [self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
-    [self.delegate viewControllerDidPresent];
-    
+  if (!_isPresented) {
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
+      [self.delegate viewControllerDidPresent];
+    }
+
     // Setup gesture recognizer after view appears and React content is mounted
     [self setupGestureRecognizer];
+
+    _isPresented = YES;
   }
-  
-  _isPresented = YES;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
