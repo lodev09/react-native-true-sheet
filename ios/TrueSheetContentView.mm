@@ -36,6 +36,8 @@ using namespace facebook::react;
 
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
+    [_touchHandler attachToView:self];
+
     _pinnedScrollView = nil;
     _lastSize = CGSizeZero;
   }
@@ -56,18 +58,8 @@ using namespace facebook::react;
   }
 }
 
-// TODO: maybe put this on init?
 - (void)setup {
-  // Attach touch handler for React Native touch events
-  if (_touchHandler) {
-    [_touchHandler attachToView:self];
-  }
-
   // Auto-detect and pin scroll views to container for proper scrolling behavior
-  [self setupScrollViewPinning];
-}
-
-- (void)setupScrollViewPinning {
   // Find scroll view in content view hierarchy
   RCTScrollViewComponentView *scrollView = [self findScrollView];
 

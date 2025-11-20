@@ -48,6 +48,8 @@ using namespace facebook::react;
   NSNumber *_activeDetentIndex;
   BOOL _isPresented;
   BOOL _hasInitiallyPresented;
+  NSInteger _initialDetentIndex;
+  BOOL _initialDetentAnimated;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -64,6 +66,8 @@ using namespace facebook::react;
     _activeDetentIndex = nil;
 
     _hasInitiallyPresented = NO;
+    _initialDetentIndex = -1;
+    _initialDetentAnimated = YES;
   }
   return self;
 }
@@ -109,7 +113,7 @@ using namespace facebook::react;
             completion:(nullable TrueSheetCompletionBlock)completion {
   if (_isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
-      [_controller resizeToIndex:index];
+      [_controller setSheetDetentWithIndex:index];
     }];
 
     if (completion) {
@@ -131,18 +135,18 @@ using namespace facebook::react;
     return;
   }
 
-  // Prepare the sheet with the correct initial index before presenting
-  [_controller prepareForPresentationAtIndex:index
-                                  completion:^{
-                                    [presentingViewController presentViewController:self->_controller
-                                                                           animated:animated
-                                                                         completion:^{
-                                                                           // Call completion handler
-                                                                           if (completion) {
-                                                                             completion(YES, nil);
-                                                                           }
-                                                                         }];
-                                  }];
+  // Set to the given detent index
+  [_controller setSheetDetentWithIndex:index];
+
+  // Present our sheet
+  [presentingViewController presentViewController:self->_controller
+                                         animated:animated
+                                       completion:^{
+                                         // Call completion handler
+                                         if (completion) {
+                                           completion(YES, nil);
+                                         }
+                                       }];
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
@@ -164,7 +168,7 @@ using namespace facebook::react;
 - (void)resizeToIndex:(NSInteger)index {
   if (_isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
-      [_controller resizeToIndex:index];
+      [_controller setSheetDetentWithIndex:index];
     }];
   }
 }
@@ -173,8 +177,6 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 
   const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
-
-  // Apply updated props to controller
 
   // Update detents - pass numbers directly (-1 represents "auto")
   NSMutableArray *detents = [NSMutableArray new];
@@ -217,22 +219,34 @@ using namespace facebook::react;
     _controller.dimmedIndex = @(newProps.dimmedIndex);
   }
 
-  // Apply background after setting backgroundColor and blurTint
-  [_controller setupBackground];
+  // Store initial presentation settings
+  _initialDetentIndex = newProps.initialDetentIndex;
+  _initialDetentAnimated = newProps.initialDetentAnimated;
+}
 
-  // Apply changes to presented sheet if needed
-  if (_isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [_controller setupDetents];
-      [_controller setupDimmedBackground];
-      [_controller resizeToIndex:[self->_activeDetentIndex integerValue]];
-    }];
-  }
+- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
+  [super finalizeUpdates:updateMask];
 
-  // Present sheet if initial detent index is set, only once
-  if (!_hasInitiallyPresented && newProps.initialDetentIndex >= 0 && !_isPresented) {
-    _hasInitiallyPresented = YES;
-    [self presentAtIndex:newProps.initialDetentIndex animated:newProps.initialDetentAnimated completion:nil];
+  // Apply controller updates after all props and children are updated
+  if (updateMask & RNComponentViewUpdateMaskProps) {
+    // Setup our sheet properties
+    [_controller setupSheetProps];
+
+    // Apply changes to presented sheet if needed
+    if (_isPresented) {
+      [_controller.sheetPresentationController animateChanges:^{
+        [self->_controller setupSheetDetents];
+        [self->_controller setSheetDetentWithIndex:[self->_activeDetentIndex integerValue]];
+      }];
+    } else {
+      [_controller setupSheetDetents];
+
+      // Handle initial presentation
+      if (!_hasInitiallyPresented && _initialDetentIndex >= 0 && !_isPresented) {
+        _hasInitiallyPresented = YES;
+        [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+      }
+    }
   }
 }
 
@@ -304,7 +318,7 @@ using namespace facebook::react;
     _controller.layoutTransitioning = YES;
 
     [_controller.sheetPresentationController animateChanges:^{
-      [self->_controller setupDetents];
+      [self->_controller setupSheetDetents];
     }];
   }
 }

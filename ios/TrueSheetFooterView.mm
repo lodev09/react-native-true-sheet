@@ -37,6 +37,8 @@ using namespace facebook::react;
 
     // Create touch handler for React Native touch events
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
+    [_touchHandler attachToView:self];
+
     _lastHeight = 0;
   }
   return self;
@@ -63,13 +65,7 @@ using namespace facebook::react;
   _lastHeight = height;
 }
 
-// TODO: maybe put this on init?
 - (void)setup {
-  // Attach touch handler for React Native touch events
-  if (_touchHandler) {
-    [_touchHandler attachToView:self];
-  }
-
   // Setup initial constraints with current frame height
   CGFloat initialHeight = self.frame.size.height;
   [self setupConstraintsWithHeight:initialHeight];

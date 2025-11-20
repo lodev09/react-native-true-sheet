@@ -133,7 +133,7 @@
       _lastViewWidth = presentedView.frame.size.width;
 
       // Recalculate detents with new width
-      [self setupDetents];
+      [self setupSheetDetents];
     }
   }
 
@@ -215,72 +215,9 @@
   }
 }
 
-#pragma mark - Background Setup
-
-- (void)setupBackground {
-  // Setup blur effect if blurTint is provided
-  if (self.blurTint && self.blurTint.length > 0) {
-    UIBlurEffectStyle style = UIBlurEffectStyleLight;
-
-    if ([self.blurTint isEqualToString:@"dark"]) {
-      style = UIBlurEffectStyleDark;
-    } else if ([self.blurTint isEqualToString:@"light"]) {
-      style = UIBlurEffectStyleLight;
-    } else if ([self.blurTint isEqualToString:@"extraLight"]) {
-      style = UIBlurEffectStyleExtraLight;
-    } else if ([self.blurTint isEqualToString:@"regular"]) {
-      style = UIBlurEffectStyleRegular;
-    } else if ([self.blurTint isEqualToString:@"prominent"]) {
-      style = UIBlurEffectStyleProminent;
-    } else if ([self.blurTint isEqualToString:@"systemThinMaterial"]) {
-      style = UIBlurEffectStyleSystemThinMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemMaterial"]) {
-      style = UIBlurEffectStyleSystemMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemThickMaterial"]) {
-      style = UIBlurEffectStyleSystemThickMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemChromeMaterial"]) {
-      style = UIBlurEffectStyleSystemChromeMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemUltraThinMaterial"]) {
-      style = UIBlurEffectStyleSystemUltraThinMaterial;
-    }
-
-    _backgroundView.effect = [UIBlurEffect effectWithStyle:style];
-    _backgroundView.backgroundColor = nil;
-  } else {
-    // No blur effect, use solid background color
-    _backgroundView.effect = nil;
-    _backgroundView.backgroundColor = self.backgroundColor;
-  }
-}
-
 #pragma mark - Sheet Configuration (iOS 15+)
 
-- (void)setupDimmedBackground {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet)
-    return;
-
-  if (self.dimmed && [self.dimmedIndex integerValue] == 0) {
-    sheet.largestUndimmedDetentIdentifier = nil;
-  } else {
-    sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
-
-    if (@available(iOS 16.0, *)) {
-      if (self.dimmed && self.dimmedIndex) {
-        NSInteger dimmedIdx = [self.dimmedIndex integerValue];
-        if (dimmedIdx > 0 && dimmedIdx - 1 < sheet.detents.count) {
-          sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIdx - 1].identifier;
-        } else if (sheet.detents.lastObject) {
-          sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
-        }
-      } else if (sheet.detents.lastObject) {
-        sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
-      }
-    }
-  }
-}
-
-- (void)setupDetents {
+- (void)setupSheetDetents {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
     return;
@@ -300,6 +237,26 @@
   }
 
   sheet.detents = detents;
+  
+  // Setup dimmed background
+  if (self.dimmed && [self.dimmedIndex integerValue] == 0) {
+    sheet.largestUndimmedDetentIdentifier = nil;
+  } else {
+    sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
+
+    if (@available(iOS 16.0, *)) {
+      if (self.dimmed && self.dimmedIndex) {
+        NSInteger dimmedIdx = [self.dimmedIndex integerValue];
+        if (dimmedIdx > 0 && dimmedIdx - 1 < sheet.detents.count) {
+          sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIdx - 1].identifier;
+        } else if (sheet.detents.lastObject) {
+          sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
+        }
+      } else if (sheet.detents.lastObject) {
+        sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
+      }
+    }
+  }
 }
 
 - (UISheetPresentationControllerDetent *)detentForValue:(id)detent withHeight:(CGFloat)height atIndex:(NSInteger)index {
@@ -369,7 +326,7 @@
   return identifier;
 }
 
-- (void)resizeToIndex:(NSInteger)index {
+- (void)setSheetDetentWithIndex:(NSInteger)index {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
     return;
@@ -443,16 +400,11 @@
   return containerView.frame.size.height;
 }
 
-- (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion {
+- (void)setupSheetProps {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet) {
-    if (completion)
-      completion();
     return;
   }
-
-  [self setupDetents];
-  [self setupDimmedBackground];
 
   sheet.delegate = self;
   sheet.prefersEdgeAttachedInCompactHeight = YES;
@@ -461,10 +413,40 @@
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
   }
-  sheet.selectedDetentIdentifier = [self detentIdentifierForIndex:index];
+  
+  // Setup blur effect if blurTint is provided
+  if (self.blurTint && self.blurTint.length > 0) {
+    UIBlurEffectStyle style = UIBlurEffectStyleLight;
 
-  if (completion)
-    completion();
+    if ([self.blurTint isEqualToString:@"dark"]) {
+      style = UIBlurEffectStyleDark;
+    } else if ([self.blurTint isEqualToString:@"light"]) {
+      style = UIBlurEffectStyleLight;
+    } else if ([self.blurTint isEqualToString:@"extraLight"]) {
+      style = UIBlurEffectStyleExtraLight;
+    } else if ([self.blurTint isEqualToString:@"regular"]) {
+      style = UIBlurEffectStyleRegular;
+    } else if ([self.blurTint isEqualToString:@"prominent"]) {
+      style = UIBlurEffectStyleProminent;
+    } else if ([self.blurTint isEqualToString:@"systemThinMaterial"]) {
+      style = UIBlurEffectStyleSystemThinMaterial;
+    } else if ([self.blurTint isEqualToString:@"systemMaterial"]) {
+      style = UIBlurEffectStyleSystemMaterial;
+    } else if ([self.blurTint isEqualToString:@"systemThickMaterial"]) {
+      style = UIBlurEffectStyleSystemThickMaterial;
+    } else if ([self.blurTint isEqualToString:@"systemChromeMaterial"]) {
+      style = UIBlurEffectStyleSystemChromeMaterial;
+    } else if ([self.blurTint isEqualToString:@"systemUltraThinMaterial"]) {
+      style = UIBlurEffectStyleSystemUltraThinMaterial;
+    }
+
+    _backgroundView.effect = [UIBlurEffect effectWithStyle:style];
+    _backgroundView.backgroundColor = nil;
+  } else {
+    // No blur effect, use solid background color
+    _backgroundView.effect = nil;
+    _backgroundView.backgroundColor = self.backgroundColor;
+  }
 }
 
 #pragma mark - UISheetPresentationControllerDelegate

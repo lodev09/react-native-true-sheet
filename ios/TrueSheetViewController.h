@@ -36,12 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSString *blurTint;
 @property (nonatomic, assign) BOOL layoutTransitioning;
 
-- (void)setupBackground;
-- (void)resizeToIndex:(NSInteger)index;
-- (void)setupDetents;
-- (void)setupDimmedBackground;
-- (void)prepareForPresentationAtIndex:(NSInteger)index completion:(void (^)(void))completion;
-- (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index;
+- (void)setSheetDetentWithIndex:(NSInteger)index;
+- (void)setupSheetDetents;
+- (void)setupSheetProps;
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
 - (CGFloat)currentHeight;
