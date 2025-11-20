@@ -61,7 +61,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   /**
    * The BottomSheetDialog instance
    */
-  private var sheetDialog: TrueSheetDialog? = null
+  private val sheetDialog: TrueSheetDialog
+
+  init {
+    reactContext.addLifecycleEventListener(this)
+    
+    // Create dialog early so it's ready when props are set
+    sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
+    sheetDialog.delegate = this
+  }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
     super.dispatchProvideStructure(structure)
@@ -87,7 +95,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    reactContext.addLifecycleEventListener(this)
+    
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      MountEvent(surfaceId, id)
+    )
   }
 
   override fun onDetachedFromWindow() {
@@ -114,14 +126,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
         present(initialDetentIndex) { }
       }
     } else {
-      sheetDialog?.let { dialog ->
-        if (dialog.isShowing) {
-          dialog.configure()
-          dialog.setStateForDetentIndex(dialog.currentDetentIndex)
+      if (sheetDialog.isShowing) {
+        sheetDialog.configure()
+        sheetDialog.setStateForDetentIndex(sheetDialog.currentDetentIndex)
 
-          UiThreadUtil.runOnUiThread {
-            dialog.positionFooter()
-          }
+        UiThreadUtil.runOnUiThread {
+          sheetDialog.positionFooter()
         }
       }
     }
@@ -135,14 +145,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Add the child to our Root Sheet View
     // This is the TrueSheetContainerView
     sheetRootView.addView(child, index)
-
-    sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
-    sheetDialog?.delegate = this
-
-    val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(
-      MountEvent(surfaceId, id)
-    )
   }
 
   override fun getChildCount(): Int = sheetRootView.childCount
@@ -175,14 +177,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
-    sheetDialog?.let { dialog ->
-      if (dialog.isShowing) {
-        dialog.dismiss()
-      }
-      dialog.delegate = null
+    if (sheetDialog.isShowing) {
+      sheetDialog.dismiss()
     }
-
-    sheetDialog = null
+    sheetDialog.delegate = null
   }
 
   override fun onHostResume() {
@@ -264,66 +262,54 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Property Setters (forward to dialog) ====================
 
   fun setEdgeToEdge(edgeToEdge: Boolean) {
-    sheetDialog?.edgeToEdge = edgeToEdge
+    sheetDialog.edgeToEdge = edgeToEdge
   }
 
   fun setMaxHeight(height: Int) {
-    sheetDialog?.let { dialog ->
-      if (dialog.maxSheetHeight == height) return
-      dialog.maxSheetHeight = height
-    }
+    if (sheetDialog.maxSheetHeight == height) return
+    sheetDialog.maxSheetHeight = height
   }
 
   fun setDimmed(dimmed: Boolean) {
-    sheetDialog?.let { dialog ->
-      if (dialog.dimmed == dimmed) return
-      dialog.dimmed = dimmed
-      if (dialog.isShowing) {
-        dialog.setupDimmedBackground(dialog.currentDetentIndex)
-      }
+    if (sheetDialog.dimmed == dimmed) return
+    sheetDialog.dimmed = dimmed
+    if (sheetDialog.isShowing) {
+      sheetDialog.setupDimmedBackground(sheetDialog.currentDetentIndex)
     }
   }
 
   fun setDimmedIndex(index: Int) {
-    sheetDialog?.let { dialog ->
-      if (dialog.dimmedIndex == index) return
-      dialog.dimmedIndex = index
-      if (dialog.isShowing) {
-        dialog.setupDimmedBackground(dialog.currentDetentIndex)
-      }
+    if (sheetDialog.dimmedIndex == index) return
+    sheetDialog.dimmedIndex = index
+    if (sheetDialog.isShowing) {
+      sheetDialog.setupDimmedBackground(sheetDialog.currentDetentIndex)
     }
   }
 
   fun setCornerRadius(radius: Float) {
-    sheetDialog?.let { dialog ->
-      if (dialog.cornerRadius == radius) return
-      dialog.cornerRadius = radius
-      dialog.setupBackground()
-    }
+    if (sheetDialog.cornerRadius == radius) return
+    sheetDialog.cornerRadius = radius
+    sheetDialog.setupBackground()
   }
 
   fun setBackground(color: Int) {
-    sheetDialog?.let { dialog ->
-      if (dialog.backgroundColor == color) return
-      dialog.backgroundColor = color
-      dialog.setupBackground()
-    }
+    if (sheetDialog.backgroundColor == color) return
+    sheetDialog.backgroundColor = color
+    sheetDialog.setupBackground()
   }
 
   fun setSoftInputMode(mode: Int) {
-    sheetDialog?.window?.setSoftInputMode(mode)
+    sheetDialog.window?.setSoftInputMode(mode)
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog?.dismissible = dismissible
+    sheetDialog.dismissible = dismissible
   }
 
   fun setGrabber(grabber: Boolean) {}
 
   fun setDetents(newDetents: Array<Any>) {
-    sheetDialog?.let { dialog ->
-      dialog.detents = newDetents
-    }
+    sheetDialog.detents = newDetents
   }
 
   fun setBlurTint(tint: String?) {}
@@ -338,10 +324,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    sheetDialog?.let { dialog ->
-      dialog.presentPromise = promiseCallback
-      dialog.present(detentIndex)
-    }
+    sheetDialog.presentPromise = promiseCallback
+    sheetDialog.present(detentIndex)
   }
 
   /**
@@ -353,9 +337,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    sheetDialog?.let { dialog ->
-      dialog.dismissPromise = promiseCallback
-      dialog.dismiss()
-    }
+    sheetDialog.dismissPromise = promiseCallback
+    sheetDialog.dismiss()
   }
 }

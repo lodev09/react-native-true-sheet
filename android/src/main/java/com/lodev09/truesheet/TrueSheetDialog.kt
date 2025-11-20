@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
@@ -69,8 +68,8 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   /**
    * The sheet container view from Material BottomSheetDialog
    */
-  private val sheetRootViewContainer: ViewGroup
-    get() = sheetRootView.parent as ViewGroup
+  private val sheetRootViewContainer: FrameLayout
+    get() = sheetRootView.parent as FrameLayout
 
   /**
    * Our sheet container view from root view's only child
@@ -130,16 +129,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var detents: Array<Any> = arrayOf(0.5, 1.0)
 
   init {
-    // Set content view with RootSheetView
-    val contentWrapper = FrameLayout(reactContext).apply {
-      addView(sheetRootView)
-//      if (!statusBarTranslucent) {
-//        // this is needed to prevent content hiding behind systems bars < API 30
-//        this.fitsSystemWindows = true
-//      }
-    }
-
-    setContentView(contentWrapper)
+    setContentView(sheetRootView)
 
     sheetRootViewContainer.setBackgroundColor(backgroundColor)
     sheetRootViewContainer.clipToOutline = true
@@ -573,20 +563,23 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           // Enables half expanded
           isFitToContents = false
 
-          setPeekHeight(getDetentHeight(detents[0]), isShowing)
-
-          // Calculate half expanded ratio, ensuring it's valid (> 0 and <= 1)
+          val peekHeightValue = getDetentHeight(detents[0])
           val middleDetentHeight = getDetentHeight(detents[1])
-          if (middleDetentHeight > 0 && maxScreenHeight > 0) {
-            val ratio = middleDetentHeight.toFloat() / maxScreenHeight.toFloat()
+          val maxHeightValue = getDetentHeight(detents[2])
+
+          setPeekHeight(peekHeightValue, isShowing)
+          maxHeight = maxHeightValue
+
+          // Calculate half expanded ratio relative to maxHeight (not maxScreenHeight)
+          // BottomSheetBehavior calculates half-expanded against parent height (which is constrained by maxHeight)
+          if (middleDetentHeight > 0 && maxHeightValue > 0) {
+            val ratio = middleDetentHeight.toFloat() / maxHeightValue.toFloat()
             // Clamp ratio to valid range: (0, 1]
             halfExpandedRatio = ratio.coerceIn(0.01f, 1.0f)
           } else {
             // Default to 0.5 if content isn't measured yet
             halfExpandedRatio = 0.5f
           }
-
-          maxHeight = getDetentHeight(detents[2])
         }
       }
     }
