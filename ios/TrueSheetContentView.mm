@@ -58,8 +58,10 @@ using namespace facebook::react;
   }
 }
 
-- (void)setup {
-  // Auto-detect and pin scroll views to container for proper scrolling behavior
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+
+  // Setup scroll view when content view is added to container
   // Find scroll view in content view hierarchy
   RCTScrollViewComponentView *scrollView = [self findScrollView];
 

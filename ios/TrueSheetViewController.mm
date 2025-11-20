@@ -237,7 +237,7 @@
   }
 
   sheet.detents = detents;
-  
+
   // Setup dimmed background
   if (self.dimmed && [self.dimmedIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
@@ -413,7 +413,7 @@
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
   }
-  
+
   // Setup blur effect if blurTint is provided
   if (self.blurTint && self.blurTint.length > 0) {
     UIBlurEffectStyle style = UIBlurEffectStyleLight;

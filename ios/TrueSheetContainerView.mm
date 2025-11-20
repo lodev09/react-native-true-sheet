@@ -67,9 +67,6 @@ using namespace facebook::react;
 
     // Set delegate to listen for size changes
     _contentView.delegate = self;
-
-    // Setup content view
-    [_contentView setup];
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {

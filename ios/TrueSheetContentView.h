@@ -28,11 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 
 /**
- * Sets up the content view with touch handling and scroll view detection
- */
-- (void)setup;
-
-/**
  * Cleans up the content view before removal
  */
 - (void)cleanup;
