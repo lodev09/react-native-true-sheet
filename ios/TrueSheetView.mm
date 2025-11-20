@@ -134,6 +134,10 @@ using namespace facebook::react;
     }
     return;
   }
+  
+  // Setup our sheet properties
+  [_controller setupSheetProps];
+  [_controller setupSheetDetents];
 
   // Set to the given detent index
   [_controller setSheetDetentWithIndex:index];
@@ -229,9 +233,6 @@ using namespace facebook::react;
 
   // Apply controller updates after all props and children are updated
   if (updateMask & RNComponentViewUpdateMaskProps) {
-    // Setup our sheet properties
-    [_controller setupSheetProps];
-
     // Apply changes to presented sheet if needed
     if (_isPresented) {
       [_controller.sheetPresentationController animateChanges:^{
@@ -239,8 +240,6 @@ using namespace facebook::react;
         [self->_controller setSheetDetentWithIndex:[self->_activeDetentIndex integerValue]];
       }];
     } else {
-      [_controller setupSheetDetents];
-
       // Handle initial presentation
       if (!_hasInitiallyPresented && _initialDetentIndex >= 0 && !_isPresented) {
         _hasInitiallyPresented = YES;
