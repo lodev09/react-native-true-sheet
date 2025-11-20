@@ -57,8 +57,8 @@ export const ReanimatedTrueSheetProvider = ({ children }) => <>{children}</>;
 
 // Mock hooks
 export const useReanimatedTrueSheet = jest.fn(() => ({
-  sheetRef: { current: null },
-  position: { value: 0 },
+  animatedPosition: { value: 0 },
+  animatedIndex: { value: -1 },
 }));
 
 export const useReanimatedPositionChangeHandler = jest.fn((callback) => jest.fn());

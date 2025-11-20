@@ -16,14 +16,14 @@ const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 export const ReanimatedExample = () => {
   const sheetRef = useRef<TrueSheet>(null);
   const insets = useSafeAreaInsets();
-  const { position } = useReanimatedTrueSheet();
+  const { animatedPosition } = useReanimatedTrueSheet();
 
   const floatingButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -position.value }],
+    transform: [{ translateY: -animatedPosition.value }],
   }));
 
   const headerStyle = useAnimatedStyle(() => ({
-    opacity: Math.max(0, 1 - position.value / 300),
+    opacity: Math.max(0, 1 - animatedPosition.value / 300),
   }));
 
   return (

@@ -62,7 +62,7 @@ describe('MyComponent', () => {
 - Renders children without modification
 
 ### Hooks
-- `useReanimatedTrueSheet()`: Returns mock ref and position
+- `useReanimatedTrueSheet()`: Returns mock `animatedPosition` and `animatedIndex` shared values
 - `useReanimatedPositionChangeHandler()`: Returns a mock function
 
 ## Example Test

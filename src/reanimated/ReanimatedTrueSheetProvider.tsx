@@ -6,7 +6,11 @@ export interface ReanimatedTrueSheetContextValue {
   /**
    * Shared value representing the current sheet position (Y offset from bottom)
    */
-  position: SharedValue<number>;
+  animatedPosition: SharedValue<number>;
+  /**
+   * Shared value representing the current detent index
+   */
+  animatedIndex: SharedValue<number>;
 }
 
 const ReanimatedTrueSheetContext = createContext<ReanimatedTrueSheetContextValue | null>(null);
@@ -34,13 +38,15 @@ export interface ReanimatedTrueSheetProviderProps {
  */
 export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetProviderProps) => {
   const { height } = useWindowDimensions();
-  const position = useSharedValue(height);
+  const animatedPosition = useSharedValue(height);
+  const animatedIndex = useSharedValue(-1);
 
   const value = useMemo(
     () => ({
-      position,
+      animatedPosition,
+      animatedIndex,
     }),
-    [position]
+    [animatedPosition, animatedIndex]
   );
 
   return (
@@ -52,7 +58,7 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
 
 /**
  * Hook to access the Reanimated TrueSheet context.
- * Returns the shared value for sheet position that can be used in animations.
+ * Returns the shared values for sheet position and detent index that can be used in animations.
  *
  * @throws Error if used outside of ReanimatedTrueSheetProvider
  *
@@ -62,10 +68,10 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
  * import { useAnimatedStyle } from 'react-native-reanimated'
  *
  * function MyComponent() {
- *   const { position } = useReanimatedTrueSheet()
+ *   const { animatedPosition, animatedIndex } = useReanimatedTrueSheet()
  *
  *   const animatedStyle = useAnimatedStyle(() => ({
- *     transform: [{ translateY: -position.value }]
+ *     transform: [{ translateY: -animatedPosition.value }]
  *   }))
  *
  *   return <Animated.View style={animatedStyle}>...</Animated.View>

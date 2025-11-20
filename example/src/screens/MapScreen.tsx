@@ -36,7 +36,7 @@ const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const { position } = useReanimatedTrueSheet();
+  const { animatedPosition } = useReanimatedTrueSheet();
 
   const sheetRef = useRef<TrueSheet>(null);
 
@@ -57,7 +57,7 @@ export const MapScreen = () => {
   const $floatingButtonStyles: StyleProp<ViewStyle> = [
     styles.floatingButton,
     useAnimatedStyle(() => ({
-      transform: [{ translateY: Math.min(-insets.bottom, -(height - position.value)) }],
+      transform: [{ translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)) }],
     })),
   ];
 

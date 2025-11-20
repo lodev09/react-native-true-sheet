@@ -47,7 +47,7 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
-  const { position } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
 
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
@@ -56,10 +56,12 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props,
     // because since IOS 26, transitioning no longer sends real-time position during
     // transition.
     if (payload.transitioning) {
-      position.value = withSpring(payload.position, SPRING_CONFIG);
+      animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
     } else {
-      position.value = payload.position;
+      animatedPosition.value = payload.position;
     }
+
+    animatedIndex.value = payload.index;
 
     if (onPositionChange) {
       scheduleOnRN(onPositionChange, {
