@@ -88,6 +88,7 @@ using namespace facebook::react;
   // Detach touch handler
   if (_touchHandler) {
     [_touchHandler detachFromView:self];
+    _touchHandler = nil;
   }
 
   // Unpin constraints (view removal handled by React Native)

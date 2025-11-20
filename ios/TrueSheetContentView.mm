@@ -105,6 +105,7 @@ using namespace facebook::react;
   // Detach touch handler
   if (_touchHandler) {
     [_touchHandler detachFromView:self];
+    _touchHandler = nil;
   }
 
   // Unpin scroll view if exists
