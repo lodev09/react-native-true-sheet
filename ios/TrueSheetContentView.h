@@ -27,11 +27,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 
-/**
- * Cleans up the content view before removal
- */
-- (void)cleanup;
-
 @end
 
 NS_ASSUME_NONNULL_END

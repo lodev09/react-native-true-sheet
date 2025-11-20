@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetContainerView : RCTViewComponentView
 
 /**
- * Delegate to notify when content is ready
+ * Delegate to notify of content size changes
  */
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
@@ -35,10 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CGFloat)contentHeight;
 
-/**
- * Cleans up the container view before removal
- */
-- (void)cleanup;
+
 
 @end
 

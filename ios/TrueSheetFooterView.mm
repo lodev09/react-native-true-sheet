@@ -19,7 +19,6 @@
 using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
-  RCTSurfaceTouchHandler *_touchHandler;
   CGFloat _lastHeight;
 }
 
@@ -35,63 +34,55 @@ using namespace facebook::react;
     // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
 
-    // Create touch handler for React Native touch events
-    _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    [_touchHandler attachToView:self];
-
     _lastHeight = 0;
   }
   return self;
 }
 
 - (void)setupConstraintsWithHeight:(CGFloat)height {
-  // Get parent view (container)
   UIView *parentView = self.superview;
   if (!parentView) {
     return;
   }
 
-  // Unpin existing constraints first
+  // Remove existing constraints before applying new ones
   [LayoutUtil unpinView:self];
 
-  // Pin to bottom, leading, and trailing edges with height constraint
-  // Pin to container (parent) which already fills the controller's view
+  // Pin footer to bottom and sides of container with specific height
   [LayoutUtil pinView:self
          toParentView:parentView
                 edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
                height:height];
 
-  // Update cached height
   _lastHeight = height;
 }
 
-- (void)setup {
-  // Setup initial constraints with current frame height
-  CGFloat initialHeight = self.frame.size.height;
-  [self setupConstraintsWithHeight:initialHeight];
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+  
+  // Setup footer constraints when added to container
+  if (self.superview) {
+    CGFloat initialHeight = self.frame.size.height;
+    [self setupConstraintsWithHeight:initialHeight];
+  }
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  // Get the height from layout metrics
   CGFloat height = layoutMetrics.frame.size.height;
 
-  // Only update constraints if height has changed
+  // Update footer constraints when height changes
   if (height != _lastHeight) {
     [self setupConstraintsWithHeight:height];
   }
 }
 
-- (void)cleanup {
-  // Detach touch handler
-  if (_touchHandler) {
-    [_touchHandler detachFromView:self];
-    _touchHandler = nil;
-  }
-
-  // Unpin constraints (view removal handled by React Native)
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+  
+  // Remove footer constraints
   [LayoutUtil unpinView:self];
 
   _lastHeight = 0;

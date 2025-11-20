@@ -18,16 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TrueSheetFooterView : RCTViewComponentView
 
-/**
- * Sets up the footer view with touch handling and constraints
- */
-- (void)setup;
-
-/**
- * Cleans up the footer view before removal
- */
-- (void)cleanup;
-
 @end
 
 NS_ASSUME_NONNULL_END

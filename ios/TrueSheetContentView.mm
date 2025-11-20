@@ -20,7 +20,6 @@
 using namespace facebook::react;
 
 @implementation TrueSheetContentView {
-  RCTSurfaceTouchHandler *_touchHandler;
   RCTScrollViewComponentView *_pinnedScrollView;
   CGSize _lastSize;
 }
@@ -34,10 +33,6 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const TrueSheetContentViewProps>();
     _props = defaultProps;
 
-    // Create touch handler for React Native touch events
-    _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-    [_touchHandler attachToView:self];
-
     _pinnedScrollView = nil;
     _lastSize = CGSizeZero;
   }
@@ -48,7 +43,7 @@ using namespace facebook::react;
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  // Notify delegate when size changes
+  // Notify delegate when content size changes for sheet height updates
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
@@ -58,11 +53,21 @@ using namespace facebook::react;
   }
 }
 
+
+
 - (void)didMoveToSuperview {
   [super didMoveToSuperview];
+  
+  // Setup scroll view pinning after Fabric mounts the view in container
+  // Ensures proper view hierarchy for scroll detection and pinning
+  if (self.superview) {
+    [self setupScrollViewPinning];
+  }
+}
 
-  // Setup scroll view when content view is added to container
-  // Find scroll view in content view hierarchy
+- (void)setupScrollViewPinning {
+  // Auto-detect and pin scroll views for proper sheet scrolling behavior
+  // Pinning ensures ScrollView fills the sheet area and scrolls correctly with the sheet
   RCTScrollViewComponentView *scrollView = [self findScrollView];
 
   if (scrollView && scrollView != _pinnedScrollView) {
@@ -71,11 +76,9 @@ using namespace facebook::react;
       [LayoutUtil unpinView:_pinnedScrollView];
     }
 
-    // Get container view (self.superview)
+    // Pin to container view to enable proper scrolling within the sheet
     UIView *containerView = self.superview;
     if (containerView) {
-      // Pin the scroll view to the container view
-      // This ensures the scroll view fills the entire sheet area for proper scrolling behavior
       [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
       _pinnedScrollView = scrollView;
     }
@@ -83,15 +86,14 @@ using namespace facebook::react;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
-  // Get the first child - this is the React component's root view
+  // Get the React component's root view
   if (self.subviews.count == 0) {
     return nil;
   }
 
   UIView *contentView = self.subviews[0];
 
-  // Check first-level children only (non-recursive) for scroll views
-  // This covers common cases like <ScrollView> or <FlatList> as direct children
+  // Check first-level children for scroll views (ScrollView or FlatList)
   for (UIView *subview in contentView.subviews) {
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
       return static_cast<RCTScrollViewComponentView *>(subview);
@@ -101,20 +103,14 @@ using namespace facebook::react;
   return nil;
 }
 
-- (void)cleanup {
-  // Detach touch handler
-  if (_touchHandler) {
-    [_touchHandler detachFromView:self];
-    _touchHandler = nil;
-  }
-
-  // Unpin scroll view if exists
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+  
+  // Remove scroll view constraints
   if (_pinnedScrollView) {
     [LayoutUtil unpinView:_pinnedScrollView];
     _pinnedScrollView = nil;
   }
-
-  // Note: View removal is handled by React Native
 }
 
 @end

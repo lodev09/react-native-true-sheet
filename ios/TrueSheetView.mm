@@ -45,6 +45,7 @@ using namespace facebook::react;
 @implementation TrueSheetView {
   TrueSheetContainerView *_containerView;
   TrueSheetViewController *_controller;
+  RCTSurfaceTouchHandler *_touchHandler;
   NSNumber *_activeDetentIndex;
   BOOL _isPresented;
   BOOL _hasInitiallyPresented;
@@ -60,6 +61,9 @@ using namespace facebook::react;
     // Initialize controller - persists across container lifecycle
     _controller = [[TrueSheetViewController alloc] init];
     _controller.delegate = self;
+
+    // Initialize touch handler - will be attached to container when mounted
+    _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
 
     _containerView = nil;
     _isPresented = NO;
@@ -262,6 +266,9 @@ using namespace facebook::react;
     // Set this view as the container's delegate
     _containerView.delegate = self;
 
+    // Attach touch handler to container for touch event handling
+    [_touchHandler attachToView:_containerView];
+
     // Add to parent view hierarchy
     [_controller.view addSubview:_containerView];
 
@@ -286,11 +293,15 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
     _containerView.delegate = nil;
 
+    // Detach touch handler
+    if (_touchHandler) {
+      [_touchHandler detachFromView:_containerView];
+    }
+
     // Unpin and remove from view hierarchy
     [LayoutUtil unpinView:_containerView];
     [_containerView removeFromSuperview];
 
-    [_containerView cleanup];
     _containerView = nil;
   }
 }

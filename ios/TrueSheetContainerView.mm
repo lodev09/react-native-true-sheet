@@ -37,7 +37,6 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const TrueSheetContainerViewProps>();
     _props = defaultProps;
 
-    // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
 
     _contentView = nil;
@@ -56,7 +55,7 @@ using namespace facebook::react;
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
 
-  // Check if it's a content or footer view
+  // Handle content view mounting
   if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
     if (_contentView != nil) {
       NSLog(@"TrueSheet: Container can only have one content component.");
@@ -64,11 +63,10 @@ using namespace facebook::react;
     }
 
     _contentView = (TrueSheetContentView *)childComponentView;
-
-    // Set delegate to listen for size changes
     _contentView.delegate = self;
   }
 
+  // Handle footer view mounting
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
       NSLog(@"TrueSheet: Container can only have one footer component.");
@@ -76,37 +74,19 @@ using namespace facebook::react;
     }
 
     _footerView = (TrueSheetFooterView *)childComponentView;
-
-    // Setup footer view
-    [_footerView setup];
   }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
-    [_contentView cleanup];
     _contentView = nil;
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
-    [_footerView cleanup];
     _footerView = nil;
   }
 
   [super unmountChildComponentView:childComponentView index:index];
-}
-
-- (void)cleanup {
-  // Cleanup child views
-  if (_contentView) {
-    [_contentView cleanup];
-    _contentView = nil;
-  }
-
-  if (_footerView) {
-    [_footerView cleanup];
-    _footerView = nil;
-  }
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
@@ -116,7 +96,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetContentViewDelegate
 
 - (void)contentViewDidChangeSize:(CGSize)newSize {
-  // Notify delegate of size change
+  // Forward content size changes to host view for sheet resizing
   if ([self.delegate respondsToSelector:@selector(containerViewContentDidChangeSize:)]) {
     [self.delegate containerViewContentDidChangeSize:newSize];
   }
