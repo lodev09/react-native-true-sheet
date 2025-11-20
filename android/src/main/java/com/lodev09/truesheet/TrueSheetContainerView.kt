@@ -95,8 +95,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
     get() = sheetView?.id ?: id
 
   var eventDispatcher: EventDispatcher? = null
-  var stateWrapper: StateWrapper? = null
-
+  
   init {
     // Container should not clip children to allow footer to position absolutely
     clipChildren = false

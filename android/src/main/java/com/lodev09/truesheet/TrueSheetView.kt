@@ -20,18 +20,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   LifecycleEventListener {
 
   var eventDispatcher: EventDispatcher? = null
-    get() = field
-    set(value) {
-      field = value
-      dialogContainer.eventDispatcher = value
-    }
 
   var stateWrapper: StateWrapper? = null
-    get() = field
-    set(value) {
-      field = value
-      dialogContainer.stateWrapper = value
-    }
 
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
@@ -68,6 +58,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Setup container with the dialog
     dialogContainer.setupInSheetView(this, sheetDialog!!)
+    dialogContainer.eventDispatcher = eventDispatcher;
 
     // Add container to the root sheet view
     rootSheetView?.addView(dialogContainer)
