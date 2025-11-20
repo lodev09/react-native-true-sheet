@@ -57,6 +57,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    */
   private static readonly instances: { [name: string]: TrueSheet } = {};
 
+  /**
+   * Resolver to be called when mount event is received
+   */
+  private presentationResolver: (() => void) | null = null;
+
   constructor(props: TrueSheetProps) {
     super(props);
 
@@ -215,6 +220,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onMount(event: MountEvent): void {
+    // Resolve the mount promise if waiting
+    if (this.presentationResolver) {
+      this.presentationResolver();
+      this.presentationResolver = null;
+    }
+
     this.props.onMount?.(event);
   }
 
@@ -248,13 +259,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
-        this.setState({ shouldRenderNativeView: true }, () => {
-          // Resolve immediately after setState completes
-          // Native side handles the rest since dialog persists
-          resolve();
-        });
+        this.presentationResolver = resolve;
+        this.setState({ shouldRenderNativeView: true });
       });
     }
+
     return TrueSheetModule?.presentByRef(this.handle, index);
   }
 
@@ -288,6 +297,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   componentWillUnmount(): void {
     this.unregisterInstance();
+
+    // Clean up presentation resolver
+    this.presentationResolver = null;
   }
 
   render(): ReactNode {

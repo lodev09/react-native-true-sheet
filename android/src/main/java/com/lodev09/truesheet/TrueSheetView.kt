@@ -65,7 +65,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   init {
     reactContext.addLifecycleEventListener(this)
-    
+
     // Create dialog early so it's ready when props are set
     sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
     sheetDialog.delegate = this
@@ -95,11 +95,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    
-    val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(
-      MountEvent(surfaceId, id)
-    )
   }
 
   override fun onDetachedFromWindow() {
@@ -145,6 +140,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Add the child to our Root Sheet View
     // This is the TrueSheetContainerView
     sheetRootView.addView(child, index)
+
+    // Dispatch mount event when TrueSheetContainerView is added
+    if (child is TrueSheetContainerView) {
+      val surfaceId = UIManagerHelper.getSurfaceId(this)
+      eventDispatcher?.dispatchEvent(
+        MountEvent(surfaceId, id)
+      )
+    }
   }
 
   override fun getChildCount(): Int = sheetRootView.childCount
