@@ -21,6 +21,7 @@
 @implementation TrueSheetViewController {
   CGFloat _lastViewWidth;
   CGFloat _lastPosition;
+  CGFloat _lastTransitionPosition;
   UIVisualEffectView *_backgroundView;
   CGFloat _bottomInset;
   BOOL _isTransitioning;
@@ -39,6 +40,7 @@
     _dimmedIndex = @(0);
     _lastViewWidth = 0;
     _lastPosition = 0;
+    _lastTransitionPosition = 0;
     _isTransitioning = NO;
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
@@ -290,68 +292,93 @@
     UIView *containerView = self.sheetPresentationController.containerView;
     UIView *presentedView = self.presentedView;
 
-    if (containerView && presentedView) {
-      CGRect frame = presentedView.frame;
+    if (!containerView || !presentedView)
+      return;
 
-      // Determine if presenting or dismissing to set correct start position
-      BOOL isPresenting = self.isBeingPresented;
+    CGRect frame = presentedView.frame;
 
-      // Set initial position based on transition type:
-      // - Presenting: Start from bottom (containerHeight) and animate up to detent
-      // - Dismissing: Start from current position and animate down to bottom
-      if (isPresenting) {
-        frame.origin.y = self.containerHeight;
-      } else {
-        frame.origin.y = presentedView.frame.origin.y;
-      }
+    // Determine if presenting or dismissing to set correct start position
+    BOOL isPresenting = self.isBeingPresented;
 
-      // Set fake view's initial frame before transition starts
-      _fakeTransitionView.frame = frame;
-
-      auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-        // Add fake view to container so it participates in the transition
-        [[context containerView] addSubview:self->_fakeTransitionView];
-
-        // Animate fake view to the presented view's final position
-        // UIKit will animate this with the same timing curve as the sheet
-        CGRect finalFrame = presentedView.frame;
-        finalFrame.origin.y = presentedView.frame.origin.y;
-        self->_fakeTransitionView.frame = finalFrame;
-
-        // Start display link to track position changes at screen refresh rate
-        // This fires at 60-120Hz and reads from the presentation layer
-        self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
-        [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-      };
-
-      [self.transitionCoordinator
-        animateAlongsideTransition:animation
-                        completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                          // Clean up display link
-                          [self->_displayLink invalidate];
-                          self->_displayLink = nil;
-
-                          // Remove fake view from hierarchy
-                          [self->_fakeTransitionView removeFromSuperview];
-                          self->_isTransitioning = NO;
-                        }];
+    // Set initial position based on transition type:
+    // - Presenting: Start from bottom (containerHeight) and animate up to detent
+    // - Dismissing: Start from current position and animate down to bottom
+    if (isPresenting) {
+      frame.origin.y = self.containerHeight;
     } else {
-      _isTransitioning = NO;
+      frame.origin.y = presentedView.frame.origin.y;
     }
+
+    // Set fake view's initial frame before transition starts
+    _fakeTransitionView.frame = frame;
+
+    auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+      // Add fake view to container so it participates in the transition
+      [[context containerView] addSubview:self->_fakeTransitionView];
+
+      // Animate fake view to the presented view's target position
+      // UIKit will animate this with the same timing curve as the sheet
+      CGRect finalFrame = presentedView.frame;
+      finalFrame.origin.y = presentedView.frame.origin.y;
+      self->_fakeTransitionView.frame = finalFrame;
+
+      // Set our last transition position so we can check if
+      // fake view's presentation layer has changed
+      // This value will not change if the sheet is being repositioned
+      // during a transition after a drag
+      self->_lastTransitionPosition = finalFrame.origin.y;
+
+      // Start display link to track position changes at screen refresh rate
+      // This fires at 60-120Hz and reads from the presentation layer
+      self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
+      [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    };
+
+    [self.transitionCoordinator
+      animateAlongsideTransition:animation
+                      completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+                        // Clean up display link
+                        [self->_displayLink invalidate];
+                        self->_displayLink = nil;
+
+                        // Remove fake view from hierarchy
+                        [self->_fakeTransitionView removeFromSuperview];
+                        self->_isTransitioning = NO;
+                      }];
   }
 }
 
 - (void)trackTransitionPosition:(CADisplayLink *)displayLink {
-  if (!_isDragging && _fakeTransitionView) {
-    // Get the presentation layer which contains the in-flight animated values
-    // Unlike the model layer (which has the final/target value), the presentation
-    // layer reflects the current state during animation
-    CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
-    if (presentationLayer) {
-      // Emit the current animated Y position to JS
-      // This provides smooth position updates that match the native animation curve
-      [self emitChangePositionDelegateWithPosition:presentationLayer.frame.origin.y transitioning:NO];
+  UIView *presentedView = self.presentedView;
+
+  if (_isDragging || !_fakeTransitionView || !presentedView)
+    return;
+
+  // Get the presentation layer which contains the in-flight animated values
+  // Unlike the model layer (which has the final/target value), the presentation
+  // layer reflects the current state during animation
+  CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
+  if (presentationLayer) {
+    BOOL transitioning = NO;
+    CGFloat position = presentationLayer.frame.origin.y;
+
+    // Our last transition position is the same with fake view's layer position
+    // Sheet must've been repositioning after dragging at lowest detent
+    if (_lastTransitionPosition == position) {
+      // Let's just flag it as transitioning to let JS manually animate
+      transitioning = YES;
+
+      // Use the target presented view's frame position to animate
+      position = presentedView.frame.origin.y;
+    } else {
+      // We are actually getting changes to our fake view's layer position
+      // Just update our last transition position
+      _lastTransitionPosition = position;
     }
+
+    // Emit the current animated Y position to JS
+    // This provides smooth position updates that match the native animation curve
+    [self emitChangePositionDelegateWithPosition:position transitioning:transitioning];
   }
 }
 

@@ -16,8 +16,8 @@ export interface DetentInfoEventPayload {
 
 export interface PositionChangeEventPayload extends DetentInfoEventPayload {
   /**
-   * Whether the sheet is currently transitioning (presenting or dismissing).
-   * When true, position updates are animated on iOS.
+   * Workaround for cases where we can't get real-time position from native.
+   * When true, manually animate the position in JS.
    */
   transitioning: boolean;
 }
@@ -287,7 +287,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the sheet's position changes.
-   * This fires continuously during drag operations.
+   * This fires continuously during sheet position changes.
    * Comes with the detent info.
    *
    * @platform android

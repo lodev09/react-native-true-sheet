@@ -5,7 +5,6 @@ import { TrueSheet } from '../TrueSheet';
 import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
 import { useReanimatedPositionChangeHandler } from './useReanimatedPositionChangeHandler';
-import { scheduleOnRN } from 'react-native-worklets';
 
 const SPRING_CONFIG: WithSpringConfig = {
   damping: 500,
@@ -14,12 +13,24 @@ const SPRING_CONFIG: WithSpringConfig = {
   overshootClamping: true,
 };
 
+interface ReanimatedTrueSheetProps extends TrueSheetProps {
+  /**
+   * Worklet version of `onPositionChange`.
+   *
+   * @see {@link TrueSheetProps.onPositionChange}
+   */
+  onPositionChange?: TrueSheetProps['onPositionChange'];
+}
+
 // Create animated version of TrueSheet
 const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 
 /**
  * Reanimated-enabled version of TrueSheet that automatically syncs position with the provider's shared value.
  * Must be used within a ReanimatedTrueSheetProvider.
+ *
+ * NOTE: `onPositionChange` is now under UI thread.
+ * Make sure you add `worklet` if you want to override this.
  *
  * @example
  * ```tsx
@@ -44,7 +55,7 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
  * }
  * ```
  */
-export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
+export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
   const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
@@ -62,12 +73,7 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props,
     }
 
     animatedIndex.value = payload.index;
-
-    if (onPositionChange) {
-      scheduleOnRN(onPositionChange, {
-        nativeEvent: payload,
-      } as PositionChangeEvent);
-    }
+    onPositionChange?.({ nativeEvent: payload } as PositionChangeEvent);
   });
 
   return <AnimatedTrueSheet ref={ref} onPositionChange={positionChangeHandler} {...rest} />;
