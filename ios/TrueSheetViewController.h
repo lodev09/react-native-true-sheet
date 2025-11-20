@@ -12,8 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
-- (void)viewControllerWillAppear;
-- (void)viewControllerDidAppear;
+- (void)viewControllerWillPresent;
+- (void)viewControllerDidPresent;
 - (void)viewControllerWillDismiss;
 - (void)viewControllerDidDismiss;
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position;
@@ -35,8 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *dimmedIndex;
 @property (nonatomic, copy, nullable) NSString *blurTint;
 @property (nonatomic, assign) BOOL layoutTransitioning;
+@property (nonatomic, assign) BOOL isPresented;
+@property (nonatomic, assign) NSInteger activeDetentIndex;
 
-- (void)setSheetDetentWithIndex:(NSInteger)index;
+- (void)applyActiveDetent;
+- (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)setupSheetDetents;
 - (void)setupSheetProps;
 - (NSInteger)currentDetentIndex;

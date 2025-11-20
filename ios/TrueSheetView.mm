@@ -46,9 +46,6 @@ using namespace facebook::react;
   TrueSheetContainerView *_containerView;
   TrueSheetViewController *_controller;
   RCTSurfaceTouchHandler *_touchHandler;
-  NSNumber *_activeDetentIndex;
-  BOOL _isPresented;
-  BOOL _hasInitiallyPresented;
   NSInteger _initialDetentIndex;
   BOOL _initialDetentAnimated;
 }
@@ -66,10 +63,7 @@ using namespace facebook::react;
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
 
     _containerView = nil;
-    _isPresented = NO;
-    _activeDetentIndex = nil;
 
-    _hasInitiallyPresented = NO;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
   }
@@ -115,9 +109,9 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
-  if (_isPresented) {
+  if (_controller.isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
-      [_controller setSheetDetentWithIndex:index];
+      [self->_controller setupActiveDetentWithIndex:index];
     }];
 
     if (completion) {
@@ -144,7 +138,7 @@ using namespace facebook::react;
   [_controller setupSheetDetents];
 
   // Set to the given detent index
-  [_controller setSheetDetentWithIndex:index];
+  [_controller setupActiveDetentWithIndex:index];
 
   // Present our sheet
   [presentingViewController presentViewController:self->_controller
@@ -158,7 +152,7 @@ using namespace facebook::react;
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  if (!_isPresented) {
+  if (!_controller.isPresented) {
     if (completion) {
       completion(YES, nil);
     }
@@ -174,9 +168,9 @@ using namespace facebook::react;
 }
 
 - (void)resizeToIndex:(NSInteger)index {
-  if (_isPresented) {
+  if (_controller.isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
-      [_controller setSheetDetentWithIndex:index];
+      [self->_controller setupActiveDetentWithIndex:index];
     }];
   }
 }
@@ -238,15 +232,14 @@ using namespace facebook::react;
   // Apply controller updates after all props and children are updated
   if (updateMask & RNComponentViewUpdateMaskProps) {
     // Apply changes to presented sheet if needed
-    if (_isPresented) {
+    if (_controller.isPresented) {
       [_controller.sheetPresentationController animateChanges:^{
         [self->_controller setupSheetDetents];
-        [self->_controller setSheetDetentWithIndex:[self->_activeDetentIndex integerValue]];
+        [self->_controller applyActiveDetent];
       }];
     } else {
       // Handle initial presentation
-      if (!_hasInitiallyPresented && _initialDetentIndex >= 0 && !_isPresented) {
-        _hasInitiallyPresented = YES;
+      if (_initialDetentIndex >= 0 && !_controller.isPresented) {
         [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
       }
     }
@@ -325,7 +318,7 @@ using namespace facebook::react;
   _controller.contentHeight = @(contentHeight);
 
   // Update detents if sheet is already presented
-  if (_isPresented) {
+  if (_controller.isPresented) {
     // Tell controller that we are transitioning from layout changes.
     // Controller viewDidLayoutSubviews will handle position notification.
     _controller.layoutTransitioning = YES;
@@ -338,18 +331,16 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetViewControllerDelegate
 
-- (void)viewControllerWillAppear {
+- (void)viewControllerWillPresent {
   NSInteger index = [_controller currentDetentIndex];
   CGFloat position = _controller.currentPosition;
 
-  // Set presentation state when presenting
-  _isPresented = YES;
-  _activeDetentIndex = @(index);
+  _controller.activeDetentIndex = index;
 
   [OnWillPresentEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)viewControllerDidAppear {
+- (void)viewControllerDidPresent {
   NSInteger index = [_controller currentDetentIndex];
   CGFloat position = _controller.currentPosition;
 
@@ -381,15 +372,14 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidDismiss {
-  _isPresented = NO;
-  _activeDetentIndex = nil;
+  _controller.activeDetentIndex = -1;
 
   [OnDidDismissEvent emit:_eventEmitter];
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
-  if (!_activeDetentIndex || [_activeDetentIndex integerValue] != index) {
-    _activeDetentIndex = @(index);
+  if (_controller.activeDetentIndex != index) {
+    _controller.activeDetentIndex = index;
   }
 
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];

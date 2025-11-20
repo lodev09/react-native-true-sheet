@@ -43,6 +43,8 @@
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
     _layoutTransitioning = NO;
+    _isPresented = NO;
+    _activeDetentIndex = -1;
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -95,8 +97,8 @@
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerWillAppear)]) {
-    [self.delegate viewControllerWillAppear];
+  if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
+    [self.delegate viewControllerWillPresent];
   }
 
   [self setupTransitionPositionTracking];
@@ -105,12 +107,15 @@
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidAppear)]) {
-    [self.delegate viewControllerDidAppear];
+  // Only trigger didPresent on the initial presentation, not on repositioning
+  if (!_isPresented && [self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
+    [self.delegate viewControllerDidPresent];
+    
+    // Setup gesture recognizer after view appears and React content is mounted
+    [self setupGestureRecognizer];
   }
-
-  // Setup gesture recognizer after view appears and React content is mounted
-  [self setupGestureRecognizer];
+  
+  _isPresented = YES;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -131,6 +136,8 @@
   }
 
   _isTrackingPositionFromLayout = NO;
+  _isPresented = NO;
+  _activeDetentIndex = -1;
 }
 
 - (void)viewDidLayoutSubviews {
@@ -455,15 +462,39 @@
   return identifier;
 }
 
-- (void)setSheetDetentWithIndex:(NSInteger)index {
+- (void)applyActiveDetent {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
     return;
 
-  UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
+  // Validate and clamp activeDetentIndex to detents bounds
+  NSInteger detentCount = _detents.count;
+  if (detentCount == 0) {
+    return;
+  }
+
+  // Clamp index to valid range
+  NSInteger clampedIndex = _activeDetentIndex;
+  if (clampedIndex < 0) {
+    clampedIndex = 0;
+  } else if (clampedIndex >= detentCount) {
+    clampedIndex = detentCount - 1;
+  }
+
+  // Update the stored index if it was clamped
+  if (clampedIndex != _activeDetentIndex) {
+    _activeDetentIndex = clampedIndex;
+  }
+
+  UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:clampedIndex];
   if (identifier) {
     sheet.selectedDetentIdentifier = identifier;
   }
+}
+
+- (void)setupActiveDetentWithIndex:(NSInteger)index {
+  _activeDetentIndex = index;
+  [self applyActiveDetent];
 }
 
 - (NSInteger)currentDetentIndex {
