@@ -14,6 +14,7 @@
 #import <react/renderer/core/LayoutMetrics.h>
 
 @class TrueSheetViewController;
+@class RCTScrollViewComponentView;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetContentView : RCTViewComponentView
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
+
+- (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 @end
 

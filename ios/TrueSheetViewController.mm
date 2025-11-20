@@ -10,6 +10,8 @@
 #import "utils/WindowUtil.h"
 
 #import <React/RCTLog.h>
+#import <React/RCTScrollViewComponentView.h>
+#import "TrueSheetContentView.h"
 
 @interface TrueSheetViewController ()
 
@@ -96,7 +98,6 @@
     [self.delegate viewControllerWillAppear];
   }
 
-  [self setupGestureRecognizer];
   [self setupTransitionPositionTracking];
 }
 
@@ -106,6 +107,9 @@
   if ([self.delegate respondsToSelector:@selector(viewControllerDidAppear)]) {
     [self.delegate viewControllerDidAppear];
   }
+
+  // Setup gesture recognizer after view appears and React content is mounted
+  [self setupGestureRecognizer];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -163,16 +167,67 @@
 
 #pragma mark - Gesture Handling
 
+/**
+ * Finds the TrueSheetContentView in the hierarchy.
+ *
+ * @param view The presentedView to start searching from
+ * @return The TrueSheetContentView found, or nil
+ */
+- (TrueSheetContentView *)findContentView:(UIView *)view {
+  // Check if this view itself is TrueSheetContentView
+  if ([view isKindOfClass:[TrueSheetContentView class]]) {
+    RCTLogInfo(@"[TrueSheet] Found TrueSheetContentView");
+    return (TrueSheetContentView *)view;
+  }
+
+  // Recursively search all subviews
+  for (UIView *subview in view.subviews) {
+    TrueSheetContentView *found = [self findContentView:subview];
+    if (found) {
+      return found;
+    }
+  }
+
+  return nil;
+}
+
 - (void)setupGestureRecognizer {
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
 
-  // TODO: fix for scrollview
+  // Attach to presented view's pan gestures (sheet's own drag gesture from UIKit)
   for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
     if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
       UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
       [panGesture addTarget:self action:@selector(handlePanGesture:)];
+    }
+  }
+
+  // Find and attach to the first ScrollView's pan gesture in the view hierarchy
+  // This handles cases where the sheet content includes a ScrollView
+  TrueSheetContentView *contentView = [self findContentView:presentedView];
+  if (contentView) {
+    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView];
+    if (scrollViewComponent) {
+      // Access the internal UIScrollView via the scrollView property
+      UIScrollView *scrollView = scrollViewComponent.scrollView;
+
+      if (scrollView) {
+        RCTLogInfo(@"[TrueSheet] Found scrollView property with %lu gesture recognizers",
+          (unsigned long)scrollView.gestureRecognizers.count);
+
+        for (UIGestureRecognizer *recognizer in scrollView.gestureRecognizers ?: @[]) {
+          if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+            UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
+            // Add our handler alongside the ScrollView's existing handler
+            [panGesture addTarget:self action:@selector(handlePanGesture:)];
+            RCTLogInfo(@"[TrueSheet] Attached pan gesture handler to ScrollView");
+          }
+        }
+      } else {
+        RCTLogInfo(@"[TrueSheet] scrollView property is nil");
+      }
     }
   }
 }
