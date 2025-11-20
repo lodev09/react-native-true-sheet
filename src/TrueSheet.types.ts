@@ -130,6 +130,9 @@ export interface TrueSheetProps extends ViewProps {
    * When `true`, the native view is created only when `present()` is called.
    * When `false`, the native view is created immediately on mount.
    *
+   * @note When `initialDetentIndex` is set, this prop is ignored and the sheet
+   * always renders immediately.
+   *
    * @default false
    */
   lazy?: boolean;

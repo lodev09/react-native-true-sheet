@@ -1,0 +1,73 @@
+---
+title: Lazy Loading
+description: Control when the sheet's content is rendered for optimal performance.
+keywords: [bottom sheet lazy loading, bottom sheet performance, bottom sheet optimization, bottom sheet rendering]
+---
+
+By default, `TrueSheet` renders its content immediately on mount, ensuring instant presentation. You can optimize performance by lazy-loading the content only when needed.
+
+## The `lazy` Prop
+
+The [`lazy`](/reference/props#lazy) prop controls when the sheet's native view is created:
+
+- **`lazy={false}`** (default): Content rendered immediately on mount → instant presentation
+- **`lazy={true}`**: Content rendered on first `present()` call → saves resources
+
+## Default Behavior
+
+By default, sheets are ready to present instantly:
+
+```tsx
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  return (
+    <>
+      <Button onPress={() => sheet.current?.present()} title="Present" />
+      <TrueSheet ref={sheet}>
+        <View>{/* Content rendered on mount, ready instantly */}</View>
+      </TrueSheet>
+    </>
+  )
+}
+```
+
+## Lazy Loading
+
+For sheets that aren't immediately needed, use lazy loading:
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet ref={sheet} lazy={true}>
+      <View>{/* Content rendered on first present() call */}</View>
+    </TrueSheet>
+  )
+}
+```
+
+:::tip When to Use
+Use `lazy={true}` for:
+- Rarely-used sheets
+- Sheets with heavy components
+- Multiple sheets to reduce initial memory
+- Sheets deep in navigation stack
+:::
+
+## With Initial Presentation
+
+When using [`initialDetentIndex`](/reference/props#initialindex), the sheet automatically ignores `lazy` and renders immediately:
+
+```tsx
+<TrueSheet
+  ref={sheet}
+  lazy={true} // Ignored when initialDetentIndex is set
+  initialDetentIndex={0}
+>
+  <View />
+</TrueSheet>
+```
+
+:::tip Best Practice
+Keep frequently-used sheets eager (default) and rarely-used sheets lazy for optimal performance.
+:::
