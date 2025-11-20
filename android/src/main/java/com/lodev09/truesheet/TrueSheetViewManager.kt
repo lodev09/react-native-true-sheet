@@ -32,7 +32,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
 
   override fun onAfterUpdateTransaction(view: TrueSheetView) {
     super.onAfterUpdateTransaction(view)
-    view.applyPropsToContainer()
     view.showOrUpdate()
   }
 

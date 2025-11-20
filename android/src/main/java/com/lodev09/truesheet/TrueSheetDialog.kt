@@ -36,8 +36,7 @@ interface TrueSheetDialogDelegate {
 @SuppressLint("ClickableViewAccessibility")
 class TrueSheetDialog(
   private val reactContext: ThemedReactContext,
-  private val rootSheetView: TrueSheetRootView,
-  private val containerView: TrueSheetContainerView
+  private val sheetRootView: TrueSheetRootView,
 ) : BottomSheetDialog(reactContext) {
 
   /**
@@ -72,8 +71,14 @@ class TrueSheetDialog(
   /**
    * The sheet container view from Material BottomSheetDialog
    */
-  private val sheetContainerView: ViewGroup?
-    get() = wrapperView?.parent?.let { it as? ViewGroup }
+  private val sheetRootViewContainer: ViewGroup
+    get() = sheetRootView.parent as ViewGroup
+
+  /**
+   * Our sheet container view from root view's only child
+   */
+  private val containerView: TrueSheetContainerView
+    get() = sheetRootView.getChildAt(0) as TrueSheetContainerView
 
   /**
    * Content view from the container
@@ -86,11 +91,6 @@ class TrueSheetDialog(
    */
   private val footerView: TrueSheetFooterView?
     get() = containerView.footerView
-
-  /**
-   * Wrapper view that contains rootSheetView
-   */
-  private var wrapperView: FrameLayout? = null
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -132,13 +132,11 @@ class TrueSheetDialog(
   var detents: Array<Any> = arrayOf(0.5, 1.0)
 
   init {
-    // Set content view with RootSheetView wrapped in FrameLayout
-    // This follows React Native Modal pattern for proper system insets handling
-    wrapperView = createDialogContentView()
-    setContentView(wrapperView!!)
+    // Set content view with RootSheetView
+    setContentView(sheetRootView)
 
-    sheetContainerView?.setBackgroundColor(backgroundColor)
-    sheetContainerView?.clipToOutline = true
+    sheetRootViewContainer.setBackgroundColor(backgroundColor)
+    sheetRootViewContainer.clipToOutline = true
 
     // Setup window params to adjust layout based on Keyboard state
     window?.apply {
@@ -321,21 +319,6 @@ class TrueSheetDialog(
     isDragging = false
   }
 
-  /**
-   * Creates the content view for the dialog.
-   * Wraps RootSheetView in a FrameLayout following React Native Modal pattern.
-   */
-  private fun createDialogContentView(): FrameLayout =
-    FrameLayout(reactContext).apply {
-      addView(
-        rootSheetView,
-        FrameLayout.LayoutParams(
-          FrameLayout.LayoutParams.MATCH_PARENT,
-          FrameLayout.LayoutParams.MATCH_PARENT
-        )
-      )
-    }
-
   override fun getEdgeToEdgeEnabled(): Boolean = edgeToEdge || super.getEdgeToEdgeEnabled()
 
   override fun onStart() {
@@ -372,7 +355,7 @@ class TrueSheetDialog(
 
     // Use current background color
     background.paint.color = backgroundColor
-    sheetContainerView?.background = background
+    sheetRootViewContainer.background = background
   }
 
   /**
@@ -449,10 +432,8 @@ class TrueSheetDialog(
 
   fun positionFooter() {
     footerView?.let { footer ->
-      sheetContainerView?.let { container ->
-        val footerHeight = containerView.footerHeight
-        footer.y = (maxScreenHeight - container.top - footerHeight).toFloat()
-      }
+      val footerHeight = containerView.footerHeight
+      footer.y = (maxScreenHeight - sheetRootViewContainer.top - footerHeight).toFloat()
     }
   }
 
@@ -571,11 +552,9 @@ class TrueSheetDialog(
 
           if (detents[0] == -1.0 || detents[0] == -1) {
             // Force a layout update for auto height
-            sheetContainerView?.let {
-              val params = it.layoutParams
-              params.height = maxHeight
-              it.layoutParams = params
-            }
+            val params = sheetRootViewContainer.layoutParams
+            params.height = maxHeight
+            sheetRootViewContainer.layoutParams = params
           }
         }
 
@@ -650,7 +629,7 @@ class TrueSheetDialog(
    */
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
-    val position = sheetContainerView?.top?.let { PixelUtils.toDIP(it.toFloat()) } ?: 0f
+    val position = PixelUtils.toDIP(sheetRootViewContainer.top.toFloat())
     return baseInfo.copy(position = position)
   }
 
