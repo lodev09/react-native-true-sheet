@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
 - (CGFloat)currentHeight;
+- (CGFloat)containerHeight;
 
 @end
 

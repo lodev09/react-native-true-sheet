@@ -145,12 +145,30 @@
     // This prevents incorrect position notifications when overlays adjust our size
     [self emitChangePositionDelegate:_layoutTransitioning || !self.isTopmostPresentedController];
 
-    // Reset layout transitioning after sending notification
-    _layoutTransitioning = NO;
+    // On IOS 26, this is called twice when we have a ScrollView
+    // Schedule flag reset after animation to avoid race condition
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      // Reset layout transitioning after sending notification
+      self->_layoutTransitioning = NO;
+    });
   }
 }
 
 #pragma mark - Gesture Handling
+
+- (void)setupGestureRecognizer {
+  UIView *presentedView = self.presentedView;
+  if (!presentedView)
+    return;
+
+  // TODO: fix for scrollview
+  for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
+    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+      UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
+      [panGesture addTarget:self action:@selector(handlePanGesture:)];
+    }
+  }
+}
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
   NSInteger index = [self currentDetentIndex];
@@ -211,6 +229,7 @@
 
 - (void)handleTransitionAnimation {
   if (!_isDragging) {
+    // TODO: maybe implement animation here instead of passing transitioning to JS
     [self emitChangePositionDelegate:YES];
   }
 }
@@ -273,8 +292,9 @@
       return [UISheetPresentationControllerDetent
         customDetentWithIdentifier:detentId
                           resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetent = context.maximumDetentValue;
-                            CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
+                            CGFloat maxDetentValue = context.maximumDetentValue;
+                            CGFloat maxValue =
+                              self.maxHeight ? MIN(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
                             CGFloat resolvedValue = MIN(height, maxValue);
                             return resolvedValue;
                           }];
@@ -296,9 +316,10 @@
     return [UISheetPresentationControllerDetent
       customDetentWithIdentifier:detentId
                         resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                          CGFloat maxDetent = context.maximumDetentValue;
-                          CGFloat maxValue = self.maxHeight ? MIN(maxDetent, [self.maxHeight floatValue]) : maxDetent;
-                          CGFloat resolvedValue = MIN(value * maxDetent, maxValue);
+                          CGFloat maxDetentValue = context.maximumDetentValue;
+                          CGFloat maxValue =
+                            self.maxHeight ? MIN(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                          CGFloat resolvedValue = MIN(value * maxDetentValue, maxValue);
                           return resolvedValue;
                         }];
   } else {
@@ -334,19 +355,6 @@
   UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:index];
   if (identifier) {
     sheet.selectedDetentIdentifier = identifier;
-  }
-}
-
-- (void)setupGestureRecognizer {
-  UIView *presentedView = self.presentedView;
-  if (!presentedView)
-    return;
-
-  for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
-    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-      UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
-      [panGesture addTarget:self action:@selector(handlePanGesture:)];
-    }
   }
 }
 

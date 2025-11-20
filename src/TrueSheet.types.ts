@@ -69,7 +69,8 @@ export type BlurTint =
  */
 export type SheetDetent =
   /**
-   * Auto resize based on content height
+   * Auto resize based on content height, clamped to container height.
+   * Use the `maxHeight` prop to set a custom limit.
    *
    * @platform android
    * @platform ios 16+
@@ -199,6 +200,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Overrides `large` or `100%` height.
+   * Also sets the maximum height for 'auto' detents.
    */
   maxHeight?: number;
 

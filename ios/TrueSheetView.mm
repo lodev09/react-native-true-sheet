@@ -138,7 +138,7 @@ using namespace facebook::react;
     }
     return;
   }
-  
+
   // Setup our sheet properties
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
@@ -318,8 +318,11 @@ using namespace facebook::react;
 #pragma mark - TrueSheetContainerViewDelegate
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize {
-  // Update controller's content height
-  _controller.contentHeight = @(newSize.height);
+  // Clamp content height to container height to prevent unbounded growth with scrollable content
+  CGFloat containerHeight = _controller.containerHeight;
+  CGFloat contentHeight = containerHeight > 0 ? MIN(newSize.height, containerHeight) : newSize.height;
+
+  _controller.contentHeight = @(contentHeight);
 
   // Update detents if sheet is already presented
   if (_isPresented) {

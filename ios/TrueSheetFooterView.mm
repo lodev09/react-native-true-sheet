@@ -59,7 +59,7 @@ using namespace facebook::react;
 
 - (void)didMoveToSuperview {
   [super didMoveToSuperview];
-  
+
   // Setup footer constraints when added to container
   if (self.superview) {
     CGFloat initialHeight = self.frame.size.height;
@@ -81,7 +81,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  
+
   // Remove footer constraints
   [LayoutUtil unpinView:self];
 

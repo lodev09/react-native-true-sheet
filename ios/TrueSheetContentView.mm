@@ -53,11 +53,9 @@ using namespace facebook::react;
   }
 }
 
-
-
 - (void)didMoveToSuperview {
   [super didMoveToSuperview];
-  
+
   // Setup scroll view pinning after Fabric mounts the view in container
   // Ensures proper view hierarchy for scroll detection and pinning
   if (self.superview) {
@@ -105,7 +103,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  
+
   // Remove scroll view constraints
   if (_pinnedScrollView) {
     [LayoutUtil unpinView:_pinnedScrollView];
