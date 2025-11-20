@@ -99,6 +99,14 @@ The detent index that the sheet should start to dim the background.
 This is ignored if `dimmed` is set to `false`.
 :::
 
+### `lazy`
+
+Lazy-load the sheet's content on first `present()` call. When `true`, the native view is created only when `present()` is called. When `false`, the native view is created immediately on mount, making presentation instant.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `boolean` | `false` | ✅ | ✅ |
+
 ### `initialIndex`
 
 Initially present the sheet, after mounting, at a given detent index.
@@ -232,7 +240,8 @@ const App = () => {
 
 ### `onMount`
 
-This is called when the sheet has been mounted and is ready to present.
+Called when the sheet's content is mounted and ready.
+The sheet automatically waits for this event before presenting.
 
 ### `onWillPresent`
 

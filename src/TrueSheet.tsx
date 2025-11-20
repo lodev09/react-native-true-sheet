@@ -69,9 +69,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.validateDetents();
 
+    const shouldRenderImmediately =
+      (props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0) ||
+      props.lazy !== true;
+
     this.state = {
-      shouldRenderNativeView:
-        props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0,
+      shouldRenderNativeView: shouldRenderImmediately,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -292,6 +295,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     // Validate when detents prop changes
     if (prevProps.detents !== this.props.detents) {
       this.validateDetents();
+    }
+
+    // Handle lazy prop changes
+    if (prevProps.lazy !== this.props.lazy && this.props.lazy === false) {
+      // If lazy changed from true to false, render the native view
+      if (!this.state.shouldRenderNativeView) {
+        this.setState({ shouldRenderNativeView: true });
+      }
     }
   }
 

@@ -126,6 +126,15 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean;
 
   /**
+   * Lazy-load the sheet's content on first `present()` call.
+   * When `true`, the native view is created only when `present()` is called.
+   * When `false`, the native view is created immediately on mount.
+   *
+   * @default false
+   */
+  lazy?: boolean;
+
+  /**
    * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.
@@ -227,7 +236,8 @@ export interface TrueSheetProps extends ViewProps {
   edgeToEdge?: boolean;
 
   /**
-   * This is called when the sheet is ready to present.
+   * Called when the sheet's content is mounted and ready.
+   * The sheet automatically waits for this event before presenting.
    */
   onMount?: (event: MountEvent) => void;
 
