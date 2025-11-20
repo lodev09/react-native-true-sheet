@@ -173,7 +173,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) : Rea
             // Emit position change event continuously during slide
             val detentInfo = getCurrentDetentInfo(sheetView)
             eventDispatcher?.dispatchEvent(
-              PositionChangeEvent(surfaceId, viewId, detentInfo.index, detentInfo.position, isDragging)
+              PositionChangeEvent(surfaceId, viewId, detentInfo.index, detentInfo.position)
             )
 
             // Update footer position during slide

@@ -106,10 +106,10 @@ export const MapScreen = () => {
         cornerRadius={12}
         initialDetentIndex={1}
         onWillPresent={handleWillPresent}
-        onPositionChange={(e) => {
-          'worklet';
-          console.log(`position changed at UI thread ${e.nativeEvent.position}`);
-        }}
+        // onPositionChange={(e) => {
+        //   'worklet';
+        //   console.log(`position changed at UI thread: ${e.nativeEvent.position}`);
+        // }}
         onDidPresent={() => {
           console.log('Sheet is presented');
         }}

@@ -15,7 +15,7 @@ const SPRING_CONFIG: WithSpringConfig = {
 
 interface ReanimatedTrueSheetProps extends TrueSheetProps {
   /**
-   * Worklet version of `onPositionChange`.
+   * Worklet version of `onPositionChange`
    *
    * @see {@link TrueSheetProps.onPositionChange}
    */
