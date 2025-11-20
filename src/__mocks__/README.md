@@ -63,7 +63,7 @@ describe('MyComponent', () => {
 
 ### Hooks
 - `useReanimatedTrueSheet()`: Returns mock ref and position
-- `usePositionChangeHandler()`: Returns a mock function
+- `useReanimatedPositionChangeHandler()`: Returns a mock function
 
 ## Example Test
 

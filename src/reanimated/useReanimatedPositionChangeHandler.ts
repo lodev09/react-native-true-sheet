@@ -7,7 +7,7 @@ type PositionChangeHandler = (
   context: Record<string, unknown>
 ) => void;
 
-export const usePositionChangeHandler = (
+export const useReanimatedPositionChangeHandler = (
   handler: PositionChangeHandler,
   dependencies: DependencyList = []
 ) => {

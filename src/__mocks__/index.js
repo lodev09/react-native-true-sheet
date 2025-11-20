@@ -61,7 +61,7 @@ export const useReanimatedTrueSheet = jest.fn(() => ({
   position: { value: 0 },
 }));
 
-export const usePositionChangeHandler = jest.fn((callback) => jest.fn());
+export const useReanimatedPositionChangeHandler = jest.fn((callback) => jest.fn());
 
 // Re-export types (these will be no-ops in JS but useful for TS consumers)
 export * from '../TrueSheet.types';

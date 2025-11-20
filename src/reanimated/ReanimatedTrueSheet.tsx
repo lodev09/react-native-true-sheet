@@ -1,10 +1,10 @@
 import { forwardRef } from 'react';
 import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated';
 
-import { TrueSheet } from './TrueSheet';
-import type { TrueSheetProps, PositionChangeEvent } from './TrueSheet.types';
+import { TrueSheet } from '../TrueSheet';
+import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
-import { usePositionChangeHandler } from './hooks';
+import { useReanimatedPositionChangeHandler } from './useReanimatedPositionChangeHandler';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const SPRING_CONFIG: WithSpringConfig = {
@@ -49,7 +49,7 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, TrueSheetProps>((props,
 
   const { position } = useReanimatedTrueSheet();
 
-  const positionChangeHandler = usePositionChangeHandler((payload) => {
+  const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
     // This is used on IOS to tell us that we have to manually animate the value
