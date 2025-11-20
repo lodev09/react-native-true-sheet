@@ -55,6 +55,7 @@ cd ios && pod install
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
+- [Testing with Jest](https://sheet.lodev09.com/guides/jest) 🧪
 - [Fabric Migration Guide](docs/FABRIC_MIGRATION.md) 📖
 - [Fabric Implementation Details](docs/FABRIC_IMPLEMENTATION.md) 🔧
 
@@ -92,6 +93,18 @@ export const App = () => {
   )
 }
 ```
+
+## Testing
+
+TrueSheet includes built-in Jest mocks for easy testing. Simply mock the package in your tests:
+
+```tsx
+jest.mock('@lodev09/react-native-true-sheet');
+```
+
+All methods (`present`, `dismiss`, `resize`) are mocked as Jest functions, allowing you to test your components without native dependencies.
+
+**[📖 Full Testing Guide](https://sheet.lodev09.com/guides/jest)**
 
 ## Contributing
 

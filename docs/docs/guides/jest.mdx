@@ -1,11 +1,80 @@
 ---
 title: Testing with Jest
-description: Mocking the bottom sheet component using Jest.
+description: Mock the bottom sheet component for testing.
 keywords: [bottom sheet jest, testing bottom sheet, mocking bottom sheet]
 ---
 
-When using `jest`, simply mock the entire package.
+Testing components that use `TrueSheet` is straightforward with the built-in Jest mocks.
+
+## Setup
+
+Add the mock to your Jest setup file.
+
+```js
+// jest.setup.js
+jest.mock('@lodev09/react-native-true-sheet');
+```
+
+Configure Jest to use the setup file in your `package.json`:
+
+```json
+{
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
+  }
+}
+```
+
+## Testing Static Methods
+
+All static methods are mocked as Jest functions.
 
 ```tsx
-jest.mock('@lodev09/react-native-true-sheet')
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+
+it('should present sheet', async () => {
+  await TrueSheet.present('my-sheet', 0);
+  
+  expect(TrueSheet.present).toHaveBeenCalledWith('my-sheet', 0);
+});
+
+it('should dismiss sheet', async () => {
+  await TrueSheet.dismiss('my-sheet');
+  
+  expect(TrueSheet.dismiss).toHaveBeenCalledWith('my-sheet');
+});
 ```
+
+## Testing Component Rendering
+
+The mock renders `TrueSheet` as a View with all props passed through.
+
+```tsx
+it('should render sheet content', () => {
+  const { getByText } = render(
+    <TrueSheet name="test" initialDetentIndex={0}>
+      <Text>Sheet Content</Text>
+    </TrueSheet>
+  );
+  
+  expect(getByText('Sheet Content')).toBeDefined();
+});
+```
+
+## Best Practices
+
+Clear mock calls between tests to avoid interference.
+
+```tsx
+describe('MyComponent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Your tests...
+});
+```
+
+:::tip
+All methods return resolved Promises, so remember to `await` them in your tests.
+:::

@@ -87,3 +87,6 @@ android/generated
 
 # Lib
 lib
+
+# Test coverage
+coverage
