@@ -12,6 +12,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
 #import "TrueSheetContentView.h"
+#import "utils/GestureUtil.h"
 
 @interface TrueSheetViewController ()
 
@@ -176,7 +177,6 @@
 - (TrueSheetContentView *)findContentView:(UIView *)view {
   // Check if this view itself is TrueSheetContentView
   if ([view isKindOfClass:[TrueSheetContentView class]]) {
-    RCTLogInfo(@"[TrueSheet] Found TrueSheetContentView");
     return (TrueSheetContentView *)view;
   }
 
@@ -197,12 +197,7 @@
     return;
 
   // Attach to presented view's pan gestures (sheet's own drag gesture from UIKit)
-  for (UIGestureRecognizer *recognizer in presentedView.gestureRecognizers ?: @[]) {
-    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-      UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
-      [panGesture addTarget:self action:@selector(handlePanGesture:)];
-    }
-  }
+  [GestureUtil attachPanGestureHandler:presentedView target:self selector:@selector(handlePanGesture:)];
 
   // Find and attach to the first ScrollView's pan gesture in the view hierarchy
   // This handles cases where the sheet content includes a ScrollView
@@ -212,21 +207,8 @@
     if (scrollViewComponent) {
       // Access the internal UIScrollView via the scrollView property
       UIScrollView *scrollView = scrollViewComponent.scrollView;
-
       if (scrollView) {
-        RCTLogInfo(@"[TrueSheet] Found scrollView property with %lu gesture recognizers",
-          (unsigned long)scrollView.gestureRecognizers.count);
-
-        for (UIGestureRecognizer *recognizer in scrollView.gestureRecognizers ?: @[]) {
-          if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-            UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
-            // Add our handler alongside the ScrollView's existing handler
-            [panGesture addTarget:self action:@selector(handlePanGesture:)];
-            RCTLogInfo(@"[TrueSheet] Attached pan gesture handler to ScrollView");
-          }
-        }
-      } else {
-        RCTLogInfo(@"[TrueSheet] scrollView property is nil");
+        [GestureUtil attachPanGestureHandler:scrollView target:self selector:@selector(handlePanGesture:)];
       }
     }
   }

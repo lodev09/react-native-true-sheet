@@ -26,13 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetModule : NSObject <RCTBridgeModule>
 
 /**
- * Get a sheet component view by its React tag
- * @param reactTag - The React native tag of the view
- * @return The TrueSheetView instance, or nil if not found
- */
-+ (nullable TrueSheetView *)getSheetByTag:(NSNumber *)reactTag;
-
-/**
  * Register a sheet component view with its React tag
  * Called automatically by TrueSheetView during initialization
  */
