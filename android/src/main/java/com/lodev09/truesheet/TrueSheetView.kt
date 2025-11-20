@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -13,7 +12,16 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
-import com.lodev09.truesheet.events.*
+import com.lodev09.truesheet.events.DetentChangeEvent
+import com.lodev09.truesheet.events.DidDismissEvent
+import com.lodev09.truesheet.events.DidPresentEvent
+import com.lodev09.truesheet.events.DragBeginEvent
+import com.lodev09.truesheet.events.DragChangeEvent
+import com.lodev09.truesheet.events.DragEndEvent
+import com.lodev09.truesheet.events.MountEvent
+import com.lodev09.truesheet.events.PositionChangeEvent
+import com.lodev09.truesheet.events.WillDismissEvent
+import com.lodev09.truesheet.events.WillPresentEvent
 
 /**
  * Main TrueSheet host view.
@@ -59,7 +67,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     super.dispatchProvideStructure(structure)
   }
 
-  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
     // Do nothing as we are laid out by UIManager
   }
 
@@ -74,11 +88,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     reactContext.addLifecycleEventListener(this)
-
-    val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(
-      com.lodev09.truesheet.events.MountEvent(surfaceId, id)
-    )
   }
 
   override fun onDetachedFromWindow() {
@@ -105,7 +114,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
         present(initialDetentIndex) { }
       }
     } else {
-
       sheetDialog?.let { dialog ->
         if (dialog.isShowing) {
           dialog.configure()
@@ -129,7 +137,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     sheetRootView.addView(child, index)
 
     sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
-    sheetDialog?.let { dialog -> dialog.delegate = this }
+    sheetDialog?.delegate = this
+
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      MountEvent(surfaceId, id)
+    )
   }
 
   override fun getChildCount(): Int = sheetRootView.childCount
@@ -168,6 +181,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       }
       dialog.delegate = null
     }
+
     sheetDialog = null
   }
 

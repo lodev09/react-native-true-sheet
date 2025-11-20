@@ -34,10 +34,8 @@ interface TrueSheetDialogDelegate {
 }
 
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetDialog(
-  private val reactContext: ThemedReactContext,
-  private val sheetRootView: TrueSheetRootView,
-) : BottomSheetDialog(reactContext) {
+class TrueSheetDialog(private val reactContext: ThemedReactContext, private val sheetRootView: TrueSheetRootView) :
+  BottomSheetDialog(reactContext) {
 
   /**
    * Delegate for handling dialog events
@@ -133,7 +131,15 @@ class TrueSheetDialog(
 
   init {
     // Set content view with RootSheetView
-    setContentView(sheetRootView)
+    val contentWrapper = FrameLayout(reactContext).apply {
+      addView(sheetRootView)
+//      if (!statusBarTranslucent) {
+//        // this is needed to prevent content hiding behind systems bars < API 30
+//        this.fitsSystemWindows = true
+//      }
+    }
+
+    setContentView(contentWrapper)
 
     sheetRootViewContainer.setBackgroundColor(backgroundColor)
     sheetRootViewContainer.clipToOutline = true
