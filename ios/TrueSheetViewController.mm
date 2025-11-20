@@ -23,7 +23,8 @@
   BOOL _isTransitioning;
   BOOL _isDragging;
   BOOL _isTrackingPositionFromLayout;
-  CADisplayLink *_transitionTimer;
+  UIView *_fakeTransitionView;
+  CADisplayLink *_displayLink;
 }
 
 - (instancetype)init {
@@ -42,6 +43,11 @@
 
     _backgroundView = [[UIVisualEffectView alloc] init];
     _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
+    // Initialize fake transition view for tracking position during animations
+    _fakeTransitionView = [[UIView alloc] init];
+    _fakeTransitionView.hidden = YES;
+    _fakeTransitionView.userInteractionEnabled = NO;
 
     // Get bottom safe area inset from the window's safe area
     // The sheet's view has smaller insets, so we need the actual device insets
@@ -143,7 +149,8 @@
 
     // If another controller is presented on top, treat position changes as transitioning
     // This prevents incorrect position notifications when overlays adjust our size
-    [self emitChangePositionDelegate:_layoutTransitioning || !self.isTopmostPresentedController];
+    [self emitChangePositionDelegateWithPosition:self.currentPosition
+                                   transitioning:_layoutTransitioning || !self.isTopmostPresentedController];
 
     // On IOS 26, this is called twice when we have a ScrollView
     // Schedule flag reset after animation to avoid race condition
@@ -183,7 +190,7 @@
       break;
     case UIGestureRecognizerStateChanged:
       if (!_isTrackingPositionFromLayout)
-        [self emitChangePositionDelegate:NO];
+        [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:NO];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
@@ -197,40 +204,104 @@
 
 #pragma mark - Position Tracking
 
-- (void)emitChangePositionDelegate:(BOOL)transitioning {
-  if (_lastPosition != self.currentPosition) {
-    _lastPosition = self.currentPosition;
+/**
+ * Emits position change to the delegate if the position has changed.
+ * @param transitioning Whether the position change is part of a transition animation
+ */
+- (void)emitChangePositionDelegateWithPosition:(CGFloat)position transitioning:(BOOL)transitioning {
+  if (_lastPosition != position) {
+    _lastPosition = position;
 
     // Emit position change delegate
     NSInteger index = [self currentDetentIndex];
 
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:transitioning:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:self.currentPosition transitioning:transitioning];
+      [self.delegate viewControllerDidChangePosition:index position:position transitioning:transitioning];
     }
   }
 }
 
+/**
+ * Sets up position tracking during view controller transitions using a fake view.
+ *
+ * This approach uses a hidden "fake" view added to the container that animates
+ * alongside the actual presented view. By observing the presentation layer of this
+ * fake view's frame, we can track smooth position changes during the native transition
+ * animation without manually animating in JavaScript.
+ *
+ * The display link fires at screen refresh rate, allowing us to emit position updates
+ * that match the native animation curve, providing smooth synchronized updates to JS.
+ */
 - (void)setupTransitionPositionTracking {
   if (self.transitionCoordinator != nil) {
     _isTransitioning = YES;
-    auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-      self->_transitionTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionAnimation)];
-      [self->_transitionTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    };
 
-    [self.transitionCoordinator
-      animateAlongsideTransition:animation
-                      completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                        [self->_transitionTimer invalidate];
-                        self->_isTransitioning = NO;
-                      }];
+    // Get the container view to add our fake transition view
+    UIView *containerView = self.sheetPresentationController.containerView;
+    UIView *presentedView = self.presentedView;
+
+    if (containerView && presentedView) {
+      CGRect frame = presentedView.frame;
+
+      // Determine if presenting or dismissing to set correct start position
+      BOOL isPresenting = self.isBeingPresented;
+
+      // Set initial position based on transition type:
+      // - Presenting: Start from bottom (containerHeight) and animate up to detent
+      // - Dismissing: Start from current position and animate down to bottom
+      if (isPresenting) {
+        frame.origin.y = self.containerHeight;
+      } else {
+        frame.origin.y = presentedView.frame.origin.y;
+      }
+
+      // Set fake view's initial frame before transition starts
+      _fakeTransitionView.frame = frame;
+
+      auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+        // Add fake view to container so it participates in the transition
+        [[context containerView] addSubview:self->_fakeTransitionView];
+
+        // Animate fake view to the presented view's final position
+        // UIKit will animate this with the same timing curve as the sheet
+        CGRect finalFrame = presentedView.frame;
+        finalFrame.origin.y = presentedView.frame.origin.y;
+        self->_fakeTransitionView.frame = finalFrame;
+
+        // Start display link to track position changes at screen refresh rate
+        // This fires at 60-120Hz and reads from the presentation layer
+        self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
+        [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+      };
+
+      [self.transitionCoordinator
+        animateAlongsideTransition:animation
+                        completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+                          // Clean up display link
+                          [self->_displayLink invalidate];
+                          self->_displayLink = nil;
+
+                          // Remove fake view from hierarchy
+                          [self->_fakeTransitionView removeFromSuperview];
+                          self->_isTransitioning = NO;
+                        }];
+    } else {
+      _isTransitioning = NO;
+    }
   }
 }
 
-- (void)handleTransitionAnimation {
-  if (!_isDragging) {
-    // TODO: maybe implement animation here instead of passing transitioning to JS
-    [self emitChangePositionDelegate:YES];
+- (void)trackTransitionPosition:(CADisplayLink *)displayLink {
+  if (!_isDragging && _fakeTransitionView) {
+    // Get the presentation layer which contains the in-flight animated values
+    // Unlike the model layer (which has the final/target value), the presentation
+    // layer reflects the current state during animation
+    CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
+    if (presentationLayer) {
+      // Emit the current animated Y position to JS
+      // This provides smooth position updates that match the native animation curve
+      [self emitChangePositionDelegateWithPosition:presentationLayer.frame.origin.y transitioning:NO];
+    }
   }
 }
 
