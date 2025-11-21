@@ -8,7 +8,6 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -38,13 +37,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Root view wrapper that gets set as the dialog content
    */
   private var sheetRootView: TrueSheetRootView = TrueSheetRootView(reactContext)
-
-  var stateWrapper: StateWrapper?
-    get() = sheetRootView.stateWrapper
-    set(stateWrapper) {
-      sheetRootView.stateWrapper = stateWrapper
-      Log.d(TAG_NAME, "setting stateWrapper")
-    }
 
   var eventDispatcher: EventDispatcher?
     get() = sheetRootView.eventDispatcher

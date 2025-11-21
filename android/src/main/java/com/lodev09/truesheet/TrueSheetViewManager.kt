@@ -5,8 +5,6 @@ import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.uimanager.ReactStylesDiffMap
-import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
@@ -22,7 +20,9 @@ import com.lodev09.truesheet.utils.PixelUtils
  * Main sheet component that manages the bottom sheet dialog
  */
 @ReactModule(name = TrueSheetViewManager.REACT_CLASS)
-class TrueSheetViewManager : ViewGroupManager<TrueSheetView>(), TrueSheetViewManagerInterface<TrueSheetView> {
+class TrueSheetViewManager :
+  ViewGroupManager<TrueSheetView>(),
+  TrueSheetViewManagerInterface<TrueSheetView> {
 
   private val delegate: ViewManagerDelegate<TrueSheetView> = TrueSheetViewManagerDelegate(this)
 
@@ -51,14 +51,6 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>(), TrueSheetViewMan
   override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {
     val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
     view.eventDispatcher = dispatcher
-  }
-
-  override fun updateState(view: TrueSheetView, props: ReactStylesDiffMap, stateWrapper: StateWrapper): Any? {
-    android.util.Log.d(TAG_NAME, "updateState called! ViewId: ${view.id}")
-    android.util.Log.d(TAG_NAME, "StateWrapper: $stateWrapper")
-    android.util.Log.d(TAG_NAME, "Props: $props")
-    view.stateWrapper = stateWrapper
-    return null
   }
 
   override fun getDelegate(): ViewManagerDelegate<TrueSheetView> = delegate

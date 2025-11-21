@@ -7,11 +7,6 @@ import type {
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
 
-export interface TrueSheetState {
-  screenWidth: Double;
-  screenHeight: Double;
-}
-
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -58,6 +53,4 @@ export interface NativeProps extends ViewProps {
   onPositionChange?: DirectEventHandler<PositionChangeEventPayload>;
 }
 
-export default codegenNativeComponent<NativeProps>('TrueSheetView', {
-  interfaceOnly: false,
-}) as HostComponent<NativeProps>;
+export default codegenNativeComponent<NativeProps>('TrueSheetView') as HostComponent<NativeProps>;
