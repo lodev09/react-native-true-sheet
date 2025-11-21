@@ -126,7 +126,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       }
 
       post {
-        present(initialDetentIndex) { }
+        present(initialDetentIndex, initialDetentAnimated) { }
       }
     } else {
       if (sheetController.isShowing) {
@@ -339,14 +339,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Presents the sheet at the given detent index.
    *
    * @param detentIndex The detent index to present at
+   * @param animated Whether to animate the presentation
    * @param promiseCallback Callback invoked when presentation completes
    */
   @UiThread
-  fun present(detentIndex: Int, promiseCallback: () -> Unit) {
+  fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
     sheetController.presentPromise = promiseCallback
-    sheetController.present(detentIndex)
+    sheetController.present(detentIndex, animated)
   }
 
   /**
