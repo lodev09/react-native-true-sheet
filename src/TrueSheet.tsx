@@ -392,12 +392,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
           <TrueSheetContainerViewNativeComponent
             style={[
               styles.containerView,
-              this.state.containerWidth !== undefined && this.state.containerHeight !== undefined
-                ? {
-                    width: this.state.containerWidth,
-                    height: this.state.containerHeight,
-                  }
-                : undefined,
+              {
+                width: this.state.containerWidth,
+                height: this.state.containerHeight,
+              },
             ]}
             collapsable={false}
           >
@@ -416,11 +414,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       </TrueSheetViewNativeComponent>
     );
   }
-
-  // We don't want any responder events bubbling out of the modal.
-  _shouldSetResponder(): boolean {
-    return true;
-  }
 }
 
 const styles = StyleSheet.create({
@@ -430,13 +423,10 @@ const styles = StyleSheet.create({
   containerView: {
     backgroundColor: 'red',
     position: 'absolute',
-    top: 0,
     left: 0,
+    right: 0,
   },
   contentView: {
     backgroundColor: 'blue',
-    position: 'absolute',
-    left: 0,
-    right: 0,
   },
 });

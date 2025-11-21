@@ -22,6 +22,14 @@ import { Button, DemoContent, Footer, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  BasicSheet,
+  BlankSheet,
+  FlatListSheet,
+  GestureSheet,
+  PromptSheet,
+  ScrollViewSheet,
+} from '../components/sheets';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -39,7 +47,7 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [contentCount, setContentCount] = useState(0);
+  const [contentCount, setContentCount] = useState(5);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -134,12 +142,12 @@ export const MapScreen = () => {
           <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
           <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         </ScrollView>
-        {/*<BasicSheet ref={basicSheet} />
+        <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
-        <BlankSheet ref={blankSheet} />*/}
+        <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
     </View>
   );

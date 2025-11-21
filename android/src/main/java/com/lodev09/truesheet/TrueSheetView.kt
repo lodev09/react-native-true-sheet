@@ -46,12 +46,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private val containerView: TrueSheetContainerView?
     get() = sheetRootView.getChildAt(0) as? TrueSheetContainerView
 
-  var eventDispatcher: EventDispatcher?
-    get() = sheetRootView.eventDispatcher
-    set(eventDispatcher) {
-      sheetRootView.eventDispatcher = eventDispatcher
-      Log.d(TAG_NAME, "setting eventDispatcher")
-    }
+  var eventDispatcher: EventDispatcher? = null
 
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
@@ -74,6 +69,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Create dialog early so it's ready when props are set
     sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
     sheetDialog.delegate = this
+
+    // Hide the host view from layout and touch handling
+    // The actual content is shown in a dialog window
+    visibility = GONE
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
@@ -88,23 +87,24 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     bottom: Int
   ) {
     // Do nothing as we are laid out by UIManager
+    Log.d(TAG_NAME, "onLayout [id=$id]: changed=$changed, bounds=($left,$top,$right,$bottom), visibility=$visibility")
   }
 
   override fun setId(id: Int) {
     super.setId(id)
 
     sheetRootView.id = id
-    Log.d(TAG_NAME, "setting id: $id")
-
     TrueSheetModule.registerView(this, id)
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    Log.d(TAG_NAME, "onAttachedToWindow [id=$id]: parent=${parent?.javaClass?.simpleName}, childCount=${sheetRootView.childCount}")
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
+    Log.d(TAG_NAME, "onDetachedFromWindow [id=$id]")
     onDropInstance()
 
     TrueSheetModule.unregisterView(id)
@@ -143,6 +143,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun addView(child: View?, index: Int) {
     UiThreadUtil.assertOnUiThread()
 
+    Log.d(
+      TAG_NAME,
+      "addView [id=$id]: child=${child?.javaClass?.simpleName}, childId=${child?.id}, index=$index, totalChildren=${sheetRootView.childCount}"
+    )
+
     // Add the child to our Root Sheet View
     // This is the TrueSheetContainerView
     sheetRootView.addView(child, index)
@@ -153,6 +158,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       eventDispatcher?.dispatchEvent(
         MountEvent(surfaceId, id)
       )
+      Log.d(TAG_NAME, "addView [id=$id]: TrueSheetContainerView added, dispatched MountEvent")
     }
   }
 
@@ -163,6 +169,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     UiThreadUtil.assertOnUiThread()
 
     if (child != null) {
+      Log.d(TAG_NAME, "removeView [id=$id]: child=${child.javaClass.simpleName}, childId=${child.id}")
       sheetRootView.removeView(child)
     }
   }
@@ -170,6 +177,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun removeViewAt(index: Int) {
     UiThreadUtil.assertOnUiThread()
     val child = getChildAt(index)
+    Log.d(TAG_NAME, "removeViewAt [id=$id]: index=$index, child=${child?.javaClass?.simpleName}")
     sheetRootView.removeView(child)
   }
 
@@ -183,6 +191,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
 
   fun onDropInstance() {
+    Log.d(TAG_NAME, "onDropInstance [id=$id]: cleaning up, isShowing=${sheetDialog.isShowing}")
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
@@ -217,6 +226,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(
       DidPresentEvent(surfaceId, id, index, position)
     )
+
+    // Set our touch event dispatcher on the root view
+    sheetRootView.eventDispatcher = eventDispatcher
   }
 
   override fun dialogWillDismiss() {
@@ -224,6 +236,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(
       WillDismissEvent(surfaceId, id)
     )
+
+    // Clear our touch event dispatcher on the root view
+    sheetRootView.eventDispatcher = null
   }
 
   override fun dialogDidDismiss() {
@@ -333,6 +348,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
+    Log.d(TAG_NAME, "present [id=$id]: detentIndex=$detentIndex, isShowing=${sheetDialog.isShowing}")
     sheetDialog.presentPromise = promiseCallback
     sheetDialog.present(detentIndex)
   }
@@ -346,6 +362,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
+    Log.d(TAG_NAME, "dismiss [id=$id]: isShowing=${sheetDialog.isShowing}")
     sheetDialog.dismissPromise = promiseCallback
     sheetDialog.dismiss()
   }
@@ -353,27 +370,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetRootViewDelegate Implementation ====================
 
   override fun rootViewDidChangeSize(width: Int, height: Int) {
-    Log.d(TAG_NAME, "Root view size changed: ${width}x$height")
-
     // Dispatch size change event to JS
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       SizeChangeEvent(surfaceId, id, width, height)
     )
-
-    // Request layout on container view - let Fabric handle sizing through its layout system
-    containerView?.let { container ->
-      Log.d(TAG_NAME, "Container view found - requesting layout (current: ${container.width}x${container.height})")
-
-      UiThreadUtil.runOnUiThread {
-        // Trigger Fabric's layout system to recalculate container dimensions
-        container.requestLayout()
-
-        Log.d(TAG_NAME, "Layout requested for container view")
-      }
-    } ?: run {
-      Log.w(TAG_NAME, "Container view not found - cannot request layout")
-    }
   }
 
   companion object {

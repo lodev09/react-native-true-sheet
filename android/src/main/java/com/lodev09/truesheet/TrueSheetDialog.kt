@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -129,6 +130,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   var detents: Array<Any> = arrayOf(0.5, 1.0)
 
   init {
+    Log.d(TAG_NAME, "TrueSheetDialog init: rootView.id=${sheetRootView.id}")
     setContentView(sheetRootView)
 
     sheetRootViewContainer.setBackgroundColor(backgroundColor)
@@ -156,6 +158,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   private fun setupDialogListeners() {
     // Setup listener when the dialog has been presented
     setOnShowListener {
+      Log.d(TAG_NAME, "TrueSheetDialog onShow: rootView.id=${sheetRootView.id}, detentIndex=$currentDetentIndex")
       registerKeyboardManager()
 
       // Initialize footer position
@@ -177,12 +180,14 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
     // Setup listener when the dialog is about to be dismissed
     setOnCancelListener {
+      Log.d(TAG_NAME, "TrueSheetDialog onCancel: rootView.id=${sheetRootView.id}")
       // Notify delegate
       delegate?.dialogWillDismiss()
     }
 
     // Setup listener when the dialog has been dismissed
     setOnDismissListener {
+      Log.d(TAG_NAME, "TrueSheetDialog onDismiss: rootView.id=${sheetRootView.id}")
       unregisterKeyboardManager()
 
       // Resolve the dismiss promise
@@ -231,6 +236,17 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
+          val stateName = when (newState) {
+            BottomSheetBehavior.STATE_HIDDEN -> "HIDDEN"
+            BottomSheetBehavior.STATE_DRAGGING -> "DRAGGING"
+            BottomSheetBehavior.STATE_EXPANDED -> "EXPANDED"
+            BottomSheetBehavior.STATE_COLLAPSED -> "COLLAPSED"
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> "HALF_EXPANDED"
+            BottomSheetBehavior.STATE_SETTLING -> "SETTLING"
+            else -> "UNKNOWN($newState)"
+          }
+          Log.d(TAG_NAME, "TrueSheetDialog onStateChanged: rootView.id=${sheetRootView.id}, state=$stateName, isShowing=$isShowing")
+
           // Handle STATE_HIDDEN before checking isShowing
           // This ensures we can dismiss even if dialog state gets out of sync
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
@@ -249,7 +265,7 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
             BottomSheetBehavior.STATE_COLLAPSED,
             BottomSheetBehavior.STATE_HALF_EXPANDED -> handleDragEnd(newState)
 
-            else -> { }
+            else -> {}
           }
         }
       }
@@ -410,6 +426,12 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
 
       setStateForDetentIndex(detentIndex)
     } else {
+      // Reset drag state before presenting
+      isDragging = false
+
+      // Request layout to ensure clean state
+      sheetRootViewContainer.requestLayout()
+
       configure()
       setStateForDetentIndex(detentIndex)
 
@@ -634,6 +656,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   companion object {
-    const val TAG_NAME = "TrueSheet"
+    private const val TAG_NAME = "TrueSheet"
   }
 }

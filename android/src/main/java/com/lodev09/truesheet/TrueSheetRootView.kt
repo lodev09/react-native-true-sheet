@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
@@ -9,7 +10,6 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.config.ReactFeatureFlags
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
-import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -63,8 +63,6 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
-    android.util.Log.d(TAG_NAME, "onSizeChanged width: ${w.toFloat().pxToDp()}, height: ${h.toFloat().pxToDp()}")
-
     // Notify delegate about size change
     delegate?.rootViewDidChangeSize(w, h)
   }
@@ -74,15 +72,35 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   }
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+    val action = when (event.actionMasked) {
+      MotionEvent.ACTION_DOWN -> "DOWN"
+      MotionEvent.ACTION_UP -> "UP"
+      MotionEvent.ACTION_MOVE -> "MOVE"
+      MotionEvent.ACTION_CANCEL -> "CANCEL"
+      else -> "OTHER(${event.actionMasked})"
+    }
+    Log.d(TAG_NAME, "onInterceptTouchEvent [id=$id]: action=$action, x=${event.x}, y=${event.y}, childCount=$childCount")
+
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
       jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
     }
-    return super.onInterceptTouchEvent(event)
+    val result = super.onInterceptTouchEvent(event)
+    Log.d(TAG_NAME, "onInterceptTouchEvent [id=$id]: returning $result")
+    return result
   }
 
   @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
+    val action = when (event.actionMasked) {
+      MotionEvent.ACTION_DOWN -> "DOWN"
+      MotionEvent.ACTION_UP -> "UP"
+      MotionEvent.ACTION_MOVE -> "MOVE"
+      MotionEvent.ACTION_CANCEL -> "CANCEL"
+      else -> "OTHER(${event.actionMasked})"
+    }
+    Log.d(TAG_NAME, "onTouchEvent [id=$id]: action=$action, x=${event.x}, y=${event.y}, visibility=$visibility, isShown=$isShown")
+
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
       jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
@@ -90,6 +108,7 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
     super.onTouchEvent(event)
     // In case when there is no children interested in handling touch event, we return true from
     // the root view in order to receive subsequent events related to that gesture
+    Log.d(TAG_NAME, "onTouchEvent [id=$id]: returning true")
     return true
   }
 
@@ -106,6 +125,7 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   @OptIn(UnstableReactNativeAPI::class)
   @Suppress("DEPRECATION")
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
+    Log.d(TAG_NAME, "onChildStartedNativeGesture [id=$id]: childView=${childView?.id}, childClass=${childView?.javaClass?.simpleName}")
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher, reactContext)
       jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
@@ -113,13 +133,15 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
+    Log.d(TAG_NAME, "onChildEndedNativeGesture [id=$id]: childView=${childView.id}, childClass=${childView.javaClass.simpleName}")
     eventDispatcher?.let { jSTouchDispatcher.onChildEndedNativeGesture(ev, it) }
     jSPointerDispatcher?.onChildEndedNativeGesture()
   }
 
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-    // No-op - override in order to still receive events to onInterceptTouchEvent
-    // even when some other view disallow that
+    Log.d(TAG_NAME, "requestDisallowInterceptTouchEvent [id=$id]: disallowIntercept=$disallowIntercept")
+    // Allow the request to propagate to parent
+    super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
 
   companion object {

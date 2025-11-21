@@ -26,17 +26,9 @@ class TrueSheetViewManager :
 
   private val delegate: ViewManagerDelegate<TrueSheetView> = TrueSheetViewManagerDelegate(this)
 
-  init {
-    android.util.Log.d("TrueSheetViewManager", "TrueSheetViewManager instantiated")
-    android.util.Log.d("TrueSheetViewManager", "Delegate: $delegate")
-  }
-
   override fun getName(): String = REACT_CLASS
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
-    android.util.Log.d("TrueSheetViewManager", "createViewInstance called")
-    return TrueSheetView(reactContext)
-  }
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView = TrueSheetView(reactContext)
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
