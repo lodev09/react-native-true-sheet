@@ -354,17 +354,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun rootViewDidChangeSize(width: Int, height: Int) {
     Log.d(TAG_NAME, "Root view size changed: ${width}x$height")
 
-    // Adjust container view dimensions to match root view
+    // Request layout on container view - let Fabric handle sizing through its layout system
     containerView?.let { container ->
+      Log.d(TAG_NAME, "Container view found - requesting layout (current: ${container.width}x${container.height})")
+
       UiThreadUtil.runOnUiThread {
-        val layoutParams = container.layoutParams
-        layoutParams.width = width
-        layoutParams.height = height
-        container.layoutParams = layoutParams
+        // Trigger Fabric's layout system to recalculate container dimensions
         container.requestLayout()
 
-        Log.d(TAG_NAME, "Container view dimensions adjusted to ${width}x$height")
+        Log.d(TAG_NAME, "Layout requested for container view")
       }
+    } ?: run {
+      Log.w(TAG_NAME, "Container view not found - cannot request layout")
     }
   }
 
