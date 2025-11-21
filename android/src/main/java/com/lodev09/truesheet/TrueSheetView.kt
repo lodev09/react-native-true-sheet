@@ -32,7 +32,7 @@ import com.lodev09.truesheet.events.WillPresentEvent
 class TrueSheetView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   LifecycleEventListener,
-  TrueSheetDialogDelegate,
+  TrueSheetControllerDelegate,
   TrueSheetRootViewDelegate {
 
   /**
@@ -57,18 +57,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private var hasHandledInitialPresentation = false
 
   /**
-   * The BottomSheetDialog instance
+   * The TrueSheetController instance that manages dialog lifecycle
    */
-  private val sheetDialog: TrueSheetDialog
+  private val sheetController: TrueSheetController
 
   init {
     reactContext.addLifecycleEventListener(this)
 
     sheetRootView.delegate = this
 
-    // Create dialog early so it's ready when props are set
-    sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
-    sheetDialog.delegate = this
+    // Create controller (dialog will be created when container mounts)
+    sheetController = TrueSheetController(reactContext, sheetRootView)
+    sheetController.delegate = this
 
     // Hide the host view from layout and touch handling
     // The actual content is shown in a dialog window
@@ -120,16 +120,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
       hasHandledInitialPresentation = true
 
+      // Create dialog if not created yet
+      if (!sheetController.isShowing) {
+        sheetController.createDialog()
+      }
+
       post {
         present(initialDetentIndex) { }
       }
     } else {
-      if (sheetDialog.isShowing) {
-        sheetDialog.configure()
-        sheetDialog.setStateForDetentIndex(sheetDialog.currentDetentIndex)
+      if (sheetController.isShowing) {
+        sheetController.configure()
+        sheetController.setStateForDetentIndex(sheetController.currentDetentIndex)
 
         UiThreadUtil.runOnUiThread {
-          sheetDialog.positionFooter()
+          sheetController.positionFooter()
         }
       }
     }
@@ -144,8 +149,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // This is the TrueSheetContainerView
     sheetRootView.addView(child, index)
 
-    // Dispatch mount event when TrueSheetContainerView is added
+    // Create dialog and dispatch mount event when TrueSheetContainerView is added
     if (child is TrueSheetContainerView) {
+      // Create the dialog now that the container is mounted
+      sheetController.createDialog()
+
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(
         MountEvent(surfaceId, id)
@@ -183,10 +191,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
-    if (sheetDialog.isShowing) {
-      sheetDialog.dismiss()
+    if (sheetController.isShowing) {
+      sheetController.dismiss()
     }
-    sheetDialog.delegate = null
+    sheetController.delegate = null
   }
 
   override fun onHostResume() {
@@ -200,16 +208,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     onDropInstance()
   }
 
-  // ==================== TrueSheetDialogDelegate Implementation ====================
+  // ==================== TrueSheetControllerDelegate Implementation ====================
 
-  override fun dialogWillPresent(index: Int, position: Float) {
+  override fun controllerWillPresent(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       WillPresentEvent(surfaceId, id, index, position)
     )
   }
 
-  override fun dialogDidPresent(index: Int, position: Float) {
+  override fun controllerDidPresent(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DidPresentEvent(surfaceId, id, index, position)
@@ -219,7 +227,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     sheetRootView.eventDispatcher = eventDispatcher
   }
 
-  override fun dialogWillDismiss() {
+  override fun controllerWillDismiss() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       WillDismissEvent(surfaceId, id)
@@ -229,99 +237,100 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     sheetRootView.eventDispatcher = null
   }
 
-  override fun dialogDidDismiss() {
+  override fun controllerDidDismiss() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DidDismissEvent(surfaceId, id)
     )
   }
 
-  override fun dialogDidChangeDetent(index: Int, position: Float) {
+  override fun controllerDidChangeDetent(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DetentChangeEvent(surfaceId, id, index, position)
     )
   }
 
-  override fun dialogDidDragBegin(index: Int, position: Float) {
+  override fun controllerDidDragBegin(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DragBeginEvent(surfaceId, id, index, position)
     )
   }
 
-  override fun dialogDidDragChange(index: Int, position: Float) {
+  override fun controllerDidDragChange(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DragChangeEvent(surfaceId, id, index, position)
     )
   }
 
-  override fun dialogDidDragEnd(index: Int, position: Float) {
+  override fun controllerDidDragEnd(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       DragEndEvent(surfaceId, id, index, position)
     )
   }
 
-  override fun dialogDidChangePosition(index: Int, position: Float) {
+  override fun controllerDidChangePosition(index: Int, position: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
       PositionChangeEvent(surfaceId, id, index, position)
     )
   }
 
-  // ==================== Property Setters (forward to dialog) ====================
+  // ==================== Property Setters (forward to controller) ====================
 
   fun setEdgeToEdge(edgeToEdge: Boolean) {
-    sheetDialog.edgeToEdge = edgeToEdge
+    sheetController.edgeToEdge = edgeToEdge
+    sheetController.applyEdgeToEdge()
   }
 
   fun setMaxHeight(height: Int) {
-    if (sheetDialog.maxSheetHeight == height) return
-    sheetDialog.maxSheetHeight = height
+    if (sheetController.maxSheetHeight == height) return
+    sheetController.maxSheetHeight = height
   }
 
   fun setDimmed(dimmed: Boolean) {
-    if (sheetDialog.dimmed == dimmed) return
-    sheetDialog.dimmed = dimmed
-    if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(sheetDialog.currentDetentIndex)
+    if (sheetController.dimmed == dimmed) return
+    sheetController.dimmed = dimmed
+    if (sheetController.isShowing) {
+      sheetController.setupDimmedBackground(sheetController.currentDetentIndex)
     }
   }
 
   fun setDimmedIndex(index: Int) {
-    if (sheetDialog.dimmedIndex == index) return
-    sheetDialog.dimmedIndex = index
-    if (sheetDialog.isShowing) {
-      sheetDialog.setupDimmedBackground(sheetDialog.currentDetentIndex)
+    if (sheetController.dimmedIndex == index) return
+    sheetController.dimmedIndex = index
+    if (sheetController.isShowing) {
+      sheetController.setupDimmedBackground(sheetController.currentDetentIndex)
     }
   }
 
   fun setCornerRadius(radius: Float) {
-    if (sheetDialog.cornerRadius == radius) return
-    sheetDialog.cornerRadius = radius
-    sheetDialog.setupBackground()
+    if (sheetController.cornerRadius == radius) return
+    sheetController.cornerRadius = radius
+    sheetController.setupBackground()
   }
 
   fun setBackground(color: Int) {
-    if (sheetDialog.backgroundColor == color) return
-    sheetDialog.backgroundColor = color
-    sheetDialog.setupBackground()
+    if (sheetController.backgroundColor == color) return
+    sheetController.backgroundColor = color
+    sheetController.setupBackground()
   }
 
   fun setSoftInputMode(mode: Int) {
-    sheetDialog.window?.setSoftInputMode(mode)
+    sheetController.setSoftInputMode(mode)
   }
 
   fun setDismissible(dismissible: Boolean) {
-    sheetDialog.dismissible = dismissible
+    sheetController.dismissible = dismissible
   }
 
   fun setGrabber(grabber: Boolean) {}
 
   fun setDetents(newDetents: Array<Any>) {
-    sheetDialog.detents = newDetents
+    sheetController.detents = newDetents
   }
 
   fun setBlurTint(tint: String?) {}
@@ -336,8 +345,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    sheetDialog.presentPromise = promiseCallback
-    sheetDialog.present(detentIndex)
+    sheetController.presentPromise = promiseCallback
+    sheetController.present(detentIndex)
   }
 
   /**
@@ -349,8 +358,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    sheetDialog.dismissPromise = promiseCallback
-    sheetDialog.dismiss()
+    sheetController.dismissPromise = promiseCallback
+    sheetController.dismiss()
   }
 
   // ==================== TrueSheetRootViewDelegate Implementation ====================
