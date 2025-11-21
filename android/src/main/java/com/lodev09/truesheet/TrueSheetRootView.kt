@@ -16,6 +16,18 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
+ * Delegate interface for TrueSheetRootView lifecycle and state changes
+ */
+interface TrueSheetRootViewDelegate {
+  /**
+   * Called when the root view's size changes
+   * @param width New width in pixels
+   * @param height New height in pixels
+   */
+  fun onRootViewSizeChanged(width: Int, height: Int)
+}
+
+/**
  * TrueSheetRootView is the ViewGroup which contains all the children of a TrueSheet. It gets all
  * child information forwarded from TrueSheetView and uses that to create children. It is
  * also responsible for acting as a RootView and handling touch events. It does this the same way
@@ -29,6 +41,7 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   RootView {
 
   internal var eventDispatcher: EventDispatcher? = null
+  internal var rootViewDelegate: TrueSheetRootViewDelegate? = null
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
@@ -51,6 +64,9 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     android.util.Log.d(TAG_NAME, "onSizeChanged width: ${w.toFloat().pxToDp()}, height: ${h.toFloat().pxToDp()}")
+
+    // Notify delegate about size change
+    rootViewDelegate?.onRootViewSizeChanged(w, h)
   }
 
   override fun handleException(t: Throwable) {
