@@ -91,7 +91,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         // sheetRef.current?.present(1)
         console.log('BasicSheet is ready!');
       }}
-      // footer={<Footer />}
+      footer={<Footer />}
       {...props}
     >
       {Array.from({ length: contentCount }, (_, i) => (

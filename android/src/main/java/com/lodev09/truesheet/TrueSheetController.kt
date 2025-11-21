@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -288,18 +289,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
           delegate?.controllerDidChangePosition(detentInfo.index, detentInfo.position)
 
           // Update footer position during slide
-          footerView?.let { footer ->
-            val footerHeight = containerView?.footerHeight ?: 0
-            val y = (maxScreenHeight - sheetView.top - footerHeight).toFloat()
-
-            if (slideOffset >= 0) {
-              // Sheet is expanding
-              footer.y = y
-            } else {
-              // Sheet is collapsing
-              footer.y = y - footerHeight * slideOffset
-            }
-          }
+          positionFooter(slideOffset)
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -510,11 +500,27 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     }
   }
 
-  fun positionFooter() {
+  fun positionFooter(slideOffset: Float? = null) {
     footerView?.let { footer ->
-      val footerHeight = containerView?.footerHeight ?: 0
-      val top = sheetRootViewContainer?.top ?: 0
-      footer.y = (maxScreenHeight - top - footerHeight).toFloat()
+      val containerView = containerView ?: return
+      val footerHeight = footer.height
+      
+      // Get container's position in screen coordinates
+      val location = IntArray(2)
+      containerView.getLocationOnScreen(location)
+      val containerTop = location[1]
+      
+      // Calculate base position (screen bottom)
+      val baseY = (maxScreenHeight - containerTop - footerHeight).toFloat()
+      
+      // Apply slideOffset for animation when sheet is below peek height
+      footer.y = if (slideOffset != null && slideOffset < 0) {
+        // Sheet is below peek height - animate footer down with sheet
+        baseY - (footerHeight * slideOffset)
+      } else {
+        // Sheet is at or above peek height - footer sticks to screen bottom
+        baseY
+      }
     }
   }
 
