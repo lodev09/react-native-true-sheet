@@ -16,7 +16,6 @@ import com.lodev09.truesheet.utils.KeyboardManager
 import com.lodev09.truesheet.utils.PixelUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.disableEdgeToEdge
-import com.lodev09.truesheet.utils.enableEdgeToEdge
 import com.lodev09.truesheet.utils.isEdgeToEdgeFeatureFlagOn
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -521,11 +520,11 @@ class TrueSheetController(
   }
 
   fun applyEdgeToEdge() {
-    if (isEdgeToEdgeFeatureFlagOn || (dialog?.edgeToEdgeEnabled == true)) {
-      dialog?.window?.enableEdgeToEdge()
-    } else {
-      dialog?.window?.disableEdgeToEdge();
-    }
+    // Bottom sheets should NOT apply edge-to-edge to their dialog window.
+    // When the app has edge-to-edge enabled, the bottom sheet should sit
+    // ON TOP of the navigation bar, not extend behind it.
+    // We always disable edge-to-edge for the bottom sheet dialog window.
+    dialog?.window?.disableEdgeToEdge()
   }
 
   fun setSoftInputMode(mode: Int) {
