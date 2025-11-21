@@ -151,15 +151,19 @@
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  UIView *presentedView = self.presentedView;
-  if (presentedView) {
-    // Detect width changes (e.g., device rotation) and trigger size recalculation
-    // This is essential for "auto" sizing to work correctly
-    if (_lastViewWidth != presentedView.frame.size.width) {
-      _lastViewWidth = presentedView.frame.size.width;
+  CGFloat currentWidth = self.view.frame.size.width;
+  
+  // Detect width changes (e.g., device rotation) and trigger size recalculation
+  // This is essential for "auto" sizing to work correctly
+  if (_lastViewWidth != currentWidth) {
+    _lastViewWidth = currentWidth;
 
-      // Recalculate detents with new width
-      [self setupSheetDetents];
+    // Recalculate detents with new width
+    [self setupSheetDetents];
+    
+    // Notify delegate of size changes (pass full size including height)
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
     }
   }
 

@@ -22,6 +22,7 @@
 #import "events/OnDragEndEvent.h"
 #import "events/OnMountEvent.h"
 #import "events/OnPositionChangeEvent.h"
+#import "events/OnSizeChangeEvent.h"
 #import "events/OnWillDismissEvent.h"
 #import "events/OnWillPresentEvent.h"
 #import "utils/LayoutUtil.h"
@@ -387,6 +388,10 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
+}
+
+- (void)viewControllerDidChangeSize:(CGSize)size {
+  [OnSizeChangeEvent emit:_eventEmitter width:size.width height:size.height];
 }
 
 #pragma mark - Private Helpers
