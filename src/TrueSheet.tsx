@@ -72,9 +72,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.validateDetents();
 
+    // Lazy load by default, except when initialDetentIndex is set (for auto-presentation)
     const shouldRenderImmediately =
-      (props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0) ||
-      props.lazy !== true;
+      props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0;
 
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
@@ -224,6 +224,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onDidDismiss(event: DidDismissEvent): void {
+    // Clean up native view after dismiss for lazy loading
     this.setState({ shouldRenderNativeView: false });
     this.props.onDidDismiss?.(event);
   }
@@ -278,6 +279,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       );
     }
 
+    // Lazy load: render native view if not already rendered
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
         this.presentationResolver = resolve;
@@ -313,14 +315,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     // Validate when detents prop changes
     if (prevProps.detents !== this.props.detents) {
       this.validateDetents();
-    }
-
-    // Handle lazy prop changes
-    if (prevProps.lazy !== this.props.lazy && this.props.lazy === false) {
-      // If lazy changed from true to false, render the native view
-      if (!this.state.shouldRenderNativeView) {
-        this.setState({ shouldRenderNativeView: true });
-      }
     }
   }
 

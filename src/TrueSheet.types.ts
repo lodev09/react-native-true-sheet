@@ -141,17 +141,6 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean;
 
   /**
-   * Lazy-load the sheet's content during presentation.
-   * When `true`, the sheets content view is created only when `present()` is called.
-   *
-   * @note When `initialDetentIndex` is set, this prop is ignored and the sheet
-   * always renders immediately.
-   *
-   * @default false
-   */
-  lazy?: boolean;
-
-  /**
    * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.
