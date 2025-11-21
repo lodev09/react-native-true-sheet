@@ -43,11 +43,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Gets the container view (first child of root view)
    */
   private val containerView: TrueSheetContainerView?
-    get() = if (sheetRootView.childCount > 0) {
-      sheetRootView.getChildAt(0) as? TrueSheetContainerView
-    } else {
-      null
-    }
+    get() = sheetRootView.getChildAt(0) as? TrueSheetContainerView
 
   var eventDispatcher: EventDispatcher?
     get() = sheetRootView.eventDispatcher
@@ -72,12 +68,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   init {
     reactContext.addLifecycleEventListener(this)
 
+    sheetRootView.delegate = this
+
     // Create dialog early so it's ready when props are set
     sheetDialog = TrueSheetDialog(reactContext, sheetRootView)
     sheetDialog.delegate = this
-
-    // Set self as root view delegate
-    sheetRootView.rootViewDelegate = this
   }
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
@@ -356,9 +351,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== TrueSheetRootViewDelegate Implementation ====================
 
-  override fun onRootViewSizeChanged(width: Int, height: Int) {
-    Log.d(TAG_NAME, "Root view size changed: ${width}x${height}")
-    
+  override fun rootViewDidChangeSize(width: Int, height: Int) {
+    Log.d(TAG_NAME, "Root view size changed: ${width}x$height")
+
     // Adjust container view dimensions to match root view
     containerView?.let { container ->
       UiThreadUtil.runOnUiThread {
@@ -367,8 +362,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
         layoutParams.height = height
         container.layoutParams = layoutParams
         container.requestLayout()
-        
-        Log.d(TAG_NAME, "Container view dimensions adjusted to ${width}x${height}")
+
+        Log.d(TAG_NAME, "Container view dimensions adjusted to ${width}x$height")
       }
     }
   }

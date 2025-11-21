@@ -24,7 +24,7 @@ interface TrueSheetRootViewDelegate {
    * @param width New width in pixels
    * @param height New height in pixels
    */
-  fun onRootViewSizeChanged(width: Int, height: Int)
+  fun rootViewDidChangeSize(width: Int, height: Int)
 }
 
 /**
@@ -41,7 +41,7 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
   RootView {
 
   internal var eventDispatcher: EventDispatcher? = null
-  internal var rootViewDelegate: TrueSheetRootViewDelegate? = null
+  internal var delegate: TrueSheetRootViewDelegate? = null
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
@@ -66,7 +66,7 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
     android.util.Log.d(TAG_NAME, "onSizeChanged width: ${w.toFloat().pxToDp()}, height: ${h.toFloat().pxToDp()}")
 
     // Notify delegate about size change
-    rootViewDelegate?.onRootViewSizeChanged(w, h)
+    delegate?.rootViewDidChangeSize(w, h)
   }
 
   override fun handleException(t: Throwable) {
