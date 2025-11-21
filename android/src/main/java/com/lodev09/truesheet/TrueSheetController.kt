@@ -225,8 +225,10 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     dialog.setOnShowListener {
       registerKeyboardManager()
 
-      // Initialize footer position
-      positionFooter()
+      // Initialize footer position after layout is complete
+      sheetRootViewContainer?.post {
+        positionFooter()
+      }
 
       // Re-enable animation
       resetAnimation()
