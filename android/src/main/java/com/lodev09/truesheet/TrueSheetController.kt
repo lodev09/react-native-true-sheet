@@ -176,11 +176,6 @@ class TrueSheetController(
     dialog = BottomSheetDialog(reactContext).apply {
       setContentView(sheetRootView)
 
-      sheetRootViewContainer?.apply {
-        setBackgroundColor(this@TrueSheetController.backgroundColor)
-        clipToOutline = true
-      }
-
       // Setup window params
       window?.apply {
         // Store current windowAnimation value to toggle later
@@ -197,6 +192,9 @@ class TrueSheetController(
       setCanceledOnTouchOutside(dismissible)
       setCancelable(dismissible)
       behavior.isHideable = dismissible
+      
+      // Apply background color and corner radius
+      setupBackground()
     }
   }
 
@@ -442,22 +440,24 @@ class TrueSheetController(
    * Setup background color and corner radius.
    */
   fun setupBackground() {
-    val outerRadii = floatArrayOf(
-      cornerRadius,
-      cornerRadius,
-      cornerRadius,
-      cornerRadius,
-      0f,
-      0f,
-      0f,
-      0f
-    )
+    sheetRootViewContainer?.apply {
+      val outerRadii = floatArrayOf(
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+        0f,
+        0f,
+        0f,
+        0f
+      )
 
-    val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
-
-    // Use current background color
-    background.paint.color = backgroundColor
-    sheetRootViewContainer?.background = background
+      val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
+      background.paint.color = backgroundColor
+      
+      this.background = background
+      this.clipToOutline = true
+    }
   }
 
   /**

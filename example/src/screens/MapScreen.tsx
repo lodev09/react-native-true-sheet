@@ -47,7 +47,7 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [contentCount, setContentCount] = useState(5);
+  const [contentCount, setContentCount] = useState(0);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
