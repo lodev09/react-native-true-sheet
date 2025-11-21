@@ -413,6 +413,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 const styles = StyleSheet.create({
   sheetView: {
     position: 'absolute',
+    zIndex: -9999,
   },
   containerView: {
     backgroundColor: 'red',
