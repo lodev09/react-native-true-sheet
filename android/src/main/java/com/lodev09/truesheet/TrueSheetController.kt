@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -352,10 +350,8 @@ class TrueSheetController(
       // Reset drag state before presenting
       isDragging = false
 
-      // Request layout to ensure clean state
-      sheetRootViewContainer?.requestLayout()
-
       configure()
+      setStateForDetentIndex(detentIndex)
 
       // Notify delegate before showing
       val detentInfo = getDetentInfoForIndex(detentIndex)
@@ -367,11 +363,6 @@ class TrueSheetController(
       }
 
       dialog.show()
-      
-      // Set state after showing to ensure it's applied correctly
-      Handler(Looper.getMainLooper()).post {
-        setStateForDetentIndex(detentIndex)
-      }
     }
   }
 
