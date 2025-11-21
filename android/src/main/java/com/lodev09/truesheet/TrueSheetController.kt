@@ -15,6 +15,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.utils.KeyboardManager
 import com.lodev09.truesheet.utils.PixelUtils
 import com.lodev09.truesheet.utils.ScreenUtils
+import com.lodev09.truesheet.utils.disableEdgeToEdge
+import com.lodev09.truesheet.utils.enableEdgeToEdge
 
 data class DetentInfo(val index: Int, val position: Float)
 
@@ -194,9 +196,12 @@ class TrueSheetController(
       setCanceledOnTouchOutside(dismissible)
       setCancelable(dismissible)
       behavior.isHideable = dismissible
-      
+
       // Apply background color and corner radius
       setupBackground()
+
+      // Apply edgeToEdge
+      applyEdgeToEdge();
     }
   }
 
@@ -457,7 +462,7 @@ class TrueSheetController(
 
       val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
       background.paint.color = backgroundColor
-      
+
       this.background = background
       this.clipToOutline = true
     }
@@ -522,14 +527,9 @@ class TrueSheetController(
 
   fun applyEdgeToEdge() {
     if (edgeToEdge || (dialog?.edgeToEdgeEnabled == true)) {
-      dialog?.window?.apply {
-        setFlags(
-          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
-
-        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-      }
+      dialog?.window?.enableEdgeToEdge()
+    } else {
+      dialog?.window?.disableEdgeToEdge();
     }
   }
 
