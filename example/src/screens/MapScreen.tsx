@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,7 +17,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, DemoContent, Footer, Spacer } from '../components';
+import { Button, DemoContent, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -103,6 +102,7 @@ export const MapScreen = () => {
         dimmedIndex={2}
         // dismissible={false}
         cornerRadius={12}
+        // style={styles.content}
         initialDetentIndex={1}
         onWillPresent={handleWillPresent}
         // onPositionChange={(e) => {
@@ -117,9 +117,10 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        footer={<Footer />}
+        // footer={<Footer />}
       >
-        <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
+        <View style={{ height: 552 }}>
+          {/*<ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>*/}
           <View style={styles.heading}>
             <Text style={styles.title}>True Sheet 💩</Text>
             <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
@@ -140,7 +141,8 @@ export const MapScreen = () => {
           <Spacer />
           <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
           <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
-        </ScrollView>
+          {/*</ScrollView>*/}
+        </View>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

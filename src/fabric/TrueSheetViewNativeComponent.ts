@@ -1,9 +1,10 @@
-import type { HostComponent, ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import type {
   DirectEventHandler,
   Double,
   Int32,
   WithDefault,
+  Float,
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
 
@@ -25,7 +26,7 @@ export interface SizeChangeEventPayload {
 
 export interface NativeProps extends ViewProps {
   // Array properties
-  detents?: ReadonlyArray<number>;
+  detents?: ReadonlyArray<Float>;
 
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>;
@@ -58,4 +59,4 @@ export interface NativeProps extends ViewProps {
   onSizeChange?: DirectEventHandler<SizeChangeEventPayload>;
 }
 
-export default codegenNativeComponent<NativeProps>('TrueSheetView') as HostComponent<NativeProps>;
+export default codegenNativeComponent<NativeProps>('TrueSheetView');

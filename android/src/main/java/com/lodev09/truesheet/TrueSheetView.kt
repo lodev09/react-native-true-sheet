@@ -323,7 +323,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setGrabber(grabber: Boolean) {}
 
-  fun setDetents(newDetents: Array<Any>) {
+  fun setDetents(newDetents: MutableList<Any>) {
     sheetController.detents = newDetents
   }
 

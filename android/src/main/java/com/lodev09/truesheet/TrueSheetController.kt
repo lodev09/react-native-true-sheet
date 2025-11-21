@@ -4,9 +4,12 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import androidx.core.view.isNotEmpty
+import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -42,6 +45,10 @@ interface TrueSheetControllerDelegate {
 @SuppressLint("ClickableViewAccessibility")
 class TrueSheetController(private val reactContext: ThemedReactContext, private val sheetRootView: TrueSheetRootView) {
 
+  companion object {
+    private const val TAG_NAME = "TrueSheet"
+  }
+
   /**
    * Delegate for handling controller events
    */
@@ -68,7 +75,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    * Our sheet container view from root view's only child
    */
   private val containerView: TrueSheetContainerView?
-    get() = if (sheetRootView.childCount > 0) {
+    get() = if (sheetRootView.isNotEmpty()) {
       sheetRootView.getChildAt(0) as? TrueSheetContainerView
     } else {
       null
@@ -77,7 +84,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
   /**
    * Content view from the container
    */
-  private val sheetContentView: TrueSheetContentView?
+  val sheetContentView: TrueSheetContentView?
     get() = containerView?.contentView
 
   /**
@@ -90,6 +97,9 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    * Track if the dialog is currently being dragged
    */
   private var isDragging = false
+
+  private val edgeToEdgeEnabled
+    get() = BuildConfig.EDGE_TO_EDGE_ENABLED || dialog?.edgeToEdgeEnabled == true
 
   /**
    * Current active detent index
@@ -140,14 +150,14 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
   var cornerRadius: Float = 0f
   var backgroundColor: Int = Color.WHITE
-  var detents: Array<Any> = arrayOf(0.5, 1.0)
+  var detents = mutableListOf(0.5, 1)
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
   init {
     // Initialize maxScreenHeight
-    maxScreenHeight = ScreenUtils.screenHeight(reactContext)
+    maxScreenHeight = ScreenUtils.screenHeight(reactContext, edgeToEdgeEnabled)
   }
 
   // ==================== Lifecycle ====================
@@ -220,6 +230,9 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
       // Re-enable animation
       resetAnimation()
+
+      // Apply edge-to-edge configuration
+      applyEdgeToEdge()
 
       // Resolve the present promise
       presentPromise?.let { promise ->
@@ -411,18 +424,12 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
           setPeekHeight(peekHeightValue, isShowing)
           maxHeight = maxHeightValue
+          halfExpandedRatio = minOf(middleDetentHeight.toFloat() / maxScreenHeight.toFloat(), 1.0f)
 
-          // Calculate half expanded ratio relative to maxHeight (not maxScreenHeight)
-          // BottomSheetBehavior calculates half-expanded against parent height (which is constrained by maxHeight)
-          if (middleDetentHeight > 0 && maxHeightValue > 0) {
-            val ratio = middleDetentHeight.toFloat() / maxHeightValue.toFloat()
-            // Clamp ratio to valid range: (0, 1) - strictly between 0 and 1 (exclusive)
-            // BottomSheetBehavior requires ratio > 0 && ratio < 1
-            halfExpandedRatio = ratio.coerceIn(0.01f, 0.99f)
-          } else {
-            // Default to 0.5 if content isn't measured yet
-            halfExpandedRatio = 0.5f
-          }
+          Log.d(TAG_NAME, "Container height: ${containerView?.height?.pxToDp()}")
+          Log.d(TAG_NAME, "Max Screen height: ${maxScreenHeight.pxToDp()}")
+          Log.d(TAG_NAME, "Ratio: $halfExpandedRatio")
+          Log.d(TAG_NAME, "middleDetentHeight: ${middleDetentHeight.pxToDp()}")
         }
       }
     }
@@ -494,6 +501,21 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     }
   }
 
+  fun applyEdgeToEdge() {
+    if (!edgeToEdgeEnabled) return
+
+    dialog?.window?.apply {
+      setFlags(
+        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+      )
+
+      // Set system UI visibility
+      @Suppress("DEPRECATION")
+      decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+    }
+  }
+
   fun positionFooter() {
     footerView?.let { footer ->
       val footerHeight = containerView?.footerHeight ?: 0
@@ -524,7 +546,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> ScreenUtils.screenHeight(reactContext)
+          else -> ScreenUtils.screenHeight(reactContext, edgeToEdgeEnabled)
         }
 
         positionFooter()
@@ -612,6 +634,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
           if (detent == -1.0) {
             // -1 represents "auto"
             val contentHeight = containerView?.contentHeight ?: 0
+            Log.d(TAG_NAME, "contentHeight: $contentHeight maxSheetHeight: $maxSheetHeight maxScreenHeight: $maxScreenHeight")
             contentHeight
           } else {
             if (detent <= 0.0 || detent > 1.0) {
@@ -625,6 +648,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
           if (detent == -1) {
             // -1 represents "auto"
             val contentHeight = containerView?.contentHeight ?: 0
+            Log.d(TAG_NAME, "int detent $detent contentHeight: ${contentHeight.pxToDp()}")
             contentHeight
           } else {
             if (detent <= 0 || detent > 1) {

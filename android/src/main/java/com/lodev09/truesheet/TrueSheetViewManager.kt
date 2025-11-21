@@ -3,7 +3,6 @@ package com.lodev09.truesheet
 import android.graphics.Color
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.ReadableType
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
@@ -69,35 +68,21 @@ class TrueSheetViewManager :
   // ==================== Props ====================
 
   @ReactProp(name = "detents")
-  override fun setDetents(view: TrueSheetView, detents: ReadableArray?) {
-    if (detents == null) {
-      view.setDetents(arrayOf(0.5, 1.0))
+  override fun setDetents(view: TrueSheetView, value: ReadableArray?) {
+    if (value == null || value.size() == 0) {
+      view.setDetents(mutableListOf(0.5f, 1f))
       return
     }
 
-    val result = ArrayList<Any>()
-    for (i in 0 until detents.size()) {
-      when (detents.getType(i)) {
-        ReadableType.Number -> {
-          val value = detents.getDouble(i)
-          result.add(value)
-        }
+    val detents = mutableListOf<Any>()
 
-        ReadableType.String -> {
-          val value = detents.getString(i)
-          if (value == "auto") {
-            result.add(-1.0)
-          }
-          // Skip other string values
-        }
+    IntProgression
+      .fromClosedRange(0, value.size() - 1, 1)
+      .asSequence()
+      .map { idx -> value.getDouble(idx) }
+      .toCollection(detents)
 
-        else -> {
-          // Skip invalid types
-        }
-      }
-    }
-
-    view.setDetents(result.toTypedArray())
+    view.setDetents(detents)
   }
 
   @ReactProp(name = "background", defaultInt = Color.WHITE)
