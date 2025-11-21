@@ -99,6 +99,26 @@ return (
 )
 ```
 
+## Edge-to-Edge Display (Android)
+
+TrueSheet automatically detects and adapts to Android's edge-to-edge display mode.
+
+Edge-to-edge is supported in React Native 0.81+ via the `edgeToEdgeEnabled` Gradle property.
+
+Enable it in your `android/gradle.properties`:
+
+```gradle title="android/gradle.properties"
+edgeToEdgeEnabled=true
+```
+
+:::info
+This property is **disabled by default**. TrueSheet will auto-detect when you enable it.
+:::
+
+:::tip
+Learn more about edge-to-edge in the [React Native 0.81 announcement](https://reactnative.dev/blog/2025/08/12/react-native-0.81).
+:::
+
 ## Weird layout render
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
