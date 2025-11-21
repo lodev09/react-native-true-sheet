@@ -35,7 +35,7 @@ interface TrueSheetControllerDelegate {
 /**
  * TrueSheetController manages the bottom sheet dialog lifecycle and properties.
  * Similar to iOS TrueSheetViewController pattern.
- * 
+ *
  * The dialog is created lazily when the container view mounts and is properly
  * cleaned up when dismissed to ensure clean state for each presentation.
  */
@@ -209,7 +209,10 @@ class TrueSheetController(
       setOnCancelListener(null)
       setOnDismissListener(null)
     }
-    
+
+    // Remove sheetRootView from its parent to allow re-attachment on next presentation
+    sheetRootViewContainer?.removeView(sheetRootView)
+
     unregisterKeyboardManager()
     dialog = null
     isDragging = false
@@ -348,9 +351,6 @@ class TrueSheetController(
     } else {
       // Reset drag state before presenting
       isDragging = false
-
-      // Request layout to ensure clean state
-      sheetRootViewContainer?.requestLayout()
 
       configure()
       setStateForDetentIndex(detentIndex)
