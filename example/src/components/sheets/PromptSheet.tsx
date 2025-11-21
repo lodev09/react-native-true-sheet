@@ -36,7 +36,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       ref={sheetRef}
       dismissible={false}
       grabber={false}
-      edgeToEdge
       name="prompt-sheet"
       detents={['auto']}
       style={styles.content}

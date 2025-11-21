@@ -17,6 +17,7 @@ import com.lodev09.truesheet.utils.PixelUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.disableEdgeToEdge
 import com.lodev09.truesheet.utils.enableEdgeToEdge
+import com.lodev09.truesheet.utils.isEdgeToEdgeFeatureFlagOn
 
 data class DetentInfo(val index: Int, val position: Float)
 
@@ -135,12 +136,6 @@ class TrueSheetController(
 
   var maxSheetHeight: Int? = null
 
-  var edgeToEdge: Boolean = false
-    set(value) {
-      field = value
-      maxScreenHeight = ScreenUtils.screenHeight(reactContext, value)
-    }
-
   var dismissible: Boolean = true
     set(value) {
       field = value
@@ -160,7 +155,7 @@ class TrueSheetController(
 
   init {
     // Initialize maxScreenHeight
-    maxScreenHeight = ScreenUtils.screenHeight(reactContext, edgeToEdge)
+    maxScreenHeight = ScreenUtils.screenHeight(reactContext, isEdgeToEdgeFeatureFlagOn)
   }
 
   // ==================== Lifecycle ====================
@@ -526,7 +521,7 @@ class TrueSheetController(
   }
 
   fun applyEdgeToEdge() {
-    if (edgeToEdge || (dialog?.edgeToEdgeEnabled == true)) {
+    if (isEdgeToEdgeFeatureFlagOn || (dialog?.edgeToEdgeEnabled == true)) {
       dialog?.window?.enableEdgeToEdge()
     } else {
       dialog?.window?.disableEdgeToEdge();
@@ -548,7 +543,7 @@ class TrueSheetController(
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> ScreenUtils.screenHeight(reactContext, edgeToEdge)
+          else -> ScreenUtils.screenHeight(reactContext, isEdgeToEdgeFeatureFlagOn)
         }
 
         positionFooter()

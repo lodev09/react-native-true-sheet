@@ -334,7 +334,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
-      edgeToEdge = false,
+
       keyboardMode = 'resize',
       dimmedIndex,
       blurTint,
@@ -368,7 +368,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        edgeToEdge={edgeToEdge}
         keyboardMode={keyboardMode}
         initialDetentIndex={initialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}

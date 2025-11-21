@@ -100,7 +100,6 @@ export const MapScreen = () => {
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
-        edgeToEdge
         dimmedIndex={2}
         // dismissible={false}
         cornerRadius={12}

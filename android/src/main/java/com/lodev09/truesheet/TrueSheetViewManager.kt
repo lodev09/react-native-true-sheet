@@ -149,10 +149,7 @@ class TrueSheetViewManager :
     }
   }
 
-  @ReactProp(name = "edgeToEdge", defaultBoolean = false)
-  override fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
-    view.setEdgeToEdge(edgeToEdge)
-  }
+
 
   @ReactProp(name = "keyboardMode")
   override fun setKeyboardMode(view: TrueSheetView, mode: String?) {

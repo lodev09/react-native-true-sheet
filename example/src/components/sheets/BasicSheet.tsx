@@ -57,7 +57,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       blurTint="dark"
       backgroundColor={DARK}
       cornerRadius={12}
-      edgeToEdge
       grabberProps={{ color: GRABBER_COLOR }}
       onDragChange={(e) =>
         console.log(

@@ -17,7 +17,6 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       footer={<Footer />}
-      edgeToEdge
       {...props}
     >
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">

@@ -281,11 +281,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== Property Setters (forward to controller) ====================
 
-  fun setEdgeToEdge(edgeToEdge: Boolean) {
-    sheetController.edgeToEdge = edgeToEdge
-    sheetController.applyEdgeToEdge()
-  }
-
   fun setMaxHeight(height: Int) {
     if (sheetController.maxSheetHeight == height) return
     sheetController.maxSheetHeight = height

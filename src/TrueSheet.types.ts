@@ -234,14 +234,6 @@ export interface TrueSheetProps extends ViewProps {
   keyboardMode?: 'resize' | 'pan';
 
   /**
-   * Supports edge-to-edge on Android.
-   * Turn this on if your app has it enabled.
-   *
-   * @platform android
-   */
-  edgeToEdge?: boolean;
-
-  /**
    * Called when the sheet's content is mounted and ready.
    * The sheet automatically waits for this event before presenting.
    */
