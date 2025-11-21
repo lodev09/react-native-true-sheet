@@ -633,6 +633,6 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
   }
 
   companion object {
-    const val TAG = "TrueSheetDialog"
+    const val TAG_NAME = "TrueSheet"
   }
 }

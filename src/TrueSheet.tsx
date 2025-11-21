@@ -346,7 +346,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     return (
       <TrueSheetViewNativeComponent
         ref={this.nativeRef}
-        style={styles.nativeSheet}
+        style={styles.sheetView}
         detents={resolvedDetents}
         blurTint={blurTint}
         background={(processColor(backgroundColor) as number) ?? 0}
@@ -386,21 +386,22 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       </TrueSheetViewNativeComponent>
     );
   }
+
+  // We don't want any responder events bubbling out of the modal.
+  _shouldSetResponder(): boolean {
+    return true;
+  }
 }
 
 const styles = StyleSheet.create({
-  nativeSheet: {
+  sheetView: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
   },
   containerView: {
     backgroundColor: 'red',
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
   },
   contentView: {
     backgroundColor: 'blue',

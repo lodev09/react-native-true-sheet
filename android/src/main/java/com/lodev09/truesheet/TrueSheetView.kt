@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -42,12 +43,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     get() = sheetRootView.stateWrapper
     set(stateWrapper) {
       sheetRootView.stateWrapper = stateWrapper
+      Log.d(TAG_NAME, "setting stateWrapper");
     }
 
   var eventDispatcher: EventDispatcher?
     get() = sheetRootView.eventDispatcher
     set(eventDispatcher) {
       sheetRootView.eventDispatcher = eventDispatcher
+      Log.d(TAG_NAME, "setting eventDispatcher");
     }
 
   var initialDetentIndex: Int = -1
@@ -89,6 +92,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     super.setId(id)
 
     sheetRootView.id = id
+    Log.d(TAG_NAME, "setting id: $id")
 
     TrueSheetModule.registerView(this, id)
   }
@@ -342,5 +346,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     sheetDialog.dismissPromise = promiseCallback
     sheetDialog.dismiss()
+  }
+
+  companion object {
+    const val TAG_NAME = "TrueSheet"
   }
 }
