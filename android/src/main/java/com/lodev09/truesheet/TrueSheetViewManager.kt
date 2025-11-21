@@ -10,7 +10,10 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
+import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.viewmanagers.TrueSheetViewManagerDelegate
+import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
 import com.lodev09.truesheet.events.*
 import com.lodev09.truesheet.utils.PixelUtils
 
@@ -19,7 +22,11 @@ import com.lodev09.truesheet.utils.PixelUtils
  * Main sheet component that manages the bottom sheet dialog
  */
 @ReactModule(name = TrueSheetViewManager.REACT_CLASS)
-class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
+class TrueSheetViewManager :
+  ViewGroupManager<TrueSheetView>(),
+  TrueSheetViewManagerInterface<TrueSheetView> {
+
+  private val delegate: ViewManagerDelegate<TrueSheetView> = TrueSheetViewManagerDelegate(this)
 
   override fun getName(): String = REACT_CLASS
 
@@ -41,9 +48,14 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   }
 
   override fun updateState(view: TrueSheetView, props: ReactStylesDiffMap, stateWrapper: StateWrapper): Any? {
+    android.util.Log.d(TAG_NAME, "updateState called! ViewId: ${view.id}")
+    android.util.Log.d(TAG_NAME, "StateWrapper: $stateWrapper")
+    android.util.Log.d(TAG_NAME, "Props: $props")
     view.stateWrapper = stateWrapper
     return null
   }
+
+  override fun getDelegate(): ViewManagerDelegate<TrueSheetView> = delegate
 
   /**
    * Export custom direct event types for Fabric
@@ -66,7 +78,7 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   // ==================== Props ====================
 
   @ReactProp(name = "detents")
-  fun setDetents(view: TrueSheetView, detents: ReadableArray?) {
+  override fun setDetents(view: TrueSheetView, detents: ReadableArray?) {
     if (detents == null) {
       view.setDetents(arrayOf(0.5, 1.0))
       return
@@ -98,61 +110,61 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   }
 
   @ReactProp(name = "background", defaultInt = Color.WHITE)
-  fun setBackground(view: TrueSheetView, color: Int) {
+  override fun setBackground(view: TrueSheetView, color: Int) {
     view.setBackground(color)
   }
 
   @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
-  fun setCornerRadius(view: TrueSheetView, radius: Double) {
+  override fun setCornerRadius(view: TrueSheetView, radius: Double) {
     if (radius >= 0) {
       view.setCornerRadius(PixelUtils.toPixel(radius))
     }
   }
 
   @ReactProp(name = "grabber", defaultBoolean = true)
-  fun setGrabber(view: TrueSheetView, grabber: Boolean) {
+  override fun setGrabber(view: TrueSheetView, grabber: Boolean) {
     view.setGrabber(grabber)
   }
 
   @ReactProp(name = "dismissible", defaultBoolean = true)
-  fun setDismissible(view: TrueSheetView, dismissible: Boolean) {
+  override fun setDismissible(view: TrueSheetView, dismissible: Boolean) {
     view.setDismissible(dismissible)
   }
 
   @ReactProp(name = "dimmed", defaultBoolean = true)
-  fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
+  override fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)
   }
 
   @ReactProp(name = "dimmedIndex", defaultInt = 0)
-  fun setDimmedIndex(view: TrueSheetView, index: Int) {
+  override fun setDimmedIndex(view: TrueSheetView, index: Int) {
     view.setDimmedIndex(index)
   }
 
   @ReactProp(name = "initialDetentIndex", defaultInt = -1)
-  fun setInitialDetentIndex(view: TrueSheetView, index: Int) {
+  override fun setInitialDetentIndex(view: TrueSheetView, index: Int) {
     view.initialDetentIndex = index
   }
 
   @ReactProp(name = "initialDetentAnimated", defaultBoolean = true)
-  fun setInitialDetentAnimated(view: TrueSheetView, animate: Boolean) {
+  override fun setInitialDetentAnimated(view: TrueSheetView, animate: Boolean) {
     view.initialDetentAnimated = animate
   }
 
   @ReactProp(name = "maxHeight", defaultDouble = 0.0)
-  fun setMaxHeight(view: TrueSheetView, height: Double) {
+  override fun setMaxHeight(view: TrueSheetView, height: Double) {
     if (height > 0) {
       view.setMaxHeight(PixelUtils.toPixel(height).toInt())
     }
   }
 
   @ReactProp(name = "edgeToEdge", defaultBoolean = false)
-  fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
+  override fun setEdgeToEdge(view: TrueSheetView, edgeToEdge: Boolean) {
     view.setEdgeToEdge(edgeToEdge)
   }
 
   @ReactProp(name = "keyboardMode")
-  fun setKeyboardMode(view: TrueSheetView, mode: String?) {
+  override fun setKeyboardMode(view: TrueSheetView, mode: String?) {
     val softInputMode = when (mode) {
       "pan" -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
       else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
@@ -161,12 +173,13 @@ class TrueSheetViewManager : ViewGroupManager<TrueSheetView>() {
   }
 
   @ReactProp(name = "blurTint")
-  fun setBlurTint(view: TrueSheetView, tint: String?) {
+  override fun setBlurTint(view: TrueSheetView, tint: String?) {
     // iOS-specific prop - no-op on Android
     view.setBlurTint(tint)
   }
 
   companion object {
     const val REACT_CLASS = "TrueSheetView"
+    const val TAG_NAME = "TrueSheet"
   }
 }

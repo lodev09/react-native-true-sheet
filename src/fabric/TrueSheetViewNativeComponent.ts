@@ -7,6 +7,11 @@ import type {
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
 
+export interface TrueSheetState {
+  screenWidth: Double;
+  screenHeight: Double;
+}
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -26,8 +31,6 @@ export interface NativeProps extends ViewProps {
   maxHeight?: WithDefault<Double, 0>;
   background?: WithDefault<Int32, 0>;
   cornerRadius?: WithDefault<Double, -1>;
-  contentHeight?: WithDefault<Double, 0>;
-  footerHeight?: WithDefault<Double, 0>;
   initialDetentIndex?: WithDefault<Int32, -1>;
   dimmedIndex?: WithDefault<Int32, 0>;
 

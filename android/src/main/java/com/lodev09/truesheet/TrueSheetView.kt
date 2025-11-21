@@ -43,14 +43,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     get() = sheetRootView.stateWrapper
     set(stateWrapper) {
       sheetRootView.stateWrapper = stateWrapper
-      Log.d(TAG_NAME, "setting stateWrapper");
+      Log.d(TAG_NAME, "setting stateWrapper")
     }
 
   var eventDispatcher: EventDispatcher?
     get() = sheetRootView.eventDispatcher
     set(eventDispatcher) {
       sheetRootView.eventDispatcher = eventDispatcher
-      Log.d(TAG_NAME, "setting eventDispatcher");
+      Log.d(TAG_NAME, "setting eventDispatcher")
     }
 
   var initialDetentIndex: Int = -1
