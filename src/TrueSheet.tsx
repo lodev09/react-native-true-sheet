@@ -29,7 +29,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, processColor, StyleSheet, View, findNodeHandle } from 'react-native';
+import { Platform, processColor, StyleSheet, findNodeHandle } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -334,7 +334,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
-
       keyboardMode = 'resize',
       dimmedIndex,
       blurTint,
@@ -343,7 +342,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       children,
       style,
       footer,
-      ...rest
+      testID,
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
@@ -387,22 +386,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent
-            style={[
-              styles.containerView,
-              {
-                width: this.state.containerWidth,
-                height: this.state.containerHeight,
-              },
-            ]}
+            testID={testID}
+            style={{
+              width: this.state.containerWidth,
+              height: this.state.containerHeight,
+            }}
             collapsable={false}
           >
-            <TrueSheetContentViewNativeComponent style={styles.contentView} collapsable={false}>
-              <View style={style} collapsable={false} {...rest}>
-                {children}
-              </View>
+            <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
+              {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
-              <TrueSheetFooterViewNativeComponent collapsable={false}>
+              <TrueSheetFooterViewNativeComponent style={styles.footer} collapsable={false}>
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
@@ -418,10 +413,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: -9999,
   },
-  containerView: {
-    backgroundColor: 'red',
-  },
-  contentView: {
-    backgroundColor: 'blue',
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
   },
 });

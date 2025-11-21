@@ -89,10 +89,8 @@ using namespace facebook::react;
     return nil;
   }
 
-  UIView *contentView = self.subviews[0];
-
   // Check first-level children for scroll views (ScrollView or FlatList)
-  for (UIView *subview in contentView.subviews) {
+  for (UIView *subview in self.subviews) {
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
       return static_cast<RCTScrollViewComponentView *>(subview);
     }

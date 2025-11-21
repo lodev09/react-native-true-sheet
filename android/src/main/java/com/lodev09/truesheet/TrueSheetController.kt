@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -506,15 +505,15 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     footerView?.let { footer ->
       val containerView = containerView ?: return
       val footerHeight = footer.height
-      
+
       // Get container's position in screen coordinates
       val location = IntArray(2)
       containerView.getLocationOnScreen(location)
       val containerTop = location[1]
-      
+
       // Calculate base position (screen bottom)
       val baseY = (maxScreenHeight - containerTop - footerHeight).toFloat()
-      
+
       // Apply slideOffset for animation when sheet is below peek height
       footer.y = if (slideOffset != null && slideOffset < 0) {
         // Sheet is below peek height - animate footer down with sheet
