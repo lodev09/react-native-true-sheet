@@ -70,7 +70,8 @@ class TrueSheetViewManager :
       DragBeginEvent.EVENT_NAME to hashMapOf("registrationName" to DragBeginEvent.REGISTRATION_NAME),
       DragChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DragChangeEvent.REGISTRATION_NAME),
       DragEndEvent.EVENT_NAME to hashMapOf("registrationName" to DragEndEvent.REGISTRATION_NAME),
-      PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME)
+      PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME),
+      SizeChangeEvent.EVENT_NAME to hashMapOf("registrationName" to SizeChangeEvent.REGISTRATION_NAME)
     )
 
   // ==================== Props ====================

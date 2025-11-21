@@ -574,8 +574,9 @@ class TrueSheetDialog(private val reactContext: ThemedReactContext, private val 
           // BottomSheetBehavior calculates half-expanded against parent height (which is constrained by maxHeight)
           if (middleDetentHeight > 0 && maxHeightValue > 0) {
             val ratio = middleDetentHeight.toFloat() / maxHeightValue.toFloat()
-            // Clamp ratio to valid range: (0, 1]
-            halfExpandedRatio = ratio.coerceIn(0.01f, 1.0f)
+            // Clamp ratio to valid range: (0, 1) - strictly between 0 and 1 (exclusive)
+            // BottomSheetBehavior requires ratio > 0 && ratio < 1
+            halfExpandedRatio = ratio.coerceIn(0.01f, 0.99f)
           } else {
             // Default to 0.5 if content isn't measured yet
             halfExpandedRatio = 0.5f

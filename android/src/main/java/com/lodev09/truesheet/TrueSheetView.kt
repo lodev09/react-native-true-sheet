@@ -20,6 +20,7 @@ import com.lodev09.truesheet.events.DragChangeEvent
 import com.lodev09.truesheet.events.DragEndEvent
 import com.lodev09.truesheet.events.MountEvent
 import com.lodev09.truesheet.events.PositionChangeEvent
+import com.lodev09.truesheet.events.SizeChangeEvent
 import com.lodev09.truesheet.events.WillDismissEvent
 import com.lodev09.truesheet.events.WillPresentEvent
 
@@ -353,6 +354,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun rootViewDidChangeSize(width: Int, height: Int) {
     Log.d(TAG_NAME, "Root view size changed: ${width}x$height")
+
+    // Dispatch size change event to JS
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(
+      SizeChangeEvent(surfaceId, id, width, height)
+    )
 
     // Request layout on container view - let Fabric handle sizing through its layout system
     containerView?.let { container ->
