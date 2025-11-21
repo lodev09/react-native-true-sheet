@@ -71,12 +71,19 @@ class TrueSheetRootView(private val reactContext: ThemedReactContext) :
     val realWidth: Float = width.toFloat().pxToDp()
     val realHeight: Float = height.toFloat().pxToDp()
 
+    android.util.Log.d("TrueSheetRootView", "updateState called - width: $realWidth, height: $realHeight")
+    android.util.Log.d("TrueSheetRootView", "stateWrapper is: ${if (stateWrapper == null) "NULL" else "NOT NULL ($stateWrapper)"}")
+
     // Fabric architecture only - update state with screen dimensions
     stateWrapper?.let { sw ->
+      android.util.Log.d("TrueSheetRootView", "Calling stateWrapper.updateState()")
       val newStateData: WritableMap = WritableNativeMap()
       newStateData.putDouble("screenWidth", realWidth.toDouble())
       newStateData.putDouble("screenHeight", realHeight.toDouble())
       sw.updateState(newStateData)
+      android.util.Log.d("TrueSheetRootView", "stateWrapper.updateState() completed successfully")
+    } ?: run {
+      android.util.Log.w("TrueSheetRootView", "stateWrapper is NULL - cannot update state!")
     }
   }
 

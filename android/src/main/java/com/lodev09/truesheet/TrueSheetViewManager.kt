@@ -22,15 +22,21 @@ import com.lodev09.truesheet.utils.PixelUtils
  * Main sheet component that manages the bottom sheet dialog
  */
 @ReactModule(name = TrueSheetViewManager.REACT_CLASS)
-class TrueSheetViewManager :
-  ViewGroupManager<TrueSheetView>(),
-  TrueSheetViewManagerInterface<TrueSheetView> {
+class TrueSheetViewManager : ViewGroupManager<TrueSheetView>(), TrueSheetViewManagerInterface<TrueSheetView> {
 
   private val delegate: ViewManagerDelegate<TrueSheetView> = TrueSheetViewManagerDelegate(this)
 
+  init {
+    android.util.Log.d("TrueSheetViewManager", "TrueSheetViewManager instantiated")
+    android.util.Log.d("TrueSheetViewManager", "Delegate: $delegate")
+  }
+
   override fun getName(): String = REACT_CLASS
 
-  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView = TrueSheetView(reactContext)
+  override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetView {
+    android.util.Log.d("TrueSheetViewManager", "createViewInstance called")
+    return TrueSheetView(reactContext)
+  }
 
   override fun onDropViewInstance(view: TrueSheetView) {
     super.onDropViewInstance(view)
