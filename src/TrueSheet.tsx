@@ -422,9 +422,6 @@ const styles = StyleSheet.create({
   },
   containerView: {
     backgroundColor: 'red',
-    position: 'absolute',
-    left: 0,
-    right: 0,
   },
   contentView: {
     backgroundColor: 'blue',

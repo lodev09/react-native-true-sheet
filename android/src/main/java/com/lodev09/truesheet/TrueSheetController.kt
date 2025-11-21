@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -405,8 +407,9 @@ class TrueSheetController(
         }
 
         2 -> {
-          setPeekHeight(getDetentHeight(detents[0]), isShowing)
+          val peekHeight = getDetentHeight(detents[0])
           maxHeight = getDetentHeight(detents[1])
+          setPeekHeight(peekHeight, isShowing)
         }
 
         3 -> {
@@ -632,7 +635,8 @@ class TrueSheetController(
         is Double -> {
           if (detent == -1.0) {
             // -1 represents "auto"
-            containerView?.contentHeight ?: 0
+            val contentHeight = containerView?.contentHeight ?: 0
+            contentHeight
           } else {
             if (detent <= 0.0 || detent > 1.0) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -644,7 +648,8 @@ class TrueSheetController(
         is Int -> {
           if (detent == -1) {
             // -1 represents "auto"
-            containerView?.contentHeight ?: 0
+            val contentHeight = containerView?.contentHeight ?: 0
+            contentHeight
           } else {
             if (detent <= 0 || detent > 1) {
               throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -656,14 +661,15 @@ class TrueSheetController(
         else -> throw IllegalArgumentException("TrueSheet: invalid detent type ${detent::class.simpleName}")
       }
 
-    return maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
+    val finalHeight = maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
+    return finalHeight
   }
 
   /**
    * Determines the state based from the given detent index.
    */
-  private fun getStateForDetentIndex(index: Int): Int =
-    when (detents.size) {
+  private fun getStateForDetentIndex(index: Int): Int {
+    return when (detents.size) {
       1 -> {
         BottomSheetBehavior.STATE_EXPANDED
       }
@@ -687,6 +693,7 @@ class TrueSheetController(
 
       else -> BottomSheetBehavior.STATE_HIDDEN
     }
+  }
 
   /**
    * Get the DetentInfo data by state.
@@ -733,9 +740,5 @@ class TrueSheetController(
     val baseInfo = getDetentInfoForIndex(index)
     val position = PixelUtils.toDIP(sheetRootViewContainer?.top?.toFloat() ?: 0f)
     return baseInfo.copy(position = position)
-  }
-
-  companion object {
-    private const val TAG_NAME = "TrueSheet"
   }
 }
