@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent

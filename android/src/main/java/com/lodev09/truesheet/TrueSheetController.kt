@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -15,8 +13,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.utils.KeyboardManager
 import com.lodev09.truesheet.utils.PixelUtils
 import com.lodev09.truesheet.utils.ScreenUtils
-import com.lodev09.truesheet.utils.disableEdgeToEdge
-import com.lodev09.truesheet.utils.isEdgeToEdgeFeatureFlagOn
 
 data class DetentInfo(val index: Int, val position: Float)
 
@@ -44,10 +40,7 @@ interface TrueSheetControllerDelegate {
  * cleaned up when dismissed to ensure clean state for each presentation.
  */
 @SuppressLint("ClickableViewAccessibility")
-class TrueSheetController(
-  private val reactContext: ThemedReactContext,
-  private val sheetRootView: TrueSheetRootView
-) {
+class TrueSheetController(private val reactContext: ThemedReactContext, private val sheetRootView: TrueSheetRootView) {
 
   /**
    * Delegate for handling controller events
@@ -154,7 +147,7 @@ class TrueSheetController(
 
   init {
     // Initialize maxScreenHeight
-    maxScreenHeight = ScreenUtils.screenHeight(reactContext, isEdgeToEdgeFeatureFlagOn)
+    maxScreenHeight = ScreenUtils.screenHeight(reactContext)
   }
 
   // ==================== Lifecycle ====================
@@ -193,9 +186,6 @@ class TrueSheetController(
 
       // Apply background color and corner radius
       setupBackground()
-
-      // Apply edgeToEdge
-      applyEdgeToEdge();
     }
   }
 
@@ -519,14 +509,6 @@ class TrueSheetController(
     behavior?.state = getStateForDetentIndex(index)
   }
 
-  fun applyEdgeToEdge() {
-    // Bottom sheets should NOT apply edge-to-edge to their dialog window.
-    // When the app has edge-to-edge enabled, the bottom sheet should sit
-    // ON TOP of the navigation bar, not extend behind it.
-    // We always disable edge-to-edge for the bottom sheet dialog window.
-    dialog?.window?.disableEdgeToEdge()
-  }
-
   fun setSoftInputMode(mode: Int) {
     dialog?.window?.setSoftInputMode(mode)
   }
@@ -542,7 +524,7 @@ class TrueSheetController(
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> ScreenUtils.screenHeight(reactContext, isEdgeToEdgeFeatureFlagOn)
+          else -> ScreenUtils.screenHeight(reactContext)
         }
 
         positionFooter()
@@ -662,8 +644,8 @@ class TrueSheetController(
   /**
    * Determines the state based from the given detent index.
    */
-  private fun getStateForDetentIndex(index: Int): Int {
-    return when (detents.size) {
+  private fun getStateForDetentIndex(index: Int): Int =
+    when (detents.size) {
       1 -> {
         BottomSheetBehavior.STATE_EXPANDED
       }
@@ -687,7 +669,6 @@ class TrueSheetController(
 
       else -> BottomSheetBehavior.STATE_HIDDEN
     }
-  }
 
   /**
    * Get the DetentInfo data by state.

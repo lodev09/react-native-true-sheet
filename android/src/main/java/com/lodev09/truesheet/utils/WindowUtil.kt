@@ -18,8 +18,8 @@ import androidx.core.view.WindowInsetsControllerCompat
  * @return true if the current UI mode is dark mode, false otherwise
  */
 private fun isDarkMode(context: Context): Boolean =
-    context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
-        Configuration.UI_MODE_NIGHT_YES
+  context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+    Configuration.UI_MODE_NIGHT_YES
 
 // The light scrim color used in the platform API 29+
 // https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/com/android/internal/policy/DecorView.java;drc=6ef0f022c333385dba2c294e35b8de544455bf19;l=142
@@ -49,10 +49,10 @@ internal fun Window.setStatusBarTranslucency(isTranslucent: Boolean) {
     decorView.setOnApplyWindowInsetsListener { v, insets ->
       val defaultInsets = v.onApplyWindowInsets(insets)
       defaultInsets.replaceSystemWindowInsets(
-          defaultInsets.systemWindowInsetLeft,
-          0,
-          defaultInsets.systemWindowInsetRight,
-          defaultInsets.systemWindowInsetBottom,
+        defaultInsets.systemWindowInsetLeft,
+        0,
+        defaultInsets.systemWindowInsetRight,
+        defaultInsets.systemWindowInsetBottom
       )
     }
   } else {
@@ -80,7 +80,7 @@ private fun Window.statusBarHide() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       // Ensure the content extends into the cutout area
       attributes.layoutInDisplayCutoutMode =
-          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
       setDecorFitsSystemWindows(false)
     }
     addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -98,7 +98,7 @@ private fun Window.statusBarShow() {
   } else {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       attributes.layoutInDisplayCutoutMode =
-          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
       setDecorFitsSystemWindows(true)
     }
     addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN)
@@ -119,11 +119,11 @@ internal fun Window.enableEdgeToEdge() {
 
   statusBarColor = Color.TRANSPARENT
   navigationBarColor =
-      when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> Color.TRANSPARENT
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isDarkMode -> LightNavigationBarColor
-        else -> DarkNavigationBarColor
-      }
+    when {
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> Color.TRANSPARENT
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isDarkMode -> LightNavigationBarColor
+      else -> DarkNavigationBarColor
+    }
 
   WindowInsetsControllerCompat(this, decorView).run {
     isAppearanceLightNavigationBars = !isDarkMode
@@ -131,11 +131,12 @@ internal fun Window.enableEdgeToEdge() {
 
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
     attributes.layoutInDisplayCutoutMode =
-        when {
-          Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
-              WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
-          else -> WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-        }
+      when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+
+        else -> WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+      }
   }
 }
 

@@ -19,14 +19,13 @@ object ScreenUtils {
     ).takeIf { it > 0 } ?: 0
 
   /**
-   * Calculate the screen height accounting for edge-to-edge mode and system bars
+   * Calculate the screen height
    *
    * @param context React context
-   * @param edgeToEdge Whether to include system bars in the height calculation
    * @return Screen height in pixels
    */
   @SuppressLint("InternalInsetResource", "DiscouragedApi")
-  fun screenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
+  fun screenHeight(context: ReactContext): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val displayMetrics = DisplayMetrics()
 
@@ -53,15 +52,6 @@ object ScreenUtils {
       0
     }
 
-    return if (edgeToEdge) {
-      // getRealMetrics includes navigation bar height
-      // windowManager.defaultDisplay.getMetrics doesn't
-      when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        true -> screenHeight
-        false -> screenHeight + navigationBarHeight
-      }
-    } else {
-      screenHeight - statusBarHeight - navigationBarHeight
-    }
+    return screenHeight - statusBarHeight - navigationBarHeight
   }
 }

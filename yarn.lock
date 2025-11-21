@@ -17198,16 +17198,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-edge-to-edge@npm:^1.4.3":
-  version: 1.7.0
-  resolution: "react-native-edge-to-edge@npm:1.7.0"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10c0/809dcf1c68f79cff788963ec7691b37024986e82470be5047bfbe42929fc2c7d45db23eab816321e776f0bb3a8295f7efa526377bce6a559c10681cd409d597d
-  languageName: node
-  linkType: hard
-
 "react-native-gesture-handler@npm:^2.29.1":
   version: 2.29.1
   resolution: "react-native-gesture-handler@npm:2.29.1"
@@ -17315,7 +17305,6 @@ __metadata:
     react: "npm:19.1.1"
     react-native: "npm:0.82.1"
     react-native-builder-bob: "npm:^0.40.15"
-    react-native-edge-to-edge: "npm:^1.4.3"
     react-native-gesture-handler: "npm:^2.29.1"
     react-native-maps: "npm:^1.26.18"
     react-native-monorepo-config: "npm:^0.1.9"

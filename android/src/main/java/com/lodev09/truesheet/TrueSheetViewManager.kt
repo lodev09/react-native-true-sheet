@@ -149,8 +149,6 @@ class TrueSheetViewManager :
     }
   }
 
-
-
   @ReactProp(name = "keyboardMode")
   override fun setKeyboardMode(view: TrueSheetView, mode: String?) {
     val softInputMode = when (mode) {
