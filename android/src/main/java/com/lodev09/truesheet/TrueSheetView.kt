@@ -87,7 +87,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     bottom: Int
   ) {
     // Do nothing as we are laid out by UIManager
-    Log.d(TAG_NAME, "onLayout [id=$id]: changed=$changed, bounds=($left,$top,$right,$bottom), visibility=$visibility")
   }
 
   override fun setId(id: Int) {
@@ -99,12 +98,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    Log.d(TAG_NAME, "onAttachedToWindow [id=$id]: parent=${parent?.javaClass?.simpleName}, childCount=${sheetRootView.childCount}")
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    Log.d(TAG_NAME, "onDetachedFromWindow [id=$id]")
     onDropInstance()
 
     TrueSheetModule.unregisterView(id)
@@ -143,11 +140,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun addView(child: View?, index: Int) {
     UiThreadUtil.assertOnUiThread()
 
-    Log.d(
-      TAG_NAME,
-      "addView [id=$id]: child=${child?.javaClass?.simpleName}, childId=${child?.id}, index=$index, totalChildren=${sheetRootView.childCount}"
-    )
-
     // Add the child to our Root Sheet View
     // This is the TrueSheetContainerView
     sheetRootView.addView(child, index)
@@ -158,7 +150,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       eventDispatcher?.dispatchEvent(
         MountEvent(surfaceId, id)
       )
-      Log.d(TAG_NAME, "addView [id=$id]: TrueSheetContainerView added, dispatched MountEvent")
     }
   }
 
@@ -169,7 +160,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     UiThreadUtil.assertOnUiThread()
 
     if (child != null) {
-      Log.d(TAG_NAME, "removeView [id=$id]: child=${child.javaClass.simpleName}, childId=${child.id}")
       sheetRootView.removeView(child)
     }
   }
@@ -177,7 +167,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun removeViewAt(index: Int) {
     UiThreadUtil.assertOnUiThread()
     val child = getChildAt(index)
-    Log.d(TAG_NAME, "removeViewAt [id=$id]: index=$index, child=${child?.javaClass?.simpleName}")
     sheetRootView.removeView(child)
   }
 
@@ -191,7 +180,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
 
   fun onDropInstance() {
-    Log.d(TAG_NAME, "onDropInstance [id=$id]: cleaning up, isShowing=${sheetDialog.isShowing}")
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
@@ -348,7 +336,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun present(detentIndex: Int, promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    Log.d(TAG_NAME, "present [id=$id]: detentIndex=$detentIndex, isShowing=${sheetDialog.isShowing}")
     sheetDialog.presentPromise = promiseCallback
     sheetDialog.present(detentIndex)
   }
@@ -362,7 +349,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     UiThreadUtil.assertOnUiThread()
 
-    Log.d(TAG_NAME, "dismiss [id=$id]: isShowing=${sheetDialog.isShowing}")
     sheetDialog.dismissPromise = promiseCallback
     sheetDialog.dismiss()
   }
