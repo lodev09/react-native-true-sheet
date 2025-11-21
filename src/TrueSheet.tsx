@@ -411,6 +411,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 const styles = StyleSheet.create({
   sheetView: {
     position: 'absolute',
+    width: '100%',
     zIndex: -9999,
   },
   footer: {

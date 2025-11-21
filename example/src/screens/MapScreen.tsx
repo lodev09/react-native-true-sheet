@@ -92,7 +92,7 @@ export const MapScreen = () => {
       <AnimatedButton
         activeOpacity={0.6}
         style={$floatingButtonStyles}
-        onPress={() => sheetRef.current?.resize(1)}
+        onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
         detents={['auto', 1]}
