@@ -131,10 +131,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (sheetController.isShowing) {
         sheetController.configure()
         sheetController.setStateForDetentIndex(sheetController.currentDetentIndex)
-
-        UiThreadUtil.runOnUiThread {
-          sheetController.positionFooter()
-        }
+        sheetController.positionFooter()
       }
     }
   }
@@ -323,7 +320,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setGrabber(grabber: Boolean) {}
 
-  fun setDetents(newDetents: MutableList<Any>) {
+  fun setDetents(newDetents: MutableList<Double>) {
     sheetController.detents = newDetents
   }
 

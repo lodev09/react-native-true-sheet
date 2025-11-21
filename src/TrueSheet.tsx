@@ -348,10 +348,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     // Trim to max 3 detents and clamp fractions
     const resolvedDetents = detents.slice(0, 3).map((detent) => {
-      if (detent === 'auto') return -1;
+      if (detent === 'auto' || detent === -1) return -1;
 
-      // Default to 0.1 if exactly zero
-      if (detent === 0) return 0.1;
+      // Default to 0.1 if zero or below
+      if (detent <= 0) return 0.1;
 
       // Clamp to maximum of 1
       return Math.min(1, detent);

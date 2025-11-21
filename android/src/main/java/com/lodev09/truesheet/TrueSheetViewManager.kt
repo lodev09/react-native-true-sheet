@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.module.annotations.ReactModule
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
@@ -12,7 +13,6 @@ import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.TrueSheetViewManagerDelegate
 import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
 import com.lodev09.truesheet.events.*
-import com.lodev09.truesheet.utils.PixelUtils
 
 /**
  * ViewManager for TrueSheetView - Fabric architecture
@@ -70,11 +70,11 @@ class TrueSheetViewManager :
   @ReactProp(name = "detents")
   override fun setDetents(view: TrueSheetView, value: ReadableArray?) {
     if (value == null || value.size() == 0) {
-      view.setDetents(mutableListOf(0.5f, 1f))
+      view.setDetents(mutableListOf(0.5, 1.0))
       return
     }
 
-    val detents = mutableListOf<Any>()
+    val detents = mutableListOf<Double>()
 
     IntProgression
       .fromClosedRange(0, value.size() - 1, 1)
@@ -93,7 +93,7 @@ class TrueSheetViewManager :
   @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
   override fun setCornerRadius(view: TrueSheetView, radius: Double) {
     if (radius >= 0) {
-      view.setCornerRadius(PixelUtils.toPixel(radius))
+      view.setCornerRadius(radius.dpToPx())
     }
   }
 
@@ -130,7 +130,7 @@ class TrueSheetViewManager :
   @ReactProp(name = "maxHeight", defaultDouble = 0.0)
   override fun setMaxHeight(view: TrueSheetView, height: Double) {
     if (height > 0) {
-      view.setMaxHeight(PixelUtils.toPixel(height).toInt())
+      view.setMaxHeight(height.dpToPx().toInt())
     }
   }
 

@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 
 class KeyboardManager(reactContext: ReactContext) {
   interface OnKeyboardChangeListener {
@@ -29,7 +30,7 @@ class KeyboardManager(reactContext: ReactContext) {
 
         override fun onGlobalLayout() {
           val heightDiff = rootView.height - height
-          if (heightDiff > PixelUtils.toPixel(200.0)) {
+          if (heightDiff > 200.dpToPx()) {
             // Will ask InputMethodManager.isAcceptingText() to detect if keyboard appeared or not.
             val inputManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             if (height != previousHeight && inputManager.isAcceptingText()) {

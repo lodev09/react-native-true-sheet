@@ -4,17 +4,16 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.utils.KeyboardManager
-import com.lodev09.truesheet.utils.PixelUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -150,7 +149,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
   var cornerRadius: Float = 0f
   var backgroundColor: Int = Color.WHITE
-  var detents = mutableListOf(0.5, 1)
+  var detents = mutableListOf(0.5, 1.0)
 
   private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
@@ -391,14 +390,14 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       isFitToContents = true
 
       // m3 max width 640dp
-      maxWidth = PixelUtils.toPixel(640.0).toInt()
+      maxWidth = 640.0.dpToPx().toInt()
 
       when (detents.size) {
         1 -> {
           maxHeight = getDetentHeight(detents[0])
           skipCollapsed = true
 
-          if (detents[0] == -1.0 || detents[0] == -1) {
+          if (detents[0] == -1.0 || detents[0] == -1.0) {
             // Force a layout update for auto height
             sheetRootViewContainer?.apply {
               val params = layoutParams
@@ -425,11 +424,6 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
           setPeekHeight(peekHeightValue, isShowing)
           maxHeight = maxHeightValue
           halfExpandedRatio = minOf(middleDetentHeight.toFloat() / maxScreenHeight.toFloat(), 1.0f)
-
-          Log.d(TAG_NAME, "Container height: ${containerView?.height?.pxToDp()}")
-          Log.d(TAG_NAME, "Max Screen height: ${maxScreenHeight.pxToDp()}")
-          Log.d(TAG_NAME, "Ratio: $halfExpandedRatio")
-          Log.d(TAG_NAME, "middleDetentHeight: ${middleDetentHeight.pxToDp()}")
         }
       }
     }
@@ -567,7 +561,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    * Get current detent info from sheet view position
    */
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val position = PixelUtils.toDIP(sheetView.top.toFloat())
+    val position = sheetView.top.pxToDp()
     return DetentInfo(currentDetentIndex, position)
   }
 
@@ -627,39 +621,17 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
   /**
    * Get the height value based on the detent config value.
    */
-  private fun getDetentHeight(detent: Any): Int {
-    val height: Int =
-      when (detent) {
-        is Double -> {
-          if (detent == -1.0) {
-            // -1 represents "auto"
-            val contentHeight = containerView?.contentHeight ?: 0
-            Log.d(TAG_NAME, "contentHeight: $contentHeight maxSheetHeight: $maxSheetHeight maxScreenHeight: $maxScreenHeight")
-            contentHeight
-          } else {
-            if (detent <= 0.0 || detent > 1.0) {
-              throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
-            }
-            (detent * maxScreenHeight).toInt()
-          }
-        }
-
-        is Int -> {
-          if (detent == -1) {
-            // -1 represents "auto"
-            val contentHeight = containerView?.contentHeight ?: 0
-            Log.d(TAG_NAME, "int detent $detent contentHeight: ${contentHeight.pxToDp()}")
-            contentHeight
-          } else {
-            if (detent <= 0 || detent > 1) {
-              throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
-            }
-            (detent.toDouble() * maxScreenHeight).toInt()
-          }
-        }
-
-        else -> throw IllegalArgumentException("TrueSheet: invalid detent type ${detent::class.simpleName}")
+  private fun getDetentHeight(detent: Double): Int {
+    val height: Int = if (detent == -1.0) {
+      // -1.0 represents "auto"
+      val contentHeight = containerView?.contentHeight ?: 0
+      contentHeight
+    } else {
+      if (detent <= 0.0 || detent > 1.0) {
+        throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
+      (detent * maxScreenHeight).toInt()
+    }
 
     val finalHeight = maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
     return finalHeight
@@ -737,7 +709,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    */
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
-    val position = PixelUtils.toDIP(sheetRootViewContainer?.top?.toFloat() ?: 0f)
+    val position = sheetRootViewContainer?.top?.pxToDp() ?: 0f
     return baseInfo.copy(position = position)
   }
 }
