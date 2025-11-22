@@ -151,17 +151,19 @@
   [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 
   // Handle rotation/size change
-  [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-    // Animation block - updates happen here
-  } completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-    // After rotation completes
-    [self setupSheetDetents];
-
-    // Notify delegate of size changes
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  [coordinator
+    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+      // Animation block - updates happen here
     }
-  }];
+    completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+      // After rotation completes
+      [self setupSheetDetents];
+
+      // Notify delegate of size changes
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+        [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+      }
+    }];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -354,20 +356,22 @@
 - (void)trackTransitionPosition:(CADisplayLink *)displayLink {
   UIView *presentedView = self.presentedView;
 
-  if (_isDragging || !_fakeTransitionView || !presentedView)
+  if (_isDragging || !_fakeTransitionView || !presentedView) {
     return;
+  }
 
   // Get the presentation layer which contains the in-flight animated values
   // Unlike the model layer (which has the final/target value), the presentation
   // layer reflects the current state during animation
   CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
+
   if (presentationLayer) {
     BOOL transitioning = NO;
     CGFloat position = presentationLayer.frame.origin.y;
 
-    // Our last transition position is the same with fake view's layer position
+    // Our last transition position is nearly the same as fake view's layer position
     // Sheet must've been repositioning after dragging at lowest detent
-    if (_lastTransitionPosition == position) {
+    if (fabs(_lastTransitionPosition - position) < FLT_EPSILON) {
       // Let's just flag it as transitioning to let JS manually animate
       transitioning = YES;
 
