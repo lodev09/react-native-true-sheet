@@ -6,4 +6,5 @@
 ## Rules
 
 1. I will do builds and UI test myself.
-2. Do not commit changes until I tell you to.
+2. DO NOT commit changes until I tell you to.
+3. DO NOT create summary documents unless you are told to.
