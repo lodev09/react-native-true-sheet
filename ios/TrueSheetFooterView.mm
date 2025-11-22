@@ -20,6 +20,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
   CGFloat _lastHeight;
+  BOOL _didInitialLayout;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -35,6 +36,7 @@ using namespace facebook::react;
     self.backgroundColor = [UIColor clearColor];
 
     _lastHeight = 0;
+    _didInitialLayout = NO;
   }
   return self;
 }
@@ -69,9 +71,14 @@ using namespace facebook::react;
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
-  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-
   CGFloat height = layoutMetrics.frame.size.height;
+
+  // On initial layout, call super to let React Native position the view
+  // After that, we use Auto Layout constraints instead
+  if (!_didInitialLayout) {
+    [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+    _didInitialLayout = YES;
+  }
 
   // Update footer constraints when height changes
   if (height != _lastHeight) {
@@ -86,6 +93,7 @@ using namespace facebook::react;
   [LayoutUtil unpinView:self];
 
   _lastHeight = 0;
+  _didInitialLayout = NO;
 }
 
 @end

@@ -396,11 +396,6 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
   [OnSizeChangeEvent emit:_eventEmitter width:size.width height:size.height];
-  
-  // Force footer to reapply constraints on size change
-  if (_containerView) {
-    [_containerView layoutFooter];
-  }
 }
 
 #pragma mark - Private Helpers
