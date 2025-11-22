@@ -1,9 +1,10 @@
 package com.lodev09.truesheet
 
+import android.os.Handler
+import android.os.Looper
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.interfaces.TurboModule
 import com.facebook.react.uimanager.UIManagerHelper
@@ -94,7 +95,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    * Helper method to get TrueSheetView by tag and execute closure
    */
   private fun withTrueSheetView(tag: Int, promise: Promise, closure: (view: TrueSheetView) -> Unit) {
-    UiThreadUtil.runOnUiThread {
+    Handler(Looper.getMainLooper()).post {
       try {
         // First try to get from registry (faster)
         val view = getSheetByTag(tag)
@@ -108,7 +109,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
 
           if (resolvedView == null) {
             promise.reject("VIEW_NOT_FOUND", "TrueSheetView with tag $tag not found")
-            return@runOnUiThread
+            return@post
           }
 
           if (resolvedView is TrueSheetView) {

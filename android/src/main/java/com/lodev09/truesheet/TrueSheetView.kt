@@ -6,7 +6,6 @@ import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -105,8 +104,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * new Dialog.
    */
   fun showOrUpdate() {
-    UiThreadUtil.assertOnUiThread()
-
     // Only handle initial presentation once on mount
     if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
       hasHandledInitialPresentation = true
@@ -129,8 +126,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== View Management ====================
 
   override fun addView(child: View?, index: Int) {
-    UiThreadUtil.assertOnUiThread()
-
     // Add the child to our ViewController
     // This is the TrueSheetContainerView
     viewController.addView(child, index)
@@ -160,8 +155,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun getChildAt(index: Int): View? = viewController.getChildAt(index)
 
   override fun removeView(child: View?) {
-    UiThreadUtil.assertOnUiThread()
-
     if (child != null) {
       // Clean up container delegate
       if (child is TrueSheetContainerView) {
@@ -173,7 +166,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun removeViewAt(index: Int) {
-    UiThreadUtil.assertOnUiThread()
     val child = getChildAt(index)
     viewController.removeView(child)
   }
@@ -339,8 +331,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    UiThreadUtil.assertOnUiThread()
-
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
   }
@@ -352,8 +342,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   @UiThread
   fun dismiss(promiseCallback: () -> Unit) {
-    UiThreadUtil.assertOnUiThread()
-
     viewController.dismissPromise = promiseCallback
     viewController.dismiss()
   }
