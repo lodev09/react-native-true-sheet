@@ -12,7 +12,6 @@ import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
-import com.facebook.react.config.ReactFeatureFlags
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -65,13 +64,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   internal var eventDispatcher: EventDispatcher? = null
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
-  private var jSPointerDispatcher: JSPointerDispatcher? = null
-
-  init {
-    if (ReactFeatureFlags.dispatchPointerEvents) {
-      jSPointerDispatcher = JSPointerDispatcher(this)
-    }
-  }
+  private var jSPointerDispatcher = JSPointerDispatcher(this)
 
   /**
    * Delegate for handling view controller events
@@ -187,7 +180,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   init {
     // Initialize maxScreenHeight
-    maxScreenHeight = ScreenUtils.screenHeight(reactContext, edgeToEdgeEnabled)
+    maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
   }
 
   // ==================== Lifecycle ====================
@@ -538,9 +531,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val footerHeight = footer.height
 
       // Get container's position in screen coordinates
-      val location = IntArray(2)
-      containerView.getLocationOnScreen(location)
-      val containerTop = location[1]
+      val containerTop = ScreenUtils.getScreenY(containerView)
 
       // Calculate base position (screen bottom)
       val baseY = (maxScreenHeight - containerTop - footerHeight).toFloat()
@@ -578,7 +569,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
         maxScreenHeight = when (isVisible) {
           true -> visibleHeight ?: 0
-          else -> ScreenUtils.screenHeight(reactContext, edgeToEdgeEnabled)
+          else -> ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
         }
 
         positionFooter()
@@ -599,7 +590,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Get current detent info from sheet view position
    */
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val position = sheetView.top.pxToDp()
+    // Get the Y position in screen coordinates (like iOS presentedView.frame.origin.y)
+    val position = ScreenUtils.getScreenY(sheetView).pxToDp()
     return DetentInfo(currentDetentIndex, position)
   }
 
@@ -746,7 +738,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
-    val position = sheetContainer?.top?.pxToDp() ?: 0f
+    // Get the Y position in screen coordinates (like iOS presentedView.frame.origin.y)
+    val container = sheetContainer
+    val position = if (container != null) {
+      ScreenUtils.getScreenY(container).pxToDp()
+    } else {
+      0f
+    }
     return baseInfo.copy(position = position)
   }
 

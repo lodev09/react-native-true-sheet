@@ -25,7 +25,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     await sheetRef.current?.dismiss();
   };
 
-  const $animatedContainer: ViewStyle = useAnimatedStyle(() => ({
+  const animatedContainerStyle: ViewStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
   }));
 
@@ -72,7 +72,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     >
       <GestureHandlerRootView style={styles.gestureRoot}>
         <GestureDetector gesture={pan}>
-          <Animated.View style={[styles.panContainer, $animatedContainer]}>
+          <Animated.View style={[styles.panContainer, animatedContainerStyle]}>
             {times(BOXES_COUNT, (i) => (
               <DemoContent key={i} text={String(i + 1)} style={styles.box} />
             ))}

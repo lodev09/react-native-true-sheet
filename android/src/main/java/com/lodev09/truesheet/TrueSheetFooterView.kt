@@ -23,7 +23,13 @@ class TrueSheetFooterView(context: ThemedReactContext) : ReactViewGroup(context)
   private var lastWidth = 0
   private var lastHeight = 0
 
-  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
     super.onLayout(changed, left, top, right, bottom)
 
     // Notify delegate when footer size changes

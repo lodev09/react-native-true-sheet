@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.DisplayMetrics
+import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import com.facebook.react.bridge.ReactContext
@@ -26,7 +27,7 @@ object ScreenUtils {
    * @return Screen height in pixels
    */
   @SuppressLint("InternalInsetResource", "DiscouragedApi")
-  fun screenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
+  fun getScreenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val displayMetrics = DisplayMetrics()
 
@@ -63,5 +64,17 @@ object ScreenUtils {
     } else {
       screenHeight - statusBarHeight - navigationBarHeight
     }
+  }
+
+  /**
+   * Get the Y coordinate of a view in screen coordinates
+   *
+   * @param view The view to get screen Y coordinate for
+   * @return Y coordinate in screen space
+   */
+  fun getScreenY(view: View): Int {
+    val location = IntArray(2)
+    view.getLocationOnScreen(location)
+    return location[1]
   }
 }

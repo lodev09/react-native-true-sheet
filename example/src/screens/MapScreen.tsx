@@ -53,12 +53,9 @@ export const MapScreen = () => {
     console.log('Sheet 1 present async');
   };
 
-  const $floatingButtonStyles: StyleProp<ViewStyle> = [
-    styles.floatingButton,
-    useAnimatedStyle(() => ({
-      transform: [{ translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)) }],
-    })),
-  ];
+  const floatingButtonStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
+    transform: [{ translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)) }],
+  }));
 
   const addContent = () => {
     setContentCount((prev) => prev + 1);
@@ -91,7 +88,7 @@ export const MapScreen = () => {
       />
       <AnimatedButton
         activeOpacity={0.6}
-        style={$floatingButtonStyles}
+        style={[styles.floatingButton, floatingButtonStyles]}
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
