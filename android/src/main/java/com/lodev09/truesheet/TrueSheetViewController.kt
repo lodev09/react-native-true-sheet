@@ -4,13 +4,23 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
+import com.facebook.react.R
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
+import com.facebook.react.config.ReactFeatureFlags
+import com.facebook.react.uimanager.JSPointerDispatcher
+import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
+import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.events.EventDispatcher
+import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.utils.KeyboardManager
@@ -19,39 +29,54 @@ import com.lodev09.truesheet.utils.ScreenUtils
 data class DetentInfo(val index: Int, val position: Float)
 
 /**
- * Delegate protocol for TrueSheetController lifecycle and interaction events.
+ * Delegate protocol for TrueSheetViewController lifecycle and interaction events.
  * Similar to iOS TrueSheetViewControllerDelegate pattern.
  */
-interface TrueSheetControllerDelegate {
-  fun controllerWillPresent(index: Int, position: Float)
-  fun controllerDidPresent(index: Int, position: Float)
-  fun controllerWillDismiss()
-  fun controllerDidDismiss()
-  fun controllerDidChangeDetent(index: Int, position: Float)
-  fun controllerDidDragBegin(index: Int, position: Float)
-  fun controllerDidDragChange(index: Int, position: Float)
-  fun controllerDidDragEnd(index: Int, position: Float)
-  fun controllerDidChangePosition(index: Int, position: Float)
+interface TrueSheetViewControllerDelegate {
+  fun viewControllerWillPresent(index: Int, position: Float)
+  fun viewControllerDidPresent(index: Int, position: Float)
+  fun viewControllerWillDismiss()
+  fun viewControllerDidDismiss()
+  fun viewControllerDidChangeDetent(index: Int, position: Float)
+  fun viewControllerDidDragBegin(index: Int, position: Float)
+  fun viewControllerDidDragChange(index: Int, position: Float)
+  fun viewControllerDidDragEnd(index: Int, position: Float)
+  fun viewControllerDidChangePosition(index: Int, position: Float)
+  fun viewControllerDidChangeSize(width: Int, height: Int)
 }
 
 /**
- * TrueSheetController manages the bottom sheet dialog lifecycle and properties.
+ * TrueSheetViewController manages the bottom sheet dialog lifecycle and properties.
  * Similar to iOS TrueSheetViewController pattern.
  *
- * The dialog is created lazily when the container view mounts and is properly
- * cleaned up when dismissed to ensure clean state for each presentation.
+ * This view acts as both the RootView (handles touch events) and the controller (manages dialog).
  */
-@SuppressLint("ClickableViewAccessibility")
-class TrueSheetController(private val reactContext: ThemedReactContext, private val sheetRootView: TrueSheetRootView) {
+@SuppressLint("ClickableViewAccessibility", "ViewConstructor")
+class TrueSheetViewController(private val reactContext: ThemedReactContext) :
+  ReactViewGroup(reactContext),
+  RootView {
 
   companion object {
     private const val TAG_NAME = "TrueSheet"
   }
 
+  // ==================== RootView Touch Handling ====================
+
+  internal var eventDispatcher: EventDispatcher? = null
+
+  private val jSTouchDispatcher = JSTouchDispatcher(this)
+  private var jSPointerDispatcher: JSPointerDispatcher? = null
+
+  init {
+    if (ReactFeatureFlags.dispatchPointerEvents) {
+      jSPointerDispatcher = JSPointerDispatcher(this)
+    }
+  }
+
   /**
-   * Delegate for handling controller events
+   * Delegate for handling view controller events
    */
-  var delegate: TrueSheetControllerDelegate? = null
+  var delegate: TrueSheetViewControllerDelegate? = null
 
   /**
    * The BottomSheetDialog instance - created lazily when container mounts
@@ -67,15 +92,15 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
   /**
    * The sheet container view from Material BottomSheetDialog
    */
-  private val sheetRootViewContainer: FrameLayout?
-    get() = sheetRootView.parent as? FrameLayout
+  private val sheetContainer: FrameLayout?
+    get() = this.parent as? FrameLayout
 
   /**
-   * Our sheet container view from root view's only child
+   * Our sheet container view from this root view's only child
    */
   private val containerView: TrueSheetContainerView?
-    get() = if (sheetRootView.isNotEmpty()) {
-      sheetRootView.getChildAt(0) as? TrueSheetContainerView
+    get() = if (this.isNotEmpty()) {
+      this.getChildAt(0) as? TrueSheetContainerView
     } else {
       null
     }
@@ -154,7 +179,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     }
 
   var cornerRadius: Float = 0f
-  var backgroundColor: Int = Color.WHITE
+  var sheetBackgroundColor: Int = Color.WHITE
   var detents = mutableListOf(0.5, 1.0)
 
   private var keyboardManager = KeyboardManager(reactContext)
@@ -180,7 +205,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     if (dialog != null) return
 
     dialog = BottomSheetDialog(reactContext).apply {
-      setContentView(sheetRootView)
+      setContentView(this@TrueSheetViewController)
 
       // Setup window params
       window?.apply {
@@ -214,8 +239,8 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       setOnDismissListener(null)
     }
 
-    // Remove sheetRootView from its parent to allow re-attachment on next presentation
-    sheetRootViewContainer?.removeView(sheetRootView)
+    // Remove this view from its parent to allow re-attachment on next presentation
+    sheetContainer?.removeView(this)
 
     unregisterKeyboardManager()
     dialog = null
@@ -231,7 +256,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       registerKeyboardManager()
 
       // Initialize footer position after layout is complete
-      sheetRootViewContainer?.post {
+      sheetContainer?.post {
         positionFooter()
       }
 
@@ -249,13 +274,13 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
       // Notify delegate
       val detentInfo = getDetentInfoForIndexWithPosition(currentDetentIndex)
-      delegate?.controllerDidPresent(detentInfo.index, detentInfo.position)
+      delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position)
     }
 
     // Setup listener when the dialog is about to be dismissed
     dialog.setOnCancelListener {
       // Notify delegate
-      delegate?.controllerWillDismiss()
+      delegate?.viewControllerWillDismiss()
     }
 
     // Setup listener when the dialog has been dismissed
@@ -267,7 +292,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       }
 
       // Notify delegate
-      delegate?.controllerDidDismiss()
+      delegate?.viewControllerDidDismiss()
 
       // Clean up the dialog for next presentation
       cleanupDialog()
@@ -293,7 +318,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
           // Emit position change event continuously during slide
           val detentInfo = getCurrentDetentInfo(sheetView)
-          delegate?.controllerDidChangePosition(detentInfo.index, detentInfo.position)
+          delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position)
 
           // Update footer position during slide
           positionFooter(slideOffset)
@@ -343,7 +368,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       // For consistency with iOS, we notify detent change immediately
       // when already showing (not waiting for state to change)
       val detentInfo = getDetentInfoForIndexWithPosition(detentIndex)
-      delegate?.controllerDidChangeDetent(detentInfo.index, detentInfo.position)
+      delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position)
 
       setStateForDetentIndex(detentIndex)
     } else {
@@ -355,7 +380,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
       // Notify delegate before showing
       val detentInfo = getDetentInfoForIndex(detentIndex)
-      delegate?.controllerWillPresent(detentInfo.index, detentInfo.position)
+      delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position)
 
       if (!animated) {
         // Disable animation
@@ -396,7 +421,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
           if (detents[0] == -1.0 || detents[0] == -1.0) {
             // Force a layout update for auto height
-            sheetRootViewContainer?.apply {
+            sheetContainer?.apply {
               val params = layoutParams
               params.height = maxHeight
               layoutParams = params
@@ -430,7 +455,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    * Setup background color and corner radius.
    */
   fun setupBackground() {
-    sheetRootViewContainer?.apply {
+    sheetContainer?.apply {
       val outerRadii = floatArrayOf(
         cornerRadius,
         cornerRadius,
@@ -443,7 +468,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       )
 
       val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
-      background.paint.color = backgroundColor
+      background.paint.color = sheetBackgroundColor
 
       this.background = background
       this.clipToOutline = true
@@ -583,7 +608,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    */
   private fun handleDragBegin(sheetView: View) {
     val detentInfo = getCurrentDetentInfo(sheetView)
-    delegate?.controllerDidDragBegin(detentInfo.index, detentInfo.position)
+    delegate?.viewControllerDidDragBegin(detentInfo.index, detentInfo.position)
     isDragging = true
   }
 
@@ -594,7 +619,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     if (!isDragging) return
 
     val detentInfo = getCurrentDetentInfo(sheetView)
-    delegate?.controllerDidDragChange(detentInfo.index, detentInfo.position)
+    delegate?.viewControllerDidDragChange(detentInfo.index, detentInfo.position)
   }
 
   /**
@@ -610,7 +635,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
     val detentInfo = getDetentInfoForState(state)
     detentInfo?.let {
       // Notify delegate of drag end
-      delegate?.controllerDidDragEnd(it.index, it.position)
+      delegate?.viewControllerDidDragEnd(it.index, it.position)
 
       if (it.index != currentDetentIndex) {
         presentPromise?.let { promise ->
@@ -622,7 +647,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
         setupDimmedBackground(it.index)
 
         // Notify delegate of detent change
-        delegate?.controllerDidChangeDetent(it.index, it.position)
+        delegate?.viewControllerDidChangeDetent(it.index, it.position)
       }
     }
 
@@ -721,7 +746,76 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
    */
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
-    val position = sheetRootViewContainer?.top?.pxToDp() ?: 0f
+    val position = sheetContainer?.top?.pxToDp() ?: 0f
     return baseInfo.copy(position = position)
+  }
+
+  // ==================== RootView Implementation ====================
+
+  override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+    super.onInitializeAccessibilityNodeInfo(info)
+
+    val testId = getTag(R.id.react_test_id) as String?
+    if (testId != null) {
+      info.viewIdResourceName = testId
+    }
+  }
+
+  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    super.onSizeChanged(w, h, oldw, oldh)
+    // Notify delegate about size change
+    delegate?.viewControllerDidChangeSize(w, h)
+  }
+
+  override fun handleException(t: Throwable) {
+    reactContext.reactApplicationContext.handleException(RuntimeException(t))
+  }
+
+  override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let { eventDispatcher ->
+      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
+      jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, true)
+    }
+    return super.onInterceptTouchEvent(event)
+  }
+
+  override fun onTouchEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let { eventDispatcher ->
+      jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)
+      jSPointerDispatcher?.handleMotionEvent(event, eventDispatcher, false)
+    }
+    super.onTouchEvent(event)
+    // In case when there is no children interested in handling touch event, we return true from
+    // the root view in order to receive subsequent events related to that gesture
+    return true
+  }
+
+  override fun onInterceptHoverEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let { jSPointerDispatcher?.handleMotionEvent(event, it, true) }
+    return super.onHoverEvent(event)
+  }
+
+  override fun onHoverEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let { jSPointerDispatcher?.handleMotionEvent(event, it, false) }
+    return super.onHoverEvent(event)
+  }
+
+  @OptIn(UnstableReactNativeAPI::class)
+  @Suppress("DEPRECATION")
+  override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
+    eventDispatcher?.let { eventDispatcher ->
+      jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher, reactContext)
+      jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
+    }
+  }
+
+  override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
+    eventDispatcher?.let { jSTouchDispatcher.onChildEndedNativeGesture(ev, it) }
+    jSPointerDispatcher?.onChildEndedNativeGesture()
+  }
+
+  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+    // Allow the request to propagate to parent
+    super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
 }

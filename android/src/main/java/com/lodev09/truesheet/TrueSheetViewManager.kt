@@ -87,7 +87,7 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "background", defaultInt = Color.WHITE)
   override fun setBackground(view: TrueSheetView, color: Int) {
-    view.setBackground(color)
+    view.setSheetBackgroundColor(color)
   }
 
   @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
