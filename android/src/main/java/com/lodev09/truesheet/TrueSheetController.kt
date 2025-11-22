@@ -137,6 +137,12 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
 
   var maxSheetHeight: Int? = null
 
+  /**
+   * The content height from the container view.
+   * Set by the host view when content size changes.
+   */
+  var contentHeight: Int = 0
+
   var dismissible: Boolean = true
     set(value) {
       field = value
@@ -344,7 +350,7 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
       // Reset drag state before presenting
       isDragging = false
 
-      configure()
+      setupSheetDetents()
       setStateForDetentIndex(detentIndex)
 
       // Notify delegate before showing
@@ -370,9 +376,9 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
   // ==================== Configuration ====================
 
   /**
-   * Configure the sheet based from the detent preference.
+   * Setup sheet detents based on the detent preference.
    */
-  fun configure() {
+  fun setupSheetDetents() {
     val behavior = this.behavior ?: return
 
     // Configure sheet sizes
@@ -631,7 +637,6 @@ class TrueSheetController(private val reactContext: ThemedReactContext, private 
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
       // -1.0 represents "auto"
-      val contentHeight = containerView?.contentHeight ?: 0
       contentHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {

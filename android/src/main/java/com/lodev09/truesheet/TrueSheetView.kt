@@ -32,7 +32,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   LifecycleEventListener,
   TrueSheetControllerDelegate,
-  TrueSheetRootViewDelegate {
+  TrueSheetRootViewDelegate,
+  TrueSheetContainerViewDelegate {
 
   /**
    * Root view wrapper that gets set as the dialog content
@@ -129,7 +130,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       }
     } else {
       if (sheetController.isShowing) {
-        sheetController.configure()
+        sheetController.setupSheetDetents()
         sheetController.setStateForDetentIndex(sheetController.currentDetentIndex)
         sheetController.positionFooter()
       }
@@ -147,6 +148,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Create dialog and dispatch mount event when TrueSheetContainerView is added
     if (child is TrueSheetContainerView) {
+      // Set up container delegate to listen for content size changes
+      child.delegate = this
+
+      // Get initial content height from container
+      val contentHeight = child.contentHeight
+      if (contentHeight > 0) {
+        sheetController.contentHeight = contentHeight
+      }
+
       // Create the dialog now that the container is mounted
       sheetController.createDialog()
 
@@ -164,6 +174,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     UiThreadUtil.assertOnUiThread()
 
     if (child != null) {
+      // Clean up container delegate
+      if (child is TrueSheetContainerView) {
+        child.delegate = null
+      }
+
       sheetRootView.removeView(child)
     }
   }
@@ -362,6 +377,30 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(
       SizeChangeEvent(surfaceId, id, width, height)
     )
+  }
+
+  // ==================== TrueSheetContainerViewDelegate Implementation ====================
+
+  override fun containerViewContentDidChangeSize(width: Int, height: Int) {
+    // Clamp content height to container height to prevent unbounded growth with scrollable content
+    val containerHeight = sheetController.maxScreenHeight
+    val contentHeight = if (containerHeight > 0) minOf(height, containerHeight) else height
+
+    sheetController.contentHeight = contentHeight
+
+    // Update detents if sheet is already presented
+    if (sheetController.isShowing) {
+      // Reconfigure sheet detents with new content height
+      sheetController.setupSheetDetents()
+      sheetController.setStateForDetentIndex(sheetController.currentDetentIndex)
+    }
+  }
+
+  override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
+    // Reposition footer when its size changes
+    if (sheetController.isShowing) {
+      sheetController.positionFooter()
+    }
   }
 
   companion object {
