@@ -112,19 +112,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       hasHandledInitialPresentation = true
 
       // Create dialog if not created yet
-      if (!viewController.isShowing) {
+      if (!viewController.isPresented) {
         viewController.createDialog()
       }
 
       post {
         present(initialDetentIndex, initialDetentAnimated) { }
       }
-    } else {
-      if (viewController.isShowing) {
-        viewController.setupSheetDetents()
-        viewController.setStateForDetentIndex(viewController.currentDetentIndex)
-        viewController.positionFooter()
-      }
+    } else if (viewController.isPresented) {
+      viewController.setupSheetDetents()
+      viewController.setStateForDetentIndex(viewController.currentDetentIndex)
+      viewController.positionFooter()
     }
   }
 
@@ -193,7 +191,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
 
-    if (viewController.isShowing) {
+    if (viewController.isPresented) {
       viewController.dismiss()
     }
     viewController.delegate = null
@@ -291,7 +289,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setDimmed(dimmed: Boolean) {
     if (viewController.dimmed == dimmed) return
     viewController.dimmed = dimmed
-    if (viewController.isShowing) {
+    if (viewController.isPresented) {
       viewController.setupDimmedBackground(viewController.currentDetentIndex)
     }
   }
@@ -299,7 +297,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setDimmedIndex(index: Int) {
     if (viewController.dimmedIndex == index) return
     viewController.dimmedIndex = index
-    if (viewController.isShowing) {
+    if (viewController.isPresented) {
       viewController.setupDimmedBackground(viewController.currentDetentIndex)
     }
   }
@@ -378,7 +376,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.contentHeight = contentHeight
 
     // Update detents if sheet is already presented
-    if (viewController.isShowing) {
+    if (viewController.isPresented) {
       // Reconfigure sheet detents with new content height
       viewController.setupSheetDetents()
       viewController.setStateForDetentIndex(viewController.currentDetentIndex)
@@ -387,7 +385,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
     // Reposition footer when its size changes
-    if (viewController.isShowing) {
+    if (viewController.isPresented) {
       viewController.positionFooter()
     }
   }

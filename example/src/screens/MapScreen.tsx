@@ -92,7 +92,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={['auto', 1]}
+        detents={[0.25, 1]}
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
