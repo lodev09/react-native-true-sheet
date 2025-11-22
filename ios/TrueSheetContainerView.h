@@ -35,6 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CGFloat)contentHeight;
 
+/**
+ * Updates footer layout constraints if needed
+ */
+- (void)layoutFooter;
+
 @end
 
 NS_ASSUME_NONNULL_END

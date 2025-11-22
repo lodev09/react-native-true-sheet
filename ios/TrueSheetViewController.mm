@@ -19,7 +19,6 @@
 @end
 
 @implementation TrueSheetViewController {
-  CGFloat _lastViewWidth;
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
   UIVisualEffectView *_backgroundView;
@@ -38,7 +37,6 @@
     _grabber = YES;
     _dimmed = YES;
     _dimmedIndex = @(0);
-    _lastViewWidth = 0;
     _lastPosition = 0;
     _lastTransitionPosition = 0;
     _isTransitioning = NO;
@@ -148,25 +146,26 @@
   _activeDetentIndex = -1;
 }
 
-- (void)viewDidLayoutSubviews {
-  [super viewDidLayoutSubviews];
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 
-  CGFloat currentWidth = self.view.frame.size.width;
-  
-  // Detect width changes (e.g., device rotation) and trigger size recalculation
-  // This is essential for "auto" sizing to work correctly
-  if (_lastViewWidth != currentWidth) {
-    _lastViewWidth = currentWidth;
-
-    // Recalculate detents with new width
+  // Handle rotation/size change
+  [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+    // Animation block - updates happen here
+  } completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+    // After rotation completes
     [self setupSheetDetents];
-    
-    // Notify delegate of size changes (pass full size including height)
+
+    // Notify delegate of size changes
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
       [self.delegate viewControllerDidChangeSize:self.view.frame.size];
     }
-  }
+  }];
+}
 
+- (void)viewDidLayoutSubviews {
+  [super viewDidLayoutSubviews];
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;

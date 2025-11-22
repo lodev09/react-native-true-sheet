@@ -52,6 +52,16 @@ using namespace facebook::react;
   return _contentView ? _contentView.frame.size.height : 0;
 }
 
+- (void)layoutFooter {
+  if (_footerView) {
+    // Force footer to reapply constraints on size change
+    CGFloat height = _footerView.frame.size.height;
+    if (height > 0) {
+      [_footerView setupConstraintsWithHeight:height];
+    }
+  }
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
 

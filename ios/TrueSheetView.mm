@@ -339,6 +339,10 @@ using namespace facebook::react;
   _controller.activeDetentIndex = index;
 
   [OnWillPresentEvent emit:_eventEmitter index:index position:position];
+  
+  // Emit onChangeSize event to layout our container on JS
+  CGSize controllerSize = _controller.view.frame.size;
+  [OnSizeChangeEvent emit:_eventEmitter width:controllerSize.width height:controllerSize.height];
 }
 
 - (void)viewControllerDidPresent {
@@ -392,6 +396,11 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
   [OnSizeChangeEvent emit:_eventEmitter width:size.width height:size.height];
+  
+  // Force footer to reapply constraints on size change
+  if (_containerView) {
+    [_containerView layoutFooter];
+  }
 }
 
 #pragma mark - Private Helpers
