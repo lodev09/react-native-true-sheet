@@ -274,10 +274,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     )
   }
 
-  override fun viewControllerDidChangePosition(index: Int, position: Float) {
+  override fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(
-      PositionChangeEvent(surfaceId, id, index, position)
+      PositionChangeEvent(surfaceId, id, index, position, transitioning)
     )
   }
 

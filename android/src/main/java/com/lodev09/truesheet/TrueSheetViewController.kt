@@ -40,7 +40,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragBegin(index: Int, position: Float)
   fun viewControllerDidDragChange(index: Int, position: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float)
-  fun viewControllerDidChangePosition(index: Int, position: Float)
+  fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
 }
 
@@ -83,10 +83,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = dialog?.behavior
 
   /**
-   * The sheet container view from Material BottomSheetDialog
+   * The sheet container view from Material BottomSheetDialog (our parent)
    */
   private val sheetContainer: FrameLayout?
     get() = this.parent as? FrameLayout
+
+  /**
+   * The actual bottom sheet view used by Material BottomSheetBehavior
+   * This is the view whose position changes during drag
+   */
+  private val bottomSheetView: FrameLayout?
+    get() = dialog?.findViewById(com.google.android.material.R.id.design_bottom_sheet)
 
   /**
    * Our sheet container view from this root view's only child
@@ -248,26 +255,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog.setOnShowListener {
       registerKeyboardManager()
 
-      // Initialize footer position after layout is complete
-      sheetContainer?.post {
-        positionFooter()
-      }
-
       // Re-enable animation
       resetAnimation()
 
       // Apply edge-to-edge configuration
       applyEdgeToEdge()
 
-      // Resolve the present promise
-      presentPromise?.let { promise ->
-        promise()
-        presentPromise = null
-      }
+      // Wait for the sheet to settle before notifying didPresent
+      // The sheet animates to its final position after onShow fires
+      sheetContainer?.post {
+        // Initialize footer position after layout is complete
+        positionFooter()
 
-      // Notify delegate
-      val detentInfo = getDetentInfoForIndexWithPosition(currentDetentIndex)
-      delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position)
+        // Resolve the present promise
+        presentPromise?.let { promise ->
+          promise()
+          presentPromise = null
+        }
+
+        // Notify delegate with the settled position
+        val detentInfo = getDetentInfoForIndexWithPosition(currentDetentIndex)
+        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position)
+      }
     }
 
     // Setup listener when the dialog is about to be dismissed
@@ -301,6 +310,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
 
+          // Emit position change event continuously during slide
+          // Set transitioning=false during drag to get real-time position updates
+          val detentInfo = getCurrentDetentInfo(sheetView)
+          delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = false)
+
           when (behavior.state) {
             // For consistency with iOS, we consider SETTLING as dragging change
             BottomSheetBehavior.STATE_DRAGGING,
@@ -308,10 +322,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
             else -> { }
           }
-
-          // Emit position change event continuously during slide
-          val detentInfo = getCurrentDetentInfo(sheetView)
-          delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position)
 
           // Update footer position during slide
           positionFooter(slideOffset)
@@ -363,6 +373,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val detentInfo = getDetentInfoForIndexWithPosition(detentIndex)
       delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position)
 
+      // Note: onSlide will be called during resize animation, no need to emit position change here
       setStateForDetentIndex(detentIndex)
     } else {
       // Reset drag state before presenting
@@ -371,9 +382,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       setStateForDetentIndex(detentIndex)
 
-      // Notify delegate before showing
-      val detentInfo = getDetentInfoForIndex(detentIndex)
-      delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position)
+      this.post {
+        // Notify delegate before showing
+        val detentInfo = getDetentInfoForIndex(detentIndex)
+        delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position)
+
+        // Emit position change with transitioning=true so Reanimated can animate it
+        delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
+      }
 
       if (!animated) {
         // Disable animation
@@ -388,6 +404,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Dismiss the sheet.
    */
   fun dismiss() {
+    this.post {
+      // Emit position change with transitioning=true to animate dismissal
+      // Use maxScreenHeight as the off-screen position (sheet slides down off screen)
+      val offScreenPosition = maxScreenHeight.pxToDp()
+      delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
+    }
+
     dialog?.dismiss()
   }
 
@@ -591,7 +614,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
     // Get the Y position in screen coordinates (like iOS presentedView.frame.origin.y)
-    val position = ScreenUtils.getScreenY(sheetView).pxToDp()
+    val screenY = ScreenUtils.getScreenY(sheetView)
+    val position = screenY.pxToDp()
     return DetentInfo(currentDetentIndex, position)
   }
 
@@ -702,31 +726,62 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     when (detents.size) {
       1 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, 0f)
-          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(0, 0f)
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, calculatePositionForDetentIndex(0))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(0, calculatePositionForDetentIndex(0))
           else -> null
         }
       }
 
       2 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, 0f)
-          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(1, 0f)
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, calculatePositionForDetentIndex(0))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(1, calculatePositionForDetentIndex(1))
           else -> null
         }
       }
 
       3 -> {
         when (state) {
-          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, 0f)
-          BottomSheetBehavior.STATE_HALF_EXPANDED -> DetentInfo(1, 0f)
-          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(2, 0f)
+          BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, calculatePositionForDetentIndex(0))
+          BottomSheetBehavior.STATE_HALF_EXPANDED -> DetentInfo(1, calculatePositionForDetentIndex(1))
+          BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(2, calculatePositionForDetentIndex(2))
           else -> null
         }
       }
 
       else -> null
     }
+
+  /**
+   * Calculate the expected Y position for a given detent index.
+   * Uses actual screen position if available, otherwise calculates based on screen height.
+   */
+  private fun calculatePositionForDetentIndex(index: Int): Float {
+    if (index < 0 || index >= detents.size) {
+      return 0f
+    }
+
+    // Try to get actual position from bottom sheet view first (same view used in behavior callbacks)
+    val sheet = bottomSheetView
+    if (sheet != null) {
+      val screenY = ScreenUtils.getScreenY(sheet)
+      // Only use actual position if sheet has been positioned (screenY > 0)
+      if (screenY > 0) {
+        return screenY.pxToDp()
+      }
+    }
+
+    // Fallback: calculate expected position
+    val detentHeight = getDetentHeight(detents[index])
+
+    // Position calculation is simple: screen height - sheet height
+    // In both edge-to-edge and non-edge-to-edge modes, getScreenY returns
+    // coordinates in screen space, and maxScreenHeight represents the available height
+    // for the sheet, so the calculation is the same
+    val positionPx = maxScreenHeight - detentHeight
+
+    return positionPx.pxToDp()
+  }
 
   /**
    * Get DetentInfo data for given detent index.
@@ -739,9 +794,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun getDetentInfoForIndexWithPosition(index: Int): DetentInfo {
     val baseInfo = getDetentInfoForIndex(index)
     // Get the Y position in screen coordinates (like iOS presentedView.frame.origin.y)
-    val container = sheetContainer
-    val position = if (container != null) {
-      ScreenUtils.getScreenY(container).pxToDp()
+    // Use bottomSheetView for consistency with behavior callbacks
+    val sheet = bottomSheetView
+    val position = if (sheet != null) {
+      val screenY = ScreenUtils.getScreenY(sheet)
+      screenY.pxToDp()
     } else {
       0f
     }

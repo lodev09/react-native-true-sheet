@@ -20,6 +20,14 @@ object ScreenUtils {
     ).takeIf { it > 0 } ?: 0
 
   /**
+   * Get the status bar height
+   *
+   * @param context React context
+   * @return Status bar height in pixels
+   */
+  fun getStatusBarHeight(context: ReactContext): Int = getIdentifierHeight(context, "status_bar_height")
+
+  /**
    * Calculate the screen height
    *
    * @param context React context

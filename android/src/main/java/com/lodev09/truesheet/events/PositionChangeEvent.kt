@@ -6,10 +6,15 @@ import com.facebook.react.uimanager.events.Event
 
 /**
  * Fired continuously for position updates during drag and animation
- * Payload: { index: number, position: number }
+ * Payload: { index: number, position: number, transitioning: boolean }
  */
-class PositionChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float) :
-  Event<PositionChangeEvent>(surfaceId, viewId) {
+class PositionChangeEvent(
+  surfaceId: Int,
+  viewId: Int,
+  private val index: Int,
+  private val position: Float,
+  private val transitioning: Boolean = false
+) : Event<PositionChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 
@@ -17,6 +22,7 @@ class PositionChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, p
     Arguments.createMap().apply {
       putInt("index", index)
       putDouble("position", position.toDouble())
+      putBoolean("transitioning", transitioning)
     }
 
   companion object {

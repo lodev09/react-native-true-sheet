@@ -1,5 +1,12 @@
 import { forwardRef } from 'react';
-import Animated, { type WithSpringConfig, withSpring } from 'react-native-reanimated';
+import Animated, {
+  type WithSpringConfig,
+  type WithTimingConfig,
+  withSpring,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import { Platform } from 'react-native';
 
 import { TrueSheet } from '../TrueSheet';
 import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
@@ -11,6 +18,11 @@ const SPRING_CONFIG: WithSpringConfig = {
   stiffness: 1000,
   mass: 3,
   overshootClamping: true,
+};
+
+const TIMING_CONFIG: WithTimingConfig = {
+  duration: 300,
+  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 };
 
 interface ReanimatedTrueSheetProps extends TrueSheetProps {
@@ -63,11 +75,14 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProp
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
-    // This is used on IOS to tell us that we have to manually animate the value
-    // because since IOS 26, transitioning no longer sends real-time position during
-    // transition.
+    // When transitioning=true, we animate the position manually for smooth transitions.
+    // This is used when native can't provide real-time position updates during animations.
     if (payload.transitioning) {
-      animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
+      if (Platform.OS === 'android') {
+        animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
+      } else {
+        animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
+      }
     } else {
       animatedPosition.value = payload.position;
     }
