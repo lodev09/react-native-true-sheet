@@ -307,7 +307,7 @@ using namespace facebook::react;
   if (_controller && _controller.presentingViewController) {
     [_controller dismissViewControllerAnimated:YES completion:nil];
   }
-  
+
   // Unregister from the registry
   // Note: Re-registration will happen automatically when the component is reused
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];

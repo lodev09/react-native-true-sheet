@@ -141,17 +141,17 @@
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
-  
+
   // Only dispatch didDismiss if the sheet is actually being dismissed
   // (not when another modal is presented on top)
   BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
-  
+
   if (isActuallyDismissing && [self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
 
   _isTrackingPositionFromLayout = NO;
-  
+
   // Only reset state if actually dismissing
   if (isActuallyDismissing) {
     _isPresented = NO;
