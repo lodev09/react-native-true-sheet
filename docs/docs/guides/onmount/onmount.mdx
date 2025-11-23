@@ -12,15 +12,15 @@ Sometimes, you may want to present the sheet directly during mount. For example,
 
 ## How?
 
-You can do this by setting [`initialIndex`](/reference/props#initialindex) prop. It accepts the [`detent`](/reference/types#sheetdetent) `index` that your sheet is configured with. See [detents](/reference/props#detents) prop for more information.
+You can do this by setting [`initialDetentIndex`](/reference/props#initialdetentindex) prop. It accepts the [`detent`](/reference/types#sheetdetent) `index` that your sheet is configured with. See [detents](/reference/props#detents) prop for more information.
 
 ```tsx {5-6}
 const App = () => {
   return (
     <TrueSheet
       detents={['auto', 0.69, 1]}
-      initialIndex={1}
-      initialIndexAnimated
+      initialDetentIndex={1}
+      initialDetentAnimated
     >
       <View />
     </TrueSheet>
@@ -30,7 +30,7 @@ const App = () => {
 
 ### Disabling Animation
 
-You may want to disable the present animation. To do this, simply set [`initialIndexAnimated`](/reference/props#initialindexanimated) to `false`.
+You may want to disable the present animation. To do this, simply set [`initialDetentAnimated`](/reference/props#initialdetentanimated) to `false`.
 
 ### Using with React Navigation
 

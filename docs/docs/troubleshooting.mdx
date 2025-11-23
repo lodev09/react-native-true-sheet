@@ -57,15 +57,15 @@ return (
 
 ### Present during Mount
 
-On iOS, when setting [`initialIndex`](/reference/props#initialindex) and enabling `initialIndexAnimated` (default is `true`) to present during mount, the presentation animation becomes weird. This happens because RNN is not yet finished when the sheet is trying to present.
+On iOS, when setting [`initialDetentIndex`](/reference/props#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation becomes weird. This happens because RNN is not yet finished when the sheet is trying to present.
 
 To solve this, you can do the following:
 
-1. Set `initialIndexAnimated` to `false`. Disables animation during mount.
+1. Set `initialDetentAnimated` to `false`. Disables animation during mount.
 
 ```tsx
 return (
-  <TrueSheet initialIndex={0} initialIndexAnimated={false}>
+  <TrueSheet initialDetentIndex={0} initialDetentAnimated={false}>
     <View />
   </TrueSheet>
 )
@@ -93,7 +93,7 @@ if (!isScreenShown) return null
 
 // Finally show the sheet 🎉
 return (
-  <TrueSheet initialIndex={0} initialIndexAnimated>
+  <TrueSheet initialDetentIndex={0} initialDetentAnimated>
     <View />
   </TrueSheet>
 )
