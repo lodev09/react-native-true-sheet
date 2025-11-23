@@ -1,59 +1,87 @@
 package com.lodev09.truesheet.utils
 
-import android.content.Context
+import android.os.Build
+import android.util.Log
 import android.view.View
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
-import android.view.inputmethod.InputMethodManager
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.PixelUtil.dpToPx
 
 class KeyboardManager(reactContext: ReactContext) {
-  interface OnKeyboardChangeListener {
-    fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?)
+  companion object {
+    private const val TAG_NAME = "TrueSheet"
   }
 
-  private var contentView: View? = null
-  private var onGlobalLayoutListener: OnGlobalLayoutListener? = null
+  interface OnKeyboardChangeListener {
+    fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int)
+  }
+
+  private var rootView: View? = null
+  private var insetsListener: ((WindowInsetsCompat) -> Unit)? = null
   private var isKeyboardVisible = false
+  private var previousHeight = 0
 
   init {
     val activity = reactContext.currentActivity
-    contentView = activity?.findViewById(android.R.id.content)
+    rootView = activity?.window?.decorView?.rootView
   }
 
   fun registerKeyboardListener(listener: OnKeyboardChangeListener?) {
-    contentView?.apply {
-      unregisterKeyboardListener()
+    val view = rootView ?: return
 
-      onGlobalLayoutListener = object : OnGlobalLayoutListener {
-        private var previousHeight = 0
+    // Clean up any existing listener first
+    unregisterKeyboardListener()
 
-        override fun onGlobalLayout() {
-          val heightDiff = rootView.height - height
-          if (heightDiff > 200.dpToPx()) {
-            // Will ask InputMethodManager.isAcceptingText() to detect if keyboard appeared or not.
-            val inputManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            if (height != previousHeight && inputManager.isAcceptingText()) {
-              listener?.onKeyboardStateChange(true, height)
+    // Create and store the insets listener
+    insetsListener = { windowInsets ->
+      handleWindowInsets(windowInsets, listener)
+    }
 
-              previousHeight = height
-              isKeyboardVisible = true
-            }
-          } else if (isKeyboardVisible) {
-            listener?.onKeyboardStateChange(false, null)
-            previousHeight = 0
-            isKeyboardVisible = false
-          }
-        }
+    // Register the WindowInsets listener
+    ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+      insetsListener?.invoke(insets)
+      insets
+    }
+
+    // Request a new insets pass to get initial state
+    ViewCompat.requestApplyInsets(view)
+  }
+
+  private fun handleWindowInsets(
+    windowInsets: WindowInsetsCompat,
+    listener: OnKeyboardChangeListener?
+  ) {
+    // Get IME (keyboard) insets
+    val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+    val isImeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+
+    // Calculate keyboard height
+    val keyboardHeight = imeInsets.bottom
+
+    if (isImeVisible && keyboardHeight > 0) {
+      // Keyboard is visible
+      if (!isKeyboardVisible || keyboardHeight != previousHeight) {
+        // Get the visible height (screen height minus keyboard height)
+        val systemBarsInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val visibleHeight = (rootView?.height ?: 0) - keyboardHeight - systemBarsInsets.top
+
+        listener?.onKeyboardStateChange(true, visibleHeight)
+        previousHeight = keyboardHeight
+        isKeyboardVisible = true
       }
-
-      getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener)
+    } else if (isKeyboardVisible) {
+      // Keyboard was visible, now it's hidden
+      listener?.onKeyboardStateChange(false, 0)
+      previousHeight = 0
+      isKeyboardVisible = false
     }
   }
 
   fun unregisterKeyboardListener() {
-    onGlobalLayoutListener?.let {
-      contentView?.getViewTreeObserver()?.removeOnGlobalLayoutListener(onGlobalLayoutListener)
+    insetsListener = null
+    rootView?.let { view ->
+      ViewCompat.setOnApplyWindowInsetsListener(view, null)
     }
   }
 }

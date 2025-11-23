@@ -585,16 +585,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Also update footer's Y position.
    */
   fun registerKeyboardManager() {
-    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
-      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int?) {
-        maxScreenHeight = when (isVisible) {
-          true -> visibleHeight ?: 0
-          else -> ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
-        }
-
-        positionFooter()
-      }
-    })
+    // TODO: might not be needed if we can properly set edge-to-edge in the dialog
+//    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
+//      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int) {
+//        maxScreenHeight = when (isVisible) {
+//          true -> visibleHeight ?: 0
+//          else -> ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+//        }
+//
+//        positionFooter()
+//      }
+//    })
   }
 
   /**
