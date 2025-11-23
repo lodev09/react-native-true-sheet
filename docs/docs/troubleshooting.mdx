@@ -34,17 +34,17 @@ Note that we are using `flexGrow` instead of `flex` here. For some weird reason,
 
 [`react-navigation`](https://reactnavigation.org)
 
-### Navigation Crash
+### Navigating from Sheet
 
-On IOS, navigating to a screen from within the Sheet can cause issues. To resolve this, dismiss the sheet before navigating!
+You can now navigate to other screens from within a sheet without any issues! The sheet will remain visible in the background when presenting modals on top.
 
 Example:
-```tsx {4-5}
+```tsx
 const sheet = useRef<TrueSheet>(null)
 
-const navigate = async () => {
-  await sheet.current?.dismiss() // wait for the sheet to dismiss ✅
-  navigation.navigate('SomeScreen') // navigate to the screen 🎉
+const navigate = () => {
+  // Navigate directly - no need to dismiss first! ✅
+  navigation.navigate('SomeScreen')
 }
 
 return (
@@ -54,6 +54,16 @@ return (
   </TrueSheet>
 )
 ```
+
+:::tip
+If you prefer to dismiss the sheet before navigating for UX reasons, you can still do so:
+```tsx
+const navigate = async () => {
+  await sheet.current?.dismiss()
+  navigation.navigate('SomeScreen')
+}
+```
+:::
 
 ### Present during Mount
 

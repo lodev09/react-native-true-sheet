@@ -58,6 +58,9 @@
     // The sheet's view has smaller insets, so we need the actual device insets
     UIWindow *window = [WindowUtil keyWindow];
     _bottomInset = window ? window.safeAreaInsets.bottom : 0;
+
+    // Allow modals to be presented from this view controller
+    self.definesPresentationContext = YES;
   }
   return self;
 }
@@ -127,7 +130,8 @@
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+  // Only dispatch willDismiss if the sheet is actually being dismissed
+  if (self.isBeingDismissed && [self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
     [self.delegate viewControllerWillDismiss];
   }
 
@@ -137,13 +141,22 @@
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
+  
+  // Only dispatch didDismiss if the sheet is actually being dismissed
+  // (not when another modal is presented on top)
+  BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
+  
+  if (isActuallyDismissing && [self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
 
   _isTrackingPositionFromLayout = NO;
-  _isPresented = NO;
-  _activeDetentIndex = -1;
+  
+  // Only reset state if actually dismissing
+  if (isActuallyDismissing) {
+    _isPresented = NO;
+    _activeDetentIndex = -1;
+  }
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -645,5 +658,15 @@
     [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition];
   }
 }
+
+#pragma mark - RNSDismissibleModalProtocol
+
+#if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
+- (BOOL)isDismissible {
+  // Return NO to prevent react-native-screens from dismissing this sheet
+  // when presenting a React Navigation modal
+  return NO;
+}
+#endif
 
 @end

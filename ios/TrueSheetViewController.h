@@ -8,6 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+#if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
+#import <RNScreens/RNSDismissibleModalProtocol.h>
+#define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 1
+#else
+#define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 0
+#endif
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
@@ -23,7 +30,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate>
+@interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate
+#if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
+                                       ,
+                                       RNSDismissibleModalProtocol
+#endif
+                                       >
 
 @property (nonatomic, weak, nullable) id<TrueSheetViewControllerDelegate> delegate;
 @property (nonatomic, strong) NSArray *detents;

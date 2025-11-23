@@ -10,15 +10,15 @@
     "build:ios": "react-native build-ios --mode Debug"
   },
   "dependencies": {
-    "@react-navigation/native": "^7.1.20",
-    "@react-navigation/native-stack": "^7.6.3",
+    "@react-navigation/native": "^7.1.21",
+    "@react-navigation/native-stack": "^7.7.0",
     "react": "19.1.1",
     "react-native": "0.82.1",
     "react-native-gesture-handler": "^2.29.1",
     "react-native-maps": "^1.26.18",
     "react-native-reanimated": "^4.1.5",
     "react-native-safe-area-context": "^5.5.2",
-    "react-native-screens": "^4.18.0",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch",
     "react-native-worklets": "^0.6.1"
   },
   "devDependencies": {
