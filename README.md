@@ -12,23 +12,20 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
 * 🎯 **Type-safe** - Full TypeScript support with Codegen-generated native interfaces
 * 🚀 **Blazing fast** - Direct C++ communication, no bridge overhead
-* 🎨 Implemented in the native realm
-* 🪶 Clean, fast, and lightweight
-* 🔄 Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods)
-* ✨ Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
-
-> [!IMPORTANT]
-> **Version 3.0+ requires React Native's New Architecture (Fabric)**
-> 
-> For the old architecture, use version 2.x. See the [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) for upgrading.
+* 🎨 **Native** - Implemented in the native realm
+* 🔄 **Imperative API** - Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods)
 
 ## Installation
 
+> [!IMPORTANT]
+> **Version 3.0+ requires React Native's New Architecture (Fabric)**
+>
+> For the old architecture, use version 2.x. See the [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) for upgrading.
+
 ### Prerequisites
 
-- React Native >= 0.71.0
+- React Native >= 0.81
 - New Architecture enabled (`RCT_NEW_ARCH_ENABLED=1` for iOS, `newArchEnabled=true` for Android)
-- iOS >= 13.4
 
 ### Install
 
@@ -55,9 +52,9 @@ cd ios && pod install
 - [Example](example)
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
-- [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) 📖
+- [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
-- [Testing with Jest](https://sheet.lodev09.com/guides/jest) 🧪
+- [Testing with Jest](https://sheet.lodev09.com/guides/jest)
 
 ## Usage
 
