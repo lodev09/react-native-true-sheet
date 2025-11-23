@@ -5,10 +5,6 @@
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-> **⚡ New Architecture (Fabric) Only**  
-> Version 3.0+ requires React Native's new architecture. For the old architecture, use version 2.x.  
-> [📖 Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration)
-
 <img alt="React Native True Sheet - IOS" src="docs/static/img/preview.gif" width="300" height="600" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-2.gif" width="300" height="600" />
 
 ## Features
@@ -20,6 +16,11 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🪶 Clean, fast, and lightweight
 * 🔄 Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods)
 * ✨ Bonus! [Blur](https://sheet.lodev09.com/reference/types#blurtint) support on IOS 😎
+
+> [!IMPORTANT]
+> **Version 3.0+ requires React Native's New Architecture (Fabric)**
+> 
+> For the old architecture, use version 2.x. See the [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) for upgrading.
 
 ## Installation
 
