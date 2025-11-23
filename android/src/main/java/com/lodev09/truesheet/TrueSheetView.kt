@@ -365,13 +365,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val containerHeight = viewController.maxScreenHeight
     val contentHeight = if (containerHeight > 0) minOf(height, containerHeight) else height
 
+    android.util.Log.d(TAG_NAME, "containerViewContentDidChangeSize: width=$width, height=$height, contentHeight=$contentHeight, isPresented=${viewController.isPresented}")
+
     viewController.contentHeight = contentHeight
 
     // Update detents if sheet is already presented
     if (viewController.isPresented) {
       // Reconfigure sheet detents with new content height
       viewController.setupSheetDetents()
-      viewController.setStateForDetentIndex(viewController.currentDetentIndex)
+
+      // Use post to ensure layout is complete before positioning footer
+      viewController.post {
+        viewController.positionFooter()
+      }
     }
   }
 
