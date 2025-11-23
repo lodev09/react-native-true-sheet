@@ -17,7 +17,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, DemoContent, Footer, Spacer } from '../components';
+import { Button, Footer, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,6 +29,7 @@ import {
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
+import { useAppNavigation } from '../hooks';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -36,6 +37,7 @@ export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
+  const navigation = useAppNavigation();
 
   const sheetRef = useRef<TrueSheet>(null);
 
@@ -46,7 +48,7 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [contentCount, setContentCount] = useState(0);
+  const [spacerCount, setSpacerCount] = useState(0);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -58,11 +60,11 @@ export const MapScreen = () => {
   }));
 
   const addContent = () => {
-    setContentCount((prev) => prev + 1);
+    setSpacerCount((prev) => prev + 1);
   };
 
   const removeContent = () => {
-    setContentCount((prev) => Math.max(0, prev - 1));
+    setSpacerCount((prev) => Math.max(0, prev - 1));
   };
 
   const handleWillPresent = (e: WillPresentEvent) => {
@@ -121,18 +123,20 @@ export const MapScreen = () => {
           <Text style={styles.title}>True Sheet 💩</Text>
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
-        {Array.from({ length: contentCount }, (_, i) => (
-          <DemoContent key={i} color={DARK_BLUE} />
-        ))}
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+        <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
 
-        <Button text={`Add Content (${contentCount})`} onPress={addContent} />
-        {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
+        <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
+        {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
+
+        {Array.from({ length: spacerCount }, (_, i) => (
+          <Spacer key={i} />
+        ))}
 
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
