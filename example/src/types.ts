@@ -1,6 +1,11 @@
 export type AppStackParamList = {
   Map: undefined;
   Navigation: undefined;
-  Child: undefined;
+  Test: undefined;
+  ModalStack: undefined;
+};
+
+export type ModalStackParamList = {
   Modal: undefined;
+  Test: undefined;
 };

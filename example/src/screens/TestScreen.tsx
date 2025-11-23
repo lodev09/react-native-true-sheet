@@ -2,11 +2,11 @@ import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { TrueSheet } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, SPACING } from '../utils';
+import { BLUE, GAP, SPACING } from '../utils';
 import { Button } from '../components';
 import { BasicSheet, PromptSheet, ScrollViewSheet } from '../components/sheets';
 
-export const ChildScreen = () => {
+export const TestScreen = () => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     padding: SPACING,
-    gap: SPACING,
+    gap: GAP,
   },
 });

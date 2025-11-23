@@ -12,7 +12,7 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { Button, Spacer } from '../components';
-import { BLUE, LIGHT_GRAY, SPACING } from '../utils';
+import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { useAppNavigation } from '../hooks';
 
 export const NavigationScreen = () => {
@@ -38,16 +38,16 @@ export const NavigationScreen = () => {
         <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
       </View>
 
-      <Button text="Navigate to Screen" onPress={() => navigation.navigate('Child')} />
+      <Button text="Navigate to Screen" onPress={() => navigation.navigate('Test')} />
+      <Button text="Open RNScreen Modal" onPress={() => navigation.navigate('ModalStack')} />
+      <Button text="Open RNScreen Sheet" onPress={() => navigationSheet.current?.present()} />
       <Spacer />
-
       <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
       <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
       <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
       <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
-      <Button text="Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
 
       <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     padding: SPACING,
-    gap: SPACING,
+    gap: GAP,
   },
   heading: {
     marginBottom: SPACING * 2,
