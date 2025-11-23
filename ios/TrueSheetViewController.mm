@@ -130,7 +130,8 @@
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+  // Only dispatch willDismiss if the sheet is actually being dismissed
+  if (self.isBeingDismissed && [self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
     [self.delegate viewControllerWillDismiss];
   }
 
@@ -140,13 +141,22 @@
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
+  
+  // Only dispatch didDismiss if the sheet is actually being dismissed
+  // (not when another modal is presented on top)
+  BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
+  
+  if (isActuallyDismissing && [self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
     [self.delegate viewControllerDidDismiss];
   }
 
   _isTrackingPositionFromLayout = NO;
-  _isPresented = NO;
-  _activeDetentIndex = -1;
+  
+  // Only reset state if actually dismissing
+  if (isActuallyDismissing) {
+    _isPresented = NO;
+    _activeDetentIndex = -1;
+  }
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
