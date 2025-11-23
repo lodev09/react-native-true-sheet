@@ -534,25 +534,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun positionFooter(slideOffset: Float? = null) {
-    footerView?.let { footer ->
-      val containerView = containerView ?: return
-      val footerHeight = footer.height
+    val footer = footerView ?: return
+    val bottomSheet = bottomSheetView ?: return
+    val footerHeight = footer.height
 
-      // Get container's position in screen coordinates
-      val containerTop = ScreenUtils.getScreenY(containerView)
+    val bottomSheetY = ScreenUtils.getScreenY(bottomSheet)
+    val statusBarHeight = if (edgeToEdgeEnabled) ScreenUtils.getStatusBarHeight(reactContext) else 0
 
-      // Calculate base position (screen bottom)
-      val baseY = (maxScreenHeight - containerTop - footerHeight).toFloat()
+    // Calculate footer Y position
+    var footerY = (maxScreenHeight - bottomSheetY - footerHeight).toFloat()
 
-      // Apply slideOffset for animation when sheet is below peek height
-      footer.y = if (slideOffset != null && slideOffset < 0) {
-        // Sheet is below peek height - animate footer down with sheet
-        baseY - (footerHeight * slideOffset)
-      } else {
-        // Sheet is at or above peek height - footer sticks to screen bottom
-        baseY
-      }
+    // Animate footer down with sheet when below peek height
+    if (slideOffset != null && slideOffset < 0) {
+      footerY -= (footerHeight * slideOffset)
     }
+
+    // Clamp footer position to prevent it from going above the status bar
+    val maxAllowedY = (maxScreenHeight - statusBarHeight - footerHeight).toFloat()
+    footer.y = minOf(footerY, maxAllowedY)
   }
 
   /**
