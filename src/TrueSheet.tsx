@@ -1,213 +1,293 @@
-import { PureComponent, Component, type RefObject, createRef, type ReactNode } from 'react'
 import {
-  requireNativeComponent,
-  Platform,
-  findNodeHandle,
-  View,
-  type NativeMethods,
-  type ViewStyle,
-  type NativeSyntheticEvent,
-  type LayoutChangeEvent,
-  type ProcessedColorValue,
-  processColor,
-} from 'react-native'
+  PureComponent,
+  type RefObject,
+  createRef,
+  type ReactNode,
+  type ComponentRef,
+  isValidElement,
+  createElement,
+} from 'react';
 
 import type {
   TrueSheetProps,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
+  DetentChangeEvent,
+  WillPresentEvent,
+  DidPresentEvent,
+  PositionChangeEvent,
+  DidDismissEvent,
+  WillDismissEvent,
+  MountEvent,
   SizeChangeEvent,
-  PresentEvent,
-} from './TrueSheet.types'
-import { TrueSheetModule } from './TrueSheetModule'
-import { TrueSheetGrabber } from './TrueSheetGrabber'
-import { TrueSheetFooter } from './TrueSheetFooter'
+} from './TrueSheet.types';
+import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
+import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
+import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent';
+import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
-const NATIVE_COMPONENT_NAME = 'TrueSheetView'
+import TrueSheetModule from './specs/NativeTrueSheetModule';
+
+import { Platform, processColor, StyleSheet, findNodeHandle } from 'react-native';
+
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n'
+  '- You are not using Expo Go\n' +
+  '- You are using the new architecture (Fabric)\n';
 
-export type ContainerSizeChangeEvent = NativeSyntheticEvent<{ width: number; height: number }>
-
-interface TrueSheetNativeViewProps extends Omit<TrueSheetProps, 'backgroundColor'> {
-  contentHeight?: number
-  footerHeight?: number
-  background?: ProcessedColorValue | null
-  scrollableHandle: number | null
-  onContainerSizeChange: (event: ContainerSizeChangeEvent) => void
+if (!TrueSheetModule) {
+  throw new Error(LINKING_ERROR);
 }
 
-type NativeRef = Component<TrueSheetNativeViewProps> & Readonly<NativeMethods>
+type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
 
 interface TrueSheetState {
-  containerWidth?: number
-  containerHeight?: number
-  contentHeight?: number
-  footerHeight?: number
-  scrollableHandle: number | null
-}
-
-const TrueSheetNativeView = requireNativeComponent<TrueSheetNativeViewProps>(NATIVE_COMPONENT_NAME)
-
-if (!TrueSheetNativeView) {
-  throw new Error(LINKING_ERROR)
+  shouldRenderNativeView: boolean;
+  containerWidth?: number;
+  containerHeight?: number;
 }
 
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
-  displayName = 'TrueSheet'
+  displayName = 'TrueSheet';
 
-  private readonly ref: RefObject<NativeRef>
+  private readonly nativeRef: RefObject<NativeRef | null>;
 
   /**
-   * Map of sheet names against their handle.
+   * Map of sheet names against their instances.
    */
-  private static readonly handles: { [name: string]: number } = {}
+  private static readonly instances: { [name: string]: TrueSheet } = {};
+
+  /**
+   * Resolver to be called when mount event is received
+   */
+  private presentationResolver: (() => void) | null = null;
 
   constructor(props: TrueSheetProps) {
-    super(props)
+    super(props);
 
-    this.ref = createRef<NativeRef>()
+    this.nativeRef = createRef<NativeRef>();
 
-    this.onMount = this.onMount.bind(this)
-    this.onDismiss = this.onDismiss.bind(this)
-    this.onPresent = this.onPresent.bind(this)
-    this.onSizeChange = this.onSizeChange.bind(this)
-    this.onDragBegin = this.onDragBegin.bind(this)
-    this.onDragChange = this.onDragChange.bind(this)
-    this.onDragEnd = this.onDragEnd.bind(this)
-    this.onContentLayout = this.onContentLayout.bind(this)
-    this.onFooterLayout = this.onFooterLayout.bind(this)
-    this.onContainerSizeChange = this.onContainerSizeChange.bind(this)
+    this.validateDetents();
+
+    // Lazy load by default, except when initialDetentIndex is set (for auto-presentation)
+    const shouldRenderImmediately =
+      props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0;
 
     this.state = {
+      shouldRenderNativeView: shouldRenderImmediately,
       containerWidth: undefined,
       containerHeight: undefined,
-      contentHeight: undefined,
-      footerHeight: undefined,
-      scrollableHandle: null,
+    };
+
+    this.onMount = this.onMount.bind(this);
+    this.onWillDismiss = this.onWillDismiss.bind(this);
+    this.onDidDismiss = this.onDidDismiss.bind(this);
+    this.onWillPresent = this.onWillPresent.bind(this);
+    this.onDidPresent = this.onDidPresent.bind(this);
+    this.onDetentChange = this.onDetentChange.bind(this);
+    this.onDragBegin = this.onDragBegin.bind(this);
+    this.onDragChange = this.onDragChange.bind(this);
+    this.onDragEnd = this.onDragEnd.bind(this);
+    this.onPositionChange = this.onPositionChange.bind(this);
+    this.onSizeChange = this.onSizeChange.bind(this);
+  }
+
+  private validateDetents(): void {
+    const { detents, initialDetentIndex } = this.props;
+
+    // Warn if detents length exceeds 3
+    if (detents && detents.length > 3) {
+      console.warn(
+        `TrueSheet: detents array has ${detents.length} items but maximum is 3. Only the first 3 will be used.`
+      );
+    }
+
+    // Warn for invalid detent fractions
+    if (detents) {
+      detents.forEach((detent, index) => {
+        if (detent !== 'auto' && typeof detent === 'number') {
+          if (detent <= 0 || detent > 1) {
+            console.warn(
+              `TrueSheet: detent at index ${index} (${detent}) should be between 0 and 1. It will be clamped.`
+            );
+          }
+        }
+      });
+    }
+
+    // Validate initialDetentIndex bounds
+    if (initialDetentIndex !== undefined && initialDetentIndex >= 0) {
+      const detentsLength = Math.min(detents?.length ?? 2, 3); // Max 3 detents
+      if (initialDetentIndex >= detentsLength) {
+        throw new Error(
+          `TrueSheet: initialDetentIndex (${initialDetentIndex}) is out of bounds. detents array has ${detentsLength} item(s)`
+        );
+      }
     }
   }
 
-  private static getHandle(name: string) {
-    const handle = TrueSheet.handles[name]
-    if (!handle) {
-      console.warn(`Could not get native view tag from "${name}". Check your name prop.`)
-      return
+  private static getInstance(name: string) {
+    const instance = TrueSheet.instances[name];
+    if (!instance) {
+      console.warn(`Could not find TrueSheet instance with name "${name}". Check your name prop.`);
+      return;
     }
 
-    return handle
-  }
-
-  /**
-   * Present the sheet by given `name`.
-   * See `name` prop.
-   */
-  public static async present(name: string, index: number = 0) {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) return
-
-    await TrueSheetModule.present(handle, index)
-  }
-
-  /**
-   * Dismiss the sheet by given `name`.
-   * See `name` prop.
-   */
-  public static async dismiss(name: string) {
-    const handle = TrueSheet.getHandle(name)
-    if (!handle) return
-
-    await TrueSheetModule.dismiss(handle)
-  }
-
-  /**
-   * Resize the sheet by given `name`.
-   * See `name` prop.
-   */
-  public static async resize(name: string, index: number) {
-    await TrueSheet.present(name, index)
+    return instance;
   }
 
   private get handle(): number {
-    const nodeHandle = findNodeHandle(this.ref.current)
+    const nodeHandle = findNodeHandle(this.nativeRef.current);
     if (nodeHandle == null || nodeHandle === -1) {
-      throw new Error('Could not get native view tag')
+      throw new Error('Could not get native view tag');
     }
 
-    return nodeHandle
-  }
-
-  private updateState(): void {
-    const scrollableHandle = this.props.scrollRef?.current
-      ? findNodeHandle(this.props.scrollRef.current)
-      : null
-
-    if (this.props.name) {
-      TrueSheet.handles[this.props.name] = this.handle
-    }
-
-    this.setState({
-      scrollableHandle,
-    })
-  }
-
-  private onSizeChange(event: SizeChangeEvent): void {
-    this.props.onSizeChange?.(event)
-  }
-
-  private onContainerSizeChange(event: ContainerSizeChangeEvent): void {
-    this.setState({
-      containerWidth: event.nativeEvent.width,
-      containerHeight: event.nativeEvent.height,
-    })
-  }
-
-  private onPresent(event: PresentEvent): void {
-    this.props.onPresent?.(event)
-  }
-
-  private onFooterLayout(event: LayoutChangeEvent): void {
-    this.setState({
-      footerHeight: event.nativeEvent.layout.height,
-    })
-  }
-
-  private onContentLayout(event: LayoutChangeEvent): void {
-    this.setState({
-      contentHeight: event.nativeEvent.layout.height,
-    })
-  }
-
-  private onDismiss(): void {
-    this.props.onDismiss?.()
-  }
-
-  private onMount(): void {
-    this.props.onMount?.()
-  }
-
-  private onDragBegin(event: DragBeginEvent): void {
-    this.props.onDragBegin?.(event)
-  }
-
-  private onDragChange(event: DragChangeEvent): void {
-    this.props.onDragChange?.(event)
-  }
-
-  private onDragEnd(event: DragEndEvent): void {
-    this.props.onDragEnd?.(event)
+    return nodeHandle;
   }
 
   /**
-   * Present the sheet. Optionally accepts a size `index`.
-   * See `sizes` prop
+   * Present the sheet by given `name` (Promise-based)
+   * @param name - Sheet name (must match sheet's name prop)
+   * @param index - Detent index (default: 0)
+   * @returns Promise that resolves when sheet is fully presented
+   * @throws Error if sheet not found or presentation fails
+   */
+  public static async present(name: string, index: number = 0): Promise<void> {
+    const instance = TrueSheet.getInstance(name);
+    if (!instance) {
+      throw new Error(`Sheet with name "${name}" not found`);
+    }
+
+    return instance.present(index);
+  }
+
+  /**
+   * Dismiss the sheet by given `name` (Promise-based)
+   * @param name - Sheet name
+   * @returns Promise that resolves when sheet is fully dismissed
+   * @throws Error if sheet not found or dismissal fails
+   */
+  public static async dismiss(name: string): Promise<void> {
+    const instance = TrueSheet.getInstance(name);
+    if (!instance) {
+      throw new Error(`Sheet with name "${name}" not found`);
+    }
+
+    return instance.dismiss();
+  }
+
+  /**
+   * Resize the sheet by given `name` (Promise-based)
+   * @param name - Sheet name
+   * @param index - New detent index
+   * @returns Promise that resolves when resize is complete
+   * @throws Error if sheet not found
+   */
+  public static async resize(name: string, index: number): Promise<void> {
+    const instance = TrueSheet.getInstance(name);
+    if (!instance) {
+      throw new Error(`Sheet with name "${name}" not found`);
+    }
+
+    return instance.resize(index);
+  }
+
+  private registerInstance(): void {
+    if (this.props.name) {
+      TrueSheet.instances[this.props.name] = this;
+    }
+  }
+
+  private unregisterInstance(): void {
+    if (this.props.name) {
+      delete TrueSheet.instances[this.props.name];
+    }
+  }
+
+  private onDetentChange(event: DetentChangeEvent): void {
+    this.props.onDetentChange?.(event);
+  }
+
+  private onWillPresent(event: WillPresentEvent): void {
+    this.props.onWillPresent?.(event);
+  }
+
+  private onDidPresent(event: DidPresentEvent): void {
+    this.props.onDidPresent?.(event);
+  }
+
+  private onWillDismiss(event: WillDismissEvent): void {
+    this.props.onWillDismiss?.(event);
+  }
+
+  private onDidDismiss(event: DidDismissEvent): void {
+    // Clean up native view after dismiss for lazy loading
+    this.setState({ shouldRenderNativeView: false });
+    this.props.onDidDismiss?.(event);
+  }
+
+  private onMount(event: MountEvent): void {
+    // Resolve the mount promise if waiting
+    if (this.presentationResolver) {
+      this.presentationResolver();
+      this.presentationResolver = null;
+    }
+
+    this.props.onMount?.(event);
+  }
+
+  private onDragBegin(event: DragBeginEvent): void {
+    this.props.onDragBegin?.(event);
+  }
+
+  private onDragChange(event: DragChangeEvent): void {
+    this.props.onDragChange?.(event);
+  }
+
+  private onDragEnd(event: DragEndEvent): void {
+    this.props.onDragEnd?.(event);
+  }
+
+  private onPositionChange(event: PositionChangeEvent): void {
+    this.props.onPositionChange?.(event);
+  }
+
+  private onSizeChange(event: SizeChangeEvent): void {
+    const { width, height } = event.nativeEvent;
+
+    // Update container view dimensions in state
+    this.setState({
+      containerWidth: width,
+      containerHeight: height,
+    });
+
+    // Internal handler only - not exposed to users
+  }
+
+  /**
+   * Present the Sheet by `index` (Promise-based)
+   * @param index - Detent index (default: 0)
    */
   public async present(index: number = 0): Promise<void> {
-    await TrueSheetModule.present(this.handle, index)
+    const detentsLength = Math.min(this.props.detents?.length ?? 2, 3); // Max 3 detents
+    if (index < 0 || index >= detentsLength) {
+      throw new Error(
+        `TrueSheet: present index (${index}) is out of bounds. detents array has ${detentsLength} item(s)`
+      );
+    }
+
+    // Lazy load: render native view if not already rendered
+    if (!this.state.shouldRenderNativeView) {
+      await new Promise<void>((resolve) => {
+        this.presentationResolver = resolve;
+        this.setState({ shouldRenderNativeView: true });
+      });
+    }
+
+    return TrueSheetModule?.presentByRef(this.handle, index);
   }
 
   /**
@@ -215,113 +295,130 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * This is an alias of the `present(index)` method.
    */
   public async resize(index: number): Promise<void> {
-    await this.present(index)
+    await this.present(index);
   }
 
   /**
    * Dismisses the Sheet
    */
   public async dismiss(): Promise<void> {
-    await TrueSheetModule.dismiss(this.handle)
+    return TrueSheetModule?.dismissByRef(this.handle);
   }
 
   componentDidMount(): void {
-    if (this.props.sizes && this.props.sizes.length > 3) {
-      console.warn(
-        'TrueSheet only supports a maximum of 3 sizes; collapsed, half-expanded and expanded. Check your `sizes` prop.'
-      )
-    }
-
-    this.updateState()
+    this.registerInstance();
   }
 
-  componentDidUpdate(): void {
-    this.updateState()
+  componentDidUpdate(prevProps: TrueSheetProps): void {
+    this.registerInstance();
+
+    // Validate when detents prop changes
+    if (prevProps.detents !== this.props.detents) {
+      this.validateDetents();
+    }
+  }
+
+  componentWillUnmount(): void {
+    this.unregisterInstance();
+
+    // Clean up presentation resolver
+    this.presentationResolver = null;
   }
 
   render(): ReactNode {
     const {
-      sizes = ['medium', 'large'],
+      detents = [0.5, 1],
       backgroundColor = 'white',
       dismissible = true,
       grabber = true,
       dimmed = true,
-      initialIndexAnimated = true,
-      edgeToEdge = false,
+      initialDetentIndex = -1,
+      initialDetentAnimated = true,
       keyboardMode = 'resize',
-      initialIndex,
       dimmedIndex,
-      grabberProps,
       blurTint,
       cornerRadius,
       maxHeight,
-      FooterComponent,
-      style,
-      contentContainerStyle,
+      edgeToEdgeFullScreen,
       children,
-      ...rest
-    } = this.props
+      style,
+      footer,
+      testID,
+    } = this.props;
+
+    // Trim to max 3 detents and clamp fractions
+    const resolvedDetents = detents.slice(0, 3).map((detent) => {
+      if (detent === 'auto' || detent === -1) return -1;
+
+      // Default to 0.1 if zero or below
+      if (detent <= 0) return 0.1;
+
+      // Clamp to maximum of 1
+      return Math.min(1, detent);
+    });
 
     return (
-      <TrueSheetNativeView
-        ref={this.ref}
-        style={$nativeSheet}
-        scrollableHandle={this.state.scrollableHandle}
-        sizes={sizes}
+      <TrueSheetViewNativeComponent
+        ref={this.nativeRef}
+        style={styles.sheetView}
+        detents={resolvedDetents}
         blurTint={blurTint}
-        background={processColor(backgroundColor)}
+        background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
-        contentHeight={this.state.contentHeight}
-        footerHeight={this.state.footerHeight}
         grabber={grabber}
         dimmed={dimmed}
         dimmedIndex={dimmedIndex}
-        edgeToEdge={edgeToEdge}
-        initialIndex={initialIndex}
-        initialIndexAnimated={initialIndexAnimated}
         keyboardMode={keyboardMode}
+        initialDetentIndex={initialDetentIndex}
+        initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         maxHeight={maxHeight}
+        edgeToEdgeFullScreen={edgeToEdgeFullScreen}
         onMount={this.onMount}
-        onPresent={this.onPresent}
-        onDismiss={this.onDismiss}
-        onSizeChange={this.onSizeChange}
+        onWillPresent={this.onWillPresent}
+        onDidPresent={this.onDidPresent}
+        onWillDismiss={this.onWillDismiss}
+        onDidDismiss={this.onDidDismiss}
+        onDetentChange={this.onDetentChange}
         onDragBegin={this.onDragBegin}
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
-        onContainerSizeChange={this.onContainerSizeChange}
+        onPositionChange={this.onPositionChange}
+        onSizeChange={this.onSizeChange}
       >
-        <View
-          collapsable={false}
-          style={[
-            {
-              overflow: Platform.select({ ios: undefined, android: 'hidden' }),
-
-              // Update the width on JS side.
-              // New Arch interop does not support updating it in native :/
+        {this.state.shouldRenderNativeView && (
+          <TrueSheetContainerViewNativeComponent
+            testID={testID}
+            style={{
               width: this.state.containerWidth,
               height: this.state.containerHeight,
-            },
-            style,
-          ]}
-          {...rest}
-        >
-          <View collapsable={false} onLayout={this.onContentLayout} style={contentContainerStyle}>
-            {children}
-          </View>
-          <View collapsable={false} onLayout={this.onFooterLayout}>
-            <TrueSheetFooter Component={FooterComponent} />
-          </View>
-          {Platform.OS === 'android' && <TrueSheetGrabber visible={grabber} {...grabberProps} />}
-        </View>
-      </TrueSheetNativeView>
-    )
+            }}
+            collapsable={false}
+          >
+            <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
+              {children}
+            </TrueSheetContentViewNativeComponent>
+            {footer && (
+              <TrueSheetFooterViewNativeComponent style={styles.footer} collapsable={false}>
+                {isValidElement(footer) ? footer : createElement(footer)}
+              </TrueSheetFooterViewNativeComponent>
+            )}
+          </TrueSheetContainerViewNativeComponent>
+        )}
+      </TrueSheetViewNativeComponent>
+    );
   }
 }
 
-const $nativeSheet: ViewStyle = {
-  position: 'absolute',
-  width: '100%',
-  left: -9999,
-  zIndex: -9999,
-}
+const styles = StyleSheet.create({
+  sheetView: {
+    position: 'absolute',
+    width: '100%',
+    zIndex: -9999,
+  },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+  },
+});

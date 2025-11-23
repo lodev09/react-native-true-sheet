@@ -1,59 +1,60 @@
-import { forwardRef, useRef, type Ref } from 'react'
-import { FlatList, View, type ViewStyle } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
+import { forwardRef, type Ref } from 'react';
+import { StyleSheet, FlatList, View } from 'react-native';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils'
-import { Input } from '../Input'
-import { DemoContent } from '../DemoContent'
+import { DARK, DARK_GRAY, INPUT_HEIGHT, SPACING, times } from '../../utils';
+import { Input } from '../Input';
+import { DemoContent } from '../DemoContent';
+import { Spacer } from '../Spacer';
+
+const TOP_INSET = INPUT_HEIGHT + SPACING * 2 + SPACING;
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  const flatListRef = useRef<FlatList>(null)
-
   return (
     <TrueSheet
       ref={ref}
-      scrollRef={flatListRef}
       cornerRadius={12}
-      sizes={['medium', 'large']}
+      detents={[0.5, 1]}
       blurTint="dark"
       backgroundColor={DARK}
       keyboardMode="pan"
-      edgeToEdge
-      onDismiss={() => console.log('Sheet FlatList dismissed!')}
-      onPresent={() => console.log(`Sheet FlatList presented!`)}
+      onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
+      onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <View style={$header}>
+      <View style={styles.header}>
         <Input />
       </View>
-      <FlatList<number>
-        ref={flatListRef}
+      <FlatList
         nestedScrollEnabled
         data={times(50, (i) => i)}
-        contentContainerStyle={$content}
+        contentContainerStyle={styles.content}
         indicatorStyle="black"
+        ItemSeparatorComponent={Spacer}
+        contentInset={{ top: TOP_INSET }}
+        scrollIndicatorInsets={{ top: TOP_INSET }}
         renderItem={() => <DemoContent color={DARK_GRAY} />}
       />
     </TrueSheet>
-  )
-})
+  );
+});
 
-FlatListSheet.displayName = 'FlatListSheet'
+FlatListSheet.displayName = 'FlatListSheet';
 
-const $content: ViewStyle = {
-  padding: SPACING,
-  paddingTop: INPUT_HEIGHT + SPACING * 4,
-}
-
-const $header: ViewStyle = {
-  position: 'absolute',
-  left: 0,
-  right: 0,
-  top: 0,
-  backgroundColor: DARK,
-  paddingTop: SPACING * 2,
-  paddingHorizontal: SPACING,
-  zIndex: 1,
-}
+const styles = StyleSheet.create({
+  content: {
+    padding: SPACING,
+  },
+  header: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    backgroundColor: DARK,
+    paddingTop: SPACING * 2,
+    paddingHorizontal: SPACING,
+    zIndex: 1,
+  },
+});

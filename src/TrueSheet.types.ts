@@ -1,24 +1,52 @@
-import type { Component, ComponentType, ReactElement, RefObject } from 'react'
-import type {
-  ColorValue,
-  NativeSyntheticEvent,
-  StyleProp,
-  ViewProps,
-  ViewStyle,
-} from 'react-native'
+import type { ComponentType, ReactElement } from 'react';
+import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native';
 
-import type { TrueSheetGrabberProps } from './TrueSheetGrabber'
+import type { TrueSheetGrabberProps } from './TrueSheetGrabber';
 
-export interface SizeInfo {
-  index: number
-  value: number
+export interface DetentInfoEventPayload {
+  /**
+   * The index position from the provided `detents`.
+   */
+  index: number;
+  /**
+   * The Y position of the sheet relative to the screen.
+   */
+  position: number;
 }
 
-export type SizeChangeEvent = NativeSyntheticEvent<SizeInfo>
-export type PresentEvent = NativeSyntheticEvent<SizeInfo>
-export type DragBeginEvent = NativeSyntheticEvent<SizeInfo>
-export type DragChangeEvent = NativeSyntheticEvent<SizeInfo>
-export type DragEndEvent = NativeSyntheticEvent<SizeInfo>
+export interface PositionChangeEventPayload extends DetentInfoEventPayload {
+  /**
+   * Workaround for cases where we can't get real-time position from native.
+   * When true, manually animate the position in JS.
+   */
+  transitioning: boolean;
+}
+
+export type MountEvent = NativeSyntheticEvent<null>;
+export type DetentChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type WillPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type DidPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type WillDismissEvent = NativeSyntheticEvent<null>;
+export type DidDismissEvent = NativeSyntheticEvent<null>;
+export type DragBeginEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type DragChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type DragEndEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
+export type PositionChangeEvent = NativeSyntheticEvent<PositionChangeEventPayload>;
+
+/**
+ * Internal event payload for size changes (not exposed to users)
+ * @internal
+ */
+export interface SizeChangeEventPayload {
+  width: number;
+  height: number;
+}
+
+/**
+ * Internal event type for size changes (not exposed to users)
+ * @internal
+ */
+export type SizeChangeEvent = NativeSyntheticEvent<SizeChangeEventPayload>;
 
 /**
  * Blur style mapped to native values in IOS.
@@ -46,17 +74,18 @@ export type BlurTint =
   | 'systemThinMaterialDark'
   | 'systemMaterialDark'
   | 'systemThickMaterialDark'
-  | 'systemChromeMaterialDark'
+  | 'systemChromeMaterialDark';
 
 /**
- * Supported Sheet size.
+ * Supported Sheet detent.
  *
  * @platform android
  * @platform ios 15+
  */
-export type SheetSize =
+export type SheetDetent =
   /**
-   * Auto resize based on content height
+   * Auto resize based on content height, clamped to container height.
+   * Use the `maxHeight` prop to set a custom limit.
    *
    * @platform android
    * @platform ios 16+
@@ -64,44 +93,13 @@ export type SheetSize =
   | 'auto'
 
   /**
-   * Fixed height
+   * Relative height as a fraction (0-1) of the available height.
+   * For example, 0.5 represents 50% of the available height.
    *
    * @platform android
    * @platform ios 16+
    */
-  | number
-
-  /**
-   * Fixed height in %
-   *
-   * @platform android
-   * @platform ios 16+
-   */
-  | `${number}%`
-
-  /**
-   * Translates to 25%
-   *
-   * @platform android
-   * @platform ios 16+
-   */
-  | 'small'
-
-  /**
-   * Translates to 50%
-   *
-   * @platform android
-   * @platform ios 15+
-   */
-  | 'medium'
-
-  /**
-   * Translates to 100%
-   *
-   * @platform android
-   * @platform ios 15+
-   */
-  | 'large'
+  | number;
 
 export interface TrueSheetProps extends ViewProps {
   /**
@@ -118,19 +116,19 @@ export interface TrueSheetProps extends ViewProps {
    * TrueSheet.present('my-awesome-sheet')
    * ```
    */
-  name?: string
+  name?: string;
   /**
-   * The sizes you want the Sheet to support.
-   * Maximum of 3 sizes only; collapsed, half-expanded, expanded.
+   * The detents you want the Sheet to support.
+   * Maximum of 3 detents only; collapsed, half-expanded, expanded.
    *
    * Example:
    * ```ts
-   * size={['auto', '60%', 'large']}
+   * detents={['auto', 0.6, 1]}
    * ```
    *
-   * @default ['medium', 'large']
+   * @default [0.5, 1]
    */
-  sizes?: SheetSize[]
+  detents?: SheetDetent[];
 
   /**
    * Specify whether the sheet background is dimmed.
@@ -140,53 +138,57 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios 15+
    * @default true
    */
-  dimmed?: boolean
+  dimmed?: boolean;
 
   /**
-   * Initially present the sheet, after mounting, at a given size index.
+   * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.
    * @default -1
    */
-  initialIndex?: number
+  initialDetentIndex?: number;
 
   /**
    * Specify whether the sheet should animate after mounting.
-   * Used with `initialIndex`.
+   * Used with `initialDetentIndex`.
    *
    * @default true
    */
-  initialIndexAnimated?: boolean
+  initialDetentAnimated?: boolean;
 
   /**
-   * The size index that the sheet should start to dim the background.
+   * The detent index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    *
    * @default 0
    */
-  dimmedIndex?: number
+  dimmedIndex?: number;
 
   /**
    * Prevents interactive dismissal of the Sheet.
    *
    * @default true
    */
-  dismissible?: boolean
+  dismissible?: boolean;
 
   /**
    * Main sheet background color.
 
    * @default white
    */
-  backgroundColor?: ColorValue
+  backgroundColor?: ColorValue;
 
   /**
    * The sheet corner radius.
    *
+   * - `undefined` (not provided): Uses system default corner radius
+   * - `0`: Sharp corners (no rounding)
+   * - `> 0`: Custom corner radius value
+   *
    * @platform android
    * @platform ios 15+
    */
-  cornerRadius?: number
+  cornerRadius?: number;
 
   /**
    * Shows native grabber (or handle) on IOS.
@@ -194,14 +196,14 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios
    * @default true
    */
-  grabber?: boolean
+  grabber?: boolean;
 
   /**
    * Grabber props to be used for android grabber or handle.
    *
    * @platform android
    */
-  grabberProps?: TrueSheetGrabberProps
+  grabberProps?: TrueSheetGrabberProps;
 
   /**
    * The blur effect style on iOS.
@@ -209,29 +211,27 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @platform ios
    */
-  blurTint?: BlurTint
-
-  /**
-   * Optional content container styles.
-   */
-  contentContainerStyle?: StyleProp<ViewStyle>
-
-  /**
-   * The main scrollable ref that Sheet should handle on IOS.
-   *
-   * @platform ios
-   */
-  scrollRef?: RefObject<Component<unknown>>
+  blurTint?: BlurTint;
 
   /**
    * Overrides `large` or `100%` height.
+   * Also sets the maximum height for 'auto' detents.
    */
-  maxHeight?: number
+  maxHeight?: number;
+
+  /**
+   * Allows the sheet to extend behind the status bar when fully expanded in edge-to-edge mode.
+   * When false (default), the sheet stops at the bottom of the status bar.
+   *
+   * @platform android
+   * @default false
+   */
+  edgeToEdgeFullScreen?: boolean;
 
   /**
    * A component that floats at the bottom of the Sheet.
    */
-  FooterComponent?: ComponentType<unknown> | ReactElement
+  footer?: ComponentType<unknown> | ReactElement;
 
   /**
    * Determines how the software keyboard will impact the layout of the sheet.
@@ -240,62 +240,75 @@ export interface TrueSheetProps extends ViewProps {
    * @platform android
    * @default resize
    */
-  keyboardMode?: 'resize' | 'pan'
+  keyboardMode?: 'resize' | 'pan';
 
   /**
-   * Supports edge-to-edge on Android.
-   * Turn this on if your app has it enabled.
-   *
-   * @platform android
+   * Called when the sheet's content is mounted and ready.
+   * The sheet automatically waits for this event before presenting.
    */
-  edgeToEdge?: boolean
+  onMount?: (event: MountEvent) => void;
 
   /**
-   * This is called when the sheet is ready to present.
+   * Called when the Sheet is about to be presented.
    */
-  onMount?: () => void
+  onWillPresent?: (event: WillPresentEvent) => void;
 
   /**
    * Called when the Sheet has been presented.
-   * Comes with the size info.
+   * Comes with the detent info.
    */
-  onPresent?: (event: PresentEvent) => void
+  onDidPresent?: (event: DidPresentEvent) => void;
+
+  /**
+   * Called when the Sheet is about to be dismissed
+   */
+  onWillDismiss?: (event: WillDismissEvent) => void;
 
   /**
    * Called when the Sheet has been dismissed
    */
-  onDismiss?: () => void
+  onDidDismiss?: (event: DidDismissEvent) => void;
 
   /**
-   * Called when the size of the sheet has changed.
+   * Called when the detent of the sheet has changed.
    * Either by dragging or programatically.
    */
-  onSizeChange?: (event: SizeChangeEvent) => void
+  onDetentChange?: (event: DetentChangeEvent) => void;
 
   /**
    * Called when the sheet has began dragging.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
    */
-  onDragBegin?: (event: DragBeginEvent) => void
+  onDragBegin?: (event: DragBeginEvent) => void;
 
   /**
    * Called when the sheet is being dragged.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
    */
-  onDragChange?: (event: DragChangeEvent) => void
+  onDragChange?: (event: DragChangeEvent) => void;
 
   /**
    * Called when the sheet dragging has ended.
-   * Comes with the size info.
+   * Comes with the detent info.
    *
    * @platform android
    * @platform ios 15+
    */
-  onDragEnd?: (event: DragEndEvent) => void
+  onDragEnd?: (event: DragEndEvent) => void;
+
+  /**
+   * Called when the sheet's position changes.
+   * This fires continuously during sheet position changes.
+   * Comes with the detent info.
+   *
+   * @platform android
+   * @platform ios 15+
+   */
+  onPositionChange?: (event: PositionChangeEvent) => void;
 }

@@ -1,6 +1,6 @@
-import { themes as prismThemes } from 'prism-react-renderer'
-import type { Config } from '@docusaurus/types'
-import type * as Preset from '@docusaurus/preset-classic'
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
 
 // import pkg from '../package.json'
 
@@ -173,7 +173,7 @@ const config: Config = {
       {
         name: 'keywords',
         content:
-          'bottom sheet, pure native bottom sheet, react native bottom sheet, bottom sheet documentation',
+          'bottom sheet, pure native bottom sheet, react native bottom sheet, bottom sheet documentation, fabric bottom sheet',
       },
       {
         name: 'og:title',
@@ -193,6 +193,6 @@ const config: Config = {
       },
     ],
   } satisfies Preset.ThemeConfig,
-}
+};
 
-export default config
+export default config;

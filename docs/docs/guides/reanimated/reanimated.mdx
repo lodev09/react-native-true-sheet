@@ -1,82 +1,87 @@
 ---
-title: Integrating Reanimated
-description: Integrate Reanimated while dragging your sheet.
-keywords: [bottom sheet dragging, react-native-reanimated, reanimated]
+title: Reanimated Integration
+description: Sync animations with your sheet using Reanimated.
+keywords: [bottom sheet, react-native-reanimated, reanimated, animations]
 ---
 
 import reanimated from './reanimated.gif'
 
-Yes! `TrueSheet` does support [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/). One use case would be a floating action button (FAB) to the sheet's movement, adjusting its position, opacity, or scale as the Sheet is being dragged.
+`TrueSheet` has first-class support for [react-native-reanimated v4](https://docs.swmansion.com/react-native-reanimated/).
+
+:::info Requirements
+- `react-native-reanimated`: ^4.0.0
+- `react-native-worklets` (peer dependency of Reanimated v4)
+:::
 
 <img alt="reanimated" src={reanimated} width="300"/>
 
-## How?
+## Usage
 
-In this example, we will use the [`onDragChange`](/reference/props#ondragchange) event to listen to size changes while dragging.
+### 1. Add the Provider
 
-You can checkout [example](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for the complete implementation.
-
-### 1. Define a handler hook
+Manages shared values for Reanimated integration.
 
 ```tsx
-import { useEvent, useHandler } from 'react-native-reanimated'
+import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet'
 
-type DragChangeHandler = (sizeInfo: SizeInfo, context: unknown) => void
-
-export const useDragChangeHandler = (
-  handler: DragChangeHandler,
-  dependencies: DependencyList = []
-) => {
-  const handlers = {
-    onDragChange: handler,
-  }
-
-  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies)
-
-  return useEvent<DragChangeEvent>(
-    (event) => {
-      'worklet'
-      const { onDragChange } = handlers
-      if (onDragChange && event.eventName.endsWith('onDragChange')) {
-        onDragChange(event, context)
-      }
-    },
-    ['onDragChange'],
-    doDependenciesDiffer
+function App() {
+  return (
+    <ReanimatedTrueSheetProvider>
+      <YourApp />
+    </ReanimatedTrueSheetProvider>
   )
 }
 ```
 
-### 2. Attach the event handler
+### 2. Use ReanimatedTrueSheet
 
-```tsx {3-4,9-12,23}
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated'
+Animated sheet component that syncs position automatically. with all props from [`TrueSheet`](/reference/props).
 
-const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity)
-const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet)
+```tsx
+import { ReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
 
-const App = () => {
-  const buttonY = useSharedValue(0)
+function MyScreen() {
+  const sheetRef = useRef<TrueSheet>(null)
 
-  const dragChangeHandler = useDragChangeHandler((sizeInfo: SizeInfo) => {
-    'worklet'
-    buttonY.value = -sizeInfo.value
-  })
+  return (
+    <ReanimatedTrueSheet
+      ref={sheetRef}
+      detents={[0.3, 0.6, 1]}
+      initialDetentIndex={1}
+    >
+      <Text>Sheet Content</Text>
+    </ReanimatedTrueSheet>
+  )
+}
+```
 
-  const $animatedStyle: ViewStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: buttonY.value }],
+:::info
+Note that the `onPositionChange` prop event now runs on the UI thread (worklet). If you override this prop, make sure to add the `'worklet'` directive to your handler.
+:::
+
+### 3. Access Sheet Position
+
+Use the `useReanimatedTrueSheet` hook to access the sheet's position.
+
+```tsx
+import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+
+function MyComponent() {
+  const { animatedPosition } = useReanimatedTrueSheet()
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -animatedPosition.value }]
   }))
 
   return (
-    <View>
-      <AnimatedButton style={$animatedStyle} />
-      <AnimatedTrueSheet
-        sizes={['auto', '69%', 'large']}
-        onDragChange={dragChangeHandler}
-      >
-        <View />
-      </AnimatedTrueSheet>
-    </View>
+    <Animated.View style={animatedStyle}>
+      <Text>This moves with the sheet</Text>
+    </Animated.View>
   )
 }
 ```
+
+## Examples
+
+See the [example app](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for complete implementations.

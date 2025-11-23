@@ -12,18 +12,15 @@ Follow the guide below so you can scroll your content using `TrueSheet`.
 
 ### IOS
 
-On iOS, use [`scrollRef`](/reference/props#scrollref) to reference the scrollable component, allowing iOS to handle it automatically.
+On iOS, scroll views (including `ScrollView` and `FlatList`) are automatically detected and handled by the sheet. You don't need to manually reference them.
 
-This works for `FlatList` as well.
-
-```tsx {6-7}
+```tsx {6-8}
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
-  const scrollview = useRef<ScrollView>(null)
 
   return (
-    <TrueSheet ref={sheet} scrollRef={scrollview}>
-      <ScrollView ref={scrollview} nestedScrollEnabled>
+    <TrueSheet ref={sheet}>
+      <ScrollView nestedScrollEnabled>
         <View />
       </ScrollView>
     </TrueSheet>
@@ -48,3 +45,11 @@ const App = () => {
   )
 }
 ```
+
+:::caution
+If your `ScrollView` content height is smaller than the sheet height, scrolling may not work properly due to a React Native framework limitation. This is because the `ScrollView` won't be scrollable when there's no overflow.
+
+**Workaround:** Ensure your content height exceeds the sheet height, or use a `FlatList` with a minimum number of items.
+
+Related: [React Native PR #44099](https://github.com/facebook/react-native/pull/44099)
+:::

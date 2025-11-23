@@ -1,0 +1,71 @@
+---
+title: Edge-to-Edge Display
+description: Configure edge-to-edge display mode on Android.
+keywords: [bottom sheet edge-to-edge, android edge-to-edge, full screen sheet]
+---
+
+# Edge-to-Edge Display (Android)
+
+TrueSheet automatically detects and adapts to Android's edge-to-edge display mode, providing a modern, immersive experience.
+
+## Enabling Edge-to-Edge
+
+Edge-to-edge is supported in React Native 0.81+ via the `edgeToEdgeEnabled` Gradle property.
+
+Enable it in your `android/gradle.properties`:
+
+```gradle title="android/gradle.properties"
+edgeToEdgeEnabled=true
+```
+
+:::info
+This property is **disabled by default** for current Android versions. TrueSheet will auto-detect when you enable it.
+
+Starting with **Android 16+ (API level 36)**, edge-to-edge will be [automatically enabled by default](https://developer.android.com/about/versions/16/behavior-changes-16#edge-to-edge) by the system.
+:::
+
+:::tip
+**Learn more:**
+- [React Native 0.81 edge-to-edge announcement](https://reactnative.dev/blog/2025/08/12/react-native-0.81)
+- [Android 16 edge-to-edge enforcement](https://developer.android.com/about/versions/16/behavior-changes-16#edge-to-edge)
+:::
+
+## Default Behavior
+
+By default, when edge-to-edge is enabled, the sheet respects the status bar and stops at the bottom of it when fully expanded. This ensures content remains visible and not obscured by the status bar.
+
+```tsx
+<TrueSheet ref={sheet}>
+  <View />
+</TrueSheet>
+```
+
+## Full Screen Mode
+
+If you want the sheet to extend behind the status bar for a true full-screen experience, use the `edgeToEdgeFullScreen` prop:
+
+```tsx {2}
+<TrueSheet
+  edgeToEdgeFullScreen
+  ref={sheet}
+>
+  <View />
+</TrueSheet>
+```
+
+When `edgeToEdgeFullScreen` is enabled:
+- ✅ The sheet extends behind the status bar when fully expanded
+- ✅ The footer (if present) still respects the status bar to prevent overlap
+
+:::tip
+Use `edgeToEdgeFullScreen` when you want maximum screen real estate, such as for image galleries or immersive content.
+:::
+
+## Summary
+
+| Prop | Behavior |
+| - | - |
+| Default (no prop) | Sheet stops at status bar bottom |
+| `edgeToEdgeFullScreen` | Sheet extends behind status bar |
+
+Both modes work seamlessly with edge-to-edge enabled and provide automatic status bar detection.

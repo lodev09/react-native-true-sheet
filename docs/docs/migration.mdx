@@ -1,0 +1,280 @@
+---
+sidebar_position: 4
+description: Migration guide from v2 to v3
+keywords: [bottom sheet migration, upgrading bottom sheet, v2 to v3, breaking changes]
+---
+
+# Migrating to v3
+
+This guide will help you migrate from TrueSheet v2 to v3. Version 3 brings full Fabric (New Architecture) support and several improvements.
+
+## Breaking Changes
+
+### 1. Fabric Architecture Required
+
+Version 3 is built exclusively for React Native's **New Architecture (Fabric)**. The old Paper architecture is no longer supported.
+
+**Requirements:**
+- React Native 0.74+ (recommended 0.81+ for edge-to-edge support)
+- New Architecture must be enabled
+
+**What you need to do:**
+
+Enable the New Architecture in your app if you haven't already:
+
+#### iOS
+```ruby title="ios/Podfile"
+use_frameworks! :linkage => :static
+$RNNewArchEnabled = true
+```
+
+Then run:
+```sh
+cd ios && pod install
+```
+
+#### Android
+```properties title="android/gradle.properties"
+newArchEnabled=true
+```
+
+:::tip
+Check out the [React Native New Architecture guide](https://reactnative.dev/docs/new-architecture-intro) for more details.
+:::
+
+### 2. Prop Renames
+
+Several props have been renamed for better clarity:
+
+| v2 Prop | v3 Prop |
+| - | - |
+| `initialIndex` | `initialDetentIndex` |
+| `initialIndexAnimated` | `initialDetentAnimated` |
+
+**Migration:**
+
+```tsx
+// ❌ v2
+<TrueSheet
+  initialIndex={1}
+  initialIndexAnimated={false}
+>
+  <View />
+</TrueSheet>
+
+// ✅ v3
+<TrueSheet
+  initialDetentIndex={1}
+  initialDetentAnimated={false}
+>
+  <View />
+</TrueSheet>
+```
+
+### 3. Removed Props
+
+#### `scrollRef` (iOS)
+
+The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS.
+
+**Migration:**
+
+```tsx
+// ❌ v2
+const scrollView = useRef<ScrollView>(null)
+
+<TrueSheet ref={sheet} scrollRef={scrollView}>
+  <ScrollView ref={scrollView} nestedScrollEnabled>
+    <View />
+  </ScrollView>
+</TrueSheet>
+
+// ✅ v3
+<TrueSheet ref={sheet}>
+  <ScrollView nestedScrollEnabled>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+:::tip
+See the [Scrolling guide](/guides/scrolling) for more information.
+:::
+
+### 4. Detent Value Changes
+
+Detent values now use **fractional values (0-1)** instead of percentage strings.
+
+**Migration:**
+
+```tsx
+// ❌ v2
+<TrueSheet detents={["50%", "80%", "100%"]}>
+  <View />
+</TrueSheet>
+
+// ✅ v3
+<TrueSheet detents={[0.5, 0.8, 1]}>
+  <View />
+</TrueSheet>
+```
+
+:::tip
+The `"auto"` detent still works the same way!
+:::
+
+## New Features in v3
+
+### 1. Automatic Edge-to-Edge Detection (Android)
+
+TrueSheet now automatically detects and adapts to Android's edge-to-edge display mode. By default, the sheet respects the status bar when fully expanded.
+
+For a true full-screen experience where the sheet extends behind the status bar, use the new `edgeToEdgeFullScreen` prop:
+
+```tsx
+<TrueSheet edgeToEdgeFullScreen>
+  <View />
+</TrueSheet>
+```
+
+:::info
+This feature is **Android-only** and requires React Native 0.81+ with `edgeToEdgeEnabled=true` in your `android/gradle.properties`.
+:::
+
+See the [Edge-to-Edge guide](/guides/edge-to-edge) for details.
+
+### 2. Enhanced Event System
+
+Version 3 introduces new lifecycle and interaction events for better control:
+
+#### New Events:
+- **`onMount`** - Called when the sheet's content is mounted and ready
+- **`onWillPresent`** - Called when the sheet is about to be presented
+- **`onDidPresent`** - Called when the sheet has been presented
+- **`onWillDismiss`** - Called when the sheet is about to be dismissed
+- **`onDidDismiss`** - Called when the sheet has been dismissed
+- **`onDragBegin`** - Called when the sheet begins dragging
+- **`onDragChange`** - Called continuously while the sheet is being dragged
+- **`onDragEnd`** - Called when sheet dragging has ended
+- **`onPositionChange`** - Called continuously when the sheet's position changes
+
+These events provide more granular control over the sheet's lifecycle and user interactions.
+
+See the [Events documentation](/reference/props#events) for detailed usage and examples.
+
+### 3. Improved Performance
+
+- Faster rendering with Fabric architecture
+- Built-in lazy loading by default
+- Smoother animations and transitions
+
+### 4. First-Class Reanimated v4 Support
+
+Version 3 introduces dedicated components for seamless integration with `react-native-reanimated` v4:
+
+#### New Components:
+- **`ReanimatedTrueSheetProvider`** - Context provider for managing shared values
+- **`ReanimatedTrueSheet`** - Drop-in replacement for `TrueSheet` with automatic position tracking
+- **`useReanimatedTrueSheet`** - Hook to access the sheet's animated position
+
+#### Example:
+
+```tsx
+import {
+  ReanimatedTrueSheetProvider,
+  ReanimatedTrueSheet,
+  useReanimatedTrueSheet,
+} from '@lodev09/react-native-true-sheet'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+
+// 1. Wrap your app with the provider
+function App() {
+  return (
+    <ReanimatedTrueSheetProvider>
+      <YourApp />
+    </ReanimatedTrueSheetProvider>
+  )
+}
+
+// 2. Use ReanimatedTrueSheet instead of TrueSheet
+function MyScreen() {
+  const sheetRef = useRef<TrueSheet>(null)
+
+  return (
+    <ReanimatedTrueSheet
+      ref={sheetRef}
+      detents={[0.3, 0.6, 1]}
+      initialDetentIndex={1}
+    >
+      <Text>Sheet Content</Text>
+    </ReanimatedTrueSheet>
+  )
+}
+
+// 3. Access the sheet's position for custom animations
+function MyAnimatedComponent() {
+  const { animatedPosition } = useReanimatedTrueSheet()
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -animatedPosition.value }],
+  }))
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Text>This moves with the sheet</Text>
+    </Animated.View>
+  )
+}
+```
+
+:::tip
+The `onPositionChange` event now runs on the UI thread (worklet) when using `ReanimatedTrueSheet`. Make sure to add the `'worklet'` directive to your handler if you override it.
+:::
+
+See the [Reanimated Integration guide](/guides/reanimated) for complete examples.
+
+## Step-by-Step Migration
+
+1. **Enable New Architecture** in your React Native app (see above)
+2. **Update the package:**
+   ```sh
+   yarn add @lodev09/react-native-true-sheet@^3.0.0
+   ```
+   ```sh
+   npm install @lodev09/react-native-true-sheet@^3.0.0
+   ```
+
+3. **Clean and reinstall iOS dependencies:**
+   ```sh
+   cd ios
+   rm -rf Pods Podfile.lock build
+   pod install
+   cd ..
+   ```
+
+4. **Clean Android build:**
+   ```sh
+   cd android
+   ./gradlew clean
+   cd ..
+   ```
+
+5. **Update your code:**
+   - Replace `initialIndex` with `initialDetentIndex`
+   - Replace `initialIndexAnimated` with `initialDetentAnimated`
+   - Remove `scrollRef` prop (iOS)
+   - Change detent percentage strings to fractional numbers
+
+6. **Test your app:**
+   ```sh
+   npx react-native run-ios
+   npx react-native run-android
+   ```
+
+## Need Help?
+
+If you encounter any issues during migration:
+
+- Check the [Troubleshooting](/troubleshooting) guide
+- Open an issue on [GitHub](https://github.com/lodev09/react-native-true-sheet/issues)
+- Review the [example app](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for reference implementations

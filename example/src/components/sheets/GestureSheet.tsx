@@ -1,75 +1,78 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react'
-import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native'
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet'
-import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated'
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
+import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
+import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { DARK, DARK_GRAY, GRABBER_COLOR, SPACING, times } from '../../utils'
-import { Footer } from '../Footer'
-import { Button } from '../Button'
-import { DemoContent } from '../DemoContent'
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING, times } from '../../utils';
+import { Footer } from '../Footer';
+import { Button } from '../Button';
+import { DemoContent } from '../DemoContent';
 
-const BOXES_COUNT = 20
-const CONTAINER_HEIGHT = 200
-const BOX_GAP = SPACING
-const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2
+const BOXES_COUNT = 20;
+const CONTAINER_HEIGHT = 200;
+const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2;
 
 interface GestureSheetProps extends TrueSheetProps {}
 
 export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueSheet>) => {
-  const sheetRef = useRef<TrueSheet>(null)
+  const sheetRef = useRef<TrueSheet>(null);
 
-  const scrollX = useSharedValue(0)
-  const dimensions = useWindowDimensions()
+  const scrollX = useSharedValue(0);
+  const dimensions = useWindowDimensions();
 
   const dismiss = async () => {
-    await sheetRef.current?.dismiss()
-  }
+    await sheetRef.current?.dismiss();
+  };
 
-  const $animatedContainer: ViewStyle = useAnimatedStyle(() => ({
+  const animatedContainerStyle: ViewStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
-  }))
+  }));
 
   const pan = Gesture.Pan()
     .onChange((e) => {
-      scrollX.value += e.changeX
+      scrollX.value += e.changeX;
     })
     .onFinalize((e) => {
       scrollX.value = withDecay({
         velocity: e.velocityX,
         rubberBandEffect: true,
-        clamp: [-((BOX_SIZE + BOX_GAP) * BOXES_COUNT) + dimensions.width - SPACING, 0],
-      })
+        clamp: [-((BOX_SIZE + GAP) * BOXES_COUNT) + dimensions.width - SPACING, 0],
+      });
     })
-    .activeOffsetX([-10, 10])
+    .activeOffsetX([-10, 10]);
 
-  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current)
+  useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
 
   return (
     <TrueSheet
-      sizes={['auto']}
+      detents={['auto']}
       ref={sheetRef}
-      contentContainerStyle={styles.content}
+      style={styles.content}
       blurTint="dark"
-      edgeToEdge
       backgroundColor={DARK}
       cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
-      onDismiss={() => console.log('Gesture sheet dismissed!')}
-      onPresent={(e) =>
+      onDidDismiss={() => console.log('Gesture sheet dismissed!')}
+      onDidPresent={(e) =>
         console.log(
-          `Gesture sheet presented with size of ${e.nativeEvent.value} at index: ${e.nativeEvent.index}`
+          `Gesture sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
-      onSizeChange={(e) =>
-        console.log(`Resized to:`, e.nativeEvent.value, 'at index:', e.nativeEvent.index)
+      onDetentChange={(e) =>
+        console.log(
+          `Detent changed to index:`,
+          e.nativeEvent.index,
+          'position:',
+          e.nativeEvent.position
+        )
       }
-      FooterComponent={<Footer />}
+      footer={<Footer />}
       {...props}
     >
       <GestureHandlerRootView style={styles.gestureRoot}>
         <GestureDetector gesture={pan}>
-          <Animated.View style={[styles.panContainer, $animatedContainer]}>
+          <Animated.View style={[styles.panContainer, animatedContainerStyle]}>
             {times(BOXES_COUNT, (i) => (
               <DemoContent key={i} text={String(i + 1)} style={styles.box} />
             ))}
@@ -78,8 +81,8 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
         <Button text="Dismis" onPress={dismiss} />
       </GestureHandlerRootView>
     </TrueSheet>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   gestureRoot: {
@@ -94,14 +97,14 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   panContainer: {
     flexDirection: 'row',
-    gap: BOX_GAP,
+    gap: GAP,
     height: CONTAINER_HEIGHT,
-    marginBottom: SPACING,
     paddingVertical: SPACING,
   },
-})
+});
 
-GestureSheet.displayName = 'GestureSheet'
+GestureSheet.displayName = 'GestureSheet';

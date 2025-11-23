@@ -1,4 +1,4 @@
-import type { SidebarsConfig } from '@docusaurus/plugin-content-docs'
+import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 
 const sidebars: SidebarsConfig = {
   trueSheetSidebar: [
@@ -7,6 +7,6 @@ const sidebars: SidebarsConfig = {
       dirName: '.',
     },
   ],
-}
+};
 
-export default sidebars
+export default sidebars;
