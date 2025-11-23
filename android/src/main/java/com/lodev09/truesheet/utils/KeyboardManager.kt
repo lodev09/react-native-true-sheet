@@ -1,9 +1,6 @@
 package com.lodev09.truesheet.utils
 
-import android.os.Build
-import android.util.Log
 import android.view.View
-import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.bridge.ReactContext
@@ -48,10 +45,7 @@ class KeyboardManager(reactContext: ReactContext) {
     ViewCompat.requestApplyInsets(view)
   }
 
-  private fun handleWindowInsets(
-    windowInsets: WindowInsetsCompat,
-    listener: OnKeyboardChangeListener?
-  ) {
+  private fun handleWindowInsets(windowInsets: WindowInsetsCompat, listener: OnKeyboardChangeListener?) {
     // Get IME (keyboard) insets
     val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
     val isImeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())

@@ -198,7 +198,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun createDialog() {
     if (dialog != null) return
 
-    dialog = BottomSheetDialog(reactContext).apply {
+    val style = if (edgeToEdgeEnabled) {
+      com.lodev09.truesheet.R.style.TrueSheetEdgeToEdgeEnabledDialog
+    } else {
+      0
+    }
+
+    dialog = BottomSheetDialog(reactContext, style).apply {
       setContentView(this@TrueSheetViewController)
 
       // Setup window params
@@ -253,9 +259,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Re-enable animation
       resetAnimation()
-
-      // Apply edge-to-edge configuration
-      applyEdgeToEdge()
 
       // Wait for the sheet to settle before notifying didPresent
       // The sheet animates to its final position after onShow fires
@@ -527,21 +530,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun resetAnimation() {
     dialog?.window?.apply {
       setWindowAnimations(windowAnimation)
-    }
-  }
-
-  fun applyEdgeToEdge() {
-    if (!edgeToEdgeEnabled) return
-
-    dialog?.window?.apply {
-      setFlags(
-        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-      )
-
-      // Set system UI visibility
-      @Suppress("DEPRECATION")
-      decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
     }
   }
 
