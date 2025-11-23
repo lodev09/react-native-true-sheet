@@ -7,6 +7,7 @@ import {
   BlankSheet,
   FlatListSheet,
   GestureSheet,
+  NavigationSheet,
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
@@ -21,6 +22,7 @@ export const NavigationScreen = () => {
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
+  const navigationSheet = useRef<TrueSheet>(null);
 
   const navigation = useAppNavigation();
 
@@ -30,7 +32,7 @@ export const NavigationScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.content}>
       <View style={styles.heading}>
         <Text style={styles.title}>True Sheet 💩</Text>
         <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
@@ -45,6 +47,7 @@ export const NavigationScreen = () => {
       <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
       <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
       <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+      <Button text="Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
 
       <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
@@ -52,16 +55,18 @@ export const NavigationScreen = () => {
       <FlatListSheet ref={flatListSheet} />
       <GestureSheet ref={gestureSheet} />
       <BlankSheet ref={blankSheet} />
+      <NavigationSheet ref={navigationSheet} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  content: {
     backgroundColor: BLUE,
     justifyContent: 'center',
     flex: 1,
     padding: SPACING,
+    gap: SPACING,
   },
   heading: {
     marginBottom: SPACING * 2,

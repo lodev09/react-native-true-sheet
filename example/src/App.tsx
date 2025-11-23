@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, NavigationScreen, ChildScreen } from './screens';
+import { MapScreen, NavigationScreen, ChildScreen, ModalScreen } from './screens';
 import type { AppStackParamList } from './types';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
@@ -13,7 +13,7 @@ const App = () => {
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-          initialRouteName="Map"
+          initialRouteName="Navigation"
         >
           <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
           <Stack.Screen
@@ -22,6 +22,7 @@ const App = () => {
             component={NavigationScreen}
           />
           <Stack.Screen name="Child" component={ChildScreen} />
+          <Stack.Screen name="Modal" component={ModalScreen} options={{ presentation: 'modal' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </ReanimatedTrueSheetProvider>

@@ -12,7 +12,7 @@ export const ChildScreen = () => {
   const scrollViewSheet = useRef<TrueSheet>(null);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.content}>
       <Button text="TrueSheet View" onPress={() => basicSheet.current?.present()} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
       <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
@@ -25,10 +25,11 @@ export const ChildScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  content: {
     backgroundColor: BLUE,
     justifyContent: 'center',
     flex: 1,
     padding: SPACING,
+    gap: SPACING,
   },
 });

@@ -10,8 +10,8 @@
     "build:ios": "react-native build-ios --mode Debug"
   },
   "dependencies": {
-    "@react-navigation/native": "^7.1.20",
-    "@react-navigation/native-stack": "^7.6.3",
+    "@react-navigation/native": "^7.1.21",
+    "@react-navigation/native-stack": "^7.7.0",
     "react": "19.1.1",
     "react-native": "0.82.1",
     "react-native-gesture-handler": "^2.29.1",

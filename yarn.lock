@@ -4903,7 +4903,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-navigation/native-stack@npm:^7.6.3":
+"@react-navigation/native-stack@npm:^7.7.0":
   version: 7.7.0
   resolution: "@react-navigation/native-stack@npm:7.7.0"
   dependencies:
@@ -4921,7 +4921,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-navigation/native@npm:^7.1.20":
+"@react-navigation/native@npm:^7.1.21":
   version: 7.1.21
   resolution: "@react-navigation/native@npm:7.1.21"
   dependencies:
@@ -17254,8 +17254,8 @@ __metadata:
     "@react-native/babel-preset": "npm:0.82.1"
     "@react-native/metro-config": "npm:0.82.1"
     "@react-native/typescript-config": "npm:0.82.1"
-    "@react-navigation/native": "npm:^7.1.20"
-    "@react-navigation/native-stack": "npm:^7.6.3"
+    "@react-navigation/native": "npm:^7.1.21"
+    "@react-navigation/native-stack": "npm:^7.7.0"
     "@types/react": "npm:19.1.1"
     react: "npm:19.1.1"
     react-native: "npm:0.82.1"
