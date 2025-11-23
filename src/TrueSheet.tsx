@@ -339,6 +339,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       blurTint,
       cornerRadius,
       maxHeight,
+      fullScreen,
       children,
       style,
       footer,
@@ -372,6 +373,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         maxHeight={maxHeight}
+        fullScreen={fullScreen}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}
         onDidPresent={this.onDidPresent}

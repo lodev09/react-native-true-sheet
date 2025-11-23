@@ -220,6 +220,15 @@ export interface TrueSheetProps extends ViewProps {
   maxHeight?: number;
 
   /**
+   * Allows the sheet to extend behind the status bar when fully expanded.
+   * When false (default), the sheet stops at the bottom of the status bar.
+   *
+   * @platform android
+   * @default false
+   */
+  fullScreen?: boolean;
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   footer?: ComponentType<unknown> | ReactElement;

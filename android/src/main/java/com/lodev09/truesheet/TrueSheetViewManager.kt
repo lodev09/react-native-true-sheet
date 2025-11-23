@@ -149,6 +149,11 @@ class TrueSheetViewManager :
     view.setBlurTint(tint)
   }
 
+  @ReactProp(name = "fullScreen", defaultBoolean = false)
+  override fun setFullScreen(view: TrueSheetView, fullScreen: Boolean) {
+    view.setFullScreen(fullScreen)
+  }
+
   companion object {
     const val REACT_CLASS = "TrueSheetView"
     const val TAG_NAME = "TrueSheet"

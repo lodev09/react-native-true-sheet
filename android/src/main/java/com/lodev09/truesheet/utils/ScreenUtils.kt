@@ -25,7 +25,20 @@ object ScreenUtils {
    * @param context React context
    * @return Status bar height in pixels
    */
-  fun getStatusBarHeight(context: ReactContext): Int = getIdentifierHeight(context, "status_bar_height")
+  fun getStatusBarHeight(context: ReactContext): Int {
+    // Modern approach using WindowInsets (API 30+)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      val windowManager = context.getSystemService(WindowManager::class.java)
+      val windowMetrics = windowManager?.currentWindowMetrics
+      val insets = windowMetrics?.windowInsets?.getInsetsIgnoringVisibility(WindowInsets.Type.statusBars())
+      if (insets != null) {
+        return insets.top
+      }
+    }
+    
+    // Fallback to legacy approach for older APIs
+    return getIdentifierHeight(context, "status_bar_height")
+  }
 
   /**
    * Calculate the screen height
@@ -46,7 +59,8 @@ object ScreenUtils {
     }
 
     val screenHeight = displayMetrics.heightPixels
-    val statusBarHeight = getIdentifierHeight(context, "status_bar_height")
+    val statusBarHeight = getStatusBarHeight(context)
+    
     val hasNavigationBar = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       context.getSystemService(WindowManager::class.java)
         ?.currentWindowMetrics

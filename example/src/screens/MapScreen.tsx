@@ -99,6 +99,7 @@ export const MapScreen = () => {
         dimmedIndex={2}
         // dismissible={false}
         cornerRadius={12}
+        // fullScreen
         style={styles.content}
         initialDetentIndex={0}
         onWillPresent={handleWillPresent}

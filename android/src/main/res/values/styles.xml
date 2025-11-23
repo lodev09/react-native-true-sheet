@@ -3,9 +3,6 @@
     <!-- Custom BottomSheetDialog style with edge-to-edge enabled -->
     <style name="TrueSheetEdgeToEdgeEnabledDialog" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <item name="enableEdgeToEdge">true</item>
     </style>
 </resources>

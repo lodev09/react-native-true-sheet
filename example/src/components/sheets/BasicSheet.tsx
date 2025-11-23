@@ -111,7 +111,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
       <TrueSheet
         ref={childSheet}
-        detents={['auto']}
+        detents={['auto', 1]}
         backgroundColor={DARK}
         style={styles.content}
         footer={<Footer />}

@@ -322,6 +322,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setBlurTint(tint: String?) {}
 
+  fun setFullScreen(fullScreen: Boolean) {
+    android.util.Log.d(TAG_NAME, "setFullScreen: $fullScreen")
+    viewController.fullScreen = fullScreen
+  }
+
   /**
    * Presents the sheet at the given detent index.
    *

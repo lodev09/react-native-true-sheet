@@ -126,6 +126,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = BuildConfig.EDGE_TO_EDGE_ENABLED || dialog?.edgeToEdgeEnabled == true
 
   /**
+   * Whether to allow the sheet to extend behind the status bar in edge-to-edge mode
+   */
+  var fullScreen: Boolean = false
+
+  /**
+   * Top inset to apply to sheet max height calculation (only when not fullScreen)
+   */
+  private val sheetTopInset: Int
+    get() = if (edgeToEdgeEnabled && !fullScreen) ScreenUtils.getStatusBarHeight(reactContext) else 0
+
+  /**
    * Current active detent index
    */
   var currentDetentIndex: Int = -1
@@ -539,9 +550,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerHeight = footer.height
 
     val bottomSheetY = ScreenUtils.getScreenY(bottomSheet)
-    val statusBarHeight = if (edgeToEdgeEnabled) ScreenUtils.getStatusBarHeight(reactContext) else 0
 
-    // Calculate footer Y position
+    // Calculate footer Y position based on bottom sheet position
     var footerY = (maxScreenHeight - bottomSheetY - footerHeight).toFloat()
 
     // Animate footer down with sheet when below peek height
@@ -549,7 +559,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       footerY -= (footerHeight * slideOffset)
     }
 
-    // Clamp footer position to prevent it from going above the status bar
+    // Clamp footer position to prevent it from going off screen when positioning at the top
+    // This happens when fullScreen is enabled in edge-to-edge mode
+    val statusBarHeight = ScreenUtils.getStatusBarHeight(reactContext)
     val maxAllowedY = (maxScreenHeight - statusBarHeight - footerHeight).toFloat()
     footer.y = minOf(footerY, maxAllowedY)
   }
@@ -671,7 +683,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       (detent * maxScreenHeight).toInt()
     }
 
-    val finalHeight = maxSheetHeight?.let { minOf(height, it, maxScreenHeight) } ?: minOf(height, maxScreenHeight)
+    // Apply top inset when edge-to-edge is enabled and fullScreen is false
+    val maxAllowedHeight = maxScreenHeight - sheetTopInset
+    val finalHeight = maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
     return finalHeight
   }
 
