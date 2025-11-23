@@ -31,20 +31,6 @@ The true native bottom sheet experience for your React Native Apps. 💩
 ```sh
 yarn add @lodev09/react-native-true-sheet
 ```
-```sh
-npm i @lodev09/react-native-true-sheet
-```
-
-### iOS Setup
-
-```sh
-cd ios && pod install
-```
-
-> **Note:** If you need old architecture support, use version 2.x:
-> ```sh
-> yarn add @lodev09/react-native-true-sheet@^2.0.0
-> ```
 
 ## Documentation
 
