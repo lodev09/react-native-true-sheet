@@ -58,6 +58,9 @@
     // The sheet's view has smaller insets, so we need the actual device insets
     UIWindow *window = [WindowUtil keyWindow];
     _bottomInset = window ? window.safeAreaInsets.bottom : 0;
+
+    // Allow modals to be presented from this view controller
+    self.definesPresentationContext = YES;
   }
   return self;
 }
@@ -645,5 +648,15 @@
     [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition];
   }
 }
+
+#pragma mark - RNSDismissibleModalProtocol
+
+#if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
+- (BOOL)isDismissible {
+  // Return NO to prevent react-native-screens from dismissing this sheet
+  // when presenting a React Navigation modal
+  return NO;
+}
+#endif
 
 @end
