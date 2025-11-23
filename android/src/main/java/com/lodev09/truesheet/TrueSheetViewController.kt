@@ -122,19 +122,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var isPresented = false
     private set
 
-  private val edgeToEdgeEnabled
-    get() = BuildConfig.EDGE_TO_EDGE_ENABLED || dialog?.edgeToEdgeEnabled == true
+  private val edgeToEdgeEnabled: Boolean
+    get() {
+      // Auto-enable edge-to-edge for Android 16+ (API level 36) if not explicitly set
+      val defaultEnabled = android.os.Build.VERSION.SDK_INT >= 36
+      return BuildConfig.EDGE_TO_EDGE_ENABLED || dialog?.edgeToEdgeEnabled == true || defaultEnabled
+    }
 
   /**
    * Whether to allow the sheet to extend behind the status bar in edge-to-edge mode
    */
-  var fullScreen: Boolean = false
+  var edgeToEdgeFullScreen: Boolean = false
 
   /**
-   * Top inset to apply to sheet max height calculation (only when not fullScreen)
+   * Top inset to apply to sheet max height calculation (only when not edgeToEdgeFullScreen)
    */
   private val sheetTopInset: Int
-    get() = if (edgeToEdgeEnabled && !fullScreen) ScreenUtils.getStatusBarHeight(reactContext) else 0
+    get() = if (edgeToEdgeEnabled && !edgeToEdgeFullScreen) ScreenUtils.getStatusBarHeight(reactContext) else 0
 
   /**
    * Current active detent index

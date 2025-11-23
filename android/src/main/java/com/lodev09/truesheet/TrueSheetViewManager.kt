@@ -149,9 +149,9 @@ class TrueSheetViewManager :
     view.setBlurTint(tint)
   }
 
-  @ReactProp(name = "fullScreen", defaultBoolean = false)
-  override fun setFullScreen(view: TrueSheetView, fullScreen: Boolean) {
-    view.setFullScreen(fullScreen)
+  @ReactProp(name = "edgeToEdgeFullScreen", defaultBoolean = false)
+  override fun setEdgeToEdgeFullScreen(view: TrueSheetView, edgeToEdgeFullScreen: Boolean) {
+    view.setEdgeToEdgeFullScreen(edgeToEdgeFullScreen)
   }
 
   companion object {
