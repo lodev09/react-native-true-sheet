@@ -19,7 +19,6 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 > [!IMPORTANT]
 > **Version 3.0+ requires React Native's New Architecture (Fabric)**
->
 > For the old architecture, use version 2.x. See the [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) for upgrading.
 
 ### Prerequisites
@@ -101,7 +100,7 @@ jest.mock('@lodev09/react-native-true-sheet');
 
 All methods (`present`, `dismiss`, `resize`) are mocked as Jest functions, allowing you to test your components without native dependencies.
 
-**[📖 Full Testing Guide](https://sheet.lodev09.com/guides/jest)**
+**[Full Testing Guide](https://sheet.lodev09.com/guides/jest)**
 
 ## Contributing
 
