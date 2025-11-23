@@ -7,7 +7,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 > **⚡ New Architecture (Fabric) Only**  
 > Version 3.0+ requires React Native's new architecture. For the old architecture, use version 2.x.  
-> [📖 Migration Guide](docs/FABRIC_MIGRATION.md) | [🔧 Implementation Details](docs/FABRIC_IMPLEMENTATION.md)
+> [📖 Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration)
 
 <img alt="React Native True Sheet - IOS" src="docs/static/img/preview.gif" width="300" height="600" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-2.gif" width="300" height="600" />
 
@@ -54,10 +54,9 @@ cd ios && pod install
 - [Example](example)
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
+- [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) 📖
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest) 🧪
-- [Fabric Migration Guide](docs/FABRIC_MIGRATION.md) 📖
-- [Fabric Implementation Details](docs/FABRIC_IMPLEMENTATION.md) 🔧
 
 ## Usage
 
