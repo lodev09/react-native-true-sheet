@@ -22,7 +22,6 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.lodev09.truesheet.utils.KeyboardManager
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -197,7 +196,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var sheetBackgroundColor: Int = Color.WHITE
   var detents = mutableListOf(0.5, 1.0)
 
-  private var keyboardManager = KeyboardManager(reactContext)
   private var windowAnimation: Int = 0
 
   init {
@@ -257,7 +255,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Remove this view from its parent to allow re-attachment on next presentation
     sheetContainer?.removeView(this)
 
-    unregisterKeyboardManager()
     dialog = null
     isDragging = false
     isPresented = false
@@ -270,7 +267,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Setup listener when the dialog has been presented
     dialog.setOnShowListener {
       isPresented = true
-      registerKeyboardManager()
 
       // Re-enable animation
       resetAnimation()
@@ -580,33 +576,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun setSoftInputMode(mode: Int) {
     dialog?.window?.setSoftInputMode(mode)
-  }
-
-  // ==================== Keyboard Management ====================
-
-  /**
-   * Handle keyboard state changes and adjust maxScreenHeight (sheet max height) accordingly.
-   * Also update footer's Y position.
-   */
-  fun registerKeyboardManager() {
-    // TODO: might not be needed if we can properly set edge-to-edge in the dialog
-//    keyboardManager.registerKeyboardListener(object : KeyboardManager.OnKeyboardChangeListener {
-//      override fun onKeyboardStateChange(isVisible: Boolean, visibleHeight: Int) {
-//        maxScreenHeight = when (isVisible) {
-//          true -> visibleHeight ?: 0
-//          else -> ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
-//        }
-//
-//        positionFooter()
-//      }
-//    })
-  }
-
-  /**
-   * Remove keyboard listener.
-   */
-  fun unregisterKeyboardManager() {
-    keyboardManager.unregisterKeyboardListener()
   }
 
   // ==================== Drag Handling ====================
