@@ -68,10 +68,10 @@ import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 
 function MyComponent() {
-  const { position } = useReanimatedTrueSheet()
+  const { animatedPosition } = useReanimatedTrueSheet()
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -position.value }]
+    transform: [{ translateY: -animatedPosition.value }]
   }))
 
   return (
