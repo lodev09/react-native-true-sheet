@@ -1,6 +1,7 @@
 import { Text } from 'react-native';
-import { render } from '@testing-library/react-native';
+import { render, act } from '@testing-library/react-native';
 import { TrueSheet } from '../index';
+import type { DidDismissEvent } from '../TrueSheet.types';
 
 describe('TrueSheet', () => {
   it('should export TrueSheet component', () => {
@@ -58,5 +59,137 @@ describe('TrueSheet', () => {
       </TrueSheet>
     );
     expect(getByText('Styled Content')).toBeDefined();
+  });
+
+  describe('Lazy Loading', () => {
+    it('should not render native view content initially when initialDetentIndex is not set', () => {
+      const { queryByText } = render(
+        <TrueSheet name="lazy-test">
+          <Text>Lazy Content</Text>
+        </TrueSheet>
+      );
+      // Content should not be rendered immediately
+      expect(queryByText('Lazy Content')).toBeNull();
+    });
+
+    it('should not render native view content when initialDetentIndex is -1', () => {
+      const { queryByText } = render(
+        <TrueSheet name="lazy-test-negative" initialDetentIndex={-1}>
+          <Text>Lazy Content Negative</Text>
+        </TrueSheet>
+      );
+      // Content should not be rendered
+      expect(queryByText('Lazy Content Negative')).toBeNull();
+    });
+
+    it('should render native view content immediately when initialDetentIndex is set to valid index', () => {
+      const { getByText } = render(
+        <TrueSheet name="eager-test" initialDetentIndex={0}>
+          <Text>Eager Content</Text>
+        </TrueSheet>
+      );
+      // Content should be rendered immediately
+      expect(getByText('Eager Content')).toBeDefined();
+    });
+
+    it('should render native view content when present is called', async () => {
+      const onMountMock = jest.fn();
+      const { queryByText } = render(
+        <TrueSheet name="present-test" onMount={onMountMock}>
+          <Text>Present Content</Text>
+        </TrueSheet>
+      );
+
+      // Initially content should not be rendered
+      expect(queryByText('Present Content')).toBeNull();
+
+      // Get the sheet instance
+      const sheetRef = (TrueSheet as any).instances['present-test'];
+      expect(sheetRef).toBeDefined();
+
+      // Trigger state change to render native view
+      await act(async () => {
+        await sheetRef.setState({ shouldRenderNativeView: true });
+      });
+
+      // Content should now be rendered after state update
+      expect(queryByText('Present Content')).not.toBeNull();
+    });
+
+    it('should clean up native view content after dismiss', async () => {
+      const onDidDismissMock = jest.fn();
+      const { getByText, queryByText } = render(
+        <TrueSheet name="dismiss-test" initialDetentIndex={0} onDidDismiss={onDidDismissMock}>
+          <Text>Dismiss Content</Text>
+        </TrueSheet>
+      );
+
+      // Content should be rendered initially
+      expect(getByText('Dismiss Content')).toBeDefined();
+
+      // Get the sheet instance and trigger dismiss
+      const sheetRef = (TrueSheet as any).instances['dismiss-test'];
+      expect(sheetRef).toBeDefined();
+
+      // Simulate dismiss event
+      await act(async () => {
+        sheetRef.onDidDismiss({} as DidDismissEvent);
+      });
+
+      // Content should be cleaned up after dismiss
+      expect(queryByText('Dismiss Content')).toBeNull();
+      expect(onDidDismissMock).toHaveBeenCalled();
+    });
+
+    it('should render footer only when native view is rendered', () => {
+      const { queryByText } = render(
+        <TrueSheet name="lazy-footer-test" footer={<Text>Lazy Footer</Text>}>
+          <Text>Lazy Body</Text>
+        </TrueSheet>
+      );
+
+      // Neither content nor footer should be rendered initially
+      expect(queryByText('Lazy Body')).toBeNull();
+      expect(queryByText('Lazy Footer')).toBeNull();
+    });
+
+    it('should render footer when sheet is presented with initialDetentIndex', () => {
+      const { getByText } = render(
+        <TrueSheet
+          name="eager-footer-test"
+          initialDetentIndex={0}
+          footer={<Text>Eager Footer</Text>}
+        >
+          <Text>Eager Body</Text>
+        </TrueSheet>
+      );
+
+      // Both content and footer should be rendered
+      expect(getByText('Eager Body')).toBeDefined();
+      expect(getByText('Eager Footer')).toBeDefined();
+    });
+
+    it('should maintain shouldRenderNativeView state correctly through lifecycle', async () => {
+      const { queryByText } = render(
+        <TrueSheet name="lifecycle-test" initialDetentIndex={-1}>
+          <Text>Lifecycle Content</Text>
+        </TrueSheet>
+      );
+
+      // Initially not rendered (lazy)
+      expect(queryByText('Lifecycle Content')).toBeNull();
+
+      // Get the sheet instance
+      const sheetRef = (TrueSheet as any).instances['lifecycle-test'];
+      expect(sheetRef).toBeDefined();
+
+      // Simulate state change that would happen during present()
+      await act(async () => {
+        await sheetRef.setState({ shouldRenderNativeView: true });
+      });
+
+      // Content should now be rendered after state update
+      expect(queryByText('Lifecycle Content')).not.toBeNull();
+    });
   });
 });

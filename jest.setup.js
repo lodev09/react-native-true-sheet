@@ -71,6 +71,22 @@ jest.mock('react-native-reanimated', () => {
     withSpring: jest.fn((value) => value),
     runOnJS: jest.fn((fn) => fn),
     createAnimatedComponent: (component) => component,
+    Easing: {
+      bezier: jest.fn(() => jest.fn()),
+      linear: jest.fn(),
+      ease: jest.fn(),
+      quad: jest.fn(),
+      cubic: jest.fn(),
+      sin: jest.fn(),
+      circle: jest.fn(),
+      exp: jest.fn(),
+      elastic: jest.fn(),
+      back: jest.fn(),
+      bounce: jest.fn(),
+      in: jest.fn(),
+      out: jest.fn(),
+      inOut: jest.fn(),
+    },
   };
 });
 
