@@ -1,5 +1,5 @@
 diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
-index 51f021831aed26a4eed3c85014020423b7b3108b..4998d946f8a2e83a0ed200d090a02523815b43ff 100644
+index 51f021831aed26a4eed3c85014020423b7b3108b..62c52923b332af8f53031b7dc835df12f3c07181 100644
 --- a/ios/RNSScreenStack.mm
 +++ b/ios/RNSScreenStack.mm
 @@ -640,8 +640,10 @@ RNS_IGNORE_SUPER_CALL_END
@@ -27,8 +27,8 @@ index 51f021831aed26a4eed3c85014020423b7b3108b..4998d946f8a2e83a0ed200d090a02523
 +      UIViewController *presentingController = nil;
 +
 +      // Check if the external modal implements the optional method
-+      if ([dismissibleModal respondsToSelector:@selector(presentingControllerForModals)]) {
-+        presentingController = [dismissibleModal presentingControllerForModals];
++      if ([dismissibleModal respondsToSelector:@selector(presentingViewController)]) {
++        presentingController = [dismissibleModal presentingViewController];
 +      }
 +
 +      // Only handle the non-dismissible modal if it provides a presenting controller
@@ -50,7 +50,7 @@ index 51f021831aed26a4eed3c85014020423b7b3108b..4998d946f8a2e83a0ed200d090a02523
  
    // We didn't detect any controllers for dismissal, thus we start presenting new VCs
 diff --git a/ios/integrations/RNSDismissibleModalProtocol.h b/ios/integrations/RNSDismissibleModalProtocol.h
-index 006f809d104c1d4fbdf6eccca89d6c6e190cca71..9991c28f42ec63a40b2e8b2e74d066eecbfad615 100644
+index 006f809d104c1d4fbdf6eccca89d6c6e190cca71..8269fdd9b483b9cc4f2be57b6b6da965033c9d9b 100644
 --- a/ios/integrations/RNSDismissibleModalProtocol.h
 +++ b/ios/integrations/RNSDismissibleModalProtocol.h
 @@ -1,3 +1,5 @@
@@ -68,7 +68,7 @@ index 006f809d104c1d4fbdf6eccca89d6c6e190cca71..9991c28f42ec63a40b2e8b2e74d066ee
 +// that should be used as the presenting controller for subsequent modals.
 +// This gives the external modal implementation control over the presentation chain.
 +// If not implemented or returns nil, the non-dismissible modal itself will be used.
-+- (nullable UIViewController *)presentingControllerForModals;
++- (nullable UIViewController *)presentingViewController;
 +
  @end
  
