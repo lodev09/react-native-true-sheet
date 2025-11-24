@@ -8,6 +8,7 @@
 
 #import "TrueSheetViewController.h"
 #import "utils/WindowUtil.h"
+#import "utils/ConversionUtil.h"
 
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
@@ -21,7 +22,7 @@
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
-  CGFloat _bottomInset;
+  CGSize _lastNotifiedSize;
   BOOL _isTransitioning;
   BOOL _isDragging;
   BOOL _isTrackingPositionFromLayout;
@@ -36,8 +37,10 @@
     _grabber = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
+    _pageSizing = YES;
     _lastPosition = 0;
     _lastTransitionPosition = 0;
+    _lastNotifiedSize = CGSizeZero;
     _isTransitioning = NO;
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
@@ -49,14 +52,6 @@
     _fakeTransitionView = [[UIView alloc] init];
     _fakeTransitionView.hidden = YES;
     _fakeTransitionView.userInteractionEnabled = NO;
-
-    // Get bottom safe area inset from the window's safe area
-    // The sheet's view has smaller insets, so we need the actual device insets
-    UIWindow *window = [WindowUtil keyWindow];
-    _bottomInset = window ? window.safeAreaInsets.bottom : 0;
-
-    // Allow modals to be presented from this view controller
-    self.definesPresentationContext = YES;
   }
   return self;
 }
@@ -99,7 +94,10 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
       [self.delegate viewControllerWillPresent];
     }
-
+    
+    // Emit size change event to layout our container
+    [self notifyContentSizeChange];
+    
     // Setup transition position tracking
     [self setupTransitionPositionTracking];
   }
@@ -167,14 +165,16 @@
       [self setupSheetDetents];
 
       // Notify delegate of size changes
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-        [self.delegate viewControllerDidChangeSize:self.view.frame.size];
-      }
+      [self notifyContentSizeChange];
     }];
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+  
+  // Notify content size changes (e.g., when pageSizing changes)
+  [self notifyContentSizeChange];
+  
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;
@@ -190,6 +190,19 @@
       // Reset layout transitioning after sending notification
       self->_layoutTransitioning = NO;
     });
+  }
+}
+
+- (void)notifyContentSizeChange {
+  CGSize currentSize = self.view.frame.size;
+  
+  // Only notify if width has actually changed
+  if (currentSize.width != _lastNotifiedSize.width) {
+    _lastNotifiedSize = currentSize;
+    
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+      [self.delegate viewControllerDidChangeSize:currentSize];
+    }
   }
 }
 
@@ -407,7 +420,7 @@
 
   // Subtract bottomInset from content height to account for safe area
   // This prevents iOS from adding extra bottom insets automatically
-  CGFloat totalHeight = [self.contentHeight floatValue] - _bottomInset;
+  CGFloat totalHeight = [self.contentHeight floatValue] - self.bottomInset;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
@@ -591,8 +604,19 @@
   return presentedView.frame.origin.y;
 }
 
+- (CGFloat)bottomInset {
+  // No bottom inset for iPad
+  if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+    return 0;
+  }
+  
+  // Get bottom safe area inset from the window's safe area
+  UIWindow *window = [WindowUtil keyWindow];
+  return window ? window.safeAreaInsets.bottom : 0;
+}
+
 - (CGFloat)currentHeight {
-  return self.containerHeight - self.currentPosition - _bottomInset;
+  return self.containerHeight - self.currentPosition - self.bottomInset;
 }
 
 - (CGFloat)containerHeight {
@@ -610,6 +634,12 @@
   }
 
   sheet.delegate = self;
+
+  // Configure page sizing behavior (iOS 17+)
+  if (@available(iOS 17.0, *)) {
+    sheet.prefersPageSizing = self.pageSizing;
+  }
+
   sheet.prefersEdgeAttachedInCompactHeight = YES;
   sheet.prefersGrabberVisible = self.grabber;
   // Only set preferredCornerRadius if explicitly provided, otherwise use system default
@@ -623,29 +653,7 @@
 
   // Setup blur effect if blurTint is provided
   if (self.blurTint && self.blurTint.length > 0) {
-    UIBlurEffectStyle style = UIBlurEffectStyleLight;
-
-    if ([self.blurTint isEqualToString:@"dark"]) {
-      style = UIBlurEffectStyleDark;
-    } else if ([self.blurTint isEqualToString:@"light"]) {
-      style = UIBlurEffectStyleLight;
-    } else if ([self.blurTint isEqualToString:@"extraLight"]) {
-      style = UIBlurEffectStyleExtraLight;
-    } else if ([self.blurTint isEqualToString:@"regular"]) {
-      style = UIBlurEffectStyleRegular;
-    } else if ([self.blurTint isEqualToString:@"prominent"]) {
-      style = UIBlurEffectStyleProminent;
-    } else if ([self.blurTint isEqualToString:@"systemThinMaterial"]) {
-      style = UIBlurEffectStyleSystemThinMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemMaterial"]) {
-      style = UIBlurEffectStyleSystemMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemThickMaterial"]) {
-      style = UIBlurEffectStyleSystemThickMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemChromeMaterial"]) {
-      style = UIBlurEffectStyleSystemChromeMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemUltraThinMaterial"]) {
-      style = UIBlurEffectStyleSystemUltraThinMaterial;
-    }
+    UIBlurEffectStyle style = [ConversionUtil blurEffectStyleFromString:self.blurTint];
 
     // Create a blur effect view and set it as the background
     UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:style]];

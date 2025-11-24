@@ -47,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
 @property (nonatomic, copy, nullable) NSString *blurTint;
+@property (nonatomic, assign) BOOL pageSizing;
 @property (nonatomic, assign) BOOL layoutTransitioning;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
@@ -57,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetProps;
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
+- (CGFloat)bottomInset;
 - (CGFloat)currentHeight;
 - (CGFloat)containerHeight;
 

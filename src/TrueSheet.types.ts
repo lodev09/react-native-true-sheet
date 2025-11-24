@@ -57,24 +57,24 @@ export type BlurTint =
   | 'light'
   | 'dark'
   | 'default'
-  | 'extraLight'
+  | 'extra-light'
   | 'regular'
   | 'prominent'
-  | 'systemUltraThinMaterial'
-  | 'systemThinMaterial'
-  | 'systemMaterial'
-  | 'systemThickMaterial'
-  | 'systemChromeMaterial'
-  | 'systemUltraThinMaterialLight'
-  | 'systemThinMaterialLight'
-  | 'systemMaterialLight'
-  | 'systemThickMaterialLight'
-  | 'systemChromeMaterialLight'
-  | 'systemUltraThinMaterialDark'
-  | 'systemThinMaterialDark'
-  | 'systemMaterialDark'
-  | 'systemThickMaterialDark'
-  | 'systemChromeMaterialDark';
+  | 'system-ultra-thin-material'
+  | 'system-thin-material'
+  | 'system-material'
+  | 'system-thick-material'
+  | 'system-chrome-material'
+  | 'system-ultra-thin-material-light'
+  | 'system-thin-material-light'
+  | 'system-material-light'
+  | 'system-thick-material-light'
+  | 'system-chrome-material-light'
+  | 'system-ultra-thin-material-dark'
+  | 'system-thin-material-dark'
+  | 'system-material-dark'
+  | 'system-thick-material-dark'
+  | 'system-chrome-material-dark';
 
 /**
  * Supported Sheet detent.
@@ -195,6 +195,16 @@ export interface TrueSheetProps extends ViewProps {
    * @platform android
    */
   grabberProps?: TrueSheetGrabberProps;
+
+  /**
+   * Controls the sheet presentation style on iPad.
+   * When enabled (true), uses a large page sheet for better readability.
+   * When disabled (false), uses a centered form sheet.
+   *
+   * @platform ios 17+
+   * @default true
+   */
+  pageSizing?: boolean;
 
   /**
    * The blur effect style on iOS.

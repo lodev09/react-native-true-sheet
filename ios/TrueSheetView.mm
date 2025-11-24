@@ -216,6 +216,9 @@ using namespace facebook::react;
   // Update grabber
   _controller.grabber = newProps.grabber;
 
+  // Update page sizing
+  _controller.pageSizing = newProps.pageSizing;
+
   // Update dismissible
   _controller.modalInPresentation = !newProps.dismissible;
 
@@ -363,10 +366,6 @@ using namespace facebook::react;
   _controller.activeDetentIndex = index;
 
   [OnWillPresentEvent emit:_eventEmitter index:index position:position];
-
-  // Emit onChangeSize event to layout our container on JS
-  CGSize controllerSize = _controller.view.frame.size;
-  [OnSizeChangeEvent emit:_eventEmitter width:controllerSize.width height:controllerSize.height];
 }
 
 - (void)viewControllerDidPresent {
@@ -419,6 +418,8 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
+  // Notify so our container can layout on JS
+  // TODO: hopefully we can convert this into native!
   [OnSizeChangeEvent emit:_eventEmitter width:size.width height:size.height];
 }
 
