@@ -21,17 +21,31 @@ yarn
 Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development.
 :::
 
+### Verifying your development environment
+
 The [example app](https://github.com/lodev09/react-native-true-sheet/tree/main/example) demonstrates usage of the library. You need to run it to test any changes you make.
+
+Before running the example app, verify that your development environment is properly configured by running:
+
+```sh
+yarn example doctor
+```
+
+This will check that all required tools and dependencies are installed and configured correctly. If any issues are found, follow the recommended fixes or refer to the [React Native environment setup guide](https://reactnative.dev/docs/environment-setup).
 
 It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
 
-If you want to use Android Studio or XCode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/TrueSheetExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > TrueSheet`.
+If you want to use Android Studio or XCode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/TrueSheetExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-true-sheet`.
 
 To edit the Java or Kotlin files, open `example/android` in Android studio and find the source files at `react-native-true-sheet` under `Android`.
 
 You can use various commands from the root directory to work with the project.
 
 To start the packager:
+
+```sh
+yarn example start
+```
 
 To run the example app on Android:
 
@@ -45,7 +59,7 @@ To run the example app on iOS:
 yarn example ios
 ```
 
-Make sure your code passes TypeScript and ESLint. Run the following to verify:
+Make sure your code passes TypeScript and ESLint. Run the following to verify and fix:
 
 ```sh
 yarn tidy
@@ -104,9 +118,7 @@ The `package.json` file contains various scripts for common tasks:
 
 ### Sending a pull request
 
-:::info
-**Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
-:::
+> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
 
 When you're sending a pull request:
 
