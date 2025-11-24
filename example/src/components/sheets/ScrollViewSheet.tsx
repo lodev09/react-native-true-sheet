@@ -14,11 +14,13 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       ref={ref}
       detents={[0.8]}
       cornerRadius={12}
+      fitScrollView
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       footer={<Footer />}
       {...props}
     >
+      <DemoContent />
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">
         {times(25, (i) => (
           <DemoContent color={BLUE} key={i} />

@@ -30,6 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
+/**
+ * setup ScrollView pinning
+ */
+- (void)setupScrollViewPinning:(BOOL)pinned;
+
 @end
 
 NS_ASSUME_NONNULL_END

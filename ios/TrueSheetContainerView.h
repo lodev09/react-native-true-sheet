@@ -40,6 +40,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)layoutFooter;
 
+/**
+ * setup ScrollView pinning
+ */
+- (void)setupContentScrollViewPinning:(BOOL)pinned;
+
 @end
 
 NS_ASSUME_NONNULL_END

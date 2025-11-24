@@ -12,14 +12,17 @@ Follow the guide below so you can scroll your content using `TrueSheet`.
 
 ### IOS
 
-On iOS, scroll views (including `ScrollView` and `FlatList`) are automatically detected and handled by the sheet. You don't need to manually reference them.
+On iOS, you can enable the `fitScrollView` prop to automatically pin scroll views (including `ScrollView` and `FlatList`) to fit within the sheet's available space.
+
+When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container.
 
 ```tsx {6-8}
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
 
   return (
-    <TrueSheet ref={sheet}>
+    <TrueSheet ref={sheet} fitScrollView={true}>
+      <View>{/* Header content */}</View>
       <ScrollView nestedScrollEnabled>
         <View />
       </ScrollView>
@@ -27,6 +30,10 @@ const App = () => {
   )
 }
 ```
+
+:::note
+By default, `fitScrollView` is `false`. Set it to `true` to enable automatic ScrollView fitting.
+:::
 
 ### Android
 

@@ -1,0 +1,70 @@
+---
+title: Adding Header
+description: Add a header component that stays above the scrollable content.
+keywords: [bottom sheet header, bottom sheet fixed header, bottom sheet sticky header]
+---
+
+Need a fixed header above your scrollable content? A title bar, search input, or navigation controls? TrueSheet makes it simple!
+
+When using `fitScrollView` on iOS, TrueSheet automatically detects views positioned above your `ScrollView` or `FlatList` and treats them as headers. The scroll view will be pinned below these header views.
+
+## How?
+
+Simply place your header view before the `ScrollView` or `FlatList` component.
+
+```tsx {4-7}
+const App = () => {
+  return (
+    <TrueSheet ref={sheet} fitScrollView>
+      <View style={styles.header}>
+        <Text>My Header</Text>
+      </View>
+      <ScrollView nestedScrollEnabled>
+        <View>{/* Your scrollable content */}</View>
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+
+const styles = StyleSheet.create({
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+})
+```
+
+:::info
+The header detection works by finding views positioned above the ScrollView based on their frame positions. The ScrollView will automatically pin its top edge below the closest sibling view above it.
+:::
+
+## Multiple Headers
+
+You can have multiple views above the ScrollView. The scroll view will pin itself below the closest view:
+
+```tsx {4-10}
+const App = () => {
+  return (
+    <TrueSheet ref={sheet} fitScrollView>
+      <View style={styles.title}>
+        <Text>Title</Text>
+      </View>
+      <View style={styles.searchBar}>
+        <TextInput placeholder="Search..." />
+      </View>
+      <ScrollView nestedScrollEnabled>
+        <View>{/* Your scrollable content */}</View>
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+Make sure `fitScrollView` is set to `true` to enable automatic header detection and ScrollView pinning. See the [Scrolling guide](/guides/scrolling) for more information about `fitScrollView`.
+:::
+
+## Platform Support
+
+This feature is **iOS only**. On Android, you can achieve similar layouts using standard React Native layout components.
