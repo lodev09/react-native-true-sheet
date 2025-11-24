@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
     height: INPUT_HEIGHT,
     borderRadius: BORDER_RADIUS,
     justifyContent: 'center',
-    marginBottom: SPACING,
   },
   input: {
     fontSize: 16,

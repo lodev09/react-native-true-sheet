@@ -1,11 +1,12 @@
 import { forwardRef, type Ref } from 'react';
-import { StyleSheet, FlatList, View } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_GRAY, SPACING, times } from '../../utils';
 import { Input } from '../Input';
 import { DemoContent } from '../DemoContent';
 import { Spacer } from '../Spacer';
+import { Header } from '../Header';
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
@@ -30,9 +31,9 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <View style={styles.header}>
+      <Header>
         <Input />
-      </View>
+      </Header>
       <FlatList
         nestedScrollEnabled
         data={times(50, (i) => i)}
@@ -59,10 +60,5 @@ FlatListSheet.displayName = 'FlatListSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-  },
-  header: {
-    backgroundColor: DARK,
-    paddingTop: SPACING * 2,
-    paddingHorizontal: SPACING,
   },
 });

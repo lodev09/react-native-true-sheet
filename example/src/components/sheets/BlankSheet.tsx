@@ -2,7 +2,7 @@ import { forwardRef, type Ref } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { styles as constantStyles, DARK, SPACING } from '../../utils';
+import { DARK, SPACING } from '../../utils';
 
 interface BlankSheetProps extends TrueSheetProps {}
 
@@ -18,7 +18,7 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
       style={styles.content}
       {...props}
     >
-      <Text style={constantStyles.whiteText}>Blank Sheet</Text>
+      <Text style={styles.text}>Blank Sheet</Text>
     </TrueSheet>
   );
 });
@@ -26,6 +26,9 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+  },
+  text: {
+    color: '#fff',
   },
 });
 
