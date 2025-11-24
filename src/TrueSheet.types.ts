@@ -34,21 +34,6 @@ export type DragEndEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type PositionChangeEvent = NativeSyntheticEvent<PositionChangeEventPayload>;
 
 /**
- * Internal event payload for size changes (not exposed to users)
- * @internal
- */
-export interface SizeChangeEventPayload {
-  width: number;
-  height: number;
-}
-
-/**
- * Internal event type for size changes (not exposed to users)
- * @internal
- */
-export type SizeChangeEvent = NativeSyntheticEvent<SizeChangeEventPayload>;
-
-/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios

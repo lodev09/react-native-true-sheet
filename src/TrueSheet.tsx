@@ -20,7 +20,6 @@ import type {
   DidDismissEvent,
   WillDismissEvent,
   MountEvent,
-  SizeChangeEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
@@ -46,8 +45,6 @@ type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
-  containerWidth?: number;
-  containerHeight?: number;
 }
 
 export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
@@ -78,8 +75,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
-      containerWidth: undefined,
-      containerHeight: undefined,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -92,7 +87,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragChange = this.onDragChange.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
     this.onPositionChange = this.onPositionChange.bind(this);
-    this.onSizeChange = this.onSizeChange.bind(this);
   }
 
   private validateDetents(): void {
@@ -255,18 +249,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onPositionChange?.(event);
   }
 
-  private onSizeChange(event: SizeChangeEvent): void {
-    const { width, height } = event.nativeEvent;
-
-    // Update container view dimensions in state
-    this.setState({
-      containerWidth: width,
-      containerHeight: height,
-    });
-
-    // Internal handler only - not exposed to users
-  }
-
   /**
    * Present the Sheet by `index` (Promise-based)
    * @param index - Detent index (default: 0)
@@ -388,17 +370,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
-        onSizeChange={this.onSizeChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            testID={testID}
-            style={{
-              width: this.state.containerWidth,
-              height: this.state.containerHeight,
-            }}
-            collapsable={false}
-          >
+          <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>
             <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
               {children}
             </TrueSheetContentViewNativeComponent>
