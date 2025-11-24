@@ -235,7 +235,7 @@ See the [Events documentation](/reference/props#events) for detailed usage and e
 
 ### 3. iPad Support with Page Sizing
 
-Version 3 now includes first-class iPad support with the new `pageSizing` prop. When enabled (default), the sheet sizes itself appropriately for larger displays like iPad, providing a centered, page-like appearance instead of stretching to full width.
+Version 3 now includes first-class iPad support with the new `pageSizing` prop. When enabled (default), the sheet uses a large page sheet for better readability on iPad. When disabled, the sheet uses a centered form sheet.
 
 ```tsx
 <TrueSheet pageSizing>
@@ -244,7 +244,7 @@ Version 3 now includes first-class iPad support with the new `pageSizing` prop. 
 ```
 
 :::info
-This feature is **iOS 17+ only** and defaults to `true`. Set to `false` if you want the sheet to stretch to full width on iPad.
+This feature is **iOS 17+ only** and defaults to `true`. Set to `false` to use a centered form sheet presentation on iPad.
 :::
 
 ### 4. Improved Performance

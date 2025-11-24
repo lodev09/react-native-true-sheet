@@ -197,8 +197,9 @@ export interface TrueSheetProps extends ViewProps {
   grabberProps?: TrueSheetGrabberProps;
 
   /**
-   * Controls whether the sheet uses page sizing behavior.
-   * When enabled, the sheet sizes itself to fit the content width on larger displays (like iPad).
+   * Controls the sheet presentation style on iPad.
+   * When enabled (true), uses a large page sheet for better readability.
+   * When disabled (false), uses a centered form sheet.
    *
    * @platform ios 17+
    * @default true
