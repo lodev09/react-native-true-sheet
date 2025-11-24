@@ -584,8 +584,12 @@
 }
 
 - (CGFloat)bottomInset {
+  // No bottom inset for iPad
+  if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+    return 0;
+  }
+  
   // Get bottom safe area inset from the window's safe area
-  // The sheet's view has smaller insets, so we need the actual device insets
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
 }
@@ -612,7 +616,7 @@
 
   // Fix for iPad presenting at the center
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = YES;
+//    sheet.prefersPageSizing = YES;
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
