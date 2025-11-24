@@ -618,7 +618,7 @@
   } else {
     sheet.preferredCornerRadius = UISheetPresentationControllerAutomaticDimension;
   }
-  
+
   self.view.backgroundColor = self.backgroundColor;
 
   // Setup blur effect if blurTint is provided

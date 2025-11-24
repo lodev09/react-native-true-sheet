@@ -188,7 +188,7 @@ using namespace facebook::react;
   }
 
   _controller.detents = detents;
-  
+
   if (newProps.background == 0) {
     _controller.backgroundColor = nil;
   } else {
