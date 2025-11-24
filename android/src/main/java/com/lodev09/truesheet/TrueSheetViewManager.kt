@@ -112,9 +112,9 @@ class TrueSheetViewManager :
     view.setDimmed(dimmed)
   }
 
-  @ReactProp(name = "dimmedIndex", defaultInt = 0)
-  override fun setDimmedIndex(view: TrueSheetView, index: Int) {
-    view.setDimmedIndex(index)
+  @ReactProp(name = "dimmedDetentIndex", defaultInt = 0)
+  override fun setDimmedDetentIndex(view: TrueSheetView, index: Int) {
+    view.setDimmedDetentIndex(index)
   }
 
   @ReactProp(name = "initialDetentIndex", defaultInt = -1)

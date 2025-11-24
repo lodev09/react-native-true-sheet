@@ -31,14 +31,14 @@ export const App = () => {
 
 ### Dimmed by Detent Index
 
-To further customize the dimming behavior, [`dimmedIndex`](/reference/props#dimmedindex) is also available. Set the [detent](/reference/props#detents) `index` at which you want the sheet to start dimming.
+To further customize the dimming behavior, [`dimmedDetentIndex`](/reference/props#dimmeddetentindex) is also available. Set the [detent](/reference/props#detents) `index` at which you want the sheet to start dimming.
 
 ```tsx {5}
 export const App = () => {
   return (
     <TrueSheet
       detents={['auto', 0.69, 1]}
-      dimmedIndex={1} // Dim will start at 69% ✅
+      dimmedDetentIndex={1} // Dim will start at 69% ✅
     >
       <View />
     </TrueSheet>
@@ -47,5 +47,5 @@ export const App = () => {
 ```
 
 :::info
-`dimmedIndex` is ignored if `dimmed` is set to `false`.
+`dimmedDetentIndex` is ignored if `dimmed` is set to `false`.
 :::

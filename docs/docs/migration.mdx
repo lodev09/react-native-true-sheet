@@ -10,7 +10,51 @@ This guide will help you migrate from TrueSheet v2 to v3. Version 3 brings full 
 
 ## Breaking Changes
 
-### 1. Fabric Architecture Required
+### 1. Background and Blur Behavior Changes
+
+#### `backgroundColor` Default Value
+
+The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **system default** when not provided, which matches the platform's native sheet background.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - backgroundColor defaults to white
+<TrueSheet>
+  <View />
+</TrueSheet>
+
+// ✅ v3 - backgroundColor uses system default (transparent on iOS)
+// If you want white background, explicitly set it:
+<TrueSheet backgroundColor="white">
+  <View />
+</TrueSheet>
+```
+
+#### `blurTint` No Longer Overrides `backgroundColor`
+
+In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - blurTint overrides backgroundColor
+<TrueSheet backgroundColor="red" blurTint="light">
+  {/* backgroundColor is ignored, only blur effect is shown */}
+</TrueSheet>
+
+// ✅ v3 - blurTint applies over backgroundColor
+<TrueSheet backgroundColor="red" blurTint="light">
+  {/* Shows red background with light blur effect on top */}
+</TrueSheet>
+
+// If you want only blur without background color:
+<TrueSheet blurTint="light">
+  {/* Just blur effect with system default background */}
+</TrueSheet>
+```
+
+### 2. Fabric Architecture Required
 
 Version 3 is built exclusively for React Native's **New Architecture (Fabric)**. The old Paper architecture is no longer supported.
 
@@ -42,7 +86,7 @@ newArchEnabled=true
 Check out the [React Native New Architecture guide](https://reactnative.dev/docs/new-architecture-intro) for more details.
 :::
 
-### 2. Prop Renames
+### 3. Prop Renames
 
 Several props have been renamed for better clarity:
 
@@ -57,6 +101,7 @@ Several props have been renamed for better clarity:
 | `onPresent` | `onDidPresent` |
 | `onDismiss` | `onDidDismiss` |
 | `onSizeChange` | `onDetentChange` |
+| `dimmedIndex` | `dimmedDetentIndex` |
 
 **Migration:**
 
@@ -91,7 +136,7 @@ Several props have been renamed for better clarity:
 </TrueSheet>
 ```
 
-### 3. Removed Props
+### 4. Removed Props
 
 The following props have been removed in v3:
 
@@ -127,7 +172,7 @@ See the [Scrolling guide](/guides/scrolling) for more information.
 
 The `contentContainerStyle` prop has been removed as it's no longer needed with the new architecture. Style your content directly instead.
 
-### 4. Detent Value Changes
+### 5. Detent Value Changes
 
 Detent values now use **fractional values (0-1)** instead of percentage strings.
 
@@ -294,6 +339,7 @@ See the [Reanimated Integration guide](/guides/reanimated) for complete examples
    - Replace `onPresent` with `onDidPresent`
    - Replace `onDismiss` with `onDidDismiss`
    - Replace `onSizeChange` with `onDetentChange`
+   - Replace `dimmedIndex` with `dimmedDetentIndex`
    - Remove `scrollRef` prop (iOS - now auto-detected)
    - Remove `contentContainerStyle` prop (no longer needed)
    - Change detent percentage strings to fractional numbers (e.g., `"50%"` → `0.5`)

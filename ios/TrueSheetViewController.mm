@@ -21,7 +21,6 @@
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
-  UIVisualEffectView *_backgroundView;
   CGFloat _bottomInset;
   BOOL _isTransitioning;
   BOOL _isDragging;
@@ -36,7 +35,7 @@
     _contentHeight = @(0);
     _grabber = YES;
     _dimmed = YES;
-    _dimmedIndex = @(0);
+    _dimmedDetentIndex = @(0);
     _lastPosition = 0;
     _lastTransitionPosition = 0;
     _isTransitioning = NO;
@@ -45,9 +44,6 @@
     _layoutTransitioning = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
-
-    _backgroundView = [[UIVisualEffectView alloc] init];
-    _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     // Initialize fake transition view for tracking position during animations
     _fakeTransitionView = [[UIView alloc] init];
@@ -93,8 +89,6 @@
   [super viewDidLoad];
 
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-  _backgroundView.frame = self.view.bounds;
-  [self.view insertSubview:self->_backgroundView atIndex:0];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -426,14 +420,14 @@
   sheet.detents = detents;
 
   // Setup dimmed background
-  if (self.dimmed && [self.dimmedIndex integerValue] == 0) {
+  if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
     sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
 
     if (@available(iOS 16.0, *)) {
-      if (self.dimmed && self.dimmedIndex) {
-        NSInteger dimmedIdx = [self.dimmedIndex integerValue];
+      if (self.dimmed && self.dimmedDetentIndex) {
+        NSInteger dimmedIdx = [self.dimmedDetentIndex integerValue];
         if (dimmedIdx > 0 && dimmedIdx - 1 < sheet.detents.count) {
           sheet.largestUndimmedDetentIdentifier = sheet.detents[dimmedIdx - 1].identifier;
         } else if (sheet.detents.lastObject) {
@@ -462,8 +456,8 @@
                           resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                             CGFloat maxDetentValue = context.maximumDetentValue;
                             CGFloat maxValue =
-                              self.maxHeight ? MIN(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                            CGFloat resolvedValue = MIN(height, maxValue);
+                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                            CGFloat resolvedValue = fmin(height, maxValue);
                             return resolvedValue;
                           }];
     } else {
@@ -481,15 +475,24 @@
   NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
 
   if (@available(iOS 16.0, *)) {
-    return [UISheetPresentationControllerDetent
-      customDetentWithIdentifier:detentId
-                        resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                          CGFloat maxDetentValue = context.maximumDetentValue;
-                          CGFloat maxValue =
-                            self.maxHeight ? MIN(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                          CGFloat resolvedValue = MIN(value * maxDetentValue, maxValue);
-                          return resolvedValue;
-                        }];
+    // Use exact comparison for common values
+    if (value == 1.0) {
+      return [UISheetPresentationControllerDetent largeDetent];
+    } else if (value == 0.5) {
+      return [UISheetPresentationControllerDetent mediumDetent];
+    } else {
+      return [UISheetPresentationControllerDetent
+        customDetentWithIdentifier:detentId
+                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                            CGFloat maxDetentValue = context.maximumDetentValue;
+                            CGFloat maxValue =
+                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                            CGFloat resolvedValue = fmin(value * maxDetentValue, maxValue);
+                            return resolvedValue;
+                          }];
+    }
+  } else if (value >= 0.5) {
+    return [UISheetPresentationControllerDetent largeDetent];
   } else {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
@@ -612,7 +615,11 @@
   // Only set preferredCornerRadius if explicitly provided, otherwise use system default
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
+  } else {
+    sheet.preferredCornerRadius = UISheetPresentationControllerAutomaticDimension;
   }
+  
+  self.view.backgroundColor = self.backgroundColor;
 
   // Setup blur effect if blurTint is provided
   if (self.blurTint && self.blurTint.length > 0) {
@@ -640,12 +647,20 @@
       style = UIBlurEffectStyleSystemUltraThinMaterial;
     }
 
-    _backgroundView.effect = [UIBlurEffect effectWithStyle:style];
-    _backgroundView.backgroundColor = nil;
+    // Create a blur effect view and set it as the background
+    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:style]];
+    blurView.frame = self.view.bounds;
+    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
+    // Insert blur view at the bottom
+    [self.view insertSubview:blurView atIndex:0];
   } else {
-    // No blur effect, use solid background color
-    _backgroundView.effect = nil;
-    _backgroundView.backgroundColor = self.backgroundColor;
+    // Remove any blur views
+    for (UIView *subview in self.view.subviews) {
+      if ([subview isKindOfClass:[UIVisualEffectView class]]) {
+        [subview removeFromSuperview];
+      }
+    }
   }
 }
 

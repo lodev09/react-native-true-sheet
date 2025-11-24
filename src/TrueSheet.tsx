@@ -328,14 +328,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   render(): ReactNode {
     const {
       detents = [0.5, 1],
-      backgroundColor = 'white',
+      backgroundColor,
       dismissible = true,
       grabber = true,
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
       keyboardMode = 'resize',
-      dimmedIndex,
+      dimmedDetentIndex,
       blurTint,
       cornerRadius,
       maxHeight,
@@ -367,7 +367,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         cornerRadius={cornerRadius}
         grabber={grabber}
         dimmed={dimmed}
-        dimmedIndex={dimmedIndex}
+        dimmedDetentIndex={dimmedDetentIndex}
         keyboardMode={keyboardMode}
         initialDetentIndex={initialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}

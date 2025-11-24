@@ -188,10 +188,13 @@ using namespace facebook::react;
   }
 
   _controller.detents = detents;
-
-  // Update background color - always set it, even if 0 (which could be a valid color like black)
-  UIColor *color = RCTUIColorFromSharedColor(SharedColor(newProps.background));
-  _controller.backgroundColor = color;
+  
+  if (newProps.background == 0) {
+    _controller.backgroundColor = nil;
+  } else {
+    UIColor *color = RCTUIColorFromSharedColor(SharedColor(newProps.background));
+    _controller.backgroundColor = color;
+  }
 
   // Update blur tint - always set it to clear when removed
   _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
@@ -217,9 +220,9 @@ using namespace facebook::react;
   // Update dimmed
   _controller.dimmed = newProps.dimmed;
 
-  // Update dimmedIndex
-  if (newProps.dimmedIndex >= 0) {
-    _controller.dimmedIndex = @(newProps.dimmedIndex);
+  // Update dimmedDetentIndex
+  if (newProps.dimmedDetentIndex >= 0) {
+    _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);
   }
 
   // Store initial presentation settings
@@ -235,6 +238,7 @@ using namespace facebook::react;
     // Apply changes to presented sheet if needed
     if (_controller.isPresented) {
       [_controller.sheetPresentationController animateChanges:^{
+        [self->_controller setupSheetProps];
         [self->_controller setupSheetDetents];
         [self->_controller applyActiveDetent];
       }];

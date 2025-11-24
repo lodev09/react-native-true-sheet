@@ -49,11 +49,11 @@ The name to reference this sheet. It has to be **_unique_**. You can then presen
 
 ### `backgroundColor`
 
-The sheet's background color.
+The sheet's background color. Uses the system default when not provided.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
-| `ColorValue` | `"white"` | ✅ | ✅ |
+| `ColorValue` | _system default_ | ✅ | ✅ |
 
 ### `cornerRadius`
 
@@ -99,7 +99,7 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 This property is only used during the initial mount.
 :::
 
-### `dimmedIndex`
+### `dimmedDetentIndex`
 
 The detent index that the sheet should start to dim the background.
 
@@ -110,8 +110,6 @@ The detent index that the sheet should start to dim the background.
 :::info
 This is ignored if `dimmed` is set to `false`.
 :::
-
-
 
 ### `initialDetentIndex`
 
@@ -167,7 +165,7 @@ A component that floats at the bottom of the sheet. Accepts a functional `Compon
 
 ### `blurTint`
 
-The blur effect style on IOS. Overrides [`backgroundColor`](#backgroundcolor) if set. Example: `"light"`, `"dark"`, etc.
+The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |

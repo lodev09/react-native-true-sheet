@@ -167,7 +167,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * The detent index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    */
-  var dimmedIndex = 0
+  var dimmedDetentIndex = 0
 
   /**
    * The maximum window height
@@ -505,14 +505,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Setup dimmed sheet.
-   * `dimmedIndex` will further customize the dimming behavior.
+   * `dimmedDetentIndex` will further customize the dimming behavior.
    */
   fun setupDimmedBackground(detentIndex: Int) {
     val dialog = this.dialog ?: return
     dialog.window?.apply {
       val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
 
-      if (dimmed && detentIndex >= dimmedIndex) {
+      if (dimmed && detentIndex >= dimmedDetentIndex) {
         // Remove touch listener
         view.setOnTouchListener(null)
 

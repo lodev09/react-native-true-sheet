@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
 @property (nonatomic, assign) BOOL dimmed;
-@property (nonatomic, strong, nullable) NSNumber *dimmedIndex;
+@property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
 @property (nonatomic, copy, nullable) NSString *blurTint;
 @property (nonatomic, assign) BOOL layoutTransitioning;
 @property (nonatomic, assign) BOOL isPresented;
