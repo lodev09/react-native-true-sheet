@@ -52,7 +52,7 @@
   } else if ([tintString isEqualToString:@"system-chrome-material-dark"]) {
     return UIBlurEffectStyleSystemChromeMaterialDark;
   }
-  
+
   // Default to light if not recognized
   return UIBlurEffectStyleLight;
 }

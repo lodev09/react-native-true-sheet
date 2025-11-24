@@ -7,8 +7,8 @@
 //
 
 #import "TrueSheetViewController.h"
-#import "utils/WindowUtil.h"
 #import "utils/ConversionUtil.h"
+#import "utils/WindowUtil.h"
 
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
@@ -94,10 +94,10 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
       [self.delegate viewControllerWillPresent];
     }
-    
+
     // Emit size change event to layout our container
     [self notifyContentSizeChange];
-    
+
     // Setup transition position tracking
     [self setupTransitionPositionTracking];
   }
@@ -171,10 +171,10 @@
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
-  
+
   // Notify content size changes (e.g., when pageSizing changes)
   [self notifyContentSizeChange];
-  
+
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;
@@ -195,11 +195,11 @@
 
 - (void)notifyContentSizeChange {
   CGSize currentSize = self.view.frame.size;
-  
+
   // Only notify if width has actually changed
   if (currentSize.width != _lastNotifiedSize.width) {
     _lastNotifiedSize = currentSize;
-    
+
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
       [self.delegate viewControllerDidChangeSize:currentSize];
     }
@@ -609,7 +609,7 @@
   if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
     return 0;
   }
-  
+
   // Get bottom safe area inset from the window's safe area
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
