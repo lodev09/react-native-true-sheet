@@ -8,6 +8,7 @@
 
 #import "TrueSheetViewController.h"
 #import "utils/WindowUtil.h"
+#import "utils/ConversionUtil.h"
 
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
@@ -54,9 +55,6 @@
     // The sheet's view has smaller insets, so we need the actual device insets
     UIWindow *window = [WindowUtil keyWindow];
     _bottomInset = window ? window.safeAreaInsets.bottom : 0;
-
-    // Allow modals to be presented from this view controller
-    self.definesPresentationContext = YES;
   }
   return self;
 }
@@ -610,6 +608,12 @@
   }
 
   sheet.delegate = self;
+
+  // Fix for iPad presenting at the center
+  if (@available(iOS 17.0, *)) {
+    sheet.prefersPageSizing = YES;
+  }
+
   sheet.prefersEdgeAttachedInCompactHeight = YES;
   sheet.prefersGrabberVisible = self.grabber;
   // Only set preferredCornerRadius if explicitly provided, otherwise use system default
@@ -623,29 +627,7 @@
 
   // Setup blur effect if blurTint is provided
   if (self.blurTint && self.blurTint.length > 0) {
-    UIBlurEffectStyle style = UIBlurEffectStyleLight;
-
-    if ([self.blurTint isEqualToString:@"dark"]) {
-      style = UIBlurEffectStyleDark;
-    } else if ([self.blurTint isEqualToString:@"light"]) {
-      style = UIBlurEffectStyleLight;
-    } else if ([self.blurTint isEqualToString:@"extraLight"]) {
-      style = UIBlurEffectStyleExtraLight;
-    } else if ([self.blurTint isEqualToString:@"regular"]) {
-      style = UIBlurEffectStyleRegular;
-    } else if ([self.blurTint isEqualToString:@"prominent"]) {
-      style = UIBlurEffectStyleProminent;
-    } else if ([self.blurTint isEqualToString:@"systemThinMaterial"]) {
-      style = UIBlurEffectStyleSystemThinMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemMaterial"]) {
-      style = UIBlurEffectStyleSystemMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemThickMaterial"]) {
-      style = UIBlurEffectStyleSystemThickMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemChromeMaterial"]) {
-      style = UIBlurEffectStyleSystemChromeMaterial;
-    } else if ([self.blurTint isEqualToString:@"systemUltraThinMaterial"]) {
-      style = UIBlurEffectStyleSystemUltraThinMaterial;
-    }
+    UIBlurEffectStyle style = [ConversionUtil blurEffectStyleFromString:self.blurTint];
 
     // Create a blur effect view and set it as the background
     UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:style]];
