@@ -428,6 +428,10 @@ using namespace facebook::react;
 
   UIViewController *rootViewController = keyWindow.rootViewController;
 
+  if (!rootViewController) {
+    return nil;
+  }
+
   // Find the top-most presented view controller
   while (rootViewController.presentedViewController) {
     UIViewController *presented = rootViewController.presentedViewController;

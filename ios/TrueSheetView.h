@@ -23,22 +23,6 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 @interface TrueSheetView : RCTViewComponentView
 
-///**
-// * The view controller managing the sheet presentation
-// * Exposed so container can access it
-// */
-//@property (nonatomic, readonly, strong) TrueSheetViewController *controller;
-//
-///**
-// * Whether the sheet is currently presented
-// */
-//@property (nonatomic, readonly) BOOL isPresented;
-//
-///**
-// * The currently active detent index
-// */
-//@property (nonatomic, readonly, strong, nullable) NSNumber *activeIndex;
-
 // TurboModule methods
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated

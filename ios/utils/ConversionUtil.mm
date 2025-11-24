@@ -11,46 +11,36 @@
 @implementation ConversionUtil
 
 + (UIBlurEffectStyle)blurEffectStyleFromString:(NSString *)tintString {
-  if ([tintString isEqualToString:@"dark"]) {
-    return UIBlurEffectStyleDark;
-  } else if ([tintString isEqualToString:@"light"]) {
-    return UIBlurEffectStyleLight;
-  } else if ([tintString isEqualToString:@"extra-light"]) {
-    return UIBlurEffectStyleExtraLight;
-  } else if ([tintString isEqualToString:@"regular"]) {
-    return UIBlurEffectStyleRegular;
-  } else if ([tintString isEqualToString:@"prominent"]) {
-    return UIBlurEffectStyleProminent;
-  } else if ([tintString isEqualToString:@"system-ultra-thin-material"]) {
-    return UIBlurEffectStyleSystemUltraThinMaterial;
-  } else if ([tintString isEqualToString:@"system-thin-material"]) {
-    return UIBlurEffectStyleSystemThinMaterial;
-  } else if ([tintString isEqualToString:@"system-material"]) {
-    return UIBlurEffectStyleSystemMaterial;
-  } else if ([tintString isEqualToString:@"system-thick-material"]) {
-    return UIBlurEffectStyleSystemThickMaterial;
-  } else if ([tintString isEqualToString:@"system-chrome-material"]) {
-    return UIBlurEffectStyleSystemChromeMaterial;
-  } else if ([tintString isEqualToString:@"system-ultra-thin-material-light"]) {
-    return UIBlurEffectStyleSystemUltraThinMaterialLight;
-  } else if ([tintString isEqualToString:@"system-thin-material-light"]) {
-    return UIBlurEffectStyleSystemThinMaterialLight;
-  } else if ([tintString isEqualToString:@"system-material-light"]) {
-    return UIBlurEffectStyleSystemMaterialLight;
-  } else if ([tintString isEqualToString:@"system-thick-material-light"]) {
-    return UIBlurEffectStyleSystemThickMaterialLight;
-  } else if ([tintString isEqualToString:@"system-chrome-material-light"]) {
-    return UIBlurEffectStyleSystemChromeMaterialLight;
-  } else if ([tintString isEqualToString:@"system-ultra-thin-material-dark"]) {
-    return UIBlurEffectStyleSystemUltraThinMaterialDark;
-  } else if ([tintString isEqualToString:@"system-thin-material-dark"]) {
-    return UIBlurEffectStyleSystemThinMaterialDark;
-  } else if ([tintString isEqualToString:@"system-material-dark"]) {
-    return UIBlurEffectStyleSystemMaterialDark;
-  } else if ([tintString isEqualToString:@"system-thick-material-dark"]) {
-    return UIBlurEffectStyleSystemThickMaterialDark;
-  } else if ([tintString isEqualToString:@"system-chrome-material-dark"]) {
-    return UIBlurEffectStyleSystemChromeMaterialDark;
+  static NSDictionary<NSString *, NSNumber *> *styleMap = nil;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    styleMap = @{
+      @"dark" : @(UIBlurEffectStyleDark),
+      @"light" : @(UIBlurEffectStyleLight),
+      @"extra-light" : @(UIBlurEffectStyleExtraLight),
+      @"regular" : @(UIBlurEffectStyleRegular),
+      @"prominent" : @(UIBlurEffectStyleProminent),
+      @"system-ultra-thin-material" : @(UIBlurEffectStyleSystemUltraThinMaterial),
+      @"system-thin-material" : @(UIBlurEffectStyleSystemThinMaterial),
+      @"system-material" : @(UIBlurEffectStyleSystemMaterial),
+      @"system-thick-material" : @(UIBlurEffectStyleSystemThickMaterial),
+      @"system-chrome-material" : @(UIBlurEffectStyleSystemChromeMaterial),
+      @"system-ultra-thin-material-light" : @(UIBlurEffectStyleSystemUltraThinMaterialLight),
+      @"system-thin-material-light" : @(UIBlurEffectStyleSystemThinMaterialLight),
+      @"system-material-light" : @(UIBlurEffectStyleSystemMaterialLight),
+      @"system-thick-material-light" : @(UIBlurEffectStyleSystemThickMaterialLight),
+      @"system-chrome-material-light" : @(UIBlurEffectStyleSystemChromeMaterialLight),
+      @"system-ultra-thin-material-dark" : @(UIBlurEffectStyleSystemUltraThinMaterialDark),
+      @"system-thin-material-dark" : @(UIBlurEffectStyleSystemThinMaterialDark),
+      @"system-material-dark" : @(UIBlurEffectStyleSystemMaterialDark),
+      @"system-thick-material-dark" : @(UIBlurEffectStyleSystemThickMaterialDark),
+      @"system-chrome-material-dark" : @(UIBlurEffectStyleSystemChromeMaterialDark),
+    };
+  });
+
+  NSNumber *style = styleMap[tintString];
+  if (style) {
+    return (UIBlurEffectStyle)[style integerValue];
   }
 
   // Default to light if not recognized

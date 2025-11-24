@@ -56,6 +56,12 @@
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  // Ensure display link is invalidated to prevent retain cycle
+  if (_displayLink) {
+    [_displayLink invalidate];
+    _displayLink = nil;
+  }
 }
 
 #pragma mark - Presentation State
@@ -367,7 +373,8 @@
 
     // Our last transition position is nearly the same as fake view's layer position
     // Sheet must've been repositioning after dragging at lowest detent
-    if (fabs(_lastTransitionPosition - position) < FLT_EPSILON) {
+    // Use 0.5 points as epsilon to account for floating-point precision in layout calculations
+    if (fabs(_lastTransitionPosition - position) < 0.5) {
       // Let's just flag it as transitioning to let JS manually animate
       transitioning = YES;
 
@@ -493,7 +500,7 @@
     return UISheetPresentationControllerDetentIdentifierMedium;
 
   UISheetPresentationControllerDetentIdentifier identifier = UISheetPresentationControllerDetentIdentifierMedium;
-  if (index < sheet.detents.count) {
+  if (index >= 0 && index < (NSInteger)sheet.detents.count) {
     UISheetPresentationControllerDetent *detent = sheet.detents[index];
     if (@available(iOS 16.0, *)) {
       identifier = detent.identifier;

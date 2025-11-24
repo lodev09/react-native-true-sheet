@@ -52,9 +52,6 @@ using namespace facebook::react;
   return self;
 }
 
-- (void)dealloc {
-}
-
 - (void)layoutSubviews {
   [super layoutSubviews];
 
