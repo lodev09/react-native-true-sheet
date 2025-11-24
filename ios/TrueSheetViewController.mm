@@ -667,6 +667,13 @@
   // when presenting a React Navigation modal
   return NO;
 }
+
+- (UIViewController *)presentingControllerForModals {
+  // Return the content view controller as the presenting controller
+  // This allows react-native-screens to present modals on top of the sheet's content
+  // instead of trying to present on top of the sheet itself
+  return self;
+}
 #endif
 
 @end
