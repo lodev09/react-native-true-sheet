@@ -38,6 +38,24 @@
   }
 }
 
++ (void)pinView:(UIView *)view toParentView:(UIView *)parentView withTopView:(UIView *)topView edges:(UIRectEdge)edges {
+  view.translatesAutoresizingMaskIntoConstraints = NO;
+  
+  // Pin top edge to bottom of top sibling
+  [view.topAnchor constraintEqualToAnchor:topView.bottomAnchor].active = YES;
+  
+  // Pin other edges to parent based on edges parameter
+  if (edges & UIRectEdgeBottom) {
+    [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor].active = YES;
+  }
+  if (edges & UIRectEdgeLeft) {
+    [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
+  }
+  if (edges & UIRectEdgeRight) {
+    [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
+  }
+}
+
 + (void)unpinView:(UIView *)view {
   if (!view)
     return;

@@ -19,6 +19,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       footer={<Footer />}
       {...props}
     >
+      <DemoContent />
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">
         {times(25, (i) => (
           <DemoContent color={BLUE} key={i} />

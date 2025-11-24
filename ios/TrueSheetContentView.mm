@@ -66,7 +66,8 @@ using namespace facebook::react;
 - (void)setupScrollViewPinning {
   // Auto-detect and pin scroll views for proper sheet scrolling behavior
   // Pinning ensures ScrollView fills the sheet area and scrolls correctly with the sheet
-  RCTScrollViewComponentView *scrollView = [self findScrollView];
+  UIView *topSibling = nil;
+  RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
   if (scrollView && scrollView != _pinnedScrollView) {
     // Unpin previous scroll view if exists
@@ -77,26 +78,71 @@ using namespace facebook::react;
     // Pin to container view to enable proper scrolling within the sheet
     UIView *containerView = self.superview;
     if (containerView) {
-      [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
+      if (topSibling) {
+        // Pin ScrollView below the top sibling
+        [LayoutUtil pinView:scrollView toParentView:containerView withTopView:topSibling edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
+      } else {
+        // No top sibling, pin to all edges of container (original behavior)
+        [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
+      }
+      
       _pinnedScrollView = scrollView;
     }
   }
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
-  // Get the React component's root view
+  return [self findScrollView:nil];
+}
+
+- (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
   if (self.subviews.count == 0) {
     return nil;
   }
 
+  RCTScrollViewComponentView *scrollView = nil;
+  UIView *topSibling = nil;
+  
   // Check first-level children for scroll views (ScrollView or FlatList)
   for (UIView *subview in self.subviews) {
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
-      return static_cast<RCTScrollViewComponentView *>(subview);
+      scrollView = static_cast<RCTScrollViewComponentView *>(subview);
+      
+      // Find the view positioned directly above this ScrollView by frame position
+      if (self.subviews.count > 1) {
+        CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
+        CGFloat closestDistance = CGFLOAT_MAX;
+        
+        for (UIView *sibling in self.subviews) {
+          // Skip the ScrollView itself
+          if (sibling == scrollView) {
+            continue;
+          }
+          
+          CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
+          
+          // Check if this sibling is positioned above the ScrollView
+          if (siblingBottom <= scrollViewTop) {
+            CGFloat distance = scrollViewTop - siblingBottom;
+            
+            // Find the closest view above (smallest distance)
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              topSibling = sibling;
+            }
+          }
+        }
+      }
+      
+      break; // Found ScrollView, no need to continue
     }
   }
-
-  return nil;
+  
+  if (outTopSibling) {
+    *outTopSibling = topSibling;
+  }
+  
+  return scrollView;
 }
 
 - (void)prepareForRecycle {
