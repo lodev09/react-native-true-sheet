@@ -17,6 +17,7 @@
 #import "TrueSheetFooterView.h"
 
 #import <React/RCTConversions.h>
+#import <React/RCTLog.h>
 
 using namespace facebook::react;
 
@@ -64,7 +65,6 @@ using namespace facebook::react;
 
 - (void)setupContentScrollViewPinning:(BOOL)pinned {
   if (_contentView) {
-    NSLog(@"setting up scrollview pinning: %i", pinned);
     [_contentView setupScrollViewPinning:pinned];
   }
 }
@@ -75,7 +75,7 @@ using namespace facebook::react;
   // Handle content view mounting
   if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
     if (_contentView != nil) {
-      NSLog(@"TrueSheet: Container can only have one content component.");
+      RCTLogWarn(@"TrueSheet: Container can only have one content component.");
       return;
     }
 
@@ -86,7 +86,7 @@ using namespace facebook::react;
   // Handle footer view mounting
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
-      NSLog(@"TrueSheet: Container can only have one footer component.");
+      RCTLogWarn(@"TrueSheet: Container can only have one footer component.");
       return;
     }
 

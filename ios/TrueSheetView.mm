@@ -37,6 +37,7 @@
 #import <React/RCTFabricComponentsPlugins.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <React/RCTLog.h>
 
 using namespace facebook::react;
 
@@ -271,7 +272,7 @@ using namespace facebook::react;
   // Check if it's a container view
   if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
     if (_containerView != nil) {
-      NSLog(@"TrueSheet: Sheet can only have one container component.");
+      RCTLogWarn(@"TrueSheet: Sheet can only have one container component.");
       return;
     }
 
