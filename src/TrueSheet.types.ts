@@ -78,9 +78,6 @@ export type BlurTint =
 
 /**
  * Supported Sheet detent.
- *
- * @platform android
- * @platform ios 15+
  */
 export type SheetDetent =
   /**
@@ -134,8 +131,6 @@ export interface TrueSheetProps extends ViewProps {
    * Specify whether the sheet background is dimmed.
    * Set to `false` to allow interaction with the background components.
    *
-   * @platform android
-   * @platform ios 15+
    * @default true
    */
   dimmed?: boolean;
@@ -162,7 +157,7 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @default 0
    */
-  dimmedIndex?: number;
+  dimmedDetentIndex?: number;
 
   /**
    * Prevents interactive dismissal of the Sheet.
@@ -173,8 +168,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Main sheet background color.
-
-   * @default white
+   * Uses system default when not provided.
    */
   backgroundColor?: ColorValue;
 
@@ -184,9 +178,6 @@ export interface TrueSheetProps extends ViewProps {
    * - `undefined` (not provided): Uses system default corner radius
    * - `0`: Sharp corners (no rounding)
    * - `> 0`: Custom corner radius value
-   *
-   * @platform android
-   * @platform ios 15+
    */
   cornerRadius?: number;
 
@@ -278,27 +269,18 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * Called when the sheet has began dragging.
    * Comes with the detent info.
-   *
-   * @platform android
-   * @platform ios 15+
    */
   onDragBegin?: (event: DragBeginEvent) => void;
 
   /**
    * Called when the sheet is being dragged.
    * Comes with the detent info.
-   *
-   * @platform android
-   * @platform ios 15+
    */
   onDragChange?: (event: DragChangeEvent) => void;
 
   /**
    * Called when the sheet dragging has ended.
    * Comes with the detent info.
-   *
-   * @platform android
-   * @platform ios 15+
    */
   onDragEnd?: (event: DragEndEvent) => void;
 
@@ -306,9 +288,6 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the sheet's position changes.
    * This fires continuously during sheet position changes.
    * Comes with the detent info.
-   *
-   * @platform android
-   * @platform ios 15+
    */
   onPositionChange?: (event: PositionChangeEvent) => void;
 }

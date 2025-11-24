@@ -46,7 +46,7 @@ export const ReanimatedExample = () => {
         initialDetentIndex={1}
         backgroundColor={DARK_BLUE}
         cornerRadius={16}
-        dimmedIndex={2}
+        dimmedDetentIndex={2}
       >
         <View style={styles.sheetContent}>
           <Text style={styles.title}>Reanimated TrueSheet 🎨</Text>

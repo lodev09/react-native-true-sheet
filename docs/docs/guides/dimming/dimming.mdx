@@ -31,14 +31,14 @@ export const App = () => {
 
 ### Dimmed by Detent Index
 
-To further customize the dimming behavior, [`dimmedIndex`](/reference/props#dimmedindex) is also available. Set the [detent](/reference/props#detents) `index` at which you want the sheet to start dimming.
+To further customize the dimming behavior, [`dimmedDetentIndex`](/reference/props#dimmeddetentindex) is also available. Set the [detent](/reference/props#detents) `index` at which you want the sheet to start dimming.
 
 ```tsx {5}
 export const App = () => {
   return (
     <TrueSheet
       detents={['auto', 0.69, 1]}
-      dimmedIndex={1} // Dim will start at 69% ✅
+      dimmedDetentIndex={1} // Dim will start at 69% ✅
     >
       <View />
     </TrueSheet>
@@ -47,5 +47,62 @@ export const App = () => {
 ```
 
 :::info
-`dimmedIndex` is ignored if `dimmed` is set to `false`.
+`dimmedDetentIndex` is ignored if `dimmed` is set to `false`.
 :::
+
+## Customizing Dimming Alpha
+
+You can dynamically control the dimming opacity based on the sheet's position using `ReanimatedTrueSheet` with `animatedPosition`.
+
+:::tip
+Learn more about Reanimated integration in the [Reanimated guide](/guides/reanimated).
+:::
+
+```tsx {2-3,7,9-11,14-21}
+import { ReanimatedTrueSheet, ReanimatedTrueSheetProvider, useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+import { StyleSheet } from 'react-native'
+
+export const App = () => {
+  return (
+    <ReanimatedTrueSheetProvider>
+      <View style={styles.container}>
+        <CustomBackdrop />
+        <Sheet />
+      </View>
+    </ReanimatedTrueSheetProvider>
+  )
+}
+
+const CustomBackdrop = () => {
+  const { animatedPosition } = useReanimatedTrueSheet()
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: animatedPosition.value * 0.5, // Adjust multiplier for desired alpha
+  }))
+
+  return <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]} />
+}
+
+const Sheet = () => {
+  return (
+    <ReanimatedTrueSheet
+      detents={[0.25, 0.5, 1]}
+      dimmed={false}
+    >
+      <View />
+    </ReanimatedTrueSheet>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backdrop: {
+    backgroundColor: 'black',
+  },
+})
+```
+
+This allows you to create custom dimming effects that respond to the sheet's movement in real-time.

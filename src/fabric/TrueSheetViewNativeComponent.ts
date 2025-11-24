@@ -33,7 +33,7 @@ export interface NativeProps extends ViewProps {
   background?: WithDefault<Int32, 0>;
   cornerRadius?: WithDefault<Double, -1>;
   initialDetentIndex?: WithDefault<Int32, -1>;
-  dimmedIndex?: WithDefault<Int32, 0>;
+  dimmedDetentIndex?: WithDefault<Int32, 0>;
 
   // String properties - use empty string as default to avoid nil insertion
   blurTint?: WithDefault<string, ''>;

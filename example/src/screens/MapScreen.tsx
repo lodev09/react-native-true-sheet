@@ -98,7 +98,7 @@ export const MapScreen = () => {
         ref={sheetRef}
         blurTint="dark"
         backgroundColor={DARK}
-        dimmedIndex={2}
+        dimmedDetentIndex={2}
         // dismissible={false}
         cornerRadius={12}
         // fullScreen
