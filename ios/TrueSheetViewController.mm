@@ -668,7 +668,7 @@
   return NO;
 }
 
-- (UIViewController *)presentingViewController {
+- (UIViewController *)newPresentingViewController {
   // Return the content view controller as the presenting controller
   // This allows react-native-screens to present modals on top of the sheet's content
   // instead of trying to present on top of the sheet itself
