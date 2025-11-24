@@ -19,6 +19,16 @@ yarn
 
 > Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development.
 
+### Verifying your development environment
+
+Before running the example app, verify that your development environment is properly configured by running:
+
+```sh
+yarn example doctor
+```
+
+This will check that all required tools and dependencies are installed and configured correctly. If any issues are found, follow the recommended fixes or refer to the [React Native environment setup guide](https://reactnative.dev/docs/environment-setup).
+
 The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
 
 It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
