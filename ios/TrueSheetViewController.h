@@ -57,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetProps;
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
+- (CGFloat)bottomInset;
 - (CGFloat)currentHeight;
 - (CGFloat)containerHeight;
 

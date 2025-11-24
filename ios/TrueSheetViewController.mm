@@ -22,7 +22,6 @@
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
-  CGFloat _bottomInset;
   BOOL _isTransitioning;
   BOOL _isDragging;
   BOOL _isTrackingPositionFromLayout;
@@ -50,11 +49,6 @@
     _fakeTransitionView = [[UIView alloc] init];
     _fakeTransitionView.hidden = YES;
     _fakeTransitionView.userInteractionEnabled = NO;
-
-    // Get bottom safe area inset from the window's safe area
-    // The sheet's view has smaller insets, so we need the actual device insets
-    UIWindow *window = [WindowUtil keyWindow];
-    _bottomInset = window ? window.safeAreaInsets.bottom : 0;
   }
   return self;
 }
@@ -405,7 +399,7 @@
 
   // Subtract bottomInset from content height to account for safe area
   // This prevents iOS from adding extra bottom insets automatically
-  CGFloat totalHeight = [self.contentHeight floatValue] - _bottomInset;
+  CGFloat totalHeight = [self.contentHeight floatValue] - self.bottomInset;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
@@ -589,8 +583,15 @@
   return presentedView.frame.origin.y;
 }
 
+- (CGFloat)bottomInset {
+  // Get bottom safe area inset from the window's safe area
+  // The sheet's view has smaller insets, so we need the actual device insets
+  UIWindow *window = [WindowUtil keyWindow];
+  return window ? window.safeAreaInsets.bottom : 0;
+}
+
 - (CGFloat)currentHeight {
-  return self.containerHeight - self.currentPosition - _bottomInset;
+  return self.containerHeight - self.currentPosition - self.bottomInset;
 }
 
 - (CGFloat)containerHeight {
