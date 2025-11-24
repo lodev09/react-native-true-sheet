@@ -142,7 +142,7 @@ The following props have been removed in v3:
 
 #### `scrollRef` (iOS)
 
-The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS.
+The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS. Use the new `fitScrollView` prop to enable automatic ScrollView pinning.
 
 **Migration:**
 
@@ -157,7 +157,7 @@ const scrollView = useRef<ScrollView>(null)
 </TrueSheet>
 
 // ✅ v3
-<TrueSheet ref={sheet}>
+<TrueSheet ref={sheet} fitScrollView>
   <ScrollView nestedScrollEnabled>
     <View />
   </ScrollView>
@@ -165,7 +165,7 @@ const scrollView = useRef<ScrollView>(null)
 ```
 
 :::tip
-See the [Scrolling guide](/guides/scrolling) for more information.
+See the [Scrolling guide](/guides/scrolling) for more information about `fitScrollView`.
 :::
 
 #### `contentContainerStyle`
