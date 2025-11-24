@@ -19,7 +19,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 > [!IMPORTANT]
 > **Version 3.0+ requires React Native's New Architecture (Fabric)**
-> For the old architecture, use version 2.x. See the [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration) for upgrading.
+> For the old architecture, use version 2.x. See the [Migration Guide](https://sheet.lodev09.com/migration) for upgrading.
 
 ### Prerequisites
 
@@ -37,7 +37,7 @@ yarn add @lodev09/react-native-true-sheet
 - [Example](example)
 - [Guides](https://sheet.lodev09.com/category/guides)
 - [Reference](https://sheet.lodev09.com/category/reference)
-- [Migration Guide (v2 → v3)](https://sheet.lodev09.com/migration)
+- [Migrating to v3](https://sheet.lodev09.com/migration)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
 

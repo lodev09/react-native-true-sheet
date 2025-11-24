@@ -48,30 +48,52 @@ Several props have been renamed for better clarity:
 
 | v2 Prop | v3 Prop |
 | - | - |
+| `sizes` | `detents` |
 | `initialIndex` | `initialDetentIndex` |
 | `initialIndexAnimated` | `initialDetentAnimated` |
+| `contentContainerStyle` | _(removed - no longer needed)_ |
+| `FooterComponent` | `footer` |
+| `edgeToEdge` | `edgeToEdgeFullScreen` |
+| `onPresent` | `onDidPresent` |
+| `onDismiss` | `onDidDismiss` |
+| `onSizeChange` | `onDetentChange` |
 
 **Migration:**
 
 ```tsx
 // ❌ v2
 <TrueSheet
+  sizes={['auto', '50%', '100%']}
   initialIndex={1}
   initialIndexAnimated={false}
+  contentContainerStyle={styles.container}
+  FooterComponent={<MyFooter />}
+  edgeToEdge
+  onPresent={(e) => console.log('presented', e.nativeEvent)}
+  onDismiss={() => console.log('dismissed')}
+  onSizeChange={(e) => console.log('size changed', e.nativeEvent)}
 >
   <View />
 </TrueSheet>
 
 // ✅ v3
 <TrueSheet
+  detents={['auto', 0.5, 1]}
   initialDetentIndex={1}
   initialDetentAnimated={false}
+  footer={<MyFooter />}
+  edgeToEdgeFullScreen
+  onDidPresent={(e) => console.log('presented', e.nativeEvent)}
+  onDidDismiss={() => console.log('dismissed')}
+  onDetentChange={(e) => console.log('detent changed', e.nativeEvent)}
 >
   <View />
 </TrueSheet>
 ```
 
 ### 3. Removed Props
+
+The following props have been removed in v3:
 
 #### `scrollRef` (iOS)
 
@@ -100,6 +122,10 @@ const scrollView = useRef<ScrollView>(null)
 :::tip
 See the [Scrolling guide](/guides/scrolling) for more information.
 :::
+
+#### `contentContainerStyle`
+
+The `contentContainerStyle` prop has been removed as it's no longer needed with the new architecture. Style your content directly instead.
 
 ### 4. Detent Value Changes
 
@@ -260,10 +286,17 @@ See the [Reanimated Integration guide](/guides/reanimated) for complete examples
    ```
 
 5. **Update your code:**
+   - Replace `sizes` with `detents`
    - Replace `initialIndex` with `initialDetentIndex`
    - Replace `initialIndexAnimated` with `initialDetentAnimated`
-   - Remove `scrollRef` prop (iOS)
-   - Change detent percentage strings to fractional numbers
+   - Replace `FooterComponent` with `footer`
+   - Replace `edgeToEdge` with `edgeToEdgeFullScreen`
+   - Replace `onPresent` with `onDidPresent`
+   - Replace `onDismiss` with `onDidDismiss`
+   - Replace `onSizeChange` with `onDetentChange`
+   - Remove `scrollRef` prop (iOS - now auto-detected)
+   - Remove `contentContainerStyle` prop (no longer needed)
+   - Change detent percentage strings to fractional numbers (e.g., `"50%"` → `0.5`)
 
 6. **Test your app:**
    ```sh
