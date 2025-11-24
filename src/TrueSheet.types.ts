@@ -197,6 +197,15 @@ export interface TrueSheetProps extends ViewProps {
   grabberProps?: TrueSheetGrabberProps;
 
   /**
+   * Controls whether the sheet uses page sizing behavior.
+   * When enabled, the sheet sizes itself to fit the content width on larger displays (like iPad).
+   *
+   * @platform ios 17+
+   * @default true
+   */
+  pageSizing?: boolean;
+
+  /**
    * The blur effect style on iOS.
    * Overrides `backgroundColor` if set.
    *

@@ -233,13 +233,27 @@ These events provide more granular control over the sheet's lifecycle and user i
 
 See the [Events documentation](/reference/props#events) for detailed usage and examples.
 
-### 3. Improved Performance
+### 3. iPad Support with Page Sizing
+
+Version 3 now includes first-class iPad support with the new `pageSizing` prop. When enabled (default), the sheet sizes itself appropriately for larger displays like iPad, providing a centered, page-like appearance instead of stretching to full width.
+
+```tsx
+<TrueSheet pageSizing>
+  <View />
+</TrueSheet>
+```
+
+:::info
+This feature is **iOS 17+ only** and defaults to `true`. Set to `false` if you want the sheet to stretch to full width on iPad.
+:::
+
+### 4. Improved Performance
 
 - Faster rendering with Fabric architecture
 - Built-in lazy loading by default
 - Smoother animations and transitions
 
-### 4. First-Class Reanimated v4 Support
+### 5. First-Class Reanimated v4 Support
 
 Version 3 introduces dedicated components for seamless integration with `react-native-reanimated` v4:
 

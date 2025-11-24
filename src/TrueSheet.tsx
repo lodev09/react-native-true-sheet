@@ -341,6 +341,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       maxHeight,
       edgeToEdgeFullScreen,
       fitScrollView = false,
+      pageSizing = true,
       children,
       style,
       footer,
@@ -376,6 +377,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         maxHeight={maxHeight}
         edgeToEdgeFullScreen={edgeToEdgeFullScreen}
         fitScrollView={fitScrollView}
+        pageSizing={pageSizing}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}
         onDidPresent={this.onDidPresent}

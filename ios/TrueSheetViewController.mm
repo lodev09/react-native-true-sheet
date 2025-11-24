@@ -22,6 +22,7 @@
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
+  CGSize _lastNotifiedSize;
   BOOL _isTransitioning;
   BOOL _isDragging;
   BOOL _isTrackingPositionFromLayout;
@@ -36,8 +37,10 @@
     _grabber = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
+    _pageSizing = YES;
     _lastPosition = 0;
     _lastTransitionPosition = 0;
+    _lastNotifiedSize = CGSizeZero;
     _isTransitioning = NO;
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
@@ -91,7 +94,10 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
       [self.delegate viewControllerWillPresent];
     }
-
+    
+    // Emit size change event to layout our container
+    [self notifyContentSizeChange];
+    
     // Setup transition position tracking
     [self setupTransitionPositionTracking];
   }
@@ -159,14 +165,16 @@
       [self setupSheetDetents];
 
       // Notify delegate of size changes
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-        [self.delegate viewControllerDidChangeSize:self.view.frame.size];
-      }
+      [self notifyContentSizeChange];
     }];
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+  
+  // Notify content size changes (e.g., when pageSizing changes)
+  [self notifyContentSizeChange];
+  
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
     _isTrackingPositionFromLayout = YES;
@@ -182,6 +190,19 @@
       // Reset layout transitioning after sending notification
       self->_layoutTransitioning = NO;
     });
+  }
+}
+
+- (void)notifyContentSizeChange {
+  CGSize currentSize = self.view.frame.size;
+  
+  // Only notify if width has actually changed
+  if (currentSize.width != _lastNotifiedSize.width) {
+    _lastNotifiedSize = currentSize;
+    
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+      [self.delegate viewControllerDidChangeSize:currentSize];
+    }
   }
 }
 
@@ -614,9 +635,9 @@
 
   sheet.delegate = self;
 
-  // Fix for iPad presenting at the center
+  // Configure page sizing behavior (iOS 17+)
   if (@available(iOS 17.0, *)) {
-//    sheet.prefersPageSizing = YES;
+    sheet.prefersPageSizing = self.pageSizing;
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
