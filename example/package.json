@@ -7,7 +7,8 @@
     "ios": "react-native run-ios --list-devices",
     "start": "react-native start",
     "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
-    "build:ios": "react-native build-ios --mode Debug"
+    "build:ios": "react-native build-ios --mode Debug",
+    "doctor": "react-native doctor"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.21",
