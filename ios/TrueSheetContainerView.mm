@@ -62,6 +62,13 @@ using namespace facebook::react;
   }
 }
 
+- (void)setupContentScrollViewPinning:(BOOL)pinned {
+  if (_contentView) {
+    NSLog(@"setting up scrollview pinning: %i", pinned);
+    [_contentView setupScrollViewPinning:pinned];
+  }
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
 

@@ -48,6 +48,7 @@ using namespace facebook::react;
   TrueSheetViewController *_controller;
   RCTSurfaceTouchHandler *_touchHandler;
   NSInteger _initialDetentIndex;
+  BOOL _fitScrollView;
   BOOL _initialDetentAnimated;
 }
 
@@ -67,6 +68,7 @@ using namespace facebook::react;
 
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
+    _fitScrollView = NO;
   }
   return self;
 }
@@ -228,6 +230,9 @@ using namespace facebook::react;
   // Store initial presentation settings
   _initialDetentIndex = newProps.initialDetentIndex;
   _initialDetentAnimated = newProps.initialDetentAnimated;
+
+  // Store ScrollView fit prop
+  _fitScrollView = newProps.fitScrollView;
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -235,6 +240,14 @@ using namespace facebook::react;
 
   // Apply controller updates after all props and children are updated
   if (updateMask & RNComponentViewUpdateMaskProps) {
+    if (!_controller)
+      return;
+
+    // Update ScrollView Pinning
+    if (_containerView) {
+      [_containerView setupContentScrollViewPinning:_fitScrollView];
+    }
+
     // Apply changes to presented sheet if needed
     if (_controller.isPresented) {
       [_controller.sheetPresentationController animateChanges:^{
@@ -281,6 +294,9 @@ using namespace facebook::react;
     if (contentHeight > 0) {
       _controller.contentHeight = @(contentHeight);
     }
+
+    // Update fitScrollView setting on container
+    [_containerView setupContentScrollViewPinning:_fitScrollView];
 
     // Emit onMount event when container is mounted
     [OnMountEvent emit:_eventEmitter];
