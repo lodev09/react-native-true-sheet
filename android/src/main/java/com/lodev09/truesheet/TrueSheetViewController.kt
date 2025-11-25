@@ -194,7 +194,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-  var cornerRadius: Float = 0f
+  var cornerRadius: Float = 28f.dpToPx()
   var sheetBackgroundColor: Int = Color.WHITE
   var detents = mutableListOf(0.5, 1.0)
 
