@@ -12,7 +12,7 @@ namespace facebook::react {
 
 /*
  * State for <TrueSheetContainerView> component.
- * Contains the container width from native Auto Layout.
+ * Contains the container dimensions from native.
  */
 class TrueSheetContainerViewState final {
  public:
@@ -24,10 +24,12 @@ class TrueSheetContainerViewState final {
   TrueSheetContainerViewState(
       TrueSheetContainerViewState const &previousState,
       folly::dynamic data)
-      : containerWidth(static_cast<float>(data["containerWidth"].getDouble())) {}
+      : containerWidth(static_cast<float>(data["containerWidth"].getDouble())),
+        containerHeight(static_cast<float>(data["containerHeight"].getDouble())) {}
 #endif
 
   float containerWidth{0};
+  float containerHeight{0};
 
 #ifdef ANDROID
   folly::dynamic getDynamic() const;

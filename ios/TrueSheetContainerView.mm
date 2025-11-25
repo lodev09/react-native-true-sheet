@@ -9,12 +9,12 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewShadowNode.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewState.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewShadowNode.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewState.h>
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 
@@ -84,13 +84,12 @@ using namespace facebook::react;
     return;
   }
 
-  _state->updateState(
-      [=](TrueSheetContainerViewShadowNode::ConcreteState::Data const &oldData)
-          -> TrueSheetContainerViewShadowNode::ConcreteState::SharedData {
-        auto newData = oldData;
-        newData.containerWidth = static_cast<float>(_lastContainerWidth);
-        return std::make_shared<TrueSheetContainerViewShadowNode::ConcreteState::Data const>(newData);
-      });
+  _state->updateState([=](TrueSheetContainerViewShadowNode::ConcreteState::Data const &oldData)
+                        -> TrueSheetContainerViewShadowNode::ConcreteState::SharedData {
+    auto newData = oldData;
+    newData.containerWidth = static_cast<float>(_lastContainerWidth);
+    return std::make_shared<TrueSheetContainerViewShadowNode::ConcreteState::Data const>(newData);
+  });
 }
 
 - (CGFloat)contentHeight {

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -780,8 +779,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     viewWidth = w
     viewHeight = h
 
-    // Update container state with new width
-    containerView?.updateState(viewWidth)
+    // Update container state with new dimensions
+    containerView?.updateState(viewWidth, viewHeight)
 
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return

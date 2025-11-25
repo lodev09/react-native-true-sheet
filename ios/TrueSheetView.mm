@@ -34,9 +34,9 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
+#import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
-#import <React/RCTLog.h>
 
 using namespace facebook::react;
 

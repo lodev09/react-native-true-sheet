@@ -17,11 +17,7 @@ class TrueSheetContainerViewManager : ViewGroupManager<TrueSheetContainerView>()
 
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContainerView = TrueSheetContainerView(reactContext)
 
-  override fun updateState(
-    view: TrueSheetContainerView,
-    props: ReactStylesDiffMap?,
-    stateWrapper: StateWrapper?
-  ): Any? {
+  override fun updateState(view: TrueSheetContainerView, props: ReactStylesDiffMap?, stateWrapper: StateWrapper?): Any? {
     view.setStateWrapper(stateWrapper)
     return null
   }

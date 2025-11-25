@@ -31,43 +31,48 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
 
   private var stateWrapper: StateWrapper? = null
 
-  // Pending width to update when stateWrapper becomes available
+  // Pending dimensions to update when stateWrapper becomes available
   private var pendingWidth: Int = 0
+  private var pendingHeight: Int = 0
 
   fun setStateWrapper(wrapper: StateWrapper?) {
     stateWrapper = wrapper
 
     if (wrapper == null) return
 
-    // Get width from parent controller and update state if we haven't yet
+    // Get dimensions from parent controller and update state if we haven't yet
     val controller = parent as? TrueSheetViewController
     if (controller != null && pendingWidth == 0) {
       val w = controller.width
-      if (w > 0) {
-        updateState(w)
+      val h = controller.height
+      if (w > 0 && h > 0) {
+        updateState(w, h)
       }
     }
   }
 
   /**
-   * Update state with container width.
+   * Update state with container dimensions.
    * Called by the controller when the dialog size changes.
    */
-  fun updateState(width: Int) {
-    // Skip if width hasn't changed
-    if (width == pendingWidth && stateWrapper != null) {
+  fun updateState(width: Int, height: Int) {
+    // Skip if dimensions haven't changed
+    if (width == pendingWidth && height == pendingHeight && stateWrapper != null) {
       return
     }
 
-    // Store width
+    // Store dimensions
     pendingWidth = width
+    pendingHeight = height
 
     val sw = stateWrapper ?: return
 
     val realWidth = width.toFloat().pxToDp()
+    val realHeight = height.toFloat().pxToDp()
 
     val newStateData = WritableNativeMap()
     newStateData.putDouble("containerWidth", realWidth.toDouble())
+    newStateData.putDouble("containerHeight", realHeight.toDouble())
     sw.updateState(newStateData)
   }
 
@@ -150,5 +155,4 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     // Forward footer size changes to host view for repositioning
     delegate?.containerViewFooterDidChangeSize(width, height)
   }
-
 }

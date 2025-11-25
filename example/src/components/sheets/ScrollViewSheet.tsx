@@ -1,8 +1,16 @@
 import { forwardRef, useState, type Ref } from 'react';
-import { StyleSheet, ScrollView, View, Text, Image, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  Image,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { BORDER_RADIUS, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
+import { BORDER_RADIUS, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { Footer } from '../Footer';
 import { Header } from '../Header';
 
@@ -39,6 +47,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       detents={[0.8, 1]}
       cornerRadius={12}
       fitScrollView
+      backgroundColor={Platform.select({ android: DARK })}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       footer={<Footer />}
