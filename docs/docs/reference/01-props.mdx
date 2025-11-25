@@ -55,13 +55,21 @@ The sheet's background color. Uses the system default when not provided.
 | - | - | - | - |
 | `ColorValue` | _system default_ | ✅ | ✅ |
 
+:::info
+When not provided, iOS uses the system background color, while Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+:::
+
 ### `cornerRadius`
 
 The sheet corner radius.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
-| `number` | | ✅ | ✅ |
+| `number` | _system default_ | ✅ | ✅ |
+
+:::info
+When not provided, iOS uses the device's native corner radius automatically, while Android defaults to `28` (following Material Design 3 guidelines).
+:::
 
 ### `maxHeight`
 

@@ -67,7 +67,6 @@ export const App = () => {
       <TrueSheet
         ref={sheet}
         detents={['auto', 1]}
-        cornerRadius={24}
       >
         <Button onPress={dismiss} title="Dismiss" />
       </TrueSheet>

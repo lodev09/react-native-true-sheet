@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
+import android.util.TypedValue
 import android.graphics.drawable.shapes.RoundRectShape
 import android.view.MotionEvent
 import android.view.View
@@ -194,8 +195,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-  var cornerRadius: Float = 0f
-  var sheetBackgroundColor: Int = Color.WHITE
+  var cornerRadius: Float = 28f.dpToPx()
+  var sheetBackgroundColor: Int = 0
   var detents = mutableListOf(0.5, 1.0)
 
   private var windowAnimation: Int = 0
@@ -203,6 +204,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   init {
     maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
     jSPointerDispatcher = JSPointerDispatcher(this)
+  }
+
+  /**
+   * Get the default background color from Material Design 3 theme.
+   * Uses colorSurfaceContainerLow which adapts to light/dark mode.
+   */
+  fun getDefaultBackgroundColor(): Int {
+    val typedValue = TypedValue()
+    return if (reactContext.theme.resolveAttribute(
+        com.google.android.material.R.attr.colorSurfaceContainerLow,
+        typedValue,
+        true
+      )
+    ) {
+      typedValue.data
+    } else {
+      Color.WHITE
+    }
   }
 
   // ==================== Lifecycle ====================
@@ -497,8 +516,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         0f
       )
 
+      // 0 (transparent) is used as sentinel for "use system default"
+      val backgroundColor = if (sheetBackgroundColor != 0) sheetBackgroundColor else getDefaultBackgroundColor()
+
       val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
-      background.paint.color = sheetBackgroundColor
+      background.paint.color = backgroundColor
 
       this.background = background
       this.clipToOutline = true
