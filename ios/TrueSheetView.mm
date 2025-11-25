@@ -247,18 +247,15 @@ using namespace facebook::react;
 }
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
-  RCTLogInfo(@"TrueSheet: updateState called");
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
+  [self updateStateIfNeeded];
 }
 
 - (void)updateStateIfNeeded {
   CGFloat containerWidth = _controller.view.bounds.size.width;
   CGFloat containerHeight = _controller.view.bounds.size.height;
 
-  RCTLogInfo(@"TrueSheet: container bounds width=%.1f height=%.1f", containerWidth, containerHeight);
-
   if (containerWidth <= 0 || containerHeight <= 0) {
-    RCTLogInfo(@"TrueSheet: skipping - invalid dimensions");
     return;
   }
 
@@ -266,12 +263,9 @@ using namespace facebook::react;
   BOOL heightChanged = fabs(containerHeight - _lastContainerHeight) > 0.5;
 
   if (widthChanged || heightChanged) {
-    RCTLogInfo(@"TrueSheet: dimensions changed, updating state");
     _lastContainerWidth = containerWidth;
     _lastContainerHeight = containerHeight;
     [self updateStateWithWidth:containerWidth height:containerHeight];
-  } else {
-    RCTLogInfo(@"TrueSheet: dimensions unchanged, skipping");
   }
 }
 
@@ -279,8 +273,6 @@ using namespace facebook::react;
   if (!_state) {
     return;
   }
-
-  RCTLogInfo(@"TrueSheet: updateState width=%.1f height=%.1f", width, height);
 
   _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
                         -> TrueSheetViewShadowNode::ConcreteState::SharedData {
