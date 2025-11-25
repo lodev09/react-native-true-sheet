@@ -3,8 +3,8 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
-import android.util.TypedValue
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
