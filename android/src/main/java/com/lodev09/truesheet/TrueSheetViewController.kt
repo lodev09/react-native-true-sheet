@@ -855,11 +855,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     return super.onHoverEvent(event)
   }
 
-  @OptIn(UnstableReactNativeAPI::class)
-  @Suppress("DEPRECATION")
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let { eventDispatcher ->
-      jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher, reactContext)
+      jSTouchDispatcher.onChildStartedNativeGesture(ev, eventDispatcher)
       jSPointerDispatcher?.onChildStartedNativeGesture(childView, ev, eventDispatcher)
     }
   }
