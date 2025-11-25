@@ -22,7 +22,6 @@
 #import "events/OnDragEndEvent.h"
 #import "events/OnMountEvent.h"
 #import "events/OnPositionChangeEvent.h"
-#import "events/OnSizeChangeEvent.h"
 #import "events/OnWillDismissEvent.h"
 #import "events/OnWillPresentEvent.h"
 #import "utils/LayoutUtil.h"
@@ -35,9 +34,9 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
+#import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
-#import <React/RCTLog.h>
 
 using namespace facebook::react;
 
@@ -293,6 +292,10 @@ using namespace facebook::react;
     // Ensure container is above background view
     [_controller.view bringSubviewToFront:_containerView];
 
+    // Force layout pass immediately so container gets correct width on mount
+    // This pushes the width to Yoga before the sheet is presented
+    [_controller.view layoutIfNeeded];
+
     // Get initial content height from container
     CGFloat contentHeight = [_containerView contentHeight];
     if (contentHeight > 0) {
@@ -418,12 +421,6 @@ using namespace facebook::react;
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
 }
 
-- (void)viewControllerDidChangeSize:(CGSize)size {
-  // Notify so our container can layout on JS
-  // TODO: hopefully we can convert this into native!
-  [OnSizeChangeEvent emit:_eventEmitter width:size.width height:size.height];
-}
-
 #pragma mark - Private Helpers
 
 - (UIViewController *)findPresentingViewController {
@@ -434,6 +431,10 @@ using namespace facebook::react;
   }
 
   UIViewController *rootViewController = keyWindow.rootViewController;
+
+  if (!rootViewController) {
+    return nil;
+  }
 
   // Find the top-most presented view controller
   while (rootViewController.presentedViewController) {

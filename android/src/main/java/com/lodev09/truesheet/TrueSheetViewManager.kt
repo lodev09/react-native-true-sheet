@@ -61,8 +61,7 @@ class TrueSheetViewManager :
       DragBeginEvent.EVENT_NAME to hashMapOf("registrationName" to DragBeginEvent.REGISTRATION_NAME),
       DragChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DragChangeEvent.REGISTRATION_NAME),
       DragEndEvent.EVENT_NAME to hashMapOf("registrationName" to DragEndEvent.REGISTRATION_NAME),
-      PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME),
-      SizeChangeEvent.EVENT_NAME to hashMapOf("registrationName" to SizeChangeEvent.REGISTRATION_NAME)
+      PositionChangeEvent.EVENT_NAME to hashMapOf("registrationName" to PositionChangeEvent.REGISTRATION_NAME)
     )
 
   // ==================== Props ====================
@@ -152,6 +151,16 @@ class TrueSheetViewManager :
   @ReactProp(name = "edgeToEdgeFullScreen", defaultBoolean = false)
   override fun setEdgeToEdgeFullScreen(view: TrueSheetView, edgeToEdgeFullScreen: Boolean) {
     view.setEdgeToEdgeFullScreen(edgeToEdgeFullScreen)
+  }
+
+  @ReactProp(name = "fitScrollView", defaultBoolean = false)
+  override fun setFitScrollView(view: TrueSheetView, value: Boolean) {
+    // iOS-specific prop - no-op on Android
+  }
+
+  @ReactProp(name = "pageSizing", defaultBoolean = true)
+  override fun setPageSizing(view: TrueSheetView, value: Boolean) {
+    // iOS-specific prop - no-op on Android
   }
 
   companion object {

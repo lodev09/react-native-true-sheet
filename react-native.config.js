@@ -2,7 +2,10 @@ module.exports = {
   dependency: {
     platforms: {
       ios: {},
-      android: {},
+      android: {
+        componentDescriptors: ['TrueSheetContainerViewComponentDescriptor'],
+        cmakeListsPath: '../android/src/main/jni/CMakeLists.txt',
+      },
     },
   },
   dependencies: {
@@ -14,4 +17,4 @@ module.exports = {
       },
     },
   },
-}
+};

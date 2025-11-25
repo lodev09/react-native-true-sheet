@@ -13,8 +13,12 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => min_ios_version_supported }
   s.source       = { :git => "https://github.com/lodev09/react-native-true-sheet.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
+  s.source_files = "ios/**/*.{h,m,mm,swift,cpp}", "common/cpp/**/*.{cpp,h}"
   s.private_header_files = "ios/**/*.h"
+
+  s.pod_target_xcconfig = {
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/common/cpp\""
+  }
 
   install_modules_dependencies(s)
 end

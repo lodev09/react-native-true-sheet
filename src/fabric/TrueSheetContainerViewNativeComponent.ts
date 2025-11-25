@@ -5,4 +5,6 @@ export interface NativeProps extends ViewProps {
   // No props needed - container accesses props from parent TrueSheetView
 }
 
-export default codegenNativeComponent<NativeProps>('TrueSheetContainerView', {});
+export default codegenNativeComponent<NativeProps>('TrueSheetContainerView', {
+  interfaceOnly: true,
+});

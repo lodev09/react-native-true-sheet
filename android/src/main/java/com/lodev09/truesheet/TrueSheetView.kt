@@ -18,7 +18,6 @@ import com.lodev09.truesheet.events.DragChangeEvent
 import com.lodev09.truesheet.events.DragEndEvent
 import com.lodev09.truesheet.events.MountEvent
 import com.lodev09.truesheet.events.PositionChangeEvent
-import com.lodev09.truesheet.events.SizeChangeEvent
 import com.lodev09.truesheet.events.WillDismissEvent
 import com.lodev09.truesheet.events.WillPresentEvent
 
@@ -348,14 +347,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     viewController.dismissPromise = promiseCallback
     viewController.dismiss()
-  }
-
-  override fun viewControllerDidChangeSize(width: Int, height: Int) {
-    // Dispatch size change event to JS
-    val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(
-      SizeChangeEvent(surfaceId, id, width, height)
-    )
   }
 
   // ==================== TrueSheetContainerViewDelegate Implementation ====================

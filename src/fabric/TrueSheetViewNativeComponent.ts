@@ -19,11 +19,6 @@ export interface PositionChangeEventPayload {
   transitioning: boolean;
 }
 
-export interface SizeChangeEventPayload {
-  width: Double;
-  height: Double;
-}
-
 export interface NativeProps extends ViewProps {
   // Array properties
   detents?: ReadonlyArray<Float>;
@@ -59,7 +54,6 @@ export interface NativeProps extends ViewProps {
   onDragChange?: DirectEventHandler<DetentInfoEventPayload>;
   onDragEnd?: DirectEventHandler<DetentInfoEventPayload>;
   onPositionChange?: DirectEventHandler<PositionChangeEventPayload>;
-  onSizeChange?: DirectEventHandler<SizeChangeEventPayload>;
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView');

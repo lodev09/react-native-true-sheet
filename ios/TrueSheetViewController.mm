@@ -22,7 +22,6 @@
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
   CGFloat _lastTransitionPosition;
-  CGSize _lastNotifiedSize;
   BOOL _isTransitioning;
   BOOL _isDragging;
   BOOL _isTrackingPositionFromLayout;
@@ -40,7 +39,6 @@
     _pageSizing = YES;
     _lastPosition = 0;
     _lastTransitionPosition = 0;
-    _lastNotifiedSize = CGSizeZero;
     _isTransitioning = NO;
     _isDragging = NO;
     _isTrackingPositionFromLayout = NO;
@@ -58,6 +56,12 @@
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  // Ensure display link is invalidated to prevent retain cycle
+  if (_displayLink) {
+    [_displayLink invalidate];
+    _displayLink = nil;
+  }
 }
 
 #pragma mark - Presentation State
@@ -94,9 +98,6 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
       [self.delegate viewControllerWillPresent];
     }
-
-    // Emit size change event to layout our container
-    [self notifyContentSizeChange];
 
     // Setup transition position tracking
     [self setupTransitionPositionTracking];
@@ -163,17 +164,11 @@
     completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
       // After rotation completes
       [self setupSheetDetents];
-
-      // Notify delegate of size changes
-      [self notifyContentSizeChange];
     }];
 }
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
-
-  // Notify content size changes (e.g., when pageSizing changes)
-  [self notifyContentSizeChange];
 
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
@@ -190,19 +185,6 @@
       // Reset layout transitioning after sending notification
       self->_layoutTransitioning = NO;
     });
-  }
-}
-
-- (void)notifyContentSizeChange {
-  CGSize currentSize = self.view.frame.size;
-
-  // Only notify if width has actually changed
-  if (currentSize.width != _lastNotifiedSize.width) {
-    _lastNotifiedSize = currentSize;
-
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-      [self.delegate viewControllerDidChangeSize:currentSize];
-    }
   }
 }
 
@@ -391,7 +373,8 @@
 
     // Our last transition position is nearly the same as fake view's layer position
     // Sheet must've been repositioning after dragging at lowest detent
-    if (fabs(_lastTransitionPosition - position) < FLT_EPSILON) {
+    // Use 0.5 points as epsilon to account for floating-point precision in layout calculations
+    if (fabs(_lastTransitionPosition - position) < 0.5) {
       // Let's just flag it as transitioning to let JS manually animate
       transitioning = YES;
 
@@ -517,7 +500,7 @@
     return UISheetPresentationControllerDetentIdentifierMedium;
 
   UISheetPresentationControllerDetentIdentifier identifier = UISheetPresentationControllerDetentIdentifierMedium;
-  if (index < sheet.detents.count) {
+  if (index >= 0 && index < (NSInteger)sheet.detents.count) {
     UISheetPresentationControllerDetent *detent = sheet.detents[index];
     if (@available(iOS 16.0, *)) {
       identifier = detent.identifier;
