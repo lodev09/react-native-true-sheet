@@ -46,7 +46,7 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
     >
       <Header />
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">
-        {times(200, (i) => (
+        {times(500, (i) => (
           <HeavyItem key={i} index={i} />
         ))}
       </ScrollView>

@@ -49,10 +49,19 @@ export const MapScreen = () => {
   const blankSheet = useRef<TrueSheet>(null);
 
   const [spacerCount, setSpacerCount] = useState(0);
+  const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
     console.log('Sheet 1 present async');
+  };
+
+  const presentScrollViewSheet = () => {
+    setScrollViewLoading(true);
+    requestAnimationFrame(async () => {
+      await scrollViewSheet.current?.present();
+      setScrollViewLoading(false);
+    });
   };
 
   const floatingButtonStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
@@ -126,7 +135,12 @@ export const MapScreen = () => {
         </View>
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+        <Button
+          text="TrueSheet ScrollView"
+          loading={scrollViewLoading}
+          disabled={scrollViewLoading}
+          onPress={presentScrollViewSheet}
+        />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
