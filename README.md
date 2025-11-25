@@ -13,6 +13,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🎯 **Type-safe** - Full TypeScript support with Codegen-generated native interfaces
 * 🚀 **Blazing fast** - Direct C++ communication, no bridge overhead
 * 🎨 **Native** - Implemented in the native realm
+* ♿ **Accessible** - Native accessibility and screen reader support out of the box
 * 🔄 **Imperative API** - Asynchronus `ref` [methods](https://sheet.lodev09.com/reference/methods#ref-methods)
 
 ## Installation
