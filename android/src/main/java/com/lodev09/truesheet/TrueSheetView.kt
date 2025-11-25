@@ -6,6 +6,9 @@ import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
+import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.uimanager.PixelUtil.pxToDp
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -48,6 +51,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
+  var stateWrapper: StateWrapper? = null
+
+  // Track last dimensions to avoid unnecessary state updates
+  private var lastContainerWidth: Int = 0
+  private var lastContainerHeight: Int = 0
+
   /**
    * Tracks if initial presentation has been handled
    */
@@ -83,10 +92,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     viewController.id = id
     TrueSheetModule.registerView(this, id)
-  }
-
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
   }
 
   override fun onDetachedFromWindow() {
@@ -270,6 +275,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     )
   }
 
+  override fun viewControllerDidChangeSize(width: Int, height: Int) {
+    updateState(width, height)
+  }
+
   // ==================== Property Setters (forward to controller) ====================
 
   fun setMaxHeight(height: Int) {
@@ -323,6 +332,33 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setEdgeToEdgeFullScreen(edgeToEdgeFullScreen: Boolean) {
     viewController.edgeToEdgeFullScreen = edgeToEdgeFullScreen
+  }
+
+  // ==================== State Management ====================
+
+  /**
+   * Update state with container dimensions.
+   * Called when the dialog size changes.
+   */
+  fun updateState(width: Int, height: Int) {
+    // Skip if dimensions haven't changed
+    if (width == lastContainerWidth && height == lastContainerHeight) {
+      return
+    }
+
+    // Store new dimensions
+    lastContainerWidth = width
+    lastContainerHeight = height
+
+    val sw = stateWrapper ?: return
+
+    val realWidth = width.toFloat().pxToDp()
+    val realHeight = height.toFloat().pxToDp()
+
+    val newStateData = WritableNativeMap()
+    newStateData.putDouble("containerWidth", realWidth.toDouble())
+    newStateData.putDouble("containerHeight", realHeight.toDouble())
+    sw.updateState(newStateData)
   }
 
   /**

@@ -9,18 +9,15 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
+#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewShadowNode.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewState.h>
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
-#import <react/renderer/core/State.h>
 
 using namespace facebook::react;
 
@@ -30,8 +27,6 @@ using namespace facebook::react;
 @implementation TrueSheetContainerView {
   TrueSheetContentView *_contentView;
   TrueSheetFooterView *_footerView;
-  TrueSheetContainerViewShadowNode::ConcreteState::Shared _state;
-  CGFloat _lastContainerWidth;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -47,7 +42,6 @@ using namespace facebook::react;
 
     _contentView = nil;
     _footerView = nil;
-    _lastContainerWidth = 0;
   }
   return self;
 }
@@ -61,35 +55,7 @@ using namespace facebook::react;
     if (!CGRectEqualToRect(self.frame, parentBounds)) {
       self.frame = parentBounds;
     }
-
-    // Update state with container width so Yoga can use it for children layout
-    [self updateStateIfNeeded];
   }
-}
-
-- (void)updateStateIfNeeded {
-  if (!self.superview) {
-    return;
-  }
-
-  CGFloat containerWidth = self.superview.bounds.size.width;
-  if (containerWidth > 0 && fabs(containerWidth - _lastContainerWidth) > 0.5) {
-    _lastContainerWidth = containerWidth;
-    [self updateState];
-  }
-}
-
-- (void)updateState {
-  if (!_state) {
-    return;
-  }
-
-  _state->updateState([=](TrueSheetContainerViewShadowNode::ConcreteState::Data const &oldData)
-                        -> TrueSheetContainerViewShadowNode::ConcreteState::SharedData {
-    auto newData = oldData;
-    newData.containerWidth = static_cast<float>(_lastContainerWidth);
-    return std::make_shared<TrueSheetContainerViewShadowNode::ConcreteState::Data const>(newData);
-  });
 }
 
 - (CGFloat)contentHeight {
@@ -151,19 +117,6 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
-}
-
-- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
-  _state = std::static_pointer_cast<TrueSheetContainerViewShadowNode::ConcreteState const>(state);
-
-  // Reset last width when state is updated to ensure we push the correct width
-  // This handles re-presentation of the sheet where state is recreated
-  _lastContainerWidth = 0;
-}
-
-- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
-  [super finalizeUpdates:updateMask];
-  [self updateStateIfNeeded];
 }
 
 #pragma mark - TrueSheetContentViewDelegate

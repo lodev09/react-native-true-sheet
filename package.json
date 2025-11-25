@@ -7,7 +7,7 @@
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "source": "./src/index.tsx",
+      "source": "./src/index.ts",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
@@ -38,7 +38,7 @@
     "typecheck": "tsc",
     "lint": "eslint --fix \"**/*.{ts,tsx}\"",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objc-lint.sh && scripts/ktlint.sh",
+    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objclint.sh && scripts/ktlint.sh",
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
     "release": "yarn tidy && release-it --only-version",

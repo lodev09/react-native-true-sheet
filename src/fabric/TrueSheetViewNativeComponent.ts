@@ -56,4 +56,6 @@ export interface NativeProps extends ViewProps {
   onPositionChange?: DirectEventHandler<PositionChangeEventPayload>;
 }
 
-export default codegenNativeComponent<NativeProps>('TrueSheetView');
+export default codegenNativeComponent<NativeProps>('TrueSheetView', {
+  interfaceOnly: true,
+});

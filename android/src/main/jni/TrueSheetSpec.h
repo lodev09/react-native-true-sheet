@@ -3,7 +3,7 @@
 #include <ReactCommon/JavaTurboModule.h>
 #include <ReactCommon/TurboModule.h>
 #include <jsi/jsi.h>
-#include <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
+#include <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 
 namespace facebook {
 namespace react {

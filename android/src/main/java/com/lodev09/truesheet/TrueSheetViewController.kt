@@ -41,6 +41,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragChange(index: Int, position: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float)
   fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean)
+  fun viewControllerDidChangeSize(width: Int, height: Int)
 }
 
 /**
@@ -64,9 +65,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
-
-  private var viewWidth = 0
-  private var viewHeight = 0
 
   /**
    * Delegate for handling view controller events
@@ -798,16 +796,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
-    viewWidth = w
-    viewHeight = h
-
-    // Update container state with new dimensions
-    containerView?.updateState(viewWidth, viewHeight)
 
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
 
-    // Update screen height based on new dimensions
+    // Notify delegate about size change so host view can update state
+    delegate?.viewControllerDidChangeSize(w, h)
+
     val oldMaxScreenHeight = maxScreenHeight
     maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
 

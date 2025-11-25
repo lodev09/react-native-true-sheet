@@ -1,16 +1,16 @@
-#include "TrueSheetContainerViewShadowNode.h"
+#include "TrueSheetViewShadowNode.h"
 
 #include <yoga/style/StyleSizeLength.h>
 
 namespace facebook::react {
 
-extern const char TrueSheetContainerViewComponentName[] = "TrueSheetContainerView";
+extern const char TrueSheetViewComponentName[] = "TrueSheetView";
 
-void TrueSheetContainerViewShadowNode::adjustLayoutWithState() {
+void TrueSheetViewShadowNode::adjustLayoutWithState() {
   ensureUnsealed();
 
   auto state = std::static_pointer_cast<
-      const TrueSheetContainerViewShadowNode::ConcreteState>(getState());
+      const TrueSheetViewShadowNode::ConcreteState>(getState());
   auto stateData = state->getData();
 
   // If container dimensions are set from native, override Yoga's dimensions
