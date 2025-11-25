@@ -89,6 +89,26 @@ object ScreenUtils {
   }
 
   /**
+   * Get the screen width
+   *
+   * @param context React context
+   * @return Screen width in pixels
+   */
+  fun getScreenWidth(context: ReactContext): Int {
+    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      val windowMetrics = windowManager.currentWindowMetrics
+      windowMetrics.bounds.width()
+    } else {
+      val displayMetrics = DisplayMetrics()
+      @Suppress("DEPRECATION")
+      windowManager.defaultDisplay.getMetrics(displayMetrics)
+      displayMetrics.widthPixels
+    }
+  }
+
+  /**
    * Get the Y coordinate of a view in screen coordinates
    *
    * @param view The view to get screen Y coordinate for

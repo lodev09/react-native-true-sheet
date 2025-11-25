@@ -1,8 +1,12 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.ViewStructure
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
@@ -51,7 +55,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
+  /**
+   * Sets the state wrapper and immediately updates with initial screen width.
+   * This ensures we have initial width even before controller emits changeSize.
+   */
   var stateWrapper: StateWrapper? = null
+    set(value) {
+      field = value
+
+      // Immediately update state with screen width
+      if (value != null) {
+        updateState(viewController.screenWidth, viewController.screenHeight)
+      }
+    }
 
   // Track last dimensions to avoid unnecessary state updates
   private var lastContainerWidth: Int = 0
@@ -389,7 +405,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun containerViewContentDidChangeSize(width: Int, height: Int) {
     // Clamp content height to container height to prevent unbounded growth with scrollable content
-    val containerHeight = viewController.maxScreenHeight
+    val containerHeight = viewController.screenHeight
     val contentHeight = if (containerHeight > 0) minOf(height, containerHeight) else height
 
     viewController.contentHeight = contentHeight
