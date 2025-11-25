@@ -292,6 +292,10 @@ using namespace facebook::react;
     // Ensure container is above background view
     [_controller.view bringSubviewToFront:_containerView];
 
+    // Force layout pass immediately so container gets correct width on mount
+    // This pushes the width to Yoga before the sheet is presented
+    [_controller.view layoutIfNeeded];
+
     // Get initial content height from container
     CGFloat contentHeight = [_containerView contentHeight];
     if (contentHeight > 0) {
