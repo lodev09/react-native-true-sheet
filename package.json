@@ -18,7 +18,7 @@
     "lib",
     "android",
     "ios",
-    "cpp",
+    "common",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
