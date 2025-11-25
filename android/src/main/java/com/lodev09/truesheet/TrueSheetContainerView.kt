@@ -3,6 +3,9 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import androidx.core.view.isNotEmpty
+import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.uimanager.PixelUtil.pxToDp
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
@@ -25,6 +28,48 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   TrueSheetFooterViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
+
+  private var stateWrapper: StateWrapper? = null
+
+  // Pending width to update when stateWrapper becomes available
+  private var pendingWidth: Int = 0
+
+  fun setStateWrapper(wrapper: StateWrapper?) {
+    stateWrapper = wrapper
+
+    if (wrapper == null) return
+
+    // Get width from parent controller and update state if we haven't yet
+    val controller = parent as? TrueSheetViewController
+    if (controller != null && pendingWidth == 0) {
+      val w = controller.width
+      if (w > 0) {
+        updateState(w)
+      }
+    }
+  }
+
+  /**
+   * Update state with container width.
+   * Called by the controller when the dialog size changes.
+   */
+  fun updateState(width: Int) {
+    // Skip if width hasn't changed
+    if (width == pendingWidth && stateWrapper != null) {
+      return
+    }
+
+    // Store width
+    pendingWidth = width
+
+    val sw = stateWrapper ?: return
+
+    val realWidth = width.toFloat().pxToDp()
+
+    val newStateData = WritableNativeMap()
+    newStateData.putDouble("containerWidth", realWidth.toDouble())
+    sw.updateState(newStateData)
+  }
 
   /**
    * Reference to content view (first child)
@@ -105,4 +150,5 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     // Forward footer size changes to host view for repositioning
     delegate?.containerViewFooterDidChangeSize(width, height)
   }
+
 }

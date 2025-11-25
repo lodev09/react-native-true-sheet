@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -40,7 +41,6 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragChange(index: Int, position: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float)
   fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean)
-  fun viewControllerDidChangeSize(width: Int, height: Int)
 }
 
 /**
@@ -64,6 +64,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
+
+  private var viewWidth = 0
+  private var viewHeight = 0
 
   /**
    * Delegate for handling view controller events
@@ -774,6 +777,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
+    viewWidth = w
+    viewHeight = h
+
+    // Update container state with new width
+    containerView?.updateState(viewWidth)
 
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
@@ -796,9 +804,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
       }
     }
-
-    // Notify delegate about size change
-    delegate?.viewControllerDidChangeSize(w, h)
   }
 
   override fun handleException(t: Throwable) {
