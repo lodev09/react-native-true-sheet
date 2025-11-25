@@ -3,9 +3,6 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import androidx.core.view.isNotEmpty
-import com.facebook.react.bridge.WritableNativeMap
-import com.facebook.react.uimanager.PixelUtil.pxToDp
-import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
@@ -28,53 +25,6 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   TrueSheetFooterViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
-
-  private var stateWrapper: StateWrapper? = null
-
-  // Pending dimensions to update when stateWrapper becomes available
-  private var pendingWidth: Int = 0
-  private var pendingHeight: Int = 0
-
-  fun setStateWrapper(wrapper: StateWrapper?) {
-    stateWrapper = wrapper
-
-    if (wrapper == null) return
-
-    // Get dimensions from parent controller and update state if we haven't yet
-    val controller = parent as? TrueSheetViewController
-    if (controller != null && pendingWidth == 0) {
-      val w = controller.width
-      val h = controller.height
-      if (w > 0 && h > 0) {
-        updateState(w, h)
-      }
-    }
-  }
-
-  /**
-   * Update state with container dimensions.
-   * Called by the controller when the dialog size changes.
-   */
-  fun updateState(width: Int, height: Int) {
-    // Skip if dimensions haven't changed
-    if (width == pendingWidth && height == pendingHeight && stateWrapper != null) {
-      return
-    }
-
-    // Store dimensions
-    pendingWidth = width
-    pendingHeight = height
-
-    val sw = stateWrapper ?: return
-
-    val realWidth = width.toFloat().pxToDp()
-    val realHeight = height.toFloat().pxToDp()
-
-    val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", realWidth.toDouble())
-    newStateData.putDouble("containerHeight", realHeight.toDouble())
-    sw.updateState(newStateData)
-  }
 
   /**
    * Reference to content view (first child)

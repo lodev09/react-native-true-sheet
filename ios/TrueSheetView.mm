@@ -27,12 +27,15 @@
 #import "utils/LayoutUtil.h"
 #import "utils/WindowUtil.h"
 
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetViewShadowNode.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
 
 #import <React/RCTConversions.h>
+#import <react/renderer/core/State.h>
 #import <React/RCTFabricComponentsPlugins.h>
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
@@ -47,6 +50,9 @@ using namespace facebook::react;
   TrueSheetContainerView *_containerView;
   TrueSheetViewController *_controller;
   RCTSurfaceTouchHandler *_touchHandler;
+  TrueSheetViewShadowNode::ConcreteState::Shared _state;
+  CGFloat _lastContainerWidth;
+  CGFloat _lastContainerHeight;
   NSInteger _initialDetentIndex;
   BOOL _fitScrollView;
   BOOL _initialDetentAnimated;
@@ -66,6 +72,8 @@ using namespace facebook::react;
 
     _containerView = nil;
 
+    _lastContainerWidth = 0;
+    _lastContainerHeight = 0;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
     _fitScrollView = NO;
@@ -238,6 +246,51 @@ using namespace facebook::react;
   _fitScrollView = newProps.fitScrollView;
 }
 
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  RCTLogInfo(@"TrueSheet: updateState called");
+  _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
+}
+
+- (void)updateStateIfNeeded {
+  CGFloat containerWidth = _controller.view.bounds.size.width;
+  CGFloat containerHeight = _controller.view.bounds.size.height;
+
+  RCTLogInfo(@"TrueSheet: container bounds width=%.1f height=%.1f", containerWidth, containerHeight);
+
+  if (containerWidth <= 0 || containerHeight <= 0) {
+    RCTLogInfo(@"TrueSheet: skipping - invalid dimensions");
+    return;
+  }
+
+  BOOL widthChanged = fabs(containerWidth - _lastContainerWidth) > 0.5;
+  BOOL heightChanged = fabs(containerHeight - _lastContainerHeight) > 0.5;
+
+  if (widthChanged || heightChanged) {
+    RCTLogInfo(@"TrueSheet: dimensions changed, updating state");
+    _lastContainerWidth = containerWidth;
+    _lastContainerHeight = containerHeight;
+    [self updateStateWithWidth:containerWidth height:containerHeight];
+  } else {
+    RCTLogInfo(@"TrueSheet: dimensions unchanged, skipping");
+  }
+}
+
+- (void)updateStateWithWidth:(CGFloat)width height:(CGFloat)height {
+  if (!_state) {
+    return;
+  }
+
+  RCTLogInfo(@"TrueSheet: updateState width=%.1f height=%.1f", width, height);
+
+  _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
+                        -> TrueSheetViewShadowNode::ConcreteState::SharedData {
+    auto newData = oldData;
+    newData.containerWidth = static_cast<float>(width);
+    newData.containerHeight = static_cast<float>(height);
+    return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
+  });
+}
+
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
   [super finalizeUpdates:updateMask];
 
@@ -291,10 +344,6 @@ using namespace facebook::react;
 
     // Ensure container is above background view
     [_controller.view bringSubviewToFront:_containerView];
-
-    // Force layout pass immediately so container gets correct width on mount
-    // This pushes the width to Yoga before the sheet is presented
-    [_controller.view layoutIfNeeded];
 
     // Get initial content height from container
     CGFloat contentHeight = [_containerView contentHeight];

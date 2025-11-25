@@ -3,22 +3,22 @@
 #include <jsi/jsi.h>
 #include <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #include <react/renderer/components/TrueSheetSpec/Props.h>
-#include <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewState.h>
+#include <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 
 namespace facebook::react {
 
-JSI_EXPORT extern const char TrueSheetContainerViewComponentName[];
+JSI_EXPORT extern const char TrueSheetViewComponentName[];
 
 /*
- * `ShadowNode` for <TrueSheetContainerView> component.
+ * `ShadowNode` for <TrueSheetView> component.
  */
-class JSI_EXPORT TrueSheetContainerViewShadowNode final
+class JSI_EXPORT TrueSheetViewShadowNode final
     : public ConcreteViewShadowNode<
-          TrueSheetContainerViewComponentName,
-          TrueSheetContainerViewProps,
-          TrueSheetContainerViewEventEmitter,
-          TrueSheetContainerViewState> {
+          TrueSheetViewComponentName,
+          TrueSheetViewProps,
+          TrueSheetViewEventEmitter,
+          TrueSheetViewState> {
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:

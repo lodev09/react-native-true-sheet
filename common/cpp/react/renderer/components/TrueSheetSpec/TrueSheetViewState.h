@@ -11,18 +11,18 @@
 namespace facebook::react {
 
 /*
- * State for <TrueSheetContainerView> component.
+ * State for <TrueSheetView> component.
  * Contains the container dimensions from native.
  */
-class TrueSheetContainerViewState final {
+class TrueSheetViewState final {
  public:
-  using Shared = std::shared_ptr<const TrueSheetContainerViewState>;
+  using Shared = std::shared_ptr<const TrueSheetViewState>;
 
-  TrueSheetContainerViewState() = default;
+  TrueSheetViewState() = default;
 
 #ifdef ANDROID
-  TrueSheetContainerViewState(
-      TrueSheetContainerViewState const &previousState,
+  TrueSheetViewState(
+      TrueSheetViewState const &previousState,
       folly::dynamic data)
       : containerWidth(static_cast<float>(data["containerWidth"].getDouble())),
         containerHeight(static_cast<float>(data["containerHeight"].getDouble())) {}
