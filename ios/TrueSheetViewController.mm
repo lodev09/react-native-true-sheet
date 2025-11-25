@@ -164,6 +164,11 @@
     completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
       // After rotation completes
       [self setupSheetDetents];
+
+      // Notify delegate of size change for state update
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+        [self.delegate viewControllerDidChangeSize:size];
+      }
     }];
 }
 

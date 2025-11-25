@@ -35,11 +35,11 @@
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
 
 #import <React/RCTConversions.h>
-#import <react/renderer/core/State.h>
 #import <React/RCTFabricComponentsPlugins.h>
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <react/renderer/core/State.h>
 
 using namespace facebook::react;
 
@@ -52,7 +52,6 @@ using namespace facebook::react;
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
   CGFloat _lastContainerWidth;
-  CGFloat _lastContainerHeight;
   NSInteger _initialDetentIndex;
   BOOL _fitScrollView;
   BOOL _initialDetentAnimated;
@@ -73,7 +72,6 @@ using namespace facebook::react;
     _containerView = nil;
 
     _lastContainerWidth = 0;
-    _lastContainerHeight = 0;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
     _fitScrollView = NO;
@@ -253,23 +251,20 @@ using namespace facebook::react;
 
 - (void)updateStateIfNeeded {
   CGFloat containerWidth = _controller.view.bounds.size.width;
-  CGFloat containerHeight = _controller.view.bounds.size.height;
 
-  if (containerWidth <= 0 || containerHeight <= 0) {
+  if (containerWidth <= 0) {
     return;
   }
 
   BOOL widthChanged = fabs(containerWidth - _lastContainerWidth) > 0.5;
-  BOOL heightChanged = fabs(containerHeight - _lastContainerHeight) > 0.5;
 
-  if (widthChanged || heightChanged) {
+  if (widthChanged) {
     _lastContainerWidth = containerWidth;
-    _lastContainerHeight = containerHeight;
-    [self updateStateWithWidth:containerWidth height:containerHeight];
+    [self updateStateWithWidth:containerWidth];
   }
 }
 
-- (void)updateStateWithWidth:(CGFloat)width height:(CGFloat)height {
+- (void)updateStateWithWidth:(CGFloat)width {
   if (!_state) {
     return;
   }
@@ -278,7 +273,6 @@ using namespace facebook::react;
                         -> TrueSheetViewShadowNode::ConcreteState::SharedData {
     auto newData = oldData;
     newData.containerWidth = static_cast<float>(width);
-    newData.containerHeight = static_cast<float>(height);
     return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
   });
 }
@@ -460,6 +454,10 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
+}
+
+- (void)viewControllerDidChangeSize:(CGSize)size {
+  [self updateStateIfNeeded];
 }
 
 #pragma mark - Private Helpers
