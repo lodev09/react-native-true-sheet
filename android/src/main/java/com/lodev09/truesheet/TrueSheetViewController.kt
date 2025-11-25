@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -53,10 +54,6 @@ interface TrueSheetViewControllerDelegate {
 class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   RootView {
-
-  companion object {
-    private const val TAG_NAME = "TrueSheet"
-  }
 
   // ==================== RootView Touch Handling ====================
 
@@ -197,7 +194,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-  var cornerRadius: Float = 28f.dpToPx()
+  var sheetCornerRadius: Float = -1f
   var sheetBackgroundColor: Int = 0
   var detents = mutableListOf(0.5, 1.0)
 
@@ -460,8 +457,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       skipCollapsed = false
       isFitToContents = true
 
-      // m3 max width 640dp
-      maxWidth = 640.0.dpToPx().toInt()
+      maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
       when (detents.size) {
         1 -> {
@@ -508,6 +504,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Setup background color and corner radius.
    */
   fun setupBackground() {
+    // -1 is used as sentinel for system default corner radius
+    val cornerRadius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
+
     sheetContainer?.apply {
       val outerRadii = floatArrayOf(
         cornerRadius,
@@ -685,7 +684,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       (detent * screenHeight).toInt()
     }
 
-    // Apply top inset when edge-to-edge is enabled and fullScreen is false
+    // Apply top inset when edge-to-edge is enabled
     val maxAllowedHeight = screenHeight - sheetTopInset
     val finalHeight = maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
     return finalHeight
@@ -876,5 +875,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // Allow the request to propagate to parent
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
+  }
+
+  companion object {
+    const val TAG_NAME = "TrueSheet"
+
+    // Material Design 3 max width in dp
+    const val DEFAULT_MAX_WIDTH = 640
+
+    // Material Design 3 default corner radius in dp
+    const val DEFAULT_CORNER_RADIUS = 16
   }
 }

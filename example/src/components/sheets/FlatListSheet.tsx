@@ -35,7 +35,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       </Header>
       <FlatList
         nestedScrollEnabled
-        data={times(50, (i) => i)}
+        data={times(10, (i) => i)}
         contentContainerStyle={styles.content}
         indicatorStyle="black"
         ItemSeparatorComponent={Spacer}
@@ -48,7 +48,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         //     onRefresh={handleRefresh}
         //   />
         // }
-        renderItem={() => <DemoContent color={DARK_GRAY} />}
+        renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
       />
     </TrueSheet>
   );
@@ -59,6 +59,6 @@ FlatListSheet.displayName = 'FlatListSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    paddingTop: SPACING * 2,
+    paddingTop: SPACING,
   },
 });

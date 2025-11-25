@@ -97,9 +97,7 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "cornerRadius", defaultDouble = -1.0)
   override fun setCornerRadius(view: TrueSheetView, radius: Double) {
-    if (radius >= 0) {
-      view.setCornerRadius(radius.dpToPx())
-    }
+    view.setCornerRadius(radius.dpToPx())
   }
 
   @ReactProp(name = "grabber", defaultBoolean = true)

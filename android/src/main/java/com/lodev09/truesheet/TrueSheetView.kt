@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -57,12 +58,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   var stateWrapper: StateWrapper? = null
     set(value) {
-      field = value
-
-      // Immediately update state with screen width
-      if (value != null) {
-        updateState(viewController.screenWidth, viewController.screenHeight)
+      // Immediately update state with screen width during first state update
+      // This will help us layout the content width before presenting
+      if (field == null && value != null) {
+        updateState(viewController.screenWidth, 0)
       }
+
+      field = value
     }
 
   // Track last dimensions to avoid unnecessary state updates
@@ -315,8 +317,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   fun setCornerRadius(radius: Float) {
-    if (viewController.cornerRadius == radius) return
-    viewController.cornerRadius = radius
+    if (viewController.sheetCornerRadius == radius) return
+    viewController.sheetCornerRadius = radius
     viewController.setupBackground()
   }
 
@@ -361,7 +363,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Store new dimensions
     lastContainerWidth = width
     lastContainerHeight = height
-
     val sw = stateWrapper ?: return
 
     val realWidth = width.toFloat().pxToDp()
