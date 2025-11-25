@@ -1,16 +1,48 @@
 #!/bin/bash
 
-echo "[Installing dependencies]"
-yarn
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
 
-echo "[Cleaning android]"
+step() {
+  echo -e "\n${BLUE}▶${NC} ${BOLD}$1${NC}"
+}
+
+success() {
+  echo -e "${GREEN}✓${NC} $1"
+}
+
+step "Installing dependencies"
+yarn && success "Dependencies installed"
+
+step "Cleaning Android"
 cd example/android
-./gradlew clean
+./gradlew clean && success "Android cleaned"
 cd ../..
 
-echo "[Removing temp directories]"
-del-cli android/build example/android/build example/android/app/build example/ios/build
+step "Cleaning up Watchman"
+watchman watch-del ./ ; watchman watch-project ./
+rm -rf $TMPDIR/metro-*
+success "Watchman cache cleared"
 
-echo "[Installing pods]"
-npx pod-install example
-bob build
+step "Cleaning up Simulator cache"
+# fixes "Unable to boot Simulator" error
+rm -rf ~/Library/Developer/CoreSimulator/Caches
+success "Simulator cache cleared"
+
+step "Removing temp directories"
+del-cli android/build example/android/build example/android/app/build example/ios/build
+success "Temp directories removed"
+
+step "Installing pods"
+npx pod-install example && success "Pods installed"
+
+step "Building with bob"
+bob build && success "Build complete"
+
+echo -e "\n${GREEN}${BOLD}All done!${NC}"
