@@ -84,7 +84,7 @@ class TrueSheetViewManager :
     view.setDetents(detents)
   }
 
-  @ReactProp(name = "background", defaultInt = Color.WHITE)
+  @ReactProp(name = "background", defaultInt = 0)
   override fun setBackground(view: TrueSheetView, color: Int) {
     view.setSheetBackgroundColor(color)
   }
