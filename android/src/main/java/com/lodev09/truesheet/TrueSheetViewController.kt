@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
+import android.util.TypedValue
 import android.graphics.drawable.shapes.RoundRectShape
 import android.view.MotionEvent
 import android.view.View
@@ -195,7 +196,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   var cornerRadius: Float = 28f.dpToPx()
-  var sheetBackgroundColor: Int = Color.WHITE
+  var sheetBackgroundColor: Int = getDefaultBackgroundColor()
   var detents = mutableListOf(0.5, 1.0)
 
   private var windowAnimation: Int = 0
@@ -203,6 +204,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   init {
     maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
     jSPointerDispatcher = JSPointerDispatcher(this)
+  }
+
+  /**
+   * Get the default background color from Material Design 3 theme.
+   * Uses colorSurfaceContainerLow which adapts to light/dark mode.
+   */
+  private fun getDefaultBackgroundColor(): Int {
+    val typedValue = TypedValue()
+    return if (reactContext.theme.resolveAttribute(
+        com.google.android.material.R.attr.colorSurfaceContainerLow,
+        typedValue,
+        true
+      )
+    ) {
+      typedValue.data
+    } else {
+      Color.WHITE
+    }
   }
 
   // ==================== Lifecycle ====================
