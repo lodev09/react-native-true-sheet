@@ -29,6 +29,7 @@ src/
 │   ├── TrueSheetViewNativeComponent.ts        # Host view spec (has interfaceOnly: true)
 │   ├── TrueSheetContainerViewNativeComponent.ts
 │   ├── TrueSheetContentViewNativeComponent.ts
+│   ├── TrueSheetHeaderViewNativeComponent.ts
 │   └── TrueSheetFooterViewNativeComponent.ts
 ├── TrueSheet.tsx              # Main React component
 └── TrueSheet.types.ts         # TypeScript types
@@ -37,6 +38,7 @@ ios/
 ├── TrueSheetView.mm/.h        # Host view (Fabric component)
 ├── TrueSheetContainerView.mm/.h
 ├── TrueSheetContentView.mm/.h
+├── TrueSheetHeaderView.mm/.h
 ├── TrueSheetFooterView.mm/.h
 ├── TrueSheetViewController.mm/.h  # UIViewController for sheet presentation
 └── TrueSheetModule.mm/.h      # TurboModule for imperative methods
@@ -61,8 +63,9 @@ common/cpp/react/renderer/components/TrueSheetSpec/
 ```
 TrueSheetView (host view - hidden, manages state)
 └── TrueSheetContainerView (fills controller's view)
+    ├── TrueSheetHeaderView (sticky header, optional)
     ├── TrueSheetContentView (sheet content)
-    └── TrueSheetFooterView (sticky footer)
+    └── TrueSheetFooterView (sticky footer, optional)
 ```
 
 ### Fabric State Management

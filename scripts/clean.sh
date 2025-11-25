@@ -25,8 +25,8 @@ cd example/android
 ./gradlew clean && success "Android cleaned"
 cd ../..
 
-step "Cleaning up Watchman"
-watchman watch-del ./ ; watchman watch-project ./
+step "Cleaning Watchman"
+watchman watch-del ./example ; watchman watch-project ./example
 rm -rf $TMPDIR/metro-*
 success "Watchman cache cleared"
 

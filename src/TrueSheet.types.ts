@@ -215,6 +215,12 @@ export interface TrueSheetProps extends ViewProps {
   edgeToEdgeFullScreen?: boolean;
 
   /**
+   * A component that is fixed at the top of the Sheet content.
+   * Useful for search bars, titles, or other header content.
+   */
+  header?: ComponentType<unknown> | ReactElement;
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   footer?: ComponentType<unknown> | ReactElement;

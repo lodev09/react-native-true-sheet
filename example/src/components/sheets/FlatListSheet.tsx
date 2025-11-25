@@ -26,13 +26,15 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       backgroundColor={DARK}
       keyboardMode="pan"
       fitScrollView
+      header={
+        <Header>
+          <Input />
+        </Header>
+      }
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <Header>
-        <Input />
-      </Header>
       <FlatList
         nestedScrollEnabled
         data={times(10, (i) => i)}

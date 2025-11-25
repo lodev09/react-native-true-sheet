@@ -47,12 +47,12 @@ export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref
       detents={[0.8, 1]}
       fitScrollView
       backgroundColor={Platform.select({ android: DARK })}
+      header={<Header />}
+      footer={<Footer />}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
-      footer={<Footer />}
       {...props}
     >
-      <Header />
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content} indicatorStyle="black">
         {times(500, (i) => (
           <HeavyItem key={i} index={i} />

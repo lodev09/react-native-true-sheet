@@ -24,6 +24,7 @@ import type {
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
 import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent';
+import TrueSheetHeaderViewNativeComponent from './fabric/TrueSheetHeaderViewNativeComponent';
 import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
@@ -326,6 +327,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       pageSizing = true,
       children,
       style,
+      header,
       footer,
       testID,
     } = this.props;
@@ -373,6 +375,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>
+            {header && (
+              <TrueSheetHeaderViewNativeComponent collapsable={false}>
+                {isValidElement(header) ? header : createElement(header)}
+              </TrueSheetHeaderViewNativeComponent>
+            )}
             <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
               {children}
             </TrueSheetContentViewNativeComponent>

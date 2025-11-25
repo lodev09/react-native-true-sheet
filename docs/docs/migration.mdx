@@ -318,6 +318,26 @@ The `onPositionChange` event now runs on the UI thread (worklet) when using `Rea
 
 See the [Reanimated Integration guide](/guides/reanimated) for complete examples.
 
+### 6. Native Header Support
+
+Version 3 introduces a new `header` prop for adding fixed headers above your scrollable content. The header is rendered as a native view and is properly accounted for in layout calculations.
+
+```tsx
+<TrueSheet
+  header={
+    <View style={styles.header}>
+      <TextInput placeholder="Search..." />
+    </View>
+  }
+>
+  <FlatList data={items} renderItem={renderItem} />
+</TrueSheet>
+```
+
+This ensures proper scrolling behavior on both iOS and Android when using `ScrollView` or `FlatList` with a header.
+
+See the [Header guide](/guides/header) for more details.
+
 ## Step-by-Step Migration
 
 1. **Enable New Architecture** in your React Native app (see above)

@@ -11,6 +11,7 @@ import com.facebook.react.views.view.ReactViewGroup
  */
 interface TrueSheetContainerViewDelegate {
   fun containerViewContentDidChangeSize(width: Int, height: Int)
+  fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
 }
 
@@ -22,6 +23,7 @@ interface TrueSheetContainerViewDelegate {
 class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   TrueSheetContentViewDelegate,
+  TrueSheetHeaderViewDelegate,
   TrueSheetFooterViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
@@ -37,13 +39,27 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     }
 
   /**
-   * Reference to footer view (second child)
+   * Reference to header view (second child if present)
+   */
+  val headerView: TrueSheetHeaderView?
+    get() {
+      for (i in 0 until childCount) {
+        val child = getChildAt(i)
+        if (child is TrueSheetHeaderView) return child
+      }
+      return null
+    }
+
+  /**
+   * Reference to footer view
    */
   val footerView: TrueSheetFooterView?
-    get() = if (childCount > 1 && getChildAt(1) is TrueSheetFooterView) {
-      getChildAt(1) as TrueSheetFooterView
-    } else {
-      null
+    get() {
+      for (i in 0 until childCount) {
+        val child = getChildAt(i)
+        if (child is TrueSheetFooterView) return child
+      }
+      return null
     }
 
   /**
@@ -51,6 +67,12 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
    */
   val contentHeight: Int
     get() = contentView?.height ?: 0
+
+  /**
+   * The header view height
+   */
+  val headerHeight: Int
+    get() = headerView?.height ?: 0
 
   /**
    * The footer view height
@@ -72,6 +94,11 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
       child.delegate = this
     }
 
+    // Set up delegate when header view is added
+    if (child is TrueSheetHeaderView) {
+      child.delegate = this
+    }
+
     // Set up delegate when footer view is added
     if (child is TrueSheetFooterView) {
       child.delegate = this
@@ -81,6 +108,11 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   override fun removeView(view: View?) {
     // Clean up delegate when content view is removed
     if (view is TrueSheetContentView) {
+      view.delegate = null
+    }
+
+    // Clean up delegate when header view is removed
+    if (view is TrueSheetHeaderView) {
       view.delegate = null
     }
 
@@ -97,6 +129,13 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   override fun contentViewDidChangeSize(width: Int, height: Int) {
     // Forward content size changes to controller for sheet resizing
     delegate?.containerViewContentDidChangeSize(width, height)
+  }
+
+  // ==================== TrueSheetHeaderViewDelegate Implementation ====================
+
+  override fun headerViewDidChangeSize(width: Int, height: Int) {
+    // Forward header size changes to host view
+    delegate?.containerViewHeaderDidChangeSize(width, height)
   }
 
   // ==================== TrueSheetFooterViewDelegate Implementation ====================

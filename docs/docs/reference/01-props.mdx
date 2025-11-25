@@ -163,6 +163,14 @@ Overrides the grabber props for android.
 | - | - | - | - |
 | [`TrueSheetGrabberProps`](/reference/types#truesheetgrabberprops) | `true` |  | ✅ |
 
+### `header`
+
+A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](/guides/header) for example.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `ComponentType<...> \| ReactElement` | | ✅ | ✅ |
+
 ### `footer`
 
 A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.

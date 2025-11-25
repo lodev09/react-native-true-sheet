@@ -14,6 +14,7 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetContentView.h"
+#import "TrueSheetHeaderView.h"
 #import "TrueSheetFooterView.h"
 
 #import <React/RCTConversions.h>
@@ -21,11 +22,12 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetContainerView () <TrueSheetContentViewDelegate>
+@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate>
 @end
 
 @implementation TrueSheetContainerView {
   TrueSheetContentView *_contentView;
+  TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
 }
 
@@ -41,6 +43,7 @@ using namespace facebook::react;
     self.backgroundColor = [UIColor clearColor];
 
     _contentView = nil;
+    _headerView = nil;
     _footerView = nil;
   }
   return self;
@@ -92,6 +95,17 @@ using namespace facebook::react;
     _contentView.delegate = self;
   }
 
+  // Handle header view mounting
+  if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
+    if (_headerView != nil) {
+      RCTLogWarn(@"TrueSheet: Container can only have one header component.");
+      return;
+    }
+
+    _headerView = (TrueSheetHeaderView *)childComponentView;
+    _headerView.delegate = self;
+  }
+
   // Handle footer view mounting
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     if (_footerView != nil) {
@@ -105,7 +119,13 @@ using namespace facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
+    _contentView.delegate = nil;
     _contentView = nil;
+  }
+
+  if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
+    _headerView.delegate = nil;
+    _headerView = nil;
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
@@ -125,6 +145,15 @@ using namespace facebook::react;
   // Forward content size changes to host view for sheet resizing
   if ([self.delegate respondsToSelector:@selector(containerViewContentDidChangeSize:)]) {
     [self.delegate containerViewContentDidChangeSize:newSize];
+  }
+}
+
+#pragma mark - TrueSheetHeaderViewDelegate
+
+- (void)headerViewDidChangeSize:(CGSize)newSize {
+  // Forward header size changes to host view
+  if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
+    [self.delegate containerViewHeaderDidChangeSize:newSize];
   }
 }
 

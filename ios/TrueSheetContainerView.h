@@ -21,6 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
 
+@optional
+
+/**
+ * Called when the header size changes
+ * @param newSize The new size of the header
+ */
+- (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
+
 @end
 
 @interface TrueSheetContainerView : RCTViewComponentView

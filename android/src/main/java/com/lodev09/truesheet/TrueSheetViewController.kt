@@ -102,6 +102,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   /**
+   * Header view from the container
+   */
+  private val headerView: TrueSheetHeaderView?
+    get() = containerView?.headerView
+
+  /**
    * Footer view from the container
    */
   private val footerView: TrueSheetFooterView?
@@ -805,8 +811,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
 
+    // Subtract header height from container height for content area calculation
+    val headerHeight = headerView?.height ?: 0
+    val effectiveHeight = h - headerHeight
+
     // Notify delegate about size change so host view can update state
-    delegate?.viewControllerDidChangeSize(w, h)
+    delegate?.viewControllerDidChangeSize(w, effectiveHeight)
 
     val oldScreenHeight = screenHeight
     screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)

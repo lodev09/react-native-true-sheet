@@ -419,6 +419,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     }
   }
 
+  override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
+    // Header size changes are handled in the controller's onSizeChanged
+  }
+
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
     // Reposition footer when its size changes
     if (viewController.isPresented) {
