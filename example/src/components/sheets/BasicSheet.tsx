@@ -54,7 +54,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       detents={['auto', 0.8, 1]}
       ref={sheetRef}
       style={styles.content}
-      cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
       onDragChange={(e) =>
         console.log(
@@ -125,7 +124,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
 const styles = StyleSheet.create({
   content: {
-    padding: SPACING,
+    paddingHorizontal: SPACING,
+    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },

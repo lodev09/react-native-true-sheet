@@ -113,6 +113,9 @@ export const MapScreen = () => {
         // fullScreen
         style={styles.content}
         initialDetentIndex={0}
+        onLayout={(e) => {
+          console.log(e.nativeEvent.layout.width, e.nativeEvent.layout.height);
+        }}
         onWillPresent={handleWillPresent}
         // onPositionChange={(e) => {
         //   'worklet';
@@ -191,10 +194,11 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     gap: GAP,
+    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {
-    marginBottom: SPACING * 2,
+    marginBottom: SPACING,
   },
   title: {
     fontSize: 24,

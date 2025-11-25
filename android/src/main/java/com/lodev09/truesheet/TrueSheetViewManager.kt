@@ -1,6 +1,5 @@
 package com.lodev09.truesheet
 
-import android.util.Log
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.module.annotations.ReactModule

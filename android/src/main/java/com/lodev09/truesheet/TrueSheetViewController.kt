@@ -12,7 +12,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
-import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -173,7 +172,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /**
    * The maximum window height
    */
-  var maxScreenHeight = 0
+  var screenHeight = 0
+
+  /**
+   * The window width
+   */
+  var screenWidth = 0
 
   var maxSheetHeight: Int? = null
 
@@ -200,7 +204,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var windowAnimation: Int = 0
 
   init {
-    maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    screenWidth = ScreenUtils.getScreenWidth(reactContext)
+
     jSPointerDispatcher = JSPointerDispatcher(this)
   }
 
@@ -433,8 +439,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss() {
     this.post {
       // Emit position change with transitioning=true to animate dismissal
-      // Use maxScreenHeight as the off-screen position (sheet slides down off screen)
-      val offScreenPosition = maxScreenHeight.pxToDp()
+      // Use screenHeight as the off-screen position (sheet slides down off screen)
+      val offScreenPosition = screenHeight.pxToDp()
       delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
     }
 
@@ -482,7 +488,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           setPeekHeight(peekHeightValue, isPresented)
           maxHeight = maxHeightValue
           expandedOffset = sheetTopInset
-          halfExpandedRatio = minOf(middleDetentHeight.toFloat() / maxScreenHeight.toFloat(), 1.0f)
+          halfExpandedRatio = minOf(middleDetentHeight.toFloat() / screenHeight.toFloat(), 1.0f)
         }
       }
 
@@ -575,7 +581,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheetY = ScreenUtils.getScreenY(bottomSheet)
 
     // Calculate footer Y position based on bottom sheet position
-    var footerY = (maxScreenHeight - bottomSheetY - footerHeight).toFloat()
+    var footerY = (screenHeight - bottomSheetY - footerHeight).toFloat()
 
     // Animate footer down with sheet when below peek height
     if (slideOffset != null && slideOffset < 0) {
@@ -585,7 +591,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Clamp footer position to prevent it from going off screen when positioning at the top
     // This happens when fullScreen is enabled in edge-to-edge mode
     val statusBarHeight = ScreenUtils.getStatusBarHeight(reactContext)
-    val maxAllowedY = (maxScreenHeight - statusBarHeight - footerHeight).toFloat()
+    val maxAllowedY = (screenHeight - statusBarHeight - footerHeight).toFloat()
     footer.y = minOf(footerY, maxAllowedY)
   }
 
@@ -676,11 +682,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      (detent * maxScreenHeight).toInt()
+      (detent * screenHeight).toInt()
     }
 
     // Apply top inset when edge-to-edge is enabled and fullScreen is false
-    val maxAllowedHeight = maxScreenHeight - sheetTopInset
+    val maxAllowedHeight = screenHeight - sheetTopInset
     val finalHeight = maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
     return finalHeight
   }
@@ -771,9 +777,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Position calculation is simple: screen height - sheet height
     // In both edge-to-edge and non-edge-to-edge modes, getScreenY returns
-    // coordinates in screen space, and maxScreenHeight represents the available height
+    // coordinates in screen space, and screenHeight represents the available height
     // for the sheet, so the calculation is the same
-    val positionPx = maxScreenHeight - detentHeight
+    val positionPx = screenHeight - detentHeight
 
     return positionPx.pxToDp()
   }
@@ -803,11 +809,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Notify delegate about size change so host view can update state
     delegate?.viewControllerDidChangeSize(w, h)
 
-    val oldMaxScreenHeight = maxScreenHeight
-    maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    val oldScreenHeight = screenHeight
+    screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
 
     // Only handle rotation if sheet is presented and screen height actually changed
-    if (isPresented && oldMaxScreenHeight != maxScreenHeight && oldMaxScreenHeight > 0) {
+    if (isPresented && oldScreenHeight != screenHeight && oldScreenHeight > 0) {
       // Recalculate sheet detents with new screen dimensions
       setupSheetDetents()
 

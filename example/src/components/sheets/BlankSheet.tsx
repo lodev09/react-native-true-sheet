@@ -12,7 +12,6 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
       ref={ref}
       detents={[0.5, 1]}
       blurTint="dark"
-      cornerRadius={12}
       backgroundColor={DARK}
       keyboardMode="pan"
       style={styles.content}
@@ -26,6 +25,7 @@ export const BlankSheet = forwardRef((props: BlankSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingTop: SPACING * 2,
   },
   text: {
     color: '#fff',

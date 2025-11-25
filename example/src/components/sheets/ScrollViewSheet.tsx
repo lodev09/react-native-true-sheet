@@ -14,6 +14,8 @@ import { BORDER_RADIUS, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } f
 import { Footer } from '../Footer';
 import { Header } from '../Header';
 
+interface ScrollViewSheetProps extends TrueSheetProps {}
+
 // Heavy item component for testing
 const HeavyItem = ({ index }: { index: number }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -38,14 +40,11 @@ const HeavyItem = ({ index }: { index: number }) => {
   );
 };
 
-interface ScrollViewSheetProps extends TrueSheetProps {}
-
 export const ScrollViewSheet = forwardRef((props: ScrollViewSheetProps, ref: Ref<TrueSheet>) => {
   return (
     <TrueSheet
       ref={ref}
       detents={[0.8, 1]}
-      cornerRadius={12}
       fitScrollView
       backgroundColor={Platform.select({ android: DARK })}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}

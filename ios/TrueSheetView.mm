@@ -51,7 +51,7 @@ using namespace facebook::react;
   TrueSheetViewController *_controller;
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
-  CGFloat _lastContainerWidth;
+  CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
   BOOL _fitScrollView;
   BOOL _initialDetentAnimated;
@@ -71,7 +71,7 @@ using namespace facebook::react;
 
     _containerView = nil;
 
-    _lastContainerWidth = 0;
+    _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
     _fitScrollView = NO;
@@ -246,28 +246,24 @@ using namespace facebook::react;
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
-  [self updateStateIfNeeded];
+
+  // Try early update of our controller size if available
+  if (_controller) {
+    [self updateStateWithSize:_controller.view.frame.size];
+  }
 }
 
-- (void)updateStateIfNeeded {
+- (void)updateStateWithSize:(CGSize)size {
   if (!_state) {
     return;
   }
 
-  CGFloat containerWidth = _controller.view.bounds.size.width;
-
-  if (containerWidth <= 0) {
-    return;
-  }
-
-  BOOL widthChanged = fabs(containerWidth - _lastContainerWidth) > 0.5;
-
-  if (widthChanged) {
-    _lastContainerWidth = containerWidth;
+  if (size.width > 0 && size.width != _lastStateSize.width) {
+    _lastStateSize = size;
     _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
                           -> TrueSheetViewShadowNode::ConcreteState::SharedData {
       auto newData = oldData;
-      newData.containerWidth = static_cast<float>(containerWidth);
+      newData.containerWidth = static_cast<float>(size.width);
       return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
     });
   }
@@ -361,6 +357,9 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  // Reset stored last width to get updated size later
+  _lastStateSize = CGSizeZero;
+
   // Dismiss controller if presented
   if (_controller && _controller.presentingViewController) {
     [_controller dismissViewControllerAnimated:YES completion:nil];
@@ -453,7 +452,8 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  [self updateStateIfNeeded];
+  // Update our layout when controller size changes
+  [self updateStateWithSize:size];
 }
 
 #pragma mark - Private Helpers

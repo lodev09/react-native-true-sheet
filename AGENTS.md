@@ -74,28 +74,6 @@ The host view (`TrueSheetView`) uses Fabric state to pass native dimensions to Y
 3. **Component descriptor** - Calls `adjustLayoutWithState()` on adopt
 4. **Native view** - Calls `updateState()` when dimensions change (e.g., rotation)
 
-### iOS State Update Flow
-
-```
-TrueSheetView.mm:
-  updateState:oldState: → _state = new state, call updateStateIfNeeded
-  updateStateIfNeeded   → check if width changed, push to Yoga via _state->updateState()
-
-TrueSheetViewController.mm:
-  viewWillTransitionToSize: → notify delegate of size change (rotation)
-```
-
-### Android State Update Flow
-
-```
-TrueSheetView.kt:
-  setStateWrapper()  → store wrapper, call updateState if dimensions available
-  updateState()      → stateWrapper.updateState() with WritableNativeMap
-
-TrueSheetViewManager.kt:
-  updateState()      → view.setStateWrapper(stateWrapper)
-```
-
 ## Key Concepts
 
 ### interfaceOnly: true
@@ -138,6 +116,4 @@ Android tracks both dimensions in state since the dialog size matters for layout
 
 ## Commands
 
-```sh
-yarn tidy          # Format code (run before git commits)
-```
+See package.json scripts.

@@ -152,28 +152,13 @@
   }
 }
 
-- (void)viewWillTransitionToSize:(CGSize)size
-       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-
-  // Handle rotation/size change
-  [coordinator
-    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      // Animation block - updates happen here
-    }
-    completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      // After rotation completes
-      [self setupSheetDetents];
-
-      // Notify delegate of size change for state update
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-        [self.delegate viewControllerDidChangeSize:size];
-      }
-    }];
-}
-
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+
+  // Update our host view layout if needed
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  }
 
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout

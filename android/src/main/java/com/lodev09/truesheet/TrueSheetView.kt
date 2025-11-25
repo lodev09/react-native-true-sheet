@@ -1,12 +1,8 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.os.Build
-import android.util.Log
 import android.view.View
 import android.view.ViewStructure
-import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener

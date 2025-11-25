@@ -21,7 +21,6 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
   return (
     <TrueSheet
       ref={ref}
-      cornerRadius={12}
       detents={[0.5, 1]}
       blurTint="dark"
       backgroundColor={DARK}
@@ -60,5 +59,6 @@ FlatListSheet.displayName = 'FlatListSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingTop: SPACING * 2,
   },
 });
