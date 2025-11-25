@@ -46,7 +46,7 @@ class TrueSheetViewManager :
   }
 
   override fun updateState(view: TrueSheetView, props: ReactStylesDiffMap?, stateWrapper: StateWrapper?): Any? {
-    view.setStateWrapper(stateWrapper)
+    view.stateWrapper = stateWrapper
     return null
   }
 

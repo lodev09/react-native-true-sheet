@@ -250,6 +250,10 @@ using namespace facebook::react;
 }
 
 - (void)updateStateIfNeeded {
+  if (!_state) {
+    return;
+  }
+
   CGFloat containerWidth = _controller.view.bounds.size.width;
 
   if (containerWidth <= 0) {
@@ -260,21 +264,13 @@ using namespace facebook::react;
 
   if (widthChanged) {
     _lastContainerWidth = containerWidth;
-    [self updateStateWithWidth:containerWidth];
+    _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
+                          -> TrueSheetViewShadowNode::ConcreteState::SharedData {
+      auto newData = oldData;
+      newData.containerWidth = static_cast<float>(containerWidth);
+      return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
+    });
   }
-}
-
-- (void)updateStateWithWidth:(CGFloat)width {
-  if (!_state) {
-    return;
-  }
-
-  _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
-                        -> TrueSheetViewShadowNode::ConcreteState::SharedData {
-    auto newData = oldData;
-    newData.containerWidth = static_cast<float>(width);
-    return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
-  });
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {

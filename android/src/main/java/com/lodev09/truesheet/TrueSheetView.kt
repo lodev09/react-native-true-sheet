@@ -51,9 +51,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
-  private var stateWrapper: StateWrapper? = null
+  var stateWrapper: StateWrapper? = null
 
-  // Pending dimensions to update when stateWrapper becomes available
+  // Track last dimensions to avoid unnecessary state updates
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
 
@@ -275,6 +275,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     )
   }
 
+  override fun viewControllerDidChangeSize(width: Int, height: Int) {
+    updateState(width, height)
+  }
+
   // ==================== Property Setters (forward to controller) ====================
 
   fun setMaxHeight(height: Int) {
@@ -332,30 +336,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== State Management ====================
 
-  fun setStateWrapper(wrapper: StateWrapper?) {
-    stateWrapper = wrapper
-
-    if (wrapper == null) return
-
-    // Update state with current dimensions if we have them
-    val w = viewController.width
-    val h = viewController.height
-    if (w > 0 && h > 0) {
-      updateState(w, h)
-    }
-  }
-
   /**
    * Update state with container dimensions.
    * Called when the dialog size changes.
    */
   fun updateState(width: Int, height: Int) {
     // Skip if dimensions haven't changed
-    if (width == lastContainerWidth && height == lastContainerHeight && stateWrapper != null) {
+    if (width == lastContainerWidth && height == lastContainerHeight) {
       return
     }
 
-    // Store dimensions
+    // Store new dimensions
     lastContainerWidth = width
     lastContainerHeight = height
 
