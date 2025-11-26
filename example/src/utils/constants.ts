@@ -3,7 +3,6 @@ export const GAP = 12;
 export const INPUT_HEIGHT = SPACING * 3;
 export const FOOTER_HEIGHT = SPACING * 4;
 export const BORDER_RADIUS = 4;
-export const GRABBER_COLOR = 'rgba(121, 135, 160, 0.5)';
 
 export const DARK = '#282e37';
 export const GRAY = '#b2bac8';

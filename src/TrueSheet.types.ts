@@ -1,8 +1,6 @@
 import type { ComponentType, ReactElement } from 'react';
 import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native';
 
-import type { TrueSheetGrabberProps } from './TrueSheetGrabber';
-
 export interface DetentInfoEventPayload {
   /**
    * The index position from the provided `detents`.
@@ -167,19 +165,14 @@ export interface TrueSheetProps extends ViewProps {
   cornerRadius?: number;
 
   /**
-   * Shows native grabber (or handle) on IOS.
+   * Shows a native grabber (or drag handle) on the sheet.
    *
-   * @platform ios
+   * iOS uses the native `UISheetPresentationController` grabber.
+   * Android renders a native view following Material Design 3 specifications.
+   *
    * @default true
    */
   grabber?: boolean;
-
-  /**
-   * Grabber props to be used for android grabber or handle.
-   *
-   * @platform android
-   */
-  grabberProps?: TrueSheetGrabberProps;
 
   /**
    * Controls the sheet presentation style on iPad.

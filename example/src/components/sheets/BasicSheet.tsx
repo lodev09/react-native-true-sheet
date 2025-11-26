@@ -2,7 +2,7 @@ import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'rea
 import { StyleSheet } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING } from '../../utils';
+import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -54,7 +54,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       detents={['auto', 0.8, 1]}
       ref={sheetRef}
       style={styles.content}
-      grabberProps={{ color: GRABBER_COLOR }}
       onDragChange={(e) =>
         console.log(
           `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

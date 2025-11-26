@@ -92,6 +92,24 @@ Several props have been renamed for better clarity:
 
 The following props have been removed in v3:
 
+#### `grabberProps` (Android)
+
+The `grabberProps` prop has been removed. The grabber is now rendered **natively** on both iOS and Android following Material Design 3 specifications. Use the `grabber` boolean prop to show or hide the native grabber.
+
+**Migration:**
+
+```tsx
+// ❌ v2
+<TrueSheet grabberProps={{ color: 'red', width: 40 }}>
+  {/* ... */}
+</TrueSheet>
+
+// ✅ v3 - grabber is native, use boolean to show/hide
+<TrueSheet grabber={true}>
+  {/* ... */}
+</TrueSheet>
+```
+
 #### `scrollRef` (iOS)
 
 The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS. Use the new `fitScrollView` prop to enable automatic ScrollView pinning.
@@ -334,6 +352,7 @@ See the [Header guide](/guides/header) for more details.
    - Replace `dimmedIndex` with `dimmedDetentIndex`
    - Remove `scrollRef` prop (iOS - now auto-detected)
    - Remove `contentContainerStyle` prop (no longer needed)
+   - Remove `grabberProps` prop (grabber is now native on both platforms)
    - Change detent percentage strings to fractional numbers (e.g., `"50%"` → `0.5`)
 
 6. **Test your app:**

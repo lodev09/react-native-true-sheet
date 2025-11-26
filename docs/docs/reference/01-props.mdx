@@ -147,21 +147,15 @@ Set to `pan` if you're working with `FlatList` with a `TextInput`.
 
 ### `grabber`
 
-Shows a grabber (or handle). Native on IOS and styled `View` on Android.
+Shows a native grabber (or drag handle) on the sheet.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
-
-
-### `grabberProps`
-
-Overrides the grabber props for android.
-
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`TrueSheetGrabberProps`](/reference/types#truesheetgrabberprops) | `true` |  | ✅ |
+:::info
+iOS uses the native `UISheetPresentationController` grabber, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32×4dp, centered, with the standard drag handle color).
+:::
 
 ### `header`
 
