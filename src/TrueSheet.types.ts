@@ -106,6 +106,9 @@ export interface TrueSheetProps extends ViewProps {
    * detents={['auto', 0.6, 1]}
    * ```
    *
+   * @note It's recommended to sort detents from smallest to largest.
+   * When using `auto`, place it at the first index if you plan to adjust content dynamically.
+   *
    * @default [0.5, 1]
    */
   detents?: SheetDetent[];
