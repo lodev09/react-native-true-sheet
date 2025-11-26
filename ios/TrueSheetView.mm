@@ -265,6 +265,11 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
+  if (_controller.isBeingPresented) {
+    RCTLogWarn(@"TrueSheet: sheet is being presented. Wait for it to transition before presenting again.");
+    return;
+  }
+
   if (_controller.isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
       [self->_controller setupActiveDetentWithIndex:index];
@@ -300,6 +305,11 @@ using namespace facebook::react;
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  if (_controller.isBeingDismissed) {
+    RCTLogWarn(@"TrueSheet: sheet is being dismissed. No need to dismiss it again.");
+    return;
+  }
+
   if (!_controller.isPresented) {
     if (completion) {
       completion(YES, nil);
