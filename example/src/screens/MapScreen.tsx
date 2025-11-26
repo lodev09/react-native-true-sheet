@@ -119,7 +119,7 @@ export const MapScreen = () => {
         dismissible={false}
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
         fitScrollView
-        initialDetentIndex={1}
+        initialDetentIndex={0}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);

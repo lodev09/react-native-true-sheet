@@ -393,6 +393,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         1 -> {
           maxHeight = getDetentHeight(detents[0])
           skipCollapsed = true
+
+          if (isPresented && detents[0] == -1.0) {
+            sheetContainer?.apply {
+              val params = layoutParams
+              params.height = maxHeight
+              layoutParams = params
+            }
+          }
         }
 
         2 -> {
@@ -406,14 +414,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           maxHeight = getDetentHeight(detents[2])
           expandedOffset = sheetTopInset
           halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), 1.0f)
-        }
-      }
-
-      if (isPresented) {
-        sheetContainer?.apply {
-          val params = layoutParams
-          params.height = maxHeight
-          layoutParams = params
         }
       }
     }
