@@ -1,6 +1,7 @@
 export const SPACING = 16;
 export const GAP = 12;
 export const INPUT_HEIGHT = SPACING * 3;
+export const HEADER_HEIGHT = SPACING * 5;
 export const FOOTER_HEIGHT = SPACING * 4;
 export const BORDER_RADIUS = 4;
 

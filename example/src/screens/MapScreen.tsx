@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,8 +18,8 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Footer, Header, Input, Spacer } from '../components';
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
+import { Button, Header, Spacer } from '../components';
+import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -30,6 +31,8 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
+
+const DETENT_1 = Platform.select({ ios: 0.094, default: 0.113 });
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -48,7 +51,6 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [showHeader, setShowHeader] = useState(false);
   const [spacerCount, setSpacerCount] = useState(0);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
@@ -65,8 +67,15 @@ export const MapScreen = () => {
     });
   };
 
-  const floatingButtonStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
-    transform: [{ translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)) }],
+  const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: Math.min(
+          -(insets.bottom + (HEADER_HEIGHT - SPACING)),
+          -(height - animatedPosition.value)
+        ),
+      },
+    ],
   }));
 
   const addContent = () => {
@@ -80,10 +89,6 @@ export const MapScreen = () => {
   const handleWillPresent = (e: WillPresentEvent) => {
     const { index, position: yPosition } = e.nativeEvent;
     console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
-  };
-
-  const toggleHeader = () => {
-    setShowHeader((prev) => !prev);
   };
 
   return (
@@ -104,21 +109,18 @@ export const MapScreen = () => {
       />
       <AnimatedButton
         activeOpacity={0.6}
-        style={[styles.floatingButton, floatingButtonStyles]}
+        style={[styles.floatingControl, floatingControlStyles]}
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={['auto', 1]}
+        detents={[DETENT_1, 0.8, 1]}
         ref={sheetRef}
-        blurTint="dark"
-        backgroundColor={DARK}
         dimmedDetentIndex={2}
-        // dismissible={false}
-        // pageSizing={false}
-        style={[styles.content, { paddingTop: showHeader ? SPACING : SPACING * 2 }]}
+        dismissible={false}
+        style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
         fitScrollView
-        // edgeToEdgeFullScreen
-        initialDetentIndex={0}
+        initialDetentIndex={1}
+        backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
@@ -130,19 +132,11 @@ export const MapScreen = () => {
         onDidPresent={() => {
           console.log('Sheet is presented');
         }}
-        // initialDetentAnimated={false}
         onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        footer={<Footer text="TOGGLE HEADER" onPress={toggleHeader} />}
-        header={
-          showHeader ? (
-            <Header>
-              <Input />
-            </Header>
-          ) : undefined
-        }
+        header={<Header />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>
@@ -166,8 +160,8 @@ export const MapScreen = () => {
         {Array.from({ length: spacerCount }, (_, i) => (
           <Spacer key={i} />
         ))}
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
@@ -180,18 +174,17 @@ export const MapScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  floatingButton: {
+  floatingControl: {
     position: 'absolute',
     right: SPACING,
     bottom: SPACING,
     height: SPACING * 3,
     width: SPACING * 3,
     borderRadius: (SPACING * 3) / 2,
-    backgroundColor: DARK_BLUE,
-    shadowColor: DARK,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    backgroundColor: Platform.select({ ios: 'rgba(0, 0, 0, 0.3)', android: DARK }),
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: Platform.select({ ios: StyleSheet.hairlineWidth }),
+    elevation: 4,
   },
   container: {
     backgroundColor: BLUE,
@@ -204,7 +197,6 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     gap: GAP,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {
     marginBottom: SPACING,

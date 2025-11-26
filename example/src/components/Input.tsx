@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { BORDER_RADIUS, GRAY, INPUT_HEIGHT, SPACING } from '../utils';
 
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: SPACING,
     height: INPUT_HEIGHT,
-    borderRadius: BORDER_RADIUS * 6,
+    borderRadius: Platform.select({ ios: BORDER_RADIUS * 6, android: BORDER_RADIUS * 3 }),
     justifyContent: 'center',
   },
   input: {

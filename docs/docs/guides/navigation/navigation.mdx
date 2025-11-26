@@ -1,0 +1,88 @@
+---
+title: React Navigation
+description: Navigate to other screens from within the bottom sheet.
+keywords: [bottom sheet navigation, react-navigation, navigating from sheet]
+---
+
+import navigation from './navigation.gif'
+
+You can navigate to other screens from within a sheet without any issues! The sheet will remain visible in the background when presenting modals on top.
+
+<img alt="navigation" src={navigation} width="300"/>
+
+## How?
+
+Just do it like you would normally 😉
+
+```tsx
+const sheet = useRef<TrueSheet>(null)
+
+const navigate = () => {
+  // Navigate directly - no need to dismiss first! ✅
+  navigation.navigate('SomeScreen')
+}
+
+return (
+  <TrueSheet ref={sheet}>
+    <Button onPress={navigate} title="Navigate to SomeScreen" />
+    <View />
+  </TrueSheet>
+)
+```
+
+## Dismissing Before Navigation
+
+If you prefer to dismiss the sheet before navigating for UX reasons, you can still do so:
+
+```tsx
+const navigate = async () => {
+  await sheet.current?.dismiss()
+  navigation.navigate('SomeScreen')
+}
+```
+
+## Present During Mount
+
+When setting [`initialDetentIndex`](/reference/props#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation may behave unexpectedly on iOS. This happens because React Navigation is not yet finished transitioning when the sheet tries to present.
+
+### Solution 1: Disable Animation
+
+Set `initialDetentAnimated` to `false` to disable animation during mount:
+
+```tsx
+return (
+  <TrueSheet initialDetentIndex={0} initialDetentAnimated={false}>
+    <View />
+  </TrueSheet>
+)
+```
+
+### Solution 2: Wait for Screen Transition
+
+Wait for the screen to fully transition using the [`transitionEnd`](https://reactnavigation.org/docs/native-stack-navigator/#transitionend) event:
+
+```tsx
+const navigation = useNavigation()
+const [isScreenShown, setIsScreenShown] = useState(false)
+
+// Subscribe to the transitionEnd event ✅
+useEffect(() => {
+  const unsubscribe = navigation.addListener("transitionEnd", ({ data }) => {
+    if (!data.closing) {
+      setIsScreenShown(true)
+    }
+  })
+
+  return unsubscribe
+}, [])
+
+// Wait for the screen to finish transitioning ✅
+if (!isScreenShown) return null
+
+// Finally show the sheet 🎉
+return (
+  <TrueSheet initialDetentIndex={0} initialDetentAnimated>
+    <View />
+  </TrueSheet>
+)
+```
