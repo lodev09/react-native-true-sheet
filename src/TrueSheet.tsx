@@ -330,6 +330,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       header,
       footer,
       testID,
+      ...rest
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
@@ -372,6 +373,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
+        {...rest}
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>

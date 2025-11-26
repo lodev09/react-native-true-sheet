@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -118,12 +117,17 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         // dismissible={false}
         // pageSizing={false}
-        // style={styles.content}
+        style={[
+          styles.content,
+          {
+            paddingTop: showHeader ? SPACING : SPACING * 2,
+          },
+        ]}
         fitScrollView
         // edgeToEdgeFullScreen
         initialDetentIndex={0}
         onLayout={(e) => {
-          console.log(e.nativeEvent.layout.width, e.nativeEvent.layout.height);
+          console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
         onWillPresent={handleWillPresent}
         // onPositionChange={(e) => {
@@ -147,38 +151,30 @@ export const MapScreen = () => {
           ) : undefined
         }
       >
-        <ScrollView
-          nestedScrollEnabled
-          contentContainerStyle={[
-            styles.content,
-            { paddingTop: showHeader ? SPACING : SPACING * 2 },
-          ]}
-        >
-          <View style={styles.heading}>
-            <Text style={styles.title}>True Sheet 💩</Text>
-            <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-          </View>
-          <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-          <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-          <Button
-            text="TrueSheet ScrollView"
-            loading={scrollViewLoading}
-            disabled={scrollViewLoading}
-            onPress={presentScrollViewSheet}
-          />
-          <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-          <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-          <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
-          <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
-          <Spacer />
-          <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
-          {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
-          {Array.from({ length: spacerCount }, (_, i) => (
-            <Spacer key={i} />
-          ))}
-          <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
-          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
-        </ScrollView>
+        <View style={styles.heading}>
+          <Text style={styles.title}>True Sheet 💩</Text>
+          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+        </View>
+        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+        <Button
+          text="TrueSheet ScrollView"
+          loading={scrollViewLoading}
+          disabled={scrollViewLoading}
+          onPress={presentScrollViewSheet}
+        />
+        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+        <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
+        <Spacer />
+        <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
+        {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
+        {Array.from({ length: spacerCount }, (_, i) => (
+          <Spacer key={i} />
+        ))}
+        <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
+        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
