@@ -41,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSArray *detents;
 @property (nonatomic, strong, nullable) NSNumber *maxHeight;
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
+@property (nonatomic, strong, nullable) NSNumber *headerHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
@@ -59,8 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
 - (CGFloat)bottomInset;
-- (CGFloat)currentHeight;
-- (CGFloat)containerHeight;
 
 @end
 

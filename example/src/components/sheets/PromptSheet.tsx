@@ -41,7 +41,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
-      cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
       onDidDismiss={handleDismiss}
       onDidPresent={(e) =>
@@ -72,6 +71,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },

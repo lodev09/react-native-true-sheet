@@ -48,7 +48,7 @@ using namespace facebook::react;
   }
 
   // Remove existing constraints before applying new ones
-  [LayoutUtil unpinView:self];
+  [LayoutUtil unpinView:self fromParentView:parentView];
 
   // Pin footer to bottom and sides of container with specific height
   [LayoutUtil pinView:self
@@ -90,7 +90,7 @@ using namespace facebook::react;
   [super prepareForRecycle];
 
   // Remove footer constraints
-  [LayoutUtil unpinView:self];
+  [LayoutUtil unpinView:self fromParentView:self.superview];
 
   _lastHeight = 0;
   _didInitialLayout = NO;

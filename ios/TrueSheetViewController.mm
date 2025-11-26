@@ -33,6 +33,7 @@
   if (self = [super initWithNibName:nil bundle:nil]) {
     _detents = @[ @0.5, @1 ];
     _contentHeight = @(0);
+    _headerHeight = @(0);
     _grabber = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
@@ -152,28 +153,13 @@
   }
 }
 
-- (void)viewWillTransitionToSize:(CGSize)size
-       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-
-  // Handle rotation/size change
-  [coordinator
-    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      // Animation block - updates happen here
-    }
-    completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      // After rotation completes
-      [self setupSheetDetents];
-
-      // Notify delegate of size change for state update
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-        [self.delegate viewControllerDidChangeSize:size];
-      }
-    }];
-}
-
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+
+  // Update our host view layout if needed
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  }
 
   if (!_isTransitioning && self.isActiveAndVisible) {
     // Flag that we are tracking position from layout
@@ -406,9 +392,9 @@
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
-  // Subtract bottomInset from content height to account for safe area
+  // Calculate total height: content + header, minus bottomInset to account for safe area
   // This prevents iOS from adding extra bottom insets automatically
-  CGFloat totalHeight = [self.contentHeight floatValue] - self.bottomInset;
+  CGFloat totalHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
@@ -608,16 +594,18 @@
 }
 
 - (CGFloat)containerHeight {
-  UIView *containerView = self.sheetPresentationController.containerView;
-  if (!containerView)
+  UIView *sheetContainerView = self.sheetPresentationController.containerView;
+  if (!sheetContainerView)
     return 0.0;
 
-  return containerView.frame.size.height;
+  return sheetContainerView.frame.size.height;
 }
 
 - (void)setupSheetProps {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet) {
+    RCTLogWarn(
+      @"TrueSheet: No sheet presentation controller available. Ensure the view controller is presented modally.");
     return;
   }
 

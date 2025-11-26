@@ -51,16 +51,27 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
+  /**
+   * Sets the state wrapper and immediately updates with initial screen width.
+   * This ensures we have initial width even before controller emits changeSize.
+   */
   var stateWrapper: StateWrapper? = null
+    set(value) {
+      // Immediately update state with screen width during first state update
+      // This will help us layout the content width before presenting
+      if (field == null && value != null) {
+        updateState(viewController.screenWidth, 0)
+      }
+
+      field = value
+    }
 
   // Track last dimensions to avoid unnecessary state updates
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
 
-  /**
-   * Tracks if initial presentation has been handled
-   */
-  private var hasHandledInitialPresentation = false
+  // Flag to prevent multiple pending sheet updates
+  private var isSheetUpdatePending: Boolean = false
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -108,22 +119,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * new Dialog.
    */
   fun showOrUpdate() {
-    // Only handle initial presentation once on mount
-    if (!hasHandledInitialPresentation && initialDetentIndex >= 0) {
-      hasHandledInitialPresentation = true
-
-      // Create dialog if not created yet
-      if (!viewController.isPresented) {
-        viewController.createDialog()
-      }
-
-      post {
-        present(initialDetentIndex, initialDetentAnimated) { }
-      }
-    } else if (viewController.isPresented) {
-      viewController.setupSheetDetents()
+    if (viewController.isPresented) {
+      updateSheetIfNeeded()
       viewController.setStateForDetentIndex(viewController.currentDetentIndex)
-      viewController.positionFooter()
     }
   }
 
@@ -139,15 +137,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       // Set up container delegate to listen for content size changes
       child.delegate = this
 
-      // Get initial content height from container
-      val contentHeight = child.contentHeight
-      if (contentHeight > 0) {
-        viewController.contentHeight = contentHeight
-      }
-
       // Create the dialog now that the container is mounted
       viewController.createDialog()
 
+      // Handle initial presentation if provided
+      if (initialDetentIndex >= 0) {
+        // We run after layout pass so content height is already available
+        post {
+          present(initialDetentIndex, initialDetentAnimated) { }
+        }
+      }
+
+      // Emit mount event
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(
         MountEvent(surfaceId, id)
@@ -158,19 +159,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun getChildCount(): Int = viewController.childCount
   override fun getChildAt(index: Int): View? = viewController.getChildAt(index)
 
-  override fun removeView(child: View?) {
-    if (child != null) {
-      // Clean up container delegate
-      if (child is TrueSheetContainerView) {
-        child.delegate = null
-      }
-
-      viewController.removeView(child)
-    }
-  }
-
   override fun removeViewAt(index: Int) {
     val child = getChildAt(index)
+
+    // Clean up container delegate
+    if (child is TrueSheetContainerView) {
+      child.delegate = null
+    }
+
     viewController.removeView(child)
   }
 
@@ -219,8 +215,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       DidPresentEvent(surfaceId, id, index, position)
     )
 
-    // Set our touch event dispatcher on the view controller
+    // Set our touch event dispatcher on the view controller and footer
     viewController.eventDispatcher = eventDispatcher
+    containerView?.footerView?.eventDispatcher = eventDispatcher
   }
 
   override fun viewControllerWillDismiss() {
@@ -229,8 +226,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       WillDismissEvent(surfaceId, id)
     )
 
-    // Clear our touch event dispatcher on the view controller
+    // Clear our touch event dispatcher on the view controller and footer
     viewController.eventDispatcher = null
+    containerView?.footerView?.eventDispatcher = null
   }
 
   override fun viewControllerDidDismiss() {
@@ -303,8 +301,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   fun setCornerRadius(radius: Float) {
-    if (viewController.cornerRadius == radius) return
-    viewController.cornerRadius = radius
+    if (viewController.sheetCornerRadius == radius) return
+    viewController.sheetCornerRadius = radius
     viewController.setupBackground()
   }
 
@@ -342,14 +340,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   fun updateState(width: Int, height: Int) {
     // Skip if dimensions haven't changed
-    if (width == lastContainerWidth && height == lastContainerHeight) {
-      return
-    }
+    if (width == lastContainerWidth && height == lastContainerHeight) return
 
     // Store new dimensions
     lastContainerWidth = width
     lastContainerHeight = height
-
     val sw = stateWrapper ?: return
 
     val realWidth = width.toFloat().pxToDp()
@@ -385,25 +380,40 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dismiss()
   }
 
+  fun updateSheetIfNeeded() {
+    // Update sheet size only when presented
+    if (!viewController.isPresented) {
+      return
+    }
+
+    // Skip if an update is already pending
+    if (isSheetUpdatePending) {
+      return
+    }
+
+    isSheetUpdatePending = true
+
+    // Use post to ensure all layout passes are complete before reconfiguring
+    // This handles cases where content and header size changes happen in sequence
+    viewController.post {
+      isSheetUpdatePending = false
+      viewController.setupSheetDetents()
+      viewController.positionFooter()
+    }
+  }
+
   // ==================== TrueSheetContainerViewDelegate Implementation ====================
 
   override fun containerViewContentDidChangeSize(width: Int, height: Int) {
-    // Clamp content height to container height to prevent unbounded growth with scrollable content
-    val containerHeight = viewController.maxScreenHeight
-    val contentHeight = if (containerHeight > 0) minOf(height, containerHeight) else height
+    updateSheetIfNeeded()
+  }
 
-    viewController.contentHeight = contentHeight
+  override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
+    updateSheetIfNeeded()
 
-    // Update detents if sheet is already presented
-    if (viewController.isPresented) {
-      // Reconfigure sheet detents with new content height
-      viewController.setupSheetDetents()
-
-      // Use post to ensure layout is complete before positioning footer
-      viewController.post {
-        viewController.positionFooter()
-      }
-    }
+    // Update our state after header change size for scroll view behavior to work
+    val sheetHeight = TrueSheetViewController.getEffectiveSheetHeight(viewController.height, height)
+    updateState(viewController.width, sheetHeight)
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {

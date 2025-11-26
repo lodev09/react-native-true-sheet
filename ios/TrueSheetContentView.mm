@@ -53,98 +53,55 @@ using namespace facebook::react;
   }
 }
 
-- (void)unpinScrollView {
+- (void)unpinScrollViewFromParentView:(UIView *)parentView {
   // Unpin previous scroll view if exists
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView];
+    [LayoutUtil unpinView:_pinnedScrollView fromParentView:parentView];
   }
 }
 
-- (void)setupScrollViewPinning:(BOOL)pinned {
+- (void)setupScrollViewPinning:(BOOL)pinned withHeaderView:(UIView *)headerView {
+  // Pin to container view (parent of content view)
+  UIView *containerView = self.superview;
+
   if (!pinned) {
-    [self unpinScrollView];
+    [self unpinScrollViewFromParentView:containerView];
+    _pinnedScrollView = nil;
     return;
   }
 
   // Auto-detect and pin scroll views for proper sheet scrolling behavior
-  // Pinning ensures ScrollView fills the sheet area and scrolls correctly with the sheet
-  UIView *topSibling = nil;
-  RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
+  // Pinning ensures ScrollView fills the available area and scrolls correctly with the sheet
+  RCTScrollViewComponentView *scrollView = [self findScrollView];
 
-  if (scrollView && scrollView != _pinnedScrollView) {
-    [self unpinScrollView];
+  if (scrollView && containerView) {
+    // Always unpin first to remove old constraints
+    [self unpinScrollViewFromParentView:containerView];
 
-    // Pin to container view to enable proper scrolling within the sheet
-    UIView *containerView = self.superview;
-    if (containerView) {
-      if (topSibling) {
-        // Pin ScrollView below the top sibling
-        [LayoutUtil pinView:scrollView
-               toParentView:containerView
-                withTopView:topSibling
-                      edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
-      } else {
-        // No top sibling, pin to all edges of container (original behavior)
-        [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
-      }
-
-      _pinnedScrollView = scrollView;
+    if (headerView) {
+      // Pin ScrollView below the header view
+      [LayoutUtil pinView:scrollView
+             toParentView:containerView
+              withTopView:headerView
+                    edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
+    } else {
+      // No header, pin to all edges of container
+      [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
     }
+
+    _pinnedScrollView = scrollView;
   }
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
-  return [self findScrollView:nil];
-}
-
-- (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
-  if (self.subviews.count == 0) {
-    return nil;
-  }
-
-  RCTScrollViewComponentView *scrollView = nil;
-  UIView *topSibling = nil;
-
   // Check first-level children for scroll views (ScrollView or FlatList)
   for (UIView *subview in self.subviews) {
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
-      scrollView = static_cast<RCTScrollViewComponentView *>(subview);
-
-      // Find the view positioned directly above this ScrollView by frame position
-      if (self.subviews.count > 1) {
-        CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
-        CGFloat closestDistance = CGFLOAT_MAX;
-
-        for (UIView *sibling in self.subviews) {
-          // Skip the ScrollView itself
-          if (sibling == scrollView) {
-            continue;
-          }
-
-          CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
-
-          // Check if this sibling is positioned above the ScrollView
-          if (siblingBottom <= scrollViewTop) {
-            CGFloat distance = scrollViewTop - siblingBottom;
-
-            // Find the closest view above (smallest distance)
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              topSibling = sibling;
-            }
-          }
-        }
-      }
-
-      break;  // Found ScrollView, no need to continue
+      return (RCTScrollViewComponentView *)subview;
     }
   }
 
-  if (outTopSibling) {
-    *outTopSibling = topSibling;
-  }
-
-  return scrollView;
+  return nil;
 }
 
 - (void)prepareForRecycle {
@@ -152,7 +109,7 @@ using namespace facebook::react;
 
   // Remove scroll view constraints
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView];
+    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
     _pinnedScrollView = nil;
   }
 }

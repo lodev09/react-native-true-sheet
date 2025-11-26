@@ -1,5 +1,5 @@
 import { StyleSheet, View, type ColorValue, type ViewProps, Text } from 'react-native';
-import { BORDER_RADIUS, SPACING } from '../utils';
+import { BORDER_RADIUS, LIGHT_GRAY, SPACING } from '../utils';
 
 interface DemoContentProps extends ViewProps {
   radius?: number;
@@ -24,10 +24,11 @@ const styles = StyleSheet.create({
     height: 100,
     padding: SPACING / 2,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
     fontSize: 16,
     lineHeight: 20,
-    color: 'white',
+    color: LIGHT_GRAY,
   },
 });

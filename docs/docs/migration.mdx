@@ -10,51 +10,7 @@ This guide will help you migrate from TrueSheet v2 to v3. Version 3 brings full 
 
 ## Breaking Changes
 
-### 1. Background and Blur Behavior Changes
-
-#### `backgroundColor` Default Value
-
-The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **system default** when not provided, which matches the platform's native sheet background.
-
-**Migration:**
-
-```tsx
-// ❌ v2 - backgroundColor defaults to white
-<TrueSheet>
-  <View />
-</TrueSheet>
-
-// ✅ v3 - backgroundColor uses system default (transparent on iOS)
-// If you want white background, explicitly set it:
-<TrueSheet backgroundColor="white">
-  <View />
-</TrueSheet>
-```
-
-#### `blurTint` No Longer Overrides `backgroundColor`
-
-In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
-
-**Migration:**
-
-```tsx
-// ❌ v2 - blurTint overrides backgroundColor
-<TrueSheet backgroundColor="red" blurTint="light">
-  {/* backgroundColor is ignored, only blur effect is shown */}
-</TrueSheet>
-
-// ✅ v3 - blurTint applies over backgroundColor
-<TrueSheet backgroundColor="red" blurTint="light">
-  {/* Shows red background with light blur effect on top */}
-</TrueSheet>
-
-// If you want only blur without background color:
-<TrueSheet blurTint="light">
-  {/* Just blur effect with system default background */}
-</TrueSheet>
-```
-
-### 2. Fabric Architecture Required
+### 1. Fabric Architecture Required
 
 Version 3 is built exclusively for React Native's **New Architecture (Fabric)**. The old Paper architecture is no longer supported.
 
@@ -86,7 +42,7 @@ newArchEnabled=true
 Check out the [React Native New Architecture guide](https://reactnative.dev/docs/new-architecture-intro) for more details.
 :::
 
-### 3. Prop Renames
+### 2. Prop Renames
 
 Several props have been renamed for better clarity:
 
@@ -114,12 +70,10 @@ Several props have been renamed for better clarity:
   contentContainerStyle={styles.container}
   FooterComponent={<MyFooter />}
   edgeToEdge
-  onPresent={(e) => console.log('presented', e.nativeEvent)}
+  onPresent={(e) => console.log(e.nativeEvent)}
   onDismiss={() => console.log('dismissed')}
-  onSizeChange={(e) => console.log('size changed', e.nativeEvent)}
->
-  <View />
-</TrueSheet>
+  onSizeChange={(e) => console.log(e.nativeEvent)}
+/>
 
 // ✅ v3
 <TrueSheet
@@ -128,15 +82,13 @@ Several props have been renamed for better clarity:
   initialDetentAnimated={false}
   footer={<MyFooter />}
   edgeToEdgeFullScreen
-  onDidPresent={(e) => console.log('presented', e.nativeEvent)}
+  onDidPresent={(e) => console.log(e.nativeEvent)}
   onDidDismiss={() => console.log('dismissed')}
-  onDetentChange={(e) => console.log('detent changed', e.nativeEvent)}
->
-  <View />
-</TrueSheet>
+  onDetentChange={(e) => console.log(e.nativeEvent)}
+/>
 ```
 
-### 4. Removed Props
+### 3. Removed Props
 
 The following props have been removed in v3:
 
@@ -148,19 +100,15 @@ The `scrollRef` prop has been removed. Scroll views are now **automatically dete
 
 ```tsx
 // ❌ v2
-const scrollView = useRef<ScrollView>(null)
+const scrollViewRef = useRef<ScrollView>(null)
 
-<TrueSheet ref={sheet} scrollRef={scrollView}>
-  <ScrollView ref={scrollView} nestedScrollEnabled>
-    <View />
-  </ScrollView>
+<TrueSheet scrollRef={scrollViewRef}>
+  <ScrollView ref={scrollViewRef}>{/* ... */}</ScrollView>
 </TrueSheet>
 
 // ✅ v3
-<TrueSheet ref={sheet} fitScrollView>
-  <ScrollView nestedScrollEnabled>
-    <View />
-  </ScrollView>
+<TrueSheet fitScrollView>
+  <ScrollView>{/* ... */}</ScrollView>
 </TrueSheet>
 ```
 
@@ -172,7 +120,7 @@ See the [Scrolling guide](/guides/scrolling) for more information about `fitScro
 
 The `contentContainerStyle` prop has been removed as it's no longer needed with the new architecture. Style your content directly instead.
 
-### 5. Detent Value Changes
+### 4. Detent Value Changes
 
 Detent values now use **fractional values (0-1)** instead of percentage strings.
 
@@ -180,19 +128,49 @@ Detent values now use **fractional values (0-1)** instead of percentage strings.
 
 ```tsx
 // ❌ v2
-<TrueSheet detents={["50%", "80%", "100%"]}>
-  <View />
-</TrueSheet>
+<TrueSheet detents={["50%", "80%", "100%"]} />
 
 // ✅ v3
-<TrueSheet detents={[0.5, 0.8, 1]}>
-  <View />
-</TrueSheet>
+<TrueSheet detents={[0.5, 0.8, 1]} />
 ```
 
 :::tip
 The `"auto"` detent still works the same way!
 :::
+
+### 5. Background and Blur Behavior Changes
+
+#### `backgroundColor` Default Value
+
+The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **system default** when not provided, which matches the platform's native sheet background.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - backgroundColor defaults to white
+<TrueSheet />
+
+// ✅ v3 - backgroundColor uses system default (transparent on iOS)
+// If you want white background, explicitly set it:
+<TrueSheet backgroundColor="white" />
+```
+
+#### `blurTint` No Longer Overrides `backgroundColor`
+
+In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - blurTint overrides backgroundColor (backgroundColor is ignored)
+<TrueSheet backgroundColor="red" blurTint="light" />
+
+// ✅ v3 - blurTint applies over backgroundColor (red + light blur)
+<TrueSheet backgroundColor="red" blurTint="light" />
+
+// If you want only blur without background color:
+<TrueSheet blurTint="light" />
+```
 
 ## New Features in v3
 
@@ -203,9 +181,7 @@ TrueSheet now automatically detects and adapts to Android's edge-to-edge display
 For a true full-screen experience where the sheet extends behind the status bar, use the new `edgeToEdgeFullScreen` prop:
 
 ```tsx
-<TrueSheet edgeToEdgeFullScreen>
-  <View />
-</TrueSheet>
+<TrueSheet edgeToEdgeFullScreen />
 ```
 
 :::info
@@ -238,9 +214,7 @@ See the [Events documentation](/reference/props#events) for detailed usage and e
 Version 3 now includes first-class iPad support with the new `pageSizing` prop. When enabled (default), the sheet uses a large page sheet for better readability on iPad. When disabled, the sheet uses a centered form sheet.
 
 ```tsx
-<TrueSheet pageSizing>
-  <View />
-</TrueSheet>
+<TrueSheet pageSizing />
 ```
 
 :::info
@@ -273,31 +247,21 @@ import {
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 
 // 1. Wrap your app with the provider
-function App() {
-  return (
-    <ReanimatedTrueSheetProvider>
-      <YourApp />
-    </ReanimatedTrueSheetProvider>
-  )
-}
+const App = () => (
+  <ReanimatedTrueSheetProvider>
+    <YourApp />
+  </ReanimatedTrueSheetProvider>
+)
 
 // 2. Use ReanimatedTrueSheet instead of TrueSheet
-function MyScreen() {
-  const sheetRef = useRef<TrueSheet>(null)
-
-  return (
-    <ReanimatedTrueSheet
-      ref={sheetRef}
-      detents={[0.3, 0.6, 1]}
-      initialDetentIndex={1}
-    >
-      <Text>Sheet Content</Text>
-    </ReanimatedTrueSheet>
-  )
-}
+const MySheet = () => (
+  <ReanimatedTrueSheet detents={[0.3, 0.6, 1]} initialDetentIndex={1}>
+    <Text>Sheet Content</Text>
+  </ReanimatedTrueSheet>
+)
 
 // 3. Access the sheet's position for custom animations
-function MyAnimatedComponent() {
+const MyAnimatedComponent = () => {
   const { animatedPosition } = useReanimatedTrueSheet()
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -317,6 +281,20 @@ The `onPositionChange` event now runs on the UI thread (worklet) when using `Rea
 :::
 
 See the [Reanimated Integration guide](/guides/reanimated) for complete examples.
+
+### 6. Native Header Support
+
+Version 3 introduces a new `header` prop for adding fixed headers above your scrollable content. The header is rendered as a native view and is properly accounted for in layout calculations.
+
+```tsx
+<TrueSheet header={<MyHeader />}>
+  <FlatList data={items} renderItem={renderItem} />
+</TrueSheet>
+```
+
+This ensures proper scrolling behavior on both iOS and Android when using `ScrollView` or `FlatList` with a header.
+
+See the [Header guide](/guides/header) for more details.
 
 ## Step-by-Step Migration
 

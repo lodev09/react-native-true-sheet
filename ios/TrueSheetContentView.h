@@ -31,9 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * setup ScrollView pinning
+ * Setup ScrollView pinning
+ * @param pinned Whether to pin the scroll view
+ * @param headerView Optional header view to pin below (can be nil)
  */
-- (void)setupScrollViewPinning:(BOOL)pinned;
+- (void)setupScrollViewPinning:(BOOL)pinned withHeaderView:(nullable UIView *)headerView;
 
 @end
 

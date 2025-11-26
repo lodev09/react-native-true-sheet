@@ -5,19 +5,19 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * Delegate interface for content view size changes
+ * Delegate interface for header view size changes
  */
-interface TrueSheetContentViewDelegate {
-  fun contentViewDidChangeSize(width: Int, height: Int)
+interface TrueSheetHeaderViewDelegate {
+  fun headerViewDidChangeSize(width: Int, height: Int)
 }
 
 /**
- * Content view that holds the main sheet content
- * This is the first child of TrueSheetContainerView
+ * Header view that holds the header content
+ * Positioned at the top of the sheet content area
  */
 @SuppressLint("ViewConstructor")
-class TrueSheetContentView(context: ThemedReactContext) : ReactViewGroup(context) {
-  var delegate: TrueSheetContentViewDelegate? = null
+class TrueSheetHeaderView(context: ThemedReactContext) : ReactViewGroup(context) {
+  var delegate: TrueSheetHeaderViewDelegate? = null
 
   private var lastWidth = 0
   private var lastHeight = 0
@@ -28,7 +28,7 @@ class TrueSheetContentView(context: ThemedReactContext) : ReactViewGroup(context
     if (w != lastWidth || h != lastHeight) {
       lastWidth = w
       lastHeight = h
-      delegate?.contentViewDidChangeSize(w, h)
+      delegate?.headerViewDidChangeSize(w, h)
     }
   }
 

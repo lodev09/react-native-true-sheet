@@ -21,22 +21,24 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
   return (
     <TrueSheet
       ref={ref}
-      cornerRadius={12}
       detents={[0.5, 1]}
       blurTint="dark"
       backgroundColor={DARK}
       keyboardMode="pan"
+      edgeToEdgeFullScreen
       fitScrollView
+      header={
+        <Header>
+          <Input />
+        </Header>
+      }
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <Header>
-        <Input />
-      </Header>
       <FlatList
         nestedScrollEnabled
-        data={times(50, (i) => i)}
+        data={times(10, (i) => i)}
         contentContainerStyle={styles.content}
         indicatorStyle="black"
         ItemSeparatorComponent={Spacer}
@@ -49,7 +51,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
         //     onRefresh={handleRefresh}
         //   />
         // }
-        renderItem={() => <DemoContent color={DARK_GRAY} />}
+        renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
       />
     </TrueSheet>
   );
@@ -60,5 +62,6 @@ FlatListSheet.displayName = 'FlatListSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingTop: SPACING,
   },
 });

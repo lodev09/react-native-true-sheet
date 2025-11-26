@@ -56,9 +56,22 @@
   }
 }
 
-+ (void)unpinView:(UIView *)view {
++ (void)unpinView:(UIView *)view fromParentView:(UIView *)parentView {
   if (!view)
     return;
+
+  // Remove constraints from parent view that reference this view
+  UIView *targetParent = parentView ?: view.superview;
+  if (targetParent) {
+    NSMutableArray *constraintsToRemove = [NSMutableArray array];
+    for (NSLayoutConstraint *constraint in targetParent.constraints) {
+      if (constraint.firstItem == view || constraint.secondItem == view) {
+        [constraintsToRemove addObject:constraint];
+      }
+    }
+    [targetParent removeConstraints:constraintsToRemove];
+  }
+
   view.translatesAutoresizingMaskIntoConstraints = YES;
   [view removeConstraints:view.constraints];
 }

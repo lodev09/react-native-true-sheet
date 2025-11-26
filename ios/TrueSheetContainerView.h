@@ -21,6 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
 
+@optional
+
+/**
+ * Called when the header size changes
+ * @param newSize The new size of the header
+ */
+- (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
+
 @end
 
 @interface TrueSheetContainerView : RCTViewComponentView
@@ -31,9 +39,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
+ * Enable ScrollView pinning
+ */
+@property (nonatomic, assign) BOOL scrollViewPinningEnabled;
+
+/**
  * Returns the current content height
  */
 - (CGFloat)contentHeight;
+
+/**
+ * Returns the current header height
+ */
+- (CGFloat)headerHeight;
 
 /**
  * Updates footer layout constraints if needed
@@ -41,9 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)layoutFooter;
 
 /**
- * setup ScrollView pinning
+ * Setup ScrollView pinning
  */
-- (void)setupContentScrollViewPinning:(BOOL)pinned;
+- (void)setupContentScrollViewPinning;
 
 @end
 

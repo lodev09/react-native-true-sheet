@@ -39,6 +39,7 @@ class TrueSheetPackage : TurboReactPackage() {
       TrueSheetViewManager(),
       TrueSheetContainerViewManager(),
       TrueSheetContentViewManager(),
+      TrueSheetHeaderViewManager(),
       TrueSheetFooterViewManager()
     )
 }

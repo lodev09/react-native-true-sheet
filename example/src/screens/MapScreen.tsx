@@ -17,7 +17,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Footer, Spacer } from '../components';
+import { Button, Footer, Header, Input, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +48,7 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
+  const [showHeader, setShowHeader] = useState(false);
   const [spacerCount, setSpacerCount] = useState(0);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
@@ -81,6 +82,10 @@ export const MapScreen = () => {
     console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
   };
 
+  const toggleHeader = () => {
+    setShowHeader((prev) => !prev);
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -110,9 +115,13 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         // dismissible={false}
         // pageSizing={false}
-        // fullScreen
-        style={styles.content}
+        style={[styles.content, { paddingTop: showHeader ? SPACING : SPACING * 2 }]}
+        fitScrollView
+        // edgeToEdgeFullScreen
         initialDetentIndex={0}
+        onLayout={(e) => {
+          console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
+        }}
         onWillPresent={handleWillPresent}
         // onPositionChange={(e) => {
         //   'worklet';
@@ -126,7 +135,14 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        footer={<Footer />}
+        footer={<Footer text="TOGGLE HEADER" onPress={toggleHeader} />}
+        header={
+          showHeader ? (
+            <Header>
+              <Input />
+            </Header>
+          ) : undefined
+        }
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>
@@ -144,15 +160,12 @@ export const MapScreen = () => {
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
-
+        <Spacer />
         <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
         {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
-
         {Array.from({ length: spacerCount }, (_, i) => (
           <Spacer key={i} />
         ))}
-
-        <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
         <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
@@ -194,7 +207,7 @@ const styles = StyleSheet.create({
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {
-    marginBottom: SPACING * 2,
+    marginBottom: SPACING,
   },
   title: {
     fontSize: 24,

@@ -24,6 +24,7 @@ import type {
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
 import TrueSheetContentViewNativeComponent from './fabric/TrueSheetContentViewNativeComponent';
+import TrueSheetHeaderViewNativeComponent from './fabric/TrueSheetHeaderViewNativeComponent';
 import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
@@ -326,8 +327,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       pageSizing = true,
       children,
       style,
+      header,
       footer,
       testID,
+      ...rest
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
@@ -343,6 +346,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     return (
       <TrueSheetViewNativeComponent
+        {...rest}
         ref={this.nativeRef}
         style={styles.sheetView}
         detents={resolvedDetents}
@@ -373,6 +377,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>
+            {header && (
+              <TrueSheetHeaderViewNativeComponent collapsable={false}>
+                {isValidElement(header) ? header : createElement(header)}
+              </TrueSheetHeaderViewNativeComponent>
+            )}
             <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
               {children}
             </TrueSheetContentViewNativeComponent>
@@ -391,6 +400,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 const styles = StyleSheet.create({
   sheetView: {
     position: 'absolute',
+    width: '100%',
     zIndex: -9999,
   },
   footer: {

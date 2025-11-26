@@ -19,6 +19,7 @@ import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -53,10 +54,6 @@ interface TrueSheetViewControllerDelegate {
 class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   RootView {
-
-  companion object {
-    private const val TAG_NAME = "TrueSheet"
-  }
 
   // ==================== RootView Touch Handling ====================
 
@@ -104,11 +101,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       null
     }
 
-  /**
-   * Footer view from the container
-   */
-  private val footerView: TrueSheetFooterView?
-    get() = containerView?.footerView
+  private val contentHeight: Int
+    get() = containerView?.contentHeight ?: 0
+
+  private val headerHeight: Int
+    get() = containerView?.headerHeight ?: 0
 
   /**
    * Track if the dialog is currently being dragged
@@ -120,6 +117,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   var isPresented = false
     private set
+
+  val statusBarHeight: Int
+    get() = ScreenUtils.getStatusBarHeight(reactContext)
 
   private val edgeToEdgeEnabled: Boolean
     get() {
@@ -137,7 +137,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Top inset to apply to sheet max height calculation (only when not edgeToEdgeFullScreen)
    */
   private val sheetTopInset: Int
-    get() = if (edgeToEdgeEnabled && !edgeToEdgeFullScreen) ScreenUtils.getStatusBarHeight(reactContext) else 0
+    get() = if (edgeToEdgeEnabled && !edgeToEdgeFullScreen) statusBarHeight else 0
 
   /**
    * Current active detent index
@@ -172,15 +172,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /**
    * The maximum window height
    */
-  var maxScreenHeight = 0
-
-  var maxSheetHeight: Int? = null
+  var screenHeight = 0
 
   /**
-   * The content height from the container view.
-   * Set by the host view when content size changes.
+   * The window width
    */
-  var contentHeight: Int = 0
+  var screenWidth = 0
+
+  var maxSheetHeight: Int? = null
 
   var dismissible: Boolean = true
     set(value) {
@@ -192,14 +191,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-  var cornerRadius: Float = 28f.dpToPx()
+  var sheetCornerRadius: Float = -1f
   var sheetBackgroundColor: Int = 0
   var detents = mutableListOf(0.5, 1.0)
 
   private var windowAnimation: Int = 0
 
   init {
-    maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    screenWidth = ScreenUtils.getScreenWidth(reactContext)
+
     jSPointerDispatcher = JSPointerDispatcher(this)
   }
 
@@ -391,7 +392,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun present(detentIndex: Int, animated: Boolean = true) {
     val dialog = this.dialog ?: run {
-      // Dialog not created yet - this shouldn't happen but handle gracefully
+      RNLog.w(reactContext, "TrueSheet: No dialog available. Ensure the sheet is mounted before presenting.")
       return
     }
 
@@ -432,8 +433,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss() {
     this.post {
       // Emit position change with transitioning=true to animate dismissal
-      // Use maxScreenHeight as the off-screen position (sheet slides down off screen)
-      val offScreenPosition = maxScreenHeight.pxToDp()
+      // Use screenHeight as the off-screen position (sheet slides down off screen)
+      val offScreenPosition = screenHeight.pxToDp()
       delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
     }
 
@@ -453,8 +454,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       skipCollapsed = false
       isFitToContents = true
 
-      // m3 max width 640dp
-      maxWidth = 640.0.dpToPx().toInt()
+      maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
       when (detents.size) {
         1 -> {
@@ -481,7 +481,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           setPeekHeight(peekHeightValue, isPresented)
           maxHeight = maxHeightValue
           expandedOffset = sheetTopInset
-          halfExpandedRatio = minOf(middleDetentHeight.toFloat() / maxScreenHeight.toFloat(), 1.0f)
+          halfExpandedRatio = minOf(middleDetentHeight.toFloat() / screenHeight.toFloat(), 1.0f)
         }
       }
 
@@ -501,6 +501,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Setup background color and corner radius.
    */
   fun setupBackground() {
+    // -1 is used as sentinel for system default corner radius
+    val cornerRadius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
+
     sheetContainer?.apply {
       val outerRadii = floatArrayOf(
         cornerRadius,
@@ -567,14 +570,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun positionFooter(slideOffset: Float? = null) {
-    val footer = footerView ?: return
+    val footerView = containerView?.footerView ?: return
+
     val bottomSheet = bottomSheetView ?: return
-    val footerHeight = footer.height
+    val footerHeight = footerView.height
 
     val bottomSheetY = ScreenUtils.getScreenY(bottomSheet)
 
     // Calculate footer Y position based on bottom sheet position
-    var footerY = (maxScreenHeight - bottomSheetY - footerHeight).toFloat()
+    var footerY = (screenHeight - bottomSheetY - footerHeight).toFloat()
 
     // Animate footer down with sheet when below peek height
     if (slideOffset != null && slideOffset < 0) {
@@ -583,9 +587,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Clamp footer position to prevent it from going off screen when positioning at the top
     // This happens when fullScreen is enabled in edge-to-edge mode
-    val statusBarHeight = ScreenUtils.getStatusBarHeight(reactContext)
-    val maxAllowedY = (maxScreenHeight - statusBarHeight - footerHeight).toFloat()
-    footer.y = minOf(footerY, maxAllowedY)
+    val maxAllowedY = (screenHeight - statusBarHeight - footerHeight).toFloat()
+    footerView.y = minOf(footerY, maxAllowedY)
   }
 
   /**
@@ -670,16 +673,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
       // -1.0 represents "auto"
-      contentHeight
+      // total height of the content + header
+      contentHeight + headerHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      (detent * maxScreenHeight).toInt()
+      (detent * screenHeight).toInt()
     }
 
-    // Apply top inset when edge-to-edge is enabled and fullScreen is false
-    val maxAllowedHeight = maxScreenHeight - sheetTopInset
+    // Apply top inset when edge-to-edge is enabled
+    val maxAllowedHeight = screenHeight - sheetTopInset
     val finalHeight = maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
     return finalHeight
   }
@@ -770,9 +774,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Position calculation is simple: screen height - sheet height
     // In both edge-to-edge and non-edge-to-edge modes, getScreenY returns
-    // coordinates in screen space, and maxScreenHeight represents the available height
+    // coordinates in screen space, and screenHeight represents the available height
     // for the sheet, so the calculation is the same
-    val positionPx = maxScreenHeight - detentHeight
+    val positionPx = screenHeight - detentHeight
 
     return positionPx.pxToDp()
   }
@@ -799,14 +803,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
 
-    // Notify delegate about size change so host view can update state
-    delegate?.viewControllerDidChangeSize(w, h)
+    val effectiveHeight = getEffectiveSheetHeight(h, headerHeight)
 
-    val oldMaxScreenHeight = maxScreenHeight
-    maxScreenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
+    // Notify delegate about size change so host view can update state
+    delegate?.viewControllerDidChangeSize(w, effectiveHeight)
+
+    val oldScreenHeight = screenHeight
+    screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
 
     // Only handle rotation if sheet is presented and screen height actually changed
-    if (isPresented && oldMaxScreenHeight != maxScreenHeight && oldMaxScreenHeight > 0) {
+    if (isPresented && oldScreenHeight != screenHeight && oldScreenHeight > 0) {
       // Recalculate sheet detents with new screen dimensions
       setupSheetDetents()
 
@@ -823,6 +829,45 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun handleException(t: Throwable) {
     reactContext.reactApplicationContext.handleException(RuntimeException(t))
+  }
+
+  /**
+   * Override to dispatch touch events to footer when it's positioned outside container bounds.
+   * This is necessary because the footer is positioned absolutely and may extend beyond the
+   * container's clipping bounds when the sheet is expanded to full height.
+   */
+  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    val footer = containerView?.footerView
+    if (footer != null && footer.visibility == View.VISIBLE) {
+      // Get footer's position in screen coordinates
+      val footerLocation = ScreenUtils.getScreenLocation(footer)
+
+      // Get touch position in screen coordinates
+      val touchScreenX = event.rawX.toInt()
+      val touchScreenY = event.rawY.toInt()
+
+      // Check if touch is within footer bounds (in screen coordinates)
+      if (touchScreenX >= footerLocation[0] &&
+        touchScreenX <= footerLocation[0] + footer.width &&
+        touchScreenY >= footerLocation[1] &&
+        touchScreenY <= footerLocation[1] + footer.height
+      ) {
+        // Transform touch to footer's local coordinates
+        val localX = touchScreenX - footerLocation[0]
+        val localY = touchScreenY - footerLocation[1]
+
+        // Create a copy of the event with local coordinates
+        val localEvent = MotionEvent.obtain(event)
+        localEvent.setLocation(localX.toFloat(), localY.toFloat())
+
+        val handled = footer.dispatchTouchEvent(localEvent)
+        localEvent.recycle()
+
+        if (handled) return true
+      }
+    }
+
+    return super.dispatchTouchEvent(event)
   }
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
@@ -869,5 +914,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // Allow the request to propagate to parent
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
+  }
+
+  companion object {
+    const val TAG_NAME = "TrueSheet"
+
+    // Material Design 3 max width in dp
+    const val DEFAULT_MAX_WIDTH = 640
+
+    // Material Design 3 default corner radius in dp
+    const val DEFAULT_CORNER_RADIUS = 16
+
+    fun getEffectiveSheetHeight(sheetHeight: Int, headerHeight: Int): Int {
+      // Calculate effective content height by subtracting header space.
+      // We subtract headerHeight * 2 because both native layout and Yoga layout
+      // account for the header. Since headerView.y is 0, headerView.bottom equals
+      // its height, effectively doubling the space we need to subtract.
+      return sheetHeight - headerHeight * 2
+    }
   }
 }

@@ -54,9 +54,5 @@ const App = () => {
 ```
 
 :::caution
-If your `ScrollView` content height is smaller than the sheet height, scrolling may not work properly due to a React Native framework limitation. This is because the `ScrollView` won't be scrollable when there's no overflow.
-
-**Workaround:** Ensure your content height exceeds the sheet height, or use a `FlatList` with a minimum number of items.
-
-Related: [React Native PR #44099](https://github.com/facebook/react-native/pull/44099)
+If your `ScrollView` content height is smaller than the sheet height, scrolling may not work properly. See [Troubleshooting](/troubleshooting#sheet-not-draggable-on-android) for more details.
 :::

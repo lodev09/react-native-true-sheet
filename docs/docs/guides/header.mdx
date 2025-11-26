@@ -4,21 +4,23 @@ description: Add a header component that stays above the scrollable content.
 keywords: [bottom sheet header, bottom sheet fixed header, bottom sheet sticky header]
 ---
 
-Need a fixed header above your scrollable content? A title bar, search input, or navigation controls? TrueSheet makes it simple!
+Need a fixed header above your scrollable content? A title bar, search input, or navigation controls? TrueSheet makes it simple with the `header` prop!
 
-When using `fitScrollView` on iOS, TrueSheet automatically detects views positioned above your `ScrollView` or `FlatList` and treats them as headers. The scroll view will be pinned below these header views.
+## Using the `header` Prop
 
-## How?
+The recommended way to add a header is using the `header` prop. This creates a native header view that is properly accounted for in layout calculations, ensuring your scrollable content gets the correct available height.
 
-Simply place your header view before the `ScrollView` or `FlatList` component.
-
-```tsx {4-7}
+```tsx {4-8}
 const App = () => {
   return (
-    <TrueSheet ref={sheet} fitScrollView>
-      <View style={styles.header}>
-        <Text>My Header</Text>
-      </View>
+    <TrueSheet
+      ref={sheet}
+      header={
+        <View style={styles.header}>
+          <Text>My Header</Text>
+        </View>
+      }
+    >
       <ScrollView nestedScrollEnabled>
         <View>{/* Your scrollable content */}</View>
       </ScrollView>
@@ -35,36 +37,35 @@ const styles = StyleSheet.create({
 })
 ```
 
-:::info
-The header detection works by finding views positioned above the ScrollView based on their frame positions. The ScrollView will automatically pin its top edge below the closest sibling view above it.
-:::
+## With Search Input
 
-## Multiple Headers
+A common use case is adding a search bar in the header:
 
-You can have multiple views above the ScrollView. The scroll view will pin itself below the closest view:
-
-```tsx {4-10}
+```tsx {4-8}
 const App = () => {
   return (
-    <TrueSheet ref={sheet} fitScrollView>
-      <View style={styles.title}>
-        <Text>Title</Text>
-      </View>
-      <View style={styles.searchBar}>
-        <TextInput placeholder="Search..." />
-      </View>
-      <ScrollView nestedScrollEnabled>
-        <View>{/* Your scrollable content */}</View>
-      </ScrollView>
+    <TrueSheet
+      ref={sheet}
+      header={
+        <View style={styles.header}>
+          <TextInput placeholder="Search..." style={styles.input} />
+        </View>
+      }
+    >
+      <FlatList
+        nestedScrollEnabled
+        data={items}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
     </TrueSheet>
   )
 }
 ```
 
 :::tip
-Make sure `fitScrollView` is set to `true` to enable automatic header detection and ScrollView pinning. See the [Scrolling guide](/guides/scrolling) for more information about `fitScrollView`.
+When using `header` with `FlatList` or `ScrollView`, the content area height is automatically adjusted to account for the header height. This ensures proper scrolling behavior on both iOS and Android.
 :::
 
 ## Platform Support
 
-This feature is **iOS only**. On Android, you can achieve similar layouts using standard React Native layout components.
+The `header` prop is supported on both **iOS** and **Android**.

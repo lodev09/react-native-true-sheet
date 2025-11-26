@@ -51,7 +51,6 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
-      cornerRadius={12}
       grabberProps={{ color: GRABBER_COLOR }}
       onDidDismiss={() => console.log('Gesture sheet dismissed!')}
       onDidPresent={(e) =>
@@ -97,6 +96,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   panContainer: {
