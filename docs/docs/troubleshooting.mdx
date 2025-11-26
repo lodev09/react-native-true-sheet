@@ -30,12 +30,6 @@ return (
 Note that we are using `flexGrow` instead of `flex` here. For some weird reason, `flex` does not work correctly. See [below](#weird-layout-render).
 :::
 
-## React Navigation
-
-[`react-navigation`](https://reactnavigation.org)
-
-See the [Navigation guide](/guides/navigation) for details on navigating to other screens from within a sheet.
-
 ## Unable to Drag on Android
 
 If sheet contains `ScrollView` and the content height is smaller than the sheet height, scrolling may not work properly due to a React Native framework limitation. This is because the `ScrollView` won't be scrollable when there's no overflow.
