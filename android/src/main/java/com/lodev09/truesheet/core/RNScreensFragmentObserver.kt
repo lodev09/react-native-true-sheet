@@ -78,9 +78,7 @@ class RNScreensFragmentObserver(
     /**
      * Check if fragment is from react-native-screens.
      */
-    private fun isScreensFragment(fragment: Fragment): Boolean {
-      return fragment.javaClass.name.startsWith(RN_SCREENS_PACKAGE)
-    }
+    private fun isScreensFragment(fragment: Fragment): Boolean = fragment.javaClass.name.startsWith(RN_SCREENS_PACKAGE)
 
     /**
      * Check if fragment is a react-native-screens modal (fullScreenModal, transparentModal, or formSheet).
