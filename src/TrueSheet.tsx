@@ -346,6 +346,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
     return (
       <TrueSheetViewNativeComponent
+        {...rest}
         ref={this.nativeRef}
         style={styles.sheetView}
         detents={resolvedDetents}
@@ -373,7 +374,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
-        {...rest}
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>

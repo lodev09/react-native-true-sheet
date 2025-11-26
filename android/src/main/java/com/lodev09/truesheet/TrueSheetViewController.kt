@@ -19,6 +19,7 @@ import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -391,7 +392,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun present(detentIndex: Int, animated: Boolean = true) {
     val dialog = this.dialog ?: run {
-      // Dialog not created yet - this shouldn't happen but handle gracefully
+      RNLog.w(reactContext, "TrueSheet: No dialog available. Ensure the sheet is mounted before presenting.")
       return
     }
 

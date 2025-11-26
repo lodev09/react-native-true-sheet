@@ -87,7 +87,7 @@ using namespace facebook::react;
 }
 
 - (void)setupContentScrollViewPinning {
-  if (_contentView) {
+  if (_scrollViewPinningSet && _contentView) {
     [_contentView setupScrollViewPinning:_scrollViewPinningEnabled withHeaderView:_headerView];
   }
 }
@@ -117,7 +117,7 @@ using namespace facebook::react;
     _headerView.delegate = self;
 
     // Re-apply scroll view pinning with header
-    if (_scrollViewPinningSet && _contentView) {
+    if (_contentView) {
       [self setupContentScrollViewPinning];
     }
 
@@ -149,7 +149,7 @@ using namespace facebook::react;
     _headerView = nil;
 
     // Re-apply scroll view pinning without header
-    if (_scrollViewPinningSet && _contentView) {
+    if (_contentView) {
       [self setupContentScrollViewPinning];
     }
 

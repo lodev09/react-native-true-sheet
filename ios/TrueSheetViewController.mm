@@ -604,6 +604,8 @@
 - (void)setupSheetProps {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet) {
+    RCTLogWarn(
+      @"TrueSheet: No sheet presentation controller available. Ensure the view controller is presented modally.");
     return;
   }
 
