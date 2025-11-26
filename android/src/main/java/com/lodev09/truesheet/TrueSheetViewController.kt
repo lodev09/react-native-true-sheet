@@ -831,6 +831,45 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     reactContext.reactApplicationContext.handleException(RuntimeException(t))
   }
 
+  /**
+   * Override to dispatch touch events to footer when it's positioned outside container bounds.
+   * This is necessary because the footer is positioned absolutely and may extend beyond the
+   * container's clipping bounds when the sheet is expanded to full height.
+   */
+  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    val footer = containerView?.footerView
+    if (footer != null && footer.visibility == View.VISIBLE) {
+      // Get footer's position in screen coordinates
+      val footerLocation = ScreenUtils.getScreenLocation(footer)
+
+      // Get touch position in screen coordinates
+      val touchScreenX = event.rawX.toInt()
+      val touchScreenY = event.rawY.toInt()
+
+      // Check if touch is within footer bounds (in screen coordinates)
+      if (touchScreenX >= footerLocation[0] &&
+        touchScreenX <= footerLocation[0] + footer.width &&
+        touchScreenY >= footerLocation[1] &&
+        touchScreenY <= footerLocation[1] + footer.height
+      ) {
+        // Transform touch to footer's local coordinates
+        val localX = touchScreenX - footerLocation[0]
+        val localY = touchScreenY - footerLocation[1]
+
+        // Create a copy of the event with local coordinates
+        val localEvent = MotionEvent.obtain(event)
+        localEvent.setLocation(localX.toFloat(), localY.toFloat())
+
+        val handled = footer.dispatchTouchEvent(localEvent)
+        localEvent.recycle()
+
+        if (handled) return true
+      }
+    }
+
+    return super.dispatchTouchEvent(event)
+  }
+
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let { eventDispatcher ->
       jSTouchDispatcher.handleTouchEvent(event, eventDispatcher, reactContext)

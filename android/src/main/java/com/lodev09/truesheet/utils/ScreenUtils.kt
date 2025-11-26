@@ -109,14 +109,22 @@ object ScreenUtils {
   }
 
   /**
+   * Get the location of a view in screen coordinates
+   *
+   * @param view The view to get screen location for
+   * @return IntArray with [x, y] coordinates in screen space
+   */
+  fun getScreenLocation(view: View): IntArray {
+    val location = IntArray(2)
+    view.getLocationOnScreen(location)
+    return location
+  }
+
+  /**
    * Get the Y coordinate of a view in screen coordinates
    *
    * @param view The view to get screen Y coordinate for
    * @return Y coordinate in screen space
    */
-  fun getScreenY(view: View): Int {
-    val location = IntArray(2)
-    view.getLocationOnScreen(location)
-    return location[1]
-  }
+  fun getScreenY(view: View): Int = getScreenLocation(view)[1]
 }

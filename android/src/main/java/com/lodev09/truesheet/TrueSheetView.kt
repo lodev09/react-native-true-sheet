@@ -215,8 +215,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       DidPresentEvent(surfaceId, id, index, position)
     )
 
-    // Set our touch event dispatcher on the view controller
+    // Set our touch event dispatcher on the view controller and footer
     viewController.eventDispatcher = eventDispatcher
+    containerView?.footerView?.eventDispatcher = eventDispatcher
   }
 
   override fun viewControllerWillDismiss() {
@@ -225,8 +226,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       WillDismissEvent(surfaceId, id)
     )
 
-    // Clear our touch event dispatcher on the view controller
+    // Clear our touch event dispatcher on the view controller and footer
     viewController.eventDispatcher = null
+    containerView?.footerView?.eventDispatcher = null
   }
 
   override fun viewControllerDidDismiss() {

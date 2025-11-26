@@ -120,7 +120,7 @@ using namespace facebook::react;
     if (_contentView) {
       [self setupContentScrollViewPinning];
     }
-    
+
     // Notify initial header size
     [self headerViewDidChangeSize:_headerView.frame.size];
   }
