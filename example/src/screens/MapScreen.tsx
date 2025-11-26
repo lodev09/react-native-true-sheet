@@ -17,7 +17,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Footer, Spacer } from '../components';
+import { Button, Footer, Header, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -110,8 +110,8 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         // dismissible={false}
         // pageSizing={false}
-        // fullScreen
         style={styles.content}
+        // edgeToEdgeFullScreen
         initialDetentIndex={0}
         onLayout={(e) => {
           console.log(e.nativeEvent.layout.width, e.nativeEvent.layout.height);
@@ -130,6 +130,7 @@ export const MapScreen = () => {
           console.log('Sheet is ready!');
         }}
         footer={<Footer />}
+        header={<Header />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>

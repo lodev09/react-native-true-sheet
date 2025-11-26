@@ -65,20 +65,16 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   /**
    * The content view height
    */
-  val contentHeight: Int
-    get() = contentView?.height ?: 0
-
+  var contentHeight: Int = 0
   /**
    * The header view height
    */
-  val headerHeight: Int
-    get() = headerView?.height ?: 0
+  var headerHeight: Int = 0
 
   /**
    * The footer view height
    */
-  val footerHeight: Int
-    get() = footerView?.height ?: 0
+  var footerHeight: Int = 0
 
   init {
     // Container should not clip children to allow footer to position absolutely
@@ -127,6 +123,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetContentViewDelegate Implementation ====================
 
   override fun contentViewDidChangeSize(width: Int, height: Int) {
+    contentHeight = height
     // Forward content size changes to controller for sheet resizing
     delegate?.containerViewContentDidChangeSize(width, height)
   }
@@ -134,6 +131,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetHeaderViewDelegate Implementation ====================
 
   override fun headerViewDidChangeSize(width: Int, height: Int) {
+    headerHeight = height
     // Forward header size changes to host view
     delegate?.containerViewHeaderDidChangeSize(width, height)
   }
@@ -141,6 +139,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetFooterViewDelegate Implementation ====================
 
   override fun footerViewDidChangeSize(width: Int, height: Int) {
+    footerHeight = height
     // Forward footer size changes to host view for repositioning
     delegate?.containerViewFooterDidChangeSize(width, height)
   }

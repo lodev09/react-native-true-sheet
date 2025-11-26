@@ -101,17 +101,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       null
     }
 
-  /**
-   * Header view from the container
-   */
-  private val headerView: TrueSheetHeaderView?
-    get() = containerView?.headerView
+  private val contentHeight: Int
+    get() = containerView?.contentHeight ?: 0
 
-  /**
-   * Footer view from the container
-   */
-  private val footerView: TrueSheetFooterView?
-    get() = containerView?.footerView
+  private val headerHeight: Int
+    get() = containerView?.headerHeight ?: 0
 
   /**
    * Track if the dialog is currently being dragged
@@ -123,6 +117,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   var isPresented = false
     private set
+
+  val statusBarHeight: Int
+    get() = ScreenUtils.getStatusBarHeight(reactContext)
 
   private val edgeToEdgeEnabled: Boolean
     get() {
@@ -140,7 +137,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Top inset to apply to sheet max height calculation (only when not edgeToEdgeFullScreen)
    */
   private val sheetTopInset: Int
-    get() = if (edgeToEdgeEnabled && !edgeToEdgeFullScreen) ScreenUtils.getStatusBarHeight(reactContext) else 0
+    get() = if (edgeToEdgeEnabled && !edgeToEdgeFullScreen) statusBarHeight else 0
 
   /**
    * Current active detent index
@@ -183,12 +180,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var screenWidth = 0
 
   var maxSheetHeight: Int? = null
-
-  /**
-   * The content height from the container view.
-   * Set by the host view when content size changes.
-   */
-  var contentHeight: Int = 0
 
   var dismissible: Boolean = true
     set(value) {
@@ -579,9 +570,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun positionFooter(slideOffset: Float? = null) {
-    val footer = footerView ?: return
+    val footerView = containerView?.footerView ?: return
+
     val bottomSheet = bottomSheetView ?: return
-    val footerHeight = footer.height
+    val footerHeight = footerView.height
 
     val bottomSheetY = ScreenUtils.getScreenY(bottomSheet)
 
@@ -595,9 +587,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Clamp footer position to prevent it from going off screen when positioning at the top
     // This happens when fullScreen is enabled in edge-to-edge mode
-    val statusBarHeight = ScreenUtils.getStatusBarHeight(reactContext)
     val maxAllowedY = (screenHeight - statusBarHeight - footerHeight).toFloat()
-    footer.y = minOf(footerY, maxAllowedY)
+    footerView.y = minOf(footerY, maxAllowedY)
   }
 
   /**
@@ -682,7 +673,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
       // -1.0 represents "auto"
-      contentHeight
+      // total height of the content + header
+      contentHeight + headerHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -811,9 +803,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
 
-    // Subtract header height from container height for content area calculation
-    val headerHeight = headerView?.height ?: 0
-    val effectiveHeight = h - headerHeight
+    // Calculate effective content height by subtracting header space.
+    // We subtract headerHeight * 2 because both native layout and Yoga layout
+    // account for the header. Since headerView.y is 0, headerView.bottom equals
+    // its height, effectively doubling the space we need to subtract.
+    val effectiveHeight = h - headerHeight * 2
 
     // Notify delegate about size change so host view can update state
     delegate?.viewControllerDidChangeSize(w, effectiveHeight)

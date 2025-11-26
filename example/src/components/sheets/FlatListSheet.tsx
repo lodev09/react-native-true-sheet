@@ -25,6 +25,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       blurTint="dark"
       backgroundColor={DARK}
       keyboardMode="pan"
+      edgeToEdgeFullScreen
       fitScrollView
       header={
         <Header>
