@@ -22,25 +22,17 @@ class TrueSheetContentView(context: ThemedReactContext) : ReactViewGroup(context
   private var lastWidth = 0
   private var lastHeight = 0
 
-  override fun onLayout(
-    changed: Boolean,
-    left: Int,
-    top: Int,
-    right: Int,
-    bottom: Int
-  ) {
-    super.onLayout(changed, left, top, right, bottom)
+  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    super.onSizeChanged(w, h, oldw, oldh)
 
-    // Notify delegate when content size changes
-    val newWidth = right - left
-    val newHeight = bottom - top
-
-    if (newWidth != lastWidth || newHeight != lastHeight) {
-      lastWidth = newWidth
-      lastHeight = newHeight
-
-      // Notify delegate of size change
-      delegate?.contentViewDidChangeSize(newWidth, newHeight)
+    if (w != lastWidth || h != lastHeight) {
+      lastWidth = w
+      lastHeight = h
+      delegate?.contentViewDidChangeSize(w, h)
     }
+  }
+
+  companion object {
+    const val TAG_NAME = "TrueSheet"
   }
 }

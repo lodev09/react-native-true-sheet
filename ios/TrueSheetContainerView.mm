@@ -120,11 +120,9 @@ using namespace facebook::react;
     if (_contentView) {
       [self setupContentScrollViewPinning];
     }
-
-    // Notify delegate that header was mounted
-    if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
-      [self.delegate containerViewHeaderDidChangeSize:_headerView.frame.size];
-    }
+    
+    // Notify initial header size
+    [self headerViewDidChangeSize:_headerView.frame.size];
   }
 
   // Handle footer view mounting
@@ -154,9 +152,7 @@ using namespace facebook::react;
     }
 
     // Notify delegate that header was unmounted (height is now 0)
-    if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
-      [self.delegate containerViewHeaderDidChangeSize:CGSizeZero];
-    }
+    [self headerViewDidChangeSize:CGSizeZero];
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {

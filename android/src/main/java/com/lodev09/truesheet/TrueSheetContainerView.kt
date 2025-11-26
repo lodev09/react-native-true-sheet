@@ -102,7 +102,9 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     }
   }
 
-  override fun removeView(view: View?) {
+  override fun removeViewAt(index: Int) {
+    val view = getChildAt(index)
+
     // Clean up delegate when content view is removed
     if (view is TrueSheetContentView) {
       view.delegate = null
@@ -111,6 +113,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     // Clean up delegate when header view is removed
     if (view is TrueSheetHeaderView) {
       view.delegate = null
+      headerViewDidChangeSize(0, 0)
     }
 
     // Clean up delegate when footer view is removed
@@ -118,7 +121,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
       view.delegate = null
     }
 
-    super.removeView(view)
+    super.removeViewAt(index)
   }
 
   // ==================== TrueSheetContentViewDelegate Implementation ====================
@@ -143,5 +146,9 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
     footerHeight = height
     // Forward footer size changes to host view for repositioning
     delegate?.containerViewFooterDidChangeSize(width, height)
+  }
+
+  companion object {
+    const val TAG_NAME = "TrueSheet"
   }
 }

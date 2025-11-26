@@ -55,6 +55,7 @@ using namespace facebook::react;
   NSInteger _initialDetentIndex;
   BOOL _fitScrollView;
   BOOL _initialDetentAnimated;
+  BOOL _isSheetUpdatePending;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -75,6 +76,7 @@ using namespace facebook::react;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
     _fitScrollView = NO;
+    _isSheetUpdatePending = NO;
   }
   return self;
 }
@@ -386,15 +388,30 @@ using namespace facebook::react;
 
 - (void)updateSheetIfNeeded {
   // Update detents if sheet is already presented
-  if (_controller.isPresented) {
+  if (!_controller.isPresented) {
+    return;
+  }
+
+  // Skip if an update is already pending
+  if (_isSheetUpdatePending) {
+    return;
+  }
+
+  _isSheetUpdatePending = YES;
+
+  // Use dispatch_async to ensure all layout passes are complete before reconfiguring
+  // This handles cases where content and header size changes happen in sequence
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self->_isSheetUpdatePending = NO;
+
     // Tell controller that we are transitioning from layout changes.
     // Controller viewDidLayoutSubviews will handle position notification.
-    _controller.layoutTransitioning = YES;
+    self->_controller.layoutTransitioning = YES;
 
-    [_controller.sheetPresentationController animateChanges:^{
+    [self->_controller.sheetPresentationController animateChanges:^{
       [self->_controller setupSheetDetents];
     }];
-  }
+  });
 }
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize {

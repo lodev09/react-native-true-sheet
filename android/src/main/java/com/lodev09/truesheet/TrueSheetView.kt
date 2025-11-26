@@ -70,6 +70,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
 
+  // Flag to prevent multiple pending sheet updates
+  private var isSheetUpdatePending: Boolean = false
+
   init {
     reactContext.addLifecycleEventListener(this)
 
@@ -156,19 +159,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun getChildCount(): Int = viewController.childCount
   override fun getChildAt(index: Int): View? = viewController.getChildAt(index)
 
-  override fun removeView(child: View?) {
-    if (child != null) {
-      // Clean up container delegate
-      if (child is TrueSheetContainerView) {
-        child.delegate = null
-      }
-
-      viewController.removeView(child)
-    }
-  }
-
   override fun removeViewAt(index: Int) {
     val child = getChildAt(index)
+
+    // Clean up container delegate
+    if (child is TrueSheetContainerView) {
+      child.delegate = null
+    }
+
     viewController.removeView(child)
   }
 
@@ -386,11 +384,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // Reconfigure sheet detents with new content height
-    viewController.setupSheetDetents()
+    // Skip if an update is already pending
+    if (isSheetUpdatePending) {
+      return
+    }
 
-    // Use post to ensure layout is complete before positioning footer
+    isSheetUpdatePending = true
+
+    // Use post to ensure all layout passes are complete before reconfiguring
+    // This handles cases where content and header size changes happen in sequence
     viewController.post {
+      isSheetUpdatePending = false
+      viewController.setupSheetDetents()
       viewController.positionFooter()
     }
   }
@@ -404,7 +409,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
     updateSheetIfNeeded()
 
-    // Update our state after header change size
+    // Update our state after header change size for scroll view behavior to work
     val sheetHeight = TrueSheetViewController.getEffectiveSheetHeight(viewController.height, height)
     updateState(viewController.width, sheetHeight)
   }

@@ -83,9 +83,7 @@ export const MapScreen = () => {
   };
 
   const toggleHeader = () => {
-    setShowHeader((prev) => {
-      return !prev;
-    });
+    setShowHeader((prev) => !prev);
   };
 
   return (
