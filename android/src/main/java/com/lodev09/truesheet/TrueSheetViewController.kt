@@ -13,6 +13,7 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
+import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.facebook.react.R
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -205,6 +206,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var windowAnimation: Int = 0
 
+  /**
+   * Observer for react-native-screens modal fragments.
+   */
+  private var rnScreensObserver: RNScreensFragmentObserver? = null
+
   init {
     screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
     screenWidth = ScreenUtils.getScreenWidth(reactContext)
@@ -251,7 +257,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       window?.apply {
         // Store current windowAnimation value to toggle later
         windowAnimation = attributes.windowAnimations
+
       }
+
+      // Setup fragment lifecycle observer to detect react-native-screens modal presentation
+      setupModalObserver()
 
       // Setup dialog lifecycle listeners
       setupDialogListeners(this)
@@ -275,6 +285,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setOnCancelListener(null)
       setOnDismissListener(null)
     }
+
+    // Cleanup observers
+    cleanupModalObserver()
 
     // Remove this view from its parent to allow re-attachment on next presentation
     sheetContainer?.removeView(this)
@@ -393,6 +406,41 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     )
   }
+
+  /**
+   * Setup fragment lifecycle observer to detect react-native-screens modal presentation.
+   * Hides TrueSheet when a modal is presented and shows it again when dismissed.
+   */
+  private fun setupModalObserver() {
+    rnScreensObserver = RNScreensFragmentObserver(
+      reactContext = reactContext,
+      onModalPresented = {
+        if (isPresented) {
+          dialog?.window?.decorView?.visibility = View.INVISIBLE
+        }
+      },
+      onModalDismissed = {
+        if (isPresented) {
+          dialog?.window?.decorView?.visibility = View.VISIBLE
+        }
+      }
+    )
+    rnScreensObserver?.start()
+  }
+
+  /**
+   * Cleanup modal observer when dialog is destroyed.
+   */
+  private fun cleanupModalObserver() {
+    rnScreensObserver?.stop()
+    rnScreensObserver = null
+  }
+
+  /**
+   * Check if there are active modal fragments being tracked.
+   * Used to prevent view unregistration during modal navigation.
+   */
+  fun hasActiveModals(): Boolean = rnScreensObserver?.hasActiveModals() ?: false
 
   // ==================== Presentation ====================
 

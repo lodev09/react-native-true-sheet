@@ -100,16 +100,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun setId(id: Int) {
     super.setId(id)
-
     viewController.id = id
     TrueSheetModule.registerView(this, id)
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    onDropInstance()
 
-    TrueSheetModule.unregisterView(id)
+    // Don't unregister if we have active modals - we need the view for recovery
+    if (viewController.hasActiveModals()) {
+      return
+    }
+
+    onDropInstance()
   }
 
   /**
