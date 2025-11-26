@@ -10,41 +10,7 @@ This guide will help you migrate from TrueSheet v2 to v3. Version 3 brings full 
 
 ## Breaking Changes
 
-### 1. Background and Blur Behavior Changes
-
-#### `backgroundColor` Default Value
-
-The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **system default** when not provided, which matches the platform's native sheet background.
-
-**Migration:**
-
-```tsx
-// ❌ v2 - backgroundColor defaults to white
-<TrueSheet />
-
-// ✅ v3 - backgroundColor uses system default (transparent on iOS)
-// If you want white background, explicitly set it:
-<TrueSheet backgroundColor="white" />
-```
-
-#### `blurTint` No Longer Overrides `backgroundColor`
-
-In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
-
-**Migration:**
-
-```tsx
-// ❌ v2 - blurTint overrides backgroundColor (backgroundColor is ignored)
-<TrueSheet backgroundColor="red" blurTint="light" />
-
-// ✅ v3 - blurTint applies over backgroundColor (red + light blur)
-<TrueSheet backgroundColor="red" blurTint="light" />
-
-// If you want only blur without background color:
-<TrueSheet blurTint="light" />
-```
-
-### 2. Fabric Architecture Required
+### 1. Fabric Architecture Required
 
 Version 3 is built exclusively for React Native's **New Architecture (Fabric)**. The old Paper architecture is no longer supported.
 
@@ -76,7 +42,7 @@ newArchEnabled=true
 Check out the [React Native New Architecture guide](https://reactnative.dev/docs/new-architecture-intro) for more details.
 :::
 
-### 3. Prop Renames
+### 2. Prop Renames
 
 Several props have been renamed for better clarity:
 
@@ -122,7 +88,7 @@ Several props have been renamed for better clarity:
 />
 ```
 
-### 4. Removed Props
+### 3. Removed Props
 
 The following props have been removed in v3:
 
@@ -154,7 +120,7 @@ See the [Scrolling guide](/guides/scrolling) for more information about `fitScro
 
 The `contentContainerStyle` prop has been removed as it's no longer needed with the new architecture. Style your content directly instead.
 
-### 5. Detent Value Changes
+### 4. Detent Value Changes
 
 Detent values now use **fractional values (0-1)** instead of percentage strings.
 
@@ -171,6 +137,40 @@ Detent values now use **fractional values (0-1)** instead of percentage strings.
 :::tip
 The `"auto"` detent still works the same way!
 :::
+
+### 5. Background and Blur Behavior Changes
+
+#### `backgroundColor` Default Value
+
+The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **system default** when not provided, which matches the platform's native sheet background.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - backgroundColor defaults to white
+<TrueSheet />
+
+// ✅ v3 - backgroundColor uses system default (transparent on iOS)
+// If you want white background, explicitly set it:
+<TrueSheet backgroundColor="white" />
+```
+
+#### `blurTint` No Longer Overrides `backgroundColor`
+
+In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
+
+**Migration:**
+
+```tsx
+// ❌ v2 - blurTint overrides backgroundColor (backgroundColor is ignored)
+<TrueSheet backgroundColor="red" blurTint="light" />
+
+// ✅ v3 - blurTint applies over backgroundColor (red + light blur)
+<TrueSheet backgroundColor="red" blurTint="light" />
+
+// If you want only blur without background color:
+<TrueSheet blurTint="light" />
+```
 
 ## New Features in v3
 
