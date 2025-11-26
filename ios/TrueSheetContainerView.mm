@@ -29,7 +29,7 @@ using namespace facebook::react;
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
-  BOOL _scrollViewPinned;
+  BOOL _scrollViewPinningSet;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -46,7 +46,7 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
-    _scrollViewPinned = NO;
+    _scrollViewPinningSet = NO;
   }
   return self;
 }
@@ -81,10 +81,14 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupContentScrollViewPinning:(BOOL)pinned {
-  _scrollViewPinned = pinned;
+- (void)setScrollViewPinningEnabled:(BOOL)scrollViewPinningEnabled {
+  _scrollViewPinningEnabled = scrollViewPinningEnabled;
+  _scrollViewPinningSet = YES;
+}
+
+- (void)setupContentScrollViewPinning {
   if (_contentView) {
-    [_contentView setupScrollViewPinning:pinned withHeaderView:_headerView];
+    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled withHeaderView:_headerView];
   }
 }
 
@@ -111,6 +115,16 @@ using namespace facebook::react;
 
     _headerView = (TrueSheetHeaderView *)childComponentView;
     _headerView.delegate = self;
+
+    // Re-apply scroll view pinning with header
+    if (_scrollViewPinningSet && _contentView) {
+      [self setupContentScrollViewPinning];
+    }
+
+    // Notify delegate that header was mounted
+    if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
+      [self.delegate containerViewHeaderDidChangeSize:_headerView.frame.size];
+    }
   }
 
   // Handle footer view mounting
@@ -135,7 +149,14 @@ using namespace facebook::react;
     _headerView = nil;
 
     // Re-apply scroll view pinning without header
-    [self setupContentScrollViewPinning:_scrollViewPinned];
+    if (_scrollViewPinningSet && _contentView) {
+      [self setupContentScrollViewPinning];
+    }
+
+    // Notify delegate that header was unmounted (height is now 0)
+    if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
+      [self.delegate containerViewHeaderDidChangeSize:CGSizeZero];
+    }
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {

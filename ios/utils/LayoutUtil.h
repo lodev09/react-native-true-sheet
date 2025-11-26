@@ -43,8 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Unpins a view by removing its constraints and re-enabling autoresizing mask translation
  * @param view The view to unpin
+ * @param parentView The parent view that holds the constraints (optional, will use superview if nil)
  */
-+ (void)unpinView:(UIView *)view;
++ (void)unpinView:(UIView *)view fromParentView:(nullable UIView *)parentView;
 
 @end
 

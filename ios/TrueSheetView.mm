@@ -242,6 +242,11 @@ using namespace facebook::react;
 
   // Store ScrollView fit prop
   _fitScrollView = newProps.fitScrollView;
+
+  if (_containerView) {
+    // Set scrollView pinning
+    _containerView.scrollViewPinningEnabled = _fitScrollView;
+  }
 }
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
@@ -279,7 +284,7 @@ using namespace facebook::react;
 
     // Update ScrollView Pinning
     if (_containerView) {
-      [_containerView setupContentScrollViewPinning:_fitScrollView];
+      [_containerView setupContentScrollViewPinning];
     }
 
     // Apply changes to presented sheet if needed
@@ -335,8 +340,9 @@ using namespace facebook::react;
       _controller.headerHeight = @(headerHeight);
     }
 
-    // Update fitScrollView setting on container
-    [_containerView setupContentScrollViewPinning:_fitScrollView];
+    // Apply scroll view pinning setting and setup
+    _containerView.scrollViewPinningEnabled = _fitScrollView;
+    [_containerView setupContentScrollViewPinning];
 
     // Emit onMount event when container is mounted
     [OnMountEvent emit:_eventEmitter];
@@ -353,7 +359,7 @@ using namespace facebook::react;
     }
 
     // Unpin and remove from view hierarchy
-    [LayoutUtil unpinView:_containerView];
+    [LayoutUtil unpinView:_containerView fromParentView:nil];
     [_containerView removeFromSuperview];
 
     _containerView = nil;

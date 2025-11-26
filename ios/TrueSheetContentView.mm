@@ -53,17 +53,20 @@ using namespace facebook::react;
   }
 }
 
-- (void)unpinScrollView {
+- (void)unpinScrollViewFromParentView:(UIView *)parentView {
   // Unpin previous scroll view if exists
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView];
-    _pinnedScrollView = nil;
+    [LayoutUtil unpinView:_pinnedScrollView fromParentView:parentView];
   }
 }
 
 - (void)setupScrollViewPinning:(BOOL)pinned withHeaderView:(UIView *)headerView {
+  // Pin to container view (parent of content view)
+  UIView *containerView = self.superview;
+
   if (!pinned) {
-    [self unpinScrollView];
+    [self unpinScrollViewFromParentView:containerView];
+    _pinnedScrollView = nil;
     return;
   }
 
@@ -71,26 +74,22 @@ using namespace facebook::react;
   // Pinning ensures ScrollView fills the available area and scrolls correctly with the sheet
   RCTScrollViewComponentView *scrollView = [self findScrollView];
 
-  if (scrollView) {
+  if (scrollView && containerView) {
     // Always unpin first to remove old constraints
-    [self unpinScrollView];
+    [self unpinScrollViewFromParentView:containerView];
 
-    // Pin to container view (parent of content view)
-    UIView *containerView = self.superview;
-    if (containerView) {
-      if (headerView) {
-        // Pin ScrollView below the header view
-        [LayoutUtil pinView:scrollView
-               toParentView:containerView
-                withTopView:headerView
-                      edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
-      } else {
-        // No header, pin to all edges of container
-        [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
-      }
-
-      _pinnedScrollView = scrollView;
+    if (headerView) {
+      // Pin ScrollView below the header view
+      [LayoutUtil pinView:scrollView
+             toParentView:containerView
+              withTopView:headerView
+                    edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
+    } else {
+      // No header, pin to all edges of container
+      [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
     }
+
+    _pinnedScrollView = scrollView;
   }
 }
 
@@ -110,7 +109,7 @@ using namespace facebook::react;
 
   // Remove scroll view constraints
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView];
+    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
     _pinnedScrollView = nil;
   }
 }

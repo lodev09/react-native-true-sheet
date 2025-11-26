@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,7 +18,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Footer, Header, Spacer } from '../components';
+import { Button, Footer, Header, Input, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +49,7 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
+  const [showHeader, setShowHeader] = useState(false);
   const [spacerCount, setSpacerCount] = useState(0);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
@@ -81,6 +83,12 @@ export const MapScreen = () => {
     console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
   };
 
+  const toggleHeader = () => {
+    setShowHeader((prev) => {
+      return !prev;
+    });
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -110,7 +118,8 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         // dismissible={false}
         // pageSizing={false}
-        style={styles.content}
+        // style={styles.content}
+        fitScrollView
         // edgeToEdgeFullScreen
         initialDetentIndex={0}
         onLayout={(e) => {
@@ -129,36 +138,47 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        footer={<Footer />}
-        header={<Header />}
+        footer={<Footer text="TOGGLE HEADER" onPress={toggleHeader} />}
+        header={
+          showHeader ? (
+            <Header>
+              <Input />
+            </Header>
+          ) : undefined
+        }
       >
-        <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet 💩</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button
-          text="TrueSheet ScrollView"
-          loading={scrollViewLoading}
-          disabled={scrollViewLoading}
-          onPress={presentScrollViewSheet}
-        />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
-        <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
-
-        <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
-        {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
-
-        {Array.from({ length: spacerCount }, (_, i) => (
-          <Spacer key={i} />
-        ))}
-
-        <Spacer />
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        <ScrollView
+          nestedScrollEnabled
+          contentContainerStyle={[
+            styles.content,
+            { paddingTop: showHeader ? SPACING : SPACING * 2 },
+          ]}
+        >
+          <View style={styles.heading}>
+            <Text style={styles.title}>True Sheet 💩</Text>
+            <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+          </View>
+          <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+          <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+          <Button
+            text="TrueSheet ScrollView"
+            loading={scrollViewLoading}
+            disabled={scrollViewLoading}
+            onPress={presentScrollViewSheet}
+          />
+          <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+          <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+          <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+          <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
+          <Spacer />
+          <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
+          {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
+          {Array.from({ length: spacerCount }, (_, i) => (
+            <Spacer key={i} />
+          ))}
+          <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
+          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        </ScrollView>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
@@ -195,7 +215,6 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     gap: GAP,
-    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   heading: {

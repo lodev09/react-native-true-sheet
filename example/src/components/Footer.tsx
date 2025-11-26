@@ -1,18 +1,16 @@
-import { StyleSheet, Text, TouchableOpacity, View, type ViewProps } from 'react-native';
+import { StyleSheet, Text, type PressableProps, Pressable } from 'react-native';
 
 import { DARK_GRAY, FOOTER_HEIGHT } from '../utils';
 
-type FooterProps = ViewProps;
+interface FooterProps extends PressableProps {
+  text?: string;
+}
 
-export const Footer = ({ children, ...rest }: FooterProps) => {
+export const Footer = ({ children, text = 'FOOTER', ...rest }: FooterProps) => {
   return (
-    <View style={styles.container} {...rest}>
-      {children || (
-        <TouchableOpacity onPress={() => console.log('footer pressed')}>
-          <Text style={styles.text}>FOOTER</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    <Pressable style={styles.container} {...rest}>
+      {children || <Text style={styles.text}>{text}</Text>}
+    </Pressable>
   );
 };
 
