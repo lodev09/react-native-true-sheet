@@ -12,7 +12,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
-import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
