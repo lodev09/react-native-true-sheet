@@ -66,6 +66,7 @@ class TrueSheetContainerView(private val reactContext: ThemedReactContext) :
    * The content view height
    */
   var contentHeight: Int = 0
+
   /**
    * The header view height
    */

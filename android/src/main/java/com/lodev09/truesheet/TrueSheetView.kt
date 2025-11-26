@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -118,9 +117,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   fun showOrUpdate() {
     if (viewController.isPresented) {
-      viewController.setupSheetDetents()
+      updateSheetIfNeeded()
       viewController.setStateForDetentIndex(viewController.currentDetentIndex)
-      viewController.positionFooter()
     }
   }
 
@@ -382,12 +380,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dismiss()
   }
 
-  // ==================== TrueSheetContainerViewDelegate Implementation ====================
-
-  override fun containerViewContentDidChangeSize(width: Int, height: Int) {
+  fun updateSheetIfNeeded() {
     // Update sheet size only when presented
-    if (!viewController.isPresented)
+    if (!viewController.isPresented) {
       return
+    }
 
     // Reconfigure sheet detents with new content height
     viewController.setupSheetDetents()
@@ -398,8 +395,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     }
   }
 
+  // ==================== TrueSheetContainerViewDelegate Implementation ====================
+
+  override fun containerViewContentDidChangeSize(width: Int, height: Int) {
+    updateSheetIfNeeded()
+  }
+
   override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
-    // Header size changes are handled by the controller via headerHeight property
+    updateSheetIfNeeded()
+
+    // Update our state after header change size
+    val sheetHeight = TrueSheetViewController.getEffectiveSheetHeight(viewController.height, height)
+    updateState(viewController.width, sheetHeight)
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {

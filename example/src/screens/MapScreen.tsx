@@ -17,7 +17,7 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Footer, Header, Spacer } from '../components';
+import { Button, Footer, Spacer } from '../components';
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRAY, SPACING } from '../utils';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -130,7 +130,6 @@ export const MapScreen = () => {
           console.log('Sheet is ready!');
         }}
         footer={<Footer />}
-        header={<Header />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -803,11 +802,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Only proceed if size actually changed
     if (w == oldw && h == oldh) return
 
-    // Calculate effective content height by subtracting header space.
-    // We subtract headerHeight * 2 because both native layout and Yoga layout
-    // account for the header. Since headerView.y is 0, headerView.bottom equals
-    // its height, effectively doubling the space we need to subtract.
-    val effectiveHeight = h - headerHeight * 2
+    val effectiveHeight = getEffectiveSheetHeight(h, headerHeight)
 
     // Notify delegate about size change so host view can update state
     delegate?.viewControllerDidChangeSize(w, effectiveHeight)
@@ -889,5 +884,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Material Design 3 default corner radius in dp
     const val DEFAULT_CORNER_RADIUS = 16
+
+    fun getEffectiveSheetHeight(sheetHeight: Int, headerHeight: Int): Int {
+      // Calculate effective content height by subtracting header space.
+      // We subtract headerHeight * 2 because both native layout and Yoga layout
+      // account for the header. Since headerView.y is 0, headerView.bottom equals
+      // its height, effectively doubling the space we need to subtract.
+      return sheetHeight - headerHeight * 2
+    }
   }
 }

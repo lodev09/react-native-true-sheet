@@ -14,8 +14,8 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetContentView.h"
-#import "TrueSheetHeaderView.h"
 #import "TrueSheetFooterView.h"
+#import "TrueSheetHeaderView.h"
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
