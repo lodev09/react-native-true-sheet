@@ -117,12 +117,7 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         // dismissible={false}
         // pageSizing={false}
-        style={[
-          styles.content,
-          {
-            paddingTop: showHeader ? SPACING : SPACING * 2,
-          },
-        ]}
+        style={[styles.content, { paddingTop: showHeader ? SPACING : SPACING * 2 }]}
         fitScrollView
         // edgeToEdgeFullScreen
         initialDetentIndex={0}

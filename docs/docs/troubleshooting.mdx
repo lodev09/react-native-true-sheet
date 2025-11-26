@@ -36,6 +36,33 @@ Note that we are using `flexGrow` instead of `flex` here. For some weird reason,
 
 See the [Navigation guide](/guides/navigation) for details on navigating to other screens from within a sheet.
 
+## Unable to Drag on Android
+
+If sheet contains `ScrollView` and the content height is smaller than the sheet height, scrolling may not work properly due to a React Native framework limitation. This is because the `ScrollView` won't be scrollable when there's no overflow.
+
+Related: [React Native PR #44099](https://github.com/facebook/react-native/pull/44099)
+
+**Workarounds:**
+
+1. Ensure your content height exceeds the sheet height, or use a `FlatList` with a minimum number of items.
+
+2. Set the `ScrollView`'s `minHeight` to the sheet height + 1 on layout. The extra pixel ensures the content overflows, enabling the scroll behavior. Note that this does not work with `'auto'` detent:
+
+```tsx
+const [minHeight, setMinHeight] = useState<number>()
+
+return (
+  <TrueSheet
+    detents={[0.5, 1]}
+    onLayout={(e) => setMinHeight(e.nativeEvent.layout.height + 1)}
+  >
+    <ScrollView style={{ minHeight }} nestedScrollEnabled>
+      <View />
+    </ScrollView>
+  </TrueSheet>
+)
+```
+
 ## Weird layout render
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
