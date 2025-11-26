@@ -16,10 +16,10 @@ export const Input = () => {
 
 const styles = StyleSheet.create({
   inputContainer: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: SPACING,
     height: INPUT_HEIGHT,
-    borderRadius: BORDER_RADIUS,
+    borderRadius: BORDER_RADIUS * 6,
     justifyContent: 'center',
   },
   input: {

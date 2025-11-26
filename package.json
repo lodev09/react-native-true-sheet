@@ -223,6 +223,9 @@
         "TrueSheetContentView": {
           "className": "TrueSheetContentView"
         },
+        "TrueSheetHeaderView": {
+          "className": "TrueSheetHeaderView"
+        },
         "TrueSheetFooterView": {
           "className": "TrueSheetFooterView"
         }

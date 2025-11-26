@@ -31,7 +31,15 @@ src/
 │   ├── TrueSheetContentViewNativeComponent.ts
 │   ├── TrueSheetHeaderViewNativeComponent.ts
 │   └── TrueSheetFooterViewNativeComponent.ts
+├── specs/
+│   └── NativeTrueSheetModule.ts               # TurboModule spec
+├── reanimated/                # Reanimated integration
+│   ├── index.ts
+│   ├── ReanimatedTrueSheet.tsx
+│   ├── ReanimatedTrueSheetProvider.tsx
+│   └── useReanimatedPositionChangeHandler.ts
 ├── TrueSheet.tsx              # Main React component
+├── TrueSheetGrabber.tsx       # Grabber component
 └── TrueSheet.types.ts         # TypeScript types
 
 ios/
@@ -41,14 +49,52 @@ ios/
 ├── TrueSheetHeaderView.mm/.h
 ├── TrueSheetFooterView.mm/.h
 ├── TrueSheetViewController.mm/.h  # UIViewController for sheet presentation
-└── TrueSheetModule.mm/.h      # TurboModule for imperative methods
+├── TrueSheetModule.mm/.h      # TurboModule for imperative methods
+├── TrueSheetComponentDescriptor.h
+├── events/                    # Event classes
+│   ├── OnDetentChangeEvent.mm/.h
+│   ├── OnDidDismissEvent.mm/.h
+│   ├── OnDidPresentEvent.mm/.h
+│   ├── OnDragBeginEvent.mm/.h
+│   ├── OnDragChangeEvent.mm/.h
+│   ├── OnDragEndEvent.mm/.h
+│   ├── OnMountEvent.mm/.h
+│   ├── OnPositionChangeEvent.mm/.h
+│   ├── OnWillDismissEvent.mm/.h
+│   └── OnWillPresentEvent.mm/.h
+└── utils/                     # Utility classes
+    ├── ConversionUtil.mm/.h
+    ├── GestureUtil.mm/.h
+    ├── LayoutUtil.mm/.h
+    └── WindowUtil.mm/.h
 
 android/src/main/java/com/lodev09/truesheet/
 ├── TrueSheetView.kt           # Host view
 ├── TrueSheetViewManager.kt    # View manager
 ├── TrueSheetContainerView.kt
+├── TrueSheetContainerViewManager.kt
+├── TrueSheetContentView.kt
+├── TrueSheetContentViewManager.kt
+├── TrueSheetHeaderView.kt
+├── TrueSheetHeaderViewManager.kt
+├── TrueSheetFooterView.kt
+├── TrueSheetFooterViewManager.kt
 ├── TrueSheetViewController.kt # Dialog/BottomSheet controller
-└── TrueSheetModule.kt         # TurboModule
+├── TrueSheetModule.kt         # TurboModule
+├── TrueSheetPackage.kt        # React Native package
+├── events/                    # Event classes
+│   ├── DetentChangeEvent.kt
+│   ├── DidDismissEvent.kt
+│   ├── DidPresentEvent.kt
+│   ├── DragBeginEvent.kt
+│   ├── DragChangeEvent.kt
+│   ├── DragEndEvent.kt
+│   ├── MountEvent.kt
+│   ├── PositionChangeEvent.kt
+│   ├── WillDismissEvent.kt
+│   └── WillPresentEvent.kt
+└── utils/
+    └── ScreenUtils.kt
 
 common/cpp/react/renderer/components/TrueSheetSpec/
 ├── TrueSheetViewState.h/.cpp           # Shared state (containerWidth)

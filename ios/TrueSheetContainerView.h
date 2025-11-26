@@ -44,6 +44,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)contentHeight;
 
 /**
+ * Returns the current header height
+ */
+- (CGFloat)headerHeight;
+
+/**
  * Updates footer layout constraints if needed
  */
 - (void)layoutFooter;

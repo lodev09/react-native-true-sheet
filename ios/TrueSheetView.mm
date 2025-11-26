@@ -329,6 +329,12 @@ using namespace facebook::react;
       _controller.contentHeight = @(contentHeight);
     }
 
+    // Get initial header height from container
+    CGFloat headerHeight = [_containerView headerHeight];
+    if (headerHeight > 0) {
+      _controller.headerHeight = @(headerHeight);
+    }
+
     // Update fitScrollView setting on container
     [_containerView setupContentScrollViewPinning:_fitScrollView];
 
@@ -372,13 +378,7 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetContainerViewDelegate
 
-- (void)containerViewContentDidChangeSize:(CGSize)newSize {
-  // Clamp content height to container height to prevent unbounded growth with scrollable content
-  CGFloat containerHeight = _controller.containerHeight;
-  CGFloat contentHeight = containerHeight > 0 ? MIN(newSize.height, containerHeight) : newSize.height;
-
-  _controller.contentHeight = @(contentHeight);
-
+- (void)updateSheetIfNeeded {
   // Update detents if sheet is already presented
   if (_controller.isPresented) {
     // Tell controller that we are transitioning from layout changes.
@@ -389,6 +389,16 @@ using namespace facebook::react;
       [self->_controller setupSheetDetents];
     }];
   }
+}
+
+- (void)containerViewContentDidChangeSize:(CGSize)newSize {
+  _controller.contentHeight = @(newSize.height);
+  [self updateSheetIfNeeded];
+}
+
+- (void)containerViewHeaderDidChangeSize:(CGSize)newSize {
+  _controller.headerHeight = @(newSize.height);
+  [self updateSheetIfNeeded];
 }
 
 #pragma mark - TrueSheetViewControllerDelegate

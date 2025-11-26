@@ -29,6 +29,7 @@ using namespace facebook::react;
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
+  BOOL _scrollViewPinned;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -45,6 +46,7 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
+    _scrollViewPinned = NO;
   }
   return self;
 }
@@ -65,6 +67,10 @@ using namespace facebook::react;
   return _contentView ? _contentView.frame.size.height : 0;
 }
 
+- (CGFloat)headerHeight {
+  return _headerView ? _headerView.frame.size.height : 0;
+}
+
 - (void)layoutFooter {
   if (_footerView) {
     // Force footer to reapply constraints on size change
@@ -76,8 +82,9 @@ using namespace facebook::react;
 }
 
 - (void)setupContentScrollViewPinning:(BOOL)pinned {
+  _scrollViewPinned = pinned;
   if (_contentView) {
-    [_contentView setupScrollViewPinning:pinned];
+    [_contentView setupScrollViewPinning:pinned withHeaderView:_headerView];
   }
 }
 
@@ -104,6 +111,11 @@ using namespace facebook::react;
 
     _headerView = (TrueSheetHeaderView *)childComponentView;
     _headerView.delegate = self;
+
+    // Re-apply scroll view pinning with header
+    if (_scrollViewPinned && _contentView) {
+      [_contentView setupScrollViewPinning:YES withHeaderView:_headerView];
+    }
   }
 
   // Handle footer view mounting
@@ -126,6 +138,11 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
     _headerView.delegate = nil;
     _headerView = nil;
+
+    // Re-apply scroll view pinning without header
+    if (_scrollViewPinned && _contentView) {
+      [_contentView setupScrollViewPinning:YES withHeaderView:nil];
+    }
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
