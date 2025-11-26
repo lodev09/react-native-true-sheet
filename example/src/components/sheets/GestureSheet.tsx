@@ -4,7 +4,7 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING, times } from '../../utils';
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { DemoContent } from '../DemoContent';
@@ -51,7 +51,6 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
-      grabberProps={{ color: GRABBER_COLOR }}
       onDidDismiss={() => console.log('Gesture sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(

@@ -2,7 +2,7 @@ import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'rea
 import { StyleSheet } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, GRABBER_COLOR, SPACING } from '../../utils';
+import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Input } from '../Input';
 import { Button } from '../Button';
@@ -41,7 +41,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
-      grabberProps={{ color: GRABBER_COLOR }}
       onDidDismiss={handleDismiss}
       onDidPresent={(e) =>
         console.log(

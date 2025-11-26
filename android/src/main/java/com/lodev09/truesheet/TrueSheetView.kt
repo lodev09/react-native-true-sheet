@@ -113,13 +113,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   /**
-   * showOrUpdate will display the Dialog. It is called by the manager once all properties are set
-   * because we need to know all of them before creating the Dialog. It is also smart during updates
-   * if the changed properties can be applied directly to the Dialog or require the recreation of a
-   * new Dialog.
+   * Finalizes property updates when the sheet is presented.
+   * Called by the manager once all properties are set.
    */
-  fun showOrUpdate() {
+  fun finalizeUpdates() {
     if (viewController.isPresented) {
+      viewController.setupBackground()
+      viewController.setupGrabber()
       updateSheetIfNeeded()
       viewController.setStateForDetentIndex(viewController.currentDetentIndex)
     }
@@ -190,7 +190,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun onHostResume() {
-    showOrUpdate()
+    finalizeUpdates()
   }
 
   override fun onHostPause() {
@@ -303,13 +303,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setCornerRadius(radius: Float) {
     if (viewController.sheetCornerRadius == radius) return
     viewController.sheetCornerRadius = radius
-    viewController.setupBackground()
   }
 
   fun setSheetBackgroundColor(color: Int) {
     if (viewController.sheetBackgroundColor == color) return
     viewController.sheetBackgroundColor = color
-    viewController.setupBackground()
   }
 
   fun setSoftInputMode(mode: Int) {
@@ -320,7 +318,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dismissible = dismissible
   }
 
-  fun setGrabber(grabber: Boolean) {}
+  fun setGrabber(grabber: Boolean) {
+    viewController.grabber = grabber
+  }
 
   fun setDetents(newDetents: MutableList<Double>) {
     viewController.detents = newDetents

@@ -37,7 +37,7 @@ class TrueSheetViewManager :
 
   override fun onAfterUpdateTransaction(view: TrueSheetView) {
     super.onAfterUpdateTransaction(view)
-    view.showOrUpdate()
+    view.finalizeUpdates()
   }
 
   override fun addEventEmitters(reactContext: ThemedReactContext, view: TrueSheetView) {

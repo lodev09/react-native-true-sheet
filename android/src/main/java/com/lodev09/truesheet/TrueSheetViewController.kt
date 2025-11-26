@@ -2,9 +2,11 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -191,6 +193,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
+  /**
+   * Whether to show the native grabber/handle.
+   * Follows Material Design 3 specs.
+   */
+  var grabber: Boolean = true
+
   var sheetCornerRadius: Float = -1f
   var sheetBackgroundColor: Int = 0
   var detents = mutableListOf(0.5, 1.0)
@@ -255,9 +263,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setCanceledOnTouchOutside(dismissible)
       setCancelable(dismissible)
       behavior.isHideable = dismissible
-
-      // Apply background color and corner radius
-      setupBackground()
     }
   }
 
@@ -289,6 +294,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Re-enable animation
       resetAnimation()
+
+      // Setup background and grabber on initial presentation
+      setupBackground()
+      setupGrabber()
 
       // Wait for the sheet to settle before notifying didPresent
       // The sheet animates to its final position after onShow fires
@@ -498,33 +507,81 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   /**
+   * Creates and adds the native grabber view to the bottom sheet.
+   * Follows Material Design 3 specs:
+   * - Width: 32dp
+   * - Height: 4dp
+   * - Color: #49454F with 0.4 alpha
+   * - Corner radius: 2dp (height/2)
+   * - Top margin: 16dp
+   */
+  fun setupGrabber() {
+    val bottomSheet = bottomSheetView ?: return
+
+    // Remove existing grabber if any
+    bottomSheet.findViewWithTag<View>(GRABBER_TAG)?.let {
+      bottomSheet.removeView(it)
+    }
+
+    // Don't add grabber if disabled
+    if (!grabber) return
+
+    // Create and add grabber view
+    val grabberView = View(reactContext).apply {
+      tag = GRABBER_TAG
+
+      // Set dimensions
+      val width = GRABBER_WIDTH.dpToPx().toInt()
+      val height = GRABBER_HEIGHT.dpToPx().toInt()
+      val topMargin = GRABBER_TOP_MARGIN.dpToPx().toInt()
+
+      layoutParams = FrameLayout.LayoutParams(width, height).apply {
+        gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
+        this.topMargin = topMargin
+      }
+
+      // Create rounded rectangle background
+      background = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = (GRABBER_HEIGHT / 2).dpToPx()
+        setColor(GRABBER_COLOR)
+      }
+
+      // Ensure grabber is above other content
+      elevation = 1f
+    }
+
+    bottomSheet.addView(grabberView)
+  }
+
+  /**
    * Setup background color and corner radius.
    */
   fun setupBackground() {
+    val bottomSheet = bottomSheetView ?: return
+
     // -1 is used as sentinel for system default corner radius
     val cornerRadius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
 
-    sheetContainer?.apply {
-      val outerRadii = floatArrayOf(
-        cornerRadius,
-        cornerRadius,
-        cornerRadius,
-        cornerRadius,
-        0f,
-        0f,
-        0f,
-        0f
-      )
+    val outerRadii = floatArrayOf(
+      cornerRadius,
+      cornerRadius,
+      cornerRadius,
+      cornerRadius,
+      0f,
+      0f,
+      0f,
+      0f
+    )
 
-      // 0 (transparent) is used as sentinel for "use system default"
-      val backgroundColor = if (sheetBackgroundColor != 0) sheetBackgroundColor else getDefaultBackgroundColor()
+    // 0 (transparent) is used as sentinel for "use system default"
+    val backgroundColor = if (sheetBackgroundColor != 0) sheetBackgroundColor else getDefaultBackgroundColor()
 
-      val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
-      background.paint.color = backgroundColor
+    val background = ShapeDrawable(RoundRectShape(outerRadii, null, null))
+    background.paint.color = backgroundColor
 
-      this.background = background
-      this.clipToOutline = true
-    }
+    bottomSheet.background = background
+    bottomSheet.clipToOutline = true
   }
 
   /**
@@ -918,12 +975,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   companion object {
     const val TAG_NAME = "TrueSheet"
+    const val GRABBER_TAG = "TrueSheetGrabber"
 
     // Material Design 3 max width in dp
     const val DEFAULT_MAX_WIDTH = 640
 
     // Material Design 3 default corner radius in dp
     const val DEFAULT_CORNER_RADIUS = 16
+
+    // Material Design 3 grabber/drag handle specs
+    const val GRABBER_WIDTH = 32f // dp
+    const val GRABBER_HEIGHT = 4f // dp
+    const val GRABBER_TOP_MARGIN = 16f // dp
+
+    // M3 spec: #49454F with 0.4 alpha = rgba(73, 69, 79, 0.4)
+    val GRABBER_COLOR = Color.argb((0.4 * 255).toInt(), 73, 69, 79)
 
     fun getEffectiveSheetHeight(sheetHeight: Int, headerHeight: Int): Int {
       // Calculate effective content height by subtracting header space.
