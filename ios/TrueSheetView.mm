@@ -58,20 +58,18 @@ using namespace facebook::react;
   BOOL _isSheetUpdatePending;
 }
 
+#pragma mark - Initialization
+
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetViewProps>();
     _props = defaultProps;
 
-    // Initialize controller - persists across container lifecycle
     _controller = [[TrueSheetViewController alloc] init];
     _controller.delegate = self;
 
-    // Initialize touch handler - will be attached to container when mounted
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
-
     _containerView = nil;
-
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
@@ -84,28 +82,23 @@ using namespace facebook::react;
 - (void)didMoveToWindow {
   [super didMoveToWindow];
 
-  if (!self.window) {
+  if (!self.window)
     return;
-  }
 
-  // Register this view with the TurboModule when added to window
-  // This ensures the tag is properly set by the framework
+  // Register with TurboModule when tag is set
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
 }
 
 - (void)dealloc {
-  // Dismiss controller if presented
   if (_controller && _controller.presentingViewController) {
     [_controller dismissViewControllerAnimated:NO completion:nil];
   }
 
-  // Clean up controller
   _controller.delegate = nil;
   _controller = nil;
 
-  // Unregister this view from the TurboModule
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
@@ -113,6 +106,158 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<TrueSheetViewComponentDescriptor>();
+}
+
+- (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
+  [super updateProps:props oldProps:oldProps];
+
+  const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
+
+  // Detents (-1 represents "auto")
+  NSMutableArray *detents = [NSMutableArray new];
+  for (const auto &detent : newProps.detents) {
+    [detents addObject:@(detent)];
+  }
+  _controller.detents = detents;
+
+  // Background color
+  _controller.backgroundColor =
+    newProps.background == 0 ? nil : RCTUIColorFromSharedColor(SharedColor(newProps.background));
+
+  // Blur tint
+  _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
+
+  // Corner radius
+  _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
+
+  // Max height
+  if (newProps.maxHeight != 0.0) {
+    _controller.maxHeight = @(newProps.maxHeight);
+  }
+
+  _controller.grabber = newProps.grabber;
+  _controller.pageSizing = newProps.pageSizing;
+  _controller.modalInPresentation = !newProps.dismissible;
+  _controller.dimmed = newProps.dimmed;
+
+  if (newProps.dimmedDetentIndex >= 0) {
+    _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);
+  }
+
+  _initialDetentIndex = newProps.initialDetentIndex;
+  _initialDetentAnimated = newProps.initialDetentAnimated;
+  _fitScrollView = newProps.fitScrollView;
+
+  if (_containerView) {
+    _containerView.scrollViewPinningEnabled = _fitScrollView;
+  }
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
+
+  if (_controller) {
+    [self updateStateWithSize:_controller.view.frame.size];
+  }
+}
+
+/**
+ * Updates Fabric state with container width for Yoga layout.
+ */
+- (void)updateStateWithSize:(CGSize)size {
+  if (!_state || size.width <= 0 || size.width == _lastStateSize.width)
+    return;
+
+  _lastStateSize = size;
+  _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
+                        -> TrueSheetViewShadowNode::ConcreteState::SharedData {
+    auto newData = oldData;
+    newData.containerWidth = static_cast<float>(size.width);
+    return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
+  });
+}
+
+- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
+  [super finalizeUpdates:updateMask];
+
+  if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
+    return;
+
+  if (_containerView) {
+    [_containerView setupContentScrollViewPinning];
+  }
+
+  if (_controller.isPresented) {
+    [_controller.sheetPresentationController animateChanges:^{
+      [self->_controller setupSheetProps];
+      [self->_controller setupSheetDetents];
+      [self->_controller applyActiveDetent];
+    }];
+  } else if (_initialDetentIndex >= 0) {
+    [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+  }
+}
+
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+
+  _lastStateSize = CGSizeZero;
+
+  if (_controller && _controller.presentingViewController) {
+    [_controller dismissViewControllerAnimated:YES completion:nil];
+  }
+
+  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+}
+
+#pragma mark - Child Component Mounting
+
+- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
+  if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
+    return;
+
+  if (_containerView != nil) {
+    RCTLogWarn(@"TrueSheet: Sheet can only have one container component.");
+    return;
+  }
+
+  _containerView = (TrueSheetContainerView *)childComponentView;
+  _containerView.delegate = self;
+
+  [_touchHandler attachToView:_containerView];
+  [_controller.view addSubview:_containerView];
+  [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
+  [_controller.view bringSubviewToFront:_containerView];
+
+  CGFloat contentHeight = [_containerView contentHeight];
+  if (contentHeight > 0) {
+    _controller.contentHeight = @(contentHeight);
+  }
+
+  CGFloat headerHeight = [_containerView headerHeight];
+  if (headerHeight > 0) {
+    _controller.headerHeight = @(headerHeight);
+  }
+
+  _containerView.scrollViewPinningEnabled = _fitScrollView;
+  [_containerView setupContentScrollViewPinning];
+
+  [OnMountEvent emit:_eventEmitter];
+}
+
+- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
+  if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
+    return;
+
+  _containerView.delegate = nil;
+
+  if (_touchHandler) {
+    [_touchHandler detachFromView:_containerView];
+  }
+
+  [LayoutUtil unpinView:_containerView fromParentView:nil];
+  [_containerView removeFromSuperview];
+  _containerView = nil;
 }
 
 #pragma mark - TurboModule Methods
@@ -124,7 +269,6 @@ using namespace facebook::react;
     [_controller.sheetPresentationController animateChanges:^{
       [self->_controller setupActiveDetentWithIndex:index];
     }];
-
     if (completion) {
       completion(YES, nil);
     }
@@ -132,30 +276,23 @@ using namespace facebook::react;
   }
 
   UIViewController *presentingViewController = [self findPresentingViewController];
-
   if (!presentingViewController) {
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                          code:1001
                                      userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
-
     if (completion) {
       completion(NO, error);
     }
     return;
   }
 
-  // Setup our sheet properties
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
-
-  // Set to the given detent index
   [_controller setupActiveDetentWithIndex:index];
 
-  // Present our sheet
-  [presentingViewController presentViewController:self->_controller
+  [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{
-                                         // Call completion handler
                                          if (completion) {
                                            completion(YES, nil);
                                          }
@@ -186,226 +323,19 @@ using namespace facebook::react;
   }
 }
 
-- (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
-  [super updateProps:props oldProps:oldProps];
-
-  const auto &newProps = *std::static_pointer_cast<TrueSheetViewProps const>(props);
-
-  // Update detents - pass numbers directly (-1 represents "auto")
-  NSMutableArray *detents = [NSMutableArray new];
-  for (const auto &detent : newProps.detents) {
-    [detents addObject:@(detent)];
-  }
-
-  _controller.detents = detents;
-
-  if (newProps.background == 0) {
-    _controller.backgroundColor = nil;
-  } else {
-    UIColor *color = RCTUIColorFromSharedColor(SharedColor(newProps.background));
-    _controller.backgroundColor = color;
-  }
-
-  // Update blur tint - always set it to clear when removed
-  _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
-
-  // Update corner radius
-  if (newProps.cornerRadius < 0) {
-    _controller.cornerRadius = nil;
-  } else {
-    _controller.cornerRadius = @(newProps.cornerRadius);
-  }
-
-  // Update max height
-  if (newProps.maxHeight != 0.0) {
-    _controller.maxHeight = @(newProps.maxHeight);
-  }
-
-  // Update grabber
-  _controller.grabber = newProps.grabber;
-
-  // Update page sizing
-  _controller.pageSizing = newProps.pageSizing;
-
-  // Update dismissible
-  _controller.modalInPresentation = !newProps.dismissible;
-
-  // Update dimmed
-  _controller.dimmed = newProps.dimmed;
-
-  // Update dimmedDetentIndex
-  if (newProps.dimmedDetentIndex >= 0) {
-    _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);
-  }
-
-  // Store initial presentation settings
-  _initialDetentIndex = newProps.initialDetentIndex;
-  _initialDetentAnimated = newProps.initialDetentAnimated;
-
-  // Store ScrollView fit prop
-  _fitScrollView = newProps.fitScrollView;
-
-  if (_containerView) {
-    // Set scrollView pinning
-    _containerView.scrollViewPinningEnabled = _fitScrollView;
-  }
-}
-
-- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
-  _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
-
-  // Try early update of our controller size if available
-  if (_controller) {
-    [self updateStateWithSize:_controller.view.frame.size];
-  }
-}
-
-- (void)updateStateWithSize:(CGSize)size {
-  if (!_state) {
-    return;
-  }
-
-  if (size.width > 0 && size.width != _lastStateSize.width) {
-    _lastStateSize = size;
-    _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
-                          -> TrueSheetViewShadowNode::ConcreteState::SharedData {
-      auto newData = oldData;
-      newData.containerWidth = static_cast<float>(size.width);
-      return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
-    });
-  }
-}
-
-- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
-  [super finalizeUpdates:updateMask];
-
-  // Apply controller updates after all props and children are updated
-  if (updateMask & RNComponentViewUpdateMaskProps) {
-    if (!_controller)
-      return;
-
-    // Update ScrollView Pinning
-    if (_containerView) {
-      [_containerView setupContentScrollViewPinning];
-    }
-
-    // Apply changes to presented sheet if needed
-    if (_controller.isPresented) {
-      [_controller.sheetPresentationController animateChanges:^{
-        [self->_controller setupSheetProps];
-        [self->_controller setupSheetDetents];
-        [self->_controller applyActiveDetent];
-      }];
-    } else {
-      // Handle initial presentation
-      if (_initialDetentIndex >= 0 && !_controller.isPresented) {
-        [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
-      }
-    }
-  }
-}
-
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-  // Check if it's a container view
-  if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
-    if (_containerView != nil) {
-      RCTLogWarn(@"TrueSheet: Sheet can only have one container component.");
-      return;
-    }
-
-    _containerView = (TrueSheetContainerView *)childComponentView;
-
-    // Set this view as the container's delegate
-    _containerView.delegate = self;
-
-    // Attach touch handler to container for touch event handling
-    [_touchHandler attachToView:_containerView];
-
-    // Add to parent view hierarchy
-    [_controller.view addSubview:_containerView];
-
-    // Pin container to fill the entire parent view
-    [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
-
-    // Ensure container is above background view
-    [_controller.view bringSubviewToFront:_containerView];
-
-    // Get initial content height from container
-    CGFloat contentHeight = [_containerView contentHeight];
-    if (contentHeight > 0) {
-      _controller.contentHeight = @(contentHeight);
-    }
-
-    // Get initial header height from container
-    CGFloat headerHeight = [_containerView headerHeight];
-    if (headerHeight > 0) {
-      _controller.headerHeight = @(headerHeight);
-    }
-
-    // Apply scroll view pinning setting and setup
-    _containerView.scrollViewPinningEnabled = _fitScrollView;
-    [_containerView setupContentScrollViewPinning];
-
-    // Emit onMount event when container is mounted
-    [OnMountEvent emit:_eventEmitter];
-  }
-}
-
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[TrueSheetContainerView class]]) {
-    _containerView.delegate = nil;
-
-    // Detach touch handler
-    if (_touchHandler) {
-      [_touchHandler detachFromView:_containerView];
-    }
-
-    // Unpin and remove from view hierarchy
-    [LayoutUtil unpinView:_containerView fromParentView:nil];
-    [_containerView removeFromSuperview];
-
-    _containerView = nil;
-  }
-}
-
-- (void)prepareForRecycle {
-  [super prepareForRecycle];
-
-  // Reset stored last width to get updated size later
-  _lastStateSize = CGSizeZero;
-
-  // Dismiss controller if presented
-  if (_controller && _controller.presentingViewController) {
-    [_controller dismissViewControllerAnimated:YES completion:nil];
-  }
-
-  // Unregister from the registry
-  // Note: Re-registration will happen automatically when the component is reused
-  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
-}
-
 #pragma mark - TrueSheetContainerViewDelegate
 
+/**
+ * Debounced sheet update to handle rapid content/header size changes.
+ */
 - (void)updateSheetIfNeeded {
-  // Update detents if sheet is already presented
-  if (!_controller.isPresented) {
+  if (!_controller.isPresented || _isSheetUpdatePending)
     return;
-  }
-
-  // Skip if an update is already pending
-  if (_isSheetUpdatePending) {
-    return;
-  }
 
   _isSheetUpdatePending = YES;
 
-  // Use dispatch_async to ensure all layout passes are complete before reconfiguring
-  // This handles cases where content and header size changes happen in sequence
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
-
-    // Tell controller that we are transitioning from layout changes.
-    // Controller viewDidLayoutSubviews will handle position notification.
     self->_controller.layoutTransitioning = YES;
 
     [self->_controller.sheetPresentationController animateChanges:^{
@@ -428,18 +358,12 @@ using namespace facebook::react;
 
 - (void)viewControllerWillPresent {
   NSInteger index = [_controller currentDetentIndex];
-  CGFloat position = _controller.currentPosition;
-
   _controller.activeDetentIndex = index;
-
-  [OnWillPresentEvent emit:_eventEmitter index:index position:position];
+  [OnWillPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition];
 }
 
 - (void)viewControllerDidPresent {
-  NSInteger index = [_controller currentDetentIndex];
-  CGFloat position = _controller.currentPosition;
-
-  [OnDidPresentEvent emit:_eventEmitter index:index position:position];
+  [OnDidPresentEvent emit:_eventEmitter index:[_controller currentDetentIndex] position:_controller.currentPosition];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
@@ -447,16 +371,13 @@ using namespace facebook::react;
     case UIGestureRecognizerStateBegan:
       [OnDragBeginEvent emit:_eventEmitter index:index position:position];
       break;
-
     case UIGestureRecognizerStateChanged:
       [OnDragChangeEvent emit:_eventEmitter index:index position:position];
       break;
-
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
       [OnDragEndEvent emit:_eventEmitter index:index position:position];
       break;
-
     default:
       break;
   }
@@ -468,7 +389,6 @@ using namespace facebook::react;
 
 - (void)viewControllerDidDismiss {
   _controller.activeDetentIndex = -1;
-
   [OnDidDismissEvent emit:_eventEmitter];
 }
 
@@ -476,7 +396,6 @@ using namespace facebook::react;
   if (_controller.activeDetentIndex != index) {
     _controller.activeDetentIndex = index;
   }
-
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
@@ -485,7 +404,6 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  // Update our layout when controller size changes
   [self updateStateWithSize:size];
 }
 
@@ -493,26 +411,21 @@ using namespace facebook::react;
 
 - (UIViewController *)findPresentingViewController {
   UIWindow *keyWindow = [WindowUtil keyWindow];
-
-  if (!keyWindow) {
+  if (!keyWindow)
     return nil;
-  }
 
   UIViewController *rootViewController = keyWindow.rootViewController;
-
-  if (!rootViewController) {
+  if (!rootViewController)
     return nil;
-  }
 
-  // Find the top-most presented view controller
+  // Find topmost presented view controller
   while (rootViewController.presentedViewController) {
     UIViewController *presented = rootViewController.presentedViewController;
 
-    // Skip TrueSheetViewController if it's being dismissed
+    // Skip TrueSheetViewController if being dismissed
     if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
       break;
     }
-
     rootViewController = presented;
   }
 
