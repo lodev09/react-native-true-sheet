@@ -111,11 +111,6 @@ using namespace facebook::react;
 
     _headerView = (TrueSheetHeaderView *)childComponentView;
     _headerView.delegate = self;
-
-    // Re-apply scroll view pinning with header
-    if (_scrollViewPinned && _contentView) {
-      [_contentView setupScrollViewPinning:YES withHeaderView:_headerView];
-    }
   }
 
   // Handle footer view mounting
@@ -140,9 +135,7 @@ using namespace facebook::react;
     _headerView = nil;
 
     // Re-apply scroll view pinning without header
-    if (_scrollViewPinned && _contentView) {
-      [_contentView setupScrollViewPinning:YES withHeaderView:nil];
-    }
+    [self setupContentScrollViewPinning:_scrollViewPinned];
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {

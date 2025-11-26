@@ -57,6 +57,7 @@ using namespace facebook::react;
   // Unpin previous scroll view if exists
   if (_pinnedScrollView) {
     [LayoutUtil unpinView:_pinnedScrollView];
+    _pinnedScrollView = nil;
   }
 }
 
@@ -70,7 +71,8 @@ using namespace facebook::react;
   // Pinning ensures ScrollView fills the available area and scrolls correctly with the sheet
   RCTScrollViewComponentView *scrollView = [self findScrollView];
 
-  if (scrollView && scrollView != _pinnedScrollView) {
+  if (scrollView) {
+    // Always unpin first to remove old constraints
     [self unpinScrollView];
 
     // Pin to container view (parent of content view)
