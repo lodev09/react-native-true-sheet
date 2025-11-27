@@ -13,7 +13,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🚀 **Native** - Implemented in the native realm
 * 🎯 **Type-safe** - Full TypeScript support with Codegen-generated native interfaces
 * ♿ **Accessible** - Native accessibility and screen reader support out of the box
-* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
+* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/props#events)
 * 🪟 **Liquid Glass** - iOS 26+ Liquid Glass support out of the box. Featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
 
 ## Installation

@@ -43,7 +43,7 @@ const navigate = async () => {
 
 ## Present During Mount
 
-When setting [`initialDetentIndex`](/reference/props#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation may behave unexpectedly on iOS. This happens because React Navigation is not yet finished transitioning when the sheet tries to present.
+When setting [`initialDetentIndex`](/reference/configuration#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation may behave unexpectedly on iOS. This happens because React Navigation is not yet finished transitioning when the sheet tries to present.
 
 ### Solution 1: Disable Animation
 

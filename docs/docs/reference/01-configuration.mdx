@@ -1,12 +1,10 @@
 ---
-title: Props
-description: True Native Bottom Sheet component props.
+title: Configuration
+description: True Native Bottom Sheet configuration props.
 keywords: [bottom sheet props, bottom sheet configuration, bottom sheet preferences]
 ---
 
-Props available for `TrueSheet`. Extends `ViewProps`.
-
-## Configuration
+Configuration props available for `TrueSheet`. Extends `ViewProps`.
 
 ```tsx {2-5}
 <TrueSheet
@@ -19,11 +17,11 @@ Props available for `TrueSheet`. Extends `ViewProps`.
 </TrueSheet>
 ```
 
-### `ref`
+## `ref`
 
-We use `ref` to reference our sheet and call the [component methods](/reference/methods). Learn more about refs [here](https://react.dev/learn/referencing-values-with-refs).
+We use `ref` to reference our sheet and call the [imperative methods](/reference/methods). Learn more about refs [here](https://react.dev/learn/referencing-values-with-refs).
 
-### `detents`
+## `detents`
 
 Array of detents you want the sheet to support. See [this guide](/guides/resizing) for example.
 
@@ -39,7 +37,7 @@ A sheet can only support up to **3** detents only! AKA **_collapsed_**, **_half-
 It's recommended to sort detents from **smallest to largest**. When using `auto`, place it at the **first index** if you plan to adjust content dynamically. This ensures the sheet presents at the accurate height initially.
 :::
 
-### `name`
+## `name`
 
 The name to reference this sheet. It has to be **_unique_**. You can then present this sheet globally using its name. See [this guide](/guides/global-methods) for example.
 
@@ -47,7 +45,7 @@ The name to reference this sheet. It has to be **_unique_**. You can then presen
 | - | - | - | - |
 | `string` | | ✅ | ✅ |
 
-### `backgroundColor`
+## `backgroundColor`
 
 The sheet's background color. Uses the system default when not provided.
 
@@ -59,7 +57,7 @@ The sheet's background color. Uses the system default when not provided.
 When not provided, iOS uses the system background color, while Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
 :::
 
-### `cornerRadius`
+## `cornerRadius`
 
 The sheet corner radius.
 
@@ -71,7 +69,7 @@ The sheet corner radius.
 When not provided, iOS uses the device's native corner radius automatically, while Android defaults to `28` (following Material Design 3 guidelines).
 :::
 
-### `maxHeight`
+## `maxHeight`
 
 Overrides `"large"` or `"100%"` height.
 
@@ -79,7 +77,7 @@ Overrides `"large"` or `"100%"` height.
 | - | - | - | - |
 | `number` | | ✅ | ✅ |
 
-### `edgeToEdgeFullScreen`
+## `edgeToEdgeFullScreen`
 
 Allows the sheet to extend behind the status bar when fully expanded in edge-to-edge mode. When `false` (default), the sheet stops at the bottom of the status bar.
 
@@ -87,7 +85,7 @@ Allows the sheet to extend behind the status bar when fully expanded in edge-to-
 | - | - | - | - |
 | `boolean` | `false` |  | ✅ |
 
-### `dismissible`
+## `dismissible`
 
 If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it.
 
@@ -95,7 +93,7 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
-### `dimmed`
+## `dimmed`
 
 Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.
 
@@ -107,7 +105,7 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 This property is only used during the initial mount.
 :::
 
-### `dimmedDetentIndex`
+## `dimmedDetentIndex`
 
 The detent index that the sheet should start to dim the background.
 
@@ -119,7 +117,7 @@ The detent index that the sheet should start to dim the background.
 This is ignored if `dimmed` is set to `false`.
 :::
 
-### `initialDetentIndex`
+## `initialDetentIndex`
 
 Initially present the sheet, after mounting, at a given detent index.
 
@@ -127,7 +125,7 @@ Initially present the sheet, after mounting, at a given detent index.
 | - | - | - | - |
 | `number` | `-1` | ✅ | ✅ |
 
-### `initialDetentAnimated`
+## `initialDetentAnimated`
 
 Specify whether the sheet should animate after mounting.
 Used with `initialDetentIndex`.
@@ -136,7 +134,7 @@ Used with `initialDetentIndex`.
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
-### `keyboardMode`
+## `keyboardMode`
 
 Determines how the software keyboard will impact the layout of the sheet.
 Set to `pan` if you're working with `FlatList` with a `TextInput`.
@@ -145,7 +143,7 @@ Set to `pan` if you're working with `FlatList` with a `TextInput`.
 | - | - | - | - |
 | `"resize", "pan"` | `"resize"` |  | ✅ |
 
-### `grabber`
+## `grabber`
 
 Shows a native grabber (or drag handle) on the sheet.
 
@@ -154,10 +152,10 @@ Shows a native grabber (or drag handle) on the sheet.
 | `boolean` | `true` | ✅ | ✅ |
 
 :::info
-iOS uses the native `UISheetPresentationController` grabber, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32×4dp, centered, with the standard drag handle color).
+iOS uses the native `UISheetPresentationController` grabber, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32x4dp, centered, with the standard drag handle color).
 :::
 
-### `header`
+## `header`
 
 A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](/guides/header) for example.
 
@@ -165,7 +163,7 @@ A component that is fixed at the top of the sheet content. Useful for search bar
 | - | - | - | - |
 | `ComponentType<...> \| ReactElement` | | ✅ | ✅ |
 
-### `footer`
+## `footer`
 
 A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.
 
@@ -173,7 +171,7 @@ A component that floats at the bottom of the sheet. Accepts a functional `Compon
 | - | - | - | - |
 | `ComponentType<...> \| ReactElement` | | ✅ | ✅ |
 
-### `scrollable`
+## `scrollable`
 
 Automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](/guides/scrolling) for example.
 
@@ -181,7 +179,7 @@ Automatically pins ScrollView or FlatList to fit within the sheet's available sp
 | - | - | - | - |
 | `boolean` | `false` | ✅ | |
 
-### `pageSizing`
+## `pageSizing`
 
 Controls the sheet presentation style on iPad. When enabled (true), uses a large page sheet for better readability. When disabled (false), uses a centered form sheet.
 
@@ -189,7 +187,7 @@ Controls the sheet presentation style on iPad. When enabled (true), uses a large
 | - | - | - | - |
 | `boolean` | `true` | **_17+_** | |
 
-### `blurTint`
+## `blurTint`
 
 The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
 
@@ -197,128 +195,10 @@ The blur effect style on iOS. When set, applies a blur effect over the [`backgro
 | - | - | - | - |
 | [`BlurTint`](/reference/types#blurtint) | | ✅ | |
 
-### `style`
+## `style`
 
 The sheet's container style override.
 
 | Type | Default | 🍎 | 🤖 |
 | - | - | - | - |
 | `StyleProp<ViewStyle>` | | ✅ | ✅ |
-
-### `contentContainerStyle`
-
-The sheet's content container style.
-
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `StyleProp<ViewStyle>` | | ✅ | ✅ |
-
-## Events
-
-```tsx {20-22}
-const App = () => {
-  const handleDismiss = () => {
-    console.log('Bye bye 👋')
-  }
-
-  const handleOnWillPresent = (e: WillPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
-    console.log('Sheet is about to be presented')
-  }
-
-  const handleOnDidPresent = (e: DidPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
-  }
-
-  const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent) // { index: 1, position: 234.5 }
-  }
-
-  return (
-    <View>
-      <Button title="Present" onPress={() => sheet.current?.present()} />
-      <TrueSheet
-        ref={sheet}
-        detents={[0.5, 0.8]}
-        onWillPresent={handleOnWillPresent}
-        onDidPresent={handleOnDidPresent}
-        onDetentChange={handleDetentChange}
-        onWillDismiss={handleOnWillDismiss}
-        onDidDismiss={handleOnDidDismiss}
-      >
-        <Button title="Resize" onPress={() => sheet.current?.resize(1)} />
-        <Button title="Dismiss" onPress={() => sheet.current?.dismiss(1)} />
-      </TrueSheet>
-    </View>
-  )
-}
-```
-
-### `onMount`
-
-Called when the sheet's content is mounted and ready.
-The sheet automatically waits for this event before presenting.
-
-### `onWillPresent`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the sheet is about to be presented.
-
-### `onDidPresent`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the sheet has been presented, providing the detent `index` and `position`.
-
-### `onWillDismiss`
-
-This is called when the sheet is about to be dismissed.
-
-### `onDidDismiss`
-
-This is called when the sheet has been dismissed.
-
-### `onDetentChange`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the detent of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
-
-### `onDragBegin`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the sheet has began dragging.
-
-### `onDragChange`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the sheet is being dragged.
-
-### `onDragEnd`
-
-Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
-
-This is called when the sheet dragging has ended.
-
-### `onPositionChange`
-
-Comes with [`PositionChangeEventPayload`](/reference/types#positionchangeeventpayload).
-
-This is called continuously when the sheet's position changes during drag operations or transitions. This event fires more frequently than `onDragChange` and provides real-time position updates.
-
-The `transitioning` property indicates whether the sheet is currently presenting or dismissing. On iOS, when `transitioning` is `true`, the position should be animated (ReanimatedTrueSheet handles this automatically).
-
-:::tip
-Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.
-:::
-
-### `onDidFocus`
-
-This is called when the sheet regains focus after a sheet presented on top of it is dismissed. Useful for refreshing data or re-enabling interactions when returning to a sheet in a stacked sheet scenario.
-
-### `onDidBlur`
-
-This is called when the sheet loses focus because another sheet is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.

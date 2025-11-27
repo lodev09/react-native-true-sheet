@@ -1,6 +1,6 @@
 ---
-title: Methods
-description: True Native Bottom Sheet component methods.
+title: Imperative Methods
+description: True Native Bottom Sheet imperative methods.
 keywords: [bottom sheet methods, preseting bottom sheet, dimissing bottom sheet, showing bottom sheet, closing bottom sheet, resizing bottom sheet]
 ---
 
@@ -21,7 +21,7 @@ return (
 
 ### `present`
 
-Present the sheet. Optionally accepts a detent `index`. See [`detents`](/reference/props#detents) prop.
+Present the sheet. Optionally accepts a detent `index`. See [`detents`](/reference/configuration#detents) prop.
 
 | Parameters | Required |
 | - | - |
@@ -57,7 +57,7 @@ await sheet.current?.resize(1)
 
 You can also call the above methods statically without having access to a sheet's `ref`. This is particularly useful when you want to present a sheet from anywhere.
 
-The API is similar to the component methods except for the required [`name`](/reference/props#name) prop. See [this guide](/guides/global-methods) for example.
+The API is similar to the component methods except for the required [`name`](/reference/configuration#name) prop. See [this guide](/guides/global-methods) for example.
 
 In the example below, we provide `"my-sheet"` as the `name` of our sheet.
 ```tsx {4}
