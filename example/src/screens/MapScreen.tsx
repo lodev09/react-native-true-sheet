@@ -120,7 +120,7 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         dismissible={false}
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
-        fitScrollView
+        scrollable
         initialDetentIndex={0}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {

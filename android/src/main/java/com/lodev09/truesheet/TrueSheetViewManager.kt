@@ -157,8 +157,8 @@ class TrueSheetViewManager :
     view.setEdgeToEdgeFullScreen(edgeToEdgeFullScreen)
   }
 
-  @ReactProp(name = "fitScrollView", defaultBoolean = false)
-  override fun setFitScrollView(view: TrueSheetView, value: Boolean) {
+  @ReactProp(name = "scrollable", defaultBoolean = false)
+  override fun setScrollable(view: TrueSheetView, value: Boolean) {
     // iOS-specific prop - no-op on Android
   }
 

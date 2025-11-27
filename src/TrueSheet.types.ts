@@ -229,7 +229,7 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios
    * @default false
    */
-  fitScrollView?: boolean;
+  scrollable?: boolean;
 
   /**
    * Determines how the software keyboard will impact the layout of the sheet.

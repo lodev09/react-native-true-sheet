@@ -323,13 +323,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       cornerRadius,
       maxHeight,
       edgeToEdgeFullScreen,
-      fitScrollView = false,
+      scrollable = false,
       pageSizing = true,
       children,
       style,
       header,
       footer,
-      testID,
       ...rest
     } = this.props;
 
@@ -362,7 +361,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         dismissible={dismissible}
         maxHeight={maxHeight}
         edgeToEdgeFullScreen={edgeToEdgeFullScreen}
-        fitScrollView={fitScrollView}
+        scrollable={scrollable}
         pageSizing={pageSizing}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}
@@ -378,9 +377,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent
             style={
-              this.props.fitScrollView && Platform.select({ android: styles.scrollableContainer })
+              this.props.scrollable && Platform.select({ android: styles.scrollableContainer })
             }
-            testID={testID}
           >
             {header && (
               <TrueSheetHeaderViewNativeComponent>
@@ -388,7 +386,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
               </TrueSheetHeaderViewNativeComponent>
             )}
             <TrueSheetContentViewNativeComponent
-              style={[style, this.props.fitScrollView && styles.scrollableContent]}
+              style={[style, this.props.scrollable && styles.scrollableContent]}
             >
               {children}
             </TrueSheetContentViewNativeComponent>

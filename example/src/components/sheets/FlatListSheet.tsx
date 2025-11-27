@@ -26,7 +26,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       backgroundColor={DARK}
       keyboardMode="pan"
       edgeToEdgeFullScreen
-      fitScrollView
+      scrollable
       header={
         <Header>
           <Input />
