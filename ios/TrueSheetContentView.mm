@@ -126,46 +126,53 @@ using namespace facebook::react;
   }
 }
 
+- (RCTScrollViewComponentView *)findScrollViewInSubviews:(NSArray<UIView *> *)subviews {
+  for (UIView *subview in subviews) {
+    if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
+      return (RCTScrollViewComponentView *)subview;
+    }
+  }
+  return nil;
+}
+
 - (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
   if (self.subviews.count == 0) {
     return nil;
   }
 
-  RCTScrollViewComponentView *scrollView = nil;
   UIView *topSibling = nil;
 
   // Check first-level children for scroll views (ScrollView or FlatList)
-  for (UIView *subview in self.subviews) {
-    if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
-      scrollView = (RCTScrollViewComponentView *)subview;
+  RCTScrollViewComponentView *scrollView = [self findScrollViewInSubviews:self.subviews];
 
-      // Find the view positioned directly above this ScrollView by frame position
-      if (self.subviews.count > 1) {
-        CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
-        CGFloat closestDistance = CGFLOAT_MAX;
+  // If not found, check second level (grandchildren)
+  if (!scrollView) {
+    for (UIView *subview in self.subviews) {
+      scrollView = [self findScrollViewInSubviews:subview.subviews];
+      if (scrollView) {
+        break;
+      }
+    }
+  }
 
-        for (UIView *sibling in self.subviews) {
-          // Skip the ScrollView itself
-          if (sibling == scrollView) {
-            continue;
-          }
+  // Find the view positioned directly above the ScrollView (only for first-level)
+  if (scrollView && scrollView.superview == self && self.subviews.count > 1) {
+    CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
+    CGFloat closestDistance = CGFLOAT_MAX;
 
-          CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
-
-          // Check if this sibling is positioned above the ScrollView
-          if (siblingBottom <= scrollViewTop) {
-            CGFloat distance = scrollViewTop - siblingBottom;
-
-            // Find the closest view above (smallest distance)
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              topSibling = sibling;
-            }
-          }
-        }
+    for (UIView *sibling in self.subviews) {
+      if (sibling == scrollView) {
+        continue;
       }
 
-      break;  // Found ScrollView, no need to continue
+      CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
+      if (siblingBottom <= scrollViewTop) {
+        CGFloat distance = scrollViewTop - siblingBottom;
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          topSibling = sibling;
+        }
+      }
     }
   }
 

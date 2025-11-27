@@ -1,5 +1,5 @@
 import { forwardRef, type Ref } from 'react';
-import { StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList, View } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_GRAY, SPACING, times } from '../../utils';
@@ -36,24 +36,26 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
-      <DemoContent />
-      <FlatList
-        nestedScrollEnabled
-        data={times(10, (i) => i)}
-        contentContainerStyle={styles.content}
-        indicatorStyle="black"
-        ItemSeparatorComponent={Spacer}
-        // scrollIndicatorInsets={{ top: TOP_INSET }}
-        // Broken on Android ;(
-        // refreshControl={
-        //   <RefreshControl
-        //     refreshing={isRefreshing}
-        //     tintColor="white"
-        //     onRefresh={handleRefresh}
-        //   />
-        // }
-        renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
-      />
+      <View style={styles.wrapper}>
+        <DemoContent />
+        <FlatList
+          nestedScrollEnabled
+          data={times(10, (i) => i)}
+          contentContainerStyle={styles.content}
+          indicatorStyle="black"
+          ItemSeparatorComponent={Spacer}
+          // scrollIndicatorInsets={{ top: TOP_INSET }}
+          // Broken on Android ;(
+          // refreshControl={
+          //   <RefreshControl
+          //     refreshing={isRefreshing}
+          //     tintColor="white"
+          //     onRefresh={handleRefresh}
+          //   />
+          // }
+          renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
+        />
+      </View>
     </TrueSheet>
   );
 });
@@ -61,6 +63,9 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
 FlatListSheet.displayName = 'FlatListSheet';
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
   content: {
     padding: SPACING,
     paddingTop: SPACING,
