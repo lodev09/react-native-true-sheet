@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetContentViewDelegate <NSObject>
 
 - (void)contentViewDidChangeSize:(CGSize)newSize;
+- (void)contentViewDidChangeChildren;
 
 @end
 
@@ -28,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 
-- (RCTScrollViewComponentView *_Nullable)findScrollView;
+- (RCTScrollViewComponentView *_Nullable)findScrollView:(UIView *_Nullable *_Nullable)outTopSibling;
 
 /**
  * Setup ScrollView pinning

@@ -53,7 +53,7 @@ using namespace facebook::react;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
-  BOOL _fitScrollView;
+  BOOL _scrollable;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
 }
@@ -73,7 +73,7 @@ using namespace facebook::react;
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
-    _fitScrollView = NO;
+    _scrollable = NO;
     _isSheetUpdatePending = NO;
   }
   return self;
@@ -146,10 +146,10 @@ using namespace facebook::react;
 
   _initialDetentIndex = newProps.initialDetentIndex;
   _initialDetentAnimated = newProps.initialDetentAnimated;
-  _fitScrollView = newProps.fitScrollView;
+  _scrollable = newProps.scrollable;
 
   if (_containerView) {
-    _containerView.scrollViewPinningEnabled = _fitScrollView;
+    _containerView.scrollViewPinningEnabled = _scrollable;
   }
 }
 
@@ -239,7 +239,7 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  _containerView.scrollViewPinningEnabled = _fitScrollView;
+  _containerView.scrollViewPinningEnabled = _scrollable;
   [_containerView setupContentScrollViewPinning];
 
   [OnMountEvent emit:_eventEmitter];

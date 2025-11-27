@@ -336,9 +336,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
     updateSheetIfNeeded()
-    // Update state for scroll view behavior to work correctly with header
-    val sheetHeight = TrueSheetViewController.getEffectiveSheetHeight(viewController.height, height)
-    updateState(viewController.width, sheetHeight)
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {

@@ -21,6 +21,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetContentView {
   RCTScrollViewComponentView *_pinnedScrollView;
+  UIView *_pinnedTopView;
   CGSize _lastSize;
 }
 
@@ -34,6 +35,7 @@ using namespace facebook::react;
     _props = defaultProps;
 
     _pinnedScrollView = nil;
+    _pinnedTopView = nil;
     _lastSize = CGSizeZero;
   }
   return self;
@@ -53,6 +55,22 @@ using namespace facebook::react;
   }
 }
 
+- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
+  [super mountChildComponentView:childComponentView index:index];
+
+  if ([self.delegate respondsToSelector:@selector(contentViewDidChangeChildren)]) {
+    [self.delegate contentViewDidChangeChildren];
+  }
+}
+
+- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
+  [super unmountChildComponentView:childComponentView index:index];
+
+  if ([self.delegate respondsToSelector:@selector(contentViewDidChangeChildren)]) {
+    [self.delegate contentViewDidChangeChildren];
+  }
+}
+
 - (void)unpinScrollViewFromParentView:(UIView *)parentView {
   // Unpin previous scroll view if exists
   if (_pinnedScrollView) {
@@ -67,41 +85,95 @@ using namespace facebook::react;
   if (!pinned) {
     [self unpinScrollViewFromParentView:containerView];
     _pinnedScrollView = nil;
+    _pinnedTopView = nil;
     return;
   }
 
   // Auto-detect and pin scroll views for proper sheet scrolling behavior
   // Pinning ensures ScrollView fills the available area and scrolls correctly with the sheet
-  RCTScrollViewComponentView *scrollView = [self findScrollView];
+  UIView *topSibling = nil;
+  RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
-  if (scrollView && containerView) {
-    // Always unpin first to remove old constraints
+  // Use closest top sibling if found, otherwise fall back to header view
+  UIView *topView = topSibling ?: headerView;
+
+  // Re-pin when scroll view or top view changes
+  BOOL scrollViewChanged = scrollView != _pinnedScrollView;
+  BOOL topViewChanged = topView != _pinnedTopView;
+
+  if (scrollView && containerView && (scrollViewChanged || topViewChanged)) {
+    // Unpin first to remove old constraints
     [self unpinScrollViewFromParentView:containerView];
 
-    if (headerView) {
-      // Pin ScrollView below the header view
+    if (topView) {
+      // Pin ScrollView below the top view
       [LayoutUtil pinView:scrollView
              toParentView:containerView
-              withTopView:headerView
+              withTopView:topView
                     edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
     } else {
-      // No header, pin to all edges of container
+      // No top view, pin to all edges of container
       [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
     }
 
     _pinnedScrollView = scrollView;
+    _pinnedTopView = topView;
+  } else if (!scrollView && _pinnedScrollView) {
+    // ScrollView was removed, clean up
+    [self unpinScrollViewFromParentView:containerView];
+    _pinnedScrollView = nil;
+    _pinnedTopView = nil;
   }
 }
 
-- (RCTScrollViewComponentView *)findScrollView {
+- (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
+  if (self.subviews.count == 0) {
+    return nil;
+  }
+
+  RCTScrollViewComponentView *scrollView = nil;
+  UIView *topSibling = nil;
+
   // Check first-level children for scroll views (ScrollView or FlatList)
   for (UIView *subview in self.subviews) {
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
-      return (RCTScrollViewComponentView *)subview;
+      scrollView = (RCTScrollViewComponentView *)subview;
+
+      // Find the view positioned directly above this ScrollView by frame position
+      if (self.subviews.count > 1) {
+        CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
+        CGFloat closestDistance = CGFLOAT_MAX;
+
+        for (UIView *sibling in self.subviews) {
+          // Skip the ScrollView itself
+          if (sibling == scrollView) {
+            continue;
+          }
+
+          CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
+
+          // Check if this sibling is positioned above the ScrollView
+          if (siblingBottom <= scrollViewTop) {
+            CGFloat distance = scrollViewTop - siblingBottom;
+
+            // Find the closest view above (smallest distance)
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              topSibling = sibling;
+            }
+          }
+        }
+      }
+
+      break;  // Found ScrollView, no need to continue
     }
   }
 
-  return nil;
+  if (outTopSibling) {
+    *outTopSibling = topSibling;
+  }
+
+  return scrollView;
 }
 
 - (void)prepareForRecycle {
@@ -111,6 +183,7 @@ using namespace facebook::react;
   if (_pinnedScrollView) {
     [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
     _pinnedScrollView = nil;
+    _pinnedTopView = nil;
   }
 }
 

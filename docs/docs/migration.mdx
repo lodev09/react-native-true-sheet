@@ -112,7 +112,7 @@ The `grabberProps` prop has been removed. The grabber is now rendered **natively
 
 #### `scrollRef` (iOS)
 
-The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS. Use the new `fitScrollView` prop to enable automatic ScrollView pinning.
+The `scrollRef` prop has been removed. Scroll views are now **automatically detected** on iOS. Use the new `scrollable` prop to enable automatic ScrollView pinning.
 
 **Migration:**
 
@@ -125,13 +125,13 @@ const scrollViewRef = useRef<ScrollView>(null)
 </TrueSheet>
 
 // ✅ v3
-<TrueSheet fitScrollView>
+<TrueSheet scrollable>
   <ScrollView>{/* ... */}</ScrollView>
 </TrueSheet>
 ```
 
 :::tip
-See the [Scrolling guide](/guides/scrolling) for more information about `fitScrollView`.
+See the [Scrolling guide](/guides/scrolling) for more information about `scrollable`.
 :::
 
 #### `contentContainerStyle`

@@ -669,7 +669,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     super.onSizeChanged(w, h, oldw, oldh)
     if (w == oldw && h == oldh) return
 
-    delegate?.viewControllerDidChangeSize(w, getEffectiveSheetHeight(h, headerHeight))
+    delegate?.viewControllerDidChangeSize(w, h)
 
     val oldScreenHeight = screenHeight
     screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)
