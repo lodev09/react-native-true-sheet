@@ -36,6 +36,7 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       {...props}
     >
+      <DemoContent />
       <FlatList
         nestedScrollEnabled
         data={times(10, (i) => i)}

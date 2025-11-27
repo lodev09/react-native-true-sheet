@@ -7,11 +7,7 @@ type HeaderProps = ViewProps;
 
 export const Header = ({ children, ...rest }: HeaderProps) => {
   return (
-    <View
-      style={styles.container}
-      onLayout={(e) => console.log(e.nativeEvent.layout.height)}
-      {...rest}
-    >
+    <View style={styles.container} {...rest}>
       {children || <Input />}
     </View>
   );
