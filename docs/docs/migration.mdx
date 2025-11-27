@@ -222,10 +222,12 @@ Version 3 introduces new lifecycle and interaction events for better control:
 - **`onDragChange`** - Called continuously while the sheet is being dragged
 - **`onDragEnd`** - Called when sheet dragging has ended
 - **`onPositionChange`** - Called continuously when the sheet's position changes
+- **`onDidFocus`** - Called when the sheet regains focus after a sheet on top is dismissed
+- **`onDidBlur`** - Called when the sheet loses focus because another sheet is presented on top
 
 These events provide more granular control over the sheet's lifecycle and user interactions.
 
-See the [Events documentation](/reference/props#events) for detailed usage and examples.
+See the [Lifecycle Events documentation](/reference/events) for detailed usage and examples.
 
 ### 3. iPad Support with Page Sizing
 

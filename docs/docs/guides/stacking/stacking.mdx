@@ -1,23 +1,22 @@
 ---
 title: Stacking Sheets
 description: Guide on how to present bottom sheet on top of an existing sheet.
-keywords: [bottom sheet stacking, multiple bottom sheets, parent bottom sheet, child bottom sheet]
+keywords: [bottom sheet stacking, multiple bottom sheets, stacked sheets]
 ---
 
 import stacking from './stacking.gif'
 
-Sometimes you want to stack the sheets one after another. There are _**two**_ ways to do this.
+TrueSheet automatically handles stacking when you present a sheet while another is already visible. The currently visible sheet will be hidden, and when the new sheet is dismissed, the previous sheet will be shown again.
 
 <img alt="stacking" src={stacking} width="300"/>
 
 ## How?
 
-### 1. Dismiss the "parent" sheet first
+Simply present a new sheet while another is visible. The sheets don't need to be in a parent-child relationship - they can be defined anywhere in your component tree.
 
-```tsx {2-3,9-9}
+```tsx
 const presentSheet2 = async () => {
-  await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss
-  await sheet2.current?.present() // Sheet 2 will now present
+  await sheet2.current?.present() // Sheet 2 will present, Sheet 1 will be hidden
 }
 
 return (
@@ -32,25 +31,41 @@ return (
   </>
 )
 ```
-### 2. Define the 2nd sheet within the "parent" sheet.
 
-Both iOS and Android handle this automatically. When a nested sheet presents, the parent sheet is hidden. When the nested sheet dismisses, the parent sheet is shown again.
+When Sheet 2 is dismissed, Sheet 1 will automatically be shown again.
 
-```tsx {2-2,7-7}
-const presentSheet2 = async () => {
-  await sheet2.current?.present() // Sheet 2 will now present
+:::note
+The previous sheet is only hidden if it's not fully expanded. When expanded, the new sheet simply presents on top.
+:::
+
+## Focus Events
+
+When stacking sheets, you can listen to focus events to know when a sheet gains or loses focus:
+
+- **`onDidBlur`** - Called when the sheet loses focus because another sheet is presented on top
+- **`onDidFocus`** - Called when the sheet regains focus after a sheet on top is dismissed
+
+This is useful for pausing/resuming updates, refreshing data, or managing interactions when the sheet is not the topmost.
+
+```tsx {7-8}
+const handleFocus = () => {
+  console.log('Sheet regained focus - refresh data')
+}
+
+const handleBlur = () => {
+  console.log('Sheet lost focus - pause updates')
 }
 
 return (
-  <TrueSheet ref={sheet1}>
-    <Button onPress={presentSheet2} title="Present Sheet 2" />
+  <TrueSheet
+    ref={sheet1}
+    onDidFocus={handleFocus}
+    onDidBlur={handleBlur}
+  >
+    <Button onPress={() => sheet2.current?.present()} title="Present Sheet 2" />
     <TrueSheet ref={sheet2}>
       <View />
     </TrueSheet>
   </TrueSheet>
 )
 ```
-
-:::note
-On Android, the parent sheet is only hidden if it's not fully expanded. This is to be consistent with iOS, which does not hide the parent sheet when stacked.
-:::

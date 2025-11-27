@@ -1,0 +1,115 @@
+---
+title: Lifecycle Events
+description: True Native Bottom Sheet lifecycle events.
+keywords: [bottom sheet events, bottom sheet callbacks, bottom sheet lifecycle]
+---
+
+Lifecycle events available for `TrueSheet`.
+
+```tsx
+const App = () => {
+  const handleDismiss = () => {
+    console.log('Bye bye')
+  }
+
+  const handleOnWillPresent = (e: WillPresentEvent) => {
+    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
+    console.log('Sheet is about to be presented')
+  }
+
+  const handleOnDidPresent = (e: DidPresentEvent) => {
+    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
+  }
+
+  const handleDetentChange = (e: DetentChangeEvent) => {
+    console.log(e.nativeEvent) // { index: 1, position: 234.5 }
+  }
+
+  return (
+    <View>
+      <Button title="Present" onPress={() => sheet.current?.present()} />
+      <TrueSheet
+        ref={sheet}
+        detents={[0.5, 0.8]}
+        onWillPresent={handleOnWillPresent}
+        onDidPresent={handleOnDidPresent}
+        onDetentChange={handleDetentChange}
+        onWillDismiss={handleOnWillDismiss}
+        onDidDismiss={handleOnDidDismiss}
+      >
+        <Button title="Resize" onPress={() => sheet.current?.resize(1)} />
+        <Button title="Dismiss" onPress={() => sheet.current?.dismiss(1)} />
+      </TrueSheet>
+    </View>
+  )
+}
+```
+
+## `onMount`
+
+Called when the sheet's content is mounted and ready.
+The sheet automatically waits for this event before presenting.
+
+## `onWillPresent`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the sheet is about to be presented.
+
+## `onDidPresent`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the sheet has been presented, providing the detent `index` and `position`.
+
+## `onWillDismiss`
+
+This is called when the sheet is about to be dismissed.
+
+## `onDidDismiss`
+
+This is called when the sheet has been dismissed.
+
+## `onDetentChange`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the detent of the sheet has changed, either by dragging or by programmatically [resizing](/reference/methods#resize) it.
+
+## `onDragBegin`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the sheet has began dragging.
+
+## `onDragChange`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the sheet is being dragged.
+
+## `onDragEnd`
+
+Comes with [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload).
+
+This is called when the sheet dragging has ended.
+
+## `onPositionChange`
+
+Comes with [`PositionChangeEventPayload`](/reference/types#positionchangeeventpayload).
+
+This is called continuously when the sheet's position changes during drag operations or transitions. This event fires more frequently than `onDragChange` and provides real-time position updates.
+
+The `transitioning` property indicates whether the sheet is currently presenting or dismissing. On iOS, when `transitioning` is `true`, the position should be animated (ReanimatedTrueSheet handles this automatically).
+
+:::tip
+Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.
+:::
+
+## `onDidFocus`
+
+This is called when the sheet regains focus after a sheet presented on top of it is dismissed. Useful for refreshing data or re-enabling interactions when returning to a sheet in a stacked sheet scenario.
+
+## `onDidBlur`
+
+This is called when the sheet loses focus because another sheet is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.

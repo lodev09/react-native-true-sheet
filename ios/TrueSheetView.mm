@@ -20,6 +20,8 @@
 #import "events/OnDragBeginEvent.h"
 #import "events/OnDragChangeEvent.h"
 #import "events/OnDragEndEvent.h"
+#import "events/OnDidBlurEvent.h"
+#import "events/OnDidFocusEvent.h"
 #import "events/OnMountEvent.h"
 #import "events/OnPositionChangeEvent.h"
 #import "events/OnWillDismissEvent.h"
@@ -415,6 +417,14 @@ using namespace facebook::react;
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
   [self updateStateWithSize:size];
+}
+
+- (void)viewControllerDidFocus {
+  [OnDidFocusEvent emit:_eventEmitter];
+}
+
+- (void)viewControllerDidBlur {
+  [OnDidBlurEvent emit:_eventEmitter];
 }
 
 #pragma mark - Private Helpers

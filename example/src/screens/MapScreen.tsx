@@ -134,6 +134,12 @@ export const MapScreen = () => {
         onDidPresent={() => {
           console.log('Sheet is presented');
         }}
+        onDidFocus={() => {
+          console.log('Sheet is focused');
+        }}
+        onDidBlur={() => {
+          console.log('Sheet is blurred');
+        }}
         onMount={() => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');

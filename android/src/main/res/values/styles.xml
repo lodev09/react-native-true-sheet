@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Custom BottomSheetDialog style with edge-to-edge enabled -->
+    <!-- Smooth slide animation for BottomSheetDialog -->
+    <style name="TrueSheetAnimation" parent="Animation.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@anim/true_sheet_slide_in</item>
+        <item name="android:windowExitAnimation">@anim/true_sheet_slide_out</item>
+    </style>
+
+    <!-- Default BottomSheetDialog style with smooth animations -->
+    <style name="TrueSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowAnimationStyle">@style/TrueSheetAnimation</item>
+    </style>
+
+    <!-- BottomSheetDialog style with edge-to-edge and smooth animations -->
     <style name="TrueSheetEdgeToEdgeEnabledDialog" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="enableEdgeToEdge">true</item>
+        <item name="android:windowAnimationStyle">@style/TrueSheetAnimation</item>
     </style>
 </resources>

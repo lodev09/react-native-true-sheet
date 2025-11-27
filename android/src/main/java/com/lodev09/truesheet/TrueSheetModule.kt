@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.interfaces.TurboModule
 import com.facebook.react.uimanager.UIManagerHelper
+import com.lodev09.truesheet.core.TrueSheetDialogObserver
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -27,10 +28,11 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
 
   override fun invalidate() {
     super.invalidate()
-    // Clear all registered views on module invalidation
+    // Clear all registered views and observer on module invalidation
     synchronized(viewRegistry) {
       viewRegistry.clear()
     }
+    TrueSheetDialogObserver.clear()
   }
 
   /**

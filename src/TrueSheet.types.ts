@@ -30,6 +30,8 @@ export type DragBeginEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type DragEndEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type PositionChangeEvent = NativeSyntheticEvent<PositionChangeEventPayload>;
+export type DidFocusEvent = NativeSyntheticEvent<null>;
+export type DidBlurEvent = NativeSyntheticEvent<null>;
 
 /**
  * Blur style mapped to native values in IOS.
@@ -297,4 +299,14 @@ export interface TrueSheetProps extends ViewProps {
    * Comes with the detent info.
    */
   onPositionChange?: (event: PositionChangeEvent) => void;
+
+  /**
+   * Called when the sheet regains focus after a sheet presented on top of it is dismissed.
+   */
+  onDidFocus?: (event: DidFocusEvent) => void;
+
+  /**
+   * Called when the sheet loses focus because another sheet is presented on top of it.
+   */
+  onDidBlur?: (event: DidBlurEvent) => void;
 }

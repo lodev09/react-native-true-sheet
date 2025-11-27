@@ -6,7 +6,7 @@ keywords: [bottom sheet resizing, bottom sheet detents, bottom sheet auto resizi
 
 import resizing from './resizing.gif'
 
-`TrueSheet` has a main prop called [`detents`](/reference/props#detents) which allows you to define the detents that the sheet can support. This is an array of [`SheetDetent`](/reference/types#sheetdetent) that supports values like `"auto"` or fractional numbers (0-1).
+`TrueSheet` has a main prop called [`detents`](/reference/configuration#detents) which allows you to define the detents that the sheet can support. This is an array of [`SheetDetent`](/reference/types#sheetdetent) that supports values like `"auto"` or fractional numbers (0-1).
 
 In some cases, you may want to resize the sheet programmatically for a better experience.
 
@@ -51,7 +51,7 @@ TrueSheet.resize('resizing-sheet', 1)
 
 ### Listening to Detent Change
 
-If you want to get the active detent information, you can listen to detent changes by providing the [`onDetentChange`](/reference/props#ondetentchange) event.
+If you want to get the active detent information, you can listen to detent changes by providing the [`onDetentChange`](/reference/events#ondetentchange) event.
 
 The event comes with the [`DetentInfoEventPayload`](/reference/types#detentinfoeventpayload) that provides the detent `index` and `position` (Y position on screen).
 
