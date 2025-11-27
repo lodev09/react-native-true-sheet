@@ -314,3 +314,11 @@ The `transitioning` property indicates whether the sheet is currently presenting
 :::tip
 Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.
 :::
+
+### `onDidFocus`
+
+This is called when the sheet regains focus after a sheet presented on top of it is dismissed. Useful for refreshing data or re-enabling interactions when returning to a sheet in a stacked sheet scenario.
+
+### `onDidBlur`
+
+This is called when the sheet loses focus because another sheet is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.

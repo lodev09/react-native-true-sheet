@@ -29,6 +29,9 @@
   // Hidden view used to track position during native transition animations
   UIView *_fakeTransitionView;
   CADisplayLink *_displayLink;
+
+  // Reference to parent TrueSheetViewController (if presented from another sheet)
+  __weak TrueSheetViewController *_parentSheetController;
 }
 
 #pragma mark - Initialization
@@ -146,6 +149,16 @@
 
   // Only trigger on initial presentation, not repositioning
   if (!_isPresented) {
+    // Capture parent sheet reference if presented from another TrueSheet
+    UIViewController *presenter = self.presentingViewController;
+    if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
+      _parentSheetController = (TrueSheetViewController *)presenter;
+      // Notify parent that it lost focus
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
+        [_parentSheetController.delegate viewControllerDidBlur];
+      }
+    }
+
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
       [self.delegate viewControllerWillPresent];
     }
@@ -182,8 +195,18 @@
   // Only dispatch didDismiss when actually dismissing (not when another modal is presented on top)
   BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
 
-  if (isActuallyDismissing && [self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
-    [self.delegate viewControllerDidDismiss];
+  if (isActuallyDismissing) {
+    // Notify the parent sheet (if any) that it regained focus
+    if (_parentSheetController) {
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
+        [_parentSheetController.delegate viewControllerDidFocus];
+      }
+      _parentSheetController = nil;
+    }
+
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
+      [self.delegate viewControllerDidDismiss];
+    }
   }
 
   _isTrackingPositionFromLayout = NO;

@@ -14,12 +14,15 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
+import com.lodev09.truesheet.core.TrueSheetDialogObserver
+import com.lodev09.truesheet.events.BlurEvent
 import com.lodev09.truesheet.events.DetentChangeEvent
 import com.lodev09.truesheet.events.DidDismissEvent
 import com.lodev09.truesheet.events.DidPresentEvent
 import com.lodev09.truesheet.events.DragBeginEvent
 import com.lodev09.truesheet.events.DragChangeEvent
 import com.lodev09.truesheet.events.DragEndEvent
+import com.lodev09.truesheet.events.FocusEvent
 import com.lodev09.truesheet.events.MountEvent
 import com.lodev09.truesheet.events.PositionChangeEvent
 import com.lodev09.truesheet.events.WillDismissEvent
@@ -36,7 +39,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate {
 
-  private val viewController: TrueSheetViewController = TrueSheetViewController(reactContext)
+  internal val viewController: TrueSheetViewController = TrueSheetViewController(reactContext)
 
   private val containerView: TrueSheetContainerView?
     get() = viewController.getChildAt(0) as? TrueSheetContainerView
@@ -62,9 +65,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // Flag to prevent multiple pending sheet updates
   private var isSheetUpdatePending: Boolean = false
-
-  // Reference to parent sheet's controller (for stacking support)
-  private var parentViewController: TrueSheetViewController? = null
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -144,6 +144,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
+    TrueSheetDialogObserver.removeSheet(this)
 
     if (viewController.isPresented) {
       viewController.dismiss()
@@ -191,9 +192,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    // Show parent sheet again if this was a stacked sheet
-    parentViewController?.showDialog()
-    parentViewController = null
+    // Notify observer that this sheet was dismissed (will show/focus parent sheet)
+    TrueSheetDialogObserver.onSheetDidDismiss(this)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float) {
@@ -223,6 +223,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
     updateState(width, height)
+  }
+
+  override fun viewControllerDidFocus() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(FocusEvent(surfaceId, id))
+  }
+
+  override fun viewControllerDidBlur() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(BlurEvent(surfaceId, id))
   }
 
   // ==================== Property Setters (forward to controller) ====================
@@ -300,15 +310,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Find and hide parent sheet if this sheet is nested inside another TrueSheet
-    // Only hide if parent is not expanded (otherwise it's already covering the screen)
+    // Notify observer that this sheet will present (will hide/blur topmost sheet)
     if (!viewController.isPresented) {
-      parentViewController = findParentViewController()
-      if (parentViewController?.isExpanded == false) {
-        parentViewController?.hideDialog()
-      } else {
-        parentViewController = null
-      }
+      TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
     }
 
     viewController.presentPromise = promiseCallback
@@ -319,21 +323,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     viewController.dismissPromise = promiseCallback
     viewController.dismiss()
-  }
-
-  /**
-   * Traverses up the view hierarchy to find a parent TrueSheetViewController.
-   * This is used to detect if this sheet is nested inside another TrueSheet's content.
-   */
-  private fun findParentViewController(): TrueSheetViewController? {
-    var current: ViewGroup? = parent as? ViewGroup
-    while (current != null) {
-      if (current is TrueSheetViewController) {
-        return current
-      }
-      current = current.parent as? ViewGroup
-    }
-    return null
   }
 
   /**

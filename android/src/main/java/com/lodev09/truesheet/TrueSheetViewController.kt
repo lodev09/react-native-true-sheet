@@ -41,6 +41,8 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragEnd(index: Int, position: Float)
   fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
+  fun viewControllerDidFocus()
+  fun viewControllerDidBlur()
 }
 
 /**
@@ -348,11 +350,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   /**
+   * Returns the current top position of the sheet (Y coordinate from screen top).
+   * Used for comparing sheet positions during stacking.
+   */
+  val currentSheetTop: Int
+    get() = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
+
+  /**
+   * Returns the expected top position of the sheet when presented at the given detent index.
+   * Used for comparing sheet positions before presentation.
+   */
+  fun getExpectedSheetTop(detentIndex: Int): Int {
+    if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
+    val detentHeight = getDetentHeight(detents[detentIndex])
+    return screenHeight - detentHeight
+  }
+
+  /**
    * Hides the dialog without dismissing it.
    * Used when another TrueSheet presents on top.
    */
   fun hideDialog() {
     dialog?.window?.decorView?.visibility = View.INVISIBLE
+
+    // Emit off-screen position
+    val offScreenPosition = screenHeight.pxToDp()
+    delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
   }
 
   /**
@@ -361,6 +384,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun showDialog() {
     dialog?.window?.decorView?.visibility = View.VISIBLE
+
+    // Emit current position
+    val detentInfo = getDetentInfoForIndex(currentDetentIndex)
+    delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
   }
 
   // ====================================================================
