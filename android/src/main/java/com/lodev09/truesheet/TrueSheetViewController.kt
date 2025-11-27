@@ -319,12 +319,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       reactContext = reactContext,
       onModalPresented = {
         if (isPresented) {
-          dialog?.window?.decorView?.visibility = View.INVISIBLE
+          hideDialog()
         }
       },
       onModalDismissed = {
         if (isPresented) {
-          dialog?.window?.decorView?.visibility = View.VISIBLE
+          showDialog()
         }
       }
     )
@@ -334,6 +334,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun cleanupModalObserver() {
     rnScreensObserver?.stop()
     rnScreensObserver = null
+  }
+
+  // ====================================================================
+  // MARK: - Dialog Visibility (for stacking)
+  // ====================================================================
+
+  /**
+   * Returns true if the sheet's top is at or above the status bar.
+   */
+  val isExpanded: Boolean
+    get() {
+      val sheetTop = bottomSheetView?.top ?: return false
+      return sheetTop <= statusBarHeight
+    }
+
+  /**
+   * Hides the dialog without dismissing it.
+   * Used when another TrueSheet presents on top.
+   */
+  fun hideDialog() {
+    dialog?.window?.decorView?.visibility = View.INVISIBLE
+  }
+
+  /**
+   * Shows a previously hidden dialog.
+   * Used when the sheet on top dismisses.
+   */
+  fun showDialog() {
+    dialog?.window?.decorView?.visibility = View.VISIBLE
   }
 
   // ====================================================================

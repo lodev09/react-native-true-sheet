@@ -343,6 +343,18 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       return Math.min(1, detent);
     });
 
+    const containerStyle =
+      this.props.scrollable &&
+      Platform.select({
+        android: styles.scrollableAndroidContainer,
+      });
+
+    const contentStyle =
+      this.props.scrollable &&
+      Platform.select({
+        android: styles.scrollableContent,
+      });
+
     return (
       <TrueSheetViewNativeComponent
         {...rest}
@@ -375,19 +387,13 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPositionChange={this.onPositionChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            style={
-              this.props.scrollable && Platform.select({ android: styles.scrollableContainer })
-            }
-          >
+          <TrueSheetContainerViewNativeComponent style={containerStyle}>
             {header && (
               <TrueSheetHeaderViewNativeComponent>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
-            <TrueSheetContentViewNativeComponent
-              style={[style, this.props.scrollable && styles.scrollableContent]}
-            >
+            <TrueSheetContentViewNativeComponent style={[style, contentStyle]}>
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
@@ -404,11 +410,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const styles = StyleSheet.create({
   sheetView: {
-    position: 'absolute',
-    width: '100%',
     zIndex: -9999,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+
+    // Android needs a fixed bottom to avoid jumping content
+    bottom: Platform.select({ android: 0 }),
   },
-  scrollableContainer: {
+  scrollableAndroidContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
