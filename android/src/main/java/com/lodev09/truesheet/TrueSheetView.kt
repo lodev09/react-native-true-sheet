@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
@@ -62,6 +63,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Flag to prevent multiple pending sheet updates
   private var isSheetUpdatePending: Boolean = false
 
+  // Reference to parent sheet's controller (for stacking support)
+  private var parentViewController: TrueSheetViewController? = null
+
   init {
     reactContext.addLifecycleEventListener(this)
     viewController.delegate = this
@@ -88,17 +92,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     super.setId(id)
     viewController.id = id
     TrueSheetModule.registerView(this, id)
-  }
-
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-
-    // Don't unregister if we have active modals - we need the view for recovery
-    if (viewController.hasActiveModals()) {
-      return
-    }
-
-    onDropInstance()
   }
 
   /**
@@ -197,6 +190,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun viewControllerDidDismiss() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
+
+    // Show parent sheet again if this was a stacked sheet
+    parentViewController?.showDialog()
+    parentViewController = null
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float) {
@@ -303,6 +300,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
+    // Find and hide parent sheet if this sheet is nested inside another TrueSheet
+    // Only hide if parent is not expanded (otherwise it's already covering the screen)
+    if (!viewController.isPresented) {
+      parentViewController = findParentViewController()
+      if (parentViewController?.isExpanded == false) {
+        parentViewController?.hideDialog()
+      } else {
+        parentViewController = null
+      }
+    }
+
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
   }
@@ -311,6 +319,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(promiseCallback: () -> Unit) {
     viewController.dismissPromise = promiseCallback
     viewController.dismiss()
+  }
+
+  /**
+   * Traverses up the view hierarchy to find a parent TrueSheetViewController.
+   * This is used to detect if this sheet is nested inside another TrueSheet's content.
+   */
+  private fun findParentViewController(): TrueSheetViewController? {
+    var current: ViewGroup? = parent as? ViewGroup
+    while (current != null) {
+      if (current is TrueSheetViewController) {
+        return current
+      }
+      current = current.parent as? ViewGroup
+    }
+    return null
   }
 
   /**

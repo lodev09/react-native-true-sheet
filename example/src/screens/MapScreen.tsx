@@ -120,6 +120,7 @@ export const MapScreen = () => {
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
+        edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
@@ -166,10 +167,10 @@ export const MapScreen = () => {
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
-        <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
         <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
+      <FlatListSheet ref={flatListSheet} />
     </View>
   );
 };

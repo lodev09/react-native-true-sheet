@@ -6,7 +6,7 @@ keywords: [bottom sheet stacking, multiple bottom sheets, parent bottom sheet, c
 
 import stacking from './stacking.gif'
 
-Sometimes you want to stack the sheets one after another. On iOS, this can cause issues. There are _**two**_ ways to resolve this.
+Sometimes you want to stack the sheets one after another. There are _**two**_ ways to do this.
 
 <img alt="stacking" src={stacking} width="300"/>
 
@@ -16,8 +16,8 @@ Sometimes you want to stack the sheets one after another. On iOS, this can cause
 
 ```tsx {2-3,9-9}
 const presentSheet2 = async () => {
-  await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss ✅
-  await sheet2.current?.present() // Sheet 2 will now present 🎉
+  await sheet1.current?.dismiss() // Wait for sheet 1 to dismiss
+  await sheet2.current?.present() // Sheet 2 will now present
 }
 
 return (
@@ -34,11 +34,11 @@ return (
 ```
 ### 2. Define the 2nd sheet within the "parent" sheet.
 
-IOS handles this automatically by default 😎.
+Both iOS and Android handle this automatically. When a nested sheet presents, the parent sheet is hidden. When the nested sheet dismisses, the parent sheet is shown again.
 
 ```tsx {2-2,7-7}
 const presentSheet2 = async () => {
-  await sheet2.current?.present() // Sheet 2 will now present 🎉
+  await sheet2.current?.present() // Sheet 2 will now present
 }
 
 return (
@@ -51,6 +51,6 @@ return (
 )
 ```
 
-:::tip
-You can do the same with **Android** for a more consistent user experience.
+:::note
+On Android, the parent sheet is only hidden if it's not fully expanded. This is to be consistent with iOS, which does not hide the parent sheet when stacked.
 :::
