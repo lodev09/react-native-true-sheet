@@ -2,7 +2,6 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
-import androidx.core.view.isNotEmpty
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
@@ -25,30 +24,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var delegate: TrueSheetContainerViewDelegate? = null
 
-  val contentView: TrueSheetContentView?
-    get() = if (isNotEmpty() && getChildAt(0) is TrueSheetContentView) {
-      getChildAt(0) as TrueSheetContentView
-    } else {
-      null
-    }
-
-  val headerView: TrueSheetHeaderView?
-    get() {
-      for (i in 0 until childCount) {
-        val child = getChildAt(i)
-        if (child is TrueSheetHeaderView) return child
-      }
-      return null
-    }
-
-  val footerView: TrueSheetFooterView?
-    get() {
-      for (i in 0 until childCount) {
-        val child = getChildAt(i)
-        if (child is TrueSheetFooterView) return child
-      }
-      return null
-    }
+  var contentView: TrueSheetContentView? = null
+  var headerView: TrueSheetHeaderView? = null
+  var footerView: TrueSheetFooterView? = null
 
   var contentHeight: Int = 0
   var headerHeight: Int = 0
@@ -64,24 +42,42 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     super.addView(child, index)
 
     when (child) {
-      is TrueSheetContentView -> child.delegate = this
-      is TrueSheetHeaderView -> child.delegate = this
-      is TrueSheetFooterView -> child.delegate = this
+      is TrueSheetContentView -> {
+        child.delegate = this
+        contentView = child
+      }
+
+      is TrueSheetHeaderView -> {
+        child.delegate = this
+        headerView = child
+      }
+
+      is TrueSheetFooterView -> {
+        child.delegate = this
+        footerView = child
+      }
     }
   }
 
   override fun removeViewAt(index: Int) {
-    val view = getChildAt(index)
-
-    when (view) {
-      is TrueSheetContentView -> view.delegate = null
+    when (val view = getChildAt(index)) {
+      is TrueSheetContentView -> {
+        view.delegate = null
+        contentView = null
+        contentViewDidChangeSize(0, 0)
+      }
 
       is TrueSheetHeaderView -> {
         view.delegate = null
+        headerView = null
         headerViewDidChangeSize(0, 0)
       }
 
-      is TrueSheetFooterView -> view.delegate = null
+      is TrueSheetFooterView -> {
+        view.delegate = null
+        footerView = null
+        footerViewDidChangeSize(0, 0)
+      }
     }
 
     super.removeViewAt(index)
