@@ -94,17 +94,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     TrueSheetModule.registerView(this, id)
   }
 
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-
-    // Don't unregister if we have active modals - we need the view for recovery
-    if (viewController.hasActiveModals()) {
-      return
-    }
-
-    onDropInstance()
-  }
-
   /**
    * Called by the manager after all properties are set.
    * Reconfigures the sheet if it's currently presented.

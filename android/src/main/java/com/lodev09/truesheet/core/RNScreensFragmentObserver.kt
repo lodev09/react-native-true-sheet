@@ -20,11 +20,6 @@ class RNScreensFragmentObserver(
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
 
   /**
-   * Check if there are active modal fragments being tracked.
-   */
-  fun hasActiveModals(): Boolean = activeModalFragments.isNotEmpty()
-
-  /**
    * Start observing fragment lifecycle events.
    */
   fun start() {

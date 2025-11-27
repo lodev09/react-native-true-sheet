@@ -15,7 +15,7 @@ export const NavigationSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref
   };
 
   return (
-    <TrueSheet ref={ref} detents={['auto']} {...props}>
+    <TrueSheet ref={ref} detents={['auto']} dimmed={false} {...props}>
       <View style={styles.container}>
         <Text style={styles.title}>Navigation Sheet</Text>
         <Text style={styles.description}>

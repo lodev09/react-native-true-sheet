@@ -186,8 +186,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   private var rnScreensObserver: RNScreensFragmentObserver? = null
 
-  fun hasActiveModals(): Boolean = rnScreensObserver?.hasActiveModals() ?: false
-
   // ====================================================================
   // MARK: - Initialization
   // ====================================================================
