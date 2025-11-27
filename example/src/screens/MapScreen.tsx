@@ -32,7 +32,7 @@ import {
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
 
-const DETENT_1 = Platform.select({ ios: 0.094, default: 0.113 });
+const DETENT_1_HEIGHT = 90;
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -41,6 +41,8 @@ export const MapScreen = () => {
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
+
+  const detent1 = DETENT_1_HEIGHT / height;
 
   const sheetRef = useRef<TrueSheet>(null);
 
@@ -113,7 +115,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[DETENT_1, 0.8, 1]}
+        detents={[detent1, 0.8, 1]}
         ref={sheetRef}
         dimmedDetentIndex={2}
         dismissible={false}

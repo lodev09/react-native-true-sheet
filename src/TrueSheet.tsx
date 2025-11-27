@@ -376,17 +376,24 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onPositionChange={this.onPositionChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent testID={testID} collapsable={false}>
+          <TrueSheetContainerViewNativeComponent
+            style={
+              this.props.fitScrollView && Platform.select({ android: styles.scrollableContainer })
+            }
+            testID={testID}
+          >
             {header && (
-              <TrueSheetHeaderViewNativeComponent collapsable={false}>
+              <TrueSheetHeaderViewNativeComponent>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
-            <TrueSheetContentViewNativeComponent style={style} collapsable={false}>
+            <TrueSheetContentViewNativeComponent
+              style={[style, this.props.fitScrollView && styles.scrollableContent]}
+            >
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
-              <TrueSheetFooterViewNativeComponent style={styles.footer} collapsable={false}>
+              <TrueSheetFooterViewNativeComponent style={styles.footer}>
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
@@ -402,6 +409,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     zIndex: -9999,
+  },
+  scrollableContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  scrollableContent: {
+    flexGrow: 1,
+    flexBasis: 0,
   },
   footer: {
     position: 'absolute',
