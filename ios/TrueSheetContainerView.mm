@@ -167,6 +167,10 @@ using namespace facebook::react;
   }
 }
 
+- (void)contentViewDidChangeChildren {
+  [self setupContentScrollViewPinning];
+}
+
 #pragma mark - TrueSheetHeaderViewDelegate
 
 - (void)headerViewDidChangeSize:(CGSize)newSize {

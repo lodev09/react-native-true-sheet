@@ -243,7 +243,7 @@
   // Also attach to ScrollView's pan gesture if present
   TrueSheetContentView *contentView = [self findContentView:presentedView];
   if (contentView) {
-    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView];
+    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
     if (scrollViewComponent && scrollViewComponent.scrollView) {
       [GestureUtil attachPanGestureHandler:scrollViewComponent.scrollView
                                     target:self
