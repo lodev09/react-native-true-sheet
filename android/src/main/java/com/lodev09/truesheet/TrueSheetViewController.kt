@@ -208,7 +208,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val style = if (edgeToEdgeEnabled) {
       com.lodev09.truesheet.R.style.TrueSheetEdgeToEdgeEnabledDialog
     } else {
-      0
+      com.lodev09.truesheet.R.style.TrueSheetDialog
     }
 
     dialog = BottomSheetDialog(reactContext, style).apply {
