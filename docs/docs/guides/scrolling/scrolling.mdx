@@ -14,18 +14,14 @@ Follow the guide below so you can scroll your content using `TrueSheet`.
 
 ## How?
 
-### IOS
+Enable the `scrollable` prop and set `nestedScrollEnabled` on your `ScrollView` or `FlatList` to properly handle scrolling within the sheet.
 
-On iOS, you can enable the `scrollable` prop to automatically pin scroll views (including `ScrollView` and `FlatList`) to fit within the sheet's available space.
-
-When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container.
-
-```tsx {6-8}
+```tsx {5-7}
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
 
   return (
-    <TrueSheet ref={sheet} scrollable={true}>
+    <TrueSheet ref={sheet} scrollable>
       <View>{/* Header content */}</View>
       <ScrollView nestedScrollEnabled>
         <View />
@@ -39,24 +35,18 @@ const App = () => {
 By default, `scrollable` is `false`. Set it to `true` to enable automatic ScrollView fitting.
 :::
 
+### iOS
+
+On iOS, `scrollable` automatically pins scroll views (including `ScrollView` and `FlatList`) to fit within the sheet's available space. The ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container.
+
 ### Android
 
-On Android, `nestedScrollEnabled` needs to be enabled so that scrolling works when the sheet is expanded to its `maxHeight`.
+On Android, `scrollable` ensures the scroll view fills the available sheet space. You must also enable `nestedScrollEnabled` on your `ScrollView` or `FlatList` for scrolling to work properly.
 
-```tsx {6}
-const App = () => {
-  const sheet = useRef<TrueSheet>(null)
+:::warning
+The `auto` detent does not work well with `scrollable` on Android. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead when using `scrollable`.
+:::
 
-  return (
-    <TrueSheet ref={sheet}>
-      <ScrollView nestedScrollEnabled>
-        <View />
-      </ScrollView>
-    </TrueSheet>
-  )
-}
-```
-
-:::caution
+:::warning
 If your `ScrollView` content height is smaller than the sheet height, scrolling may not work properly. See [Troubleshooting](/troubleshooting#unable-to-drag-on-android) for more details.
 :::
