@@ -12,13 +12,8 @@ import com.facebook.react.uimanager.events.Event
  * Fired when the detent changes
  * Payload: { index: number, position: number, detent: number }
  */
-class DetentChangeEvent(
-  surfaceId: Int,
-  viewId: Int,
-  private val index: Int,
-  private val position: Float,
-  private val detent: Float
-) : Event<DetentChangeEvent>(surfaceId, viewId) {
+class DetentChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
+  Event<DetentChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 

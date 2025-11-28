@@ -27,13 +27,8 @@ class MountEvent(surfaceId: Int, viewId: Int) : Event<MountEvent>(surfaceId, vie
  * Fired before the sheet is presented
  * Payload: { index: number, position: number, detent: number }
  */
-class WillPresentEvent(
-  surfaceId: Int,
-  viewId: Int,
-  private val index: Int,
-  private val position: Float,
-  private val detent: Float
-) : Event<WillPresentEvent>(surfaceId, viewId) {
+class WillPresentEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
+  Event<WillPresentEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 
@@ -54,13 +49,8 @@ class WillPresentEvent(
  * Fired after the sheet is presented
  * Payload: { index: number, position: number, detent: number }
  */
-class DidPresentEvent(
-  surfaceId: Int,
-  viewId: Int,
-  private val index: Int,
-  private val position: Float,
-  private val detent: Float
-) : Event<DidPresentEvent>(surfaceId, viewId) {
+class DidPresentEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
+  Event<DidPresentEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 

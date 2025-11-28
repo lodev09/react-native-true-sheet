@@ -364,13 +364,19 @@ using namespace facebook::react;
   NSInteger index = [_controller currentDetentIndex];
   _controller.activeDetentIndex = index;
   CGFloat detent = [_controller detentValueForIndex:index];
-  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter index:index position:_controller.currentPosition detent:detent];
+  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter
+                                      index:index
+                                   position:_controller.currentPosition
+                                     detent:detent];
 }
 
 - (void)viewControllerDidPresent {
   NSInteger index = [_controller currentDetentIndex];
   CGFloat detent = [_controller detentValueForIndex:index];
-  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:_controller.currentPosition detent:detent];
+  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter
+                                     index:index
+                                  position:_controller.currentPosition
+                                    detent:detent];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
@@ -412,7 +418,11 @@ using namespace facebook::react;
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
                           transitioning:(BOOL)transitioning {
-  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:index position:position detent:detent transitioning:transitioning];
+  [TrueSheetStateEvents emitPositionChange:_eventEmitter
+                                     index:index
+                                  position:position
+                                    detent:detent
+                             transitioning:transitioning];
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
