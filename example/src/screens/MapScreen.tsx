@@ -123,6 +123,12 @@ export const MapScreen = () => {
         onDidFocus={() => {
           console.log('Sheet is focused');
         }}
+        onWillFocus={() => {
+          console.log('Sheet will focus');
+        }}
+        onWillBlur={() => {
+          console.log('Sheet will blur');
+        }}
         onDidBlur={() => {
           console.log('Sheet is blurred');
         }}
@@ -130,7 +136,7 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        header={<Header onLayout={(e) => console.log(e.nativeEvent.layout.height)} />}
+        header={<Header />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>

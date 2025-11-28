@@ -64,6 +64,12 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
           `drag began at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
+      onWillBlur={() => {
+        console.log('Basic sheet will blur');
+      }}
+      onDidBlur={() => {
+        console.log('Basic sheet blurred');
+      }}
       onDragEnd={(e) =>
         console.log(
           `drag ended at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

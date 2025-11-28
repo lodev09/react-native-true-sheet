@@ -56,7 +56,9 @@ export interface NativeProps extends ViewProps {
   onDragChange?: DirectEventHandler<DetentInfoEventPayload>;
   onDragEnd?: DirectEventHandler<DetentInfoEventPayload>;
   onPositionChange?: DirectEventHandler<PositionChangeEventPayload>;
+  onWillFocus?: DirectEventHandler<null>;
   onDidFocus?: DirectEventHandler<null>;
+  onWillBlur?: DirectEventHandler<null>;
   onDidBlur?: DirectEventHandler<null>;
 }
 

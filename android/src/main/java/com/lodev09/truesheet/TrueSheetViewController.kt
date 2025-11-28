@@ -34,14 +34,16 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
-  fun viewControllerDidDismiss()
+  fun viewControllerDidDismiss(hadParent: Boolean)
   fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float, detent: Float)
   fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
+  fun viewControllerWillFocus()
   fun viewControllerDidFocus()
+  fun viewControllerWillBlur()
   fun viewControllerDidBlur()
 }
 
@@ -109,6 +111,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var isPresented = false
     private set
 
+  var isDialogVisible = false
+    private set
+
   var currentDetentIndex: Int = -1
     private set
 
@@ -118,6 +123,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var presentPromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
+
+  // Reference to parent TrueSheetView (if presented from another sheet)
+  var parentSheetView: TrueSheetView? = null
 
   // ====================================================================
   // MARK: - Configuration Properties
@@ -242,12 +250,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog = null
     isDragging = false
     isPresented = false
+    isDialogVisible = false
     lastEmittedPositionPx = -1
   }
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
       isPresented = true
+      isDialogVisible = true
       resetAnimation()
       setupBackground()
       setupGrabber()
@@ -259,6 +269,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
         emitChangePositionDelegate(detentInfo.index, positionPx, transitioning = true)
 
+        // Notify parent sheet that it has lost focus (after this sheet appeared)
+        parentSheetView?.viewControllerDidBlur()
+
         presentPromise?.invoke()
         presentPromise = null
 
@@ -267,13 +280,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnCancelListener {
+      // Notify parent sheet that it is about to regain focus
+      parentSheetView?.viewControllerWillFocus()
+
       delegate?.viewControllerWillDismiss()
     }
 
     dialog.setOnDismissListener {
+      val hadParent = parentSheetView != null
+
+      // Notify parent sheet that it has regained focus
+      parentSheetView?.viewControllerDidFocus()
+      parentSheetView = null
+
       dismissPromise?.invoke()
       dismissPromise = null
-      delegate?.viewControllerDidDismiss()
+      delegate?.viewControllerDidDismiss(hadParent)
       cleanupDialog()
     }
   }
@@ -374,9 +396,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Hides the dialog without dismissing it.
-   * Used when another TrueSheet presents on top.
+   * Used when another TrueSheet presents on top or when RN screen is presented.
    */
   fun hideDialog() {
+    isDialogVisible = false
     dialog?.window?.decorView?.visibility = View.INVISIBLE
 
     // Emit off-screen position (detent = 0 since sheet is fully hidden)
@@ -388,6 +411,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Used when the sheet on top dismisses.
    */
   fun showDialog() {
+    isDialogVisible = true
     dialog?.window?.decorView?.visibility = View.VISIBLE
 
     // Emit current position
@@ -420,6 +444,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       val detentInfo = getDetentInfoForIndex(detentIndex)
       val detent = getDetentValueForIndex(detentInfo.index)
+
+      // Notify parent sheet that it is about to lose focus (before this sheet appears)
+      parentSheetView?.viewControllerWillBlur()
+
       delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
 
       if (!animated) {

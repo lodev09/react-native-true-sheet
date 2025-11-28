@@ -3,76 +3,54 @@ package com.lodev09.truesheet.core
 import com.lodev09.truesheet.TrueSheetView
 
 /**
- * Observes TrueSheet dialog lifecycle to manage sheet stacking.
- * Automatically hides/shows sheets and dispatches focus/blur events
- * when sheets are presented on top of each other.
+ * Manages TrueSheet stacking behavior.
+ * Tracks presented sheets and handles visibility when sheets stack on top of each other.
  */
 object TrueSheetDialogObserver {
 
-  /**
-   * Stack of currently presented sheet views (most recent on top)
-   */
   private val presentedSheetStack = mutableListOf<TrueSheetView>()
 
   /**
    * Called when a sheet is about to be presented.
-   * Hides and blurs the current topmost sheet if exists.
-   *
-   * @param sheetView The sheet that is about to be presented
-   * @param detentIndex The detent index the sheet will be presented at
+   * Returns the visible parent sheet to stack on, or null if none.
    */
   @JvmStatic
-  fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int) {
+  fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
     synchronized(presentedSheetStack) {
-      // Get the current topmost sheet
-      val topSheet = presentedSheetStack.lastOrNull()
+      val parentSheet = presentedSheetStack.lastOrNull()
+        ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
 
-      // Hide and blur the topmost sheet if it exists
-      topSheet?.let {
-        // Don't hide if the top sheet is fully expanded (covers the screen)
-        // or if the top sheet is smaller than the presenting sheet
-        // A smaller topSheetTop value means the sheet is taller (closer to top of screen)
-        val topSheetTop = it.viewController.currentSheetTop
-        val presentingSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
-
-        if (!it.viewController.isExpanded && topSheetTop <= presentingSheetTop) {
+      // Hide parent if the new sheet would cover it
+      parentSheet?.let {
+        val parentTop = it.viewController.currentSheetTop
+        val newSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
+        if (!it.viewController.isExpanded && parentTop <= newSheetTop) {
           it.viewController.hideDialog()
         }
-        it.viewControllerDidBlur()
       }
 
-      // Add new sheet to stack
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
       }
+
+      return parentSheet
     }
   }
 
   /**
    * Called when a sheet has been dismissed.
-   * Shows and focuses the sheet below it (if any).
-   *
-   * @param sheetView The sheet that was dismissed
+   * Shows the parent sheet if this sheet was stacked on it.
    */
   @JvmStatic
-  fun onSheetDidDismiss(sheetView: TrueSheetView) {
+  fun onSheetDidDismiss(sheetView: TrueSheetView, hadParent: Boolean) {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
-
-      // Show and focus the new topmost sheet
-      presentedSheetStack.lastOrNull()?.let {
-        it.viewController.showDialog()
-        it.viewControllerDidFocus()
+      if (hadParent) {
+        presentedSheetStack.lastOrNull()?.viewController?.showDialog()
       }
     }
   }
 
-  /**
-   * Removes a sheet from the stack without triggering focus events.
-   * Used when a sheet is being destroyed/cleaned up.
-   *
-   * @param sheetView The sheet to remove
-   */
   @JvmStatic
   fun removeSheet(sheetView: TrueSheetView) {
     synchronized(presentedSheetStack) {
@@ -80,10 +58,6 @@ object TrueSheetDialogObserver {
     }
   }
 
-  /**
-   * Clears all tracked sheets.
-   * Used when the module is invalidated.
-   */
   @JvmStatic
   fun clear() {
     synchronized(presentedSheetStack) {

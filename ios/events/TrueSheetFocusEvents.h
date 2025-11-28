@@ -15,12 +15,15 @@ using namespace facebook::react;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OnDragChangeEvent : NSObject
+@interface TrueSheetFocusEvents : NSObject
 
-+ (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
-       index:(NSInteger)index
-    position:(CGFloat)position
-      detent:(CGFloat)detent;
++ (void)emitWillFocus:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
+
++ (void)emitDidFocus:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
+
++ (void)emitWillBlur:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
+
++ (void)emitDidBlur:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
 
 @end
 

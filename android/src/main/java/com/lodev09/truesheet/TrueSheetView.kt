@@ -14,18 +14,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetDialogObserver
-import com.lodev09.truesheet.events.BlurEvent
-import com.lodev09.truesheet.events.DetentChangeEvent
-import com.lodev09.truesheet.events.DidDismissEvent
-import com.lodev09.truesheet.events.DidPresentEvent
-import com.lodev09.truesheet.events.DragBeginEvent
-import com.lodev09.truesheet.events.DragChangeEvent
-import com.lodev09.truesheet.events.DragEndEvent
-import com.lodev09.truesheet.events.FocusEvent
-import com.lodev09.truesheet.events.MountEvent
-import com.lodev09.truesheet.events.PositionChangeEvent
-import com.lodev09.truesheet.events.WillDismissEvent
-import com.lodev09.truesheet.events.WillPresentEvent
+import com.lodev09.truesheet.events.*
 
 /**
  * Main TrueSheet host view that manages the sheet dialog and dispatches events to JavaScript.
@@ -187,12 +176,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     containerView?.footerView?.eventDispatcher = null
   }
 
-  override fun viewControllerDidDismiss() {
+  override fun viewControllerDidDismiss(hadParent: Boolean) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    // Notify observer that this sheet was dismissed (will show/focus parent sheet)
-    TrueSheetDialogObserver.onSheetDidDismiss(this)
+    TrueSheetDialogObserver.onSheetDidDismiss(this, hadParent)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {
@@ -224,9 +212,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     updateState(width, height)
   }
 
+  override fun viewControllerWillFocus() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(WillFocusEvent(surfaceId, id))
+  }
+
   override fun viewControllerDidFocus() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(FocusEvent(surfaceId, id))
+  }
+
+  override fun viewControllerWillBlur() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(WillBlurEvent(surfaceId, id))
   }
 
   override fun viewControllerDidBlur() {
@@ -309,11 +307,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Notify observer that this sheet will present (will hide/blur topmost sheet)
     if (!viewController.isPresented) {
-      TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
+      viewController.parentSheetView = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
     }
-
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
   }
