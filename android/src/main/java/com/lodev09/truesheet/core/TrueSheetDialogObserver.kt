@@ -26,7 +26,11 @@ object TrueSheetDialogObserver {
   fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
     synchronized(presentedSheetStack) {
       // Get the current topmost sheet (will be the parent)
-      val parentSheet = presentedSheetStack.lastOrNull()
+      val topSheet = presentedSheetStack.lastOrNull()
+
+      // Only treat as parent if the sheet is actually presented and visible
+      // This prevents capturing sheets that are behind RN screens
+      val parentSheet = topSheet?.takeIf { it.viewController.isPresented }
 
       // Hide the parent sheet if needed
       parentSheet?.let {
