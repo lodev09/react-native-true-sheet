@@ -123,6 +123,12 @@ export const MapScreen = () => {
         onDidFocus={() => {
           console.log('Sheet is focused');
         }}
+        onWillFocus={() => {
+          console.log('Sheet will focus');
+        }}
+        onWillBlur={() => {
+          console.log('Sheet will blur');
+        }}
         onDidBlur={() => {
           console.log('Sheet is blurred');
         }}

@@ -14,18 +14,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetDialogObserver
-import com.lodev09.truesheet.events.BlurEvent
-import com.lodev09.truesheet.events.DetentChangeEvent
-import com.lodev09.truesheet.events.DidDismissEvent
-import com.lodev09.truesheet.events.DidPresentEvent
-import com.lodev09.truesheet.events.DragBeginEvent
-import com.lodev09.truesheet.events.DragChangeEvent
-import com.lodev09.truesheet.events.DragEndEvent
-import com.lodev09.truesheet.events.FocusEvent
-import com.lodev09.truesheet.events.MountEvent
-import com.lodev09.truesheet.events.PositionChangeEvent
-import com.lodev09.truesheet.events.WillDismissEvent
-import com.lodev09.truesheet.events.WillPresentEvent
+import com.lodev09.truesheet.events.*
 
 /**
  * Main TrueSheet host view that manages the sheet dialog and dispatches events to JavaScript.
@@ -224,9 +213,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     updateState(width, height)
   }
 
+  override fun viewControllerWillFocus() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(WillFocusEvent(surfaceId, id))
+  }
+
   override fun viewControllerDidFocus() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(FocusEvent(surfaceId, id))
+  }
+
+  override fun viewControllerWillBlur() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(WillBlurEvent(surfaceId, id))
   }
 
   override fun viewControllerDidBlur() {

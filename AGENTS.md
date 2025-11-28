@@ -51,17 +51,11 @@ ios/
 ├── TrueSheetViewController.mm/.h  # UIViewController for sheet presentation
 ├── TrueSheetModule.mm/.h      # TurboModule for imperative methods
 ├── TrueSheetComponentDescriptor.h
-├── events/                    # Event classes
-│   ├── OnDetentChangeEvent.mm/.h
-│   ├── OnDidDismissEvent.mm/.h
-│   ├── OnDidPresentEvent.mm/.h
-│   ├── OnDragBeginEvent.mm/.h
-│   ├── OnDragChangeEvent.mm/.h
-│   ├── OnDragEndEvent.mm/.h
-│   ├── OnMountEvent.mm/.h
-│   ├── OnPositionChangeEvent.mm/.h
-│   ├── OnWillDismissEvent.mm/.h
-│   └── OnWillPresentEvent.mm/.h
+├── events/                    # Event classes (grouped by category)
+│   ├── TrueSheetLifecycleEvents.mm/.h  # mount, willPresent, didPresent, willDismiss, didDismiss
+│   ├── TrueSheetDragEvents.mm/.h       # dragBegin, dragChange, dragEnd
+│   ├── TrueSheetFocusEvents.mm/.h      # willFocus, didFocus, willBlur, didBlur
+│   └── TrueSheetStateEvents.mm/.h      # detentChange, positionChange
 └── utils/                     # Utility classes
     ├── ConversionUtil.mm/.h
     ├── GestureUtil.mm/.h
@@ -82,17 +76,11 @@ android/src/main/java/com/lodev09/truesheet/
 ├── TrueSheetViewController.kt # Dialog/BottomSheet controller
 ├── TrueSheetModule.kt         # TurboModule
 ├── TrueSheetPackage.kt        # React Native package
-├── events/                    # Event classes
-│   ├── DetentChangeEvent.kt
-│   ├── DidDismissEvent.kt
-│   ├── DidPresentEvent.kt
-│   ├── DragBeginEvent.kt
-│   ├── DragChangeEvent.kt
-│   ├── DragEndEvent.kt
-│   ├── MountEvent.kt
-│   ├── PositionChangeEvent.kt
-│   ├── WillDismissEvent.kt
-│   └── WillPresentEvent.kt
+├── events/                    # Event classes (grouped by category)
+│   ├── TrueSheetLifecycleEvents.kt  # MountEvent, WillPresentEvent, DidPresentEvent, WillDismissEvent, DidDismissEvent
+│   ├── TrueSheetDragEvents.kt       # DragBeginEvent, DragChangeEvent, DragEndEvent
+│   ├── TrueSheetFocusEvents.kt      # WillFocusEvent, FocusEvent, WillBlurEvent, BlurEvent
+│   └── TrueSheetStateEvents.kt      # DetentChangeEvent, PositionChangeEvent
 └── utils/
     └── ScreenUtils.kt
 

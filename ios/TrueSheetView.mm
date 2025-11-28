@@ -14,18 +14,10 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
-#import "events/OnDetentChangeEvent.h"
-#import "events/OnDidBlurEvent.h"
-#import "events/OnDidDismissEvent.h"
-#import "events/OnDidFocusEvent.h"
-#import "events/OnDidPresentEvent.h"
-#import "events/OnDragBeginEvent.h"
-#import "events/OnDragChangeEvent.h"
-#import "events/OnDragEndEvent.h"
-#import "events/OnMountEvent.h"
-#import "events/OnPositionChangeEvent.h"
-#import "events/OnWillDismissEvent.h"
-#import "events/OnWillPresentEvent.h"
+#import "events/TrueSheetDragEvents.h"
+#import "events/TrueSheetFocusEvents.h"
+#import "events/TrueSheetLifecycleEvents.h"
+#import "events/TrueSheetStateEvents.h"
 #import "utils/LayoutUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -244,7 +236,7 @@ using namespace facebook::react;
   _containerView.scrollViewPinningEnabled = _scrollable;
   [_containerView setupContentScrollViewPinning];
 
-  [OnMountEvent emit:_eventEmitter];
+  [TrueSheetLifecycleEvents emitMount:_eventEmitter];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -372,27 +364,27 @@ using namespace facebook::react;
   NSInteger index = [_controller currentDetentIndex];
   _controller.activeDetentIndex = index;
   CGFloat detent = [_controller detentValueForIndex:index];
-  [OnWillPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition detent:detent];
+  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter index:index position:_controller.currentPosition detent:detent];
 }
 
 - (void)viewControllerDidPresent {
   NSInteger index = [_controller currentDetentIndex];
   CGFloat detent = [_controller detentValueForIndex:index];
-  [OnDidPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition detent:detent];
+  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:_controller.currentPosition detent:detent];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
   CGFloat detent = [_controller detentValueForIndex:index];
   switch (state) {
     case UIGestureRecognizerStateBegan:
-      [OnDragBeginEvent emit:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragBegin:_eventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateChanged:
-      [OnDragChangeEvent emit:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragChange:_eventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-      [OnDragEndEvent emit:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragEnd:_eventEmitter index:index position:position detent:detent];
       break;
     default:
       break;
@@ -400,12 +392,12 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillDismiss {
-  [OnWillDismissEvent emit:_eventEmitter];
+  [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
 }
 
 - (void)viewControllerDidDismiss {
   _controller.activeDetentIndex = -1;
-  [OnDidDismissEvent emit:_eventEmitter];
+  [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
@@ -413,26 +405,34 @@ using namespace facebook::react;
     _controller.activeDetentIndex = index;
   }
   CGFloat detent = [_controller detentValueForIndex:index];
-  [OnDetentChangeEvent emit:_eventEmitter index:index position:position detent:detent];
+  [TrueSheetStateEvents emitDetentChange:_eventEmitter index:index position:position detent:detent];
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
                           transitioning:(BOOL)transitioning {
-  [OnPositionChangeEvent emit:_eventEmitter index:index position:position detent:detent transitioning:transitioning];
+  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:index position:position detent:detent transitioning:transitioning];
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
   [self updateStateWithSize:size];
 }
 
+- (void)viewControllerWillFocus {
+  [TrueSheetFocusEvents emitWillFocus:_eventEmitter];
+}
+
 - (void)viewControllerDidFocus {
-  [OnDidFocusEvent emit:_eventEmitter];
+  [TrueSheetFocusEvents emitDidFocus:_eventEmitter];
+}
+
+- (void)viewControllerWillBlur {
+  [TrueSheetFocusEvents emitWillBlur:_eventEmitter];
 }
 
 - (void)viewControllerDidBlur {
-  [OnDidBlurEvent emit:_eventEmitter];
+  [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
 #pragma mark - Private Helpers

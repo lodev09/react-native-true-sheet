@@ -30,7 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
                                  detent:(CGFloat)detent
                           transitioning:(BOOL)transitioning;
 - (void)viewControllerDidChangeSize:(CGSize)size;
+- (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
+- (void)viewControllerWillBlur;
 - (void)viewControllerDidBlur;
 
 @end

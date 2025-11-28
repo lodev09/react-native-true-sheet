@@ -148,9 +148,9 @@
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
-      // Notify parent that it lost focus
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
-        [_parentSheetController.delegate viewControllerDidBlur];
+      // Notify parent that it is about to lose focus
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
+        [_parentSheetController.delegate viewControllerWillBlur];
       }
     }
 
@@ -165,6 +165,13 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
+    // Notify parent that it has lost focus (after the child sheet appeared)
+    if (_parentSheetController) {
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
+        [_parentSheetController.delegate viewControllerDidBlur];
+      }
+    }
+
     if ([self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
       [self.delegate viewControllerDidPresent];
     }
@@ -176,8 +183,19 @@
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  if (self.isBeingDismissed && [self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
-    [self.delegate viewControllerWillDismiss];
+  BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
+
+  if (isActuallyDismissing) {
+    // Notify the parent sheet (if any) that it is about to regain focus
+    if (_parentSheetController) {
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
+        [_parentSheetController.delegate viewControllerWillFocus];
+      }
+    }
+
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+      [self.delegate viewControllerWillDismiss];
+    }
   }
 
   [self setupTransitionPositionTracking];
@@ -447,7 +465,7 @@
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
   // Subtract bottomInset to prevent iOS from adding extra bottom insets
-  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
+  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];

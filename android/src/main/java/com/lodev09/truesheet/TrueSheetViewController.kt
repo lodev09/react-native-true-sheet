@@ -41,7 +41,9 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragEnd(index: Int, position: Float, detent: Float)
   fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
+  fun viewControllerWillFocus()
   fun viewControllerDidFocus()
+  fun viewControllerWillBlur()
   fun viewControllerDidBlur()
 }
 

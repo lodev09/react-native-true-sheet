@@ -29,6 +29,9 @@ object TrueSheetDialogObserver {
 
       // Hide and blur the topmost sheet if it exists
       topSheet?.let {
+        // Notify that sheet is about to lose focus
+        it.viewControllerWillBlur()
+
         // Don't hide if the top sheet is fully expanded (covers the screen)
         // or if the top sheet is smaller than the presenting sheet
         // A smaller topSheetTop value means the sheet is taller (closer to top of screen)
@@ -38,6 +41,8 @@ object TrueSheetDialogObserver {
         if (!it.viewController.isExpanded && topSheetTop <= presentingSheetTop) {
           it.viewController.hideDialog()
         }
+
+        // Notify that sheet has lost focus
         it.viewControllerDidBlur()
       }
 
@@ -61,7 +66,12 @@ object TrueSheetDialogObserver {
 
       // Show and focus the new topmost sheet
       presentedSheetStack.lastOrNull()?.let {
+        // Notify that sheet is about to regain focus
+        it.viewControllerWillFocus()
+
         it.viewController.showDialog()
+
+        // Notify that sheet has regained focus
         it.viewControllerDidFocus()
       }
     }

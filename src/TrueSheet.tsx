@@ -20,7 +20,9 @@ import type {
   DidDismissEvent,
   WillDismissEvent,
   MountEvent,
+  WillFocusEvent,
   DidFocusEvent,
+  WillBlurEvent,
   DidBlurEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
@@ -90,7 +92,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDragChange = this.onDragChange.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
     this.onPositionChange = this.onPositionChange.bind(this);
+    this.onWillFocus = this.onWillFocus.bind(this);
     this.onDidFocus = this.onDidFocus.bind(this);
+    this.onWillBlur = this.onWillBlur.bind(this);
     this.onDidBlur = this.onDidBlur.bind(this);
   }
 
@@ -254,8 +258,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onPositionChange?.(event);
   }
 
+  private onWillFocus(event: WillFocusEvent): void {
+    this.props.onWillFocus?.(event);
+  }
+
   private onDidFocus(event: DidFocusEvent): void {
     this.props.onDidFocus?.(event);
+  }
+
+  private onWillBlur(event: WillBlurEvent): void {
+    this.props.onWillBlur?.(event);
   }
 
   private onDidBlur(event: DidBlurEvent): void {
@@ -397,7 +409,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDragChange={this.onDragChange}
         onDragEnd={this.onDragEnd}
         onPositionChange={this.onPositionChange}
+        onWillFocus={this.onWillFocus}
         onDidFocus={this.onDidFocus}
+        onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
       >
         {this.state.shouldRenderNativeView && (
