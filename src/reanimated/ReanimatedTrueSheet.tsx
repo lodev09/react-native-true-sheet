@@ -78,24 +78,29 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProp
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
-    // When transitioning=true, we get the target position from native
+    const targetPosition = screenHeight * (1 - payload.detent);
+    const targetIndex = interpolate(
+      payload.position,
+      [screenHeight, targetPosition],
+      [payload.index - 1, payload.index],
+      Extrapolation.CLAMP
+    );
+
     if (payload.transitioning) {
+      // Animate position and index when transitioning
       if (Platform.OS === 'android') {
         animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
+        animatedIndex.value = withTiming(targetIndex, TIMING_CONFIG);
       } else {
         animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
+        animatedIndex.value = withSpring(targetIndex, SPRING_CONFIG);
       }
     } else {
+      // Update directly during drag
       animatedPosition.value = payload.position;
-      const targetPosition = screenHeight * (1 - payload.detent);
-
-      animatedIndex.value = interpolate(
-        payload.position,
-        [screenHeight, targetPosition],
-        [payload.index - 1, payload.index],
-        Extrapolation.CLAMP
-      );
+      animatedIndex.value = targetIndex;
     }
+
     onPositionChange?.({ nativeEvent: payload } as PositionChangeEvent);
   });
 

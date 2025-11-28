@@ -16,7 +16,7 @@ import {
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import MapView from 'react-native-maps';
-import Animated, { useAnimatedReaction, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import { Button, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
@@ -39,7 +39,7 @@ const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
+  const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
 
   const detent1 = DETENT_1_HEIGHT / height;
@@ -76,13 +76,6 @@ export const MapScreen = () => {
       },
     ],
   }));
-
-  useAnimatedReaction(
-    () => animatedIndex.value,
-    (value) => {
-      console.log(value);
-    }
-  );
 
   const addContent = () => {
     setSpacerCount((prev) => prev + 1);
