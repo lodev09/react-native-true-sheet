@@ -54,21 +54,21 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       detents={['auto', 0.8, 1]}
       ref={sheetRef}
       style={styles.content}
-      onDragChange={(e) =>
-        console.log(
-          `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
-        )
-      }
-      onDragBegin={(e) =>
-        console.log(
-          `drag began at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
-        )
-      }
-      onDragEnd={(e) =>
-        console.log(
-          `drag ended at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
-        )
-      }
+      // onDragChange={(e) =>
+      //   console.log(
+      //     `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+      //   )
+      // }
+      // onDragBegin={(e) =>
+      //   console.log(
+      //     `drag began at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+      //   )
+      // }
+      // onDragEnd={(e) =>
+      //   console.log(
+      //     `drag ended at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
+      //   )
+      // }
       onDidDismiss={() => console.log('Basic sheet dismissed!')}
       onDidPresent={(e) =>
         console.log(

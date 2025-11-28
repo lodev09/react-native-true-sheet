@@ -5,7 +5,7 @@ import { MapScreen, NavigationScreen, TestScreen, ModalScreen } from './screens'
 import type { AppStackParamList, ModalStackParamList } from './types';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
-const DEFAULT_NAVIGATION: keyof AppStackParamList = 'Map';
+const DEFAULT_NAVIGATION: keyof AppStackParamList = 'Navigation';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 const ModalStack = createNativeStackNavigator<ModalStackParamList>();

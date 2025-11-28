@@ -282,11 +282,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
           val positionPx = getCurrentPositionPx(sheetView)
-          val position = positionPx.pxToDp()
           val nearestIndex = getNearestDetentIndex(positionPx)
           val detent = getActualDetentForPosition(positionPx)
 
-          delegate?.viewControllerDidChangePosition(nearestIndex, position, detent, transitioning = false)
+          delegate?.viewControllerDidChangePosition(nearestIndex, positionPx.pxToDp(), detent, transitioning = false)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
