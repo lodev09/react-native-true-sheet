@@ -5,10 +5,8 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
-  Extrapolation,
-  interpolate,
 } from 'react-native-reanimated';
-import { Platform, useWindowDimensions } from 'react-native';
+import { Platform } from 'react-native';
 
 import { TrueSheet } from '../TrueSheet';
 import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
@@ -72,33 +70,27 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
-  const { height: screenHeight } = useWindowDimensions();
-  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex, detent } = useReanimatedTrueSheet();
 
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
-    const targetPosition = screenHeight * (1 - payload.detent);
-    const targetIndex = interpolate(
-      payload.position,
-      [screenHeight, targetPosition],
-      [payload.index - 1, payload.index],
-      Extrapolation.CLAMP
-    );
+    // Update detent directly (discrete value, not animated)
+    detent.value = payload.detent;
 
     if (payload.transitioning) {
       // Animate position and index when transitioning
       if (Platform.OS === 'android') {
         animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
-        animatedIndex.value = withTiming(targetIndex, TIMING_CONFIG);
+        animatedIndex.value = withTiming(payload.index, TIMING_CONFIG);
       } else {
         animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
-        animatedIndex.value = withSpring(targetIndex, SPRING_CONFIG);
+        animatedIndex.value = withSpring(payload.index, SPRING_CONFIG);
       }
     } else {
       // Update directly during drag
       animatedPosition.value = payload.position;
-      animatedIndex.value = targetIndex;
+      animatedIndex.value = payload.index;
     }
 
     onPositionChange?.({ nativeEvent: payload } as PositionChangeEvent);

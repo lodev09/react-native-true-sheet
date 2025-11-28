@@ -164,14 +164,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== TrueSheetViewControllerDelegate Implementation ====================
 
-  override fun viewControllerWillPresent(index: Int, position: Float) {
+  override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
   }
 
-  override fun viewControllerDidPresent(index: Int, position: Float) {
+  override fun viewControllerDidPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(DidPresentEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(DidPresentEvent(surfaceId, id, index, position, detent))
 
     // Enable touch event dispatching to React Native
     viewController.eventDispatcher = eventDispatcher
@@ -195,24 +195,24 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     TrueSheetDialogObserver.onSheetDidDismiss(this)
   }
 
-  override fun viewControllerDidChangeDetent(index: Int, position: Float) {
+  override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(DetentChangeEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(DetentChangeEvent(surfaceId, id, index, position, detent))
   }
 
-  override fun viewControllerDidDragBegin(index: Int, position: Float) {
+  override fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(DragBeginEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(DragBeginEvent(surfaceId, id, index, position, detent))
   }
 
-  override fun viewControllerDidDragChange(index: Int, position: Float) {
+  override fun viewControllerDidDragChange(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(DragChangeEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(DragChangeEvent(surfaceId, id, index, position, detent))
   }
 
-  override fun viewControllerDidDragEnd(index: Int, position: Float) {
+  override fun viewControllerDidDragEnd(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(DragEndEvent(surfaceId, id, index, position))
+    eventDispatcher?.dispatchEvent(DragEndEvent(surfaceId, id, index, position, detent))
   }
 
   override fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean) {

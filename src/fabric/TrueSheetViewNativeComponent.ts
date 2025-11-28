@@ -11,6 +11,7 @@ import { codegenNativeComponent } from 'react-native';
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
+  detent: Double;
 }
 
 export interface PositionChangeEventPayload {

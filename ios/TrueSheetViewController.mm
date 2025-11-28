@@ -312,8 +312,10 @@
 
 - (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
   NSInteger count = _detents.count;
-  if (count == 0) return -1;
-  if (count == 1) return 0;
+  if (count == 0)
+    return -1;
+  if (count == 1)
+    return 0;
 
   // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
   CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
@@ -322,7 +324,8 @@
   CGFloat firstDetentValue = [self detentValueForIndex:0];
   if (currentDetent < firstDetentValue) {
     // Interpolate: 0 at firstDetentValue, -1 at 0
-    if (firstDetentValue <= 0) return 0;
+    if (firstDetentValue <= 0)
+      return 0;
     CGFloat progress = currentDetent / firstDetentValue;
     return progress - 1;
   }
@@ -335,7 +338,8 @@
     if (currentDetent <= nextDetentValue) {
       // Interpolate between index i and i+1
       CGFloat range = nextDetentValue - detentValue;
-      if (range <= 0) return i;
+      if (range <= 0)
+        return i;
       CGFloat progress = (currentDetent - detentValue) / range;
       return i + fmax(0, fmin(1, progress));
     }
@@ -448,7 +452,7 @@
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
     UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
-                                                                 withAutoHeight:autoHeight
+                                                             withAutoHeight:autoHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
   }
@@ -476,7 +480,9 @@
   }
 }
 
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent withAutoHeight:(CGFloat)autoHeight atIndex:(NSInteger)index {
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
+                                         withAutoHeight:(CGFloat)autoHeight
+                                                atIndex:(NSInteger)index {
   if (![detent isKindOfClass:[NSNumber class]]) {
     return [UISheetPresentationControllerDetent mediumDetent];
   }

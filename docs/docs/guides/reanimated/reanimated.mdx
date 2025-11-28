@@ -68,7 +68,7 @@ import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
 import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated'
 
 function MyComponent() {
-  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet()
+  const { animatedPosition, animatedIndex, detent } = useReanimatedTrueSheet()
 
   // Example: Move component based on sheet position
   const positionStyle = useAnimatedStyle(() => ({
@@ -94,6 +94,7 @@ function MyComponent() {
 | - | - | - |
 | `animatedPosition` | `SharedValue<number>` | The current Y position of the sheet relative to the screen. |
 | `animatedIndex` | `SharedValue<number>` | The current detent index as a continuous float. Interpolates smoothly between detent indices during drag (e.g., `0.5` when halfway between index 0 and 1). |
+| `detent` | `SharedValue<number>` | The current detent value (0-1 fraction of screen height) for the current/target detent index. |
 
 ## Examples
 

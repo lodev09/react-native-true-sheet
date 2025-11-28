@@ -371,24 +371,28 @@ using namespace facebook::react;
 - (void)viewControllerWillPresent {
   NSInteger index = [_controller currentDetentIndex];
   _controller.activeDetentIndex = index;
-  [OnWillPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition];
+  CGFloat detent = [_controller detentValueForIndex:index];
+  [OnWillPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition detent:detent];
 }
 
 - (void)viewControllerDidPresent {
-  [OnDidPresentEvent emit:_eventEmitter index:[_controller currentDetentIndex] position:_controller.currentPosition];
+  NSInteger index = [_controller currentDetentIndex];
+  CGFloat detent = [_controller detentValueForIndex:index];
+  [OnDidPresentEvent emit:_eventEmitter index:index position:_controller.currentPosition detent:detent];
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
+  CGFloat detent = [_controller detentValueForIndex:index];
   switch (state) {
     case UIGestureRecognizerStateBegan:
-      [OnDragBeginEvent emit:_eventEmitter index:index position:position];
+      [OnDragBeginEvent emit:_eventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateChanged:
-      [OnDragChangeEvent emit:_eventEmitter index:index position:position];
+      [OnDragChangeEvent emit:_eventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-      [OnDragEndEvent emit:_eventEmitter index:index position:position];
+      [OnDragEndEvent emit:_eventEmitter index:index position:position detent:detent];
       break;
     default:
       break;
@@ -408,7 +412,8 @@ using namespace facebook::react;
   if (_controller.activeDetentIndex != index) {
     _controller.activeDetentIndex = index;
   }
-  [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
+  CGFloat detent = [_controller detentValueForIndex:index];
+  [OnDetentChangeEvent emit:_eventEmitter index:index position:position detent:detent];
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)index

@@ -31,14 +31,14 @@ import com.lodev09.truesheet.utils.ScreenUtils
 data class DetentInfo(val index: Int, val position: Float)
 
 interface TrueSheetViewControllerDelegate {
-  fun viewControllerWillPresent(index: Int, position: Float)
-  fun viewControllerDidPresent(index: Int, position: Float)
+  fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
+  fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
   fun viewControllerDidDismiss()
-  fun viewControllerDidChangeDetent(index: Int, position: Float)
-  fun viewControllerDidDragBegin(index: Int, position: Float)
-  fun viewControllerDidDragChange(index: Int, position: Float)
-  fun viewControllerDidDragEnd(index: Int, position: Float)
+  fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float)
+  fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
+  fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
+  fun viewControllerDidDragEnd(index: Int, position: Float, detent: Float)
   fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
   fun viewControllerDidFocus()
@@ -254,8 +254,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       sheetContainer?.post {
         val detentInfo = getDetentInfoForIndex(currentDetentIndex)
+        val detent = getDetentValueForIndex(detentInfo.index)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position)
+        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
         emitChangePositionDelegate(detentInfo.index, positionPx, transitioning = true)
 
         presentPromise?.invoke()
@@ -409,7 +410,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (isPresented) {
       val detentInfo = getDetentInfoForIndex(detentIndex)
-      delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position)
+      val detent = getDetentValueForIndex(detentInfo.index)
+      delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
       setStateForDetentIndex(detentIndex)
     } else {
       isDragging = false
@@ -417,7 +419,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setStateForDetentIndex(detentIndex)
 
       val detentInfo = getDetentInfoForIndex(detentIndex)
-      delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position)
+      val detent = getDetentValueForIndex(detentInfo.index)
+      delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
 
       if (!animated) {
         dialog.window?.setWindowAnimations(0)
@@ -699,14 +702,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleDragBegin(sheetView: View) {
     val detentInfo = getCurrentDetentInfo(sheetView)
-    delegate?.viewControllerDidDragBegin(detentInfo.index, detentInfo.position)
+    val detent = getDetentValueForIndex(detentInfo.index)
+    delegate?.viewControllerDidDragBegin(detentInfo.index, detentInfo.position, detent)
     isDragging = true
   }
 
   private fun handleDragChange(sheetView: View) {
     if (!isDragging) return
     val detentInfo = getCurrentDetentInfo(sheetView)
-    delegate?.viewControllerDidDragChange(detentInfo.index, detentInfo.position)
+    val detent = getDetentValueForIndex(detentInfo.index)
+    delegate?.viewControllerDidDragChange(detentInfo.index, detentInfo.position, detent)
   }
 
   private fun handleDragEnd(state: Int) {
@@ -714,7 +719,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val detentInfo = getDetentInfoForState(state)
     detentInfo?.let {
-      delegate?.viewControllerDidDragEnd(it.index, it.position)
+      val detent = getDetentValueForIndex(it.index)
+      delegate?.viewControllerDidDragEnd(it.index, it.position, detent)
 
       if (it.index != currentDetentIndex) {
         presentPromise?.invoke()
@@ -722,7 +728,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         currentDetentIndex = it.index
         setupDimmedBackground(it.index)
-        delegate?.viewControllerDidChangeDetent(it.index, it.position)
+        delegate?.viewControllerDidChangeDetent(it.index, it.position, detent)
       }
     }
 

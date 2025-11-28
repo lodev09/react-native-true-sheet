@@ -65,6 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
 - (CGFloat)bottomInset;
+- (CGFloat)detentValueForIndex:(NSInteger)index;
 
 @end
 

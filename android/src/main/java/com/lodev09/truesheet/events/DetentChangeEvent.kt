@@ -8,7 +8,7 @@ import com.facebook.react.uimanager.events.Event
  * Fired when the active detent changes
  * Payload: { index: number, position: number }
  */
-class DetentChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float) :
+class DetentChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
   Event<DetentChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
@@ -17,6 +17,7 @@ class DetentChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, pri
     Arguments.createMap().apply {
       putInt("index", index)
       putDouble("position", position.toDouble())
+      putDouble("detent", detent.toDouble())
     }
 
   companion object {
