@@ -284,14 +284,19 @@ const MySheet = () => (
 
 // 3. Access the sheet's position for custom animations
 const MyAnimatedComponent = () => {
-  const { animatedPosition } = useReanimatedTrueSheet()
+  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet()
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const positionStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -animatedPosition.value }],
   }))
 
+  // Example: Fade in as sheet expands from index 0 to 1
+  const opacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1])
+  }))
+
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={[opacityStyle, positionStyle]}>
       <Text>This moves with the sheet</Text>
     </Animated.View>
   )
