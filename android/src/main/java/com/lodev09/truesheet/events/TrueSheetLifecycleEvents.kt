@@ -5,10 +5,6 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 
 /**
- * Lifecycle events: mount, willPresent, didPresent, willDismiss, didDismiss
- */
-
-/**
  * Fired when the sheet component is mounted and ready
  */
 class MountEvent(surfaceId: Int, viewId: Int) : Event<MountEvent>(surfaceId, viewId) {

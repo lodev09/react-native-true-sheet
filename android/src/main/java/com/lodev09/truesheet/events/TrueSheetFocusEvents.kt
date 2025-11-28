@@ -5,10 +5,6 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 
 /**
- * Focus events: willFocus, didFocus, willBlur, didBlur
- */
-
-/**
  * Fired when the sheet is about to regain focus because a sheet on top of it is being dismissed
  */
 class WillFocusEvent(surfaceId: Int, viewId: Int) : Event<WillFocusEvent>(surfaceId, viewId) {

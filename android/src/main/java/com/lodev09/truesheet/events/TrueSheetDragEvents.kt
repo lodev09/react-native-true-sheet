@@ -5,10 +5,6 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 
 /**
- * Drag events: dragBegin, dragChange, dragEnd
- */
-
-/**
  * Fired when dragging begins
  * Payload: { index: number, position: number, detent: number }
  */

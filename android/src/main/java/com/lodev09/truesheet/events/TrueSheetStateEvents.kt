@@ -5,10 +5,6 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 
 /**
- * State events: detentChange, positionChange
- */
-
-/**
  * Fired when the detent changes
  * Payload: { index: number, position: number, detent: number }
  */
