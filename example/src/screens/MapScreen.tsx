@@ -53,7 +53,6 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [spacerCount, setSpacerCount] = useState(0);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
   const presentBasicSheet = async (index = 0) => {
@@ -76,14 +75,6 @@ export const MapScreen = () => {
       },
     ],
   }));
-
-  const addContent = () => {
-    setSpacerCount((prev) => prev + 1);
-  };
-
-  const removeContent = () => {
-    setSpacerCount((prev) => Math.max(0, prev - 1));
-  };
 
   const handleWillPresent = (e: WillPresentEvent) => {
     const { index, position: yPosition } = e.nativeEvent;
@@ -160,11 +151,6 @@ export const MapScreen = () => {
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
         <Spacer />
-        <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
-        {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
-        {Array.from({ length: spacerCount }, (_, i) => (
-          <Spacer key={i} />
-        ))}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />

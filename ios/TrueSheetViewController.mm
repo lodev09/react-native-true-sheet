@@ -305,12 +305,34 @@
 
 #pragma mark - Position Tracking
 
+- (CGFloat)resolvedAutoDetentHeight {
+  CGFloat totalHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
+  CGFloat maxValue = self.maxHeight ? fmin(self.screenHeight, [self.maxHeight floatValue]) : self.screenHeight;
+  return fmin(totalHeight, maxValue);
+}
+
+- (CGFloat)resolvedDetentValueForIndex:(NSInteger)index {
+  if (index < 0 || index >= (NSInteger)_detents.count) {
+    return 0;
+  }
+
+  CGFloat detent = [_detents[index] doubleValue];
+
+  // -1 represents "auto" - calculate resolved value based on content height
+  if (detent == -1) {
+    CGFloat resolvedHeight = [self resolvedAutoDetentHeight];
+    return self.screenHeight > 0 ? resolvedHeight / self.screenHeight : 0;
+  }
+
+  return detent;
+}
+
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position transitioning:(BOOL)transitioning {
   if (_lastPosition != position) {
     _lastPosition = position;
 
     NSInteger index = [self currentDetentIndex];
-    CGFloat detent = (index >= 0 && index < (NSInteger)_detents.count) ? [_detents[index] doubleValue] : 0;
+    CGFloat detent = [self resolvedDetentValueForIndex:index];
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:transitioning:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent transitioning:transitioning];
     }
@@ -449,10 +471,7 @@
       return [UISheetPresentationControllerDetent
         customDetentWithIdentifier:detentId
                           resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetentValue = context.maximumDetentValue;
-                            CGFloat maxValue =
-                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                            return fmin(height, maxValue);
+                            return [self resolvedAutoDetentHeight];
                           }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
