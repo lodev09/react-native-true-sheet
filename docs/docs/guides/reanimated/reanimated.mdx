@@ -65,18 +65,24 @@ Use the `useReanimatedTrueSheet` hook to access the sheet's animated values.
 
 ```tsx
 import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
-import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated'
 
 function MyComponent() {
   const { animatedPosition, animatedIndex } = useReanimatedTrueSheet()
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  // Example: Move component based on sheet position
+  const positionStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -animatedPosition.value }]
   }))
 
+  // Example: Fade in as sheet expands from index 0 to 1
+  const opacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1])
+  }))
+
   return (
-    <Animated.View style={animatedStyle}>
-      <Text>This moves with the sheet</Text>
+    <Animated.View style={[positionStyle, opacityStyle]}>
+      <Text>This moves and fades with the sheet</Text>
     </Animated.View>
   )
 }
