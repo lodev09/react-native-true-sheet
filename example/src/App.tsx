@@ -5,6 +5,8 @@ import { MapScreen, NavigationScreen, TestScreen, ModalScreen } from './screens'
 import type { AppStackParamList, ModalStackParamList } from './types';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
+const DEFAULT_NAVIGATION: keyof AppStackParamList = 'Map';
+
 const Stack = createNativeStackNavigator<AppStackParamList>();
 const ModalStack = createNativeStackNavigator<ModalStackParamList>();
 
@@ -23,7 +25,7 @@ const App = () => {
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-          initialRouteName="Map"
+          initialRouteName={DEFAULT_NAVIGATION}
         >
           <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
           <Stack.Screen
