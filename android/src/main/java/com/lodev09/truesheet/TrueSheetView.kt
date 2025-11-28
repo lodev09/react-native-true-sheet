@@ -176,12 +176,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     containerView?.footerView?.eventDispatcher = null
   }
 
-  override fun viewControllerDidDismiss() {
+  override fun viewControllerDidDismiss(hadParent: Boolean) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    // Notify observer that this sheet was dismissed (will show/focus parent sheet)
-    TrueSheetDialogObserver.onSheetDidDismiss(this)
+    TrueSheetDialogObserver.onSheetDidDismiss(this, hadParent)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {
@@ -308,12 +307,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Notify observer and get parent sheet reference (if presenting from another sheet)
     if (!viewController.isPresented) {
-      val parentSheet = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
-      viewController.parentSheetView = parentSheet
+      viewController.parentSheetView = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
     }
-
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
   }

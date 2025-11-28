@@ -34,7 +34,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
-  fun viewControllerDidDismiss()
+  fun viewControllerDidDismiss(hadParent: Boolean)
   fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
@@ -109,6 +109,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   var isPresented = false
+    private set
+
+  var isDialogVisible = false
     private set
 
   var currentDetentIndex: Int = -1
@@ -247,12 +250,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog = null
     isDragging = false
     isPresented = false
+    isDialogVisible = false
     lastEmittedPositionPx = -1
   }
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
       isPresented = true
+      isDialogVisible = true
       resetAnimation()
       setupBackground()
       setupGrabber()
@@ -282,13 +287,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnDismissListener {
+      val hadParent = parentSheetView != null
+
       // Notify parent sheet that it has regained focus
       parentSheetView?.viewControllerDidFocus()
       parentSheetView = null
 
       dismissPromise?.invoke()
       dismissPromise = null
-      delegate?.viewControllerDidDismiss()
+      delegate?.viewControllerDidDismiss(hadParent)
       cleanupDialog()
     }
   }
@@ -389,9 +396,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Hides the dialog without dismissing it.
-   * Used when another TrueSheet presents on top.
+   * Used when another TrueSheet presents on top or when RN screen is presented.
    */
   fun hideDialog() {
+    isDialogVisible = false
     dialog?.window?.decorView?.visibility = View.INVISIBLE
 
     // Emit off-screen position (detent = 0 since sheet is fully hidden)
@@ -403,6 +411,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Used when the sheet on top dismisses.
    */
   fun showDialog() {
+    isDialogVisible = true
     dialog?.window?.decorView?.visibility = View.VISIBLE
 
     // Emit current position

@@ -136,7 +136,7 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        header={<Header onLayout={(e) => console.log(e.nativeEvent.layout.height)} />}
+        header={<Header />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>
