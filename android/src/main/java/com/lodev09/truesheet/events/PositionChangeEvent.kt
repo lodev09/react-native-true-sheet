@@ -11,7 +11,7 @@ import com.facebook.react.uimanager.events.Event
 class PositionChangeEvent(
   surfaceId: Int,
   viewId: Int,
-  private val index: Int,
+  private val index: Float,
   private val position: Float,
   private val detent: Float,
   private val transitioning: Boolean = false
@@ -21,7 +21,7 @@ class PositionChangeEvent(
 
   override fun getEventData(): WritableMap =
     Arguments.createMap().apply {
-      putInt("index", index)
+      putDouble("index", index.toDouble())
       putDouble("position", position.toDouble())
       putDouble("detent", detent.toDouble())
       putBoolean("transitioning", transitioning)

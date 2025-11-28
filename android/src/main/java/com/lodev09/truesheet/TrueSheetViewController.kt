@@ -39,7 +39,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragBegin(index: Int, position: Float)
   fun viewControllerDidDragChange(index: Int, position: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float)
-  fun viewControllerDidChangePosition(index: Int, position: Float, detent: Float, transitioning: Boolean)
+  fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
   fun viewControllerDidFocus()
   fun viewControllerDidBlur()
@@ -602,7 +602,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Emits position change to the delegate if the position has changed.
-   * @param index The current detent index
+   * @param index The current detent index (discrete, used as fallback)
    * @param positionPx The current position in pixels (screen Y coordinate)
    * @param transitioning Whether the sheet is transitioning (programmatic) vs dragging
    */
@@ -611,8 +611,59 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     lastEmittedPositionPx = positionPx
     val position = positionPx.pxToDp()
-    val detent = getActualDetentForPosition(positionPx)
-    delegate?.viewControllerDidChangePosition(index, position, detent, transitioning)
+    val interpolatedIndex = getInterpolatedIndexForPosition(positionPx)
+    val detent = getDetentValueForIndex(kotlin.math.round(interpolatedIndex).toInt())
+    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, transitioning)
+  }
+
+  /**
+   * Calculates the interpolated index based on position.
+   * Returns a continuous value (e.g., 0.5 means halfway between detent 0 and 1).
+   */
+  private fun getInterpolatedIndexForPosition(positionPx: Int): Float {
+    val count = detents.size
+    if (count == 0) return -1f
+    if (count == 1) return 0f
+
+    // Convert position to detent fraction
+    val currentDetent = (screenHeight - positionPx).toFloat() / screenHeight.toFloat()
+
+    // Handle below first detent (interpolate from -1 to 0)
+    val firstDetentValue = getDetentValueForIndex(0)
+    if (currentDetent < firstDetentValue) {
+      if (firstDetentValue <= 0) return 0f
+      val progress = currentDetent / firstDetentValue
+      return progress - 1f
+    }
+
+    // Find which segment the current detent falls into and interpolate
+    for (i in 0 until count - 1) {
+      val detentValue = getDetentValueForIndex(i)
+      val nextDetentValue = getDetentValueForIndex(i + 1)
+
+      if (currentDetent <= nextDetentValue) {
+        val range = nextDetentValue - detentValue
+        if (range <= 0) return i.toFloat()
+        val progress = (currentDetent - detentValue) / range
+        return i + maxOf(0f, minOf(1f, progress))
+      }
+    }
+
+    return (count - 1).toFloat()
+  }
+
+  /**
+   * Gets the detent value (fraction) for a given index.
+   * For auto (-1), calculates the actual fraction from content + header height.
+   */
+  private fun getDetentValueForIndex(index: Int): Float {
+    if (index < 0 || index >= detents.size) return 0f
+    val value = detents[index]
+    return if (value == -1.0) {
+      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+    } else {
+      value.toFloat()
+    }
   }
 
   // ====================================================================
@@ -751,17 +802,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val detentHeight = getDetentHeight(detents[index])
     return (screenHeight - detentHeight).pxToDp()
-  }
-
-  /**
-   * Calculates the actual detent fraction for the given position.
-   * This ensures JS receives a detent value that matches the actual position,
-   * avoiding precision issues from integer truncation in getDetentHeight.
-   */
-  private fun getActualDetentForPosition(positionPx: Int): Float {
-    if (screenHeight <= 0) return 0f
-    val sheetHeight = screenHeight - positionPx
-    return sheetHeight.toFloat() / screenHeight.toFloat()
   }
 
   fun getDetentInfoForIndex(index: Int) = getDetentInfoForState(getStateForDetentIndex(index)) ?: DetentInfo(0, 0f)
