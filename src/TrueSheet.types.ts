@@ -10,6 +10,10 @@ export interface DetentInfoEventPayload {
    * The Y position of the sheet relative to the screen.
    */
   position: number;
+  /**
+   * The detent value (0-1) for the current index.
+   */
+  detent: number;
 }
 
 export interface PositionChangeEventPayload extends DetentInfoEventPayload {

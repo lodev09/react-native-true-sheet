@@ -8,7 +8,7 @@ import com.facebook.react.uimanager.events.Event
  * Fired when user stops dragging the sheet
  * Payload: { index: number, position: number }
  */
-class DragEndEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float) :
+class DragEndEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
   Event<DragEndEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
@@ -17,6 +17,7 @@ class DragEndEvent(surfaceId: Int, viewId: Int, private val index: Int, private 
     Arguments.createMap().apply {
       putInt("index", index)
       putDouble("position", position.toDouble())
+      putDouble("detent", detent.toDouble())
     }
 
   companion object {

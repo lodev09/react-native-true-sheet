@@ -32,7 +32,7 @@ import {
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
 
-const DETENT_1_HEIGHT = Platform.select({ ios: 90, default: 110 });
+const DETENT_1_HEIGHT = Platform.select({ ios: HEADER_HEIGHT, default: 110 });
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -53,7 +53,6 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
 
-  const [spacerCount, setSpacerCount] = useState(0);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
 
   const presentBasicSheet = async (index = 0) => {
@@ -72,21 +71,10 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: Math.min(
-          -(insets.bottom + (HEADER_HEIGHT - SPACING)),
-          -(height - animatedPosition.value)
-        ),
+        translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)),
       },
     ],
   }));
-
-  const addContent = () => {
-    setSpacerCount((prev) => prev + 1);
-  };
-
-  const removeContent = () => {
-    setSpacerCount((prev) => Math.max(0, prev - 1));
-  };
 
   const handleWillPresent = (e: WillPresentEvent) => {
     const { index, position: yPosition } = e.nativeEvent;
@@ -115,21 +103,23 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[detent1, 0.8, 1]}
+        detents={[detent1, 0.7, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
         edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
-        backgroundColor={Platform.select({ android: DARK })}
+        backgroundColor={Platform.select({ default: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
         onWillPresent={handleWillPresent}
         // onPositionChange={(e) => {
         //   'worklet';
-        //   console.log(`position changed at UI thread: ${e.nativeEvent.position}`);
+
+        //   const { detent, position, index } = e.nativeEvent;
+        //   console.log(`index: ${index}, detent: ${detent}, position: ${position}`);
         // }}
         onDidPresent={() => {
           console.log('Sheet is presented');
@@ -163,13 +153,8 @@ export const MapScreen = () => {
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
         <Spacer />
-        <Button text={`Add Space (${spacerCount})`} onPress={addContent} />
-        {spacerCount > 0 && <Button text="Remove Space" onPress={removeContent} />}
-        {Array.from({ length: spacerCount }, (_, i) => (
-          <Spacer key={i} />
-        ))}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

@@ -4,13 +4,19 @@ import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 export interface ReanimatedTrueSheetContextValue {
   /**
-   * Shared value representing the current sheet position (Y offset from bottom)
+   * Shared value representing the current sheet position (Y offset from top of screen)
    */
   animatedPosition: SharedValue<number>;
   /**
-   * Shared value representing the current detent index
+   * Shared value representing the current detent index as a continuous float.
+   * Interpolates smoothly between -1 (off-screen) and the target detent index.
    */
   animatedIndex: SharedValue<number>;
+  /**
+   * Shared value representing the current detent value (0-1 fraction of screen height).
+   * This is the discrete value for the current/target detent index.
+   */
+  detent: SharedValue<number>;
 }
 
 const ReanimatedTrueSheetContext = createContext<ReanimatedTrueSheetContextValue | null>(null);
@@ -40,13 +46,15 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
   const { height } = useWindowDimensions();
   const animatedPosition = useSharedValue(height);
   const animatedIndex = useSharedValue(-1);
+  const detent = useSharedValue(0);
 
   const value = useMemo(
     () => ({
       animatedPosition,
       animatedIndex,
+      detent,
     }),
-    [animatedPosition, animatedIndex]
+    [animatedPosition, animatedIndex, detent]
   );
 
   return (

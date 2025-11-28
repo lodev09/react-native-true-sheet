@@ -70,24 +70,29 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
-  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex, detent } = useReanimatedTrueSheet();
 
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
-    // When transitioning=true, we animate the position manually for smooth transitions.
-    // This is used when native can't provide real-time position updates during animations.
+    // Update detent directly (discrete value, not animated)
+    detent.value = payload.detent;
+
     if (payload.transitioning) {
+      // Animate position and index when transitioning
       if (Platform.OS === 'android') {
         animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
+        animatedIndex.value = withTiming(payload.index, TIMING_CONFIG);
       } else {
         animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
+        animatedIndex.value = withSpring(payload.index, SPRING_CONFIG);
       }
     } else {
+      // Update directly during drag
       animatedPosition.value = payload.position;
+      animatedIndex.value = payload.index;
     }
 
-    animatedIndex.value = payload.index;
     onPositionChange?.({ nativeEvent: payload } as PositionChangeEvent);
   });
 

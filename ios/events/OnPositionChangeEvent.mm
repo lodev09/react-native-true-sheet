@@ -13,16 +13,18 @@
 @implementation OnPositionChangeEvent
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
-          index:(NSInteger)index
+          index:(CGFloat)index
        position:(CGFloat)position
+         detent:(CGFloat)detent
   transitioning:(BOOL)transitioning {
   if (!eventEmitter)
     return;
 
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
   TrueSheetViewEventEmitter::OnPositionChange event;
-  event.index = static_cast<int>(index);
+  event.index = static_cast<double>(index);
   event.position = static_cast<double>(position);
+  event.detent = static_cast<double>(detent);
   event.transitioning = static_cast<bool>(transitioning);
   emitter->onPositionChange(event);
 }

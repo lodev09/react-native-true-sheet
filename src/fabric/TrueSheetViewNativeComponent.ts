@@ -11,11 +11,13 @@ import { codegenNativeComponent } from 'react-native';
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
+  detent: Double;
 }
 
 export interface PositionChangeEventPayload {
-  index: Int32;
+  index: Double;
   position: Double;
+  detent: Double;
   transitioning: boolean;
 }
 

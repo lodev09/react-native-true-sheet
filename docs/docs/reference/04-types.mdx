@@ -58,7 +58,8 @@ Blur tint that is mapped into native values in IOS.
 ```tsx
 {
   index: 1,
-  position: 123.5
+  position: 123.5,
+  detent: 0.5
 }
 ```
 
@@ -66,6 +67,7 @@ Blur tint that is mapped into native values in IOS.
 | - | - | - |
 | index | `number` | The detent index from the provided detents. See `detents` prop. |
 | position | `number` | The Y position of the sheet relative to the screen. |
+| detent | `number` | The detent value (0-1) for the current index. |
 
 ## `PositionChangeEventPayload`
 
@@ -73,14 +75,16 @@ Blur tint that is mapped into native values in IOS.
 
 ```tsx
 {
-  index: 1,
+  index: 1.5,
   position: 123.5,
+  detent: 0.5,
   transitioning: false
 }
 ```
 
 | Property | Type | Description |
 | - | - | - |
-| index | `number` | The detent index from the provided detents. See `detents` prop. |
+| index | `number` | The interpolated detent index. Continuous value that smoothly transitions between detents (e.g., `0.5` means halfway between detent 0 and 1). |
 | position | `number` | The Y position of the sheet relative to the screen. |
+| detent | `number` | The detent value (0-1) for the nearest detent index. |
 | transitioning | `boolean` | Whether the sheet is currently transitioning (presenting or dismissing). When `true`, position updates are animated on iOS. |

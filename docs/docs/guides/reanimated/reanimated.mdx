@@ -59,28 +59,42 @@ function MyScreen() {
 Note that the `onPositionChange` prop event now runs on the UI thread (worklet). If you override this prop, make sure to add the `'worklet'` directive to your handler.
 :::
 
-### 3. Access Sheet Position
+### 3. Access Animated Values
 
-Use the `useReanimatedTrueSheet` hook to access the sheet's position.
+Use the `useReanimatedTrueSheet` hook to access the sheet's animated values.
 
 ```tsx
 import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
-import Animated, { useAnimatedStyle } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated'
 
 function MyComponent() {
-  const { animatedPosition } = useReanimatedTrueSheet()
+  const { animatedPosition, animatedIndex, detent } = useReanimatedTrueSheet()
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  // Example: Move component based on sheet position
+  const positionStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -animatedPosition.value }]
   }))
 
+  // Example: Fade in as sheet expands from index 0 to 1
+  const opacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1])
+  }))
+
   return (
-    <Animated.View style={animatedStyle}>
-      <Text>This moves with the sheet</Text>
+    <Animated.View style={[positionStyle, opacityStyle]}>
+      <Text>This moves and fades with the sheet</Text>
     </Animated.View>
   )
 }
 ```
+
+#### Available Values
+
+| Value | Type | Description |
+| - | - | - |
+| `animatedPosition` | `SharedValue<number>` | The current Y position of the sheet relative to the screen. |
+| `animatedIndex` | `SharedValue<number>` | The current detent index as a continuous float. Interpolates smoothly between detent indices during drag (e.g., `0.5` when halfway between index 0 and 1). |
+| `detent` | `SharedValue<number>` | The current detent value (0-1 fraction of screen height) for the current/target detent index. |
 
 ## Examples
 

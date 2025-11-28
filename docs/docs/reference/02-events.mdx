@@ -13,16 +13,16 @@ const App = () => {
   }
 
   const handleOnWillPresent = (e: WillPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
+    console.log(e.nativeEvent) // { index: 0, position: 123.5, detent: 0.5 }
     console.log('Sheet is about to be presented')
   }
 
   const handleOnDidPresent = (e: DidPresentEvent) => {
-    console.log(e.nativeEvent) // { index: 0, position: 123.5 }
+    console.log(e.nativeEvent) // { index: 0, position: 123.5, detent: 0.5 }
   }
 
   const handleDetentChange = (e: DetentChangeEvent) => {
-    console.log(e.nativeEvent) // { index: 1, position: 234.5 }
+    console.log(e.nativeEvent) // { index: 1, position: 234.5, detent: 0.8 }
   }
 
   return (

@@ -8,7 +8,7 @@ import com.facebook.react.uimanager.events.Event
  * Fired after the sheet presentation is complete
  * Payload: { index: number, position: number }
  */
-class DidPresentEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float) :
+class DidPresentEvent(surfaceId: Int, viewId: Int, private val index: Int, private val position: Float, private val detent: Float) :
   Event<DidPresentEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
@@ -17,6 +17,7 @@ class DidPresentEvent(surfaceId: Int, viewId: Int, private val index: Int, priva
     Arguments.createMap().apply {
       putInt("index", index)
       putDouble("position", position.toDouble())
+      putDouble("detent", detent.toDouble())
     }
 
   companion object {

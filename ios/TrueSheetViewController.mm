@@ -100,13 +100,8 @@
   return window ? window.safeAreaInsets.bottom : 0;
 }
 
-- (CGFloat)currentHeight {
-  return self.containerHeight - self.currentPosition - self.bottomInset;
-}
-
-- (CGFloat)containerHeight {
-  UIView *sheetContainerView = self.sheetPresentationController.containerView;
-  return sheetContainerView ? sheetContainerView.frame.size.height : 0.0;
+- (CGFloat)screenHeight {
+  return UIScreen.mainScreen.bounds.size.height;
 }
 
 - (NSInteger)currentDetentIndex {
@@ -306,11 +301,65 @@
   if (_lastPosition != position) {
     _lastPosition = position;
 
-    NSInteger index = [self currentDetentIndex];
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:transitioning:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:position transitioning:transitioning];
+    CGFloat index = [self interpolatedIndexForPosition:position];
+    NSInteger discreteIndex = (NSInteger)round(index);
+    CGFloat detent = [self detentValueForIndex:discreteIndex];
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:transitioning:)]) {
+      [self.delegate viewControllerDidChangePosition:index position:position detent:detent transitioning:transitioning];
     }
   }
+}
+
+- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
+  NSInteger count = _detents.count;
+  if (count == 0)
+    return -1;
+  if (count == 1)
+    return 0;
+
+  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
+  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+
+  // Handle below first detent (interpolate from -1 to 0)
+  CGFloat firstDetentValue = [self detentValueForIndex:0];
+  if (currentDetent < firstDetentValue) {
+    // Interpolate: 0 at firstDetentValue, -1 at 0
+    if (firstDetentValue <= 0)
+      return 0;
+    CGFloat progress = currentDetent / firstDetentValue;
+    return progress - 1;
+  }
+
+  // Find which segment the current detent falls into and interpolate
+  for (NSInteger i = 0; i < count - 1; i++) {
+    CGFloat detentValue = [self detentValueForIndex:i];
+    CGFloat nextDetentValue = [self detentValueForIndex:i + 1];
+
+    if (currentDetent <= nextDetentValue) {
+      // Interpolate between index i and i+1
+      CGFloat range = nextDetentValue - detentValue;
+      if (range <= 0)
+        return i;
+      CGFloat progress = (currentDetent - detentValue) / range;
+      return i + fmax(0, fmin(1, progress));
+    }
+  }
+
+  return count - 1;
+}
+
+- (CGFloat)detentValueForIndex:(NSInteger)index {
+  if (index >= 0 && index < (NSInteger)_detents.count) {
+    CGFloat value = [_detents[index] floatValue];
+    // For auto (-1), calculate actual fraction from content + header height
+    // Subtract bottomInset to match the actual sheet height (consistent with detent resolver)
+    if (value == -1) {
+      CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
+      return autoHeight / self.screenHeight;
+    }
+    return value;
+  }
+  return 0;
 }
 
 /**
@@ -336,7 +385,7 @@
   BOOL isPresenting = self.isBeingPresented;
 
   // Set initial position: presenting starts from bottom, dismissing from current
-  frame.origin.y = isPresenting ? self.containerHeight : presentedView.frame.origin.y;
+  frame.origin.y = isPresenting ? self.screenHeight : presentedView.frame.origin.y;
   _fakeTransitionView.frame = frame;
 
   auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
@@ -398,12 +447,12 @@
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
   // Subtract bottomInset to prevent iOS from adding extra bottom insets
-  CGFloat totalHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
+  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
     UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
-                                                                 withHeight:totalHeight
+                                                             withAutoHeight:autoHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
   }
@@ -431,7 +480,9 @@
   }
 }
 
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent withHeight:(CGFloat)height atIndex:(NSInteger)index {
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
+                                         withAutoHeight:(CGFloat)autoHeight
+                                                atIndex:(NSInteger)index {
   if (![detent isKindOfClass:[NSNumber class]]) {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
@@ -441,15 +492,9 @@
   // -1 represents "auto" (fit content height)
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      NSString *detentId = @"custom-auto";
-      return [UISheetPresentationControllerDetent
-        customDetentWithIdentifier:detentId
-                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetentValue = context.maximumDetentValue;
-                            CGFloat maxValue =
-                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                            return fmin(height, maxValue);
-                          }];
+      // Subtract bottomInset so position matches screenHeight - sheetHeight
+      // iOS adds bottom safe area to sheet height internally
+      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight - self.bottomInset];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -461,26 +506,28 @@
   }
 
   if (@available(iOS 16.0, *)) {
-    if (value == 1.0) {
-      return [UISheetPresentationControllerDetent largeDetent];
-    } else if (value == 0.5) {
-      return [UISheetPresentationControllerDetent mediumDetent];
-    } else {
-      NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
-      return [UISheetPresentationControllerDetent
-        customDetentWithIdentifier:detentId
-                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetentValue = context.maximumDetentValue;
-                            CGFloat maxValue =
-                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                            return fmin(value * maxDetentValue, maxValue);
-                          }];
-    }
+    NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
+    // Subtract bottomInset so position matches screenHeight - (detent * screenHeight)
+    // iOS adds bottom safe area to sheet height internally
+    CGFloat sheetHeight = value * self.screenHeight - self.bottomInset;
+    return [self customDetentWithIdentifier:detentId height:sheetHeight];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];
   } else {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
+}
+
+- (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
+                                                             height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
+  return [UISheetPresentationControllerDetent
+    customDetentWithIdentifier:identifier
+                      resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                        CGFloat maxDetentValue = context.maximumDetentValue;
+                        CGFloat maxValue =
+                          self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                        return fmin(height, maxValue);
+                      }];
 }
 
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index {
