@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { TrueSheet, type PositionChangeEvent } from '@lodev09/react-native-true-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import {
   BasicSheet,
@@ -24,22 +24,11 @@ export const NavigationScreen = () => {
   const blankSheet = useRef<TrueSheet>(null);
   const navigationSheet = useRef<TrueSheet>(null);
 
-  const lastTrackedPosRef = useRef(0);
-
   const navigation = useAppNavigation();
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
     console.log('Sheet 1 present async');
-  };
-
-  const handlePositionChange = (e: PositionChangeEvent) => {
-    if (lastTrackedPosRef.current === e.nativeEvent.position) {
-      console.log(`duplicate!!!! ${e.nativeEvent.position}`);
-    } else {
-      lastTrackedPosRef.current = e.nativeEvent.position;
-      console.log(`index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`);
-    }
   };
 
   return (
@@ -60,7 +49,7 @@ export const NavigationScreen = () => {
       <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
       <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
-      <BasicSheet initialDetentIndex={0} onPositionChange={handlePositionChange} ref={basicSheet} />
+      <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
       <ScrollViewSheet ref={scrollViewSheet} />
       <FlatListSheet ref={flatListSheet} />

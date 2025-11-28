@@ -624,9 +624,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     return DetentInfo(currentDetentIndex, screenY.pxToDp())
   }
 
-  private fun getCurrentPositionPx(sheetView: View): Int {
-    return ScreenUtils.getScreenY(sheetView)
-  }
+  private fun getCurrentPositionPx(sheetView: View): Int = ScreenUtils.getScreenY(sheetView)
 
   /**
    * Returns the detent index for the current position.

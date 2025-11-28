@@ -16,7 +16,7 @@ import {
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import MapView from 'react-native-maps';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle } from 'react-native-reanimated';
 
 import { Button, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
@@ -103,11 +103,11 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[detent1, 0.7, 1]}
+        detents={[0.5, 0.7, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
-        dismissible={false}
+        // dismissible={false}
         edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
         backgroundColor={Platform.select({ default: DARK })}
@@ -115,10 +115,12 @@ export const MapScreen = () => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
         onWillPresent={handleWillPresent}
-        // onPositionChange={(e) => {
-        //   'worklet';
-        //   console.log(`position changed at UI thread: ${e.nativeEvent.position}`);
-        // }}
+        onPositionChange={(e) => {
+          'worklet';
+
+          const { detent, position, transitioning } = e.nativeEvent;
+          console.log(`screenHeight: ${height}, position: ${position}`);
+        }}
         onDidPresent={() => {
           console.log('Sheet is presented');
         }}

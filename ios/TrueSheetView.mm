@@ -15,13 +15,13 @@
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
 #import "events/OnDetentChangeEvent.h"
+#import "events/OnDidBlurEvent.h"
 #import "events/OnDidDismissEvent.h"
+#import "events/OnDidFocusEvent.h"
 #import "events/OnDidPresentEvent.h"
 #import "events/OnDragBeginEvent.h"
 #import "events/OnDragChangeEvent.h"
 #import "events/OnDragEndEvent.h"
-#import "events/OnDidBlurEvent.h"
-#import "events/OnDidFocusEvent.h"
 #import "events/OnMountEvent.h"
 #import "events/OnPositionChangeEvent.h"
 #import "events/OnWillDismissEvent.h"
@@ -411,7 +411,10 @@ using namespace facebook::react;
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent transitioning:(BOOL)transitioning {
+- (void)viewControllerDidChangePosition:(NSInteger)index
+                               position:(CGFloat)position
+                                 detent:(CGFloat)detent
+                          transitioning:(BOOL)transitioning {
   [OnPositionChangeEvent emit:_eventEmitter index:index position:position detent:detent transitioning:transitioning];
 }
 
