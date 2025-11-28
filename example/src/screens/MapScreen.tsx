@@ -32,8 +32,6 @@ import {
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
 
-const DETENT_1_HEIGHT = Platform.select({ ios: HEADER_HEIGHT, default: 110 });
-
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
@@ -41,8 +39,6 @@ export const MapScreen = () => {
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
-
-  const detent1 = DETENT_1_HEIGHT / height;
 
   const sheetRef = useRef<TrueSheet>(null);
 
@@ -71,7 +67,7 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)),
+        translateY: Math.min(-(insets.bottom + HEADER_HEIGHT), -(height - animatedPosition.value)),
       },
     ],
   }));
@@ -103,7 +99,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[detent1, 0.7, 1]}
+        detents={[(HEADER_HEIGHT + insets.bottom) / height, 0.7, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -134,7 +130,7 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
-        header={<Header />}
+        header={<Header onLayout={(e) => console.log(e.nativeEvent.layout.height)} />}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet 💩</Text>
