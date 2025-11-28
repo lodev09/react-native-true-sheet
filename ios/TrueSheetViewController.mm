@@ -301,12 +301,47 @@
   if (_lastPosition != position) {
     _lastPosition = position;
 
-    NSInteger index = [self currentDetentIndex];
-    CGFloat detent = [self detentValueForIndex:index];
+    CGFloat index = [self interpolatedIndexForPosition:position];
+    NSInteger discreteIndex = (NSInteger)round(index);
+    CGFloat detent = [self detentValueForIndex:discreteIndex];
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:transitioning:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent transitioning:transitioning];
     }
   }
+}
+
+- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
+  NSInteger count = _detents.count;
+  if (count == 0) return -1;
+  if (count == 1) return 0;
+
+  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
+  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+
+  // Handle below first detent (interpolate from -1 to 0)
+  CGFloat firstDetentValue = [self detentValueForIndex:0];
+  if (currentDetent < firstDetentValue) {
+    // Interpolate: 0 at firstDetentValue, -1 at 0
+    if (firstDetentValue <= 0) return 0;
+    CGFloat progress = currentDetent / firstDetentValue;
+    return progress - 1;
+  }
+
+  // Find which segment the current detent falls into and interpolate
+  for (NSInteger i = 0; i < count - 1; i++) {
+    CGFloat detentValue = [self detentValueForIndex:i];
+    CGFloat nextDetentValue = [self detentValueForIndex:i + 1];
+
+    if (currentDetent <= nextDetentValue) {
+      // Interpolate between index i and i+1
+      CGFloat range = nextDetentValue - detentValue;
+      if (range <= 0) return i;
+      CGFloat progress = (currentDetent - detentValue) / range;
+      return i + fmax(0, fmin(1, progress));
+    }
+  }
+
+  return count - 1;
 }
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {

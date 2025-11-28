@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OnPositionChangeEvent : NSObject
 
 + (void)emit:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
-          index:(NSInteger)index
+          index:(CGFloat)index
        position:(CGFloat)position
          detent:(CGFloat)detent
   transitioning:(BOOL)transitioning;

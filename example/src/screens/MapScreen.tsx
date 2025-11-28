@@ -118,8 +118,8 @@ export const MapScreen = () => {
         onPositionChange={(e) => {
           'worklet';
 
-          const { detent, position, transitioning } = e.nativeEvent;
-          console.log(`screenHeight: ${height}, position: ${position}`);
+          const { detent, position, index } = e.nativeEvent;
+          console.log(`index: ${index}, detent: ${detent}, position: ${position}`);
         }}
         onDidPresent={() => {
           console.log('Sheet is presented');

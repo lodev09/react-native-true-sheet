@@ -14,7 +14,7 @@ export interface DetentInfoEventPayload {
 }
 
 export interface PositionChangeEventPayload {
-  index: Int32;
+  index: Double;
   position: Double;
   detent: Double;
   transitioning: boolean;
