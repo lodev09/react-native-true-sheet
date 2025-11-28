@@ -75,6 +75,7 @@ Blur tint that is mapped into native values in IOS.
 {
   index: 1,
   position: 123.5,
+  detent: 0.5,
   transitioning: false
 }
 ```
@@ -83,4 +84,5 @@ Blur tint that is mapped into native values in IOS.
 | - | - | - |
 | index | `number` | The detent index from the provided detents. See `detents` prop. |
 | position | `number` | The Y position of the sheet relative to the screen. |
+| detent | `number` | The detent value (0-1) for the current target index. |
 | transitioning | `boolean` | Whether the sheet is currently transitioning (presenting or dismissing). When `true`, position updates are animated on iOS. |

@@ -4,11 +4,12 @@ import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 export interface ReanimatedTrueSheetContextValue {
   /**
-   * Shared value representing the current sheet position (Y offset from bottom)
+   * Shared value representing the current sheet position (Y offset from top of screen)
    */
   animatedPosition: SharedValue<number>;
   /**
-   * Shared value representing the current detent index
+   * Shared value representing the current detent index as a continuous float.
+   * Interpolates smoothly between -1 (off-screen) and the target detent index.
    */
   animatedIndex: SharedValue<number>;
 }

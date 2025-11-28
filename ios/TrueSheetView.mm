@@ -411,8 +411,8 @@ using namespace facebook::react;
   [OnDetentChangeEvent emit:_eventEmitter index:index position:position];
 }
 
-- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning {
-  [OnPositionChangeEvent emit:_eventEmitter index:index position:position transitioning:transitioning];
+- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent transitioning:(BOOL)transitioning {
+  [OnPositionChangeEvent emit:_eventEmitter index:index position:position detent:detent transitioning:transitioning];
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {

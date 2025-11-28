@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewControllerDidDismiss;
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position;
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position;
-- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position transitioning:(BOOL)transitioning;
+- (void)viewControllerDidChangePosition:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent transitioning:(BOOL)transitioning;
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerDidFocus;
 - (void)viewControllerDidBlur;

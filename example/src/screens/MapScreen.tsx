@@ -16,7 +16,7 @@ import {
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import MapView from 'react-native-maps';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle } from 'react-native-reanimated';
 
 import { Button, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
@@ -32,14 +32,14 @@ import {
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
 
-const DETENT_1_HEIGHT = Platform.select({ ios: 90, default: 110 });
+const DETENT_1_HEIGHT = Platform.select({ ios: HEADER_HEIGHT, default: 110 });
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const { animatedPosition } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
 
   const detent1 = DETENT_1_HEIGHT / height;
@@ -72,13 +72,17 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: Math.min(
-          -(insets.bottom + (HEADER_HEIGHT - SPACING)),
-          -(height - animatedPosition.value)
-        ),
+        translateY: Math.min(-insets.bottom, -(height - animatedPosition.value)),
       },
     ],
   }));
+
+  useAnimatedReaction(
+    () => animatedIndex.value,
+    (value) => {
+      console.log(value);
+    }
+  );
 
   const addContent = () => {
     setSpacerCount((prev) => prev + 1);
@@ -115,14 +119,14 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[detent1, 0.8, 1]}
+        detents={[detent1, 0.7, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
         edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
-        backgroundColor={Platform.select({ android: DARK })}
+        backgroundColor={Platform.select({ default: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
@@ -169,7 +173,7 @@ export const MapScreen = () => {
           <Spacer key={i} />
         ))}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

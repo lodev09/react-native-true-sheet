@@ -39,7 +39,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragBegin(index: Int, position: Float)
   fun viewControllerDidDragChange(index: Int, position: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float)
-  fun viewControllerDidChangePosition(index: Int, position: Float, transitioning: Boolean)
+  fun viewControllerDidChangePosition(index: Int, position: Float, detent: Float, transitioning: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
   fun viewControllerDidFocus()
   fun viewControllerDidBlur()
@@ -252,8 +252,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       sheetContainer?.post {
         val detentInfo = getDetentInfoForIndex(currentDetentIndex)
+        val detent = detents.getOrElse(currentDetentIndex) { 0.0 }.toFloat()
         delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position)
-        delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
+        delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, detent, transitioning = true)
 
         presentPromise?.invoke()
         presentPromise = null
@@ -280,7 +281,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
           val detentInfo = getCurrentDetentInfo(sheetView)
-          delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = false)
+          val detent = detents.getOrElse(detentInfo.index) { 0.0 }.toFloat()
+          delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, detent, transitioning = false)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -375,7 +377,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Emit off-screen position
     val offScreenPosition = screenHeight.pxToDp()
-    delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
+    val detent = detents.getOrElse(currentDetentIndex) { 0.0 }.toFloat()
+    delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, detent, transitioning = true)
   }
 
   /**
@@ -387,7 +390,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Emit current position
     val detentInfo = getDetentInfoForIndex(currentDetentIndex)
-    delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
+    val detent = detents.getOrElse(currentDetentIndex) { 0.0 }.toFloat()
+    delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, detent, transitioning = true)
   }
 
   // ====================================================================
@@ -426,7 +430,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss() {
     this.post {
       val offScreenPosition = screenHeight.pxToDp()
-      delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, transitioning = true)
+      val detent = detents.getOrElse(currentDetentIndex) { 0.0 }.toFloat()
+      delegate?.viewControllerDidChangePosition(currentDetentIndex, offScreenPosition, detent, transitioning = true)
     }
     dialog?.dismiss()
   }
@@ -733,7 +738,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       this.post {
         positionFooter()
         val detentInfo = getDetentInfoForIndex(currentDetentIndex)
-        delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, transitioning = true)
+        val detent = detents.getOrElse(currentDetentIndex) { 0.0 }.toFloat()
+        delegate?.viewControllerDidChangePosition(detentInfo.index, detentInfo.position, detent, transitioning = true)
       }
     }
   }

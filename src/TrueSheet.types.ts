@@ -14,6 +14,10 @@ export interface DetentInfoEventPayload {
 
 export interface PositionChangeEventPayload extends DetentInfoEventPayload {
   /**
+   * The detent value (0-1) for the current target index.
+   */
+  detent: number;
+  /**
    * Workaround for cases where we can't get real-time position from native.
    * When true, manually animate the position in JS.
    */

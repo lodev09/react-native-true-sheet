@@ -92,6 +92,14 @@
   return presentedView ? presentedView.frame.origin.y : 0.0;
 }
 
+- (CGFloat)topInset {
+  if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+    return 0;
+  }
+  UIWindow *window = [WindowUtil keyWindow];
+  return window ? window.safeAreaInsets.top : 0;
+}
+
 - (CGFloat)bottomInset {
   if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
     return 0;
@@ -100,13 +108,8 @@
   return window ? window.safeAreaInsets.bottom : 0;
 }
 
-- (CGFloat)currentHeight {
-  return self.containerHeight - self.currentPosition - self.bottomInset;
-}
-
-- (CGFloat)containerHeight {
-  UIView *sheetContainerView = self.sheetPresentationController.containerView;
-  return sheetContainerView ? sheetContainerView.frame.size.height : 0.0;
+- (CGFloat)screenHeight {
+  return UIScreen.mainScreen.bounds.size.height;
 }
 
 - (NSInteger)currentDetentIndex {
@@ -307,8 +310,9 @@
     _lastPosition = position;
 
     NSInteger index = [self currentDetentIndex];
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:transitioning:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:position transitioning:transitioning];
+    CGFloat detent = (index >= 0 && index < (NSInteger)_detents.count) ? [_detents[index] doubleValue] : 0;
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:transitioning:)]) {
+      [self.delegate viewControllerDidChangePosition:index position:position detent:detent transitioning:transitioning];
     }
   }
 }
@@ -336,7 +340,7 @@
   BOOL isPresenting = self.isBeingPresented;
 
   // Set initial position: presenting starts from bottom, dismissing from current
-  frame.origin.y = isPresenting ? self.containerHeight : presentedView.frame.origin.y;
+  frame.origin.y = isPresenting ? self.screenHeight : presentedView.frame.origin.y;
   _fakeTransitionView.frame = frame;
 
   auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
@@ -461,21 +465,14 @@
   }
 
   if (@available(iOS 16.0, *)) {
-    if (value == 1.0) {
-      return [UISheetPresentationControllerDetent largeDetent];
-    } else if (value == 0.5) {
-      return [UISheetPresentationControllerDetent mediumDetent];
-    } else {
-      NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
-      return [UISheetPresentationControllerDetent
-        customDetentWithIdentifier:detentId
-                          resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
-                            CGFloat maxDetentValue = context.maximumDetentValue;
-                            CGFloat maxValue =
-                              self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                            return fmin(value * maxDetentValue, maxValue);
-                          }];
-    }
+    NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
+    return [UISheetPresentationControllerDetent
+      customDetentWithIdentifier:detentId
+                        resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
+                          CGFloat maxValue =
+                            self.maxHeight ? fmin(self.screenHeight, [self.maxHeight floatValue]) : self.screenHeight;
+                          return fmin(value * self.screenHeight, maxValue);
+                        }];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];
   } else {

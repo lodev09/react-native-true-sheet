@@ -5,8 +5,10 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
+  Extrapolation,
+  interpolate,
 } from 'react-native-reanimated';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 
 import { TrueSheet } from '../TrueSheet';
 import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
@@ -70,13 +72,13 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
+  const { height: screenHeight } = useWindowDimensions();
   const { animatedPosition, animatedIndex } = useReanimatedTrueSheet();
 
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
 
-    // When transitioning=true, we animate the position manually for smooth transitions.
-    // This is used when native can't provide real-time position updates during animations.
+    // When transitioning=true, we get the target position from native
     if (payload.transitioning) {
       if (Platform.OS === 'android') {
         animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
@@ -85,9 +87,15 @@ export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProp
       }
     } else {
       animatedPosition.value = payload.position;
-    }
+      const targetPosition = screenHeight * (1 - payload.detent);
 
-    animatedIndex.value = payload.index;
+      animatedIndex.value = interpolate(
+        payload.position,
+        [screenHeight, targetPosition],
+        [payload.index - 1, payload.index],
+        Extrapolation.CLAMP
+      );
+    }
     onPositionChange?.({ nativeEvent: payload } as PositionChangeEvent);
   });
 
