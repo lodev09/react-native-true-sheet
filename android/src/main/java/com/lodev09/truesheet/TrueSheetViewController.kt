@@ -121,6 +121,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var presentPromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
 
+  // Reference to parent TrueSheetView (if presented from another sheet)
+  var parentSheetView: TrueSheetView? = null
+
   // ====================================================================
   // MARK: - Configuration Properties
   // ====================================================================
@@ -261,6 +264,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
         emitChangePositionDelegate(detentInfo.index, positionPx, transitioning = true)
 
+        // Notify parent sheet that it has lost focus (after this sheet appeared)
+        parentSheetView?.viewControllerDidBlur()
+
         presentPromise?.invoke()
         presentPromise = null
 
@@ -269,10 +275,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnCancelListener {
+      // Notify parent sheet that it is about to regain focus
+      parentSheetView?.viewControllerWillFocus()
+
       delegate?.viewControllerWillDismiss()
     }
 
     dialog.setOnDismissListener {
+      // Notify parent sheet that it has regained focus
+      parentSheetView?.viewControllerDidFocus()
+      parentSheetView = null
+
       dismissPromise?.invoke()
       dismissPromise = null
       delegate?.viewControllerDidDismiss()
@@ -422,6 +435,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       val detentInfo = getDetentInfoForIndex(detentIndex)
       val detent = getDetentValueForIndex(detentInfo.index)
+
+      // Notify parent sheet that it is about to lose focus (before this sheet appears)
+      parentSheetView?.viewControllerWillBlur()
+
       delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
 
       if (!animated) {

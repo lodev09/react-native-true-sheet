@@ -4,8 +4,8 @@ import com.lodev09.truesheet.TrueSheetView
 
 /**
  * Observes TrueSheet dialog lifecycle to manage sheet stacking.
- * Automatically hides/shows sheets and dispatches focus/blur events
- * when sheets are presented on top of each other.
+ * Manages the stack of presented sheets and handles visibility.
+ * Focus/blur events are dispatched by TrueSheetViewController tied to dialog lifecycle.
  */
 object TrueSheetDialogObserver {
 
@@ -16,22 +16,20 @@ object TrueSheetDialogObserver {
 
   /**
    * Called when a sheet is about to be presented.
-   * Hides and blurs the current topmost sheet if exists.
+   * Returns the parent sheet (if any) and handles visibility.
    *
    * @param sheetView The sheet that is about to be presented
    * @param detentIndex The detent index the sheet will be presented at
+   * @return The parent sheet view that will lose focus, or null if none
    */
   @JvmStatic
-  fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int) {
+  fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
     synchronized(presentedSheetStack) {
-      // Get the current topmost sheet
-      val topSheet = presentedSheetStack.lastOrNull()
+      // Get the current topmost sheet (will be the parent)
+      val parentSheet = presentedSheetStack.lastOrNull()
 
-      // Hide and blur the topmost sheet if it exists
-      topSheet?.let {
-        // Notify that sheet is about to lose focus
-        it.viewControllerWillBlur()
-
+      // Hide the parent sheet if needed
+      parentSheet?.let {
         // Don't hide if the top sheet is fully expanded (covers the screen)
         // or if the top sheet is smaller than the presenting sheet
         // A smaller topSheetTop value means the sheet is taller (closer to top of screen)
@@ -41,21 +39,20 @@ object TrueSheetDialogObserver {
         if (!it.viewController.isExpanded && topSheetTop <= presentingSheetTop) {
           it.viewController.hideDialog()
         }
-
-        // Notify that sheet has lost focus
-        it.viewControllerDidBlur()
       }
 
       // Add new sheet to stack
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
       }
+
+      return parentSheet
     }
   }
 
   /**
    * Called when a sheet has been dismissed.
-   * Shows and focuses the sheet below it (if any).
+   * Shows the parent sheet if any exists.
    *
    * @param sheetView The sheet that was dismissed
    */
@@ -64,21 +61,15 @@ object TrueSheetDialogObserver {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
 
-      // Show and focus the new topmost sheet
+      // Show the new topmost sheet (parent)
       presentedSheetStack.lastOrNull()?.let {
-        // Notify that sheet is about to regain focus
-        it.viewControllerWillFocus()
-
         it.viewController.showDialog()
-
-        // Notify that sheet has regained focus
-        it.viewControllerDidFocus()
       }
     }
   }
 
   /**
-   * Removes a sheet from the stack without triggering focus events.
+   * Removes a sheet from the stack without triggering any events.
    * Used when a sheet is being destroyed/cleaned up.
    *
    * @param sheetView The sheet to remove

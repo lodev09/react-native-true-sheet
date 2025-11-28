@@ -308,9 +308,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Notify observer that this sheet will present (will hide/blur topmost sheet)
+    // Notify observer and get parent sheet reference (if presenting from another sheet)
     if (!viewController.isPresented) {
-      TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
+      val parentSheet = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
+      viewController.parentSheetView = parentSheet
     }
 
     viewController.presentPromise = promiseCallback
