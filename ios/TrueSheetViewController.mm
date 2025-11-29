@@ -399,7 +399,7 @@
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
   if (index >= 0 && index < (NSInteger)_detents.count) {
-    CGFloat value = [_detents[index] floatValue];
+    CGFloat value = [_detents[index] doubleValue];
     // For auto (-1), calculate actual fraction from content + header height
     // Subtract bottomInset to match the actual sheet height (consistent with detent resolver)
     if (value == -1) {
@@ -528,7 +528,7 @@
     return [UISheetPresentationControllerDetent mediumDetent];
   }
 
-  CGFloat value = [detent floatValue];
+  CGFloat value = [detent doubleValue];
 
   // -1 represents "auto" (fit content height)
   if (value == -1) {

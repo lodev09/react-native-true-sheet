@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
                                        >
 
 @property (nonatomic, weak, nullable) id<TrueSheetViewControllerDelegate> delegate;
-@property (nonatomic, strong) NSArray *detents;
+@property (nonatomic, strong) NSArray<NSNumber *> *detents;
 @property (nonatomic, strong, nullable) NSNumber *maxHeight;
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, nullable) NSNumber *headerHeight;
