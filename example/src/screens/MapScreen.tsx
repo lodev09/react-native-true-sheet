@@ -103,8 +103,6 @@ export const MapScreen = () => {
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
-        blurTint="extra-light"
-        // blurInteraction={false}
         dismissible={false}
         edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
