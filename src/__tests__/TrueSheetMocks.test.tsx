@@ -6,7 +6,6 @@ import { render } from '@testing-library/react-native';
 const {
   TrueSheet,
   ReanimatedTrueSheet,
-  TrueSheetGrabber,
   ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
   useReanimatedPositionChangeHandler,
@@ -83,13 +82,6 @@ describe('TrueSheet Mocks', () => {
         </ReanimatedTrueSheet>
       );
       expect(getByText('Reanimated Content')).toBeDefined();
-    });
-  });
-
-  describe('TrueSheetGrabber Mock', () => {
-    it('should render with testID', () => {
-      const { getByTestId } = render(<TrueSheetGrabber />);
-      expect(getByTestId('true-sheet-grabber')).toBeDefined();
     });
   });
 

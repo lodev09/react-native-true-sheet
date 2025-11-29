@@ -11,15 +11,6 @@ import { Header } from '../Header';
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<TrueSheet>) => {
-  // const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // const handleRefresh = () => {
-  //   setIsRefreshing(true);
-  //   setTimeout(() => {
-  //     setIsRefreshing(false);
-  //   }, 5000);
-  // };
-
   return (
     <TrueSheet
       ref={ref}
@@ -46,10 +37,6 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           ItemSeparatorComponent={Spacer}
-          // Broken on Android ;(
-          // refreshControl={
-          //   <RefreshControl refreshing={isRefreshing} tintColor="white" onRefresh={handleRefresh} />
-          // }
           renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
         />
       </View>
