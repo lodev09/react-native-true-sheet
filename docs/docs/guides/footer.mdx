@@ -54,3 +54,30 @@ const App = () => {
 }
 ```
 :::
+
+## Safe Area Handling
+
+The footer is pinned to the bottom edge of the sheet. When using an `auto` detent on iOS, the sheet height automatically includes the bottom safe area. To ensure your footer extends properly into the safe area, add bottom padding:
+
+```tsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const MyFooter = () => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ paddingBottom: insets.bottom, backgroundColor: '#333' }}>
+      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: '#fff' }}>Footer Content</Text>
+      </View>
+    </View>
+  );
+};
+
+// Usage
+<TrueSheet detents={['auto']} footer={<MyFooter />}>
+  {/* content */}
+</TrueSheet>
+```
+
+This ensures the footer background extends into the safe area while keeping the content above the home indicator.

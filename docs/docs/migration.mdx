@@ -136,7 +136,46 @@ Detent values now use **fractional values (0-1)** instead of percentage strings.
 The `"auto"` detent still works the same way!
 :::
 
-### 5. Background and Blur Behavior Changes
+### 5. Native Bottom Safe Area Handling (iOS)
+
+iOS now handles bottom safe area insets natively for the sheet. This means the sheet height includes the safe area automatically, providing consistent behavior across all Apple devices (iPhone, iPad, visionOS).
+
+**What this means:**
+- The `position`, `index`, and `detent` values are calculated purely from the actual sheet position relative to screen height
+- On iPhone, a sheet at detent `0.5` will be taller than `0.5 * screenHeight` because iOS adds the bottom safe area internally
+
+**Footer with auto detent:**
+
+The footer is pinned to the bottom edge of the sheet. When using an `auto` detent, the sheet height includes the safe area, so your footer needs to extend into it:
+
+```tsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const MyFooter = () => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ paddingBottom: insets.bottom, backgroundColor: '#333' }}>
+      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Footer Content</Text>
+      </View>
+    </View>
+  );
+};
+
+// Usage
+<TrueSheet detents={['auto']} footer={<MyFooter />}>
+  {/* content */}
+</TrueSheet>
+```
+
+This ensures the footer background extends into the safe area while keeping the content above the home indicator.
+
+:::tip
+See the [Footer guide](/guides/footer) for more details.
+:::
+
+### 6. Background and Blur Behavior Changes
 
 #### `backgroundColor` Default Value
 
