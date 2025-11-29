@@ -15,31 +15,11 @@ This guide will help you migrate from TrueSheet v2 to v3. Version 3 brings full 
 Version 3 is built exclusively for React Native's **New Architecture (Fabric)**. The old Paper architecture is no longer supported.
 
 **Requirements:**
-- React Native 0.74+ (recommended 0.81+ for edge-to-edge support)
-- New Architecture must be enabled
-
-**What you need to do:**
-
-Enable the New Architecture in your app if you haven't already:
-
-#### iOS
-```ruby title="ios/Podfile"
-use_frameworks! :linkage => :static
-$RNNewArchEnabled = true
-```
-
-Then run:
-```sh
-cd ios && pod install
-```
-
-#### Android
-```properties title="android/gradle.properties"
-newArchEnabled=true
-```
+- React Native >= 0.76 (Expo SDK 52+)
+- New Architecture enabled (default in RN 0.76+)
 
 :::tip
-Check out the [React Native New Architecture guide](https://reactnative.dev/docs/new-architecture-intro) for more details.
+If you're on React Native 0.76+, the New Architecture is enabled by default. No additional configuration is needed.
 :::
 
 ### 2. Prop Renames

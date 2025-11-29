@@ -24,13 +24,20 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 ### Prerequisites
 
-- React Native >= 0.81
-- New Architecture enabled (`RCT_NEW_ARCH_ENABLED=1` for iOS, `newArchEnabled=true` for Android)
+- React Native >= 0.76 (Expo SDK 52+)
+- New Architecture enabled (default in RN 0.76+)
 
-### Install
+### Expo
+
+```sh
+npx expo install @lodev09/react-native-true-sheet
+```
+
+### Bare React Native
 
 ```sh
 yarn add @lodev09/react-native-true-sheet
+cd ios && pod install
 ```
 
 ## Documentation

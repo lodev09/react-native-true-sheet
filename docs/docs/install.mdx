@@ -6,21 +6,29 @@ keywords: [bottom sheet installation, bottom sheet yarn, bottom sheet npm, ios b
 
 # Installation
 
-You can install the package by using either `yarn` or `npm`.
+## Prerequisites
 
-```sh
-yarn add @lodev09/react-native-true-sheet
-```
-```sh
-npm i @lodev09/react-native-true-sheet
-```
-
-Next, run the following to install it on IOS.
-
-```sh
-cd ios && pod install
-```
+- React Native >= 0.76 (Expo SDK 52+)
+- New Architecture enabled (default in RN 0.76+)
 
 :::info
 This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). Use this with [Expo CNG](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
 :::
+
+## Expo
+
+```sh
+npx expo install @lodev09/react-native-true-sheet
+```
+
+## Bare React Native
+
+```sh
+yarn add @lodev09/react-native-true-sheet
+```
+
+Then install the native dependencies:
+
+```sh
+cd ios && pod install
+```
