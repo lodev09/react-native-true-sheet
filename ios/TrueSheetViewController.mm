@@ -231,8 +231,8 @@
   }
 
   if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
-    // Treat position changes as transitioning when another controller is presented on top
-    [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:YES];
+    // Not realtime when layout changes (e.g., another controller is presented on top)
+    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
 
     // On iOS 26, this is called twice when we have a ScrollView
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -290,11 +290,11 @@
       _isDragging = YES;
       break;
     case UIGestureRecognizerStateChanged:
-      [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:NO];
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
-      [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:YES];
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         self->_isDragging = NO;
       });
@@ -307,7 +307,7 @@
 
 #pragma mark - Position Tracking
 
-- (void)emitChangePositionDelegateWithPosition:(CGFloat)position transitioning:(BOOL)transitioning {
+- (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime {
   // Use epsilon comparison to avoid missing updates due to floating point precision
   if (fabs(_lastPosition - position) > 0.01) {
     _lastPosition = position;
@@ -315,8 +315,8 @@
     CGFloat index = [self interpolatedIndexForPosition:position];
     NSInteger discreteIndex = (NSInteger)round(index);
     CGFloat detent = [self detentValueForIndex:discreteIndex];
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:transitioning:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:position detent:detent transitioning:transitioning];
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
+      [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
   }
 }
@@ -435,7 +435,7 @@
     CGFloat staticPosition = _fakeTransitionView.frame.origin.y;
 
     if (fabs(staticPosition - transitioningPosition) > 0.01) {
-      [self emitChangePositionDelegateWithPosition:transitioningPosition transitioning:NO];
+      [self emitChangePositionDelegateWithPosition:transitioningPosition realtime:YES];
     }
   }
 }

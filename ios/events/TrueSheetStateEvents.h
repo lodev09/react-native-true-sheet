@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
                      index:(CGFloat)index
                   position:(CGFloat)position
                     detent:(CGFloat)detent
-             transitioning:(BOOL)transitioning;
+                  realtime:(BOOL)realtime;
 
 @end
 

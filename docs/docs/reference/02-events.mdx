@@ -100,7 +100,7 @@ Comes with [`PositionChangeEventPayload`](/reference/types#positionchangeeventpa
 
 This is called continuously when the sheet's position changes during drag operations or transitions. This event fires more frequently than `onDragChange` and provides real-time position updates.
 
-The `transitioning` property indicates whether the sheet is currently presenting or dismissing. On iOS, when `transitioning` is `true`, the position should be animated (ReanimatedTrueSheet handles this automatically).
+The `realtime` property indicates whether the position value is real-time (e.g., during drag or animation tracking). When `realtime` is `false`, the position should be animated in JS (ReanimatedTrueSheet handles this automatically).
 
 :::tip
 Use this event when you need smooth, continuous position tracking for animations or visual feedback. For less frequent updates during dragging, use `onDragChange` instead.

@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
-                          transitioning:(BOOL)transitioning;
+                               realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
