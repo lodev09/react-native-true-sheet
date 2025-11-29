@@ -417,12 +417,8 @@ using namespace facebook::react;
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
-                          transitioning:(BOOL)transitioning {
-  [TrueSheetStateEvents emitPositionChange:_eventEmitter
-                                     index:index
-                                  position:position
-                                    detent:detent
-                             transitioning:transitioning];
+                               realtime:(BOOL)realtime {
+  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:index position:position detent:detent realtime:realtime];
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {

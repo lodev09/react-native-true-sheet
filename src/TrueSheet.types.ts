@@ -18,10 +18,10 @@ export interface DetentInfoEventPayload {
 
 export interface PositionChangeEventPayload extends DetentInfoEventPayload {
   /**
-   * Workaround for cases where we can't get real-time position from native.
-   * When true, manually animate the position in JS.
+   * Indicates whether the position value is real-time (e.g., during drag or animation tracking).
+   * When false, the position should be animated in JS.
    */
-  transitioning: boolean;
+  realtime: boolean;
 }
 
 export type MountEvent = NativeSyntheticEvent<null>;

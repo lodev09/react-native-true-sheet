@@ -28,7 +28,7 @@ class DetentChangeEvent(surfaceId: Int, viewId: Int, private val index: Int, pri
 
 /**
  * Fired continuously for position updates during drag and animation
- * Payload: { index: number, position: number, detent: number, transitioning: boolean }
+ * Payload: { index: number, position: number, detent: number, realtime: boolean }
  */
 class PositionChangeEvent(
   surfaceId: Int,
@@ -36,7 +36,7 @@ class PositionChangeEvent(
   private val index: Float,
   private val position: Float,
   private val detent: Float,
-  private val transitioning: Boolean = false
+  private val realtime: Boolean = false
 ) : Event<PositionChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
@@ -46,7 +46,7 @@ class PositionChangeEvent(
       putDouble("index", index.toDouble())
       putDouble("position", position.toDouble())
       putDouble("detent", detent.toDouble())
-      putBoolean("transitioning", transitioning)
+      putBoolean("realtime", realtime)
     }
 
   companion object {

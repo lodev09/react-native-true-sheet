@@ -156,7 +156,7 @@ export const MapScreen = () => {
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
         <Spacer />
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

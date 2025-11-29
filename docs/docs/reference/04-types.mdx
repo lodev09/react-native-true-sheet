@@ -78,7 +78,7 @@ Blur tint that is mapped into native values in IOS.
   index: 1.5,
   position: 123.5,
   detent: 0.5,
-  transitioning: false
+  realtime: true
 }
 ```
 
@@ -87,4 +87,4 @@ Blur tint that is mapped into native values in IOS.
 | index | `number` | The interpolated detent index. Continuous value that smoothly transitions between detents (e.g., `0.5` means halfway between detent 0 and 1). |
 | position | `number` | The Y position of the sheet relative to the screen. |
 | detent | `number` | The detent value (0-1) for the nearest detent index. |
-| transitioning | `boolean` | Whether the sheet is currently transitioning (presenting or dismissing). When `true`, position updates are animated on iOS. |
+| realtime | `boolean` | Whether the position is a real-time value (e.g., during drag or animation tracking). When `false`, position should be animated in JS. |

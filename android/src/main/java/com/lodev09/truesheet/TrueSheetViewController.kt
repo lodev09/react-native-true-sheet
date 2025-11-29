@@ -39,7 +39,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragEnd(index: Int, position: Float, detent: Float)
-  fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, transitioning: Boolean)
+  fun viewControllerDidChangePosition(index: Float, position: Float, detent: Float, realtime: Boolean)
   fun viewControllerDidChangeSize(width: Int, height: Int)
   fun viewControllerWillFocus()
   fun viewControllerDidFocus()
@@ -267,7 +267,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val detent = getDetentValueForIndex(detentInfo.index)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
         delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
-        emitChangePositionDelegate(detentInfo.index, positionPx, transitioning = true)
+        emitChangePositionDelegate(detentInfo.index, positionPx, realtime = false)
 
         // Notify parent sheet that it has lost focus (after this sheet appeared)
         parentSheetView?.viewControllerDidBlur()
@@ -308,7 +308,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           val positionPx = getCurrentPositionPx(sheetView)
           val detentIndex = getDetentIndexForPosition(positionPx)
 
-          emitChangePositionDelegate(detentIndex, positionPx, transitioning = false)
+          emitChangePositionDelegate(detentIndex, positionPx, realtime = true)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -403,7 +403,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog?.window?.decorView?.visibility = View.INVISIBLE
 
     // Emit off-screen position (detent = 0 since sheet is fully hidden)
-    emitChangePositionDelegate(currentDetentIndex, screenHeight, transitioning = true)
+    emitChangePositionDelegate(currentDetentIndex, screenHeight, realtime = false)
   }
 
   /**
@@ -416,7 +416,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Emit current position
     val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-    emitChangePositionDelegate(currentDetentIndex, positionPx, transitioning = true)
+    emitChangePositionDelegate(currentDetentIndex, positionPx, realtime = false)
   }
 
   // ====================================================================
@@ -461,7 +461,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss() {
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
-      emitChangePositionDelegate(currentDetentIndex, screenHeight, transitioning = true)
+      emitChangePositionDelegate(currentDetentIndex, screenHeight, realtime = false)
     }
     dialog?.dismiss()
   }
@@ -635,16 +635,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Emits position change to the delegate if the position has changed.
    * @param index The current detent index (discrete, used as fallback)
    * @param positionPx The current position in pixels (screen Y coordinate)
-   * @param transitioning Whether the sheet is transitioning (programmatic) vs dragging
+   * @param realtime Whether the position is a real-time value (during drag or animation tracking)
    */
-  private fun emitChangePositionDelegate(index: Int, positionPx: Int, transitioning: Boolean) {
+  private fun emitChangePositionDelegate(index: Int, positionPx: Int, realtime: Boolean) {
     if (positionPx == lastEmittedPositionPx) return
 
     lastEmittedPositionPx = positionPx
     val position = positionPx.pxToDp()
     val interpolatedIndex = getInterpolatedIndexForPosition(positionPx)
     val detent = getDetentValueForIndex(kotlin.math.round(interpolatedIndex).toInt())
-    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, transitioning)
+    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
   /**
@@ -863,7 +863,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       this.post {
         positionFooter()
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-        emitChangePositionDelegate(currentDetentIndex, positionPx, transitioning = true)
+        emitChangePositionDelegate(currentDetentIndex, positionPx, realtime = false)
       }
     }
   }

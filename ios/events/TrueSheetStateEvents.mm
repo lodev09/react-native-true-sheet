@@ -31,7 +31,7 @@
                      index:(CGFloat)index
                   position:(CGFloat)position
                     detent:(CGFloat)detent
-             transitioning:(BOOL)transitioning {
+                  realtime:(BOOL)realtime {
   if (!eventEmitter)
     return;
 
@@ -40,7 +40,7 @@
   event.index = static_cast<double>(index);
   event.position = static_cast<double>(position);
   event.detent = static_cast<double>(detent);
-  event.transitioning = static_cast<bool>(transitioning);
+  event.realtime = static_cast<bool>(realtime);
   emitter->onPositionChange(event);
 }
 

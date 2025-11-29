@@ -18,7 +18,7 @@ export interface PositionChangeEventPayload {
   index: Double;
   position: Double;
   detent: Double;
-  transitioning: boolean;
+  realtime: boolean;
 }
 
 export interface NativeProps extends ViewProps {
