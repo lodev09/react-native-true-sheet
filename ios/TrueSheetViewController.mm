@@ -21,10 +21,8 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
-  CGFloat _lastTransitionPosition;
   BOOL _isTransitioning;
   BOOL _isDragging;
-  BOOL _isTrackingPositionFromLayout;
 
   // Hidden view used to track position during native transition animations
   UIView *_fakeTransitionView;
@@ -46,10 +44,8 @@
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
     _lastPosition = 0;
-    _lastTransitionPosition = 0;
     _isTransitioning = NO;
     _isDragging = NO;
-    _isTrackingPositionFromLayout = NO;
     _layoutTransitioning = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
@@ -199,7 +195,6 @@
   }
 
   [self setupTransitionPositionTracking];
-  _isTrackingPositionFromLayout = NO;
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -222,8 +217,6 @@
     }
   }
 
-  _isTrackingPositionFromLayout = NO;
-
   if (isActuallyDismissing) {
     _isPresented = NO;
     _activeDetentIndex = -1;
@@ -237,12 +230,9 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
-  if (!_isTransitioning && self.isActiveAndVisible) {
-    _isTrackingPositionFromLayout = YES;
-
+  if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
     // Treat position changes as transitioning when another controller is presented on top
-    [self emitChangePositionDelegateWithPosition:self.currentPosition
-                                   transitioning:_layoutTransitioning || !self.isTopmostPresentedController];
+    [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:YES];
 
     // On iOS 26, this is called twice when we have a ScrollView
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -300,14 +290,16 @@
       _isDragging = YES;
       break;
     case UIGestureRecognizerStateChanged:
-      if (!_isTrackingPositionFromLayout) {
-        [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:NO];
-      }
+      [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:NO];
       break;
     case UIGestureRecognizerStateEnded:
-    case UIGestureRecognizerStateCancelled:
-      _isDragging = NO;
+    case UIGestureRecognizerStateCancelled: {
+      [self emitChangePositionDelegateWithPosition:self.currentPosition transitioning:YES];
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self->_isDragging = NO;
+      });
       break;
+    }
     default:
       break;
   }
@@ -316,7 +308,8 @@
 #pragma mark - Position Tracking
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position transitioning:(BOOL)transitioning {
-  if (_lastPosition != position) {
+  // Use epsilon comparison to avoid missing updates due to floating point precision
+  if (fabs(_lastPosition - position) > 0.01) {
     _lastPosition = position;
 
     CGFloat index = [self interpolatedIndexForPosition:position];
@@ -413,8 +406,6 @@
     finalFrame.origin.y = presentedView.frame.origin.y;
     self->_fakeTransitionView.frame = finalFrame;
 
-    self->_lastTransitionPosition = finalFrame.origin.y;
-
     // Track position at screen refresh rate via display link
     self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
     [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
@@ -440,18 +431,12 @@
   CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
 
   if (presentationLayer) {
-    BOOL transitioning = NO;
-    CGFloat position = presentationLayer.frame.origin.y;
+    CGFloat transitioningPosition = presentationLayer.frame.origin.y;
+    CGFloat staticPosition = _fakeTransitionView.frame.origin.y;
 
-    // If position matches last transition position (within epsilon), sheet is repositioning after drag
-    if (fabs(_lastTransitionPosition - position) < 0.5) {
-      transitioning = YES;
-      position = presentedView.frame.origin.y;
-    } else {
-      _lastTransitionPosition = position;
+    if (fabs(staticPosition - transitioningPosition) > 0.01) {
+      [self emitChangePositionDelegateWithPosition:transitioningPosition transitioning:NO];
     }
-
-    [self emitChangePositionDelegateWithPosition:position transitioning:transitioning];
   }
 }
 
