@@ -158,7 +158,16 @@ class TrueSheetViewManager :
   @ReactProp(name = "blurTint")
   override fun setBlurTint(view: TrueSheetView, tint: String?) {
     // iOS-specific prop - no-op on Android
-    view.setBlurTint(tint)
+  }
+
+  @ReactProp(name = "blurIntensity", defaultDouble = 1.0)
+  override fun setBlurIntensity(view: TrueSheetView, value: Double) {
+    // iOS-specific prop - no-op on Android
+  }
+
+  @ReactProp(name = "blurInteraction", defaultBoolean = false)
+  override fun setBlurInteraction(view: TrueSheetView, value: Boolean) {
+    // iOS-specific prop - no-op on Android
   }
 
   @ReactProp(name = "edgeToEdgeFullScreen", defaultBoolean = false)

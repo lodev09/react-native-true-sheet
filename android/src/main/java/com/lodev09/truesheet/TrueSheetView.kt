@@ -284,9 +284,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setDetents(newDetents: MutableList<Double>) {
     viewController.detents = newDetents
   }
-
-  fun setBlurTint(tint: String?) {}
-
   fun setEdgeToEdgeFullScreen(edgeToEdgeFullScreen: Boolean) {
     viewController.edgeToEdgeFullScreen = edgeToEdgeFullScreen
   }
