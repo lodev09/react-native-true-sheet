@@ -83,15 +83,16 @@
 
   // Use animator to control blur intensity
   __weak typeof(self) weakSelf = self;
-  _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0 curve:UIViewAnimationCurveLinear animations:^{
-    weakSelf.effect = blurEffect;
-  }];
+  _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
+                                                             curve:UIViewAnimationCurveLinear
+                                                        animations:^{
+                                                          weakSelf.effect = blurEffect;
+                                                        }];
   _blurAnimator.pausesOnCompletion = YES;
 
   // Set intensity: nil means system default (100%), otherwise use provided value (0-100)
-  CGFloat intensity = (self.blurIntensity && [self.blurIntensity floatValue] >= 0)
-    ? [self.blurIntensity floatValue] / 100.0
-    : 1.0;
+  CGFloat intensity =
+    (self.blurIntensity && [self.blurIntensity floatValue] >= 0) ? [self.blurIntensity floatValue] / 100.0 : 1.0;
   _blurAnimator.fractionComplete = intensity;
 }
 
