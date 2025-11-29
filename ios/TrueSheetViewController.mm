@@ -332,10 +332,8 @@
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
+      _isDragging = NO;
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self->_isDragging = NO;
-      });
       break;
     }
     default:
