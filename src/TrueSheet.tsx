@@ -432,7 +432,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
               </TrueSheetFooterViewNativeComponent>
             )}
             {/* Grabber hitbox for Android - allows dragging the sheet from the top area */}
-            {Platform.OS === 'android' && grabber && (
+            {Platform.OS === 'android' && grabber && draggable && (
               <View collapsable={false} style={styles.grabberHitbox} />
             )}
           </TrueSheetContainerViewNativeComponent>
