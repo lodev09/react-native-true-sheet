@@ -40,6 +40,7 @@
     _contentHeight = @(0);
     _headerHeight = @(0);
     _grabber = YES;
+    _draggable = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
@@ -263,6 +264,21 @@
   if (!presentedView)
     return;
 
+  // Disable pan gestures if draggable is NO
+  if (!self.draggable) {
+    [GestureUtil setPanGesturesEnabled:NO forView:presentedView];
+
+    // Also disable ScrollView's pan gesture if present
+    TrueSheetContentView *contentView = [self findContentView:presentedView];
+    if (contentView) {
+      RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
+      if (scrollViewComponent && scrollViewComponent.scrollView) {
+        [GestureUtil setPanGesturesEnabled:NO forView:scrollViewComponent.scrollView];
+      }
+    }
+    return;
+  }
+
   // Attach to presented view's pan gesture (sheet's drag gesture from UIKit)
   [GestureUtil attachPanGestureHandler:presentedView target:self selector:@selector(handlePanGesture:)];
 
@@ -274,6 +290,23 @@
       [GestureUtil attachPanGestureHandler:scrollViewComponent.scrollView
                                     target:self
                                   selector:@selector(handlePanGesture:)];
+    }
+  }
+}
+
+- (void)updateDraggable {
+  UIView *presentedView = self.presentedView;
+  if (!presentedView)
+    return;
+
+  [GestureUtil setPanGesturesEnabled:self.draggable forView:presentedView];
+
+  // Also update ScrollView's pan gesture if present
+  TrueSheetContentView *contentView = [self findContentView:presentedView];
+  if (contentView) {
+    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
+    if (scrollViewComponent && scrollViewComponent.scrollView) {
+      [GestureUtil setPanGesturesEnabled:self.draggable forView:scrollViewComponent.scrollView];
     }
   }
 }
@@ -600,7 +633,7 @@
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
-  sheet.prefersGrabberVisible = self.grabber;
+  sheet.prefersGrabberVisible = self.grabber && self.draggable;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];

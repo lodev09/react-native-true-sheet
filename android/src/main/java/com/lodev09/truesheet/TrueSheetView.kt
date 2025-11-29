@@ -273,6 +273,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dismissible = dismissible
   }
 
+  fun setDraggable(draggable: Boolean) {
+    viewController.draggable = draggable
+  }
+
   fun setGrabber(grabber: Boolean) {
     viewController.grabber = grabber
   }

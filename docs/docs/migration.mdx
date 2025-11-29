@@ -323,6 +323,22 @@ This ensures proper scrolling behavior on both iOS and Android when using `Scrol
 
 See the [Header guide](/guides/header) for more details.
 
+### 7. Draggable Control
+
+Version 3 introduces the `draggable` prop to disable user dragging entirely. When set to `false`, the sheet becomes static and can only be resized programmatically using the [`resize`](/reference/methods#resize) method.
+
+```tsx
+<TrueSheet draggable={false} detents={[0.5, 1]}>
+  <Button title="Expand" onPress={() => sheet.current?.resize(1)} />
+</TrueSheet>
+```
+
+:::info
+When `draggable` is `false`, the grabber is automatically hidden.
+:::
+
+See the [Configuration reference](/reference/configuration#draggable) for more details.
+
 ## Step-by-Step Migration
 
 1. **Enable New Architecture** in your React Native app (see above)

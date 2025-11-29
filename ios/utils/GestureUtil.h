@@ -20,6 +20,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)attachPanGestureHandler:(UIView *)view target:(id)target selector:(SEL)selector;
 
+/**
+ * Enables or disables all pan gesture recognizers on a view
+ * @param view The view whose pan gesture recognizers to enable/disable
+ * @param enabled Whether the pan gestures should be enabled
+ */
++ (void)setPanGesturesEnabled:(BOOL)enabled forView:(UIView *)view;
+
 @end
 
 NS_ASSUME_NONNULL_END

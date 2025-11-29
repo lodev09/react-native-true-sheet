@@ -93,6 +93,18 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ |
 
+## `draggable`
+
+If set to `false`, the sheet will disable dragging to resize. The sheet can only be resized programmatically using the [`resize`](/reference/methods#resize) method.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ |
+
+:::info
+When `draggable` is `false`, the [`grabber`](#grabber) is automatically hidden.
+:::
+
 ## `dimmed`
 
 Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.

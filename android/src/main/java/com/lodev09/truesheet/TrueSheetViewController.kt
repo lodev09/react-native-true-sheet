@@ -153,6 +153,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
+  var draggable: Boolean = true
+    set(value) {
+      field = value
+      behavior?.isDraggable = value
+    }
+
   // ====================================================================
   // MARK: - Computed Properties
   // ====================================================================
@@ -234,6 +240,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setCanceledOnTouchOutside(dismissible)
       setCancelable(dismissible)
       behavior.isHideable = dismissible
+      behavior.isDraggable = draggable
     }
   }
 
@@ -515,7 +522,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       bottomSheet.removeView(it)
     }
 
-    if (!grabber) return
+    if (!grabber || !draggable) return
 
     val grabberView = View(reactContext).apply {
       tag = GRABBER_TAG

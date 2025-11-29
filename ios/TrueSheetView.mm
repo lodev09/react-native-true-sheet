@@ -132,6 +132,7 @@ using namespace facebook::react;
   _controller.grabber = newProps.grabber;
   _controller.pageSizing = newProps.pageSizing;
   _controller.modalInPresentation = !newProps.dismissible;
+  _controller.draggable = newProps.draggable;
   _controller.dimmed = newProps.dimmed;
 
   if (newProps.dimmedDetentIndex >= 0) {
@@ -187,6 +188,7 @@ using namespace facebook::react;
       [self->_controller setupSheetDetents];
       [self->_controller applyActiveDetent];
     }];
+    [_controller updateDraggable];
   } else if (_initialDetentIndex >= 0) {
     [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
   }
