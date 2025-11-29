@@ -39,6 +39,7 @@ export interface NativeProps extends ViewProps {
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
   dismissible?: WithDefault<boolean, true>;
+  draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
   initialDetentAnimated?: WithDefault<boolean, true>;
   edgeToEdgeFullScreen?: WithDefault<boolean, false>;

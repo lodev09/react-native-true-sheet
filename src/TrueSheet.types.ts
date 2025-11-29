@@ -161,6 +161,14 @@ export interface TrueSheetProps extends ViewProps {
   dismissible?: boolean;
 
   /**
+   * Enables or disables dragging the sheet to resize it.
+   * When disabled, the sheet becomes static and can only be resized programmatically.
+   *
+   * @default true
+   */
+  draggable?: boolean;
+
+  /**
    * Main sheet background color.
    * Uses system default when not provided.
    */

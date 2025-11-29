@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
+@property (nonatomic, assign) BOOL draggable;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
 @property (nonatomic, copy, nullable) NSString *blurTint;
@@ -64,6 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)setupSheetDetents;
 - (void)setupSheetProps;
+- (void)updateDraggable;
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
 - (CGFloat)bottomInset;

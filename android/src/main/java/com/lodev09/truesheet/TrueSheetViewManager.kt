@@ -114,6 +114,11 @@ class TrueSheetViewManager :
     view.setDismissible(dismissible)
   }
 
+  @ReactProp(name = "draggable", defaultBoolean = true)
+  override fun setDraggable(view: TrueSheetView, draggable: Boolean) {
+    view.setDraggable(draggable)
+  }
+
   @ReactProp(name = "dimmed", defaultBoolean = true)
   override fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)

@@ -337,6 +337,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       detents = [0.5, 1],
       backgroundColor,
       dismissible = true,
+      draggable = true,
       grabber = true,
       dimmed = true,
       initialDetentIndex = -1,
@@ -395,6 +396,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         initialDetentIndex={initialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
+        draggable={draggable}
         maxHeight={maxHeight}
         edgeToEdgeFullScreen={edgeToEdgeFullScreen}
         scrollable={scrollable}

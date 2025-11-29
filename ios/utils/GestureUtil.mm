@@ -23,4 +23,16 @@
   }
 }
 
++ (void)setPanGesturesEnabled:(BOOL)enabled forView:(UIView *)view {
+  if (!view) {
+    return;
+  }
+
+  for (UIGestureRecognizer *recognizer in view.gestureRecognizers ?: @[]) {
+    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+      recognizer.enabled = enabled;
+    }
+  }
+}
+
 @end
