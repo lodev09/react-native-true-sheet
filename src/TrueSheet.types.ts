@@ -212,6 +212,25 @@ export interface TrueSheetProps extends ViewProps {
   blurTint?: BlurTint;
 
   /**
+   * The intensity of the blur effect (0-100).
+   * Only applies when `blurTint` is set.
+   * Uses system default if not provided.
+   *
+   * @platform ios
+   */
+  blurIntensity?: number;
+
+  /**
+   * Enables or disables user interaction on the blur view.
+   * Disabling this can help with visual artifacts (flash) on iOS 18+
+   * when touching the sheet content with blur enabled.
+   * Uses system default (true) if not provided.
+   *
+   * @platform ios
+   */
+  blurInteraction?: boolean;
+
+  /**
    * Overrides `large` or `100%` height.
    * Also sets the maximum height for 'auto' detents.
    */

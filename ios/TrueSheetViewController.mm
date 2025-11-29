@@ -30,6 +30,10 @@
 
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
+
+  // Blur effect views and animator
+  UIVisualEffectView *_blurView;
+  UIViewPropertyAnimator *_blurAnimator;
 }
 
 #pragma mark - Initialization
@@ -54,6 +58,8 @@
     _fakeTransitionView = [[UIView alloc] init];
     _fakeTransitionView.hidden = YES;
     _fakeTransitionView.userInteractionEnabled = NO;
+
+    _blurInteraction = YES;
   }
   return self;
 }
@@ -646,15 +652,48 @@
   // Setup or remove blur effect
   if (self.blurTint && self.blurTint.length > 0) {
     UIBlurEffectStyle style = [ConversionUtil blurEffectStyleFromString:self.blurTint];
-    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:style]];
-    blurView.frame = self.view.bounds;
-    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.view insertSubview:blurView atIndex:0];
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
+
+    // Remove existing blur view if style changed
+    if (_blurView && _blurView.superview) {
+      [_blurView removeFromSuperview];
+      _blurView = nil;
+    }
+
+    // Stop and clear existing animator
+    if (_blurAnimator) {
+      [_blurAnimator stopAnimation:YES];
+      _blurAnimator = nil;
+    }
+
+    // Create new blur view
+    _blurView = [[UIVisualEffectView alloc] init];
+    _blurView.frame = self.view.bounds;
+    _blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _blurView.userInteractionEnabled = self.blurInteraction;
+    [self.view insertSubview:_blurView atIndex:0];
+
+    // Use animator to control blur intensity
+    _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0 curve:UIViewAnimationCurveLinear animations:^{
+      self->_blurView.effect = blurEffect;
+    }];
+    _blurAnimator.pausesOnCompletion = YES;
+
+    // Set intensity: -1 means system default (100%), otherwise use provided value (0-100)
+    CGFloat intensity = (self.blurIntensity && [self.blurIntensity floatValue] >= 0)
+      ? [self.blurIntensity floatValue] / 100.0
+      : 1.0;
+    _blurAnimator.fractionComplete = intensity;
   } else {
-    for (UIView *subview in self.view.subviews) {
-      if ([subview isKindOfClass:[UIVisualEffectView class]]) {
-        [subview removeFromSuperview];
-      }
+    // Remove blur effect
+    if (_blurAnimator) {
+      [_blurAnimator stopAnimation:YES];
+      _blurAnimator = nil;
+    }
+
+    if (_blurView) {
+      [_blurView removeFromSuperview];
+      _blurView = nil;
     }
   }
 }

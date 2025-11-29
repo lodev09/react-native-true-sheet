@@ -36,6 +36,10 @@ export interface NativeProps extends ViewProps {
   blurTint?: WithDefault<string, ''>;
   keyboardMode?: WithDefault<'resize' | 'pan', 'resize'>;
 
+  // Blur properties - use -1 as default to indicate "not set" (use system default)
+  blurIntensity?: WithDefault<Double, -1>;
+  blurInteraction?: WithDefault<boolean, true>;
+
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
   dismissible?: WithDefault<boolean, true>;

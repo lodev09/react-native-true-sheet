@@ -103,10 +103,12 @@ export const MapScreen = () => {
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
+        blurTint="extra-light"
+        // blurInteraction={false}
         dismissible={false}
         edgeToEdgeFullScreen
         style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
-        backgroundColor={Platform.select({ default: DARK })}
+        backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
