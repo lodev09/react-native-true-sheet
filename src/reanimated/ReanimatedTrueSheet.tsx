@@ -70,26 +70,26 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
   const { onPositionChange, ...rest } = props;
 
-  const { animatedPosition, animatedIndex, detent } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex, animatedDetent } = useReanimatedTrueSheet();
 
   const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
     'worklet';
-
-    // Update detent directly (discrete value, not animated)
-    detent.value = payload.detent;
 
     if (payload.realtime) {
       // Update directly when we have real-time values (during drag or animation tracking)
       animatedPosition.value = payload.position;
       animatedIndex.value = payload.index;
+      animatedDetent.value = payload.detent;
     } else {
-      // Animate position and index when not real-time
+      // Animate position, index, and detent when not real-time
       if (Platform.OS === 'android') {
         animatedPosition.value = withTiming(payload.position, TIMING_CONFIG);
         animatedIndex.value = withTiming(payload.index, TIMING_CONFIG);
+        animatedDetent.value = withTiming(payload.detent, TIMING_CONFIG);
       } else {
         animatedPosition.value = withSpring(payload.position, SPRING_CONFIG);
         animatedIndex.value = withSpring(payload.index, SPRING_CONFIG);
+        animatedDetent.value = withSpring(payload.detent, SPRING_CONFIG);
       }
     }
 

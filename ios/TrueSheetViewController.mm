@@ -349,8 +349,7 @@
     _lastPosition = position;
 
     CGFloat index = [self interpolatedIndexForPosition:position];
-    NSInteger discreteIndex = (NSInteger)round(index);
-    CGFloat detent = [self detentValueForIndex:discreteIndex];
+    CGFloat detent = [self interpolatedDetentForPosition:position];
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
@@ -393,6 +392,32 @@
   }
 
   return count - 1;
+}
+
+- (CGFloat)interpolatedDetentForPosition:(CGFloat)position {
+  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
+  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+
+  NSInteger count = _detents.count;
+  if (count == 0)
+    return 0;
+
+  // Clamp to valid range between first and last detent
+  CGFloat firstDetentValue = [self detentValueForIndex:0];
+  CGFloat lastDetentValue = [self detentValueForIndex:count - 1];
+
+  if (currentDetent < firstDetentValue) {
+    // Below first detent - interpolate from 0 to first detent
+    if (firstDetentValue <= 0)
+      return 0;
+    return fmax(0, currentDetent);
+  }
+
+  if (currentDetent > lastDetentValue) {
+    return lastDetentValue;
+  }
+
+  return currentDetent;
 }
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
