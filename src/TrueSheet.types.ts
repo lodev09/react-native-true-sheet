@@ -257,11 +257,12 @@ export interface TrueSheetProps extends ViewProps {
   footer?: ComponentType<unknown> | ReactElement;
 
   /**
-   * Automatically pins ScrollView or FlatList to fit within the sheet's available space.
+   * On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space.
    * When enabled, the ScrollView's top edge will be pinned below any top sibling views,
    * and its left, right, and bottom edges will be pinned to the container.
    *
-   * @platform ios
+   * On Android, it adds additional style to the content for scrollable to work.
+   *
    * @default false
    */
   scrollable?: boolean;
