@@ -82,7 +82,7 @@
   self.userInteractionEnabled = self.blurInteraction;
 
   // Use animator to control blur intensity
-  __weak typeof(self) weakSelf = self;
+  __weak __typeof(self) weakSelf = self;
   _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
                                                              curve:UIViewAnimationCurveLinear
                                                         animations:^{
