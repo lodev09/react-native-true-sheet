@@ -8,7 +8,7 @@
 
 #import "TrueSheetViewController.h"
 #import "TrueSheetContentView.h"
-#import "utils/ConversionUtil.h"
+#import "core/TrueSheetBlurView.h"
 #import "utils/GestureUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -30,6 +30,9 @@
 
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
+
+  // Blur effect view
+  TrueSheetBlurView *_blurView;
 }
 
 #pragma mark - Initialization
@@ -54,6 +57,8 @@
     _fakeTransitionView = [[UIView alloc] init];
     _fakeTransitionView.hidden = YES;
     _fakeTransitionView.userInteractionEnabled = NO;
+
+    _blurInteraction = YES;
   }
   return self;
 }
@@ -645,16 +650,25 @@
 
   // Setup or remove blur effect
   if (self.blurTint && self.blurTint.length > 0) {
-    UIBlurEffectStyle style = [ConversionUtil blurEffectStyleFromString:self.blurTint];
-    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:style]];
-    blurView.frame = self.view.bounds;
-    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.view insertSubview:blurView atIndex:0];
+    // Create blur view if needed
+    if (!_blurView) {
+      _blurView = [[TrueSheetBlurView alloc] init];
+      _blurView.frame = self.view.bounds;
+      _blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+      [self.view insertSubview:_blurView atIndex:0];
+    }
+
+    // Update blur properties and apply effect
+    _blurView.blurTint = self.blurTint;
+    _blurView.blurIntensity = self.blurIntensity;
+    _blurView.blurInteraction = self.blurInteraction;
+    [_blurView applyBlurEffect];
   } else {
-    for (UIView *subview in self.view.subviews) {
-      if ([subview isKindOfClass:[UIVisualEffectView class]]) {
-        [subview removeFromSuperview];
-      }
+    // Remove blur effect
+    if (_blurView) {
+      [_blurView removeBlurEffect];
+      [_blurView removeFromSuperview];
+      _blurView = nil;
     }
   }
 }

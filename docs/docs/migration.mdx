@@ -339,6 +339,23 @@ When `draggable` is `false`, the grabber is automatically hidden.
 
 See the [Configuration reference](/reference/configuration#draggable) for more details.
 
+### 8. Blur Intensity and Interaction Control
+
+Version 3 introduces new props for fine-grained control over the blur effect on iOS:
+
+- **`blurIntensity`** - Control the blur intensity (0-100)
+- **`blurInteraction`** - Enable/disable user interaction on the blur view
+
+```tsx
+<TrueSheet
+  blurTint="light"
+  blurIntensity={50}
+  blurInteraction={false}
+/>
+```
+
+See the [Configuration reference](/reference/configuration#blurintensity) for more details.
+
 ## Step-by-Step Migration
 
 1. **Enable New Architecture** in your React Native app (see above)
