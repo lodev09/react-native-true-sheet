@@ -2,11 +2,9 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -26,6 +24,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
+import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -62,10 +61,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
-    private const val GRABBER_WIDTH = 32f // dp
-    private const val GRABBER_HEIGHT = 4f // dp
-    private const val GRABBER_TOP_MARGIN = 16f // dp
-    private val GRABBER_COLOR = Color.argb((0.4 * 255).toInt(), 73, 69, 79) // #49454F @ 40%
 
     /**
      * Gets the effective sheet height by subtracting headerHeight * 2.
@@ -524,21 +519,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (!grabber || !draggable) return
 
-    val grabberView = View(reactContext).apply {
+    val grabberView = TrueSheetGrabberView(reactContext).apply {
       tag = GRABBER_TAG
-      layoutParams = FrameLayout.LayoutParams(
-        GRABBER_WIDTH.dpToPx().toInt(),
-        GRABBER_HEIGHT.dpToPx().toInt()
-      ).apply {
-        gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
-        topMargin = GRABBER_TOP_MARGIN.dpToPx().toInt()
-      }
-      background = GradientDrawable().apply {
-        shape = GradientDrawable.RECTANGLE
-        cornerRadius = (GRABBER_HEIGHT / 2).dpToPx()
-        setColor(GRABBER_COLOR)
-      }
-      elevation = 1f
     }
 
     bottomSheet.addView(grabberView)

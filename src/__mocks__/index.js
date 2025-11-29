@@ -47,11 +47,6 @@ export class ReanimatedTrueSheet extends TrueSheet {
   }
 }
 
-// Mock TrueSheetGrabber
-export const TrueSheetGrabber = ({ style, ...props }) => (
-  <View style={style} {...props} testID="true-sheet-grabber" />
-);
-
 // Mock ReanimatedTrueSheetProvider
 export const ReanimatedTrueSheetProvider = ({ children }) => <>{children}</>;
 

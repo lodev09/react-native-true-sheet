@@ -33,7 +33,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, processColor, StyleSheet, findNodeHandle } from 'react-native';
+import { Platform, processColor, StyleSheet, findNodeHandle, View } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -431,6 +431,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
+            {/* Grabber hitbox for Android - allows dragging the sheet from the top area */}
+            {Platform.OS === 'android' && grabber && (
+              <View collapsable={false} style={styles.grabberHitbox} />
+            )}
           </TrueSheetContainerViewNativeComponent>
         )}
       </TrueSheetViewNativeComponent>
@@ -464,5 +468,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
+  },
+  grabberHitbox: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 48, // Material Design 3 minimum touch target
   },
 });
