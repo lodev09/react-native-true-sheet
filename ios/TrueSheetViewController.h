@@ -70,7 +70,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateDraggable;
 - (NSInteger)currentDetentIndex;
 - (CGFloat)currentPosition;
-- (CGFloat)bottomInset;
 - (CGFloat)detentValueForIndex:(NSInteger)index;
 
 @end
