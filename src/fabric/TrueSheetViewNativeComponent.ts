@@ -4,7 +4,6 @@ import type {
   Double,
   Int32,
   WithDefault,
-  Float,
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
 
@@ -23,7 +22,7 @@ export interface PositionChangeEventPayload {
 
 export interface NativeProps extends ViewProps {
   // Array properties
-  detents?: ReadonlyArray<Float>;
+  detents?: ReadonlyArray<Double>;
 
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>;

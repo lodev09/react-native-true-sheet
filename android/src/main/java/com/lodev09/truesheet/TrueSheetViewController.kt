@@ -632,7 +632,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     lastEmittedPositionPx = positionPx
     val position = positionPx.pxToDp()
     val interpolatedIndex = getInterpolatedIndexForPosition(positionPx)
-    val detent = getDetentValueForIndex(kotlin.math.round(interpolatedIndex).toInt())
+    val detent = getInterpolatedDetentForPosition(positionPx)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
@@ -670,6 +670,34 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     return (count - 1).toFloat()
+  }
+
+  /**
+   * Calculates the interpolated detent value based on position.
+   * Returns the actual screen fraction, clamped to valid detent range.
+   */
+  private fun getInterpolatedDetentForPosition(positionPx: Int): Float {
+    // Convert position to detent fraction
+    val currentDetent = (screenHeight - positionPx).toFloat() / screenHeight.toFloat()
+
+    val count = detents.size
+    if (count == 0) return 0f
+
+    // Clamp to valid range between first and last detent
+    val firstDetentValue = getDetentValueForIndex(0)
+    val lastDetentValue = getDetentValueForIndex(count - 1)
+
+    if (currentDetent < firstDetentValue) {
+      // Below first detent - interpolate from 0 to first detent
+      if (firstDetentValue <= 0) return 0f
+      return maxOf(0f, currentDetent)
+    }
+
+    if (currentDetent > lastDetentValue) {
+      return lastDetentValue
+    }
+
+    return currentDetent
   }
 
   /**

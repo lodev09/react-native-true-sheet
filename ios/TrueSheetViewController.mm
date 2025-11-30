@@ -94,14 +94,6 @@
   return presentedView ? presentedView.frame.origin.y : 0.0;
 }
 
-- (CGFloat)bottomInset {
-  if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-    return 0;
-  }
-  UIWindow *window = [WindowUtil keyWindow];
-  return window ? window.safeAreaInsets.bottom : 0;
-}
-
 - (CGFloat)screenHeight {
   return UIScreen.mainScreen.bounds.size.height;
 }
@@ -332,10 +324,8 @@
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
+      _isDragging = NO;
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self->_isDragging = NO;
-      });
       break;
     }
     default:
@@ -351,8 +341,7 @@
     _lastPosition = position;
 
     CGFloat index = [self interpolatedIndexForPosition:position];
-    NSInteger discreteIndex = (NSInteger)round(index);
-    CGFloat detent = [self detentValueForIndex:discreteIndex];
+    CGFloat detent = [self interpolatedDetentForPosition:position];
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
@@ -397,13 +386,38 @@
   return count - 1;
 }
 
+- (CGFloat)interpolatedDetentForPosition:(CGFloat)position {
+  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
+  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+
+  NSInteger count = _detents.count;
+  if (count == 0)
+    return 0;
+
+  // Clamp to valid range between first and last detent
+  CGFloat firstDetentValue = [self detentValueForIndex:0];
+  CGFloat lastDetentValue = [self detentValueForIndex:count - 1];
+
+  if (currentDetent < firstDetentValue) {
+    // Below first detent - interpolate from 0 to first detent
+    if (firstDetentValue <= 0)
+      return 0;
+    return fmax(0, currentDetent);
+  }
+
+  if (currentDetent > lastDetentValue) {
+    return lastDetentValue;
+  }
+
+  return currentDetent;
+}
+
 - (CGFloat)detentValueForIndex:(NSInteger)index {
   if (index >= 0 && index < (NSInteger)_detents.count) {
-    CGFloat value = [_detents[index] floatValue];
+    CGFloat value = [_detents[index] doubleValue];
     // For auto (-1), calculate actual fraction from content + header height
-    // Subtract bottomInset to match the actual sheet height (consistent with detent resolver)
     if (value == -1) {
-      CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue] - self.bottomInset;
+      CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
       return autoHeight / self.screenHeight;
     }
     return value;
@@ -487,7 +501,6 @@
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
 
-  // Subtract bottomInset to prevent iOS from adding extra bottom insets
   CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
@@ -528,14 +541,12 @@
     return [UISheetPresentationControllerDetent mediumDetent];
   }
 
-  CGFloat value = [detent floatValue];
+  CGFloat value = [detent doubleValue];
 
   // -1 represents "auto" (fit content height)
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      // Subtract bottomInset so position matches screenHeight - sheetHeight
-      // iOS adds bottom safe area to sheet height internally
-      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight - self.bottomInset];
+      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -548,9 +559,7 @@
 
   if (@available(iOS 16.0, *)) {
     NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
-    // Subtract bottomInset so position matches screenHeight - (detent * screenHeight)
-    // iOS adds bottom safe area to sheet height internally
-    CGFloat sheetHeight = value * self.screenHeight - self.bottomInset;
+    CGFloat sheetHeight = value * self.screenHeight;
     return [self customDetentWithIdentifier:detentId height:sheetHeight];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];

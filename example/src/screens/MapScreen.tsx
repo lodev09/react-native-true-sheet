@@ -21,7 +21,6 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Button, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BasicSheet,
   BlankSheet,
@@ -35,7 +34,6 @@ import { useAppNavigation } from '../hooks';
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
-  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -67,7 +65,7 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: Math.min(-(insets.bottom + HEADER_HEIGHT), -(height - animatedPosition.value)),
+        translateY: Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
       },
     ],
   }));
@@ -99,13 +97,13 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[(HEADER_HEIGHT + insets.bottom) / height, 0.7, 1]}
+        detents={[HEADER_HEIGHT / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
         edgeToEdgeFullScreen
-        style={[styles.content, { paddingBottom: insets.bottom + SPACING }]}
+        style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
