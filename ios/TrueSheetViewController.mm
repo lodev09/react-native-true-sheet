@@ -398,12 +398,23 @@
   return basePosition;
 }
 
-- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
+/// Finds the segment containing the given position and returns the lower index and progress within that segment.
+/// Returns YES if a segment was found, NO otherwise. When NO, `outIndex` contains the boundary index.
+- (BOOL)findSegmentForPosition:(CGFloat)position
+                      outIndex:(NSInteger *)outIndex
+                   outProgress:(CGFloat *)outProgress {
   NSInteger count = _resolvedDetentPositions.count;
-  if (count == 0)
-    return -1;
-  if (count == 1)
-    return 0;
+  if (count == 0) {
+    *outIndex = -1;
+    *outProgress = 0;
+    return NO;
+  }
+
+  if (count == 1) {
+    *outIndex = 0;
+    *outProgress = 0;
+    return NO;
+  }
 
   CGFloat firstPos = [self estimatedPositionForIndex:0];
   CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
@@ -411,68 +422,73 @@
   // Below first detent (position > firstPos means sheet is smaller)
   if (position > firstPos) {
     CGFloat range = self.screenHeight - firstPos;
-    return range > 0 ? -(position - firstPos) / range : 0;
+    *outIndex = -1;
+    *outProgress = range > 0 ? (position - firstPos) / range : 0;
+    return NO;
   }
 
   // Above last detent
-  if (position < lastPos)
-    return count - 1;
+  if (position < lastPos) {
+    *outIndex = count - 1;
+    *outProgress = 0;
+    return NO;
+  }
 
-  // Find segment and interpolate (positions decrease as index increases)
+  // Find segment (positions decrease as index increases)
   for (NSInteger i = 0; i < count - 1; i++) {
     CGFloat pos = [self estimatedPositionForIndex:i];
     CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
 
     if (position <= pos && position >= nextPos) {
       CGFloat range = pos - nextPos;
-      if (range <= 0)
-        return i;
-      CGFloat progress = (pos - position) / range;
-      return i + fmax(0, fmin(1, progress));
+      *outIndex = i;
+      *outProgress = range > 0 ? (pos - position) / range : 0;
+      return YES;
     }
   }
 
-  return count - 1;
+  *outIndex = count - 1;
+  *outProgress = 0;
+  return NO;
+}
+
+- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
+  NSInteger index;
+  CGFloat progress;
+  BOOL found = [self findSegmentForPosition:position outIndex:&index outProgress:&progress];
+
+  if (!found) {
+    if (index == -1) {
+      // Below first detent - return negative progress
+      return -progress;
+    }
+    // At or beyond boundary
+    return index;
+  }
+
+  // Within a segment - interpolate
+  return index + fmax(0, fmin(1, progress));
 }
 
 - (CGFloat)interpolatedDetentForPosition:(CGFloat)position {
-  NSInteger count = _resolvedDetentPositions.count;
-  if (count == 0)
-    return 0;
+  NSInteger index;
+  CGFloat progress;
+  BOOL found = [self findSegmentForPosition:position outIndex:&index outProgress:&progress];
 
-  CGFloat firstPos = [self estimatedPositionForIndex:0];
-  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
-  CGFloat firstDetent = [self detentValueForIndex:0];
-  CGFloat lastDetent = [self detentValueForIndex:count - 1];
-
-  // Below first detent
-  if (position > firstPos) {
-    CGFloat range = self.screenHeight - firstPos;
-    CGFloat progress = range > 0 ? (position - firstPos) / range : 0;
-    return fmax(0, firstDetent * (1 - progress));
-  }
-
-  // Above last detent
-  if (position < lastPos)
-    return lastDetent;
-
-  // Find segment and interpolate
-  for (NSInteger i = 0; i < count - 1; i++) {
-    CGFloat pos = [self estimatedPositionForIndex:i];
-    CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
-
-    if (position <= pos && position >= nextPos) {
-      CGFloat range = pos - nextPos;
-      if (range <= 0)
-        return [self detentValueForIndex:i];
-      CGFloat progress = (pos - position) / range;
-      CGFloat detent = [self detentValueForIndex:i];
-      CGFloat nextDetent = [self detentValueForIndex:i + 1];
-      return detent + progress * (nextDetent - detent);
+  if (!found) {
+    if (index == -1) {
+      // Below first detent
+      CGFloat firstDetent = [self detentValueForIndex:0];
+      return fmax(0, firstDetent * (1 - progress));
     }
+    // At or beyond boundary
+    return [self detentValueForIndex:index];
   }
 
-  return lastDetent;
+  // Within a segment - interpolate between detent values
+  CGFloat detent = [self detentValueForIndex:index];
+  CGFloat nextDetent = [self detentValueForIndex:index + 1];
+  return detent + progress * (nextDetent - detent);
 }
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
