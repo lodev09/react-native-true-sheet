@@ -23,6 +23,7 @@
   CGFloat _lastPosition;
   BOOL _isTransitioning;
   BOOL _isDragging;
+  NSInteger _pendingDetentIndex;
 
   // Hidden view used to track position during native transition animations
   UIView *_fakeTransitionView;
@@ -55,6 +56,7 @@
     _isDragging = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
+    _pendingDetentIndex = -1;
 
     _fakeTransitionView = [[UIView alloc] init];
     _fakeTransitionView.hidden = YES;
@@ -256,6 +258,19 @@
 
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
     });
+
+    // Emit pending detent change after programmatic resize settles
+    if (_pendingDetentIndex >= 0) {
+      NSInteger pendingIndex = _pendingDetentIndex;
+      _pendingDetentIndex = -1;
+
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+          CGFloat detent = [self detentValueForIndex:pendingIndex];
+          [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+        }
+      });
+    }
   }
 }
 
@@ -710,6 +725,16 @@
 }
 
 - (void)setupActiveDetentWithIndex:(NSInteger)index {
+  _activeDetentIndex = index;
+  [self applyActiveDetent];
+}
+
+- (void)resizeToDetentIndex:(NSInteger)index {
+  if (index == _activeDetentIndex) {
+    return;
+  }
+
+  _pendingDetentIndex = index;
   _activeDetentIndex = index;
   [self applyActiveDetent];
 }

@@ -274,7 +274,7 @@ using namespace facebook::react;
 
   if (_controller.isPresented) {
     [_controller.sheetPresentationController animateChanges:^{
-      [self->_controller setupActiveDetentWithIndex:index];
+      [self->_controller resizeToDetentIndex:index];
     }];
     if (completion) {
       completion(YES, nil);
@@ -325,14 +325,6 @@ using namespace facebook::react;
                                       completion(YES, nil);
                                     }
                                   }];
-}
-
-- (void)resizeToIndex:(NSInteger)index {
-  if (_controller.isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [self->_controller setupActiveDetentWithIndex:index];
-    }];
-  }
 }
 
 #pragma mark - TrueSheetContainerViewDelegate
