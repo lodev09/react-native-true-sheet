@@ -42,6 +42,9 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n' +
   '- You are using the new architecture (Fabric)\n';
 
+// Material Design 3 minimum touch target
+const ANDROID_HITBOX_HEIGHT = 48;
+
 if (!TrueSheetModule) {
   throw new Error(LINKING_ERROR);
 }
@@ -377,7 +380,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     const contentStyle =
       this.props.scrollable &&
       Platform.select({
-        android: styles.scrollableContent,
+        android: styles.scrollableAndroidContent,
       });
 
     return (
@@ -431,7 +434,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
-            {/* Grabber hitbox for Android - allows dragging the sheet from the top area */}
             {Platform.OS === 'android' && grabber && draggable && (
               <View collapsable={false} style={styles.grabberHitbox} />
             )}
@@ -460,7 +462,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  scrollableContent: {
+  scrollableAndroidContent: {
     flexGrow: 1,
     flexBasis: 0,
   },
@@ -474,6 +476,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 48, // Material Design 3 minimum touch target
+    height: ANDROID_HITBOX_HEIGHT,
   },
 });
