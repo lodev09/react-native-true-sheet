@@ -90,12 +90,12 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={['auto', 1]}
+        detents={[HEADER_HEIGHT / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
-        // edgeToEdgeFullScreen
+        edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
@@ -108,12 +108,12 @@ export const MapScreen = () => {
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
-        onPositionChange={(e) => {
-          'worklet';
+        // onPositionChange={(e) => {
+        //   'worklet';
 
-          const { detent, position, index } = e.nativeEvent;
-          console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
-        }}
+        //   const { detent, position, index } = e.nativeEvent;
+        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
+        // }}
         onDidPresent={(e) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
@@ -163,8 +163,8 @@ export const MapScreen = () => {
           onPress={() => setShowExtraContent(!showExtraContent)}
         />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
+        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

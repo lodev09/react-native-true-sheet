@@ -229,12 +229,16 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
+  // Check if there's an active presented controller that has settled (not being presented/dismissed)
+  UIViewController *presented = self.presentedViewController;
+  BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
+
   if (!_isDragging) {
     dispatch_async(dispatch_get_main_queue(), ^{
       // Update stored position for current detent (handles content size changes)
       [self storeResolvedPositionForIndex:[self currentDetentIndex]];
 
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
     });
   }
 
@@ -404,9 +408,7 @@
 
 /// Finds the segment containing the given position and returns the lower index and progress within that segment.
 /// Returns YES if a segment was found, NO otherwise. When NO, `outIndex` contains the boundary index.
-- (BOOL)findSegmentForPosition:(CGFloat)position
-                      outIndex:(NSInteger *)outIndex
-                   outProgress:(CGFloat *)outProgress {
+- (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
   NSInteger count = _resolvedDetentPositions.count;
   if (count == 0) {
     *outIndex = -1;
