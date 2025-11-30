@@ -117,6 +117,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val resolvedDetentPositions = mutableListOf<Int>()
 
   private var isDragging = false
+  private var isReconfiguring = false
   private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
 
@@ -351,6 +352,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             BottomSheetBehavior.STATE_EXPANDED,
             BottomSheetBehavior.STATE_COLLAPSED,
             BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+              // Ignore state changes triggered by content size reconfiguration
+              if (isReconfiguring) return
+
               getDetentInfoForState(newState)?.let { detentInfo ->
                 // Store resolved position when sheet settles
                 storeResolvedPosition(detentInfo.index)
@@ -531,39 +535,39 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
+    // Flag to prevent state change callbacks from updating detent index during reconfiguration
+    isReconfiguring = true
+
     behavior.apply {
       skipCollapsed = false
-      isFitToContents = true
+      isFitToContents = false
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
       when (detents.size) {
         1 -> {
-          maxHeight = getDetentHeight(detents[0])
-          skipCollapsed = true
-
-          if (isPresented && detents[0] == -1.0) {
-            sheetContainer?.apply {
-              val params = layoutParams
-              params.height = maxHeight
-              layoutParams = params
-            }
-          }
+          setPeekHeight(getDetentHeight(detents[0]), isPresented)
+          expandedOffset = screenHeight - peekHeight
         }
 
         2 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          maxHeight = getDetentHeight(detents[1])
+          expandedOffset = screenHeight - getDetentHeight(detents[1])
         }
 
         3 -> {
-          isFitToContents = false
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          maxHeight = getDetentHeight(detents[2])
-          expandedOffset = sheetTopInset
           halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), 1.0f)
+          expandedOffset = screenHeight - getDetentHeight(detents[2])
         }
       }
     }
+
+    // Re-apply current state to update position after config changes
+    if (isPresented) {
+      setStateForDetentIndex(currentDetentIndex)
+    }
+
+    isReconfiguring = false
   }
 
   fun setupGrabber() {
@@ -700,7 +704,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun storeResolvedPosition(index: Int) {
     if (index < 0 || index >= resolvedDetentPositions.size) return
     val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: return
-    if (positionPx > 0 && positionPx < screenHeight) {
+    if (positionPx in 1..<screenHeight) {
       resolvedDetentPositions[index] = positionPx
     }
   }
