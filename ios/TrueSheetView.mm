@@ -368,27 +368,19 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetViewControllerDelegate
 
-- (void)viewControllerWillPresent {
-  NSInteger index = [_controller currentDetentIndex];
+- (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   _controller.activeDetentIndex = index;
-  CGFloat detent = [_controller detentValueForIndex:index];
-  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter
-                                      index:index
-                                   position:_controller.currentPosition
-                                     detent:detent];
+  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter index:index position:position detent:detent];
 }
 
-- (void)viewControllerDidPresent {
-  NSInteger index = [_controller currentDetentIndex];
-  CGFloat detent = [_controller detentValueForIndex:index];
-  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter
-                                     index:index
-                                  position:_controller.currentPosition
-                                    detent:detent];
+- (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
+  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 }
 
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position {
-  CGFloat detent = [_controller detentValueForIndex:index];
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state
+                        index:(NSInteger)index
+                     position:(CGFloat)position
+                       detent:(CGFloat)detent {
   switch (state) {
     case UIGestureRecognizerStateBegan:
       [TrueSheetDragEvents emitDragBegin:_eventEmitter index:index position:position detent:detent];
@@ -414,11 +406,10 @@ using namespace facebook::react;
   [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
 }
 
-- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position {
+- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   if (_controller.activeDetentIndex != index) {
     _controller.activeDetentIndex = index;
   }
-  CGFloat detent = [_controller detentValueForIndex:index];
   [TrueSheetStateEvents emitDetentChange:_eventEmitter index:index position:position detent:detent];
 }
 

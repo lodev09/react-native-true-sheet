@@ -19,12 +19,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
-- (void)viewControllerWillPresent;
-- (void)viewControllerDidPresent;
+- (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
+- (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
 - (void)viewControllerWillDismiss;
 - (void)viewControllerDidDismiss;
-- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position;
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position;
+- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state
+                        index:(NSInteger)index
+                     position:(CGFloat)position
+                       detent:(CGFloat)detent;
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
@@ -68,9 +71,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetDetents;
 - (void)setupSheetProps;
 - (void)updateDraggable;
-- (NSInteger)currentDetentIndex;
-- (CGFloat)currentPosition;
-- (CGFloat)detentValueForIndex:(NSInteger)index;
 
 @end
 

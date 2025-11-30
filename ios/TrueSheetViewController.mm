@@ -148,8 +148,12 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
-      [self.delegate viewControllerWillPresent];
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger index = [self currentDetentIndex];
+        CGFloat detent = [self detentValueForIndex:index];
+        [self.delegate viewControllerWillPresentAtIndex:index position:self.currentPosition detent:detent];
+      });
     }
     [self setupTransitionPositionTracking];
   }
@@ -166,8 +170,12 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
-      [self.delegate viewControllerDidPresent];
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresentAtIndex:position:detent:)]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger index = [self currentDetentIndex];
+        CGFloat detent = [self detentValueForIndex:index];
+        [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
+      });
     }
     [self setupGestureRecognizer];
     _isPresented = YES;
@@ -310,9 +318,10 @@
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
   NSInteger index = [self currentDetentIndex];
+  CGFloat detent = [self detentValueForIndex:index];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:detent:)]) {
+    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
   }
 
   switch (gesture.state) {
@@ -686,9 +695,14 @@
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
-  NSInteger index = [self currentDetentIndex];
-  if (index >= 0 && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:)]) {
-    [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSInteger index = [self currentDetentIndex];
+      if (index >= 0) {
+        CGFloat detent = [self detentValueForIndex:index];
+        [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+      }
+    });
   }
 }
 

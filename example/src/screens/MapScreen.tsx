@@ -70,11 +70,6 @@ export const MapScreen = () => {
     ],
   }));
 
-  const handleWillPresent = (e: WillPresentEvent) => {
-    const { index, position: yPosition } = e.nativeEvent;
-    console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
-  };
-
   return (
     <View style={styles.container}>
       <MapView
@@ -97,7 +92,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 'auto', 1]}
+        detents={[HEADER_HEIGHT / height, 0.7426778242677824, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -108,15 +103,17 @@ export const MapScreen = () => {
         onLayout={(e) => {
           console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
         }}
-        onWillPresent={handleWillPresent}
+        onWillPresent={(e: WillPresentEvent) => {
+          console.log(`Sheet will presented to index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`);
+        }}
         // onPositionChange={(e) => {
         //   'worklet';
 
         //   const { detent, position, index } = e.nativeEvent;
         //   console.log(`index: ${index}, detent: ${detent}, position: ${position}`);
         // }}
-        onDidPresent={() => {
-          console.log('Sheet is presented');
+        onDidPresent={(e) => {
+          console.log(`Sheet is presented to index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`);
         }}
         onDidFocus={() => {
           console.log('Sheet is focused');
@@ -135,9 +132,7 @@ export const MapScreen = () => {
           console.log('Sheet is ready!');
         }}
         onDetentChange={(e) => {
-          console.log(
-            `detent changed to ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
-          );
+          console.log(`Deetent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`);
         }}
         header={<Header />}
       >
