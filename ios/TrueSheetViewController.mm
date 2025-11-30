@@ -21,18 +21,17 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
-  BOOL _isTransitioning;
   BOOL _isDragging;
-
-  // Hidden view used to track position during native transition animations
-  UIView *_fakeTransitionView;
-  CADisplayLink *_displayLink;
+  NSInteger _pendingDetentIndex;
 
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
 
   // Blur effect view
   TrueSheetBlurView *_blurView;
+
+  // Resolved detent positions (Y coordinate when sheet rests at each detent)
+  NSMutableArray<NSNumber *> *_resolvedDetentPositions;
 }
 
 #pragma mark - Initialization
@@ -48,28 +47,19 @@
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
     _lastPosition = 0;
-    _isTransitioning = NO;
     _isDragging = NO;
-    _layoutTransitioning = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
-
-    _fakeTransitionView = [[UIView alloc] init];
-    _fakeTransitionView.hidden = YES;
-    _fakeTransitionView.userInteractionEnabled = NO;
+    _pendingDetentIndex = -1;
 
     _blurInteraction = YES;
+    _resolvedDetentPositions = [NSMutableArray array];
   }
   return self;
 }
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-  if (_displayLink) {
-    [_displayLink invalidate];
-    _displayLink = nil;
-  }
 }
 
 #pragma mark - Computed Properties
@@ -82,7 +72,7 @@
 }
 
 - (BOOL)isActiveAndVisible {
-  return self.isViewLoaded && self.view.window != nil && !self.isBeingDismissed;
+  return self.isViewLoaded && self.view.window != nil;
 }
 
 - (UIView *)presentedView {
@@ -148,10 +138,15 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresent)]) {
-      [self.delegate viewControllerWillPresent];
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger index = [self currentDetentIndex];
+        CGFloat position = self.currentPosition;
+        CGFloat detent = [self detentValueForIndex:index];
+
+        [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
+      });
     }
-    [self setupTransitionPositionTracking];
   }
 }
 
@@ -166,8 +161,12 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresent)]) {
-      [self.delegate viewControllerDidPresent];
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresentAtIndex:position:detent:)]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger index = [self currentDetentIndex];
+        CGFloat detent = [self detentValueForIndex:index];
+        [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
+      });
     }
     [self setupGestureRecognizer];
     _isPresented = YES;
@@ -187,12 +186,14 @@
       }
     }
 
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+    });
+
     if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
       [self.delegate viewControllerWillDismiss];
     }
   }
-
-  [self setupTransitionPositionTracking];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -228,13 +229,29 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
-  if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
-    // Not realtime when layout changes (e.g., another controller is presented on top)
-    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+  // Check if there's an active presented controller that has settled (not being presented/dismissed)
+  UIViewController *presented = self.presentedViewController;
+  BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
 
-    // On iOS 26, this is called twice when we have a ScrollView
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      self->_layoutTransitioning = NO;
+  if (!_isDragging) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      // Update stored position for current detent (handles content size changes)
+      [self storeResolvedPositionForIndex:[self currentDetentIndex]];
+
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
+    });
+  }
+
+  // Emit pending detent change after programmatic resize settles
+  if (_pendingDetentIndex >= 0) {
+    NSInteger pendingIndex = _pendingDetentIndex;
+    _pendingDetentIndex = -1;
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+        CGFloat detent = [self detentValueForIndex:pendingIndex];
+        [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+      }
     });
   }
 }
@@ -310,9 +327,10 @@
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
   NSInteger index = [self currentDetentIndex];
+  CGFloat detent = [self detentValueForIndex:index];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:detent:)]) {
+    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
   }
 
   switch (gesture.state) {
@@ -325,7 +343,12 @@
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
       _isDragging = NO;
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        // Store resolved position when drag ends
+        [self storeResolvedPositionForIndex:[self currentDetentIndex]];
+
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+      });
       break;
     }
     default:
@@ -348,68 +371,130 @@
   }
 }
 
-- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
-  NSInteger count = _detents.count;
-  if (count == 0)
-    return -1;
-  if (count == 1)
+/// Stores the current position for the given detent index
+- (void)storeResolvedPositionForIndex:(NSInteger)index {
+  if (index >= 0 && index < (NSInteger)_resolvedDetentPositions.count) {
+    _resolvedDetentPositions[index] = @(self.currentPosition);
+  }
+}
+
+/// Returns the estimated Y position for a detent index, using stored positions when available
+- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
+  if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count)
     return 0;
 
-  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
-  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
-
-  // Handle below first detent (interpolate from -1 to 0)
-  CGFloat firstDetentValue = [self detentValueForIndex:0];
-  if (currentDetent < firstDetentValue) {
-    // Interpolate: 0 at firstDetentValue, -1 at 0
-    if (firstDetentValue <= 0)
-      return 0;
-    CGFloat progress = currentDetent / firstDetentValue;
-    return progress - 1;
+  CGFloat storedPos = [_resolvedDetentPositions[index] doubleValue];
+  if (storedPos > 0) {
+    return storedPos;
   }
 
-  // Find which segment the current detent falls into and interpolate
-  for (NSInteger i = 0; i < count - 1; i++) {
-    CGFloat detentValue = [self detentValueForIndex:i];
-    CGFloat nextDetentValue = [self detentValueForIndex:i + 1];
+  // Estimate based on detent value and known offset from first resolved position
+  CGFloat detentValue = [self detentValueForIndex:index];
+  CGFloat basePosition = self.screenHeight - (detentValue * self.screenHeight);
 
-    if (currentDetent <= nextDetentValue) {
-      // Interpolate between index i and i+1
-      CGFloat range = nextDetentValue - detentValue;
-      if (range <= 0)
-        return i;
-      CGFloat progress = (currentDetent - detentValue) / range;
-      return i + fmax(0, fmin(1, progress));
+  // Find a resolved position to calculate offset
+  for (NSInteger i = 0; i < (NSInteger)_resolvedDetentPositions.count; i++) {
+    CGFloat pos = [_resolvedDetentPositions[i] doubleValue];
+    if (pos > 0) {
+      CGFloat knownDetent = [self detentValueForIndex:i];
+      CGFloat expectedPos = self.screenHeight - (knownDetent * self.screenHeight);
+      CGFloat offset = pos - expectedPos;
+      return basePosition + offset;
     }
   }
 
-  return count - 1;
+  return basePosition;
+}
+
+/// Finds the segment containing the given position and returns the lower index and progress within that segment.
+/// Returns YES if a segment was found, NO otherwise. When NO, `outIndex` contains the boundary index.
+- (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
+  NSInteger count = _resolvedDetentPositions.count;
+  if (count == 0) {
+    *outIndex = -1;
+    *outProgress = 0;
+    return NO;
+  }
+
+  if (count == 1) {
+    *outIndex = 0;
+    *outProgress = 0;
+    return NO;
+  }
+
+  CGFloat firstPos = [self estimatedPositionForIndex:0];
+  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
+
+  // Below first detent (position > firstPos means sheet is smaller)
+  if (position > firstPos) {
+    CGFloat range = self.screenHeight - firstPos;
+    *outIndex = -1;
+    *outProgress = range > 0 ? (position - firstPos) / range : 0;
+    return NO;
+  }
+
+  // Above last detent
+  if (position < lastPos) {
+    *outIndex = count - 1;
+    *outProgress = 0;
+    return NO;
+  }
+
+  // Find segment (positions decrease as index increases)
+  for (NSInteger i = 0; i < count - 1; i++) {
+    CGFloat pos = [self estimatedPositionForIndex:i];
+    CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
+
+    if (position <= pos && position >= nextPos) {
+      CGFloat range = pos - nextPos;
+      *outIndex = i;
+      *outProgress = range > 0 ? (pos - position) / range : 0;
+      return YES;
+    }
+  }
+
+  *outIndex = count - 1;
+  *outProgress = 0;
+  return NO;
+}
+
+- (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
+  NSInteger index;
+  CGFloat progress;
+  BOOL found = [self findSegmentForPosition:position outIndex:&index outProgress:&progress];
+
+  if (!found) {
+    if (index == -1) {
+      // Below first detent - return negative progress
+      return -progress;
+    }
+    // At or beyond boundary
+    return index;
+  }
+
+  // Within a segment - interpolate
+  return index + fmax(0, fmin(1, progress));
 }
 
 - (CGFloat)interpolatedDetentForPosition:(CGFloat)position {
-  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
-  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+  NSInteger index;
+  CGFloat progress;
+  BOOL found = [self findSegmentForPosition:position outIndex:&index outProgress:&progress];
 
-  NSInteger count = _detents.count;
-  if (count == 0)
-    return 0;
-
-  // Clamp to valid range between first and last detent
-  CGFloat firstDetentValue = [self detentValueForIndex:0];
-  CGFloat lastDetentValue = [self detentValueForIndex:count - 1];
-
-  if (currentDetent < firstDetentValue) {
-    // Below first detent - interpolate from 0 to first detent
-    if (firstDetentValue <= 0)
-      return 0;
-    return fmax(0, currentDetent);
+  if (!found) {
+    if (index == -1) {
+      // Below first detent
+      CGFloat firstDetent = [self detentValueForIndex:0];
+      return fmax(0, firstDetent * (1 - progress));
+    }
+    // At or beyond boundary
+    return [self detentValueForIndex:index];
   }
 
-  if (currentDetent > lastDetentValue) {
-    return lastDetentValue;
-  }
-
-  return currentDetent;
+  // Within a segment - interpolate between detent values
+  CGFloat detent = [self detentValueForIndex:index];
+  CGFloat nextDetent = [self detentValueForIndex:index + 1];
+  return detent + progress * (nextDetent - detent);
 }
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
@@ -425,73 +510,6 @@
   return 0;
 }
 
-/**
- * Sets up position tracking during view controller transitions using a fake view.
- *
- * This uses a hidden "fake" view added to the container that animates alongside
- * the presented view. By observing the presentation layer, we can track smooth
- * position changes during native transition animations.
- */
-- (void)setupTransitionPositionTracking {
-  if (self.transitionCoordinator == nil)
-    return;
-
-  _isTransitioning = YES;
-
-  UIView *containerView = self.sheetPresentationController.containerView;
-  UIView *presentedView = self.presentedView;
-
-  if (!containerView || !presentedView)
-    return;
-
-  CGRect frame = presentedView.frame;
-  BOOL isPresenting = self.isBeingPresented;
-
-  // Set initial position: presenting starts from bottom, dismissing from current
-  frame.origin.y = isPresenting ? self.screenHeight : presentedView.frame.origin.y;
-  _fakeTransitionView.frame = frame;
-
-  auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-    [[context containerView] addSubview:self->_fakeTransitionView];
-
-    CGRect finalFrame = presentedView.frame;
-    finalFrame.origin.y = presentedView.frame.origin.y;
-    self->_fakeTransitionView.frame = finalFrame;
-
-    // Track position at screen refresh rate via display link
-    self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
-    [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-  };
-
-  [self.transitionCoordinator
-    animateAlongsideTransition:animation
-                    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                      [self->_displayLink invalidate];
-                      self->_displayLink = nil;
-                      [self->_fakeTransitionView removeFromSuperview];
-                      self->_isTransitioning = NO;
-                    }];
-}
-
-- (void)trackTransitionPosition:(CADisplayLink *)displayLink {
-  UIView *presentedView = self.presentedView;
-
-  if (_isDragging || !_fakeTransitionView || !presentedView)
-    return;
-
-  // Presentation layer contains in-flight animated values (not final/target values)
-  CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
-
-  if (presentationLayer) {
-    CGFloat transitioningPosition = presentationLayer.frame.origin.y;
-    CGFloat staticPosition = _fakeTransitionView.frame.origin.y;
-
-    if (fabs(staticPosition - transitioningPosition) > 0.01) {
-      [self emitChangePositionDelegateWithPosition:transitioningPosition realtime:YES];
-    }
-  }
-}
-
 #pragma mark - Sheet Configuration
 
 - (void)setupSheetDetents {
@@ -500,6 +518,7 @@
     return;
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
+  [_resolvedDetentPositions removeAllObjects];
 
   CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
@@ -509,6 +528,8 @@
                                                              withAutoHeight:autoHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
+    // Initialize with placeholder - will be updated when sheet settles at each detent
+    [_resolvedDetentPositions addObject:@(0)];
   }
 
   sheet.detents = detents;
@@ -632,6 +653,16 @@
   [self applyActiveDetent];
 }
 
+- (void)resizeToDetentIndex:(NSInteger)index {
+  if (index == _activeDetentIndex) {
+    return;
+  }
+
+  _pendingDetentIndex = index;
+  _activeDetentIndex = index;
+  [self applyActiveDetent];
+}
+
 - (void)setupSheetProps {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet) {
@@ -686,9 +717,14 @@
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
-  NSInteger index = [self currentDetentIndex];
-  if (index >= 0 && [self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:)]) {
-    [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSInteger index = [self currentDetentIndex];
+      if (index >= 0) {
+        CGFloat detent = [self detentValueForIndex:index];
+        [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+      }
+    });
   }
 }
 

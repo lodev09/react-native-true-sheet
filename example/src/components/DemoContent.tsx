@@ -8,7 +8,7 @@ interface DemoContentProps extends ViewProps {
 }
 
 export const DemoContent = (props: DemoContentProps) => {
-  const { text, radius = BORDER_RADIUS, style: $style, color = 'rgba(0,0,0,0.2)', ...rest } = props;
+  const { text, radius = BORDER_RADIUS, style: $style, color = 'rgba(0,0,0,0.3)', ...rest } = props;
   return (
     <View
       style={[styles.content, { backgroundColor: color, borderRadius: radius }, $style]}
@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
   content: {
     height: 100,
     padding: SPACING / 2,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

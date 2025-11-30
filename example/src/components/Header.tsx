@@ -1,15 +1,16 @@
-import { StyleSheet, Platform, View, type ViewProps } from 'react-native';
+import { StyleSheet, Platform, type ViewProps } from 'react-native';
 
 import { HEADER_HEIGHT, SPACING } from '../utils';
 import { Input } from './Input';
+import Animated from 'react-native-reanimated';
 
 type HeaderProps = ViewProps;
 
-export const Header = ({ children, ...rest }: HeaderProps) => {
+export const Header = ({ children, style, ...rest }: HeaderProps) => {
   return (
-    <View style={styles.container} {...rest}>
+    <Animated.View style={[styles.container, style]} {...rest}>
       {children || <Input />}
-    </View>
+    </Animated.View>
   );
 };
 

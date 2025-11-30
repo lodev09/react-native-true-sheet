@@ -18,12 +18,11 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Header, Spacer } from '../components';
+import { Button, DemoContent, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
   BasicSheet,
-  BlankSheet,
   FlatListSheet,
   GestureSheet,
   PromptSheet,
@@ -45,9 +44,8 @@ export const MapScreen = () => {
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const blankSheet = useRef<TrueSheet>(null);
-
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
+  const [showExtraContent, setShowExtraContent] = useState(false);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -69,11 +67,6 @@ export const MapScreen = () => {
       },
     ],
   }));
-
-  const handleWillPresent = (e: WillPresentEvent) => {
-    const { index, position: yPosition } = e.nativeEvent;
-    console.log(`Sheet will present to index: ${index} at position ${yPosition}`);
-  };
 
   return (
     <View style={styles.container}>
@@ -106,37 +99,45 @@ export const MapScreen = () => {
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
-          console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
+          console.log(
+            `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
+          );
         }}
-        onWillPresent={handleWillPresent}
+        onWillPresent={(e: WillPresentEvent) => {
+          console.log(
+            `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
+        }}
         // onPositionChange={(e) => {
         //   'worklet';
 
         //   const { detent, position, index } = e.nativeEvent;
-        //   console.log(`index: ${index}, detent: ${detent}, position: ${position}`);
+        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
         // }}
-        onDidPresent={() => {
-          console.log('Sheet is presented');
+        onDidPresent={(e) => {
+          console.log(
+            `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
         }}
         onDidFocus={() => {
-          console.log('Sheet is focused');
+          console.log('sheet is focused');
         }}
         onWillFocus={() => {
-          console.log('Sheet will focus');
+          console.log('sheet will focus');
         }}
         onWillBlur={() => {
-          console.log('Sheet will blur');
+          console.log('sheet will blur');
         }}
         onDidBlur={() => {
-          console.log('Sheet is blurred');
+          console.log('sheet is blurred');
         }}
         onMount={() => {
           // sheetRef.current?.present(1)
-          console.log('Sheet is ready!');
+          console.log('sheet is ready!');
         }}
         onDetentChange={(e) => {
           console.log(
-            `detent changed to ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+            `detent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
         header={<Header />}
@@ -155,16 +156,19 @@ export const MapScreen = () => {
         />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
         <Spacer />
+        <Button
+          text={showExtraContent ? 'Remove Content' : 'Add Content'}
+          onPress={() => setShowExtraContent(!showExtraContent)}
+        />
+        {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <GestureSheet ref={gestureSheet} />
-        <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
       <FlatListSheet ref={flatListSheet} />
     </View>

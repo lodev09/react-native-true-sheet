@@ -19,12 +19,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
-- (void)viewControllerWillPresent;
-- (void)viewControllerDidPresent;
+- (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
+- (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
 - (void)viewControllerWillDismiss;
 - (void)viewControllerDidDismiss;
-- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position;
-- (void)viewControllerDidDrag:(UIGestureRecognizerState)state index:(NSInteger)index position:(CGFloat)position;
+- (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
+- (void)viewControllerDidDrag:(UIGestureRecognizerState)state
+                        index:(NSInteger)index
+                     position:(CGFloat)position
+                       detent:(CGFloat)detent;
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
@@ -59,18 +62,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
 @property (nonatomic, assign) BOOL pageSizing;
-@property (nonatomic, assign) BOOL layoutTransitioning;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
+- (void)resizeToDetentIndex:(NSInteger)index;
 - (void)setupSheetDetents;
 - (void)setupSheetProps;
 - (void)updateDraggable;
-- (NSInteger)currentDetentIndex;
-- (CGFloat)currentPosition;
-- (CGFloat)detentValueForIndex:(NSInteger)index;
 
 @end
 
