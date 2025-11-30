@@ -50,7 +50,6 @@
     _lastPosition = 0;
     _isTransitioning = NO;
     _isDragging = NO;
-    _layoutTransitioning = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
 
@@ -237,12 +236,8 @@
   }
 
   if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
-    // Not realtime when layout changes (e.g., another controller is presented on top)
-    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-
-    // On iOS 26, this is called twice when we have a ScrollView
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      self->_layoutTransitioning = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
     });
   }
 }
@@ -334,7 +329,9 @@
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
       _isDragging = NO;
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+      });
       break;
     }
     default:
