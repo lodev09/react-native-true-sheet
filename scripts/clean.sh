@@ -26,7 +26,7 @@ cd example/android
 cd ../..
 
 step "Cleaning Watchman"
-watchman watch-del ./example ; watchman watch-project ./example
+watchman watch-del ./ ; watchman watch-project ./
 rm -rf $TMPDIR/metro-*
 success "Watchman cache cleared"
 
