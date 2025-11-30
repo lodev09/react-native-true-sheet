@@ -90,7 +90,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[0.1, 0.5, 1]}
+        detents={['auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -164,7 +164,7 @@ export const MapScreen = () => {
         />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(1)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

@@ -21,13 +21,8 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
-  BOOL _isTransitioning;
   BOOL _isDragging;
   NSInteger _pendingDetentIndex;
-
-  // Hidden view used to track position during native transition animations
-  UIView *_fakeTransitionView;
-  CADisplayLink *_displayLink;
 
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
@@ -52,15 +47,10 @@
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
     _lastPosition = 0;
-    _isTransitioning = NO;
     _isDragging = NO;
     _isPresented = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
-
-    _fakeTransitionView = [[UIView alloc] init];
-    _fakeTransitionView.hidden = YES;
-    _fakeTransitionView.userInteractionEnabled = NO;
 
     _blurInteraction = YES;
     _resolvedDetentPositions = [NSMutableArray array];
@@ -70,11 +60,6 @@
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-  if (_displayLink) {
-    [_displayLink invalidate];
-    _displayLink = nil;
-  }
 }
 
 #pragma mark - Computed Properties
@@ -87,7 +72,7 @@
 }
 
 - (BOOL)isActiveAndVisible {
-  return self.isViewLoaded && self.view.window != nil && !self.isBeingDismissed;
+  return self.isViewLoaded && self.view.window != nil;
 }
 
 - (UIView *)presentedView {
@@ -159,15 +144,9 @@
         CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
 
-        // Store the target position for the initial detent so interpolation works during animation
-        if (index >= 0 && index < (NSInteger)self->_resolvedDetentPositions.count) {
-          self->_resolvedDetentPositions[index] = @(position);
-        }
-
         [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
       });
     }
-    [self setupTransitionPositionTracking];
   }
 }
 
@@ -207,12 +186,14 @@
       }
     }
 
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+    });
+
     if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
       [self.delegate viewControllerWillDismiss];
     }
   }
-
-  [self setupTransitionPositionTracking];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -248,29 +229,26 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
-  if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
+  if (!_isDragging) {
     dispatch_async(dispatch_get_main_queue(), ^{
       // Update stored position for current detent (handles content size changes)
-      NSInteger index = [self currentDetentIndex];
-      if (index >= 0 && index < (NSInteger)self->_resolvedDetentPositions.count) {
-        self->_resolvedDetentPositions[index] = @(self.currentPosition);
-      }
+      [self storeResolvedPositionForIndex:[self currentDetentIndex]];
 
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
     });
+  }
 
-    // Emit pending detent change after programmatic resize settles
-    if (_pendingDetentIndex >= 0) {
-      NSInteger pendingIndex = _pendingDetentIndex;
-      _pendingDetentIndex = -1;
+  // Emit pending detent change after programmatic resize settles
+  if (_pendingDetentIndex >= 0) {
+    NSInteger pendingIndex = _pendingDetentIndex;
+    _pendingDetentIndex = -1;
 
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
-          CGFloat detent = [self detentValueForIndex:pendingIndex];
-          [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-        }
-      });
-    }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+        CGFloat detent = [self detentValueForIndex:pendingIndex];
+        [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+      }
+    });
   }
 }
 
@@ -362,6 +340,9 @@
     case UIGestureRecognizerStateCancelled: {
       _isDragging = NO;
       dispatch_async(dispatch_get_main_queue(), ^{
+        // Store resolved position when drag ends
+        [self storeResolvedPositionForIndex:[self currentDetentIndex]];
+
         [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
       });
       break;
@@ -386,14 +367,22 @@
   }
 }
 
+/// Stores the current position for the given detent index
+- (void)storeResolvedPositionForIndex:(NSInteger)index {
+  if (index >= 0 && index < (NSInteger)_resolvedDetentPositions.count) {
+    _resolvedDetentPositions[index] = @(self.currentPosition);
+  }
+}
+
 /// Returns the estimated Y position for a detent index, using stored positions when available
 - (CGFloat)estimatedPositionForIndex:(NSInteger)index {
   if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count)
     return 0;
 
   CGFloat storedPos = [_resolvedDetentPositions[index] doubleValue];
-  if (storedPos > 0)
+  if (storedPos > 0) {
     return storedPos;
+  }
 
   // Estimate based on detent value and known offset from first resolved position
   CGFloat detentValue = [self detentValueForIndex:index];
@@ -517,73 +506,6 @@
     return value;
   }
   return 0;
-}
-
-/**
- * Sets up position tracking during view controller transitions using a fake view.
- *
- * This uses a hidden "fake" view added to the container that animates alongside
- * the presented view. By observing the presentation layer, we can track smooth
- * position changes during native transition animations.
- */
-- (void)setupTransitionPositionTracking {
-  if (self.transitionCoordinator == nil)
-    return;
-
-  _isTransitioning = YES;
-
-  UIView *containerView = self.sheetPresentationController.containerView;
-  UIView *presentedView = self.presentedView;
-
-  if (!containerView || !presentedView)
-    return;
-
-  CGRect frame = presentedView.frame;
-  BOOL isPresenting = self.isBeingPresented;
-
-  // Set initial position: presenting starts from bottom, dismissing from current
-  frame.origin.y = isPresenting ? self.screenHeight : presentedView.frame.origin.y;
-  _fakeTransitionView.frame = frame;
-
-  auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-    [[context containerView] addSubview:self->_fakeTransitionView];
-
-    CGRect finalFrame = presentedView.frame;
-    finalFrame.origin.y = presentedView.frame.origin.y;
-    self->_fakeTransitionView.frame = finalFrame;
-
-    // Track position at screen refresh rate via display link
-    self->_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(trackTransitionPosition:)];
-    [self->_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-  };
-
-  [self.transitionCoordinator
-    animateAlongsideTransition:animation
-                    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                      [self->_displayLink invalidate];
-                      self->_displayLink = nil;
-                      [self->_fakeTransitionView removeFromSuperview];
-                      self->_isTransitioning = NO;
-                    }];
-}
-
-- (void)trackTransitionPosition:(CADisplayLink *)displayLink {
-  UIView *presentedView = self.presentedView;
-
-  if (_isDragging || !_fakeTransitionView || !presentedView)
-    return;
-
-  // Presentation layer contains in-flight animated values (not final/target values)
-  CALayer *presentationLayer = _fakeTransitionView.layer.presentationLayer;
-
-  if (presentationLayer) {
-    CGFloat transitioningPosition = presentationLayer.frame.origin.y;
-    CGFloat staticPosition = _fakeTransitionView.frame.origin.y;
-
-    if (fabs(staticPosition - transitioningPosition) > 0.01) {
-      [self emitChangePositionDelegateWithPosition:transitioningPosition realtime:YES];
-    }
-  }
 }
 
 #pragma mark - Sheet Configuration
