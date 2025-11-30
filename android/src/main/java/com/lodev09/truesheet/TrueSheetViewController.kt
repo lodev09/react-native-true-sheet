@@ -11,6 +11,7 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.isNotEmpty
+import androidx.core.view.isVisible
 import com.facebook.react.R
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -111,6 +112,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var currentDetentIndex: Int = -1
     private set
+
+  // Resolved detent positions (Y coordinate when sheet rests at each detent)
+  private val resolvedDetentPositions = mutableListOf<Int>()
 
   private var isDragging = false
   private var windowAnimation: Int = 0
@@ -275,7 +279,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val detentInfo = getDetentInfoForIndex(currentDetentIndex)
         val detent = getDetentValueForIndex(detentInfo.index)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
+
         delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
+
+        // Store resolved position for initial detent
+        storeResolvedPosition(detentInfo.index)
         emitChangePositionDelegate(detentInfo.index, positionPx, realtime = false)
 
         // Notify parent sheet that it has lost focus (after this sheet appeared)
@@ -342,7 +350,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
             BottomSheetBehavior.STATE_EXPANDED,
             BottomSheetBehavior.STATE_COLLAPSED,
-            BottomSheetBehavior.STATE_HALF_EXPANDED -> handleDragEnd(newState)
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+              getDetentInfoForState(newState)?.let { detentInfo ->
+                // Store resolved position when sheet settles
+                storeResolvedPosition(detentInfo.index)
+
+                if (isDragging) {
+                  // Handle drag end
+                  val detent = getDetentValueForIndex(detentInfo.index)
+                  delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
+
+                  if (detentInfo.index != currentDetentIndex) {
+                    presentPromise?.invoke()
+                    presentPromise = null
+                    currentDetentIndex = detentInfo.index
+                    setupDimmedBackground(detentInfo.index)
+                    delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+                  }
+
+                  isDragging = false
+                } else {
+                  // Handle programmatic resize - emit detent change after sheet settles
+                  if (detentInfo.index != currentDetentIndex) {
+                    val detent = getDetentValueForIndex(detentInfo.index)
+                    currentDetentIndex = detentInfo.index
+                    delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+                  }
+                }
+              }
+            }
 
             else -> {}
           }
@@ -438,15 +474,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    currentDetentIndex = detentIndex
     setupDimmedBackground(detentIndex)
 
     if (isPresented) {
-      val detentInfo = getDetentInfoForIndex(detentIndex)
-      val detent = getDetentValueForIndex(detentInfo.index)
-      delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+      // Detent change will be emitted when sheet settles in onStateChanged
+      // Don't update currentDetentIndex here - it will be updated when sheet settles
       setStateForDetentIndex(detentIndex)
     } else {
+      currentDetentIndex = detentIndex
       isDragging = false
       setupSheetDetents()
       setStateForDetentIndex(detentIndex)
@@ -481,6 +516,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun setupSheetDetents() {
     val behavior = this.behavior ?: return
+
+    // Reset resolved positions if detents count changed
+    if (resolvedDetentPositions.size != detents.size) {
+      resolvedDetentPositions.clear()
+      repeat(detents.size) { resolvedDetentPositions.add(0) }
+    }
+
+    // Always update auto detent positions based on current content height
+    for (i in detents.indices) {
+      if (detents[i] == -1.0) {
+        val detentHeight = getDetentHeight(detents[i])
+        resolvedDetentPositions[i] = screenHeight - detentHeight
+      }
+    }
 
     behavior.apply {
       skipCollapsed = false
@@ -644,39 +693,99 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   /**
+   * Stores the current Y position as the resolved position for the given detent index.
+   * This is called when the sheet settles at a detent to capture the actual position
+   * which may differ from the calculated position due to system adjustments.
+   */
+  private fun storeResolvedPosition(index: Int) {
+    if (index < 0 || index >= resolvedDetentPositions.size) return
+    val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: return
+    if (positionPx > 0 && positionPx < screenHeight) {
+      resolvedDetentPositions[index] = positionPx
+    }
+  }
+
+  /**
+   * Stores the resolved position for the current detent.
+   * Called from TrueSheetView when content size changes.
+   */
+  fun storeCurrentResolvedPosition() {
+    storeResolvedPosition(currentDetentIndex)
+  }
+
+  /**
+   * Returns the estimated Y position for a detent index, using stored positions when available.
+   */
+  private fun getEstimatedPositionForIndex(index: Int): Int {
+    if (index < 0 || index >= resolvedDetentPositions.size) return screenHeight
+
+    val storedPos = resolvedDetentPositions[index]
+    if (storedPos > 0) return storedPos
+
+    // Estimate based on getDetentHeight which accounts for bottomInset and maxAllowedHeight
+    if (index < detents.size) {
+      val detentHeight = getDetentHeight(detents[index])
+      return screenHeight - detentHeight
+    }
+
+    return screenHeight
+  }
+
+  /**
+   * Finds the segment index and interpolation progress for a given position.
+   * Returns a Triple of (fromIndex, toIndex, progress) where progress is 0-1 within that segment.
+   * Returns null if position count is less than 2.
+   */
+  private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
+    val count = resolvedDetentPositions.size
+    if (count < 2) return null
+
+    val firstPos = getEstimatedPositionForIndex(0)
+    val lastPos = getEstimatedPositionForIndex(count - 1)
+
+    // Below first detent
+    if (positionPx > firstPos) {
+      val range = screenHeight - firstPos
+      val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
+      return Triple(-1, 0, progress) // Special index -1 for below first
+    }
+
+    // Above last detent
+    if (positionPx < lastPos) {
+      return Triple(count - 1, count - 1, 0f)
+    }
+
+    // Find segment (positions decrease as index increases)
+    for (i in 0 until count - 1) {
+      val pos = getEstimatedPositionForIndex(i)
+      val nextPos = getEstimatedPositionForIndex(i + 1)
+
+      if (positionPx <= pos && positionPx >= nextPos) {
+        val range = pos - nextPos
+        val progress = if (range > 0) (pos - positionPx).toFloat() / range else 0f
+        return Triple(i, i + 1, maxOf(0f, minOf(1f, progress)))
+      }
+    }
+
+    return Triple(count - 1, count - 1, 0f)
+  }
+
+  /**
    * Calculates the interpolated index based on position.
    * Returns a continuous value (e.g., 0.5 means halfway between detent 0 and 1).
    */
   private fun getInterpolatedIndexForPosition(positionPx: Int): Float {
-    val count = detents.size
+    val count = resolvedDetentPositions.size
     if (count == 0) return -1f
     if (count == 1) return 0f
 
-    // Convert position to detent fraction
-    val currentDetent = (screenHeight - positionPx).toFloat() / screenHeight.toFloat()
+    val segment = findSegmentForPosition(positionPx) ?: return 0f
+    val (fromIndex, _, progress) = segment
 
-    // Handle below first detent (interpolate from -1 to 0)
-    val firstDetentValue = getDetentValueForIndex(0)
-    if (currentDetent < firstDetentValue) {
-      if (firstDetentValue <= 0) return 0f
-      val progress = currentDetent / firstDetentValue
-      return progress - 1f
-    }
+    // Below first detent
+    if (fromIndex == -1) return -progress
 
-    // Find which segment the current detent falls into and interpolate
-    for (i in 0 until count - 1) {
-      val detentValue = getDetentValueForIndex(i)
-      val nextDetentValue = getDetentValueForIndex(i + 1)
-
-      if (currentDetent <= nextDetentValue) {
-        val range = nextDetentValue - detentValue
-        if (range <= 0) return i.toFloat()
-        val progress = (currentDetent - detentValue) / range
-        return i + maxOf(0f, minOf(1f, progress))
-      }
-    }
-
-    return (count - 1).toFloat()
+    return fromIndex + progress
   }
 
   /**
@@ -684,27 +793,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Returns the actual screen fraction, clamped to valid detent range.
    */
   private fun getInterpolatedDetentForPosition(positionPx: Int): Float {
-    // Convert position to detent fraction
-    val currentDetent = (screenHeight - positionPx).toFloat() / screenHeight.toFloat()
-
-    val count = detents.size
+    val count = resolvedDetentPositions.size
     if (count == 0) return 0f
 
-    // Clamp to valid range between first and last detent
-    val firstDetentValue = getDetentValueForIndex(0)
-    val lastDetentValue = getDetentValueForIndex(count - 1)
+    val segment = findSegmentForPosition(positionPx) ?: return getDetentValueForIndex(0)
+    val (fromIndex, toIndex, progress) = segment
 
-    if (currentDetent < firstDetentValue) {
-      // Below first detent - interpolate from 0 to first detent
-      if (firstDetentValue <= 0) return 0f
-      return maxOf(0f, currentDetent)
+    // Below first detent
+    if (fromIndex == -1) {
+      val firstDetent = getDetentValueForIndex(0)
+      return maxOf(0f, firstDetent * (1 - progress))
     }
 
-    if (currentDetent > lastDetentValue) {
-      return lastDetentValue
-    }
-
-    return currentDetent
+    val fromDetent = getDetentValueForIndex(fromIndex)
+    val toDetent = getDetentValueForIndex(toIndex)
+    return fromDetent + progress * (toDetent - fromDetent)
   }
 
   /**
@@ -765,27 +868,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val detentInfo = getCurrentDetentInfo(sheetView)
     val detent = getDetentValueForIndex(detentInfo.index)
     delegate?.viewControllerDidDragChange(detentInfo.index, detentInfo.position, detent)
-  }
-
-  private fun handleDragEnd(state: Int) {
-    if (!isDragging) return
-
-    val detentInfo = getDetentInfoForState(state)
-    detentInfo?.let {
-      val detent = getDetentValueForIndex(it.index)
-      delegate?.viewControllerDidDragEnd(it.index, it.position, detent)
-
-      if (it.index != currentDetentIndex) {
-        presentPromise?.invoke()
-        presentPromise = null
-
-        currentDetentIndex = it.index
-        setupDimmedBackground(it.index)
-        delegate?.viewControllerDidChangeDetent(it.index, it.position, detent)
-      }
-    }
-
-    isDragging = false
   }
 
   // ====================================================================
@@ -890,6 +972,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       this.post {
         positionFooter()
+        storeResolvedPosition(currentDetentIndex)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
         emitChangePositionDelegate(currentDetentIndex, positionPx, realtime = false)
       }
@@ -911,7 +994,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   override fun dispatchTouchEvent(event: MotionEvent): Boolean {
     val footer = containerView?.footerView
-    if (footer != null && footer.visibility == View.VISIBLE) {
+    if (footer != null && footer.isVisible) {
       val footerLocation = ScreenUtils.getScreenLocation(footer)
       val touchScreenX = event.rawX.toInt()
       val touchScreenY = event.rawY.toInt()
