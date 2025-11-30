@@ -18,12 +18,11 @@ import {
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { Button, Header, Spacer } from '../components';
+import { Button, DemoContent, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
   BasicSheet,
-  BlankSheet,
   FlatListSheet,
   GestureSheet,
   PromptSheet,
@@ -45,9 +44,8 @@ export const MapScreen = () => {
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const blankSheet = useRef<TrueSheet>(null);
-
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
+  const [showExtraContent, setShowExtraContent] = useState(false);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -158,16 +156,19 @@ export const MapScreen = () => {
         />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
         <Spacer />
+        <Button
+          text={showExtraContent ? 'Remove Content' : 'Add Content'}
+          onPress={() => setShowExtraContent(!showExtraContent)}
+        />
+        {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <GestureSheet ref={gestureSheet} />
-        <BlankSheet ref={blankSheet} />
       </ReanimatedTrueSheet>
       <FlatListSheet ref={flatListSheet} />
     </View>
