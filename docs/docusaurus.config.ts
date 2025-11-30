@@ -154,12 +154,12 @@ const config: Config = {
       darkTheme: prismThemes.oneDark,
       additionalLanguages: ['swift', 'java', 'kotlin'],
     },
-    // announcementBar: {
-    //   id: '0.11.0-dimming',
-    //   content: `<b style="color: #47d995">Dimming</b> is now available 🎉! Checkout <a href="/guides/dimming">this guide</a> and start building your own Maps App 😎`,
-    //   backgroundColor: '#1f64ae',
-    //   textColor: '#ffffff',
-    // },
+    announcementBar: {
+      id: '3.0.0-release',
+      content: `🎉 <b>True Sheet 3.0</b> is here! Completely rebuilt for Fabric ⚡ <a href="/blog/release-3-0">Read the announcement →</a>`,
+      backgroundColor: '#1f64ae',
+      textColor: '#ffffff',
+    },
     image: 'img/logo.png',
     metadata: [
       {

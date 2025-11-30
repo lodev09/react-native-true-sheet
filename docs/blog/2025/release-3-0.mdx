@@ -1,0 +1,209 @@
+---
+date: 2025-12-01
+slug: release-3-0
+title: Version 3.0 Release
+authors: [lodev09]
+tags: [release, fabric, new-architecture]
+---
+
+import previewIos from '/img/preview-ios.gif'
+import previewAndroid from '/img/preview-android.gif'
+
+## True Sheet 3.0 is here!
+
+We're thrilled to announce the biggest update yet! True Sheet has been **completely rebuilt from the ground up** for React Native's New Architecture (Fabric). This isn't just an update — it's a whole new level of performance and native experience.
+
+<div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+  <img alt="React Native True Sheet - iOS" src={previewIos} width="300" />
+  <img alt="React Native True Sheet - Android" src={previewAndroid} width="300" />
+</div>
+
+{/* truncate */}
+
+## Powered by Fabric
+
+Version 3 is built **exclusively** for React Native's New Architecture. Here's what that means for you:
+
+- **No Bridge** — Direct C++ communication between JavaScript and native code
+- **Blazing Fast** — Synchronous layout updates with Fabric
+- **Shared C++ Core** — State and shadow nodes shared between iOS and Android
+- **100% Type-safe** — Full TypeScript support with Codegen-generated native interfaces
+
+**Requirements:**
+- React Native >= 0.76 (Expo SDK 52+)
+- New Architecture enabled (default in RN 0.76+)
+
+## What's New
+
+### Automatic ScrollView Detection
+
+Say goodbye to `scrollRef`! Scroll views are now **automatically detected** on iOS. Just use the `scrollable` prop and you're good to go:
+
+```tsx
+<TrueSheet scrollable>
+  <ScrollView>{/* Your scrollable content */}</ScrollView>
+</TrueSheet>
+```
+
+See the [Scrolling guide](/guides/scrolling) for more details.
+
+### Native Header and Footer
+
+Add fixed headers and footers that stay put while your content scrolls:
+
+```tsx
+<TrueSheet
+  header={<MyHeader />}
+  footer={<MyFooter />}
+>
+  <FlatList data={items} renderItem={renderItem} />
+</TrueSheet>
+```
+
+See the [Header guide](/guides/header) and [Footer guide](/guides/footer) for more details.
+
+### Sheet Stacking
+
+Stack multiple sheets on top of each other on **both iOS and Android**! New focus events help you manage interactions:
+
+- **`onWillFocus`** / **`onDidFocus`** — Sheet regains focus
+- **`onWillBlur`** / **`onDidBlur`** — Sheet loses focus
+
+See the [Stacking guide](/guides/stacking) for more details.
+
+### Rich Event System
+
+Track every moment of your sheet's lifecycle:
+
+| Lifecycle | Drag | Position |
+| - | - | - |
+| `onMount` | `onDragBegin` | `onPositionChange` |
+| `onWillPresent` | `onDragChange` | `onDetentChange` |
+| `onDidPresent` | `onDragEnd` | |
+| `onWillDismiss` | | |
+| `onDidDismiss` | | |
+
+See the [onMount guide](/guides/onmount) for handling sheet readiness.
+
+### Reanimated v4 Integration
+
+Seamless animations with dedicated Reanimated components:
+
+```tsx
+import {
+  ReanimatedTrueSheetProvider,
+  ReanimatedTrueSheet,
+  useReanimatedTrueSheet,
+} from '@lodev09/react-native-true-sheet'
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated'
+
+const App = () => (
+  <ReanimatedTrueSheetProvider>
+    <MySheet />
+  </ReanimatedTrueSheetProvider>
+)
+
+const MySheet = () => (
+  <ReanimatedTrueSheet detents={[0.3, 0.6, 1]}>
+    <AnimatedContent />
+  </ReanimatedTrueSheet>
+)
+
+const AnimatedContent = () => {
+  const { animatedIndex } = useReanimatedTrueSheet()
+
+  // Fade in as sheet expands from index 0 to 1
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1])
+  }))
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Text>I fade in as the sheet expands!</Text>
+    </Animated.View>
+  )
+}
+```
+
+See the [Reanimated guide](/guides/reanimated) for complete examples.
+
+### Draggable Control
+
+Need a static sheet? Disable dragging entirely:
+
+```tsx
+<TrueSheet draggable={false} detents={[0.5, 1]}>
+  <Button title="Expand" onPress={() => sheet.current?.resize(1)} />
+</TrueSheet>
+```
+
+See the [Resizing guide](/guides/resizing) for programmatic control.
+
+### Dimming Control
+
+Customize when the background dims based on detent index:
+
+```tsx
+<TrueSheet detents={[0.3, 0.6, 1]} dimmedDetentIndex={1}>
+  {/* Dims only when at index 1 or above */}
+</TrueSheet>
+```
+
+See the [Dimming guide](/guides/dimming) for more details.
+
+### Edge-to-Edge Support (Android)
+
+TrueSheet automatically adapts to Android's edge-to-edge mode. Go full-screen with:
+
+```tsx
+<TrueSheet edgeToEdgeFullScreen />
+```
+
+See the [Edge-to-Edge guide](/guides/edge-to-edge) for details.
+
+### Global Static Methods
+
+Present sheets from anywhere in your app using static methods:
+
+```tsx
+// Register a named sheet
+<TrueSheet name="my-sheet">
+  {/* content */}
+</TrueSheet>
+
+// Present from anywhere
+TrueSheet.present('my-sheet')
+```
+
+See the [Global Methods guide](/guides/global-methods) for more details.
+
+## Breaking Changes
+
+Heads up! Version 3 includes some breaking changes:
+
+- **Fabric Required** — Old Paper architecture is no longer supported
+- **Prop Renames** — `sizes` → `detents`, `initialIndex` → `initialDetentIndex`, `onPresent` → `onDidPresent`, and more
+- **Detent Values** — Use fractional values (`0.5`) instead of percentage strings (`"50%"`)
+- **Removed Props** — `scrollRef`, `grabberProps`, `contentContainerStyle`
+
+Check out the [Migration Guide](/migration) for the full list and step-by-step upgrade instructions.
+
+## Get Started
+
+```sh
+yarn add @lodev09/react-native-true-sheet@^3.0.0
+```
+
+Or with Expo:
+
+```sh
+npx expo install @lodev09/react-native-true-sheet
+```
+
+Running into issues? Check out the [Troubleshooting guide](/troubleshooting) for common fixes.
+
+## Thank You!
+
+A huge thanks to everyone who contributed, reported issues, and provided feedback. Your support makes True Sheet better with every release!
+
+We're just getting started. Stay tuned for more exciting updates!
