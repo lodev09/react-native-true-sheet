@@ -248,6 +248,12 @@
 
   if (!_isTransitioning && !_isDragging && self.isActiveAndVisible) {
     dispatch_async(dispatch_get_main_queue(), ^{
+      // Update stored position for current detent (handles content size changes)
+      NSInteger index = [self currentDetentIndex];
+      if (index >= 0 && index < (NSInteger)self->_resolvedDetentPositions.count) {
+        self->_resolvedDetentPositions[index] = @(self.currentPosition);
+      }
+
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
     });
   }
@@ -750,15 +756,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
       if (index >= 0) {
-        CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
-
-        // Store the actual position when sheet settles at this detent
-        if (index < (NSInteger)self->_resolvedDetentPositions.count) {
-          self->_resolvedDetentPositions[index] = @(position);
-        }
-
-        [self.delegate viewControllerDidChangeDetent:index position:position detent:detent];
+        [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
       }
     });
   }
