@@ -57,16 +57,20 @@ const App = () => {
 
 ## Safe Area Handling
 
-The footer is pinned to the bottom edge of the sheet. When using an `auto` detent on iOS, the sheet height automatically includes the bottom safe area. To ensure your footer extends properly into the safe area, add bottom padding:
+The footer is pinned to the bottom edge of the sheet. The sheet height automatically includes the bottom safe area on both iOS and Android. To ensure your footer extends properly into the safe area, add bottom padding:
 
 ```tsx
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const isIPad = Platform.OS === 'ios' && Platform.isPad;
 
 const MyFooter = () => {
   const insets = useSafeAreaInsets();
+  const bottomInset = isIPad ? 0 : insets.bottom;
 
   return (
-    <View style={{ paddingBottom: insets.bottom, backgroundColor: '#333' }}>
+    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
       <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ color: '#fff' }}>Footer Content</Text>
       </View>
@@ -81,3 +85,7 @@ const MyFooter = () => {
 ```
 
 This ensures the footer background extends into the safe area while keeping the content above the home indicator.
+
+:::note
+On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
+:::
