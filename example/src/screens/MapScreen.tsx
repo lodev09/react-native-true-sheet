@@ -92,7 +92,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 0.7426778242677824, 1]}
+        detents={[HEADER_HEIGHT / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -101,38 +101,46 @@ export const MapScreen = () => {
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {
-          console.log(`Sheet layout ${e.nativeEvent.layout.width}x${e.nativeEvent.layout.height}`);
+          console.log(
+            `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
+          );
         }}
         onWillPresent={(e: WillPresentEvent) => {
-          console.log(`Sheet will presented to index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`);
+          console.log(
+            `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
         }}
         // onPositionChange={(e) => {
         //   'worklet';
 
         //   const { detent, position, index } = e.nativeEvent;
-        //   console.log(`index: ${index}, detent: ${detent}, position: ${position}`);
+        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
         // }}
         onDidPresent={(e) => {
-          console.log(`Sheet is presented to index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`);
+          console.log(
+            `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
         }}
         onDidFocus={() => {
-          console.log('Sheet is focused');
+          console.log('sheet is focused');
         }}
         onWillFocus={() => {
-          console.log('Sheet will focus');
+          console.log('sheet will focus');
         }}
         onWillBlur={() => {
-          console.log('Sheet will blur');
+          console.log('sheet will blur');
         }}
         onDidBlur={() => {
-          console.log('Sheet is blurred');
+          console.log('sheet is blurred');
         }}
         onMount={() => {
           // sheetRef.current?.present(1)
-          console.log('Sheet is ready!');
+          console.log('sheet is ready!');
         }}
         onDetentChange={(e) => {
-          console.log(`Deetent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`);
+          console.log(
+            `detent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
         }}
         header={<Header />}
       >

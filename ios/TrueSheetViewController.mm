@@ -33,6 +33,9 @@
 
   // Blur effect view
   TrueSheetBlurView *_blurView;
+
+  // Resolved detent positions (Y coordinate when sheet rests at each detent)
+  NSMutableArray<NSNumber *> *_resolvedDetentPositions;
 }
 
 #pragma mark - Initialization
@@ -58,6 +61,7 @@
     _fakeTransitionView.userInteractionEnabled = NO;
 
     _blurInteraction = YES;
+    _resolvedDetentPositions = [NSMutableArray array];
   }
   return self;
 }
@@ -150,8 +154,15 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
       dispatch_async(dispatch_get_main_queue(), ^{
         NSInteger index = [self currentDetentIndex];
+        CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
-        [self.delegate viewControllerWillPresentAtIndex:index position:self.currentPosition detent:detent];
+
+        // Store the target position for the initial detent so interpolation works during animation
+        if (index >= 0 && index < (NSInteger)self->_resolvedDetentPositions.count) {
+          self->_resolvedDetentPositions[index] = @(position);
+        }
+
+        [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
       });
     }
     [self setupTransitionPositionTracking];
@@ -354,37 +365,63 @@
   }
 }
 
+/// Returns the estimated Y position for a detent index, using stored positions when available
+- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
+  if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count)
+    return 0;
+
+  CGFloat storedPos = [_resolvedDetentPositions[index] doubleValue];
+  if (storedPos > 0)
+    return storedPos;
+
+  // Estimate based on detent value and known offset from first resolved position
+  CGFloat detentValue = [self detentValueForIndex:index];
+  CGFloat basePosition = self.screenHeight - (detentValue * self.screenHeight);
+
+  // Find a resolved position to calculate offset
+  for (NSInteger i = 0; i < (NSInteger)_resolvedDetentPositions.count; i++) {
+    CGFloat pos = [_resolvedDetentPositions[i] doubleValue];
+    if (pos > 0) {
+      CGFloat knownDetent = [self detentValueForIndex:i];
+      CGFloat expectedPos = self.screenHeight - (knownDetent * self.screenHeight);
+      CGFloat offset = pos - expectedPos;
+      return basePosition + offset;
+    }
+  }
+
+  return basePosition;
+}
+
 - (CGFloat)interpolatedIndexForPosition:(CGFloat)position {
-  NSInteger count = _detents.count;
+  NSInteger count = _resolvedDetentPositions.count;
   if (count == 0)
     return -1;
   if (count == 1)
     return 0;
 
-  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
-  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
+  CGFloat firstPos = [self estimatedPositionForIndex:0];
+  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
 
-  // Handle below first detent (interpolate from -1 to 0)
-  CGFloat firstDetentValue = [self detentValueForIndex:0];
-  if (currentDetent < firstDetentValue) {
-    // Interpolate: 0 at firstDetentValue, -1 at 0
-    if (firstDetentValue <= 0)
-      return 0;
-    CGFloat progress = currentDetent / firstDetentValue;
-    return progress - 1;
+  // Below first detent (position > firstPos means sheet is smaller)
+  if (position > firstPos) {
+    CGFloat range = self.screenHeight - firstPos;
+    return range > 0 ? -(position - firstPos) / range : 0;
   }
 
-  // Find which segment the current detent falls into and interpolate
-  for (NSInteger i = 0; i < count - 1; i++) {
-    CGFloat detentValue = [self detentValueForIndex:i];
-    CGFloat nextDetentValue = [self detentValueForIndex:i + 1];
+  // Above last detent
+  if (position < lastPos)
+    return count - 1;
 
-    if (currentDetent <= nextDetentValue) {
-      // Interpolate between index i and i+1
-      CGFloat range = nextDetentValue - detentValue;
+  // Find segment and interpolate (positions decrease as index increases)
+  for (NSInteger i = 0; i < count - 1; i++) {
+    CGFloat pos = [self estimatedPositionForIndex:i];
+    CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
+
+    if (position <= pos && position >= nextPos) {
+      CGFloat range = pos - nextPos;
       if (range <= 0)
         return i;
-      CGFloat progress = (currentDetent - detentValue) / range;
+      CGFloat progress = (pos - position) / range;
       return i + fmax(0, fmin(1, progress));
     }
   }
@@ -393,29 +430,43 @@
 }
 
 - (CGFloat)interpolatedDetentForPosition:(CGFloat)position {
-  // Convert position to detent fraction: detent = (screenHeight - position) / screenHeight
-  CGFloat currentDetent = (self.screenHeight - position) / self.screenHeight;
-
-  NSInteger count = _detents.count;
+  NSInteger count = _resolvedDetentPositions.count;
   if (count == 0)
     return 0;
 
-  // Clamp to valid range between first and last detent
-  CGFloat firstDetentValue = [self detentValueForIndex:0];
-  CGFloat lastDetentValue = [self detentValueForIndex:count - 1];
+  CGFloat firstPos = [self estimatedPositionForIndex:0];
+  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
+  CGFloat firstDetent = [self detentValueForIndex:0];
+  CGFloat lastDetent = [self detentValueForIndex:count - 1];
 
-  if (currentDetent < firstDetentValue) {
-    // Below first detent - interpolate from 0 to first detent
-    if (firstDetentValue <= 0)
-      return 0;
-    return fmax(0, currentDetent);
+  // Below first detent
+  if (position > firstPos) {
+    CGFloat range = self.screenHeight - firstPos;
+    CGFloat progress = range > 0 ? (position - firstPos) / range : 0;
+    return fmax(0, firstDetent * (1 - progress));
   }
 
-  if (currentDetent > lastDetentValue) {
-    return lastDetentValue;
+  // Above last detent
+  if (position < lastPos)
+    return lastDetent;
+
+  // Find segment and interpolate
+  for (NSInteger i = 0; i < count - 1; i++) {
+    CGFloat pos = [self estimatedPositionForIndex:i];
+    CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
+
+    if (position <= pos && position >= nextPos) {
+      CGFloat range = pos - nextPos;
+      if (range <= 0)
+        return [self detentValueForIndex:i];
+      CGFloat progress = (pos - position) / range;
+      CGFloat detent = [self detentValueForIndex:i];
+      CGFloat nextDetent = [self detentValueForIndex:i + 1];
+      return detent + progress * (nextDetent - detent);
+    }
   }
 
-  return currentDetent;
+  return lastDetent;
 }
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
@@ -506,6 +557,7 @@
     return;
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
+  [_resolvedDetentPositions removeAllObjects];
 
   CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
@@ -515,6 +567,8 @@
                                                              withAutoHeight:autoHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
+    // Initialize with placeholder - will be updated when sheet settles at each detent
+    [_resolvedDetentPositions addObject:@(0)];
   }
 
   sheet.detents = detents;
@@ -696,8 +750,15 @@
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
       if (index >= 0) {
+        CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
-        [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+
+        // Store the actual position when sheet settles at this detent
+        if (index < (NSInteger)self->_resolvedDetentPositions.count) {
+          self->_resolvedDetentPositions[index] = @(position);
+        }
+
+        [self.delegate viewControllerDidChangeDetent:index position:position detent:detent];
       }
     });
   }
