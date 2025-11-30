@@ -134,6 +134,11 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('Sheet is ready!');
         }}
+        onDetentChange={(e) => {
+          console.log(
+            `detent changed to ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          );
+        }}
         header={<Header />}
       >
         <View style={styles.heading}>
