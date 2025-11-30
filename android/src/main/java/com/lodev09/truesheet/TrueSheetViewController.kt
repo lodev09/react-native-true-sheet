@@ -162,6 +162,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = ScreenUtils.getStatusBarHeight(reactContext)
 
   /**
+   * The bottom inset (navigation bar height) to add to sheet height.
+   * This matches iOS behavior where the system adds bottom safe area inset internally.
+   */
+  private val bottomInset: Int
+    get() = ScreenUtils.getNavigationBarHeight(reactContext)
+
+  /**
    * Edge-to-edge is enabled by default on API 36+, or when explicitly configured.
    */
   private val edgeToEdgeEnabled: Boolean
@@ -702,7 +709,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Gets the detent value (fraction) for a given index.
-   * For auto (-1), calculates the actual fraction from content + header height.
+   * Returns the raw screen fraction without bottomInset for interpolation calculations.
+   * Note: bottomInset is only added in getDetentHeight() for actual sheet sizing.
    */
   private fun getDetentValueForIndex(index: Int): Float {
     if (index < 0 || index >= detents.size) return 0f
@@ -786,12 +794,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
-      contentHeight + headerHeight
+      // For auto detent, add bottomInset to match iOS behavior where the system
+      // adds bottom safe area inset internally to the sheet height
+      contentHeight + headerHeight + bottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      (detent * screenHeight).toInt()
+      // For fractional detents, add bottomInset to match iOS behavior
+      (detent * screenHeight).toInt() + bottomInset
     }
 
     val maxAllowedHeight = screenHeight - sheetTopInset
