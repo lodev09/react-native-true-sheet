@@ -96,13 +96,6 @@ export const MapScreen = () => {
         dimmedDetentIndex={2}
         dismissible={false}
         edgeToEdgeFullScreen
-        blurTint="dark"
-        blurOptions={{ intensity: 0 }}
-        grabberOptions={{
-          // height: 10,
-          // width: 60,
-          // color: "blue",
-        }}
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e) => {

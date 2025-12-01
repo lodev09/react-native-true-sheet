@@ -15,8 +15,8 @@ type GrabberOptionsType = Readonly<{
 }>;
 
 type BlurOptionsType = Readonly<{
-  intensity: Double; // -1 means not set (use system default)
-  interaction: boolean;
+  intensity?: WithDefault<Double, -1>;
+  interaction?: WithDefault<boolean, true>;
 }>;
 
 export interface DetentInfoEventPayload {

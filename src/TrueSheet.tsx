@@ -392,10 +392,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={styles.sheetView}
         detents={resolvedDetents}
         blurTint={blurTint}
-        blurOptions={{
-          intensity: blurOptions?.intensity ?? -1,
-          interaction: blurOptions?.interaction ?? true,
-        }}
+        blurOptions={blurOptions}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
         grabber={grabber}
