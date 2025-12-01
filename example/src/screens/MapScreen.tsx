@@ -90,11 +90,11 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 'auto', 1]}
+        detents={['auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
-        dismissible={false}
+        // dismissible={false}
         edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}

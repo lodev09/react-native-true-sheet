@@ -50,6 +50,13 @@ using namespace facebook::react;
   BOOL _scrollable;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
+
+  // Waiting for presented view controller to dismiss
+  NSTimer *_pendingPresentTimer;
+  __weak UIViewController *_pendingPresentBlockingVC;
+  NSInteger _pendingPresentIndex;
+  BOOL _pendingPresentAnimated;
+  TrueSheetCompletionBlock _pendingPresentCompletion;
 }
 
 #pragma mark - Initialization
@@ -69,6 +76,12 @@ using namespace facebook::react;
     _initialDetentAnimated = YES;
     _scrollable = NO;
     _isSheetUpdatePending = NO;
+
+    _pendingPresentTimer = nil;
+    _pendingPresentBlockingVC = nil;
+    _pendingPresentIndex = -1;
+    _pendingPresentAnimated = YES;
+    _pendingPresentCompletion = nil;
   }
   return self;
 }
@@ -86,6 +99,8 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+  [self cancelPendingPresent];
+
   if (_controller && _controller.presentingViewController) {
     [_controller dismissViewControllerAnimated:NO completion:nil];
   }
@@ -94,6 +109,16 @@ using namespace facebook::react;
   _controller = nil;
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+}
+
+- (void)cancelPendingPresent {
+  if (_pendingPresentTimer) {
+    [_pendingPresentTimer invalidate];
+    _pendingPresentTimer = nil;
+  }
+  _pendingPresentBlockingVC = nil;
+  _pendingPresentIndex = -1;
+  _pendingPresentCompletion = nil;
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -225,12 +250,14 @@ using namespace facebook::react;
     }];
     [_controller updateDraggable];
   } else if (_initialDetentIndex >= 0) {
-    [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+    [self presentInitialDetentAtIndex:_initialDetentIndex animated:_initialDetentAnimated];
   }
 }
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+
+  [self cancelPendingPresent];
 
   _lastStateSize = CGSizeZero;
 
@@ -311,7 +338,7 @@ using namespace facebook::react;
     return;
   }
 
-  UIViewController *presentingViewController = [self findPresentingViewController];
+  UIViewController *presentingViewController = [self findTopmostViewController];
   if (!presentingViewController) {
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                          code:1001
@@ -462,27 +489,63 @@ using namespace facebook::react;
 
 #pragma mark - Private Helpers
 
-- (UIViewController *)findPresentingViewController {
+- (UIViewController *)findTopmostViewController {
   UIWindow *keyWindow = [WindowUtil keyWindow];
   if (!keyWindow)
     return nil;
 
-  UIViewController *rootViewController = keyWindow.rootViewController;
-  if (!rootViewController)
-    return nil;
-
-  // Find topmost presented view controller
-  while (rootViewController.presentedViewController) {
-    UIViewController *presented = rootViewController.presentedViewController;
-
-    // Skip TrueSheetViewController if being dismissed
-    if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
-      break;
-    }
-    rootViewController = presented;
+  UIViewController *vc = keyWindow.rootViewController;
+  while (vc.presentedViewController && !vc.presentedViewController.isBeingDismissed) {
+    vc = vc.presentedViewController;
   }
 
-  return rootViewController;
+  return vc;
+}
+
+/**
+ * Presents the sheet at the initial detent index, waiting for any presented view controller to dismiss first.
+ */
+- (void)presentInitialDetentAtIndex:(NSInteger)index animated:(BOOL)animated {
+  if (_controller.isPresented || _controller.isBeingPresented || _pendingPresentBlockingVC)
+    return;
+
+  UIViewController *topmostVC = [self findTopmostViewController];
+  if (!topmostVC)
+    return;
+
+  UIWindow *keyWindow = [WindowUtil keyWindow];
+  UIViewController *rootVC = keyWindow.rootViewController;
+
+  // If there's a presented VC, wait for it to dismiss
+  if (topmostVC != rootVC) {
+    _pendingPresentBlockingVC = topmostVC;
+    _pendingPresentIndex = index;
+    _pendingPresentAnimated = animated;
+    _pendingPresentCompletion = nil;
+
+    _pendingPresentTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
+                                                            target:self
+                                                          selector:@selector(checkPendingPresent)
+                                                          userInfo:nil
+                                                           repeats:YES];
+    return;
+  }
+
+  [self presentAtIndex:index animated:animated completion:nil];
+}
+
+- (void)checkPendingPresent {
+  UIViewController *blockingVC = _pendingPresentBlockingVC;
+  if (blockingVC && blockingVC.view.window && !blockingVC.isBeingDismissed) {
+    return;
+  }
+
+  NSInteger index = _pendingPresentIndex;
+  BOOL animated = _pendingPresentAnimated;
+  TrueSheetCompletionBlock completion = _pendingPresentCompletion;
+
+  [self cancelPendingPresent];
+  [self presentAtIndex:index animated:animated completion:completion];
 }
 
 @end
