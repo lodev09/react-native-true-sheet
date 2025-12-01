@@ -471,12 +471,12 @@ using namespace facebook::react;
   if (!rootViewController)
     return nil;
 
-  // Find topmost presented view controller
+  // Find topmost presented view controller that is not being dismissed
   while (rootViewController.presentedViewController) {
     UIViewController *presented = rootViewController.presentedViewController;
 
-    // Skip TrueSheetViewController if being dismissed
-    if ([presented isKindOfClass:[TrueSheetViewController class]] && presented.isBeingDismissed) {
+    // Skip any view controller that is being dismissed
+    if (presented.isBeingDismissed) {
       break;
     }
     rootViewController = presented;

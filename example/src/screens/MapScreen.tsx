@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -29,6 +29,7 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -51,6 +52,15 @@ export const MapScreen = () => {
     await basicSheet.current?.present(index);
     console.log('basic sheet presented');
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('MapScreen focused, presenting BasicSheet');
+      requestAnimationFrame(() => {
+        presentBasicSheet();
+      });
+    }, [])
+  );
 
   const presentScrollViewSheet = () => {
     setScrollViewLoading(true);
