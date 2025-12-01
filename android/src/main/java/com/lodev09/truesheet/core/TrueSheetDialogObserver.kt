@@ -64,4 +64,15 @@ object TrueSheetDialogObserver {
       presentedSheetStack.clear()
     }
   }
+
+  /**
+   * Returns the topmost presented and visible sheet, or null if none.
+   */
+  @JvmStatic
+  fun getTopmostPresentedSheet(): TrueSheetView? {
+    synchronized(presentedSheetStack) {
+      return presentedSheetStack.lastOrNull()
+        ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
+    }
+  }
 }

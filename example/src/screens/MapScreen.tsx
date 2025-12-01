@@ -46,6 +46,16 @@ export const MapScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
   const [showExtraContent, setShowExtraContent] = useState(false);
+  const [showTestSheet, setShowTestSheet] = useState(false);
+  const blockingSheet = useRef<TrueSheet>(null);
+
+  const testWaitForDismiss = async () => {
+    await blockingSheet.current?.present();
+
+    setTimeout(() => {
+      setShowTestSheet(true);
+    }, 500);
+  };
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -163,6 +173,7 @@ export const MapScreen = () => {
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
+        <Button text="Test Wait for Dismiss" onPress={testWaitForDismiss} />
         <Spacer />
         <Button
           text={showExtraContent ? 'Remove Content' : 'Add Content'}
@@ -177,6 +188,25 @@ export const MapScreen = () => {
         <GestureSheet ref={gestureSheet} />
       </ReanimatedTrueSheet>
       <FlatListSheet ref={flatListSheet} />
+      <TrueSheet ref={blockingSheet} detents={['auto']}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Blocking Sheet</Text>
+          <Text style={styles.subtitle}>Dismiss this sheet. The test sheet should present after.</Text>
+          <Button text="Dismiss" onPress={() => blockingSheet.current?.dismiss()} />
+        </View>
+      </TrueSheet>
+      {showTestSheet && (
+        <TrueSheet
+          detents={['auto']}
+          initialDetentIndex={0}
+          onDidDismiss={() => setShowTestSheet(false)}
+        >
+          <View style={styles.content}>
+            <Text style={styles.title}>Test Sheet</Text>
+            <Text style={styles.subtitle}>This sheet waited for the blocking sheet to dismiss.</Text>
+          </View>
+        </TrueSheet>
+      )}
     </View>
   );
 };

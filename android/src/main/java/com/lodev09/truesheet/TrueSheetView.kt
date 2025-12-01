@@ -55,6 +55,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Flag to prevent multiple pending sheet updates
   private var isSheetUpdatePending: Boolean = false
 
+  // Pending initial presentation state
+  private var pendingPresentIndex: Int = -1
+  private var pendingPresentAnimated: Boolean = true
+
   init {
     reactContext.addLifecycleEventListener(this)
     viewController.delegate = this
@@ -107,11 +111,44 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
       // Present at initial detent after layout pass when content height is available
       if (initialDetentIndex >= 0) {
-        post { present(initialDetentIndex, initialDetentAnimated) { } }
+        post { presentInitialDetent(initialDetentIndex, initialDetentAnimated) }
       }
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
+    }
+  }
+
+  /**
+   * Presents the sheet at the initial detent index, waiting for any presented sheet to dismiss first.
+   */
+  private fun presentInitialDetent(detentIndex: Int, animated: Boolean) {
+    if (viewController.isPresented || pendingPresentIndex >= 0) return
+
+    val topmostSheet = TrueSheetDialogObserver.getTopmostPresentedSheet()
+    if (topmostSheet != null) {
+      // Wait for blocking sheet to dismiss via polling
+      pendingPresentIndex = detentIndex
+      pendingPresentAnimated = animated
+      postDelayed(pendingPresentRunnable, 100)
+      return
+    }
+
+    present(detentIndex, animated) { }
+  }
+
+  private val pendingPresentRunnable = object : Runnable {
+    override fun run() {
+      if (pendingPresentIndex < 0 || viewController.isPresented) return
+
+      if (TrueSheetDialogObserver.getTopmostPresentedSheet() == null) {
+        val index = pendingPresentIndex
+        val animated = pendingPresentAnimated
+        pendingPresentIndex = -1
+        present(index, animated) { }
+      } else {
+        postDelayed(this, 100)
+      }
     }
   }
 
@@ -132,6 +169,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
+    removeCallbacks(pendingPresentRunnable)
+    pendingPresentIndex = -1
     TrueSheetModule.unregisterView(id)
     TrueSheetDialogObserver.removeSheet(this)
 
