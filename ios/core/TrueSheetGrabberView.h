@@ -16,7 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface TrueSheetGrabberView : UIView
 
-+ (CGFloat)preferredHeight;
+/// Adds the grabber view to a parent view with proper constraints
+- (void)addToView:(UIView *)parentView;
 
 @end
 

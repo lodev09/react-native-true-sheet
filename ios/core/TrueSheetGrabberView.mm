@@ -87,14 +87,28 @@ static const CGFloat kContainerHeight = kGrabberHeight + (kGrabberTopMargin * 2)
   ]];
 }
 
+#pragma mark - Public
+
+- (void)addToView:(UIView *)parentView {
+  if (self.superview == parentView) {
+    return;
+  }
+
+  self.translatesAutoresizingMaskIntoConstraints = NO;
+  [parentView addSubview:self];
+
+  [NSLayoutConstraint activateConstraints:@[
+    [self.topAnchor constraintEqualToAnchor:parentView.topAnchor],
+    [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor],
+    [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor],
+    [self.heightAnchor constraintEqualToConstant:kContainerHeight],
+  ]];
+}
+
 #pragma mark - Layout
 
 - (CGSize)intrinsicContentSize {
   return CGSizeMake(UIViewNoIntrinsicMetric, kContainerHeight);
-}
-
-+ (CGFloat)preferredHeight {
-  return kContainerHeight;
 }
 
 @end

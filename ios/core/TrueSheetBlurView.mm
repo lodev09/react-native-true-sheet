@@ -61,52 +61,51 @@
 
 #pragma mark - Public
 
-- (void)applyBlurEffect {
-  if (!self.blurTint || self.blurTint.length == 0) {
-    [self removeBlurEffect];
+- (void)addToView:(UIView *)parentView {
+  if (self.superview == parentView) {
     return;
   }
 
-  // Stop and clear existing animator
-  if (_blurAnimator) {
-    [_blurAnimator stopAnimation:YES];
-    _blurAnimator = nil;
-  }
+  self.frame = parentView.bounds;
+  self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [parentView insertSubview:self atIndex:0];
+}
 
-  // Clear existing effect
-  self.effect = nil;
-
-  UIBlurEffectStyle style = [TrueSheetBlurView blurEffectStyleFromString:self.blurTint];
-  UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
-
+- (void)applyBlurEffect {
   self.userInteractionEnabled = self.blurInteraction;
 
-  // Use animator to control blur intensity
-  __weak __typeof(self) weakSelf = self;
-  _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
-                                                             curve:UIViewAnimationCurveLinear
-                                                        animations:^{
-                                                          weakSelf.effect = blurEffect;
-                                                        }];
-  _blurAnimator.pausesOnCompletion = YES;
+  // Create animator only once
+  if (!_blurAnimator) {
+    UIBlurEffectStyle style = [TrueSheetBlurView blurEffectStyleFromString:self.blurTint];
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
 
-  // Set intensity: nil means system default (100%), otherwise use provided value (0-100)
+    __weak __typeof(self) weakSelf = self;
+    _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
+                                                               curve:UIViewAnimationCurveLinear
+                                                          animations:^{
+                                                            weakSelf.effect = blurEffect;
+                                                          }];
+    _blurAnimator.pausesOnCompletion = YES;
+  }
+
+  // Update intensity
   CGFloat intensity =
     (self.blurIntensity && [self.blurIntensity floatValue] >= 0) ? [self.blurIntensity floatValue] / 100.0 : 1.0;
   _blurAnimator.fractionComplete = intensity;
 }
 
-- (void)removeBlurEffect {
-  if (_blurAnimator) {
-    [_blurAnimator stopAnimation:YES];
-    _blurAnimator = nil;
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+  [super willMoveToSuperview:newSuperview];
+
+  // Clean up when removed from superview
+  if (!newSuperview) {
+    if (_blurAnimator) {
+      [_blurAnimator stopAnimation:YES];
+      _blurAnimator = nil;
+    }
+
+    self.effect = nil;
   }
-
-  self.effect = nil;
-}
-
-- (void)dealloc {
-  [self removeBlurEffect];
 }
 
 @end

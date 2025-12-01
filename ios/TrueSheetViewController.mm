@@ -683,9 +683,6 @@
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
 
-  // Disable native grabber - we use our own custom grabber view
-  sheet.prefersGrabberVisible = NO;
-
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
   } else {
@@ -694,48 +691,34 @@
 
   self.view.backgroundColor = self.backgroundColor;
 
-  // Setup or remove blur effect
+  // Setup blur effect view - recreate only when blurTint changes
+  BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:self.blurTint];
+
+  if (_blurView && blurTintChanged) {
+    [_blurView removeFromSuperview];
+    _blurView = nil;
+  }
+
   if (self.blurTint && self.blurTint.length > 0) {
-    // Create blur view if needed
     if (!_blurView) {
       _blurView = [[TrueSheetBlurView alloc] init];
-      _blurView.frame = self.view.bounds;
-      _blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-      [self.view insertSubview:_blurView atIndex:0];
+      [_blurView addToView:self.view];
     }
-
-    // Update blur properties and apply effect
     _blurView.blurTint = self.blurTint;
     _blurView.blurIntensity = self.blurIntensity;
     _blurView.blurInteraction = self.blurInteraction;
     [_blurView applyBlurEffect];
-  } else {
-    // Remove blur effect
-    if (_blurView) {
-      [_blurView removeBlurEffect];
-      [_blurView removeFromSuperview];
-      _blurView = nil;
-    }
   }
 
   // Setup custom grabber view
-  if (self.grabber && self.draggable) {
-    if (!_grabberView) {
-      _grabberView = [[TrueSheetGrabberView alloc] init];
-      _grabberView.translatesAutoresizingMaskIntoConstraints = NO;
-      [self.view addSubview:_grabberView];
-
-      [NSLayoutConstraint activateConstraints:@[
-        [_grabberView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
-        [_grabberView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-        [_grabberView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
-        [_grabberView.heightAnchor constraintEqualToConstant:[TrueSheetGrabberView preferredHeight]],
-      ]];
-    }
-    _grabberView.hidden = NO;
-  } else {
-    _grabberView.hidden = YES;
+  if (!_grabberView) {
+    _grabberView = [[TrueSheetGrabberView alloc] init];
+    [_grabberView addToView:self.view];
   }
+  
+  // Disable native grabber - we use our own custom grabber view
+  sheet.prefersGrabberVisible = NO;
+  _grabberView.hidden = !(self.grabber && self.draggable);
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
