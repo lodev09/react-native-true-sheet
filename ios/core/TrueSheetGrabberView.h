@@ -25,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Top margin from the sheet edge (default: 5)
 @property (nonatomic, strong, nullable) NSNumber *topMargin;
 
+/// Corner radius of the grabber pill (default: height / 2)
+@property (nonatomic, strong, nullable) NSNumber *cornerRadius;
+
 /// Custom color for the grabber (uses vibrancy effect when nil)
 @property (nonatomic, strong, nullable) UIColor *color;
 

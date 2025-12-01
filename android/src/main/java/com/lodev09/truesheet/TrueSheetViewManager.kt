@@ -122,7 +122,8 @@ class TrueSheetViewManager :
       width = if (options.hasKey("width")) options.getDouble("width").toFloat() else null,
       height = if (options.hasKey("height")) options.getDouble("height").toFloat() else null,
       topMargin = if (options.hasKey("topMargin")) options.getDouble("topMargin").toFloat() else null,
-      color = if (options.hasKey("color")) options.getInt("color") else null
+      cornerRadius = if (options.hasKey("cornerRadius") && options.getDouble("cornerRadius") >= 0) options.getDouble("cornerRadius").toFloat() else null,
+      color = if (options.hasKey("color") && options.getInt("color") != 0) options.getInt("color") else null
     )
     view.setGrabberOptions(grabberOptions)
   }
@@ -178,13 +179,8 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
-  @ReactProp(name = "blurIntensity", defaultDouble = 1.0)
-  override fun setBlurIntensity(view: TrueSheetView, value: Double) {
-    // iOS-specific prop - no-op on Android
-  }
-
-  @ReactProp(name = "blurInteraction", defaultBoolean = false)
-  override fun setBlurInteraction(view: TrueSheetView, value: Boolean) {
+  @ReactProp(name = "blurOptions")
+  override fun setBlurOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
   }
 

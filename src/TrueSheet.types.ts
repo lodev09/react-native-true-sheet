@@ -62,6 +62,12 @@ export interface GrabberOptions {
    */
   topMargin?: number;
   /**
+   * The corner radius of the grabber pill.
+   *
+   * @default height / 2
+   */
+  cornerRadius?: number;
+  /**
    * The color of the grabber.
    * Uses native vibrancy/material styling when not provided.
    */

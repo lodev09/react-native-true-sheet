@@ -16,6 +16,7 @@ data class GrabberOptions(
   val width: Float? = null,
   val height: Float? = null,
   val topMargin: Float? = null,
+  val cornerRadius: Float? = null,
   val color: Int? = null
 )
 
@@ -45,6 +46,9 @@ class TrueSheetGrabberView(
   private val grabberTopMargin: Float
     get() = options?.topMargin ?: DEFAULT_TOP_MARGIN
 
+  private val grabberCornerRadius: Float
+    get() = options?.cornerRadius ?: (grabberHeight / 2)
+
   private val grabberColor: Int
     get() = options?.color ?: DEFAULT_COLOR
 
@@ -59,7 +63,7 @@ class TrueSheetGrabberView(
 
     background = GradientDrawable().apply {
       shape = GradientDrawable.RECTANGLE
-      cornerRadius = (grabberHeight / 2).dpToPx()
+      cornerRadius = grabberCornerRadius.dpToPx()
       setColor(grabberColor)
     }
 

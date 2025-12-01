@@ -11,6 +11,7 @@ type GrabberOptionsType = Readonly<{
   width?: Double;
   height?: Double;
   topMargin?: Double;
+  cornerRadius?: WithDefault<Double, -1>;
   color?: Int32;
 }>;
 

@@ -40,6 +40,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   return _topMargin ? [_topMargin floatValue] : kDefaultGrabberTopMargin;
 }
 
+- (CGFloat)effectiveCornerRadius {
+  return _cornerRadius ? [_cornerRadius floatValue] : [self effectiveHeight] / 2.0;
+}
+
 #pragma mark - Setup
 
 - (void)setupView {
@@ -82,11 +86,13 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 
   // Position the grabber: centered horizontally, with top margin
   self.frame = CGRectMake((parentWidth - width) / 2.0, topMargin, width, height);
-  self.layer.cornerRadius = height / 2.0;
+  self.layer.cornerRadius = [self effectiveCornerRadius];
 
   // Update vibrancy and fill view frames
   _vibrancyView.frame = self.bounds;
   _fillView.frame = _vibrancyView.contentView.bounds;
+
+  NSLog(@"TrueSheetGrabberView: _cornerRadius = %@, effective = %f", _cornerRadius, [self effectiveCornerRadius]);
 
   // Apply custom color to vibrancy view
   NSLog(@"TrueSheetGrabberView: _color = %@", _color);
