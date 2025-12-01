@@ -300,10 +300,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnCancelListener {
+      delegate?.viewControllerWillDismiss()
+
       // Notify parent sheet that it is about to regain focus
       parentSheetView?.viewControllerWillFocus()
-
-      delegate?.viewControllerWillDismiss()
     }
 
     dialog.setOnDismissListener {

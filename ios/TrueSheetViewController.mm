@@ -193,19 +193,19 @@
     _isPresented = NO;
     _activeDetentIndex = -1;
 
-    // Notify the parent sheet (if any) that it is about to regain focus
-    if (_parentSheetController) {
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
-        [_parentSheetController.delegate viewControllerWillFocus];
-      }
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+      [self.delegate viewControllerWillDismiss];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
     });
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
-      [self.delegate viewControllerWillDismiss];
+    // Notify the parent sheet (if any) that it is about to regain focus
+    if (_parentSheetController) {
+      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
+        [_parentSheetController.delegate viewControllerWillFocus];
+      }
     }
   }
 }
