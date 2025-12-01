@@ -4,13 +4,12 @@ import type { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Spacer } from '../components';
-import { BasicSheet, PromptSheet, ScrollViewSheet } from '../components/sheets';
+import { PromptSheet, FlatListSheet } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
 
 export const ModalScreen = () => {
-  const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
-  const scrollViewSheet = useRef<TrueSheet>(null);
+  const flatlistSheet = useRef<TrueSheet>(null);
 
   const navigation = useAppNavigation();
 
@@ -23,16 +22,14 @@ export const ModalScreen = () => {
         </Text>
       </View>
 
-      <Button text="TrueSheet View" onPress={() => basicSheet.current?.present()} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-      <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
       <Spacer />
       <Button text="Navigate Test" onPress={() => navigation.navigate('Test')} />
       <Button text="Dimiss Modal" onPress={() => navigation.goBack()} />
 
-      <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
-      <ScrollViewSheet ref={scrollViewSheet} />
+      <FlatListSheet ref={flatlistSheet} />
     </View>
   );
 };

@@ -759,8 +759,14 @@
 }
 
 - (UIViewController *)newPresentingViewController {
-  // Allow react-native-screens to present modals on top of the sheet's content
-  return self;
+  // Find the topmost TrueSheetViewController in the chain
+  // This handles cases where this sheet is presenting another sheet (child sheet)
+  UIViewController *topmost = self;
+  while (topmost.presentedViewController != nil && !topmost.presentedViewController.isBeingDismissed &&
+         [topmost.presentedViewController isKindOfClass:[TrueSheetViewController class]]) {
+    topmost = topmost.presentedViewController;
+  }
+  return topmost;
 }
 #endif
 

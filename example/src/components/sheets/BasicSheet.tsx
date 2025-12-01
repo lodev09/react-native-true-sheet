@@ -7,6 +7,7 @@ import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { Spacer } from '../Spacer';
+import { useAppNavigation } from '../../hooks';
 
 interface BasicSheetProps extends TrueSheetProps {}
 
@@ -14,6 +15,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
+  const navigation = useAppNavigation();
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -108,6 +110,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Spacer />
       <Button text="Present Child Sheet" onPress={presentChild} />
       <Button text="Present PromptSheet" onPress={presentPromptSheet} />
+      <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
       <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
 

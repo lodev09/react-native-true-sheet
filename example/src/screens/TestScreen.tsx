@@ -4,22 +4,21 @@ import type { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, SPACING } from '../utils';
 import { Button } from '../components';
-import { BasicSheet, PromptSheet, ScrollViewSheet } from '../components/sheets';
+import { BasicSheet, PromptSheet, FlatListSheet } from '../components/sheets';
 
 export const TestScreen = () => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
-  const scrollViewSheet = useRef<TrueSheet>(null);
+  const flatListSheet = useRef<TrueSheet>(null);
 
   return (
     <View style={styles.content}>
-      <Button text="TrueSheet View" onPress={() => basicSheet.current?.present()} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-      <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
 
       <BasicSheet ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
-      <ScrollViewSheet ref={scrollViewSheet} />
+      <FlatListSheet ref={flatListSheet} />
     </View>
   );
 };
