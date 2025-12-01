@@ -383,6 +383,31 @@ Version 3 introduces new props for fine-grained control over the blur effect on 
 
 See the [Configuration reference](/reference/configuration#blurintensity) for more details.
 
+### 9. React Native Screens Integration
+
+Version 3 works seamlessly with React Navigation! You can navigate to other screens from within a sheet and the sheet will remain visible in the background when presenting modals on top.
+
+:::note
+This requires changes to `react-native-screens`. There is a [pending PR](https://github.com/software-mansion/react-native-screens/pull/3415) that adds support for this. In the meantime, you can apply the patch from the [example app](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch).
+:::
+
+```tsx
+const sheet = useRef<TrueSheet>(null)
+
+const navigate = () => {
+  // Navigate directly - no need to dismiss first!
+  navigation.navigate('SomeScreen')
+}
+
+return (
+  <TrueSheet ref={sheet}>
+    <Button onPress={navigate} title="Navigate to SomeScreen" />
+  </TrueSheet>
+)
+```
+
+See the [React Navigation guide](/guides/navigation) for more details.
+
 ## Step-by-Step Migration
 
 1. **Enable New Architecture** in your React Native app (see above)

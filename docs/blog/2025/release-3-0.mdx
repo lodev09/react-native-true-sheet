@@ -177,6 +177,16 @@ TrueSheet.present('my-sheet')
 
 See the [Global Methods guide](/guides/global-methods) for more details.
 
+### React Native Screens Integration
+
+Navigate to other screens from within a sheet without any issues! The sheet will remain visible in the background when presenting modals on top.
+
+:::note
+This requires changes to `react-native-screens`. There is a [pending PR](https://github.com/software-mansion/react-native-screens/pull/3415) that adds support for this. In the meantime, you can apply the patch from the [example app](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch).
+:::
+
+See the [React Navigation guide](/guides/navigation) for more details.
+
 ## Breaking Changes
 
 Heads up! Version 3 includes some breaking changes:
