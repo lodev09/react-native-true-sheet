@@ -52,8 +52,7 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 
   // Create blur effect for vibrancy base
   UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial];
-  UIVibrancyEffect *vibrancyEffect = [UIVibrancyEffect effectForBlurEffect:blurEffect
-                                                                     style:UIVibrancyEffectStyleFill];
+  UIVibrancyEffect *vibrancyEffect = [UIVibrancyEffect effectForBlurEffect:blurEffect style:UIVibrancyEffectStyleFill];
 
   // Create the vibrancy view that fills this view
   _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:vibrancyEffect];
