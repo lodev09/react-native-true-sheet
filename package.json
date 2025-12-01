@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "The true native bottom sheet experience for your React Native Apps.",
   "source": "./src/index.ts",
   "main": "./lib/module/index.js",
@@ -153,7 +153,10 @@
       "publish": true
     },
     "hooks": {
-      "before:init": ["yarn tidy", "yarn test"]
+      "before:init": [
+        "yarn tidy",
+        "yarn test"
+      ]
     },
     "github": {
       "release": true,
