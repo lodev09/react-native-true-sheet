@@ -16,8 +16,23 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface TrueSheetGrabberView : UIView
 
+/// Width of the grabber pill (default: 36)
+@property (nonatomic, strong, nullable) NSNumber *grabberWidth;
+
+/// Height of the grabber pill (default: 5)
+@property (nonatomic, strong, nullable) NSNumber *grabberHeight;
+
+/// Top margin from the sheet edge (default: 5)
+@property (nonatomic, strong, nullable) NSNumber *topMargin;
+
+/// Custom color for the grabber (uses vibrancy effect when nil)
+@property (nonatomic, strong, nullable) UIColor *color;
+
 /// Adds the grabber view to a parent view with proper constraints
 - (void)addToView:(UIView *)parentView;
+
+/// Applies the current configuration to the grabber view
+- (void)applyConfiguration;
 
 @end
 

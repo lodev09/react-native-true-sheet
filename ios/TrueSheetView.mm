@@ -136,6 +136,33 @@ using namespace facebook::react;
   }
 
   _controller.grabber = newProps.grabber;
+
+  // Grabber options - check if any non-default values are set
+  const auto &grabberOpts = newProps.grabberOptions;
+  BOOL hasColor = grabberOpts.color != SharedColor();
+  BOOL hasGrabberOptions = grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 || hasColor;
+
+  if (hasGrabberOptions) {
+    NSMutableDictionary *options = [NSMutableDictionary dictionary];
+
+    if (grabberOpts.width > 0) {
+      options[@"width"] = @(grabberOpts.width);
+    }
+    if (grabberOpts.height > 0) {
+      options[@"height"] = @(grabberOpts.height);
+    }
+    if (grabberOpts.topMargin > 0) {
+      options[@"topMargin"] = @(grabberOpts.topMargin);
+    }
+    if (hasColor) {
+      options[@"color"] = RCTUIColorFromSharedColor(grabberOpts.color);
+    }
+
+    _controller.grabberOptions = options;
+  } else {
+    _controller.grabberOptions = nil;
+  }
+
   _controller.pageSizing = newProps.pageSizing;
   _controller.modalInPresentation = !newProps.dismissible;
   _controller.draggable = newProps.draggable;

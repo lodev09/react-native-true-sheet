@@ -51,6 +51,31 @@ Blur tint that is mapped into native values in IOS.
 | `"system-thick-material-dark"` |
 | `"system-chrome-material-dark"` |
 
+## `GrabberOptions`
+
+Options for customizing the grabber (drag handle) appearance.
+
+```tsx
+<TrueSheet
+  grabber
+  grabberOptions={{
+    width: 48,
+    height: 6,
+    topMargin: 10,
+    color: '#FF0000',
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `width` | `number` | The width of the grabber pill. | iOS: `36`, Android: `32` |
+| `height` | `number` | The height of the grabber pill. | iOS: `5`, Android: `4` |
+| `topMargin` | `number` | The top margin from the sheet edge. | iOS: `5`, Android: `16` |
+| `color` | `ColorValue` | The color of the grabber. Uses native styling when not provided. | |
+
 ## `DetentInfoEventPayload`
 
 `Object` that comes with most sheet events.

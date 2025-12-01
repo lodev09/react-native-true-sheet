@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ReactStylesDiffMap
@@ -13,6 +14,7 @@ import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.TrueSheetViewManagerDelegate
 import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
+import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.events.*
 
 /**
@@ -107,6 +109,22 @@ class TrueSheetViewManager :
   @ReactProp(name = "grabber", defaultBoolean = true)
   override fun setGrabber(view: TrueSheetView, grabber: Boolean) {
     view.setGrabber(grabber)
+  }
+
+  @ReactProp(name = "grabberOptions")
+  override fun setGrabberOptions(view: TrueSheetView, options: ReadableMap?) {
+    if (options == null) {
+      view.setGrabberOptions(null)
+      return
+    }
+
+    val grabberOptions = GrabberOptions(
+      width = if (options.hasKey("width")) options.getDouble("width").toFloat() else null,
+      height = if (options.hasKey("height")) options.getDouble("height").toFloat() else null,
+      topMargin = if (options.hasKey("topMargin")) options.getDouble("topMargin").toFloat() else null,
+      color = if (options.hasKey("color")) options.getInt("color") else null
+    )
+    view.setGrabberOptions(grabberOptions)
   }
 
   @ReactProp(name = "dismissible", defaultBoolean = true)

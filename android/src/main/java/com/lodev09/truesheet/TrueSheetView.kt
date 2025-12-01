@@ -13,6 +13,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
+import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetDialogObserver
 import com.lodev09.truesheet.events.*
 
@@ -279,6 +280,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setGrabber(grabber: Boolean) {
     viewController.grabber = grabber
+  }
+
+  fun setGrabberOptions(options: GrabberOptions?) {
+    viewController.grabberOptions = options
   }
 
   fun setDetents(newDetents: MutableList<Double>) {

@@ -164,7 +164,35 @@ Shows a native grabber (or drag handle) on the sheet.
 | `boolean` | `true` | ✅ | ✅ |
 
 :::info
-iOS uses the native `UISheetPresentationController` grabber, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32x4dp, centered, with the standard drag handle color).
+iOS uses the native `UISheetPresentationController` grabber by default, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32x4dp, centered, with the standard drag handle color).
+
+When [`grabberOptions`](#grabberoptions) is provided, iOS uses a custom grabber view instead of the system default.
+:::
+
+## `grabberOptions`
+
+Options for customizing the grabber appearance. Only applies when [`grabber`](#grabber) is `true`.
+
+| Type | Default | 🍎 | 🤖 |
+| - | - | - | - |
+| [`GrabberOptions`](/reference/types#grabberoptions) | | ✅ | ✅ |
+
+```tsx
+<TrueSheet
+  grabber
+  grabberOptions={{
+    width: 48,
+    height: 6,
+    topMargin: 10,
+    color: '#FF0000',
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+:::info
+On iOS, when `grabberOptions` is not provided, the native system grabber is used. When any option is provided, a custom grabber view with vibrancy effect is rendered instead.
 :::
 
 ## `header`

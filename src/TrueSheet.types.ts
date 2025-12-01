@@ -40,6 +40,35 @@ export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
 
 /**
+ * Options for customizing the grabber (drag handle) appearance.
+ */
+export interface GrabberOptions {
+  /**
+   * The width of the grabber pill.
+   *
+   * @default iOS: 36, Android: 32
+   */
+  width?: number;
+  /**
+   * The height of the grabber pill.
+   *
+   * @default iOS: 5, Android: 4
+   */
+  height?: number;
+  /**
+   * The top margin of the grabber from the sheet edge.
+   *
+   * @default iOS: 5, Android: 16
+   */
+  topMargin?: number;
+  /**
+   * The color of the grabber.
+   * Uses native vibrancy/material styling when not provided.
+   */
+  color?: ColorValue;
+}
+
+/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios
@@ -192,6 +221,12 @@ export interface TrueSheetProps extends ViewProps {
    * @default true
    */
   grabber?: boolean;
+
+  /**
+   * Options for customizing the grabber appearance.
+   * Only applies when `grabber` is `true`.
+   */
+  grabberOptions?: GrabberOptions;
 
   /**
    * Controls the sheet presentation style on iPad.

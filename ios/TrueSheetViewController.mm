@@ -125,6 +125,11 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+
+  // Create custom grabber view (hidden by default, shown when grabberOptions is set)
+  _grabberView = [[TrueSheetGrabberView alloc] init];
+  _grabberView.hidden = YES;
+  [_grabberView addToView:self.view];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -710,15 +715,25 @@
     [_blurView applyBlurEffect];
   }
 
-  // Setup custom grabber view
-  if (!_grabberView) {
-    _grabberView = [[TrueSheetGrabberView alloc] init];
-    [_grabberView addToView:self.view];
+  // Setup grabber
+  BOOL showGrabber = self.grabber && self.draggable;
+
+  if (self.grabberOptions) {
+    // Use custom grabber view when options are provided
+    sheet.prefersGrabberVisible = NO;
+
+    NSDictionary *options = self.grabberOptions;
+    _grabberView.grabberWidth = options[@"width"];
+    _grabberView.grabberHeight = options[@"height"];
+    _grabberView.topMargin = options[@"topMargin"];
+    _grabberView.color = options[@"color"];
+    [_grabberView applyConfiguration];
+    _grabberView.hidden = !showGrabber;
+  } else {
+    // Use system default grabber when no options provided
+    sheet.prefersGrabberVisible = showGrabber;
+    _grabberView.hidden = YES;
   }
-  
-  // Disable native grabber - we use our own custom grabber view
-  sheet.prefersGrabberVisible = NO;
-  _grabberView.hidden = !(self.grabber && self.draggable);
 }
 
 #pragma mark - UISheetPresentationControllerDelegate

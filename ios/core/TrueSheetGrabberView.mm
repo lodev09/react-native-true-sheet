@@ -8,14 +8,13 @@
 
 #import "TrueSheetGrabberView.h"
 
-static const CGFloat kGrabberWidth = 36.0;
-static const CGFloat kGrabberHeight = 5.0;
-static const CGFloat kGrabberTopMargin = 5.0;
-static const CGFloat kContainerHeight = kGrabberHeight + (kGrabberTopMargin * 2);
+static const CGFloat kDefaultGrabberWidth = 36.0;
+static const CGFloat kDefaultGrabberHeight = 5.0;
+static const CGFloat kDefaultGrabberTopMargin = 5.0;
 
 @implementation TrueSheetGrabberView {
-  UIVisualEffectView *_blurView;
-  UIView *_grabberPill;
+  UIVisualEffectView *_vibrancyView;
+  UIView *_fillView;
 }
 
 #pragma mark - Initialization
@@ -27,64 +26,41 @@ static const CGFloat kContainerHeight = kGrabberHeight + (kGrabberTopMargin * 2)
   return self;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame {
-  if (self = [super initWithFrame:frame]) {
-    [self setupView];
-  }
-  return self;
+#pragma mark - Computed Properties
+
+- (CGFloat)effectiveWidth {
+  return _grabberWidth ? [_grabberWidth floatValue] : kDefaultGrabberWidth;
+}
+
+- (CGFloat)effectiveHeight {
+  return _grabberHeight ? [_grabberHeight floatValue] : kDefaultGrabberHeight;
+}
+
+- (CGFloat)effectiveTopMargin {
+  return _topMargin ? [_topMargin floatValue] : kDefaultGrabberTopMargin;
 }
 
 #pragma mark - Setup
 
 - (void)setupView {
   self.userInteractionEnabled = NO;
-
-  // Create the pill container (clips the blur effect like _UIGrabber does)
-  _grabberPill = [[UIView alloc] init];
-  _grabberPill.translatesAutoresizingMaskIntoConstraints = NO;
-  _grabberPill.layer.cornerRadius = kGrabberHeight / 2.0;
-  _grabberPill.clipsToBounds = YES;
-  [self addSubview:_grabberPill];
+  self.clipsToBounds = YES;
 
   // Create blur effect for vibrancy base
   UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial];
-
-  // Create vibrancy effect with tertiary label style (more opaque, greyish)
   UIVibrancyEffect *vibrancyEffect = [UIVibrancyEffect effectForBlurEffect:blurEffect
                                                                      style:UIVibrancyEffectStyleFill];
 
-  // Create the vibrancy view (larger than pill, like native 36x15)
-  _blurView = [[UIVisualEffectView alloc] initWithEffect:vibrancyEffect];
-  _blurView.translatesAutoresizingMaskIntoConstraints = NO;
-  [_grabberPill addSubview:_blurView];
+  // Create the vibrancy view that fills this view
+  _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:vibrancyEffect];
+  _vibrancyView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [self addSubview:_vibrancyView];
 
   // Add a fill view inside vibrancy contentView
-  UIView *fillView = [[UIView alloc] init];
-  fillView.translatesAutoresizingMaskIntoConstraints = NO;
-  fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.4];
-  [_blurView.contentView addSubview:fillView];
-
-  [NSLayoutConstraint activateConstraints:@[
-    [fillView.topAnchor constraintEqualToAnchor:_blurView.contentView.topAnchor],
-    [fillView.leadingAnchor constraintEqualToAnchor:_blurView.contentView.leadingAnchor],
-    [fillView.trailingAnchor constraintEqualToAnchor:_blurView.contentView.trailingAnchor],
-    [fillView.bottomAnchor constraintEqualToAnchor:_blurView.contentView.bottomAnchor],
-  ]];
-
-  // Setup constraints
-  [NSLayoutConstraint activateConstraints:@[
-    // Pill container centered
-    [_grabberPill.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
-    [_grabberPill.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-    [_grabberPill.widthAnchor constraintEqualToConstant:kGrabberWidth],
-    [_grabberPill.heightAnchor constraintEqualToConstant:kGrabberHeight],
-
-    // Blur view larger and offset (like native 36x15 at {0, -5})
-    [_blurView.centerXAnchor constraintEqualToAnchor:_grabberPill.centerXAnchor],
-    [_blurView.centerYAnchor constraintEqualToAnchor:_grabberPill.centerYAnchor],
-    [_blurView.widthAnchor constraintEqualToConstant:kGrabberWidth],
-    [_blurView.heightAnchor constraintEqualToConstant:15.0],
-  ]];
+  _fillView = [[UIView alloc] init];
+  _fillView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.4];
+  [_vibrancyView.contentView addSubview:_fillView];
 }
 
 #pragma mark - Public
@@ -94,21 +70,31 @@ static const CGFloat kContainerHeight = kGrabberHeight + (kGrabberTopMargin * 2)
     return;
   }
 
-  self.translatesAutoresizingMaskIntoConstraints = NO;
   [parentView addSubview:self];
-
-  [NSLayoutConstraint activateConstraints:@[
-    [self.topAnchor constraintEqualToAnchor:parentView.topAnchor],
-    [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor],
-    [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor],
-    [self.heightAnchor constraintEqualToConstant:kContainerHeight],
-  ]];
+  [self applyConfiguration];
 }
 
-#pragma mark - Layout
+- (void)applyConfiguration {
+  CGFloat width = [self effectiveWidth];
+  CGFloat height = [self effectiveHeight];
+  CGFloat topMargin = [self effectiveTopMargin];
+  CGFloat parentWidth = self.superview ? self.superview.bounds.size.width : UIScreen.mainScreen.bounds.size.width;
 
-- (CGSize)intrinsicContentSize {
-  return CGSizeMake(UIViewNoIntrinsicMetric, kContainerHeight);
+  // Position the grabber: centered horizontally, with top margin
+  self.frame = CGRectMake((parentWidth - width) / 2.0, topMargin, width, height);
+  self.layer.cornerRadius = height / 2.0;
+
+  // Update vibrancy and fill view frames
+  _vibrancyView.frame = self.bounds;
+  _fillView.frame = _vibrancyView.contentView.bounds;
+
+  // Apply custom color to fill view while keeping vibrancy effect
+  _fillView.backgroundColor = _color ?: [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
+}
+
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [self applyConfiguration];
 }
 
 @end

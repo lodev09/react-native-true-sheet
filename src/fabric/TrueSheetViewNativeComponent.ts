@@ -1,4 +1,4 @@
-import type { ViewProps } from 'react-native';
+import type { ColorValue, ViewProps } from 'react-native';
 import type {
   DirectEventHandler,
   Double,
@@ -6,6 +6,13 @@ import type {
   WithDefault,
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
+
+type GrabberOptionsType = Readonly<{
+  width?: Double;
+  height?: Double;
+  topMargin?: Double;
+  color?: ColorValue;
+}>;
 
 export interface DetentInfoEventPayload {
   index: Int32;
@@ -41,6 +48,7 @@ export interface NativeProps extends ViewProps {
 
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
+  grabberOptions?: GrabberOptionsType;
   dismissible?: WithDefault<boolean, true>;
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
