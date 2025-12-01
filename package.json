@@ -41,7 +41,7 @@
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objclint.sh && scripts/ktlint.sh",
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
-    "release": "yarn tidy && release-it --only-version",
+    "release": "release-it",
     "release:beta": "yarn release --preRelease=beta"
   },
   "keywords": [
@@ -151,6 +151,9 @@
     },
     "npm": {
       "publish": true
+    },
+    "hooks": {
+      "before:init": ["yarn tidy", "yarn test"]
     },
     "github": {
       "release": true,
