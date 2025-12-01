@@ -9,6 +9,7 @@
 #import "TrueSheetViewController.h"
 #import "TrueSheetContentView.h"
 #import "core/TrueSheetBlurView.h"
+#import "core/TrueSheetGrabberView.h"
 #import "utils/GestureUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -29,6 +30,9 @@
 
   // Blur effect view
   TrueSheetBlurView *_blurView;
+
+  // Custom grabber view
+  TrueSheetGrabberView *_grabberView;
 
   // Resolved detent positions (Y coordinate when sheet rests at each detent)
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
@@ -678,7 +682,9 @@
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
-  sheet.prefersGrabberVisible = self.grabber && self.draggable;
+
+  // Disable native grabber - we use our own custom grabber view
+  sheet.prefersGrabberVisible = NO;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
@@ -710,6 +716,25 @@
       [_blurView removeFromSuperview];
       _blurView = nil;
     }
+  }
+
+  // Setup custom grabber view
+  if (self.grabber && self.draggable) {
+    if (!_grabberView) {
+      _grabberView = [[TrueSheetGrabberView alloc] init];
+      _grabberView.translatesAutoresizingMaskIntoConstraints = NO;
+      [self.view addSubview:_grabberView];
+
+      [NSLayoutConstraint activateConstraints:@[
+        [_grabberView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [_grabberView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [_grabberView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [_grabberView.heightAnchor constraintEqualToConstant:[TrueSheetGrabberView preferredHeight]],
+      ]];
+    }
+    _grabberView.hidden = NO;
+  } else {
+    _grabberView.hidden = YES;
   }
 }
 
