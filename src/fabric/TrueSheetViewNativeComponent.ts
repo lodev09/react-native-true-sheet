@@ -7,6 +7,19 @@ import type {
 } from 'react-native/Libraries/Types/CodegenTypes';
 import { codegenNativeComponent } from 'react-native';
 
+type GrabberOptionsType = Readonly<{
+  width?: Double;
+  height?: Double;
+  topMargin?: Double;
+  cornerRadius?: WithDefault<Double, -1>;
+  color?: Int32;
+}>;
+
+type BlurOptionsType = Readonly<{
+  intensity?: WithDefault<Double, -1>;
+  interaction?: WithDefault<boolean, true>;
+}>;
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -35,12 +48,12 @@ export interface NativeProps extends ViewProps {
   blurTint?: WithDefault<string, ''>;
   keyboardMode?: WithDefault<'resize' | 'pan', 'resize'>;
 
-  // Blur properties - use -1 as default to indicate "not set" (use system default)
-  blurIntensity?: WithDefault<Double, -1>;
-  blurInteraction?: WithDefault<boolean, true>;
+  // Blur options
+  blurOptions?: BlurOptionsType;
 
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
+  grabberOptions?: GrabberOptionsType;
   dismissible?: WithDefault<boolean, true>;
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;

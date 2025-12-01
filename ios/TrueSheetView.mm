@@ -121,11 +121,10 @@ using namespace facebook::react;
   // Blur tint
   _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
 
-  // Blur intensity (-1 means use system default)
-  _controller.blurIntensity = newProps.blurIntensity >= 0 ? @(newProps.blurIntensity) : nil;
-
-  // Blur interaction
-  _controller.blurInteraction = newProps.blurInteraction;
+  // Blur options
+  const auto &blurOpts = newProps.blurOptions;
+  _controller.blurIntensity = blurOpts.intensity >= 0 ? @(blurOpts.intensity) : nil;
+  _controller.blurInteraction = blurOpts.interaction;
 
   // Corner radius
   _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
@@ -136,6 +135,36 @@ using namespace facebook::react;
   }
 
   _controller.grabber = newProps.grabber;
+
+  // Grabber options - check if any non-default values are set
+  const auto &grabberOpts = newProps.grabberOptions;
+  BOOL hasGrabberOptions = grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 ||
+    grabberOpts.cornerRadius >= 0 || grabberOpts.color != 0;
+
+  if (hasGrabberOptions) {
+    NSMutableDictionary *options = [NSMutableDictionary dictionary];
+
+    if (grabberOpts.width > 0) {
+      options[@"width"] = @(grabberOpts.width);
+    }
+    if (grabberOpts.height > 0) {
+      options[@"height"] = @(grabberOpts.height);
+    }
+    if (grabberOpts.topMargin > 0) {
+      options[@"topMargin"] = @(grabberOpts.topMargin);
+    }
+    if (grabberOpts.cornerRadius >= 0) {
+      options[@"cornerRadius"] = @(grabberOpts.cornerRadius);
+    }
+    if (grabberOpts.color != 0) {
+      options[@"color"] = RCTUIColorFromSharedColor(SharedColor(grabberOpts.color));
+    }
+
+    _controller.grabberOptions = options;
+  } else {
+    _controller.grabberOptions = nil;
+  }
+
   _controller.pageSizing = newProps.pageSizing;
   _controller.modalInPresentation = !newProps.dismissible;
   _controller.draggable = newProps.draggable;

@@ -24,6 +24,7 @@ import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.utils.ScreenUtils
@@ -139,6 +140,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmed = true
   var dimmedDetentIndex = 0
   var grabber: Boolean = true
+  var grabberOptions: GrabberOptions? = null
   var sheetCornerRadius: Float = -1f
   var sheetBackgroundColor: Int = 0
   var edgeToEdgeFullScreen: Boolean = false
@@ -579,7 +581,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (!grabber || !draggable) return
 
-    val grabberView = TrueSheetGrabberView(reactContext).apply {
+    val grabberView = TrueSheetGrabberView(reactContext, grabberOptions).apply {
       tag = GRABBER_TAG
     }
 

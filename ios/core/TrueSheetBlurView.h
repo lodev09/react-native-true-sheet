@@ -16,8 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
 
+/// Adds the blur view to a parent view with proper constraints
+- (void)addToView:(UIView *)parentView;
+
 - (void)applyBlurEffect;
-- (void)removeBlurEffect;
 
 @end
 

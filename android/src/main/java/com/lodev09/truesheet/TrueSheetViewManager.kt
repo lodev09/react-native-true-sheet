@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.view.WindowManager
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ReactStylesDiffMap
@@ -13,6 +14,7 @@ import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.TrueSheetViewManagerDelegate
 import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
+import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.events.*
 
 /**
@@ -109,6 +111,23 @@ class TrueSheetViewManager :
     view.setGrabber(grabber)
   }
 
+  @ReactProp(name = "grabberOptions")
+  override fun setGrabberOptions(view: TrueSheetView, options: ReadableMap?) {
+    if (options == null) {
+      view.setGrabberOptions(null)
+      return
+    }
+
+    val grabberOptions = GrabberOptions(
+      width = if (options.hasKey("width")) options.getDouble("width").toFloat() else null,
+      height = if (options.hasKey("height")) options.getDouble("height").toFloat() else null,
+      topMargin = if (options.hasKey("topMargin")) options.getDouble("topMargin").toFloat() else null,
+      cornerRadius = if (options.hasKey("cornerRadius") && options.getDouble("cornerRadius") >= 0) options.getDouble("cornerRadius").toFloat() else null,
+      color = if (options.hasKey("color") && options.getInt("color") != 0) options.getInt("color") else null
+    )
+    view.setGrabberOptions(grabberOptions)
+  }
+
   @ReactProp(name = "dismissible", defaultBoolean = true)
   override fun setDismissible(view: TrueSheetView, dismissible: Boolean) {
     view.setDismissible(dismissible)
@@ -160,13 +179,8 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
-  @ReactProp(name = "blurIntensity", defaultDouble = 1.0)
-  override fun setBlurIntensity(view: TrueSheetView, value: Double) {
-    // iOS-specific prop - no-op on Android
-  }
-
-  @ReactProp(name = "blurInteraction", defaultBoolean = false)
-  override fun setBlurInteraction(view: TrueSheetView, value: Boolean) {
+  @ReactProp(name = "blurOptions")
+  override fun setBlurOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
   }
 

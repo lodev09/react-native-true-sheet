@@ -9,6 +9,7 @@
 #import "TrueSheetViewController.h"
 #import "TrueSheetContentView.h"
 #import "core/TrueSheetBlurView.h"
+#import "core/TrueSheetGrabberView.h"
 #import "utils/GestureUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -29,6 +30,9 @@
 
   // Blur effect view
   TrueSheetBlurView *_blurView;
+
+  // Custom grabber view
+  TrueSheetGrabberView *_grabberView;
 
   // Resolved detent positions (Y coordinate when sheet rests at each detent)
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
@@ -121,6 +125,11 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+
+  // Create custom grabber view (hidden by default, shown when grabberOptions is set)
+  _grabberView = [[TrueSheetGrabberView alloc] init];
+  _grabberView.hidden = YES;
+  [_grabberView addToView:self.view];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -678,7 +687,6 @@
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
-  sheet.prefersGrabberVisible = self.grabber && self.draggable;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
@@ -688,28 +696,44 @@
 
   self.view.backgroundColor = self.backgroundColor;
 
-  // Setup or remove blur effect
+  // Setup blur effect view - recreate only when blurTint changes
+  BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:self.blurTint];
+
+  if (_blurView && blurTintChanged) {
+    [_blurView removeFromSuperview];
+    _blurView = nil;
+  }
+
   if (self.blurTint && self.blurTint.length > 0) {
-    // Create blur view if needed
     if (!_blurView) {
       _blurView = [[TrueSheetBlurView alloc] init];
-      _blurView.frame = self.view.bounds;
-      _blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-      [self.view insertSubview:_blurView atIndex:0];
+      [_blurView addToView:self.view];
     }
-
-    // Update blur properties and apply effect
     _blurView.blurTint = self.blurTint;
     _blurView.blurIntensity = self.blurIntensity;
     _blurView.blurInteraction = self.blurInteraction;
     [_blurView applyBlurEffect];
+  }
+
+  // Setup grabber
+  BOOL showGrabber = self.grabber && self.draggable;
+
+  if (self.grabberOptions) {
+    // Use custom grabber view when options are provided
+    sheet.prefersGrabberVisible = NO;
+
+    NSDictionary *options = self.grabberOptions;
+    _grabberView.grabberWidth = options[@"width"];
+    _grabberView.grabberHeight = options[@"height"];
+    _grabberView.topMargin = options[@"topMargin"];
+    _grabberView.cornerRadius = options[@"cornerRadius"];
+    _grabberView.color = options[@"color"];
+    [_grabberView applyConfiguration];
+    _grabberView.hidden = !showGrabber;
   } else {
-    // Remove blur effect
-    if (_blurView) {
-      [_blurView removeBlurEffect];
-      [_blurView removeFromSuperview];
-      _blurView = nil;
-    }
+    // Use system default grabber when no options provided
+    sheet.prefersGrabberVisible = showGrabber;
+    _grabberView.hidden = YES;
   }
 }
 

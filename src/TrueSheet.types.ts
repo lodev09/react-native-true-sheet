@@ -40,6 +40,63 @@ export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
 
 /**
+ * Options for customizing the grabber (drag handle) appearance.
+ */
+export interface GrabberOptions {
+  /**
+   * The width of the grabber pill.
+   *
+   * @default iOS: 36, Android: 32
+   */
+  width?: number;
+  /**
+   * The height of the grabber pill.
+   *
+   * @default iOS: 5, Android: 4
+   */
+  height?: number;
+  /**
+   * The top margin of the grabber from the sheet edge.
+   *
+   * @default iOS: 5, Android: 16
+   */
+  topMargin?: number;
+  /**
+   * The corner radius of the grabber pill.
+   *
+   * @default height / 2
+   */
+  cornerRadius?: number;
+  /**
+   * The color of the grabber.
+   * Uses native vibrancy/material styling when not provided.
+   */
+  color?: ColorValue;
+}
+
+/**
+ * Options for customizing the blur effect.
+ * Only applies when `blurTint` is set.
+ *
+ * @platform ios
+ */
+export interface BlurOptions {
+  /**
+   * The intensity of the blur effect (0-100).
+   * Uses system default if not provided.
+   */
+  intensity?: number;
+  /**
+   * Enables or disables user interaction on the blur view.
+   * Disabling this can help with visual artifacts (flash) on iOS 18+
+   * when touching the sheet content with blur enabled.
+   *
+   * @default true
+   */
+  interaction?: boolean;
+}
+
+/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios
@@ -194,6 +251,12 @@ export interface TrueSheetProps extends ViewProps {
   grabber?: boolean;
 
   /**
+   * Options for customizing the grabber appearance.
+   * Only applies when `grabber` is `true`.
+   */
+  grabberOptions?: GrabberOptions;
+
+  /**
    * Controls the sheet presentation style on iPad.
    * When enabled (true), uses a large page sheet for better readability.
    * When disabled (false), uses a centered form sheet.
@@ -212,23 +275,12 @@ export interface TrueSheetProps extends ViewProps {
   blurTint?: BlurTint;
 
   /**
-   * The intensity of the blur effect (0-100).
+   * Options for customizing the blur effect.
    * Only applies when `blurTint` is set.
-   * Uses system default if not provided.
    *
    * @platform ios
    */
-  blurIntensity?: number;
-
-  /**
-   * Enables or disables user interaction on the blur view.
-   * Disabling this can help with visual artifacts (flash) on iOS 18+
-   * when touching the sheet content with blur enabled.
-   * Uses system default (true) if not provided.
-   *
-   * @platform ios
-   */
-  blurInteraction?: boolean;
+  blurOptions?: BlurOptions;
 
   /**
    * Overrides `large` or `100%` height.

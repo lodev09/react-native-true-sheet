@@ -51,6 +51,54 @@ Blur tint that is mapped into native values in IOS.
 | `"system-thick-material-dark"` |
 | `"system-chrome-material-dark"` |
 
+## `BlurOptions`
+
+Options for customizing the blur effect. Only applies when `blurTint` is set.
+
+```tsx
+<TrueSheet
+  blurTint="dark"
+  blurOptions={{
+    intensity: 80,
+    interaction: false,
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `intensity` | `number` | The intensity of the blur effect (0-100). | _system default_ |
+| `interaction` | `boolean` | Enables or disables user interaction on the blur view. Disabling can help with visual artifacts on iOS 18+. | `true` |
+
+## `GrabberOptions`
+
+Options for customizing the grabber (drag handle) appearance.
+
+```tsx
+<TrueSheet
+  grabber
+  grabberOptions={{
+    width: 48,
+    height: 6,
+    topMargin: 10,
+    cornerRadius: 3,
+    color: '#FF0000',
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `width` | `number` | The width of the grabber pill. | iOS: `36`, Android: `32` |
+| `height` | `number` | The height of the grabber pill. | iOS: `5`, Android: `4` |
+| `topMargin` | `number` | The top margin from the sheet edge. | iOS: `5`, Android: `16` |
+| `cornerRadius` | `number` | The corner radius of the grabber pill. | `height / 2` |
+| `color` | `ColorValue` | The color of the grabber. Uses native styling when not provided. | |
+
 ## `DetentInfoEventPayload`
 
 `Object` that comes with most sheet events.

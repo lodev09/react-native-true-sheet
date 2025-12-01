@@ -342,12 +342,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dismissible = true,
       draggable = true,
       grabber = true,
+      grabberOptions,
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
       keyboardMode = 'resize',
       dimmedDetentIndex,
       blurTint,
+      blurOptions,
       cornerRadius,
       maxHeight,
       edgeToEdgeFullScreen,
@@ -390,9 +392,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={styles.sheetView}
         detents={resolvedDetents}
         blurTint={blurTint}
+        blurOptions={blurOptions}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
         grabber={grabber}
+        grabberOptions={{
+          ...grabberOptions,
+          color: (processColor(grabberOptions?.color) as number) ?? 0,
+        }}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
         keyboardMode={keyboardMode}
