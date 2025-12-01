@@ -182,12 +182,17 @@
   }
 }
 
+- (BOOL)isDismissing {
+  return self.presentingViewController == nil || self.isBeingDismissed;
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
+  if (self.isDismissing) {
+    _isPresented = NO;
+    _activeDetentIndex = -1;
 
-  if (isActuallyDismissing) {
     // Notify the parent sheet (if any) that it is about to regain focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
@@ -209,9 +214,7 @@
   [super viewDidDisappear:animated];
 
   // Only dispatch didDismiss when actually dismissing (not when another modal is presented on top)
-  BOOL isActuallyDismissing = self.presentingViewController == nil || self.isBeingDismissed;
-
-  if (isActuallyDismissing) {
+  if (self.isDismissing) {
     // Notify the parent sheet (if any) that it regained focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
@@ -223,11 +226,6 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
       [self.delegate viewControllerDidDismiss];
     }
-  }
-
-  if (isActuallyDismissing) {
-    _isPresented = NO;
-    _activeDetentIndex = -1;
   }
 }
 

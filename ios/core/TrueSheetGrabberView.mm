@@ -91,10 +91,7 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   _vibrancyView.frame = self.bounds;
   _fillView.frame = _vibrancyView.contentView.bounds;
 
-  NSLog(@"TrueSheetGrabberView: _cornerRadius = %@, effective = %f", _cornerRadius, [self effectiveCornerRadius]);
-
   // Apply custom color to vibrancy view
-  NSLog(@"TrueSheetGrabberView: _color = %@", _color);
   if (_color) {
     _vibrancyView.backgroundColor = _color;
   } else {
