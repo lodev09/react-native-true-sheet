@@ -3,6 +3,9 @@
 [![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/ci.yml)
 [![NPM Downloads](https://img.shields.io/npm/d18m/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
 
+> [!NOTE]
+> 🎉 **Version 3.0 is here!** Completely rebuilt for Fabric with new features like automatic ScrollView detection, native headers/footers, sheet stacking, and more. [Read the announcement](https://sheet.lodev09.com/blog/release-3-0)
+
 The true native bottom sheet experience for your React Native Apps. 💩
 
 <img alt="React Native True Sheet - IOS" src="docs/static/img/preview-ios.gif" width="300" height="600" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-android.gif" width="300" height="600" />
