@@ -139,7 +139,7 @@ using namespace facebook::react;
   // Grabber options - check if any non-default values are set
   const auto &grabberOpts = newProps.grabberOptions;
   BOOL hasGrabberOptions = grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 ||
-    grabberOpts.cornerRadius >= 0 || grabberOpts.color != 0;
+                           grabberOpts.cornerRadius >= 0 || grabberOpts.color != 0;
 
   if (hasGrabberOptions) {
     NSMutableDictionary *options = [NSMutableDictionary dictionary];

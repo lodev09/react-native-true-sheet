@@ -122,7 +122,13 @@ class TrueSheetViewManager :
       width = if (options.hasKey("width")) options.getDouble("width").toFloat() else null,
       height = if (options.hasKey("height")) options.getDouble("height").toFloat() else null,
       topMargin = if (options.hasKey("topMargin")) options.getDouble("topMargin").toFloat() else null,
-      cornerRadius = if (options.hasKey("cornerRadius") && options.getDouble("cornerRadius") >= 0) options.getDouble("cornerRadius").toFloat() else null,
+      cornerRadius = if (options.hasKey("cornerRadius") &&
+        options.getDouble("cornerRadius") >= 0
+      ) {
+        options.getDouble("cornerRadius").toFloat()
+      } else {
+        null
+      },
       color = if (options.hasKey("color") && options.getInt("color") != 0) options.getInt("color") else null
     )
     view.setGrabberOptions(grabberOptions)
