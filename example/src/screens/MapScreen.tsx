@@ -49,7 +49,7 @@ export const MapScreen = () => {
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
-    console.log('Sheet 1 present async');
+    console.log('basic sheet presented');
   };
 
   const presentScrollViewSheet = () => {
@@ -139,6 +139,12 @@ export const MapScreen = () => {
           console.log(
             `detent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
+        }}
+        onWillDismiss={() => {
+          console.log('sheet will dismiss');
+        }}
+        onDidDismiss={() => {
+          console.log('sheet has been dismissed');
         }}
         header={<Header />}
       >
