@@ -59,7 +59,7 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   // Add a fill view inside vibrancy contentView
   _fillView = [[UIView alloc] init];
   _fillView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.4];
+  _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
   [_vibrancyView.contentView addSubview:_fillView];
 }
 
@@ -88,8 +88,13 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   _vibrancyView.frame = self.bounds;
   _fillView.frame = _vibrancyView.contentView.bounds;
 
-  // Apply custom color to fill view while keeping vibrancy effect
-  _fillView.backgroundColor = _color ?: [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
+  // Apply custom color to vibrancy view
+  NSLog(@"TrueSheetGrabberView: _color = %@", _color);
+  if (_color) {
+    _vibrancyView.backgroundColor = _color;
+  } else {
+    _vibrancyView.backgroundColor = nil;
+  }
 }
 
 - (void)layoutSubviews {

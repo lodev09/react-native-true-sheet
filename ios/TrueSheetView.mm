@@ -139,8 +139,8 @@ using namespace facebook::react;
 
   // Grabber options - check if any non-default values are set
   const auto &grabberOpts = newProps.grabberOptions;
-  BOOL hasColor = grabberOpts.color != SharedColor();
-  BOOL hasGrabberOptions = grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 || hasColor;
+  BOOL hasGrabberOptions =
+    grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 || grabberOpts.color != 0;
 
   if (hasGrabberOptions) {
     NSMutableDictionary *options = [NSMutableDictionary dictionary];
@@ -154,8 +154,8 @@ using namespace facebook::react;
     if (grabberOpts.topMargin > 0) {
       options[@"topMargin"] = @(grabberOpts.topMargin);
     }
-    if (hasColor) {
-      options[@"color"] = RCTUIColorFromSharedColor(grabberOpts.color);
+    if (grabberOpts.color != 0) {
+      options[@"color"] = RCTUIColorFromSharedColor(SharedColor(grabberOpts.color));
     }
 
     _controller.grabberOptions = options;

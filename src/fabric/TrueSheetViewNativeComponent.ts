@@ -1,4 +1,4 @@
-import type { ColorValue, ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import type {
   DirectEventHandler,
   Double,
@@ -11,7 +11,7 @@ type GrabberOptionsType = Readonly<{
   width?: Double;
   height?: Double;
   topMargin?: Double;
-  color?: ColorValue;
+  color?: Int32;
 }>;
 
 export interface DetentInfoEventPayload {
