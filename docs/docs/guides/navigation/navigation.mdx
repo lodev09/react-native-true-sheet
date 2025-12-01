@@ -45,6 +45,35 @@ const navigate = async () => {
 }
 ```
 
+## Presenting on Screen Focus
+
+When presenting a sheet in response to screen focus (e.g., using `useFocusEffect`), you may encounter issues on iOS where the sheet presents on the wrong view controller. This happens when a modal is being dismissed and the focus event fires before iOS marks the modal as "being dismissed".
+
+### Solution: Delay with requestAnimationFrame
+
+Use `requestAnimationFrame` to delay the presentation, giving iOS time to update the view controller state:
+
+```tsx
+import { useFocusEffect } from '@react-navigation/native'
+
+const sheet = useRef<TrueSheet>(null)
+
+useFocusEffect(
+  useCallback(() => {
+    // Delay presentation to ensure dismissing modals are detected ✅
+    requestAnimationFrame(() => {
+      sheet.current?.present()
+    })
+  }, [])
+)
+
+return (
+  <TrueSheet ref={sheet}>
+    <View />
+  </TrueSheet>
+)
+```
+
 ## Present During Mount
 
 When setting [`initialDetentIndex`](/reference/configuration#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation may behave unexpectedly on iOS. This happens because React Navigation is not yet finished transitioning when the sheet tries to present.
