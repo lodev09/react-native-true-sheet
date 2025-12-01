@@ -349,8 +349,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       keyboardMode = 'resize',
       dimmedDetentIndex,
       blurTint,
-      blurIntensity,
-      blurInteraction,
+      blurOptions,
       cornerRadius,
       maxHeight,
       edgeToEdgeFullScreen,
@@ -393,8 +392,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={styles.sheetView}
         detents={resolvedDetents}
         blurTint={blurTint}
-        blurIntensity={blurIntensity}
-        blurInteraction={blurInteraction}
+        blurOptions={{
+          intensity: blurOptions?.intensity ?? -1,
+          interaction: blurOptions?.interaction ?? true,
+        }}
         background={(processColor(backgroundColor) as number) ?? 0}
         cornerRadius={cornerRadius}
         grabber={grabber}

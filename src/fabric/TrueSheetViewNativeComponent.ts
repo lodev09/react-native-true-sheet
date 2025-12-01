@@ -14,6 +14,11 @@ type GrabberOptionsType = Readonly<{
   color?: Int32;
 }>;
 
+type BlurOptionsType = Readonly<{
+  intensity: Double; // -1 means not set (use system default)
+  interaction: boolean;
+}>;
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -42,9 +47,8 @@ export interface NativeProps extends ViewProps {
   blurTint?: WithDefault<string, ''>;
   keyboardMode?: WithDefault<'resize' | 'pan', 'resize'>;
 
-  // Blur properties - use -1 as default to indicate "not set" (use system default)
-  blurIntensity?: WithDefault<Double, -1>;
-  blurInteraction?: WithDefault<boolean, true>;
+  // Blur options
+  blurOptions?: BlurOptionsType;
 
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
