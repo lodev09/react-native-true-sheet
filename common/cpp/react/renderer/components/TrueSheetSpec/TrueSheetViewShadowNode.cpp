@@ -1,8 +1,10 @@
 #include "TrueSheetViewShadowNode.h"
 
-#include <yoga/style/StyleSizeLength.h>
+#include <react/renderer/components/view/conversions.h>
 
 namespace facebook::react {
+
+using namespace yoga;
 
 extern const char TrueSheetViewComponentName[] = "TrueSheetView";
 
@@ -22,7 +24,7 @@ void TrueSheetViewShadowNode::adjustLayoutWithState() {
 
     // Set width if provided
     if (stateData.containerWidth > 0) {
-      adjustedStyle.setDimension(yoga::Dimension::Width, yoga::StyleSizeLength::points(stateData.containerWidth));
+      adjustedStyle.setDimension(yoga::Dimension::Width, StyleSizeLength::points(stateData.containerWidth));
       if (adjustedStyle.dimension(yoga::Dimension::Width) != currentStyle.dimension(yoga::Dimension::Width)) {
         needsUpdate = true;
       }
@@ -30,7 +32,7 @@ void TrueSheetViewShadowNode::adjustLayoutWithState() {
 
     // Set height if provided
     if (stateData.containerHeight > 0) {
-      adjustedStyle.setDimension(yoga::Dimension::Height, yoga::StyleSizeLength::points(stateData.containerHeight));
+      adjustedStyle.setDimension(yoga::Dimension::Height, StyleSizeLength::points(stateData.containerHeight));
       if (adjustedStyle.dimension(yoga::Dimension::Height) != currentStyle.dimension(yoga::Dimension::Height)) {
         needsUpdate = true;
       }
