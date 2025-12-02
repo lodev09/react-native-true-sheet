@@ -17,10 +17,6 @@
 
 using namespace facebook::react;
 
-Class<RCTComponentViewProtocol> TrueSheetHeaderViewCls(void) {
-  return TrueSheetHeaderView.class;
-}
-
 @implementation TrueSheetHeaderView {
   CGSize _lastSize;
 }
@@ -60,5 +56,9 @@ Class<RCTComponentViewProtocol> TrueSheetHeaderViewCls(void) {
 }
 
 @end
+
+Class<RCTComponentViewProtocol> TrueSheetHeaderViewCls(void) {
+  return TrueSheetHeaderView.class;
+}
 
 #endif

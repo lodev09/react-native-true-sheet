@@ -19,10 +19,6 @@
 
 using namespace facebook::react;
 
-Class<RCTComponentViewProtocol> TrueSheetContentViewCls(void) {
-  return TrueSheetContentView.class;
-}
-
 @implementation TrueSheetContentView {
   RCTScrollViewComponentView *_pinnedScrollView;
   UIView *_pinnedTopView;
@@ -199,5 +195,9 @@ Class<RCTComponentViewProtocol> TrueSheetContentViewCls(void) {
 }
 
 @end
+
+Class<RCTComponentViewProtocol> TrueSheetContentViewCls(void) {
+  return TrueSheetContentView.class;
+}
 
 #endif

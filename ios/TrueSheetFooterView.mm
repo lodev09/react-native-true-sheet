@@ -18,10 +18,6 @@
 
 using namespace facebook::react;
 
-Class<RCTComponentViewProtocol> TrueSheetFooterViewCls(void) {
-  return TrueSheetFooterView.class;
-}
-
 @implementation TrueSheetFooterView {
   CGFloat _lastHeight;
   BOOL _didInitialLayout;
@@ -101,5 +97,9 @@ Class<RCTComponentViewProtocol> TrueSheetFooterViewCls(void) {
 }
 
 @end
+
+Class<RCTComponentViewProtocol> TrueSheetFooterViewCls(void) {
+  return TrueSheetFooterView.class;
+}
 
 #endif
