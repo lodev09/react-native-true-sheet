@@ -153,7 +153,7 @@
 
     if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        NSInteger index = [self currentDetentIndex];
+        NSInteger index = self.currentDetentIndex;
         CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
 
@@ -194,16 +194,13 @@
   [super viewWillDisappear:animated];
 
   if (self.isDismissing) {
-    _isPresented = NO;
-    _activeDetentIndex = -1;
-
     if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
       [self.delegate viewControllerWillDismiss];
     }
 
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-    });
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+//    });
 
     // Notify the parent sheet (if any) that it is about to regain focus
     if (_parentSheetController) {
@@ -219,6 +216,9 @@
 
   // Only dispatch didDismiss when actually dismissing (not when another modal is presented on top)
   if (self.isDismissing) {
+    _isPresented = NO;
+    _activeDetentIndex = -1;
+
     // Notify the parent sheet (if any) that it regained focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
@@ -230,6 +230,40 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
       [self.delegate viewControllerDidDismiss];
     }
+  }
+}
+
+- (void)viewDidLayoutSubviews {
+  [super viewDidLayoutSubviews];
+
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
+    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  }
+
+  // Check if there's an active presented controller that has settled (not being presented/dismissed)
+  UIViewController *presented = self.presentedViewController;
+  BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
+
+  if (!_isDragging) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      // Update stored position for current detent (handles content size changes)
+      [self storeResolvedPositionForIndex:[self currentDetentIndex]];
+
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
+    });
+  }
+
+  // Emit pending detent change after programmatic resize settles
+  if (_pendingDetentIndex >= 0) {
+    NSInteger pendingIndex = _pendingDetentIndex;
+    _pendingDetentIndex = -1;
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+        CGFloat detent = [self detentValueForIndex:pendingIndex];
+        [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+      }
+    });
   }
 }
 
@@ -287,40 +321,6 @@
                                 completion();
                               }
                             }];
-}
-
-- (void)viewDidLayoutSubviews {
-  [super viewDidLayoutSubviews];
-
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
-  }
-
-  // Check if there's an active presented controller that has settled (not being presented/dismissed)
-  UIViewController *presented = self.presentedViewController;
-  BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-
-  if (!_isDragging) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      // Update stored position for current detent (handles content size changes)
-      [self storeResolvedPositionForIndex:[self currentDetentIndex]];
-
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
-    });
-  }
-
-  // Emit pending detent change after programmatic resize settles
-  if (_pendingDetentIndex >= 0) {
-    NSInteger pendingIndex = _pendingDetentIndex;
-    _pendingDetentIndex = -1;
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
-        CGFloat detent = [self detentValueForIndex:pendingIndex];
-        [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-      }
-    });
-  }
 }
 
 #pragma mark - Gesture Handling
@@ -393,7 +393,7 @@
 }
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
-  NSInteger index = [self currentDetentIndex];
+  NSInteger index = self.currentDetentIndex;
   CGFloat detent = [self detentValueForIndex:index];
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:detent:)]) {
@@ -412,8 +412,7 @@
       _isDragging = NO;
       dispatch_async(dispatch_get_main_queue(), ^{
         // Store resolved position when drag ends
-        [self storeResolvedPositionForIndex:[self currentDetentIndex]];
-
+        [self storeResolvedPositionForIndex:self.currentDetentIndex];
         [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
       });
       break;
@@ -801,7 +800,7 @@
   (UISheetPresentationController *)sheetPresentationController {
   if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      NSInteger index = [self currentDetentIndex];
+      NSInteger index = self.currentDetentIndex;
       if (index >= 0) {
         CGFloat detent = [self detentValueForIndex:index];
         [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
