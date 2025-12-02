@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -250,6 +251,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setCancelable(dismissible)
       behavior.isHideable = dismissible
       behavior.isDraggable = draggable
+
+      setOnKeyListener { _, keyCode, event ->
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP && !dismissible) {
+          reactContext.currentActivity?.onBackPressed()
+          true
+        } else {
+          false
+        }
+      }
     }
   }
 
