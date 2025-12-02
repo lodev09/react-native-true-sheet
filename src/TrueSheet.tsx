@@ -24,6 +24,7 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
+  BackPressEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
@@ -99,6 +100,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDidFocus = this.onDidFocus.bind(this);
     this.onWillBlur = this.onWillBlur.bind(this);
     this.onDidBlur = this.onDidBlur.bind(this);
+    this.onBackPress = this.onBackPress.bind(this);
   }
 
   private validateDetents(): void {
@@ -277,6 +279,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDidBlur?.(event);
   }
 
+  private onBackPress(event: BackPressEvent): void {
+    this.props.onBackPress?.(event);
+  }
+
   /**
    * Present the Sheet by `index` (Promise-based)
    * @param index - Detent index (default: 0)
@@ -425,6 +431,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDidFocus={this.onDidFocus}
         onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
+        onBackPress={this.onBackPress}
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={containerStyle}>

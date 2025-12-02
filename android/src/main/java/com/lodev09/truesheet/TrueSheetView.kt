@@ -233,6 +233,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BlurEvent(surfaceId, id))
   }
 
+  override fun viewControllerDidBackPress() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
+  }
+
   // ==================== Property Setters (forward to controller) ====================
 
   fun setMaxHeight(height: Int) {

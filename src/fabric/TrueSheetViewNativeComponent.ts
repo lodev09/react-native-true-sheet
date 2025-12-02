@@ -77,6 +77,7 @@ export interface NativeProps extends ViewProps {
   onDidFocus?: DirectEventHandler<null>;
   onWillBlur?: DirectEventHandler<null>;
   onDidBlur?: DirectEventHandler<null>;
+  onBackPress?: DirectEventHandler<null>;
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

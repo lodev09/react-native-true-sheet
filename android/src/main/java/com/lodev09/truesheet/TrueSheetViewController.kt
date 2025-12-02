@@ -46,6 +46,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidFocus()
   fun viewControllerWillBlur()
   fun viewControllerDidBlur()
+  fun viewControllerDidBackPress()
 }
 
 /**
@@ -250,6 +251,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setCancelable(dismissible)
       behavior.isHideable = dismissible
       behavior.isDraggable = draggable
+
+      // Handle back press
+      onBackPressedDispatcher.addCallback(object : androidx.activity.OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+          this@TrueSheetViewController.delegate?.viewControllerDidBackPress()
+          if (dismissible) {
+            dismiss()
+          }
+        }
+      })
     }
   }
 

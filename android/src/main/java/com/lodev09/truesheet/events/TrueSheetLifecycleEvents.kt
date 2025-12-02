@@ -92,3 +92,18 @@ class DidDismissEvent(surfaceId: Int, viewId: Int) : Event<DidDismissEvent>(surf
     const val REGISTRATION_NAME = "onDidDismiss"
   }
 }
+
+/**
+ * Fired when the hardware back button is pressed (Android only)
+ */
+class BackPressEvent(surfaceId: Int, viewId: Int) : Event<BackPressEvent>(surfaceId, viewId) {
+
+  override fun getEventName(): String = EVENT_NAME
+
+  override fun getEventData(): WritableMap = Arguments.createMap()
+
+  companion object {
+    const val EVENT_NAME = "topBackPress"
+    const val REGISTRATION_NAME = "onBackPress"
+  }
+}
