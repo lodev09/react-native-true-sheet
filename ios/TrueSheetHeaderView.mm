@@ -57,4 +57,8 @@ using namespace facebook::react;
 
 @end
 
+Class<RCTComponentViewProtocol> TrueSheetHeaderViewCls(void) {
+  return TrueSheetHeaderView.class;
+}
+
 #endif

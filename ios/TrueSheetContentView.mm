@@ -196,4 +196,8 @@ using namespace facebook::react;
 
 @end
 
+Class<RCTComponentViewProtocol> TrueSheetContentViewCls(void) {
+  return TrueSheetContentView.class;
+}
+
 #endif

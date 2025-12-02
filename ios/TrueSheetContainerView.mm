@@ -26,6 +26,10 @@ using namespace facebook::react;
 @interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate>
 @end
 
+Class<RCTComponentViewProtocol> TrueSheetContainerViewCls(void) {
+  return TrueSheetContainerView.class;
+}
+
 @implementation TrueSheetContainerView {
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;

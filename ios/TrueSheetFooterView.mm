@@ -98,4 +98,8 @@ using namespace facebook::react;
 
 @end
 
+Class<RCTComponentViewProtocol> TrueSheetFooterViewCls(void) {
+  return TrueSheetFooterView.class;
+}
+
 #endif
