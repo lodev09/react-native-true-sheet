@@ -25,6 +25,11 @@
   BOOL _isDragging;
   NSInteger _pendingDetentIndex;
 
+  // Transitioning tracker
+  CADisplayLink *_transitioningTimer;
+  UIView *_transitionFakeView;
+  BOOL _isTransitioning;
+
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -58,6 +63,8 @@
     _isPresented = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
+    _isTransitioning = NO;
+    _transitionFakeView = [UIView new];
 
     _blurInteraction = YES;
     _resolvedDetentPositions = [NSMutableArray array];
@@ -141,6 +148,12 @@
 
   // Only trigger on initial presentation, not repositioning
   if (!_isPresented) {
+    
+    // Initially store resolved position during presentation
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self storeResolvedPositionForIndex:self.currentDetentIndex];
+    });
+    
     // Capture parent sheet reference if presented from another TrueSheet
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
@@ -161,6 +174,8 @@
       });
     }
   }
+
+  [self setupTransitionTracker];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -198,10 +213,6 @@
       [self.delegate viewControllerWillDismiss];
     }
 
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-//    });
-
     // Notify the parent sheet (if any) that it is about to regain focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
@@ -209,6 +220,8 @@
       }
     }
   }
+
+  [self setupTransitionTracker];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -240,17 +253,13 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
-  // Check if there's an active presented controller that has settled (not being presented/dismissed)
   UIViewController *presented = self.presentedViewController;
   BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
 
-  if (!_isDragging) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      // Update stored position for current detent (handles content size changes)
-      [self storeResolvedPositionForIndex:[self currentDetentIndex]];
-
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
-    });
+  if (!_isDragging && !_isTransitioning) {
+    // Update stored position for current detent (handles content size changes)
+    [self storeResolvedPositionForIndex:self.currentDetentIndex];
+    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
   }
 
   // Emit pending detent change after programmatic resize settles
@@ -409,12 +418,15 @@
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
+      if (!_isTransitioning) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          // Store resolved position when drag ends
+          [self storeResolvedPositionForIndex:self.currentDetentIndex];
+          [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+        });
+      }
+
       _isDragging = NO;
-      dispatch_async(dispatch_get_main_queue(), ^{
-        // Store resolved position when drag ends
-        [self storeResolvedPositionForIndex:self.currentDetentIndex];
-        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
-      });
       break;
     }
     default:
@@ -423,6 +435,56 @@
 }
 
 #pragma mark - Position Tracking
+
+- (void)setupTransitionTracker {
+  if (!self.transitionCoordinator)
+    return;
+
+  _isTransitioning = YES;
+
+  CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
+  CGRect presentedFrame = CGRectMake(0, self.presentedView.frame.origin.y, 0, 0);
+
+  // Set starting fake view position
+  _transitionFakeView.frame = self.isDismissing ? presentedFrame : dismissedFrame;
+  [self storeResolvedPositionForIndex:self.currentDetentIndex];
+
+  auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+    [[context containerView] addSubview:self->_transitionFakeView];
+
+    // Set the fake view target position
+    self->_transitionFakeView.frame = self.isDismissing ? dismissedFrame : presentedFrame;
+
+    self->_transitioningTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionTracker)];
+    [self->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+  };
+
+  [self.transitionCoordinator
+      animateAlongsideTransition:animation
+                      completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+                        [self->_transitioningTimer setPaused:YES];
+                        [self->_transitioningTimer invalidate];
+                        [self->_transitionFakeView removeFromSuperview];
+                        self->_isTransitioning = NO;
+                      }];
+}
+
+- (void)handleTransitionTracker {
+  if (!_isDragging && _transitionFakeView.layer) {
+    CALayer *layer = _transitionFakeView.layer;
+
+    CGFloat layerPosition = layer.presentationLayer.frame.origin.y;
+
+    if (self.currentPosition >= self.screenHeight) {
+      // Dismissing position
+      [self emitChangePositionDelegateWithPosition:layerPosition realtime:YES];
+    } else {
+      // Presenting position
+      CGFloat position = fmax(self.currentPosition, layerPosition);
+      [self emitChangePositionDelegateWithPosition:position realtime:YES];
+    }
+  }
+}
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime {
   // Use epsilon comparison to avoid missing updates due to floating point precision
