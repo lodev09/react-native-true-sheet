@@ -1,8 +1,5 @@
 import { useEvent, useHandler } from 'react-native-reanimated';
-import type {
-  PositionChangeEvent,
-  PositionChangeEventPayload,
-} from '@lodev09/react-native-true-sheet';
+import type { PositionChangeEvent, PositionChangeEventPayload } from '../TrueSheet.types';
 import type { DependencyList } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 
 type PositionChangeHandler = (

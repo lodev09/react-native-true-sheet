@@ -8,11 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 
-import {
-  TrueSheet,
-  type TrueSheetProps,
-  type PositionChangeEvent,
-} from '@lodev09/react-native-true-sheet';
+import { TrueSheet } from '../TrueSheet';
+import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
 import { useReanimatedPositionChangeHandler } from './useReanimatedPositionChangeHandler';
 
