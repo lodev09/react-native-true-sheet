@@ -121,3 +121,10 @@ This is called when the sheet is about to lose focus because another sheet is ab
 ## `onDidBlur`
 
 This is called when the sheet has lost focus because another sheet is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.
+
+## `onBackPress`
+
+:::info Android only
+:::
+
+This is called when the hardware back button is pressed on Android. Use this to handle custom back press behavior, such as dismissing the sheet programmatically when `dismissible` is `false`.

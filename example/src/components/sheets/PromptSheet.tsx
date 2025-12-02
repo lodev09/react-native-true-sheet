@@ -55,6 +55,12 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           e.nativeEvent.position
         )
       }
+      onBackPress={() => {
+        console.log('Back button pressed!');
+        // Handle custom back press behavior here
+        // For example, dismiss the sheet programmatically
+        sheetRef.current?.dismiss();
+      }}
       footer={<Footer />}
       {...props}
     >
