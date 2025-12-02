@@ -11,6 +11,11 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./reanimated": {
+      "source": "./src/reanimated/index.ts",
+      "types": "./lib/typescript/src/reanimated/index.d.ts",
+      "default": "./lib/module/reanimated/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

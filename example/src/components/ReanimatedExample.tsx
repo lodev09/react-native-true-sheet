@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { type TrueSheet } from '@lodev09/react-native-true-sheet';
 import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
-  type TrueSheet,
-} from '@lodev09/react-native-true-sheet';
+} from '@lodev09/react-native-true-sheet/reanimated';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
