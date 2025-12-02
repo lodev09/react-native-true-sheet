@@ -6,15 +6,20 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import {
   TrueSheet,
+  type WillPresentEvent,
+  type DidPresentEvent,
+  type DetentChangeEvent,
+} from '@lodev09/react-native-true-sheet';
+import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
-  type WillPresentEvent,
-} from '@lodev09/react-native-true-sheet';
+} from '@lodev09/react-native-true-sheet/reanimated';
 import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
@@ -98,7 +103,7 @@ export const MapScreen = () => {
         edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
-        onLayout={(e) => {
+        onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
           );
@@ -114,7 +119,7 @@ export const MapScreen = () => {
         //   const { detent, position, index } = e.nativeEvent;
         //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
         // }}
-        onDidPresent={(e) => {
+        onDidPresent={(e: DidPresentEvent) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
@@ -135,7 +140,7 @@ export const MapScreen = () => {
           // sheetRef.current?.present(1)
           console.log('sheet is ready!');
         }}
-        onDetentChange={(e) => {
+        onDetentChange={(e: DetentChangeEvent) => {
           console.log(
             `detent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
