@@ -144,12 +144,11 @@
 
   // Only trigger on initial presentation, not repositioning
   if (!_isPresented) {
-    
     // Initially store resolved position during presentation
     dispatch_async(dispatch_get_main_queue(), ^{
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     });
-    
+
     // Capture parent sheet reference if presented from another TrueSheet
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
@@ -456,13 +455,13 @@
   };
 
   [self.transitionCoordinator
-      animateAlongsideTransition:animation
-                      completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                        [self->_transitioningTimer setPaused:YES];
-                        [self->_transitioningTimer invalidate];
-                        [self->_transitionFakeView removeFromSuperview];
-                        self->_isTransitioning = NO;
-                      }];
+    animateAlongsideTransition:animation
+                    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+                      [self->_transitioningTimer setPaused:YES];
+                      [self->_transitioningTimer invalidate];
+                      [self->_transitionFakeView removeFromSuperview];
+                      self->_isTransitioning = NO;
+                    }];
 }
 
 - (void)handleTransitionTracker {
