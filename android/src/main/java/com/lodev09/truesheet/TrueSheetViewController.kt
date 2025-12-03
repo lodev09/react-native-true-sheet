@@ -467,7 +467,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun hideDialog() {
     isDialogVisible = false
-    dialog?.window?.decorView?.visibility = View.INVISIBLE
+    dialog?.window?.decorView?.visibility = INVISIBLE
 
     // Emit off-screen position (detent = 0 since sheet is fully hidden)
     emitChangePositionDelegate(screenHeight, realtime = false)
@@ -479,7 +479,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun showDialog() {
     isDialogVisible = true
-    dialog?.window?.decorView?.visibility = View.VISIBLE
+    dialog?.window?.decorView?.visibility = VISIBLE
 
     // Emit current position
     val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
@@ -564,12 +564,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         1 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
           expandedOffset = screenHeight - peekHeight
-          isFitToContents = true
+          isFitToContents = expandedOffset == 0
         }
 
         2 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), 0.9f)
           expandedOffset = screenHeight - getDetentHeight(detents[1])
+          isFitToContents = expandedOffset == 0
         }
 
         3 -> {
