@@ -64,12 +64,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
-
-    /**
-     * Gets the effective sheet height by subtracting headerHeight * 2.
-     * This is needed because both native layout and Yoga layout account for the header separately.
-     */
-    fun getEffectiveSheetHeight(sheetHeight: Int, headerHeight: Int): Int = sheetHeight - headerHeight * 2
   }
 
   // ====================================================================
@@ -298,7 +292,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         // Store resolved position for initial detent
         storeResolvedPosition(detentInfo.index)
-        emitChangePositionDelegate(detentInfo.index, positionPx, realtime = false)
+        emitChangePositionDelegate(positionPx, realtime = false)
 
         // Notify parent sheet that it has lost focus (after this sheet appeared)
         parentSheetView?.viewControllerDidBlur()
@@ -337,9 +331,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
           val positionPx = getCurrentPositionPx(sheetView)
-          val detentIndex = getDetentIndexForPosition(positionPx)
 
-          emitChangePositionDelegate(detentIndex, positionPx, realtime = true)
+          emitChangePositionDelegate(positionPx, realtime = true)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -477,7 +470,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog?.window?.decorView?.visibility = View.INVISIBLE
 
     // Emit off-screen position (detent = 0 since sheet is fully hidden)
-    emitChangePositionDelegate(currentDetentIndex, screenHeight, realtime = false)
+    emitChangePositionDelegate(screenHeight, realtime = false)
   }
 
   /**
@@ -490,7 +483,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Emit current position
     val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-    emitChangePositionDelegate(currentDetentIndex, positionPx, realtime = false)
+    emitChangePositionDelegate(positionPx, realtime = false)
   }
 
   // ====================================================================
@@ -534,7 +527,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss() {
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
-      emitChangePositionDelegate(currentDetentIndex, screenHeight, realtime = false)
+      emitChangePositionDelegate(screenHeight, realtime = false)
     }
     dialog?.dismiss()
   }
@@ -707,11 +700,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /**
    * Emits position change to the delegate if the position has changed.
-   * @param index The current detent index (discrete, used as fallback)
    * @param positionPx The current position in pixels (screen Y coordinate)
    * @param realtime Whether the position is a real-time value (during drag or animation tracking)
    */
-  private fun emitChangePositionDelegate(index: Int, positionPx: Int, realtime: Boolean) {
+  private fun emitChangePositionDelegate(positionPx: Int, realtime: Boolean) {
     if (positionPx == lastEmittedPositionPx) return
 
     lastEmittedPositionPx = positionPx
@@ -865,26 +857,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun getCurrentPositionPx(sheetView: View): Int = ScreenUtils.getScreenY(sheetView)
 
-  /**
-   * Returns the detent index for the current position.
-   * Only reports a higher index when the sheet has reached that detent's height.
-   */
-  private fun getDetentIndexForPosition(positionPx: Int): Int {
-    if (detents.isEmpty()) return 0
-
-    val sheetHeight = screenHeight - positionPx
-
-    // Find the highest detent index that the sheet has reached
-    for (i in detents.indices.reversed()) {
-      val detentHeight = getDetentHeight(detents[i])
-      if (sheetHeight >= detentHeight) {
-        return i
-      }
-    }
-
-    return 0
-  }
-
   private fun handleDragBegin(sheetView: View) {
     val detentInfo = getCurrentDetentInfo(sheetView)
     val detent = getDetentValueForIndex(detentInfo.index)
@@ -1006,7 +978,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         positionFooter()
         storeResolvedPosition(currentDetentIndex)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-        emitChangePositionDelegate(currentDetentIndex, positionPx, realtime = false)
+        emitChangePositionDelegate(positionPx, realtime = false)
       }
     }
   }
