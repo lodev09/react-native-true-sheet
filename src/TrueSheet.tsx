@@ -160,31 +160,37 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
    * Present the sheet by given `name` (Promise-based)
    * @param name - Sheet name (must match sheet's name prop)
    * @param index - Detent index (default: 0)
+   * @param animated - Whether to animate the presentation (default: true)
    * @returns Promise that resolves when sheet is fully presented
    * @throws Error if sheet not found or presentation fails
    */
-  public static async present(name: string, index: number = 0): Promise<void> {
+  public static async present(
+    name: string,
+    index: number = 0,
+    animated: boolean = true
+  ): Promise<void> {
     const instance = TrueSheet.getInstance(name);
     if (!instance) {
       throw new Error(`Sheet with name "${name}" not found`);
     }
 
-    return instance.present(index);
+    return instance.present(index, animated);
   }
 
   /**
    * Dismiss the sheet by given `name` (Promise-based)
    * @param name - Sheet name
+   * @param animated - Whether to animate the dismissal (default: true)
    * @returns Promise that resolves when sheet is fully dismissed
    * @throws Error if sheet not found or dismissal fails
    */
-  public static async dismiss(name: string): Promise<void> {
+  public static async dismiss(name: string, animated: boolean = true): Promise<void> {
     const instance = TrueSheet.getInstance(name);
     if (!instance) {
       throw new Error(`Sheet with name "${name}" not found`);
     }
 
-    return instance.dismiss();
+    return instance.dismiss(animated);
   }
 
   /**
@@ -286,8 +292,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   /**
    * Present the Sheet by `index` (Promise-based)
    * @param index - Detent index (default: 0)
+   * @param animated - Whether to animate the presentation (default: true)
    */
-  public async present(index: number = 0): Promise<void> {
+  public async present(index: number = 0, animated: boolean = true): Promise<void> {
     const detentsLength = Math.min(this.props.detents?.length ?? 2, 3); // Max 3 detents
     if (index < 0 || index >= detentsLength) {
       throw new Error(
@@ -303,7 +310,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       });
     }
 
-    return TrueSheetModule?.presentByRef(this.handle, index);
+    return TrueSheetModule?.presentByRef(this.handle, index, animated);
   }
 
   /**
@@ -316,9 +323,10 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   /**
    * Dismisses the Sheet
+   * @param animated - Whether to animate the dismissal (default: true)
    */
-  public async dismiss(): Promise<void> {
-    return TrueSheetModule?.dismissByRef(this.handle);
+  public async dismiss(animated: boolean = true): Promise<void> {
+    return TrueSheetModule?.dismissByRef(this.handle, animated);
   }
 
   componentDidMount(): void {

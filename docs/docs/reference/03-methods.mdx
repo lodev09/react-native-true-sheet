@@ -21,23 +21,34 @@ return (
 
 ### `present`
 
-Present the sheet. Optionally accepts a detent `index`. See [`detents`](/reference/configuration#detents) prop.
+Present the sheet. Optionally accepts a detent `index` and `animated` flag. See [`detents`](/reference/configuration#detents) prop.
 
-| Parameters | Required |
-| - | - |
-| `index: number = 0` | No |
+| Parameters | Required | Default |
+| - | - | - |
+| `index: number` | No | `0` |
+| `animated: boolean` | No | `true` |
 
 ```tsx
 await sheet.current?.present()
+
+// Present without animation
+await sheet.current?.present(0, false)
 ```
 
 
 ### `dismiss`
 
-Dismisses the sheet.
+Dismisses the sheet. Optionally accepts an `animated` flag.
+
+| Parameters | Required | Default |
+| - | - | - |
+| `animated: boolean` | No | `true` |
 
 ```tsx
 await sheet.current?.dismiss()
+
+// Dismiss without animation
+await sheet.current?.dismiss(false)
 ```
 
 ### `resize`
@@ -74,9 +85,15 @@ You can then use these methods globally.
 
 ```tsx
 await TrueSheet.present('my-sheet')
+
+// Present without animation
+await TrueSheet.present('my-sheet', 0, false)
 ```
 ```tsx
 await TrueSheet.dismiss('my-sheet')
+
+// Dismiss without animation
+await TrueSheet.dismiss('my-sheet', false)
 ```
 ```tsx
 // Resize to 80%
