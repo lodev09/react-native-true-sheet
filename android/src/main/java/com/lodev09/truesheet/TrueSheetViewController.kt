@@ -564,7 +564,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isReconfiguring = true
 
     behavior.apply {
-      skipCollapsed = false
       isFitToContents = false
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
@@ -572,6 +571,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         1 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
           expandedOffset = screenHeight - peekHeight
+          isFitToContents = true
         }
 
         2 -> {
@@ -991,6 +991,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     if (w == oldw && h == oldh) return
+
+    // Fix issue where size keeps changing when full expanding to full screen (edgeToEdgeFullScreen enabled)
+    if (h + statusBarHeight >= screenHeight && isExpanded && oldw == w) return
 
     delegate?.viewControllerDidChangeSize(w, h)
 
