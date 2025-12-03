@@ -13,7 +13,9 @@ private const val RN_SCREENS_PACKAGE = "com.swmansion.rnscreens"
  */
 class RNScreensFragmentObserver(
   private val reactContext: ReactContext,
+  private val onModalWillPresent: () -> Unit = {},
   private val onModalPresented: () -> Unit,
+  private val onModalWillDismiss: () -> Unit = {},
   private val onModalDismissed: () -> Unit
 ) {
   private var fragmentLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
@@ -27,13 +29,18 @@ class RNScreensFragmentObserver(
     val fragmentManager = activity.supportFragmentManager
 
     fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
-      override fun onFragmentAttached(fm: FragmentManager, fragment: Fragment, context: android.content.Context) {
-        super.onFragmentAttached(fm, fragment, context)
+      override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
+        super.onFragmentStarted(fm, fragment)
 
-        if (isModalFragment(fragment)) {
+        if (isModalFragment(fragment) && !activeModalFragments.contains(fragment)) {
+          // Notify willPresent before adding to active set
+          if (activeModalFragments.isEmpty()) {
+            onModalWillPresent()
+          }
+
           activeModalFragments.add(fragment)
 
-          // Notify when the first modal is attached
+          // Notify didPresent after modal is started
           if (activeModalFragments.size == 1) {
             onModalPresented()
           }
@@ -44,9 +51,14 @@ class RNScreensFragmentObserver(
         super.onFragmentStopped(fm, fragment)
 
         if (activeModalFragments.contains(fragment)) {
+          // Notify willDismiss before removing from active set
+          if (activeModalFragments.size == 1) {
+            onModalWillDismiss()
+          }
+
           activeModalFragments.remove(fragment)
 
-          // Notify when all modals are dismissed
+          // Notify didDismiss after all modals are dismissed
           if (activeModalFragments.isEmpty()) {
             onModalDismissed()
           }
