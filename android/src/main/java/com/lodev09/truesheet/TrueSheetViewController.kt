@@ -61,6 +61,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   companion object {
     const val TAG_NAME = "TrueSheet"
 
+    private const val MAX_HALF_EXPANDED_RATIO = 0.999f
+
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
@@ -564,34 +566,44 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       isFitToContents = false
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
+      val oldExpandOffset = expandedOffset
+
       when (detents.size) {
         1 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
+          halfExpandedRatio = minOf(peekHeight.toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - peekHeight
           isFitToContents = expandedOffset == 0
         }
 
         2 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), 0.9f)
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - getDetentHeight(detents[1])
           isFitToContents = expandedOffset == 0
         }
 
         3 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), 0.9f)
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - getDetentHeight(detents[2])
         }
       }
-    }
 
-    // Re-apply current state to update position after config changes
-    if (isPresented) {
-      setStateForDetentIndex(currentDetentIndex)
-    }
+      // Keep container size in sync with sheet size
+      if (oldExpandOffset != expandedOffset || expandedOffset == 0) {
+        val offset = if (expandedOffset == 0) statusBarHeight else 0
+        val newHeight = screenHeight - expandedOffset - offset
+        delegate?.viewControllerDidChangeSize(width, newHeight)
+      }
 
-    isReconfiguring = false
+      if (isPresented) {
+        // Re-apply current state to update position after config changes
+        setStateForDetentIndex(currentDetentIndex)
+      }
+
+      isReconfiguring = false
+    }
   }
 
   fun setupGrabber() {
@@ -787,7 +799,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val pos = getEstimatedPositionForIndex(i)
       val nextPos = getEstimatedPositionForIndex(i + 1)
 
-      if (positionPx <= pos && positionPx >= nextPos) {
+      if (positionPx in nextPos..pos) {
         val range = pos - nextPos
         val progress = if (range > 0) (pos - positionPx).toFloat() / range else 0f
         return Triple(i, i + 1, maxOf(0f, minOf(1f, progress)))
@@ -970,10 +982,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     super.onSizeChanged(w, h, oldw, oldh)
     if (w == oldw && h == oldh) return
 
-    // Fix issue where size keeps changing when full expanding to full screen (edgeToEdgeFullScreen enabled)
-    if (h + statusBarHeight >= screenHeight && isExpanded && oldw == w) return
-
-    delegate?.viewControllerDidChangeSize(w, h)
+    // Skip when fully expanding to full screen (edgeToEdgeFullScreen enabled)
+    // Size keeps changing on this case
+    if (h + statusBarHeight > screenHeight && isExpanded && oldw == w) {
+      return
+    }
 
     val oldScreenHeight = screenHeight
     screenHeight = ScreenUtils.getScreenHeight(reactContext, edgeToEdgeEnabled)

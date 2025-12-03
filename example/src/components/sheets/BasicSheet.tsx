@@ -23,7 +23,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   };
 
   const dismiss = async () => {
-    await sheetRef.current?.dismiss(false);
+    await sheetRef.current?.dismiss();
     console.log('Basic sheet dismiss asynced');
   };
 
