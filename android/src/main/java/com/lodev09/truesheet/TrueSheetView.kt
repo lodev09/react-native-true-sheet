@@ -326,9 +326,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   @UiThread
-  fun dismiss(promiseCallback: () -> Unit) {
+  fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
     viewController.dismissPromise = promiseCallback
-    viewController.dismiss()
+    viewController.dismiss(animated)
   }
 
   /**

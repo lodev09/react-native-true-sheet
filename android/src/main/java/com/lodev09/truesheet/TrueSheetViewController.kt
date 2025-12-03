@@ -524,12 +524,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  fun dismiss() {
+  fun dismiss(animated: Boolean = true) {
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
       emitChangePositionDelegate(screenHeight, realtime = false)
     }
-    dialog?.dismiss()
+
+    dialog?.apply {
+      if (!animated) window?.setWindowAnimations(0)
+      post { dismiss() }
+    }
   }
 
   // ====================================================================

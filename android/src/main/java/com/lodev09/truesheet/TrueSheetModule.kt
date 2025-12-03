@@ -46,12 +46,12 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    * @throws OPERATION_FAILED if the operation fails for any other reason
    */
   @ReactMethod
-  fun presentByRef(viewTag: Double, index: Double, promise: Promise) {
+  fun presentByRef(viewTag: Double, index: Double, animated: Boolean, promise: Promise) {
     val tag = viewTag.toInt()
     val detentIndex = index.toInt()
 
     withTrueSheetView(tag, promise) { view ->
-      view.present(detentIndex) {
+      view.present(detentIndex, animated) {
         promise.resolve(null)
       }
     }
@@ -67,11 +67,11 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    * @throws OPERATION_FAILED if the operation fails for any other reason
    */
   @ReactMethod
-  fun dismissByRef(viewTag: Double, promise: Promise) {
+  fun dismissByRef(viewTag: Double, animated: Boolean, promise: Promise) {
     val tag = viewTag.toInt()
 
     withTrueSheetView(tag, promise) { view ->
-      view.dismiss {
+      view.dismiss(animated) {
         promise.resolve(null)
       }
     }
@@ -89,8 +89,8 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    */
   @ReactMethod
   fun resizeByRef(viewTag: Double, index: Double, promise: Promise) {
-    // Resize is just an alias for present
-    presentByRef(viewTag, index, promise)
+    // Resize is just an alias for present (always animated)
+    presentByRef(viewTag, index, true, promise)
   }
 
   /**

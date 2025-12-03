@@ -46,6 +46,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 
 - (void)presentByRef:(double)viewTag
                index:(double)index
+            animated:(BOOL)animated
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
@@ -57,7 +58,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
     }
 
     [trueSheetView presentAtIndex:(NSInteger)index
-                         animated:YES
+                         animated:animated
                        completion:^(BOOL success, NSError *_Nullable error) {
                          if (success) {
                            resolve(nil);
@@ -68,7 +69,10 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   });
 }
 
-- (void)dismissByRef:(double)viewTag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)dismissByRef:(double)viewTag
+            animated:(BOOL)animated
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
 
@@ -77,7 +81,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
       return;
     }
 
-    [trueSheetView dismissAnimated:YES
+    [trueSheetView dismissAnimated:animated
                         completion:^(BOOL success, NSError *_Nullable error) {
                           if (success) {
                             resolve(nil);
@@ -92,8 +96,8 @@ RCT_EXPORT_MODULE(TrueSheetModule)
               index:(double)index
             resolve:(RCTPromiseResolveBlock)resolve
              reject:(RCTPromiseRejectBlock)reject {
-  // Resize is just present with a different index
-  [self presentByRef:viewTag index:index resolve:resolve reject:reject];
+  // Resize is just present with a different index (always animated)
+  [self presentByRef:viewTag index:index animated:YES resolve:resolve reject:reject];
 }
 
 #pragma mark - Helper Methods
