@@ -108,19 +108,19 @@ Use this event when you need smooth, continuous position tracking for animations
 
 ## `onWillFocus`
 
-This is called when the sheet is about to regain focus after a sheet presented on top of it begins dismissing.
+This is called when the sheet is about to regain focus after a sheet or `react-native-screens` modal presented on top of it begins dismissing.
 
 ## `onDidFocus`
 
-This is called when the sheet has regained focus after a sheet presented on top of it is dismissed. Useful for refreshing data or re-enabling interactions when returning to a sheet in a stacked sheet scenario.
+This is called when the sheet has regained focus after a sheet or `react-native-screens` modal presented on top of it is dismissed. Useful for refreshing data or re-enabling interactions when returning to a sheet.
 
 ## `onWillBlur`
 
-This is called when the sheet is about to lose focus because another sheet is about to be presented on top of it.
+This is called when the sheet is about to lose focus because another sheet or `react-native-screens` modal is about to be presented on top of it.
 
 ## `onDidBlur`
 
-This is called when the sheet has lost focus because another sheet is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.
+This is called when the sheet has lost focus because another sheet or `react-native-screens` modal is presented on top of it. Useful for pausing updates or disabling interactions while the sheet is not the topmost.
 
 ## `onBackPress`
 

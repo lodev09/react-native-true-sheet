@@ -34,6 +34,38 @@ return (
 )
 ```
 
+## Focus and Blur Events
+
+When presenting `react-native-screens` modals on top of the sheet, focus and blur events are emitted automatically. This allows you to respond when the sheet loses or regains focus due to modal presentation/dismissal.
+
+```tsx
+<TrueSheet
+  ref={sheet}
+  onWillBlur={() => {
+    // Modal is about to be presented on top
+    console.log('Sheet will lose focus')
+  }}
+  onDidBlur={() => {
+    // Modal is now presented on top
+    console.log('Sheet lost focus')
+  }}
+  onWillFocus={() => {
+    // Modal is about to be dismissed
+    console.log('Sheet will regain focus')
+  }}
+  onDidFocus={() => {
+    // Modal was dismissed, sheet is back in focus
+    console.log('Sheet regained focus')
+  }}
+>
+  <Button onPress={() => navigation.navigate('ModalScreen')} title="Open Modal" />
+</TrueSheet>
+```
+
+:::tip
+Use `onDidFocus` to refresh data or re-enable interactions when returning from a modal.
+:::
+
 ## Dismissing Before Navigation
 
 If you prefer to dismiss the sheet before navigating for UX reasons, you can still do so:
