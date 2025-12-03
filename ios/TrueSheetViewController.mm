@@ -86,10 +86,6 @@
   return self.presentedViewController == nil;
 }
 
-- (BOOL)isActiveAndVisible {
-  return self.isViewLoaded && self.view.window != nil;
-}
-
 - (UIView *)presentedView {
   return self.sheetPresentationController.presentedView;
 }
