@@ -327,6 +327,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       isDismissing = true
       emitWillDismissEvents()
 
+      // Emit off-screen position since onSlide isn't triggered for user-initiated dismiss
+      emitChangePositionDelegate(screenHeight, realtime = false)
+
       // Emit didBlur/didDismiss after dismiss animation completes
       android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
         emitDidDismissEvents()
