@@ -22,10 +22,6 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
-  override fun initialize() {
-    super.initialize()
-  }
-
   override fun invalidate() {
     super.invalidate()
     // Clear all registered views and observer on module invalidation
