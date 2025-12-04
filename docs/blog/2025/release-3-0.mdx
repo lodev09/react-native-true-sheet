@@ -95,7 +95,7 @@ import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated'
-import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated'
 
 const App = () => (
   <ReanimatedTrueSheetProvider>
@@ -114,7 +114,7 @@ const AnimatedContent = () => {
 
   // Fade in as sheet expands from index 0 to 1
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1])
+    opacity: interpolate(animatedIndex.value, [0, 1], [0, 1], Extrapolation.CLAMP)
   }))
 
   return (

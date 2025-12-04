@@ -69,9 +69,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)resizeToDetentIndex:(NSInteger)index;
-- (void)setupSheetDetents;
 - (void)setupSheetProps;
-- (void)updateDraggable;
+- (void)setupSheetDetents;
+- (void)setupSheetDetentsForSizeChange;
+- (void)setupDraggable;
 
 @end
 

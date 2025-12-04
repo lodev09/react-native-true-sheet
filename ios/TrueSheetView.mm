@@ -223,7 +223,7 @@ using namespace facebook::react;
       [self->_controller setupSheetDetents];
       [self->_controller applyActiveDetent];
     }];
-    [_controller updateDraggable];
+    [_controller setupDraggable];
   } else if (_initialDetentIndex >= 0) {
     [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
   }
@@ -361,7 +361,7 @@ using namespace facebook::react;
 /**
  * Debounced sheet update to handle rapid content/header size changes.
  */
-- (void)updateSheetIfNeeded {
+- (void)setupSheetDetentsForSizeChange {
   if (!_controller.isPresented || _isSheetUpdatePending)
     return;
 
@@ -371,19 +371,19 @@ using namespace facebook::react;
     self->_isSheetUpdatePending = NO;
 
     [self->_controller.sheetPresentationController animateChanges:^{
-      [self->_controller setupSheetDetents];
+      [self->_controller setupSheetDetentsForSizeChange];
     }];
   });
 }
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize {
   _controller.contentHeight = @(newSize.height);
-  [self updateSheetIfNeeded];
+  [self setupSheetDetentsForSizeChange];
 }
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize {
   _controller.headerHeight = @(newSize.height);
-  [self updateSheetIfNeeded];
+  [self setupSheetDetentsForSizeChange];
 }
 
 #pragma mark - TrueSheetViewControllerDelegate

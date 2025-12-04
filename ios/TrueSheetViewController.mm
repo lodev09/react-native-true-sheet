@@ -22,13 +22,15 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
-  BOOL _isDragging;
   NSInteger _pendingDetentIndex;
+  BOOL _pendingContentSizeChange;
 
-  // Transitioning tracker
+  // Position tracking
   CADisplayLink *_transitioningTimer;
   UIView *_transitionFakeView;
+  BOOL _isDragging;
   BOOL _isTransitioning;
+  BOOL _isTrackingPositionFromLayout;
 
   // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
@@ -61,10 +63,13 @@
     _lastPosition = 0;
     _isDragging = NO;
     _isPresented = NO;
+    _pendingContentSizeChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
+    
     _isTransitioning = NO;
     _transitionFakeView = [UIView new];
+    _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
     _resolvedDetentPositions = [NSMutableArray array];
@@ -200,6 +205,9 @@
       if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
         [self.delegate viewControllerDidFocus];
       }
+      
+      // Emit correct position after presentation
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
 
     [self setupGestureRecognizer];
@@ -264,20 +272,36 @@
   }
 }
 
+- (void)viewWillLayoutSubviews {
+  [super viewWillLayoutSubviews];
+  
+  if (!_isTransitioning) {
+    _isTrackingPositionFromLayout = YES;
+    
+    UIViewController *presented = self.presentedViewController;
+    
+    // Not realtime when another controller is presented that triggers our layout
+    BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
+    
+    BOOL realtime = !hasPresentedController;
+    
+    if (_pendingContentSizeChange) {
+      _pendingContentSizeChange = NO;
+      realtime = NO;
+      
+      // Store resolved position after content size changes
+      [self storeResolvedPositionForIndex:self.currentDetentIndex];
+    }
+    
+    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
+  }
+}
+
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
-  }
-
-  UIViewController *presented = self.presentedViewController;
-  BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-
-  if (!_isDragging && !_isTransitioning) {
-    // Update stored position for current detent (handles content size changes)
-    [self storeResolvedPositionForIndex:self.currentDetentIndex];
-    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:hasPresentedController];
   }
 
   // Emit pending detent change after programmatic resize settles
@@ -289,9 +313,14 @@
       if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
         CGFloat detent = [self detentValueForIndex:pendingIndex];
         [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+        
+        // Emit position for the final position
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
       }
     });
   }
+  
+  _isTrackingPositionFromLayout = NO;
 }
 
 #pragma mark - Presentation Tracking (for RN Screens integration)
@@ -402,7 +431,7 @@
   }
 }
 
-- (void)updateDraggable {
+- (void)setupDraggable {
   UIView *presentedView = self.presentedView;
   if (!presentedView)
     return;
@@ -432,7 +461,9 @@
       _isDragging = YES;
       break;
     case UIGestureRecognizerStateChanged:
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES];
+      if (!_isTrackingPositionFromLayout) {
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
+      }
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
@@ -440,10 +471,12 @@
         dispatch_async(dispatch_get_main_queue(), ^{
           // Store resolved position when drag ends
           [self storeResolvedPositionForIndex:self.currentDetentIndex];
-          [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO];
+          
+          // Emit the correct position after dragging
+          [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
-
+      
       _isDragging = NO;
       break;
     }
@@ -461,7 +494,7 @@
   _isTransitioning = YES;
 
   CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
-  CGRect presentedFrame = CGRectMake(0, self.presentedView.frame.origin.y, 0, 0);
+  CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
   // Set starting fake view position
   _transitionFakeView.frame = self.isDismissing ? presentedFrame : dismissedFrame;
@@ -470,7 +503,7 @@
   auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
     [[context containerView] addSubview:self->_transitionFakeView];
 
-    // Set the fake view target position
+    // Set ending fake view position
     self->_transitionFakeView.frame = self.isDismissing ? dismissedFrame : presentedFrame;
 
     self->_transitioningTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionTracker)];
@@ -495,16 +528,17 @@
 
     if (self.currentPosition >= self.screenHeight) {
       // Dismissing position
-      [self emitChangePositionDelegateWithPosition:layerPosition realtime:YES];
+      CGFloat position = fmax(_lastPosition, layerPosition);
+      [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
     } else {
       // Presenting position
       CGFloat position = fmax(self.currentPosition, layerPosition);
-      [self emitChangePositionDelegateWithPosition:position realtime:YES];
+      [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
     }
   }
 }
 
-- (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime {
+- (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
   // Use epsilon comparison to avoid missing updates due to floating point precision
   if (fabs(_lastPosition - position) > 0.01) {
     _lastPosition = position;
@@ -514,6 +548,9 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
+    
+    // Debug position tracking
+    // NSLog(@"position from %@: %f, realtime: %i", debug, position, realtime);
   }
 }
 
@@ -657,6 +694,11 @@
 }
 
 #pragma mark - Sheet Configuration
+
+- (void)setupSheetDetentsForSizeChange {
+  _pendingContentSizeChange = YES;
+  [self setupSheetDetents];
+}
 
 - (void)setupSheetDetents {
   UISheetPresentationController *sheet = self.sheetPresentationController;
