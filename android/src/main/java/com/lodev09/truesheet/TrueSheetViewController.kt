@@ -299,6 +299,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         // Notify parent sheet that it has lost focus (after this sheet appeared)
         parentSheetView?.viewControllerDidBlur()
 
+        // Emit didFocus with didPresent
+        delegate?.viewControllerDidFocus()
+
         presentPromise?.invoke()
         presentPromise = null
 
@@ -307,6 +310,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnCancelListener {
+      // Emit willBlur with willDismiss
+      delegate?.viewControllerWillBlur()
+
       delegate?.viewControllerWillDismiss()
 
       // Notify parent sheet that it is about to regain focus
@@ -319,6 +325,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       // Notify parent sheet that it has regained focus
       parentSheetView?.viewControllerDidFocus()
       parentSheetView = null
+
+      // Emit didBlur with didDismiss
+      delegate?.viewControllerDidBlur()
 
       dismissPromise?.invoke()
       dismissPromise = null
@@ -348,6 +357,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun onStateChanged(sheetView: View, newState: Int) {
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+            // TODO: maybe we emit didDismiss here
+            // delegate?.viewControllerDidDismiss(hadParent)
             dismiss()
             return
           }
@@ -517,6 +528,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       parentSheetView?.viewControllerWillBlur()
 
       delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
+
+      // Emit willFocus with willPresent
+      delegate?.viewControllerWillFocus()
 
       if (!animated) {
         dialog.window?.setWindowAnimations(0)

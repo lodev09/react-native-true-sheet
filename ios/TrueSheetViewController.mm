@@ -159,15 +159,20 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
-      dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
         NSInteger index = self.currentDetentIndex;
         CGFloat position = self.currentPosition;
         CGFloat detent = [self detentValueForIndex:index];
 
         [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
-      });
-    }
+      }
+
+      // Emit willFocus with willPresent
+      if ([self.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
+        [self.delegate viewControllerWillFocus];
+      }
+    });
   }
 
   [self setupTransitionTracker];
@@ -184,13 +189,19 @@
       }
     }
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidPresentAtIndex:position:detent:)]) {
-      dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidPresentAtIndex:position:detent:)]) {
         NSInteger index = [self currentDetentIndex];
         CGFloat detent = [self detentValueForIndex:index];
         [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
-      });
-    }
+      }
+
+      // Emit didFocus with didPresent
+      if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
+        [self.delegate viewControllerDidFocus];
+      }
+    });
+
     [self setupGestureRecognizer];
     _isPresented = YES;
   }
@@ -204,9 +215,16 @@
   [super viewWillDisappear:animated];
 
   if (self.isDismissing) {
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
-      [self.delegate viewControllerWillDismiss];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+      // Emit willBlur with willDismiss
+      if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
+        [self.delegate viewControllerWillBlur];
+      }
+
+      if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+        [self.delegate viewControllerWillDismiss];
+      }
+    });
 
     // Notify the parent sheet (if any) that it is about to regain focus
     if (_parentSheetController) {
@@ -233,6 +251,11 @@
         [_parentSheetController.delegate viewControllerDidFocus];
       }
       _parentSheetController = nil;
+    }
+
+    // Emit didBlur with didDismiss
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
+      [self.delegate viewControllerDidBlur];
     }
 
     if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
