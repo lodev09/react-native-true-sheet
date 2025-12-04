@@ -6,13 +6,13 @@ export class TrueSheet extends React.Component {
   static instances = {};
 
   // Static methods
-  static dismiss = jest.fn((name) => Promise.resolve());
-  static present = jest.fn((name, index = 0) => Promise.resolve());
+  static dismiss = jest.fn((name, animated = true) => Promise.resolve());
+  static present = jest.fn((name, index = 0, animated = true) => Promise.resolve());
   static resize = jest.fn((name, index) => Promise.resolve());
 
   // Instance methods
-  dismiss = jest.fn(() => Promise.resolve());
-  present = jest.fn((index = 0) => Promise.resolve());
+  dismiss = jest.fn((animated = true) => Promise.resolve());
+  present = jest.fn((index = 0, animated = true) => Promise.resolve());
   resize = jest.fn((index) => Promise.resolve());
 
   componentDidMount() {
@@ -30,9 +30,10 @@ export class TrueSheet extends React.Component {
   }
 
   render() {
-    const { children, footer, style, ...rest } = this.props;
+    const { children, header, footer, style, ...rest } = this.props;
     return (
       <View style={style} {...rest}>
+        {header}
         {children}
         {footer}
       </View>
