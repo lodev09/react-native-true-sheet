@@ -310,9 +310,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     dialog.setOnCancelListener {
+      // User-initiated dismiss (back button, tap outside)
       // Emit willBlur with willDismiss
       delegate?.viewControllerWillBlur()
-
       delegate?.viewControllerWillDismiss()
 
       // Notify parent sheet that it is about to regain focus
@@ -328,10 +328,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Emit didBlur with didDismiss
       delegate?.viewControllerDidBlur()
+      delegate?.viewControllerDidDismiss(hadParent)
 
       dismissPromise?.invoke()
       dismissPromise = null
-      delegate?.viewControllerDidDismiss(hadParent)
+
       cleanupDialog()
     }
   }
@@ -357,9 +358,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun onStateChanged(sheetView: View, newState: Int) {
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-            // TODO: maybe we emit didDismiss here
-            // delegate?.viewControllerDidDismiss(hadParent)
-            dismiss()
+            // setOnDismissListener handles didBlur/didDismiss
+            dialog.dismiss()
             return
           }
 
@@ -541,15 +541,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun dismiss(animated: Boolean = true) {
+    // Emit willBlur with willDismiss
+    delegate?.viewControllerWillBlur()
+    delegate?.viewControllerWillDismiss()
+
+    // Notify parent sheet that it is about to regain focus
+    parentSheetView?.viewControllerWillFocus()
+
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
       emitChangePositionDelegate(screenHeight, realtime = false)
     }
 
-    dialog?.apply {
-      if (!animated) window?.setWindowAnimations(0)
-      post { dismiss() }
+    if (!animated) {
+      dialog?.window?.setWindowAnimations(0)
     }
+
+    // Temporarily enable hideable to allow STATE_HIDDEN transition
+    behavior?.isHideable = true
+    behavior?.state = BottomSheetBehavior.STATE_HIDDEN
   }
 
   // ====================================================================

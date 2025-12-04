@@ -176,6 +176,7 @@ export const MapScreen = () => {
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
         <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />

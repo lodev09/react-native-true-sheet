@@ -157,15 +157,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
+
+    // Enable touch event dispatching to React Native
+    viewController.eventDispatcher = eventDispatcher
+    containerView?.footerView?.eventDispatcher = eventDispatcher
   }
 
   override fun viewControllerDidPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidPresentEvent(surfaceId, id, index, position, detent))
-
-    // Enable touch event dispatching to React Native
-    viewController.eventDispatcher = eventDispatcher
-    containerView?.footerView?.eventDispatcher = eventDispatcher
   }
 
   override fun viewControllerWillDismiss() {
