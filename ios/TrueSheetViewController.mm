@@ -66,7 +66,7 @@
     _pendingContentSizeChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
-    
+
     _isTransitioning = NO;
     _transitionFakeView = [UIView new];
     _isTrackingPositionFromLayout = NO;
@@ -205,7 +205,7 @@
       if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
         [self.delegate viewControllerDidFocus];
       }
-      
+
       // Emit correct position after presentation
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
@@ -274,25 +274,25 @@
 
 - (void)viewWillLayoutSubviews {
   [super viewWillLayoutSubviews];
-  
+
   if (!_isTransitioning) {
     _isTrackingPositionFromLayout = YES;
-    
+
     UIViewController *presented = self.presentedViewController;
-    
+
     // Not realtime when another controller is presented that triggers our layout
     BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-    
+
     BOOL realtime = !hasPresentedController;
-    
+
     if (_pendingContentSizeChange) {
       _pendingContentSizeChange = NO;
       realtime = NO;
-      
+
       // Store resolved position after content size changes
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     }
-    
+
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
   }
 }
@@ -313,13 +313,13 @@
       if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
         CGFloat detent = [self detentValueForIndex:pendingIndex];
         [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-        
+
         // Emit position for the final position
         [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
       }
     });
   }
-  
+
   _isTrackingPositionFromLayout = NO;
 }
 
@@ -471,12 +471,12 @@
         dispatch_async(dispatch_get_main_queue(), ^{
           // Store resolved position when drag ends
           [self storeResolvedPositionForIndex:self.currentDetentIndex];
-          
+
           // Emit the correct position after dragging
           [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
-      
+
       _isDragging = NO;
       break;
     }
@@ -548,7 +548,7 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
-    
+
     // Debug position tracking
     // NSLog(@"position from %@: %f, realtime: %i", debug, position, realtime);
   }

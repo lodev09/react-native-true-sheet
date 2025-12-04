@@ -52,7 +52,7 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
     animatedPosition,
     animatedIndex,
     animatedDetent,
-  }
+  };
 
   return (
     <ReanimatedTrueSheetContext.Provider value={value}>
