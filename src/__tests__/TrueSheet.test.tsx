@@ -1,7 +1,13 @@
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet } from '../index';
-import type { DidDismissEvent } from '../TrueSheet.types';
+import type {
+  DidDismissEvent,
+  WillFocusEvent,
+  DidFocusEvent,
+  WillBlurEvent,
+  DidBlurEvent,
+} from '../TrueSheet.types';
 
 describe('TrueSheet', () => {
   it('should export TrueSheet component', () => {
@@ -190,6 +196,80 @@ describe('TrueSheet', () => {
 
       // Content should now be rendered after state update
       expect(queryByText('Lifecycle Content')).not.toBeNull();
+    });
+  });
+
+  describe('Focus/Blur Events', () => {
+    it('should call onWillFocus when triggered', async () => {
+      const onWillFocusMock = jest.fn();
+      render(
+        <TrueSheet name="will-focus-test" initialDetentIndex={0} onWillFocus={onWillFocusMock}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = (TrueSheet as any).instances['will-focus-test'];
+      expect(sheetRef).toBeDefined();
+
+      await act(async () => {
+        sheetRef.onWillFocus({} as WillFocusEvent);
+      });
+
+      expect(onWillFocusMock).toHaveBeenCalled();
+    });
+
+    it('should call onDidFocus when triggered', async () => {
+      const onDidFocusMock = jest.fn();
+      render(
+        <TrueSheet name="did-focus-test" initialDetentIndex={0} onDidFocus={onDidFocusMock}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = (TrueSheet as any).instances['did-focus-test'];
+      expect(sheetRef).toBeDefined();
+
+      await act(async () => {
+        sheetRef.onDidFocus({} as DidFocusEvent);
+      });
+
+      expect(onDidFocusMock).toHaveBeenCalled();
+    });
+
+    it('should call onWillBlur when triggered', async () => {
+      const onWillBlurMock = jest.fn();
+      render(
+        <TrueSheet name="will-blur-test" initialDetentIndex={0} onWillBlur={onWillBlurMock}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = (TrueSheet as any).instances['will-blur-test'];
+      expect(sheetRef).toBeDefined();
+
+      await act(async () => {
+        sheetRef.onWillBlur({} as WillBlurEvent);
+      });
+
+      expect(onWillBlurMock).toHaveBeenCalled();
+    });
+
+    it('should call onDidBlur when triggered', async () => {
+      const onDidBlurMock = jest.fn();
+      render(
+        <TrueSheet name="did-blur-test" initialDetentIndex={0} onDidBlur={onDidBlurMock}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = (TrueSheet as any).instances['did-blur-test'];
+      expect(sheetRef).toBeDefined();
+
+      await act(async () => {
+        sheetRef.onDidBlur({} as DidBlurEvent);
+      });
+
+      expect(onDidBlurMock).toHaveBeenCalled();
     });
   });
 });
