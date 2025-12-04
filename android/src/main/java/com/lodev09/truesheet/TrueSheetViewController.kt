@@ -66,6 +66,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
+
+    // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
+    private const val PRESENT_ANIMATION_DURATION = 200L
+    private const val DISMISS_ANIMATION_DURATION = 150L
   }
 
   // ====================================================================
@@ -115,6 +119,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val resolvedDetentPositions = mutableListOf<Int>()
 
   private var isDragging = false
+  private var isDismissing = false
   private var isReconfiguring = false
   private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
@@ -272,6 +277,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     dialog = null
     isDragging = false
+    isDismissing = false
     isPresented = false
     isDialogVisible = false
     lastEmittedPositionPx = -1
@@ -286,43 +292,51 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupGrabber()
 
       sheetContainer?.post {
-        val detentInfo = getDetentInfoForIndex(currentDetentIndex)
-        val detent = getDetentValueForIndex(detentInfo.index)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
 
-        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
-
         // Store resolved position for initial detent
-        storeResolvedPosition(detentInfo.index)
+        storeResolvedPosition(currentDetentIndex)
         emitChangePositionDelegate(positionPx, realtime = false)
+
+        positionFooter()
+      }
+
+      // Emit didPresent/didFocus after present animation completes
+      sheetContainer?.postDelayed({
+        val detentInfo = getDetentInfoForIndex(currentDetentIndex)
+        val detent = getDetentValueForIndex(detentInfo.index)
+
+        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
 
         // Notify parent sheet that it has lost focus (after this sheet appeared)
         parentSheetView?.viewControllerDidBlur()
 
+        // Emit didFocus with didPresent
+        delegate?.viewControllerDidFocus()
+
         presentPromise?.invoke()
         presentPromise = null
-
-        positionFooter()
-      }
+      }, PRESENT_ANIMATION_DURATION)
     }
 
     dialog.setOnCancelListener {
-      delegate?.viewControllerWillDismiss()
+      // Skip if already handled by STATE_HIDDEN (programmatic dismiss)
+      if (isDismissing) return@setOnCancelListener
 
-      // Notify parent sheet that it is about to regain focus
-      parentSheetView?.viewControllerWillFocus()
+      // User-initiated dismiss (back button, tap outside)
+      isDismissing = true
+      emitWillDismissEvents()
+
+      // Emit off-screen position since onSlide isn't triggered for user-initiated dismiss
+      emitChangePositionDelegate(screenHeight, realtime = false)
+
+      // Emit didBlur/didDismiss after dismiss animation completes
+      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        emitDidDismissEvents()
+      }, DISMISS_ANIMATION_DURATION)
     }
 
     dialog.setOnDismissListener {
-      val hadParent = parentSheetView != null
-
-      // Notify parent sheet that it has regained focus
-      parentSheetView?.viewControllerDidFocus()
-      parentSheetView = null
-
-      dismissPromise?.invoke()
-      dismissPromise = null
-      delegate?.viewControllerDidDismiss(hadParent)
       cleanupDialog()
     }
   }
@@ -348,7 +362,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun onStateChanged(sheetView: View, newState: Int) {
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-            dismiss()
+            // Mark as dismissing so setOnCancelListener skips emitting events
+            isDismissing = true
+            emitDidDismissEvents()
+            dialog.dismiss()
             return
           }
 
@@ -431,6 +448,34 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun cleanupModalObserver() {
     rnScreensObserver?.stop()
     rnScreensObserver = null
+  }
+
+  // ====================================================================
+  // MARK: - Dismiss Event Helpers
+  // ====================================================================
+
+  /**
+   * Emits willBlur and willDismiss events, and notifies parent sheet of upcoming focus change.
+   */
+  private fun emitWillDismissEvents() {
+    delegate?.viewControllerWillBlur()
+    delegate?.viewControllerWillDismiss()
+    parentSheetView?.viewControllerWillFocus()
+  }
+
+  /**
+   * Emits didBlur and didDismiss events, notifies parent sheet, and invokes dismiss promise.
+   */
+  private fun emitDidDismissEvents() {
+    val hadParent = parentSheetView != null
+    parentSheetView?.viewControllerDidFocus()
+    parentSheetView = null
+
+    delegate?.viewControllerDidBlur()
+    delegate?.viewControllerDidDismiss(hadParent)
+
+    dismissPromise?.invoke()
+    dismissPromise = null
   }
 
   // ====================================================================
@@ -518,6 +563,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
 
+      // Emit willFocus with willPresent
+      delegate?.viewControllerWillFocus()
+
       if (!animated) {
         dialog.window?.setWindowAnimations(0)
       }
@@ -527,15 +575,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun dismiss(animated: Boolean = true) {
+    emitWillDismissEvents()
+
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
       emitChangePositionDelegate(screenHeight, realtime = false)
     }
 
-    dialog?.apply {
-      if (!animated) window?.setWindowAnimations(0)
-      post { dismiss() }
+    if (!animated) {
+      dialog?.window?.setWindowAnimations(0)
     }
+
+    // Temporarily enable hideable to allow STATE_HIDDEN transition
+    behavior?.isHideable = true
+    behavior?.state = BottomSheetBehavior.STATE_HIDDEN
   }
 
   // ====================================================================
