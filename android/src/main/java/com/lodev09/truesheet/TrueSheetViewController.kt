@@ -66,6 +66,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
+
+    // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
+    private const val PRESENT_ANIMATION_DURATION = 200L
+    private const val DISMISS_ANIMATION_DURATION = 150L
   }
 
   // ====================================================================
@@ -115,6 +119,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val resolvedDetentPositions = mutableListOf<Int>()
 
   private var isDragging = false
+  private var isDismissing = false
   private var isReconfiguring = false
   private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
@@ -272,6 +277,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     dialog = null
     isDragging = false
+    isDismissing = false
     isPresented = false
     isDialogVisible = false
     lastEmittedPositionPx = -1
@@ -286,15 +292,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupGrabber()
 
       sheetContainer?.post {
-        val detentInfo = getDetentInfoForIndex(currentDetentIndex)
-        val detent = getDetentValueForIndex(detentInfo.index)
         val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
 
-        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
-
         // Store resolved position for initial detent
-        storeResolvedPosition(detentInfo.index)
+        storeResolvedPosition(currentDetentIndex)
         emitChangePositionDelegate(positionPx, realtime = false)
+
+        positionFooter()
+      }
+
+      // Emit didPresent/didFocus after present animation completes
+      sheetContainer?.postDelayed({
+        val detentInfo = getDetentInfoForIndex(currentDetentIndex)
+        val detent = getDetentValueForIndex(detentInfo.index)
+
+        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
 
         // Notify parent sheet that it has lost focus (after this sheet appeared)
         parentSheetView?.viewControllerDidBlur()
@@ -304,35 +316,38 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         presentPromise?.invoke()
         presentPromise = null
-
-        positionFooter()
-      }
+      }, PRESENT_ANIMATION_DURATION)
     }
 
     dialog.setOnCancelListener {
+      // Skip if already handled by STATE_HIDDEN (programmatic dismiss)
+      if (isDismissing) return@setOnCancelListener
+
       // User-initiated dismiss (back button, tap outside)
+      isDismissing = true
+
       // Emit willBlur with willDismiss
       delegate?.viewControllerWillBlur()
       delegate?.viewControllerWillDismiss()
 
       // Notify parent sheet that it is about to regain focus
       parentSheetView?.viewControllerWillFocus()
+
+      // Emit didBlur/didDismiss after dismiss animation completes
+      val hadParent = parentSheetView != null
+      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        parentSheetView?.viewControllerDidFocus()
+        parentSheetView = null
+
+        delegate?.viewControllerDidBlur()
+        delegate?.viewControllerDidDismiss(hadParent)
+
+        dismissPromise?.invoke()
+        dismissPromise = null
+      }, DISMISS_ANIMATION_DURATION)
     }
 
     dialog.setOnDismissListener {
-      val hadParent = parentSheetView != null
-
-      // Notify parent sheet that it has regained focus
-      parentSheetView?.viewControllerDidFocus()
-      parentSheetView = null
-
-      // Emit didBlur with didDismiss
-      delegate?.viewControllerDidBlur()
-      delegate?.viewControllerDidDismiss(hadParent)
-
-      dismissPromise?.invoke()
-      dismissPromise = null
-
       cleanupDialog()
     }
   }
@@ -358,7 +373,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun onStateChanged(sheetView: View, newState: Int) {
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-            // setOnDismissListener handles didBlur/didDismiss
+            // Mark as dismissing so setOnCancelListener skips emitting events
+            isDismissing = true
+
+            val hadParent = parentSheetView != null
+
+            // Notify parent sheet that it has regained focus
+            parentSheetView?.viewControllerDidFocus()
+            parentSheetView = null
+
+            // Emit didBlur with didDismiss
+            delegate?.viewControllerDidBlur()
+            delegate?.viewControllerDidDismiss(hadParent)
+
+            dismissPromise?.invoke()
+            dismissPromise = null
+
             dialog.dismiss()
             return
           }
