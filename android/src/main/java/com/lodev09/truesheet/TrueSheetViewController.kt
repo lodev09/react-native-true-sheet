@@ -325,25 +325,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // User-initiated dismiss (back button, tap outside)
       isDismissing = true
-
-      // Emit willBlur with willDismiss
-      delegate?.viewControllerWillBlur()
-      delegate?.viewControllerWillDismiss()
-
-      // Notify parent sheet that it is about to regain focus
-      parentSheetView?.viewControllerWillFocus()
+      emitWillDismissEvents()
 
       // Emit didBlur/didDismiss after dismiss animation completes
-      val hadParent = parentSheetView != null
       android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-        parentSheetView?.viewControllerDidFocus()
-        parentSheetView = null
-
-        delegate?.viewControllerDidBlur()
-        delegate?.viewControllerDidDismiss(hadParent)
-
-        dismissPromise?.invoke()
-        dismissPromise = null
+        emitDidDismissEvents()
       }, DISMISS_ANIMATION_DURATION)
     }
 
@@ -375,20 +361,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
             // Mark as dismissing so setOnCancelListener skips emitting events
             isDismissing = true
-
-            val hadParent = parentSheetView != null
-
-            // Notify parent sheet that it has regained focus
-            parentSheetView?.viewControllerDidFocus()
-            parentSheetView = null
-
-            // Emit didBlur with didDismiss
-            delegate?.viewControllerDidBlur()
-            delegate?.viewControllerDidDismiss(hadParent)
-
-            dismissPromise?.invoke()
-            dismissPromise = null
-
+            emitDidDismissEvents()
             dialog.dismiss()
             return
           }
@@ -472,6 +445,34 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun cleanupModalObserver() {
     rnScreensObserver?.stop()
     rnScreensObserver = null
+  }
+
+  // ====================================================================
+  // MARK: - Dismiss Event Helpers
+  // ====================================================================
+
+  /**
+   * Emits willBlur and willDismiss events, and notifies parent sheet of upcoming focus change.
+   */
+  private fun emitWillDismissEvents() {
+    delegate?.viewControllerWillBlur()
+    delegate?.viewControllerWillDismiss()
+    parentSheetView?.viewControllerWillFocus()
+  }
+
+  /**
+   * Emits didBlur and didDismiss events, notifies parent sheet, and invokes dismiss promise.
+   */
+  private fun emitDidDismissEvents() {
+    val hadParent = parentSheetView != null
+    parentSheetView?.viewControllerDidFocus()
+    parentSheetView = null
+
+    delegate?.viewControllerDidBlur()
+    delegate?.viewControllerDidDismiss(hadParent)
+
+    dismissPromise?.invoke()
+    dismissPromise = null
   }
 
   // ====================================================================
@@ -571,12 +572,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun dismiss(animated: Boolean = true) {
-    // Emit willBlur with willDismiss
-    delegate?.viewControllerWillBlur()
-    delegate?.viewControllerWillDismiss()
-
-    // Notify parent sheet that it is about to regain focus
-    parentSheetView?.viewControllerWillFocus()
+    emitWillDismissEvents()
 
     this.post {
       // Emit off-screen position (detent = 0 since sheet is fully hidden)
