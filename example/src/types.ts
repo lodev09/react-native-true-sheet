@@ -3,6 +3,7 @@ export type AppStackParamList = {
   Navigation: undefined;
   Test: undefined;
   ModalStack: undefined;
+  SheetNavigator: undefined;
 };
 
 export type ModalStackParamList = {

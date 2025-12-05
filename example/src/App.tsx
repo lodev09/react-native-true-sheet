@@ -1,7 +1,13 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, NavigationScreen, TestScreen, ModalScreen } from './screens';
+import {
+  MapScreen,
+  NavigationScreen,
+  TestScreen,
+  ModalScreen,
+  SheetNavigatorScreen,
+} from './screens';
 import type { AppStackParamList, ModalStackParamList } from './types';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
@@ -38,6 +44,11 @@ const App = () => {
             name="ModalStack"
             component={ModalStackScreen}
             options={{ presentation: 'fullScreenModal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="SheetNavigator"
+            component={SheetNavigatorScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>
