@@ -612,6 +612,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (dimmed && detentIndex >= dimmedDetentIndex) {
         view.setOnTouchListener(null)
         setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        setDimAmount(0.32f) // M3 scrim opacity
         dialog.setCanceledOnTouchOutside(dismissible)
       } else {
         view.setOnTouchListener { v, event ->
