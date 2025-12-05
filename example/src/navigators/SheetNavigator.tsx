@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import MapView from 'react-native-maps';
 
 import {
   createTrueSheetNavigator,
@@ -15,20 +16,35 @@ type SheetNavigatorParamList = {
 
 const Sheet = createTrueSheetNavigator<SheetNavigatorParamList>();
 
-const HomeContent = () => {
+const HomeScreen = () => {
   const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
 
   return (
-    <View style={styles.content}>
-      <View style={styles.heading}>
-        <Text style={styles.title}>Sheet Navigator</Text>
-        <Text style={styles.subtitle}>
-          Using createTrueSheetNavigator for react-navigation integration.
-        </Text>
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialCamera={{
+          altitude: 18000,
+          zoom: 14,
+          center: {
+            latitude: 9.306743705457553,
+            longitude: 123.30474002203727,
+          },
+          pitch: 0,
+          heading: 0,
+        }}
+        userInterfaceStyle="dark"
+      />
+      <View style={styles.content}>
+        <View style={styles.heading}>
+          <Text style={styles.title}>Sheet Navigator</Text>
+          <Text style={styles.subtitle}>
+            Using createTrueSheetNavigator for react-navigation integration.
+          </Text>
+        </View>
+        <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
+        <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
       </View>
-
-      <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
-      <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
     </View>
   );
 };
@@ -66,10 +82,10 @@ const SettingsSheet = () => {
   );
 };
 
-export const SheetNavigatorScreen = () => {
+export const SheetNavigator = () => {
   return (
     <Sheet.Navigator>
-      <Sheet.Screen name="Home" component={HomeContent} />
+      <Sheet.Screen name="Home" component={HomeScreen} />
       <Sheet.Screen
         name="Details"
         component={DetailsSheet}
@@ -92,15 +108,22 @@ export const SheetNavigatorScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  content: {
+  container: {
     backgroundColor: BLUE,
-    justifyContent: 'center',
     flex: 1,
-    padding: SPACING,
+  },
+  map: {
+    flex: 1,
+  },
+  content: {
+    position: 'absolute',
+    top: 100,
+    left: SPACING,
+    right: SPACING,
     gap: GAP,
   },
   heading: {
-    marginBottom: SPACING * 2,
+    marginBottom: SPACING,
   },
   title: {
     fontSize: 24,
