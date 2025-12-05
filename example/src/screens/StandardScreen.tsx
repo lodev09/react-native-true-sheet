@@ -15,7 +15,7 @@ import { Button, Spacer } from '../components';
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { useAppNavigation } from '../hooks';
 
-export const NavigationScreen = () => {
+export const StandardScreen = () => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);

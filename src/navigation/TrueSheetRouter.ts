@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 import {
+  type CommonActions,
   type ParamListBase,
   type Router,
   StackRouter,
@@ -14,9 +15,20 @@ export type TrueSheetRouterOptions = StackRouterOptions;
 
 export type TrueSheetActionType =
   | StackActionType
+  | ReturnType<typeof CommonActions.goBack>
   | {
       type: 'RESIZE';
       index: number;
+      source?: string;
+      target?: string;
+    }
+  | {
+      type: 'DISMISS';
+      source?: string;
+      target?: string;
+    }
+  | {
+      type: 'REMOVE';
       source?: string;
       target?: string;
     };
@@ -25,6 +37,12 @@ export const TrueSheetActions = {
   ...StackActions,
   resize(index: number): TrueSheetActionType {
     return { type: 'RESIZE', index };
+  },
+  dismiss(): TrueSheetActionType {
+    return { type: 'DISMISS' };
+  },
+  remove(): TrueSheetActionType {
+    return { type: 'REMOVE' };
   },
 };
 
@@ -52,6 +70,25 @@ export function TrueSheetRouter(
     },
 
     getStateForAction(state, action, options) {
+      // Handle GO_BACK by marking route as closing
+      if (action.type === 'GO_BACK') {
+        if (state.routes.length <= 1) {
+          return state;
+        }
+
+        return {
+          ...state,
+          routes: state.routes.map((route, i) =>
+            i === state.index
+              ? {
+                  ...route,
+                  closing: true,
+                }
+              : route
+          ),
+        };
+      }
+
       switch (action.type) {
         case 'RESIZE': {
           const index =
@@ -71,6 +108,54 @@ export function TrueSheetRouter(
             ),
           };
         }
+
+        case 'POP':
+        case 'DISMISS': {
+          // Don't allow dismissing the first screen
+          if (state.routes.length <= 1) {
+            return state;
+          }
+
+          // Find the route to dismiss
+          const routeIndex =
+            action.target === state.key && action.source
+              ? state.routes.findIndex((r) => r.key === action.source)
+              : state.index;
+
+          // Mark the route as closing instead of removing it
+          return {
+            ...state,
+            routes: state.routes.map((route, i) =>
+              i === routeIndex
+                ? {
+                    ...route,
+                    closing: true,
+                  }
+                : route
+            ),
+          };
+        }
+
+        case 'REMOVE': {
+          // Actually remove the closing route
+          const routeKey = action.source;
+          const routeIndex = routeKey
+            ? state.routes.findIndex((r) => r.key === routeKey)
+            : state.routes.findIndex((r) => r.closing);
+
+          if (routeIndex === -1) {
+            return state;
+          }
+
+          const routes = state.routes.filter((_, i) => i !== routeIndex);
+
+          return {
+            ...state,
+            index: Math.min(state.index, routes.length - 1),
+            routes,
+          };
+        }
+
         default:
           return baseRouter.getStateForAction(state, action, options);
       }

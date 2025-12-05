@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, NavigationScreen, TestScreen } from '../screens';
+import { MapScreen, StandardScreen, TestScreen } from '../screens';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
 import type { AppStackParamList } from '../types';
 
-const DEFAULT_NAVIGATION: keyof AppStackParamList = 'Map';
+const DEFAULT_NAVIGATION: keyof AppStackParamList = 'SheetNavigator';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -18,8 +18,8 @@ export const RootNavigator = () => {
       <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
       <Stack.Screen
         options={{ headerShown: false, title: 'Home' }}
-        name="Navigation"
-        component={NavigationScreen}
+        name="Standard"
+        component={StandardScreen}
       />
       <Stack.Screen name="Test" component={TestScreen} />
       <Stack.Screen

@@ -1,4 +1,4 @@
 export * from './MapScreen';
-export * from './NavigationScreen';
+export * from './StandardScreen';
 export * from './TestScreen';
 export * from './ModalScreen';

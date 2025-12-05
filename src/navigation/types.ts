@@ -21,6 +21,7 @@ export type TrueSheetNavigationState<ParamList extends ParamListBase> = Omit<
   type: 'true-sheet';
   routes: (NavigationState<ParamList>['routes'][number] & {
     resizeIndex?: number | null;
+    closing?: boolean;
   })[];
 };
 

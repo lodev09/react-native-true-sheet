@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
-import MapView from 'react-native-maps';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import {
   createTrueSheetNavigator,
@@ -7,6 +8,7 @@ import {
 } from '@lodev09/react-native-true-sheet/navigation';
 import { Button, DemoContent } from '../components';
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
+import type { AppStackParamList } from '../types';
 
 type SheetNavigatorParamList = {
   Home: undefined;
@@ -18,39 +20,26 @@ const Sheet = createTrueSheetNavigator<SheetNavigatorParamList>();
 
 const HomeScreen = () => {
   const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
+  const rootNavigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   return (
-    <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        initialCamera={{
-          altitude: 18000,
-          zoom: 14,
-          center: {
-            latitude: 9.306743705457553,
-            longitude: 123.30474002203727,
-          },
-          pitch: 0,
-          heading: 0,
-        }}
-        userInterfaceStyle="dark"
-      />
-      <View style={styles.content}>
-        <View style={styles.heading}>
-          <Text style={styles.title}>Sheet Navigator</Text>
-          <Text style={styles.subtitle}>
-            Using createTrueSheetNavigator for react-navigation integration.
-          </Text>
-        </View>
-        <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
-        <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>Sheet Navigator</Text>
+        <Text style={styles.subtitle}>
+          Using createTrueSheetNavigator for react-navigation integration.
+        </Text>
       </View>
+      <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
+      <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+      <Button text="Navigate to Test" onPress={() => rootNavigation.navigate('Test')} />
     </View>
   );
 };
 
 const DetailsSheet = () => {
   const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
+  const rootNavigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   return (
     <View style={styles.sheetContent}>
@@ -60,6 +49,7 @@ const DetailsSheet = () => {
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
         <Button text="Open Settings" onPress={() => navigation.navigate('Settings')} />
+        <Button text="Open Modal" onPress={() => rootNavigation.navigate('ModalStack')} />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
     </View>
@@ -108,22 +98,15 @@ export const SheetNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: BLUE,
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
   content: {
-    position: 'absolute',
-    top: 100,
-    left: SPACING,
-    right: SPACING,
+    backgroundColor: BLUE,
+    justifyContent: 'center',
+    flex: 1,
+    padding: SPACING,
     gap: GAP,
   },
   heading: {
-    marginBottom: SPACING,
+    marginBottom: SPACING * 2,
   },
   title: {
     fontSize: 24,

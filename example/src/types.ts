@@ -1,6 +1,6 @@
 export type AppStackParamList = {
   Map: undefined;
-  Navigation: undefined;
+  Standard: undefined;
   Test: undefined;
   ModalStack: undefined;
   SheetNavigator: undefined;

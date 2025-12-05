@@ -10,11 +10,13 @@ import type {
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
 } from './types';
+import { TrueSheetActions } from './TrueSheetRouter';
 
 type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
   detentIndex: number;
   navigation: TrueSheetNavigationProp<ParamListBase>;
   routeKey: string;
+  closing?: boolean;
   children: React.ReactNode;
 };
 
@@ -22,21 +24,30 @@ function TrueSheetScreen({
   detentIndex,
   navigation,
   routeKey,
+  closing,
   detents,
   children,
   ...sheetProps
 }: TrueSheetScreenProps) {
   const ref = useRef<TrueSheet>(null);
   const lastIndexRef = useRef(detentIndex);
+  const isDismissedRef = useRef(false);
 
-  const isMounted = useRef(true);
+  // Handle closing state change - dismiss the sheet and wait for animation
   useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+    if (closing && !isDismissedRef.current) {
+      isDismissedRef.current = true;
+      (async () => {
+        await ref.current?.dismiss();
+        navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+      })();
+    } else if (closing && isDismissedRef.current) {
+      // Sheet was already dismissed by user swipe, just remove
+      navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+    }
+  }, [closing, navigation, routeKey]);
 
-  // Handle detentIndex changes (snapTo)
+  // Handle detentIndex changes (resize)
   useEffect(() => {
     if (detentIndex != null && lastIndexRef.current !== detentIndex) {
       ref.current?.resize(detentIndex);
@@ -58,9 +69,9 @@ function TrueSheetScreen({
   );
 
   const onDismiss = useCallback(() => {
-    // TrueSheet will call onDidDismiss on unmount, but we do not want that since
-    // we already popped the screen.
-    if (isMounted.current) {
+    // User dismissed the sheet by swiping down
+    if (!isDismissedRef.current) {
+      isDismissedRef.current = true;
       navigation.goBack();
     }
   }, [navigation]);
@@ -96,31 +107,33 @@ export function TrueSheetView({ state, descriptors }: Props) {
     return null;
   }
 
+  // Sheet routes (excluding first screen which is rendered as content)
+  const sheetRoutes = state.routes.slice(1);
+
   return (
     <>
       {firstScreen.render()}
-      {state.routes.slice(1).map((route) => {
+      {sheetRoutes.map((route) => {
         const descriptor = descriptors[route.key];
 
         if (!descriptor) {
           return null;
         }
 
-        const { options, navigation, render } = descriptor;
+        const { options, navigation: screenNavigation, render } = descriptor;
         const { detentIndex, detents, ...sheetProps } = options;
 
         return (
           <TrueSheetScreen
             key={route.key}
             routeKey={route.key}
-            // Make sure index is in range, it could be out if resizeIndex is persisted
-            // and detents is changed.
+            closing={route.closing}
             detentIndex={Math.min(
               route.resizeIndex ?? detentIndex ?? 0,
               detents != null ? detents.length - 1 : 0
             )}
             detents={detents ?? DEFAULT_DETENTS}
-            navigation={navigation}
+            navigation={screenNavigation}
             {...sheetProps}
           >
             {render()}
