@@ -92,7 +92,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupBackground()
       viewController.setupGrabber()
       updateSheetIfNeeded()
-      viewController.setStateForDetentIndex(viewController.currentDetentIndex)
     }
   }
 

@@ -13,7 +13,8 @@ import type {
 import { TrueSheetActions } from './TrueSheetRouter';
 
 type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
-  detentIndex: number;
+  detentIndex?: number;
+  resizeKey?: number;
   navigation: TrueSheetNavigationProp<ParamListBase>;
   routeKey: string;
   closing?: boolean;
@@ -21,7 +22,8 @@ type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
 };
 
 function TrueSheetScreen({
-  detentIndex,
+  detentIndex = 0,
+  resizeKey,
   navigation,
   routeKey,
   closing,
@@ -32,6 +34,7 @@ function TrueSheetScreen({
   const ref = useRef<TrueSheet>(null);
   const lastIndexRef = useRef(detentIndex);
   const isDismissedRef = useRef(false);
+  const hasMountedRef = useRef(false);
 
   // Handle closing state change - dismiss the sheet and wait for animation
   useEffect(() => {
@@ -47,26 +50,29 @@ function TrueSheetScreen({
     }
   }, [closing, navigation, routeKey]);
 
-  // Handle detentIndex changes (resize)
+  // Present on mount
   useEffect(() => {
+    hasMountedRef.current = true;
+    ref.current?.present(lastIndexRef.current);
+  }, []);
+
+  // Handle detentIndex changes (resize)
+  // resizeKey changes on every resize action, even if index is the same
+  useEffect(() => {
+    // Skip if not mounted yet - onMount will handle initial present
+    if (!hasMountedRef.current) return;
+
     if (detentIndex != null && lastIndexRef.current !== detentIndex) {
-      ref.current?.resize(detentIndex);
       lastIndexRef.current = detentIndex;
+      ref.current?.resize(detentIndex);
     }
-  }, [detentIndex]);
+  }, [detentIndex, resizeKey]);
 
-  const onDetentChange = useCallback(
-    (event: { nativeEvent: { index: number } }) => {
-      const newIndex = event.nativeEvent.index;
-      const currentIndex = lastIndexRef.current;
-      lastIndexRef.current = newIndex;
-
-      if (newIndex >= 0 && newIndex !== currentIndex) {
-        navigation.resize(newIndex);
-      }
-    },
-    [navigation]
-  );
+  const onDetentChange = useCallback((event: { nativeEvent: { index: number } }) => {
+    // Only track the current index locally for user drags
+    // We don't update navigation state here to avoid blocking programmatic resizes
+    lastIndexRef.current = event.nativeEvent.index;
+  }, []);
 
   const onDismiss = useCallback(() => {
     // User dismissed the sheet by swiping down
@@ -80,7 +86,6 @@ function TrueSheetScreen({
     <TrueSheet
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
-      initialDetentIndex={detentIndex}
       detents={detents}
       onDetentChange={onDetentChange}
       onDidDismiss={onDismiss}
@@ -132,6 +137,7 @@ export function TrueSheetView({ state, descriptors }: Props) {
               route.resizeIndex ?? detentIndex ?? 0,
               detents != null ? detents.length - 1 : 0
             )}
+            resizeKey={route.resizeKey}
             detents={detents ?? DEFAULT_DETENTS}
             navigation={screenNavigation}
             {...sheetProps}

@@ -103,6 +103,8 @@ export function TrueSheetRouter(
                 ? {
                     ...route,
                     resizeIndex: action.index,
+                    // Increment key to trigger effect even when resizing to same index
+                    resizeKey: (route.resizeKey ?? 0) + 1,
                   }
                 : route
             ),
