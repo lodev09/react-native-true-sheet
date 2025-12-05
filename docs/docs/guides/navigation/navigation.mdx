@@ -154,6 +154,36 @@ function DetailsSheet({ route }: TrueSheetScreenProps<SheetParamList, 'Details'>
 }
 ```
 
+### Expo Router
+
+You can use the TrueSheet navigator with [Expo Router](https://docs.expo.dev/router/introduction/) by wrapping it with `withLayoutContext`:
+
+```tsx
+import { withLayoutContext } from 'expo-router';
+import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
+
+const { Navigator } = createTrueSheetNavigator();
+
+const TrueSheet = withLayoutContext(Navigator);
+
+export default function Layout() {
+  return (
+    <TrueSheet>
+      <TrueSheet.Screen name="index" />
+      <TrueSheet.Screen
+        name="details"
+        options={{
+          detents: ['auto', 1],
+          cornerRadius: 16,
+        }}
+      />
+    </TrueSheet>
+  );
+}
+```
+
+The first screen (`index`) renders as regular content, and subsequent screens are presented as sheets when navigated to using Expo Router's navigation methods.
+
 ---
 
 ## Navigating from Sheets
