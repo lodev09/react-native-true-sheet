@@ -25,26 +25,18 @@
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
 
-  // Position tracking
   CADisplayLink *_transitioningTimer;
   UIView *_transitionFakeView;
   BOOL _isDragging;
   BOOL _isTransitioning;
   BOOL _isTrackingPositionFromLayout;
 
-  // Reference to parent TrueSheetViewController (if presented from another sheet)
   __weak TrueSheetViewController *_parentSheetController;
 
-  // Blur effect view
   TrueSheetBlurView *_blurView;
-
-  // Custom grabber view
   TrueSheetGrabberView *_grabberView;
 
-  // Resolved detent positions (Y coordinate when sheet rests at each detent)
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
-
-  // Tracks whether this sheet has a presented controller (e.g., RN Screens modal)
   BOOL _hasPresentedController;
 }
 
@@ -138,7 +130,6 @@
   [super viewDidLoad];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
 
-  // Create custom grabber view (hidden by default, shown when grabberOptions is set)
   _grabberView = [[TrueSheetGrabberView alloc] init];
   _grabberView.hidden = YES;
   [_grabberView addToView:self.view];
@@ -147,18 +138,14 @@
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  // Only trigger on initial presentation, not repositioning
   if (!_isPresented) {
-    // Initially store resolved position during presentation
     dispatch_async(dispatch_get_main_queue(), ^{
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     });
 
-    // Capture parent sheet reference if presented from another TrueSheet
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
-      // Notify parent that it is about to lose focus
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
         [_parentSheetController.delegate viewControllerWillBlur];
       }
@@ -173,7 +160,6 @@
         [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
       }
 
-      // Emit willFocus with willPresent
       if ([self.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
         [self.delegate viewControllerWillFocus];
       }
@@ -187,7 +173,6 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
-    // Notify parent that it has lost focus (after the child sheet appeared)
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
         [_parentSheetController.delegate viewControllerDidBlur];
@@ -201,12 +186,10 @@
         [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       }
 
-      // Emit didFocus with didPresent
       if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
         [self.delegate viewControllerDidFocus];
       }
 
-      // Emit correct position after presentation
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
 
@@ -224,7 +207,6 @@
 
   if (self.isDismissing) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      // Emit willBlur with willDismiss
       if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
         [self.delegate viewControllerWillBlur];
       }
@@ -234,7 +216,6 @@
       }
     });
 
-    // Notify the parent sheet (if any) that it is about to regain focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
         [_parentSheetController.delegate viewControllerWillFocus];
@@ -248,12 +229,10 @@
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
 
-  // Only dispatch didDismiss when actually dismissing (not when another modal is presented on top)
   if (self.isDismissing) {
     _isPresented = NO;
     _activeDetentIndex = -1;
 
-    // Notify the parent sheet (if any) that it regained focus
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
         [_parentSheetController.delegate viewControllerDidFocus];
@@ -261,7 +240,6 @@
       _parentSheetController = nil;
     }
 
-    // Emit didBlur with didDismiss
     if ([self.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
       [self.delegate viewControllerDidBlur];
     }
@@ -279,17 +257,12 @@
     _isTrackingPositionFromLayout = YES;
 
     UIViewController *presented = self.presentedViewController;
-
-    // Not realtime when another controller is presented that triggers our layout
     BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-
     BOOL realtime = !hasPresentedController;
 
     if (_pendingContentSizeChange) {
       _pendingContentSizeChange = NO;
       realtime = NO;
-
-      // Store resolved position after content size changes
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     }
 
@@ -304,7 +277,6 @@
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
   }
 
-  // Emit pending detent change after programmatic resize settles
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
     _pendingDetentIndex = -1;
@@ -313,8 +285,6 @@
       if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
         CGFloat detent = [self detentValueForIndex:pendingIndex];
         [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-
-        // Emit position for the final position
         [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
       }
     });
@@ -323,18 +293,15 @@
   _isTrackingPositionFromLayout = NO;
 }
 
-#pragma mark - Presentation Tracking (for RN Screens integration)
+#pragma mark - Presentation Tracking (RN Screens)
 
 - (void)presentViewController:(UIViewController *)viewControllerToPresent
                      animated:(BOOL)flag
                    completion:(void (^)(void))completion {
-  // Check if this is a non-TrueSheet controller (e.g., RN Screens modal)
   BOOL isExternalController = ![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]];
 
   if (isExternalController && !_hasPresentedController) {
     _hasPresentedController = YES;
-
-    // Emit blur events when an external controller is presented on top
     if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
       [self.delegate viewControllerWillBlur];
     }
@@ -359,7 +326,6 @@
   BOOL isExternalController = presented && ![presented isKindOfClass:[TrueSheetViewController class]];
 
   if (isExternalController && _hasPresentedController) {
-    // Emit focus events when external controller is dismissed
     if ([self.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
       [self.delegate viewControllerWillFocus];
     }
@@ -379,7 +345,7 @@
                             }];
 }
 
-#pragma mark - Gesture Handling
+#pragma mark - Position & Gesture Handling
 
 - (TrueSheetContentView *)findContentView:(UIView *)view {
   if ([view isKindOfClass:[TrueSheetContentView class]]) {
@@ -401,11 +367,9 @@
   if (!presentedView)
     return;
 
-  // Disable pan gestures if draggable is NO
   if (!self.draggable) {
     [GestureUtil setPanGesturesEnabled:NO forView:presentedView];
 
-    // Also disable ScrollView's pan gesture if present
     TrueSheetContentView *contentView = [self findContentView:presentedView];
     if (contentView) {
       RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
@@ -416,10 +380,8 @@
     return;
   }
 
-  // Attach to presented view's pan gesture (sheet's drag gesture from UIKit)
   [GestureUtil attachPanGestureHandler:presentedView target:self selector:@selector(handlePanGesture:)];
 
-  // Also attach to ScrollView's pan gesture if present
   TrueSheetContentView *contentView = [self findContentView:presentedView];
   if (contentView) {
     RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
@@ -438,7 +400,6 @@
 
   [GestureUtil setPanGesturesEnabled:self.draggable forView:presentedView];
 
-  // Also update ScrollView's pan gesture if present
   TrueSheetContentView *contentView = [self findContentView:presentedView];
   if (contentView) {
     RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
@@ -469,10 +430,7 @@
     case UIGestureRecognizerStateCancelled: {
       if (!_isTransitioning) {
         dispatch_async(dispatch_get_main_queue(), ^{
-          // Store resolved position when drag ends
           [self storeResolvedPositionForIndex:self.currentDetentIndex];
-
-          // Emit the correct position after dragging
           [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
@@ -485,8 +443,6 @@
   }
 }
 
-#pragma mark - Position Tracking
-
 - (void)setupTransitionTracker {
   if (!self.transitionCoordinator)
     return;
@@ -496,14 +452,11 @@
   CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
-  // Set starting fake view position
   _transitionFakeView.frame = self.isDismissing ? presentedFrame : dismissedFrame;
   [self storeResolvedPositionForIndex:self.currentDetentIndex];
 
   auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
     [[context containerView] addSubview:self->_transitionFakeView];
-
-    // Set ending fake view position
     self->_transitionFakeView.frame = self.isDismissing ? dismissedFrame : presentedFrame;
 
     self->_transitioningTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionTracker)];
@@ -523,15 +476,12 @@
 - (void)handleTransitionTracker {
   if (!_isDragging && _transitionFakeView.layer) {
     CALayer *layer = _transitionFakeView.layer;
-
     CGFloat layerPosition = layer.presentationLayer.frame.origin.y;
 
     if (self.currentPosition >= self.screenHeight) {
-      // Dismissing position
       CGFloat position = fmax(_lastPosition, layerPosition);
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
     } else {
-      // Presenting position
       CGFloat position = fmax(self.currentPosition, layerPosition);
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
     }
@@ -539,7 +489,6 @@
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
-  // Use epsilon comparison to avoid missing updates due to floating point precision
   if (fabs(_lastPosition - position) > 0.01) {
     _lastPosition = position;
 
@@ -548,20 +497,15 @@
     if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
       [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
     }
-
-    // Debug position tracking
-    // NSLog(@"position from %@: %f, realtime: %i", debug, position, realtime);
   }
 }
 
-/// Stores the current position for the given detent index
 - (void)storeResolvedPositionForIndex:(NSInteger)index {
   if (index >= 0 && index < (NSInteger)_resolvedDetentPositions.count) {
     _resolvedDetentPositions[index] = @(self.currentPosition);
   }
 }
 
-/// Returns the estimated Y position for a detent index, using stored positions when available
 - (CGFloat)estimatedPositionForIndex:(NSInteger)index {
   if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count)
     return 0;
@@ -571,11 +515,9 @@
     return storedPos;
   }
 
-  // Estimate based on detent value and known offset from first resolved position
   CGFloat detentValue = [self detentValueForIndex:index];
   CGFloat basePosition = self.screenHeight - (detentValue * self.screenHeight);
 
-  // Find a resolved position to calculate offset
   for (NSInteger i = 0; i < (NSInteger)_resolvedDetentPositions.count; i++) {
     CGFloat pos = [_resolvedDetentPositions[i] doubleValue];
     if (pos > 0) {
@@ -589,8 +531,6 @@
   return basePosition;
 }
 
-/// Finds the segment containing the given position and returns the lower index and progress within that segment.
-/// Returns YES if a segment was found, NO otherwise. When NO, `outIndex` contains the boundary index.
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
   NSInteger count = _resolvedDetentPositions.count;
   if (count == 0) {
@@ -608,7 +548,6 @@
   CGFloat firstPos = [self estimatedPositionForIndex:0];
   CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
 
-  // Below first detent (position > firstPos means sheet is smaller)
   if (position > firstPos) {
     CGFloat range = self.screenHeight - firstPos;
     *outIndex = -1;
@@ -616,14 +555,12 @@
     return NO;
   }
 
-  // Above last detent
   if (position < lastPos) {
     *outIndex = count - 1;
     *outProgress = 0;
     return NO;
   }
 
-  // Find segment (positions decrease as index increases)
   for (NSInteger i = 0; i < count - 1; i++) {
     CGFloat pos = [self estimatedPositionForIndex:i];
     CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
@@ -648,14 +585,11 @@
 
   if (!found) {
     if (index == -1) {
-      // Below first detent - return negative progress
       return -progress;
     }
-    // At or beyond boundary
     return index;
   }
 
-  // Within a segment - interpolate
   return index + fmax(0, fmin(1, progress));
 }
 
@@ -666,15 +600,12 @@
 
   if (!found) {
     if (index == -1) {
-      // Below first detent
       CGFloat firstDetent = [self detentValueForIndex:0];
       return fmax(0, firstDetent * (1 - progress));
     }
-    // At or beyond boundary
     return [self detentValueForIndex:index];
   }
 
-  // Within a segment - interpolate between detent values
   CGFloat detent = [self detentValueForIndex:index];
   CGFloat nextDetent = [self detentValueForIndex:index + 1];
   return detent + progress * (nextDetent - detent);
@@ -683,7 +614,6 @@
 - (CGFloat)detentValueForIndex:(NSInteger)index {
   if (index >= 0 && index < (NSInteger)_detents.count) {
     CGFloat value = [_detents[index] doubleValue];
-    // For auto (-1), calculate actual fraction from content + header height
     if (value == -1) {
       CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
       return autoHeight / self.screenHeight;
@@ -716,13 +646,11 @@
                                                              withAutoHeight:autoHeight
                                                                     atIndex:index];
     [detents addObject:sheetDetent];
-    // Initialize with placeholder - will be updated when sheet settles at each detent
     [_resolvedDetentPositions addObject:@(0)];
   }
 
   sheet.detents = detents;
 
-  // Setup dimmed background
   if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
@@ -752,7 +680,6 @@
 
   CGFloat value = [detent doubleValue];
 
-  // -1 represents "auto" (fit content height)
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
       return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight];
@@ -818,7 +745,6 @@
   if (detentCount == 0)
     return;
 
-  // Clamp index to valid range
   NSInteger clampedIndex = _activeDetentIndex;
   if (clampedIndex < 0) {
     clampedIndex = 0;
@@ -875,7 +801,6 @@
 
   self.view.backgroundColor = self.backgroundColor;
 
-  // Setup blur effect view - recreate only when blurTint changes
   BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:self.blurTint];
 
   if (_blurView && blurTintChanged) {
@@ -894,11 +819,9 @@
     [_blurView applyBlurEffect];
   }
 
-  // Setup grabber
   BOOL showGrabber = self.grabber && self.draggable;
 
   if (self.grabberOptions) {
-    // Use custom grabber view when options are provided
     sheet.prefersGrabberVisible = NO;
 
     NSDictionary *options = self.grabberOptions;
@@ -910,7 +833,6 @@
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
   } else {
-    // Use system default grabber when no options provided
     sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
   }
@@ -935,13 +857,10 @@
 
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
 - (BOOL)isDismissible {
-  // Prevent react-native-screens from dismissing this sheet when presenting a modal
   return NO;
 }
 
 - (UIViewController *)newPresentingViewController {
-  // Find the topmost TrueSheetViewController in the chain
-  // This handles cases where this sheet is presenting another sheet (child sheet)
   UIViewController *topmost = self;
   while (topmost.presentedViewController != nil && !topmost.presentedViewController.isBeingDismissed &&
          [topmost.presentedViewController isKindOfClass:[TrueSheetViewController class]]) {
