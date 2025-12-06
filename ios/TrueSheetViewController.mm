@@ -489,6 +489,17 @@
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
+  UIViewController *presented = self.presentedViewController;
+  if (presented) {
+    UIModalPresentationStyle style = presented.modalPresentationStyle;
+    if (style == UIModalPresentationFullScreen ||
+        style == UIModalPresentationOverFullScreen ||
+        style == UIModalPresentationCurrentContext ||
+        style == UIModalPresentationOverCurrentContext) {
+      return;
+    }
+  }
+
   if (fabs(_lastPosition - position) > 0.01) {
     _lastPosition = position;
 

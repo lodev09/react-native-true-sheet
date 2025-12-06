@@ -448,15 +448,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun hideDialog() {
     isDialogVisible = false
     dialog?.window?.decorView?.visibility = INVISIBLE
-    emitChangePositionDelegate(screenHeight, realtime = false)
   }
 
   /** Shows a previously hidden dialog. */
   fun showDialog() {
     isDialogVisible = true
     dialog?.window?.decorView?.visibility = VISIBLE
-    val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-    emitChangePositionDelegate(positionPx, realtime = false)
   }
 
   // ====================================================================
