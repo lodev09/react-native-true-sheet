@@ -8,21 +8,13 @@ import navigation from './navigation.gif'
 
 ## Sheet Navigator
 
-TrueSheet provides a custom navigator for React Navigation that lets you present screens as sheets. Similar to how a tab navigator wraps your content and renders a tab bar, the sheet navigator wraps your app and allows presenting sheets on top.
-
-The base screen (determined by `initialRouteName`) is rendered as regular content, while other screens are presented as sheets on top.
-
-### Installation
-
-The navigation module is a separate optional import. Make sure you have `@react-navigation/native` installed:
+TrueSheet provides a custom navigator for React Navigation. The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
 
 ```bash
 npm install @react-navigation/native
 ```
 
 ### Basic Usage
-
-Wrap your app content with the sheet navigator. Use `initialRouteName` to specify which screen is the base content - other screens are presented as sheets:
 
 ```tsx
 import { NavigationContainer } from '@react-navigation/native';
@@ -31,76 +23,20 @@ import {
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
 
-type RootParamList = {
-  Main: undefined;
-  Details: undefined;
-  Settings: undefined;
-};
-
-const Sheet = createTrueSheetNavigator<RootParamList>();
-
-function MainScreen() {
-  const navigation = useTrueSheetNavigation<RootParamList>();
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-      <Button
-        title="Open Details"
-        onPress={() => navigation.navigate('Details')}
-      />
-      <Button
-        title="Open Settings"
-        onPress={() => navigation.navigate('Settings')}
-      />
-    </View>
-  );
-}
-
-function DetailsSheet() {
-  const navigation = useTrueSheetNavigation<RootParamList>();
-
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>Details Sheet</Text>
-      <Button title="Close" onPress={() => navigation.goBack()} />
-    </View>
-  );
-}
-
-function SettingsSheet() {
-  const navigation = useTrueSheetNavigation<RootParamList>();
-
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>Settings Sheet</Text>
-      <Button title="Close" onPress={() => navigation.goBack()} />
-    </View>
-  );
-}
+const Sheet = createTrueSheetNavigator();
 
 function App() {
   return (
     <NavigationContainer>
-      <Sheet.Navigator initialRouteName="Main">
+      <Sheet.Navigator>
+        {/* Base screen (first screen is the default) */}
+        <Sheet.Screen name="Main" component={MainScreen} />
         {/* Sheet screens */}
         <Sheet.Screen
           name="Details"
           component={DetailsSheet}
-          options={{
-            detents: ['auto', 1],
-            cornerRadius: 16,
-          }}
+          options={{ detents: ['auto', 1], cornerRadius: 16 }}
         />
-        <Sheet.Screen
-          name="Settings"
-          component={SettingsSheet}
-          options={{
-            detents: [0.5, 1],
-            grabber: true,
-          }}
-        />
-        {/* Base screen - determined by initialRouteName */}
-        <Sheet.Screen name="Main" component={MainScreen} />
       </Sheet.Navigator>
     </NavigationContainer>
   );
@@ -109,51 +45,30 @@ function App() {
 
 ### Wrapping Existing Navigation
 
-For apps with existing navigation, wrap your root navigator with the sheet navigator. This allows sheets to be presented from anywhere in your app:
+Wrap your root navigator to present sheets from anywhere:
 
 ```tsx
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
-
 const Stack = createNativeStackNavigator();
 const Sheet = createTrueSheetNavigator();
 
-// Your existing stack navigator
 function RootStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
-        options={{ presentation: 'modal' }}
-      />
     </Stack.Navigator>
   );
 }
 
-// Wrap with sheet navigator
 function App() {
   return (
     <NavigationContainer>
-      <Sheet.Navigator initialRouteName="Root">
-        {/* Sheet screens accessible from anywhere */}
+      <Sheet.Navigator>
+        <Sheet.Screen name="Root" component={RootStack} />
         <Sheet.Screen
           name="Details"
           component={DetailsSheet}
           options={{ detents: ['auto', 1], cornerRadius: 16 }}
-        />
-        <Sheet.Screen
-          name="Settings"
-          component={SettingsSheet}
-          options={{ detents: ['auto', 1], cornerRadius: 16 }}
-        />
-        {/* Your existing navigation as the base */}
-        <Sheet.Screen
-          name="Root"
-          component={RootStack}
-          options={{ headerShown: false }}
         />
       </Sheet.Navigator>
     </NavigationContainer>
@@ -161,24 +76,7 @@ function App() {
 }
 ```
 
-Now you can open sheets from any screen in your app:
-
-```tsx
-function HomeScreen() {
-  const navigation = useTrueSheetNavigation();
-
-  return (
-    <Button
-      title="Open Details Sheet"
-      onPress={() => navigation.navigate('Details')}
-    />
-  );
-}
-```
-
-### Resizing Sheets
-
-Use the `resize` method to programmatically change the sheet's detent:
+### Navigation & Resizing
 
 ```tsx
 function DetailsSheet() {
@@ -186,394 +84,139 @@ function DetailsSheet() {
 
   return (
     <View>
-      <Button
-        title="Expand to Full"
-        onPress={() => navigation.resize(1)} // Resize to second detent
-      />
-      <Button
-        title="Close"
-        onPress={() => navigation.goBack()}
-      />
+      <Button title="Expand" onPress={() => navigation.resize(1)} />
+      <Button title="Close" onPress={() => navigation.goBack()} />
     </View>
   );
 }
 ```
 
-:::info
-Use `initialRouteName` to specify which screen is the base. Defaults to the first screen if not specified.
-:::
-
 ### Screen Options
 
-All TrueSheet props are available as screen options (for sheet screens, not the base screen):
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `detentIndex` | `number` | The detent index to present at (default: `0`) |
-| `detents` | `SheetDetent[]` | Sheet detents (default: `['auto']`) |
-| `backgroundColor` | `ColorValue` | Sheet background color |
-| `cornerRadius` | `number` | Corner radius |
-| `dismissible` | `boolean` | Allow interactive dismissal (default: `true`) |
-| `draggable` | `boolean` | Allow dragging to resize (default: `true`) |
-| `grabber` | `boolean` | Show grabber handle (default: `true`) |
-| `grabberOptions` | `GrabberOptions` | Grabber customization |
-| `dimmed` | `boolean` | Dim background (default: `true`) |
-| `dimmedDetentIndex` | `number` | Detent to start dimming |
-| `blurTint` | `BlurTint` | iOS blur effect |
-| `blurOptions` | `BlurOptions` | Blur customization |
-| `maxHeight` | `number` | Maximum sheet height |
-| `edgeToEdgeFullScreen` | `boolean` | Android edge-to-edge mode |
-| `scrollable` | `boolean` | Enable scrollable content |
-| `keyboardMode` | `'resize' \| 'pan'` | Android keyboard mode |
-| `pageSizing` | `boolean` | iPad page sizing |
-| `header` | `Component` | Fixed header component |
-| `footer` | `Component` | Fixed footer component |
+All [TrueSheet props](/reference/configuration) are available as screen options.
 
 ### Screen Listeners
-
-Listen to sheet events at the navigator level:
 
 ```tsx
 <Sheet.Navigator
   screenListeners={{
-    sheetWillPresent: (e) => {
-      console.log('Sheet will present at index:', e.data.index);
-    },
-    sheetDidPresent: (e) => {
-      console.log('Sheet presented at index:', e.data.index);
-    },
-    sheetWillDismiss: () => {
-      console.log('Sheet will dismiss');
-    },
-    sheetDidDismiss: () => {
-      console.log('Sheet dismissed');
-    },
-    sheetDetentChange: (e) => {
-      console.log('Detent changed to:', e.data.index);
-    },
-    sheetDragBegin: (e) => {
-      console.log('Drag started at index:', e.data.index);
-    },
-    sheetDragEnd: (e) => {
-      console.log('Drag ended at index:', e.data.index);
-    },
+    sheetDidPresent: (e) => console.log('Presented:', e.data.index),
+    sheetDidDismiss: () => console.log('Dismissed'),
   }}
 >
 ```
 
-Available events:
-
-| Event | Data | Description |
-|-------|------|-------------|
-| `sheetWillPresent` | `DetentInfoEventPayload` | Sheet is about to present |
-| `sheetDidPresent` | `DetentInfoEventPayload` | Sheet finished presenting |
-| `sheetWillDismiss` | `undefined` | Sheet is about to dismiss |
-| `sheetDidDismiss` | `undefined` | Sheet finished dismissing |
-| `sheetDetentChange` | `DetentInfoEventPayload` | Detent changed |
-| `sheetDragBegin` | `DetentInfoEventPayload` | User started dragging |
-| `sheetDragChange` | `DetentInfoEventPayload` | User is dragging |
-| `sheetDragEnd` | `DetentInfoEventPayload` | User stopped dragging |
-| `sheetPositionChange` | `PositionChangeEventPayload` | Position changed |
-| `sheetWillFocus` | `undefined` | Sheet will regain focus |
-| `sheetDidFocus` | `undefined` | Sheet regained focus |
-| `sheetWillBlur` | `undefined` | Sheet will lose focus |
-| `sheetDidBlur` | `undefined` | Sheet lost focus |
-
-### TypeScript
-
-For full type safety, define your param list and use the typed hook:
-
-```tsx
-import {
-  createTrueSheetNavigator,
-  useTrueSheetNavigation,
-  type TrueSheetScreenProps,
-} from '@lodev09/react-native-true-sheet/navigation';
-
-type RootParamList = {
-  Main: undefined;
-  Details: { id: string };
-  Settings: undefined;
-};
-
-// Typed navigation hook
-const navigation = useTrueSheetNavigation<RootParamList>();
-
-// Typed screen props
-function DetailsSheet({ route }: TrueSheetScreenProps<RootParamList, 'Details'>) {
-  const { id } = route.params;
-  // ...
-}
-```
+| Event | Description |
+|-------|-------------|
+| `sheetWillPresent` | Sheet is about to present |
+| `sheetDidPresent` | Sheet finished presenting |
+| `sheetWillDismiss` | Sheet is about to dismiss |
+| `sheetDidDismiss` | Sheet finished dismissing |
+| `sheetDetentChange` | Detent changed |
+| `sheetDragBegin` | User started dragging |
+| `sheetDragChange` | User is dragging |
+| `sheetDragEnd` | User stopped dragging |
+| `sheetPositionChange` | Position changed |
 
 ### Expo Router
 
-You can use the TrueSheet navigator with [Expo Router](https://docs.expo.dev/router/introduction/) by wrapping it with `withLayoutContext`. The sheet navigator wraps your main content, similar to how tabs wrap tab screens.
-
-#### File Structure
-
 ```
 app/
-├── _layout.tsx              # TrueSheet navigator (root)
-├── (main)/                  # Main app content (base screen)
-│   ├── _layout.tsx          # Stack or Tabs
-│   ├── index.tsx            # Home screen
-│   └── profile.tsx          # Other screens
-├── details.tsx              # Sheet screen
-└── settings.tsx             # Sheet screen
+├── _layout.tsx          # TrueSheet navigator
+├── (main)/              # Base content
+│   ├── _layout.tsx      # Stack or Tabs
+│   └── index.tsx
+└── details.tsx          # Sheet screen
 ```
 
-#### `app/_layout.tsx`
-
 ```tsx
+// app/_layout.tsx
 import { withLayoutContext } from 'expo-router';
 import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
 
 const { Navigator } = createTrueSheetNavigator();
-
 export default withLayoutContext(Navigator);
 ```
 
-#### `app/(main)/_layout.tsx`
-
 ```tsx
-import { Stack } from 'expo-router';
-
-export default function MainLayout() {
-  return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: 'Home' }} />
-      <Stack.Screen name="profile" options={{ title: 'Profile' }} />
-    </Stack>
-  );
-}
-```
-
-#### `app/(main)/index.tsx`
-
-```tsx
-import { View, Button } from 'react-native';
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
-
-export default function HomeScreen() {
-  const navigation = useTrueSheetNavigation();
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-      <Button
-        title="Open Details Sheet"
-        onPress={() => navigation.navigate('details')}
-      />
-      <Button
-        title="Open Settings Sheet"
-        onPress={() => navigation.navigate('settings')}
-      />
-    </View>
-  );
-}
-```
-
-#### `app/details.tsx`
-
-```tsx
-import { View, Text, Button } from 'react-native';
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
-
+// app/details.tsx
 export const unstable_settings = {
-  options: {
-    detents: ['auto', 1],
-    cornerRadius: 16,
-  },
+  options: { detents: ['auto', 1], cornerRadius: 16 },
 };
 
 export default function DetailsSheet() {
   const navigation = useTrueSheetNavigation();
-
   return (
-    <View style={{ padding: 20 }}>
-      <Text>Details Sheet</Text>
-      <Button title="Resize to 100%" onPress={() => navigation.resize(1)} />
+    <View>
       <Button title="Close" onPress={() => navigation.goBack()} />
     </View>
   );
 }
 ```
-
-#### `app/settings.tsx`
-
-```tsx
-import { View, Text, Button } from 'react-native';
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
-
-export const unstable_settings = {
-  options: {
-    detents: ['auto', 1],
-    cornerRadius: 16,
-  },
-};
-
-export default function SettingsSheet() {
-  const navigation = useTrueSheetNavigation();
-
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>Settings Sheet</Text>
-      <Button title="Close" onPress={() => navigation.goBack()} />
-    </View>
-  );
-}
-```
-
----
 
 ## Navigating from Sheets
 
 :::note
-Navigating from within the sheet requires changes to `react-native-screens`. There is a [pending PR](https://github.com/software-mansion/react-native-screens/pull/3415) that adds support for this. In the meantime, you can apply the patch from the [example app](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch).
+Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415).
 :::
 
-You can navigate to other screens from within a sheet without any issues! The sheet will remain visible in the background when presenting modals on top.
+Navigate directly from sheets - they remain visible when presenting modals on top.
 
 <img alt="navigation" src={navigation} width="300"/>
 
-### How?
-
-Just do it like you would normally:
-
 ```tsx
-const sheet = useRef<TrueSheet>(null)
-
-const navigate = () => {
-  // Navigate directly - no need to dismiss first!
-  navigation.navigate('SomeScreen')
-}
-
-return (
-  <TrueSheet ref={sheet}>
-    <Button onPress={navigate} title="Navigate to SomeScreen" />
-    <View />
-  </TrueSheet>
-)
+// Navigate directly - no need to dismiss first!
+navigation.navigate('SomeScreen')
 ```
 
-### Focus and Blur Events
+### Focus Events
 
-When presenting `react-native-screens` modals on top of the sheet, focus and blur events are emitted automatically. This allows you to respond when the sheet loses or regains focus due to modal presentation/dismissal.
+Respond when sheets lose/regain focus due to modals:
 
 ```tsx
 <TrueSheet
-  ref={sheet}
-  onWillBlur={() => {
-    // Modal is about to be presented on top
-    console.log('Sheet will lose focus')
-  }}
-  onDidBlur={() => {
-    // Modal is now presented on top
-    console.log('Sheet lost focus')
-  }}
-  onWillFocus={() => {
-    // Modal is about to be dismissed
-    console.log('Sheet will regain focus')
-  }}
-  onDidFocus={() => {
-    // Modal was dismissed, sheet is back in focus
-    console.log('Sheet regained focus')
-  }}
+  onDidBlur={() => console.log('Lost focus')}
+  onDidFocus={() => console.log('Regained focus')}
 >
-  <Button onPress={() => navigation.navigate('ModalScreen')} title="Open Modal" />
-</TrueSheet>
 ```
-
-:::tip
-Use `onDidFocus` to refresh data or re-enable interactions when returning from a modal.
-:::
-
-### Dismissing Before Navigation
-
-If you prefer to dismiss the sheet before navigating for UX reasons, you can still do so:
-
-```tsx
-const navigate = async () => {
-  await sheet.current?.dismiss()
-  navigation.navigate('SomeScreen')
-}
-```
-
----
 
 ## Presenting on Screen Focus
 
-When presenting a sheet in response to screen focus (e.g., using `useFocusEffect`), you may encounter issues on iOS where the sheet presents on the wrong view controller. This happens when a modal is being dismissed and the focus event fires before iOS marks the modal as "being dismissed".
-
-### Solution: Delay with requestAnimationFrame
-
-Use `requestAnimationFrame` to delay the presentation, giving iOS time to update the view controller state:
+When using `useFocusEffect`, delay presentation to avoid iOS issues:
 
 ```tsx
-import { useFocusEffect } from '@react-navigation/native'
-
-const sheet = useRef<TrueSheet>(null)
-
 useFocusEffect(
   useCallback(() => {
-    // Delay presentation to ensure dismissing modals are detected
     requestAnimationFrame(() => {
       sheet.current?.present()
     })
   }, [])
 )
-
-return (
-  <TrueSheet ref={sheet}>
-    <View />
-  </TrueSheet>
-)
 ```
-
----
 
 ## Present During Mount
 
-When setting [`initialDetentIndex`](/reference/configuration#initialdetentindex) and enabling `initialDetentAnimated` (default is `true`) to present during mount, the presentation animation may behave unexpectedly on iOS. This happens because React Navigation is not yet finished transitioning when the sheet tries to present.
+When using `initialDetentIndex` with animation, the sheet may behave unexpectedly during screen transitions.
 
-### Solution 1: Disable Animation
-
-Set `initialDetentAnimated` to `false` to disable animation during mount:
+**Solution 1:** Disable animation
 
 ```tsx
-return (
-  <TrueSheet initialDetentIndex={0} initialDetentAnimated={false}>
-    <View />
-  </TrueSheet>
-)
+<TrueSheet initialDetentIndex={0} initialDetentAnimated={false}>
 ```
 
-### Solution 2: Wait for Screen Transition
-
-Wait for the screen to fully transition using the [`transitionEnd`](https://reactnavigation.org/docs/native-stack-navigator/#transitionend) event:
+**Solution 2:** Wait for transition
 
 ```tsx
-const navigation = useNavigation()
-const [isScreenShown, setIsScreenShown] = useState(false)
+const [ready, setReady] = useState(false)
 
-// Subscribe to the transitionEnd event
 useEffect(() => {
   const unsubscribe = navigation.addListener("transitionEnd", ({ data }) => {
-    if (!data.closing) {
-      setIsScreenShown(true)
-    }
+    if (!data.closing) setReady(true)
   })
-
   return unsubscribe
 }, [])
 
-// Wait for the screen to finish transitioning
-if (!isScreenShown) return null
+if (!ready) return null
 
-// Finally show the sheet
-return (
-  <TrueSheet initialDetentIndex={0} initialDetentAnimated>
-    <View />
-  </TrueSheet>
-)
+return <TrueSheet initialDetentIndex={0}>{/* ... */}</TrueSheet>
 ```
