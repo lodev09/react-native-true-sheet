@@ -228,19 +228,17 @@ interface TrueSheetViewProps {
 }
 
 export function TrueSheetView({ state, navigation, descriptors }: TrueSheetViewProps) {
-  const firstScreenKey = state.routes[0]?.key;
-  const firstScreen = firstScreenKey ? descriptors[firstScreenKey] : undefined;
+  // First route is the base screen, rest are sheets
+  const [baseRoute, ...sheetRoutes] = state.routes;
 
-  if (!firstScreen) {
-    return null;
-  }
-
-  // Sheet routes (excluding first screen which is rendered as content)
-  const sheetRoutes = state.routes.slice(1);
+  const baseDescriptor = baseRoute ? descriptors[baseRoute.key] : null;
 
   return (
     <>
-      {firstScreen.render()}
+      {/* Render base screen */}
+      {baseDescriptor?.render()}
+
+      {/* Render sheet screens */}
       {sheetRoutes.map((route) => {
         const descriptor = descriptors[route.key];
 

@@ -94,7 +94,7 @@ export function TrueSheetRouter(
         case 'GO_BACK':
         case 'POP':
         case 'DISMISS': {
-          // Don't allow dismissing the first screen
+          // Can't dismiss if only base screen remains (index 0)
           if (state.routes.length <= 1) {
             return state;
           }
@@ -104,6 +104,11 @@ export function TrueSheetRouter(
             action.target === state.key && 'source' in action && action.source
               ? state.routes.findIndex((r) => r.key === action.source)
               : state.index;
+
+          // Don't dismiss the base screen (index 0)
+          if (routeIndex === 0) {
+            return state;
+          }
 
           // Mark the route as closing instead of removing it
           return {

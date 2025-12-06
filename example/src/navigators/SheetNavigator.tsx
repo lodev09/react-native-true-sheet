@@ -8,13 +8,7 @@ import {
 } from '@lodev09/react-native-true-sheet/navigation';
 import { Button, DemoContent } from '../components';
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
-import type { AppStackParamList } from '../types';
-
-type SheetNavigatorParamList = {
-  Home: undefined;
-  Details: undefined;
-  Settings: undefined;
-};
+import type { AppStackParamList, SheetNavigatorParamList } from '../types';
 
 const Sheet = createTrueSheetNavigator<SheetNavigatorParamList>();
 
@@ -39,7 +33,6 @@ const HomeScreen = () => {
 
 const DetailsSheet = () => {
   const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
-  const rootNavigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   return (
     <View style={styles.sheetContent}>
@@ -49,7 +42,6 @@ const DetailsSheet = () => {
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
         <Button text="Open Settings" onPress={() => navigation.navigate('Settings')} />
-        <Button text="Open Modal" onPress={() => rootNavigation.navigate('ModalStack')} />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
     </View>
@@ -95,14 +87,14 @@ export const SheetNavigator = () => {
           console.log(`[SheetNavigator] sheetDragBegin: index=${e.data.index}`);
         },
         sheetDragChange: (e) => {
-          console.log(`[SheetNavigator] sheetDragChange: position=${e.data.position}`);
+          console.log(`[SheetNavigator] sheetDragChange: position=${e.data.position.toFixed(0)}`);
         },
         sheetDragEnd: (e) => {
           console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
         },
         sheetPositionChange: (e) => {
           console.log(
-            `[SheetNavigator] sheetPositionChange: position=${e.data.position}, realtime=${e.data.realtime}`
+            `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
           );
         },
         sheetWillFocus: () => {
@@ -119,7 +111,9 @@ export const SheetNavigator = () => {
         },
       }}
     >
-      <Sheet.Screen name="Home" component={HomeScreen} />
+      {/* First screen is the base - rendered as regular screen */}
+      <Sheet.Screen name="SheetHome" component={HomeScreen} />
+      {/* Subsequent screens are presented as sheets */}
       <Sheet.Screen
         name="Details"
         component={DetailsSheet}

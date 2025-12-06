@@ -5,16 +5,15 @@ import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
 import type { AppStackParamList } from '../types';
 
-const DEFAULT_NAVIGATION: keyof AppStackParamList = 'SheetNavigator';
-
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export const RootNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-      initialRouteName={DEFAULT_NAVIGATION}
+      initialRouteName="Home"
     >
+      <Stack.Screen options={{ headerShown: false }} name="Home" component={SheetNavigator} />
       <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
       <Stack.Screen
         options={{ headerShown: false, title: 'Home' }}
@@ -26,11 +25,6 @@ export const RootNavigator = () => {
         name="ModalStack"
         component={ModalStackNavigator}
         options={{ presentation: 'fullScreenModal', headerShown: false }}
-      />
-      <Stack.Screen
-        name="SheetNavigator"
-        component={SheetNavigator}
-        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

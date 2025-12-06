@@ -168,7 +168,7 @@ export const MapScreen = () => {
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
-        <Button text="Sheet Navigator" onPress={() => navigation.navigate('SheetNavigator')} />
+        <Button text="Navigate to Home" onPress={() => navigation.navigate('Home')} />
         <Spacer />
         <Button
           text={showExtraContent ? 'Remove Content' : 'Add Content'}
