@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -92,7 +93,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupBackground()
       viewController.setupGrabber()
       updateSheetIfNeeded()
-      viewController.setStateForDetentIndex(viewController.currentDetentIndex)
     }
   }
 

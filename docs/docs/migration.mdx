@@ -376,12 +376,14 @@ Version 3 introduces new props for fine-grained control over the blur effect on 
 ```tsx
 <TrueSheet
   blurTint="light"
-  blurIntensity={50}
-  blurInteraction={false}
+  blurOptions={{
+    intensity: 80,
+    interaction: false,
+  }}
 />
 ```
 
-See the [Configuration reference](/reference/configuration#blurintensity) for more details.
+See the [Configuration reference](/reference/configuration#bluroptions) for more details.
 
 ### 9. React Native Screens Integration
 

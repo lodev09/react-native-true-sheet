@@ -16,6 +16,11 @@
       "types": "./lib/typescript/src/reanimated/index.d.ts",
       "default": "./lib/module/reanimated/index.js"
     },
+    "./navigation": {
+      "source": "./src/navigation/index.ts",
+      "types": "./lib/typescript/src/navigation/index.d.ts",
+      "default": "./lib/module/navigation/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -81,6 +86,7 @@
     "@evilmartians/lefthook": "^2.0.4",
     "@react-native/babel-preset": "^0.82.1",
     "@react-native/eslint-config": "^0.82.1",
+    "@react-navigation/native": "^7.1.6",
     "@release-it/conventional-changelog": "^10.0.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/babel__core": "^7",
@@ -92,6 +98,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^29.7.0",
+    "nanoid": "^5.1.5",
     "prettier": "^3.0.3",
     "react": "19.1.1",
     "react-native": "0.82.1",
@@ -107,12 +114,16 @@
     "@types/react": "19.1.1"
   },
   "peerDependencies": {
+    "@react-navigation/native": ">=6.0.0",
     "react": "*",
     "react-native": "*",
     "react-native-reanimated": ">=4.0.0",
     "react-native-worklets": "*"
   },
   "peerDependenciesMeta": {
+    "@react-navigation/native": {
+      "optional": true
+    },
     "react-native-reanimated": {
       "optional": true
     },
