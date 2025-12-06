@@ -70,25 +70,6 @@ export function TrueSheetRouter(
     },
 
     getStateForAction(state, action, options) {
-      // Handle GO_BACK by marking route as closing
-      if (action.type === 'GO_BACK') {
-        if (state.routes.length <= 1) {
-          return state;
-        }
-
-        return {
-          ...state,
-          routes: state.routes.map((route, i) =>
-            i === state.index
-              ? {
-                  ...route,
-                  closing: true,
-                }
-              : route
-          ),
-        };
-      }
-
       switch (action.type) {
         case 'RESIZE': {
           const index =
@@ -111,6 +92,7 @@ export function TrueSheetRouter(
           };
         }
 
+        case 'GO_BACK':
         case 'POP':
         case 'DISMISS': {
           // Don't allow dismissing the first screen
@@ -120,7 +102,7 @@ export function TrueSheetRouter(
 
           // Find the route to dismiss
           const routeIndex =
-            action.target === state.key && action.source
+            action.target === state.key && 'source' in action && action.source
               ? state.routes.findIndex((r) => r.key === action.source)
               : state.index;
 

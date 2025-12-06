@@ -62,8 +62,6 @@ export type TrueSheetNavigationHelpers = NavigationHelpers<
   TrueSheetNavigationEventMap
 >;
 
-export type TrueSheetNavigationConfig = Record<string, unknown>;
-
 /**
  * Screen options for TrueSheet navigator screens.
  */
@@ -102,8 +100,7 @@ export type TrueSheetNavigatorProps = DefaultNavigatorOptions<
   TrueSheetNavigationOptions,
   TrueSheetNavigationEventMap,
   unknown
-> &
-  TrueSheetNavigationConfig;
+>;
 
 export type TrueSheetDescriptor = Descriptor<
   TrueSheetNavigationOptions,

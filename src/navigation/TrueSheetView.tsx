@@ -4,8 +4,6 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { TrueSheet } from '../TrueSheet';
 import type {
   TrueSheetDescriptorMap,
-  TrueSheetNavigationConfig,
-  TrueSheetNavigationHelpers,
   TrueSheetNavigationOptions,
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
@@ -98,13 +96,12 @@ function TrueSheetScreen({
 
 const DEFAULT_DETENTS: ('auto' | number)[] = ['auto'];
 
-type Props = TrueSheetNavigationConfig & {
+interface TrueSheetViewProps {
   state: TrueSheetNavigationState<ParamListBase>;
-  navigation: TrueSheetNavigationHelpers;
   descriptors: TrueSheetDescriptorMap;
-};
+}
 
-export function TrueSheetView({ state, descriptors }: Props) {
+export function TrueSheetView({ state, descriptors }: TrueSheetViewProps) {
   const firstScreenKey = state.routes[0]?.key;
   const firstScreen = firstScreenKey ? descriptors[firstScreenKey] : undefined;
 
