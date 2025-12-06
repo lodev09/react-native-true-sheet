@@ -1,5 +1,5 @@
 export type AppStackParamList = {
-  Home: undefined;
+  SheetStack: undefined;
   Map: undefined;
   Standard: undefined;
   Test: undefined;
@@ -11,7 +11,7 @@ export type ModalStackParamList = {
   Test: undefined;
 };
 
-export type SheetNavigatorParamList = {
+export type SheetStackParamList = {
   SheetHome: undefined;
   Details: undefined;
   Settings: undefined;

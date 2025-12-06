@@ -41,7 +41,7 @@ export const StandardScreen = () => {
       <Button text="Navigate to Screen" onPress={() => navigation.navigate('Test')} />
       <Button text="Open RNScreen Modal" onPress={() => navigation.navigate('ModalStack')} />
       <Button text="Open RNScreen Sheet" onPress={() => navigationSheet.current?.present()} />
-      <Button text="Navigate to Home" onPress={() => navigation.navigate('Home')} />
+      <Button text="Navigate to Home" onPress={() => navigation.navigate('SheetStack')} />
       <Spacer />
       <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />

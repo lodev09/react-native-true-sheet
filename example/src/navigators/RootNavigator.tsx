@@ -11,12 +11,16 @@ export const RootNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-      initialRouteName="Home"
+      initialRouteName="Map"
     >
-      <Stack.Screen options={{ headerShown: false }} name="Home" component={SheetNavigator} />
+      <Stack.Screen
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+        name="SheetStack"
+        component={SheetNavigator}
+      />
       <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreen} />
       <Stack.Screen
-        options={{ headerShown: false, title: 'Home' }}
+        options={{ headerShown: false, title: 'Standard' }}
         name="Standard"
         component={StandardScreen}
       />

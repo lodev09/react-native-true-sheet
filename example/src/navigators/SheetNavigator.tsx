@@ -8,12 +8,12 @@ import {
 } from '@lodev09/react-native-true-sheet/navigation';
 import { Button, DemoContent } from '../components';
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
-import type { AppStackParamList, SheetNavigatorParamList } from '../types';
+import type { AppStackParamList, SheetStackParamList } from '../types';
 
-const Sheet = createTrueSheetNavigator<SheetNavigatorParamList>();
+const Sheet = createTrueSheetNavigator<SheetStackParamList>();
 
 const HomeScreen = () => {
-  const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
+  const navigation = useTrueSheetNavigation<SheetStackParamList>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   return (
@@ -27,12 +27,13 @@ const HomeScreen = () => {
       <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
       <Button text="Navigate to Test" onPress={() => rootNavigation.navigate('Test')} />
+      <Button text="Go Back" onPress={() => navigation.goBack()} />
     </View>
   );
 };
 
 const DetailsSheet = () => {
-  const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
+  const navigation = useTrueSheetNavigation<SheetStackParamList>();
 
   return (
     <View style={styles.sheetContent}>
@@ -49,7 +50,7 @@ const DetailsSheet = () => {
 };
 
 const SettingsSheet = () => {
-  const navigation = useTrueSheetNavigation<SheetNavigatorParamList>();
+  const navigation = useTrueSheetNavigation<SheetStackParamList>();
 
   return (
     <View style={styles.sheetContent}>
