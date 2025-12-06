@@ -492,10 +492,8 @@
   UIViewController *presented = self.presentedViewController;
   if (presented) {
     UIModalPresentationStyle style = presented.modalPresentationStyle;
-    if (style == UIModalPresentationFullScreen ||
-        style == UIModalPresentationOverFullScreen ||
-        style == UIModalPresentationCurrentContext ||
-        style == UIModalPresentationOverCurrentContext) {
+    if (style == UIModalPresentationFullScreen || style == UIModalPresentationOverFullScreen ||
+        style == UIModalPresentationCurrentContext || style == UIModalPresentationOverCurrentContext) {
       return;
     }
   }
