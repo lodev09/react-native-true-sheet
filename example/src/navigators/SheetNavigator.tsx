@@ -74,7 +74,51 @@ const SettingsSheet = () => {
 
 export const SheetNavigator = () => {
   return (
-    <Sheet.Navigator>
+    <Sheet.Navigator
+      screenListeners={{
+        sheetWillPresent: (e) => {
+          console.log(`[SheetNavigator] sheetWillPresent: index=${e.data.index}`);
+        },
+        sheetDidPresent: (e) => {
+          console.log(`[SheetNavigator] sheetDidPresent: index=${e.data.index}`);
+        },
+        sheetWillDismiss: () => {
+          console.log('[SheetNavigator] sheetWillDismiss');
+        },
+        sheetDidDismiss: () => {
+          console.log('[SheetNavigator] sheetDidDismiss');
+        },
+        sheetDetentChange: (e) => {
+          console.log(`[SheetNavigator] sheetDetentChange: index=${e.data.index}`);
+        },
+        sheetDragBegin: (e) => {
+          console.log(`[SheetNavigator] sheetDragBegin: index=${e.data.index}`);
+        },
+        sheetDragChange: (e) => {
+          console.log(`[SheetNavigator] sheetDragChange: position=${e.data.position}`);
+        },
+        sheetDragEnd: (e) => {
+          console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
+        },
+        sheetPositionChange: (e) => {
+          console.log(
+            `[SheetNavigator] sheetPositionChange: position=${e.data.position}, realtime=${e.data.realtime}`
+          );
+        },
+        sheetWillFocus: () => {
+          console.log('[SheetNavigator] sheetWillFocus');
+        },
+        sheetDidFocus: () => {
+          console.log('[SheetNavigator] sheetDidFocus');
+        },
+        sheetWillBlur: () => {
+          console.log('[SheetNavigator] sheetWillBlur');
+        },
+        sheetDidBlur: () => {
+          console.log('[SheetNavigator] sheetDidBlur');
+        },
+      }}
+    >
       <Sheet.Screen name="Home" component={HomeScreen} />
       <Sheet.Screen
         name="Details"

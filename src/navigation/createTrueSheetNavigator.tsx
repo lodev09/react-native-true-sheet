@@ -24,7 +24,7 @@ function TrueSheetNavigator({
   screenListeners,
   screenOptions,
 }: TrueSheetNavigatorProps) {
-  const { state, descriptors, NavigationContent } = useNavigationBuilder<
+  const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
     TrueSheetNavigationState<ParamListBase>,
     TrueSheetRouterOptions,
     TrueSheetActionHelpers<ParamListBase>,
@@ -39,7 +39,7 @@ function TrueSheetNavigator({
 
   return (
     <NavigationContent>
-      <TrueSheetView state={state} descriptors={descriptors} />
+      <TrueSheetView state={state} navigation={navigation} descriptors={descriptors} />
     </NavigationContent>
   );
 }

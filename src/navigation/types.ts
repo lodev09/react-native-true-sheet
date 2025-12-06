@@ -1,7 +1,6 @@
 import type {
   DefaultNavigatorOptions,
   Descriptor,
-  EventMapBase,
   NavigationHelpers,
   NavigationProp,
   NavigationState,
@@ -12,7 +11,70 @@ import type {
 
 import type { TrueSheetProps } from '../TrueSheet.types';
 
-export type TrueSheetNavigationEventMap = EventMapBase;
+export interface DetentChangeEventData {
+  index: number;
+  position: number;
+  detent: number;
+}
+
+export interface PositionChangeEventData extends DetentChangeEventData {
+  realtime: boolean;
+}
+
+export type TrueSheetNavigationEventMap = {
+  /**
+   * Event fired when the sheet is about to be presented.
+   */
+  sheetWillPresent: { data: DetentChangeEventData };
+  /**
+   * Event fired when the sheet has been presented.
+   */
+  sheetDidPresent: { data: DetentChangeEventData };
+  /**
+   * Event fired when the sheet is about to be dismissed.
+   */
+  sheetWillDismiss: { data: undefined };
+  /**
+   * Event fired when the sheet has been dismissed.
+   */
+  sheetDidDismiss: { data: undefined };
+  /**
+   * Event fired when the sheet's detent changes.
+   */
+  sheetDetentChange: { data: DetentChangeEventData };
+  /**
+   * Event fired when the user starts dragging the sheet.
+   */
+  sheetDragBegin: { data: DetentChangeEventData };
+  /**
+   * Event fired while the user is dragging the sheet.
+   */
+  sheetDragChange: { data: DetentChangeEventData };
+  /**
+   * Event fired when the user stops dragging the sheet.
+   */
+  sheetDragEnd: { data: DetentChangeEventData };
+  /**
+   * Event fired when the sheet's position changes.
+   */
+  sheetPositionChange: { data: PositionChangeEventData };
+  /**
+   * Event fired when the sheet is about to regain focus.
+   */
+  sheetWillFocus: { data: undefined };
+  /**
+   * Event fired when the sheet regains focus.
+   */
+  sheetDidFocus: { data: undefined };
+  /**
+   * Event fired when the sheet is about to lose focus.
+   */
+  sheetWillBlur: { data: undefined };
+  /**
+   * Event fired when the sheet loses focus.
+   */
+  sheetDidBlur: { data: undefined };
+};
 
 export type TrueSheetNavigationState<ParamList extends ParamListBase> = Omit<
   NavigationState<ParamList>,
