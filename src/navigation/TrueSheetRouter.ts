@@ -94,9 +94,9 @@ export function TrueSheetRouter(
         case 'GO_BACK':
         case 'POP':
         case 'DISMISS': {
-          // Can't dismiss if only base screen remains (index 0)
+          // Only base screen remains - let parent navigator handle it
           if (state.routes.length <= 1) {
-            return state;
+            return null;
           }
 
           // Find the route to dismiss
@@ -105,9 +105,9 @@ export function TrueSheetRouter(
               ? state.routes.findIndex((r) => r.key === action.source)
               : state.index;
 
-          // Don't dismiss the base screen (index 0)
+          // Base screen - let parent navigator handle it
           if (routeIndex === 0) {
-            return state;
+            return null;
           }
 
           // Mark the route as closing instead of removing it
