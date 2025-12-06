@@ -20,6 +20,7 @@ import type {
 
 function TrueSheetNavigator({
   id,
+  initialRouteName,
   children,
   screenListeners,
   screenOptions,
@@ -32,6 +33,7 @@ function TrueSheetNavigator({
     TrueSheetNavigationEventMap
   >(TrueSheetRouter, {
     id,
+    initialRouteName,
     children,
     screenListeners,
     screenOptions,

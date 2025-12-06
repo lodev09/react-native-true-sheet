@@ -10,7 +10,7 @@ import navigation from './navigation.gif'
 
 TrueSheet provides a custom navigator for React Navigation that lets you present screens as sheets. Similar to how a tab navigator wraps your content and renders a tab bar, the sheet navigator wraps your app and allows presenting sheets on top.
 
-The first screen in the navigator acts as the base content (typically your main app or stack navigator), while subsequent screens are presented as sheets.
+The base screen (determined by `initialRouteName`) is rendered as regular content, while other screens are presented as sheets on top.
 
 ### Installation
 
@@ -22,7 +22,7 @@ npm install @react-navigation/native
 
 ### Basic Usage
 
-Wrap your app content with the sheet navigator. The first screen is your main content, and additional screens are presented as sheets:
+Wrap your app content with the sheet navigator. Use `initialRouteName` to specify which screen is the base content - other screens are presented as sheets:
 
 ```tsx
 import { NavigationContainer } from '@react-navigation/native';
@@ -81,10 +81,8 @@ function SettingsSheet() {
 function App() {
   return (
     <NavigationContainer>
-      <Sheet.Navigator>
-        {/* First screen is the base content */}
-        <Sheet.Screen name="Main" component={MainScreen} />
-        {/* Additional screens are presented as sheets */}
+      <Sheet.Navigator initialRouteName="Main">
+        {/* Sheet screens */}
         <Sheet.Screen
           name="Details"
           component={DetailsSheet}
@@ -101,6 +99,8 @@ function App() {
             grabber: true,
           }}
         />
+        {/* Base screen - determined by initialRouteName */}
+        <Sheet.Screen name="Main" component={MainScreen} />
       </Sheet.Navigator>
     </NavigationContainer>
   );
@@ -137,13 +137,7 @@ function RootStack() {
 function App() {
   return (
     <NavigationContainer>
-      <Sheet.Navigator>
-        {/* Your existing navigation as the base */}
-        <Sheet.Screen
-          name="Root"
-          component={RootStack}
-          options={{ headerShown: false }}
-        />
+      <Sheet.Navigator initialRouteName="Root">
         {/* Sheet screens accessible from anywhere */}
         <Sheet.Screen
           name="Details"
@@ -154,6 +148,12 @@ function App() {
           name="Settings"
           component={SettingsSheet}
           options={{ detents: ['auto', 1], cornerRadius: 16 }}
+        />
+        {/* Your existing navigation as the base */}
+        <Sheet.Screen
+          name="Root"
+          component={RootStack}
+          options={{ headerShown: false }}
         />
       </Sheet.Navigator>
     </NavigationContainer>
@@ -198,6 +198,10 @@ function DetailsSheet() {
   );
 }
 ```
+
+:::info
+Use `initialRouteName` to specify which screen is the base. Defaults to the first screen if not specified.
+:::
 
 ### Screen Options
 

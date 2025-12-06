@@ -111,9 +111,9 @@ export const SheetNavigator = () => {
         },
       }}
     >
-      {/* First screen is the base - rendered as regular screen */}
+      {/* Base screen (first screen is the default base) */}
       <Sheet.Screen name="SheetHome" component={HomeScreen} />
-      {/* Subsequent screens are presented as sheets */}
+      {/* Sheet screens */}
       <Sheet.Screen
         name="Details"
         component={DetailsSheet}

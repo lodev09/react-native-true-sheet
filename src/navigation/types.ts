@@ -156,7 +156,14 @@ export type TrueSheetNavigatorProps = DefaultNavigatorOptions<
   TrueSheetNavigationOptions,
   TrueSheetNavigationEventMap,
   unknown
->;
+> & {
+  /**
+   * The name of the route to use as the base screen.
+   * This screen will be rendered as a regular screen, while other screens are presented as sheets.
+   * Defaults to the first screen defined in the navigator.
+   */
+  initialRouteName?: string;
+};
 
 export type TrueSheetDescriptor = Descriptor<
   TrueSheetNavigationOptions,
