@@ -6,6 +6,14 @@ keywords: [bottom sheet navigation, react-navigation, navigating from sheet, she
 
 import navigation from './navigation.gif'
 
+TrueSheet works with React Navigation out of the box. It just works! 😉
+
+<img alt="navigation" src={navigation} width="300"/>
+
+## How?
+
+You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets, or simply [navigate from within sheets](#navigating-from-sheets) using your existing navigation setup.
+
 ## Sheet Navigator
 
 TrueSheet provides a custom navigator for React Navigation. The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
@@ -162,8 +170,6 @@ Requires a [patch to react-native-screens](https://github.com/lodev09/react-nati
 
 Navigate directly from sheets - they remain visible when presenting modals on top.
 
-<img alt="navigation" src={navigation} width="300"/>
-
 ```tsx
 // Navigate directly - no need to dismiss first!
 navigation.navigate('SomeScreen')
@@ -180,7 +186,7 @@ Respond when sheets lose/regain focus due to modals:
 >
 ```
 
-## Presenting on Screen Focus
+### Presenting on Screen Focus
 
 When using `useFocusEffect`, delay presentation to avoid iOS issues:
 
@@ -194,7 +200,7 @@ useFocusEffect(
 )
 ```
 
-## Present During Mount
+### Present During Mount
 
 When using `initialDetentIndex` with animation, the sheet may behave unexpectedly during screen transitions.
 
