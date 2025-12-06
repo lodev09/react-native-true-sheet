@@ -13,6 +13,7 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetDialogObserver
@@ -329,6 +330,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
     viewController.dismissPromise = promiseCallback
     viewController.dismiss(animated)
+  }
+
+  @UiThread
+  fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
+    if (!viewController.isPresented) {
+      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
+      promiseCallback()
+      return
+    }
+
+    present(detentIndex, true, promiseCallback)
   }
 
   /**

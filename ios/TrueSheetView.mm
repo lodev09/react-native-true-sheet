@@ -356,6 +356,18 @@ using namespace facebook::react;
                                   }];
 }
 
+- (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion {
+  if (!_controller.isPresented) {
+    RCTLogWarn(@"TrueSheet: Cannot resize. Sheet is not presented.");
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
+  [self presentAtIndex:index animated:YES completion:completion];
+}
+
 #pragma mark - TrueSheetContainerViewDelegate
 
 /**

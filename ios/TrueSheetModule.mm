@@ -96,8 +96,23 @@ RCT_EXPORT_MODULE(TrueSheetModule)
               index:(double)index
             resolve:(RCTPromiseResolveBlock)resolve
              reject:(RCTPromiseRejectBlock)reject {
-  // Resize is just present with a different index (always animated)
-  [self presentByRef:viewTag index:index animated:YES resolve:resolve reject:reject];
+  RCTExecuteOnMainQueue(^{
+    TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
+
+    if (!trueSheetView) {
+      reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
+      return;
+    }
+
+    [trueSheetView resizeToIndex:(NSInteger)index
+                      completion:^(BOOL success, NSError *_Nullable error) {
+                        if (success) {
+                          resolve(nil);
+                        } else {
+                          reject(@"RESIZE_FAILED", error.localizedDescription ?: @"Failed to resize sheet", error);
+                        }
+                      }];
+  });
 }
 
 #pragma mark - Helper Methods

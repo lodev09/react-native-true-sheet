@@ -85,8 +85,14 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    */
   @ReactMethod
   fun resizeByRef(viewTag: Double, index: Double, promise: Promise) {
-    // Resize is just an alias for present (always animated)
-    presentByRef(viewTag, index, true, promise)
+    val tag = viewTag.toInt()
+    val detentIndex = index.toInt()
+
+    withTrueSheetView(tag, promise) { view ->
+      view.resize(detentIndex) {
+        promise.resolve(null)
+      }
+    }
   }
 
   /**
