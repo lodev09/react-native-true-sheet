@@ -1,10 +1,5 @@
 # Agent Instructions
 
-## Get Started
-
-- See README to know more about this project.
-- Get previous commits on this branch to get context.
-
 ## Rules
 
 1. I will do builds and UI test myself.
@@ -13,130 +8,64 @@
 
 ## Project Overview
 
-This is a React Native Fabric (New Architecture) bottom sheet library. It provides native bottom sheet functionality for both iOS and Android.
+React Native Fabric (New Architecture) bottom sheet library for iOS and Android.
 
-### Key Technologies
-
-- **React Native New Architecture (Fabric)** - No bridge, direct C++ communication
+- **Fabric** - No bridge, direct C++ communication
 - **Codegen** - Auto-generates native interfaces from TypeScript specs
-- **C++ Shared Code** - State and shadow nodes shared between iOS and Android
+- **C++ Shared Code** - State and shadow nodes shared between platforms
 
 ## Project Structure
 
 ```
 src/
-├── fabric/                    # Native component specs (codegen input)
-│   ├── TrueSheetViewNativeComponent.ts        # Host view spec (has interfaceOnly: true)
-│   ├── TrueSheetContainerViewNativeComponent.ts
-│   ├── TrueSheetContentViewNativeComponent.ts
-│   ├── TrueSheetHeaderViewNativeComponent.ts
-│   └── TrueSheetFooterViewNativeComponent.ts
-├── specs/
-│   └── NativeTrueSheetModule.ts               # TurboModule spec
-├── reanimated/                # Reanimated integration
-│   ├── index.ts
-│   ├── ReanimatedTrueSheet.tsx
-│   ├── ReanimatedTrueSheetProvider.tsx
-│   └── useReanimatedPositionChangeHandler.ts
-├── TrueSheet.tsx              # Main React component
-├── TrueSheetGrabber.tsx       # Grabber component
-└── TrueSheet.types.ts         # TypeScript types
+├── fabric/           # Native component specs (codegen input)
+├── specs/            # TurboModule spec
+├── reanimated/       # Reanimated integration
+├── navigation/       # React Navigation integration
+├── TrueSheet.tsx     # Main React component
+└── TrueSheet.types.ts
 
 ios/
-├── TrueSheetView.mm/.h        # Host view (Fabric component)
-├── TrueSheetContainerView.mm/.h
-├── TrueSheetContentView.mm/.h
-├── TrueSheetHeaderView.mm/.h
-├── TrueSheetFooterView.mm/.h
-├── TrueSheetViewController.mm/.h  # UIViewController for sheet presentation
-├── TrueSheetModule.mm/.h      # TurboModule for imperative methods
-├── TrueSheetComponentDescriptor.h
-├── events/                    # Event classes (grouped by category)
-│   ├── TrueSheetLifecycleEvents.mm/.h  # mount, willPresent, didPresent, willDismiss, didDismiss
-│   ├── TrueSheetDragEvents.mm/.h       # dragBegin, dragChange, dragEnd
-│   ├── TrueSheetFocusEvents.mm/.h      # willFocus, didFocus, willBlur, didBlur
-│   └── TrueSheetStateEvents.mm/.h      # detentChange, positionChange
+├── TrueSheetView.mm           # Host view (Fabric component)
+├── TrueSheetViewController.mm # UIViewController for sheet presentation
+├── TrueSheetModule.mm         # TurboModule
+├── TrueSheet*View.mm          # Container, Content, Header, Footer views
+├── core/                      # Core UI components (GrabberView, BlurView)
+├── events/                    # Event classes
 └── utils/                     # Utility classes
-    ├── ConversionUtil.mm/.h
-    ├── GestureUtil.mm/.h
-    ├── LayoutUtil.mm/.h
-    └── WindowUtil.mm/.h
 
-android/src/main/java/com/lodev09/truesheet/
+android/.../truesheet/
 ├── TrueSheetView.kt           # Host view
-├── TrueSheetViewManager.kt    # View manager
-├── TrueSheetContainerView.kt
-├── TrueSheetContainerViewManager.kt
-├── TrueSheetContentView.kt
-├── TrueSheetContentViewManager.kt
-├── TrueSheetHeaderView.kt
-├── TrueSheetHeaderViewManager.kt
-├── TrueSheetFooterView.kt
-├── TrueSheetFooterViewManager.kt
 ├── TrueSheetViewController.kt # Dialog/BottomSheet controller
 ├── TrueSheetModule.kt         # TurboModule
-├── TrueSheetPackage.kt        # React Native package
-├── events/                    # Event classes (grouped by category)
-│   ├── TrueSheetLifecycleEvents.kt  # MountEvent, WillPresentEvent, DidPresentEvent, WillDismissEvent, DidDismissEvent
-│   ├── TrueSheetDragEvents.kt       # DragBeginEvent, DragChangeEvent, DragEndEvent
-│   ├── TrueSheetFocusEvents.kt      # WillFocusEvent, FocusEvent, WillBlurEvent, BlurEvent
-│   └── TrueSheetStateEvents.kt      # DetentChangeEvent, PositionChangeEvent
-└── utils/
-    └── ScreenUtils.kt
+├── TrueSheet*View.kt          # Container, Content, Header, Footer views
+├── TrueSheet*ViewManager.kt   # View managers
+├── core/                      # Core components (GrabberView, DialogObserver, etc.)
+├── events/                    # Event classes
+└── utils/                     # Utility classes
 
-common/cpp/react/renderer/components/TrueSheetSpec/
-├── TrueSheetViewState.h/.cpp           # Shared state (containerWidth)
-├── TrueSheetViewShadowNode.h/.cpp      # Custom shadow node with adjustLayoutWithState()
-└── TrueSheetViewComponentDescriptor.h  # Custom descriptor that calls adjustLayoutWithState()
+common/cpp/.../TrueSheetSpec/
+├── TrueSheetViewState.h/.cpp         # Shared state
+├── TrueSheetViewShadowNode.h/.cpp    # Custom shadow node
+└── TrueSheetViewComponentDescriptor.h
 ```
 
-## Architecture
-
-### View Hierarchy
+## View Hierarchy
 
 ```
 TrueSheetView (host view - hidden, manages state)
 └── TrueSheetContainerView (fills controller's view)
-    ├── TrueSheetHeaderView (sticky header, optional)
-    ├── TrueSheetContentView (sheet content)
-    └── TrueSheetFooterView (sticky footer, optional)
+    ├── TrueSheetHeaderView (optional)
+    ├── TrueSheetContentView
+    └── TrueSheetFooterView (optional)
 ```
-
-### Fabric State Management
-
-The host view (`TrueSheetView`) uses Fabric state to pass native dimensions to Yoga for layout:
-
-1. **State files** (`TrueSheetViewState.h/.cpp`) - Hold `containerWidth` from native
-2. **Shadow node** (`TrueSheetViewShadowNode`) - `adjustLayoutWithState()` updates Yoga dimensions
-3. **Component descriptor** - Calls `adjustLayoutWithState()` on adopt
-4. **Native view** - Calls `updateState()` when dimensions change (e.g., rotation)
-
-## Key Concepts
-
-### interfaceOnly: true
-
-In `TrueSheetViewNativeComponent.ts`, `interfaceOnly: true` means:
-- Codegen generates interfaces but not the component descriptor
-- We provide custom C++ files (state, shadow node, descriptor) in `common/`
-
-### Container View
-
-The container view is a simple pass-through without custom state. It uses codegen-generated descriptor from `ComponentDescriptors.h`.
-
-### iOS: Width-only tracking
-
-iOS only tracks width changes for state updates since height is determined by content. See `_lastContainerWidth` in `TrueSheetView.mm`.
-
-### Android: Width and Height
-
-Android tracks both dimensions in state since the dialog size matters for layout.
 
 ## Common Tasks
 
 ### Adding a new prop
 
-1. Add to `TrueSheetViewNativeComponent.ts`
-2. Run codegen (build the app)
+1. Add to `src/fabric/TrueSheetViewNativeComponent.ts`
+2. Build the app (runs codegen)
 3. Implement in `TrueSheetView.mm` (iOS) and `TrueSheetViewManager.kt` (Android)
 
 ### Adding a new event
@@ -145,12 +74,6 @@ Android tracks both dimensions in state since the dialog size matters for layout
 2. Create event class in `ios/events/` and `android/.../events/`
 3. Emit from native view
 
-### Modifying state/shadow node
-
-1. Update `TrueSheetViewState.h/.cpp`
-2. Update `TrueSheetViewShadowNode.cpp` if layout logic changes
-3. Update native views to push new state values
-
 ## Commands
 
-See package.json scripts.
+See `package.json` scripts.
