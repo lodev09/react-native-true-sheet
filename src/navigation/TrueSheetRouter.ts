@@ -72,7 +72,7 @@ export function TrueSheetRouter(
     getStateForAction(state, action, options) {
       switch (action.type) {
         case 'RESIZE': {
-          const index =
+          const routeIndex =
             action.target === state.key && action.source
               ? state.routes.findIndex((r) => r.key === action.source)
               : state.index;
@@ -80,11 +80,10 @@ export function TrueSheetRouter(
           return {
             ...state,
             routes: state.routes.map((route, i) =>
-              i === index
+              i === routeIndex
                 ? {
                     ...route,
                     resizeIndex: action.index,
-                    // Increment key to trigger effect even when resizing to same index
                     resizeKey: (route.resizeKey ?? 0) + 1,
                   }
                 : route
