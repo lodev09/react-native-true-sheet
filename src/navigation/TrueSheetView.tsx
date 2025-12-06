@@ -4,21 +4,21 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { TrueSheet } from '../TrueSheet';
 import type {
   DetentChangeEvent,
-  WillPresentEvent,
+  DetentInfoEventPayload,
+  DidBlurEvent,
+  DidFocusEvent,
   DidPresentEvent,
-  WillDismissEvent,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
   PositionChangeEvent,
-  WillFocusEvent,
-  DidFocusEvent,
+  PositionChangeEventPayload,
   WillBlurEvent,
-  DidBlurEvent,
+  WillDismissEvent,
+  WillFocusEvent,
+  WillPresentEvent,
 } from '../TrueSheet.types';
 import type {
-  DetentChangeEventData,
-  PositionChangeEventData,
   TrueSheetDescriptorMap,
   TrueSheetNavigationEventMap,
   TrueSheetNavigationHelpers,
@@ -85,7 +85,7 @@ function TrueSheetScreen({
   const emitEvent = useCallback(
     (
       type: keyof TrueSheetNavigationEventMap,
-      data: DetentChangeEventData | PositionChangeEventData | undefined
+      data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
     ) => {
       emit({
         type,

@@ -9,27 +9,21 @@ import type {
   StackActionHelpers,
 } from '@react-navigation/native';
 
-import type { TrueSheetProps } from '../TrueSheet.types';
-
-export interface DetentChangeEventData {
-  index: number;
-  position: number;
-  detent: number;
-}
-
-export interface PositionChangeEventData extends DetentChangeEventData {
-  realtime: boolean;
-}
+import type {
+  DetentInfoEventPayload,
+  PositionChangeEventPayload,
+  TrueSheetProps,
+} from '../TrueSheet.types';
 
 export type TrueSheetNavigationEventMap = {
   /**
    * Event fired when the sheet is about to be presented.
    */
-  sheetWillPresent: { data: DetentChangeEventData };
+  sheetWillPresent: { data: DetentInfoEventPayload };
   /**
    * Event fired when the sheet has been presented.
    */
-  sheetDidPresent: { data: DetentChangeEventData };
+  sheetDidPresent: { data: DetentInfoEventPayload };
   /**
    * Event fired when the sheet is about to be dismissed.
    */
@@ -41,23 +35,23 @@ export type TrueSheetNavigationEventMap = {
   /**
    * Event fired when the sheet's detent changes.
    */
-  sheetDetentChange: { data: DetentChangeEventData };
+  sheetDetentChange: { data: DetentInfoEventPayload };
   /**
    * Event fired when the user starts dragging the sheet.
    */
-  sheetDragBegin: { data: DetentChangeEventData };
+  sheetDragBegin: { data: DetentInfoEventPayload };
   /**
    * Event fired while the user is dragging the sheet.
    */
-  sheetDragChange: { data: DetentChangeEventData };
+  sheetDragChange: { data: DetentInfoEventPayload };
   /**
    * Event fired when the user stops dragging the sheet.
    */
-  sheetDragEnd: { data: DetentChangeEventData };
+  sheetDragEnd: { data: DetentInfoEventPayload };
   /**
    * Event fired when the sheet's position changes.
    */
-  sheetPositionChange: { data: PositionChangeEventData };
+  sheetPositionChange: { data: PositionChangeEventPayload };
   /**
    * Event fired when the sheet is about to regain focus.
    */
