@@ -98,13 +98,23 @@
   return UIScreen.mainScreen.bounds.size.height;
 }
 
-- (CGFloat)contentBottomInset {
-  if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
-    return 0;
-  }
+- (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
   if ([_insetAdjustment isEqualToString:@"automatic"]) {
     return 0;
   }
+  
+  if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
+    return 0;
+  }
+  
+  // On iOS 26+, returns 0 for small detents (height <= 150)
+  // Floating sheets don't need adjustment
+  if (@available(iOS 26.0, *)) {
+    if (height <= 150) {
+      return 0;
+    }
+  }
+  
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
 }
@@ -734,14 +744,14 @@
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
                                                              height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
-  CGFloat bottomInset = self.contentBottomInset;
+  CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         CGFloat maxValue =
                           self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                        CGFloat adjustedHeight = height - bottomInset;
+                        CGFloat adjustedHeight = height - bottomAdjustment;
                         return fmin(adjustedHeight, maxValue);
                       }];
 }
