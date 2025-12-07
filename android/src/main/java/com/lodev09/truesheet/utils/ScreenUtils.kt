@@ -1,8 +1,10 @@
 package com.lodev09.truesheet.utils
 
+import android.graphics.Point
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
+import android.view.WindowManager
 import kotlin.math.min
 
 /**
@@ -71,6 +73,25 @@ object ScreenUtils {
    */
   fun getScreenHeight(view: View): Int {
     return view.resources.displayMetrics.heightPixels
+  }
+
+  /**
+   * Get the real physical device screen height, including system bars.
+   * This is consistent across all API levels.
+   *
+   * @param view Any view to get context from
+   * @return Real screen height in pixels
+   */
+  @Suppress("DEPRECATION")
+  fun getRealScreenHeight(view: View): Int {
+    val windowManager = view.context.getSystemService(WindowManager::class.java)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      windowManager.currentWindowMetrics.bounds.height()
+    } else {
+      val size = Point()
+      windowManager.defaultDisplay.getRealSize(size)
+      size.y
+    }
   }
 
   /**

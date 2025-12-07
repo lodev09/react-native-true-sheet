@@ -546,8 +546,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         3 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          val detentHeight = getDetentHeight(detents[1])
+          // Use real device height for consistent ratio calculation across API levels
+          val realHeight = ScreenUtils.getRealScreenHeight(this@TrueSheetViewController)
+          Log.d(TAG_NAME, "setupSheetDetents: API=${android.os.Build.VERSION.SDK_INT}, screenHeight=$screenHeight, realHeight=$realHeight, detentHeight=$detentHeight")
+          halfExpandedRatio = minOf(detentHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - getDetentHeight(detents[2])
+          Log.d(TAG_NAME, "  halfExpandedRatio=$halfExpandedRatio, expandedOffset=$expandedOffset")
         }
       }
 
@@ -668,8 +673,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Position & Drag Handling
   // ====================================================================
 
+  /**
+   * Calculate the visible sheet height from a sheet view.
+   * Uses real screen height for consistency across API levels.
+   */
   private fun getVisibleSheetHeight(sheetView: View): Int {
-    return sheetView.height - sheetView.top
+    val realHeight = ScreenUtils.getRealScreenHeight(sheetView)
+    return realHeight - sheetView.top
   }
 
   private fun getPositionDp(visibleSheetHeight: Int): Float {
@@ -688,9 +698,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun storeResolvedPosition(index: Int) {
     if (index < 0 || index >= resolvedDetentPositions.size) return
-    val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: return
-    if (positionPx in 1..<screenHeight) {
-      resolvedDetentPositions[index] = positionPx
+    val sheetTop = bottomSheetView?.top ?: return
+    val realHeight = ScreenUtils.getRealScreenHeight(this)
+    // Only store if sheetTop is valid (greater than 0 and less than real screen height)
+    if (sheetTop in 1..<realHeight) {
+      resolvedDetentPositions[index] = sheetTop
     }
   }
 
@@ -699,17 +711,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun getEstimatedPositionForIndex(index: Int): Int {
-    if (index < 0 || index >= resolvedDetentPositions.size) return screenHeight
+    val realHeight = ScreenUtils.getRealScreenHeight(this)
+    if (index < 0 || index >= resolvedDetentPositions.size) return realHeight
 
     val storedPos = resolvedDetentPositions[index]
     if (storedPos > 0) return storedPos
 
     if (index < detents.size) {
       val detentHeight = getDetentHeight(detents[index])
-      return screenHeight - detentHeight
+      return realHeight - detentHeight
     }
 
-    return screenHeight
+    return realHeight
   }
 
   /** Returns (fromIndex, toIndex, progress) for interpolation, or null if < 2 detents. */
@@ -717,11 +730,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val count = resolvedDetentPositions.size
     if (count < 2) return null
 
+    val realHeight = ScreenUtils.getRealScreenHeight(this)
     val firstPos = getEstimatedPositionForIndex(0)
     val lastPos = getEstimatedPositionForIndex(count - 1)
 
     if (positionPx > firstPos) {
-      val range = screenHeight - firstPos
+      val range = realHeight - firstPos
       val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }
@@ -908,8 +922,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       this.post {
         positionFooter()
         storeResolvedPosition(currentDetentIndex)
-        val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
-        emitChangePositionDelegate(positionPx, realtime = false)
+        bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
       }
     }
   }
