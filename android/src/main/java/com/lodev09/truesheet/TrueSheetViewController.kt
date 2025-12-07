@@ -287,7 +287,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       isDismissing = true
       emitWillDismissEvents()
-      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
+      emitDismissedPosition()
     }
 
     dialog.setOnDismissListener {
@@ -436,15 +436,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   /** Hides without dismissing. Used for sheet stacking and RN Screens modals. */
-  fun hideDialog() {
+  fun hideDialog(emitPosition: Boolean = false) {
     isDialogVisible = false
     dialog?.window?.decorView?.visibility = INVISIBLE
+    if (emitPosition) {
+      emitDismissedPosition()
+    }
   }
 
   /** Shows a previously hidden dialog. */
-  fun showDialog() {
+  fun showDialog(emitPosition: Boolean = false) {
     isDialogVisible = true
     dialog?.window?.decorView?.visibility = VISIBLE
+    if (emitPosition) {
+      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
+    }
   }
 
   // ====================================================================
@@ -487,10 +493,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isDismissing = true
     emitWillDismissEvents()
-
-    this.post {
-      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
-    }
+    emitDismissedPosition()
 
     if (!animated) {
       dialog?.window?.setWindowAnimations(0)
@@ -677,6 +680,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val interpolatedIndex = getInterpolatedIndexForPosition(sheetView.top)
     val detent = getInterpolatedDetentForPosition(sheetView.top)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
+  }
+
+  private fun emitDismissedPosition() {
+    val position = screenHeight.pxToDp()
+    lastEmittedPositionPx = -1
+    delegate?.viewControllerDidChangePosition(-1f, position, 0f, false)
   }
 
   /**

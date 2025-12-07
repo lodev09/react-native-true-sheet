@@ -25,7 +25,7 @@ object TrueSheetDialogObserver {
         val parentTop = it.viewController.currentSheetTop
         val newSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
         if (!it.viewController.isExpanded && parentTop <= newSheetTop) {
-          it.viewController.hideDialog()
+          it.viewController.hideDialog(emitPosition = true)
         }
       }
 
@@ -46,7 +46,7 @@ object TrueSheetDialogObserver {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
       if (hadParent) {
-        presentedSheetStack.lastOrNull()?.viewController?.showDialog()
+        presentedSheetStack.lastOrNull()?.viewController?.showDialog(emitPosition = true)
       }
     }
   }

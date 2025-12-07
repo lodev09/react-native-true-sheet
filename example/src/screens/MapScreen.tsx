@@ -100,7 +100,7 @@ export const MapScreen = () => {
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
-        edgeToEdgeFullScreen
+        // edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
@@ -116,8 +116,8 @@ export const MapScreen = () => {
         // onPositionChange={(e) => {
         //   'worklet';
 
-        //   const { detent, position, index } = e.nativeEvent;
-        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
+        //   const { detent, position, index, realtime } = e.nativeEvent;
+        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`);
         // }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
@@ -168,8 +168,16 @@ export const MapScreen = () => {
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <View style={styles.buttonRow}>
-          <Button style={styles.rowButton} text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
-          <Button style={styles.rowButton} text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />
+          <Button
+            style={styles.rowButton}
+            text="Open Modal"
+            onPress={() => navigation.navigate('ModalStack')}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Sheet Navigator"
+            onPress={() => navigation.navigate('SheetStack')}
+          />
         </View>
         <Spacer />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
@@ -179,11 +187,23 @@ export const MapScreen = () => {
             text={showExtraContent ? 'Remove Content' : 'Add Content'}
             onPress={() => setShowExtraContent(!showExtraContent)}
           />
-          <Button style={styles.rowButton} text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+          <Button
+            style={styles.rowButton}
+            text="Expand"
+            onPress={() => sheetRef.current?.resize(2)}
+          />
         </View>
         <View style={styles.buttonRow}>
-          <Button style={styles.rowButton} text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
-          <Button style={styles.rowButton} text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+          <Button
+            style={styles.rowButton}
+            text="Collapse"
+            onPress={() => sheetRef.current?.resize(0)}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Dismiss"
+            onPress={() => sheetRef.current?.dismiss()}
+          />
         </View>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
