@@ -519,30 +519,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       val oldExpandOffset = expandedOffset
 
-      when (detents.size) {
-        1 -> {
-          setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          val adjustedPeekHeight = peekHeight - edgeToEdgeTopInset
-          halfExpandedRatio = minOf(adjustedPeekHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - peekHeight)
-          isFitToContents = expandedOffset == 0
-        }
+      val maxAvailableHeight = realHeight - edgeToEdgeTopInset
 
-        2 -> {
-          setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          val maxDetentHeight = getDetentHeight(detents[1])
-          halfExpandedRatio = minOf((maxDetentHeight - edgeToEdgeTopInset).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - maxDetentHeight)
-          isFitToContents = expandedOffset == 0
-        }
+      setPeekHeight(getDetentHeight(detents[0]), isPresented)
 
-        3 -> {
-          setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          val midDetentHeight = getDetentHeight(detents[1])
-          halfExpandedRatio = minOf((midDetentHeight - edgeToEdgeTopInset).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - getDetentHeight(detents[2]))
-        }
+      val halfExpandedDetentHeight = when (detents.size) {
+        1 -> peekHeight
+        else -> getDetentHeight(detents[1])
       }
+
+      val maxDetentHeight = getDetentHeight(detents.last())
+
+      val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
+      halfExpandedRatio = minOf(adjustedHalfExpandedHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+
+      expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - maxDetentHeight)
+      isFitToContents = detents.size < 3 && expandedOffset == 0
 
       if (oldExpandOffset != expandedOffset || expandedOffset == 0) {
         val offset = if (expandedOffset == 0) topInset else 0

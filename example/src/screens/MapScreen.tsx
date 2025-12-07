@@ -95,7 +95,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 'auto', 1]}
+        detents={[0.1, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
