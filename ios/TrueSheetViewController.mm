@@ -103,7 +103,7 @@
 }
 
 - (CGFloat)contentBottomInset {
-  return [_insetAdjustment isEqualToString:@"automatic"] ? self.bottomInset : 0;
+  return [_insetAdjustment isEqualToString:@"automatic"] ? 0 : self.bottomInset;
 }
 
 - (NSInteger)currentDetentIndex {

@@ -373,6 +373,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       style,
       header,
       footer,
+      insetAdjustment = 'automatic',
       ...rest
     } = this.props;
 
@@ -425,6 +426,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         edgeToEdgeFullScreen={edgeToEdgeFullScreen}
         scrollable={scrollable}
         pageSizing={pageSizing}
+        insetAdjustment={insetAdjustment}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}
         onDidPresent={this.onDidPresent}

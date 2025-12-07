@@ -178,8 +178,7 @@ using namespace facebook::react;
   _initialDetentAnimated = newProps.initialDetentAnimated;
   _scrollable = newProps.scrollable;
 
-  // Inset adjustment (iOS handles insets automatically, this is for API consistency)
-  _controller.insetAdjustment = !newProps.insetAdjustment.empty() ? RCTNSStringFromString(newProps.insetAdjustment) : @"automatic";
+  _controller.insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
 
   if (_containerView) {
     _containerView.scrollViewPinningEnabled = _scrollable;

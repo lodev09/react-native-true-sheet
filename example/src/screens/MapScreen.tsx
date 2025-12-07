@@ -101,15 +101,15 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[0.1, 'auto', 1]}
+        detents={[HEADER_HEIGHT / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
         // insetAdjustment="never"
-        // edgeToEdgeFullScreen
+        edgeToEdgeFullScreen
         style={styles.content}
-        backgroundColor={Platform.select({ android: DARK })}
+        backgroundColor={Platform.select({ default: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`

@@ -100,7 +100,7 @@ export interface BlurOptions {
 /**
  * Inset adjustment behavior for the sheet content.
  */
-export type InsetAdjustmentBehavior =
+export type InsetAdjustment =
   /**
    * Automatically adjusts the sheet height to account for system insets (safe area).
    * This ensures the sheet content is properly inset from system UI elements.
@@ -322,7 +322,7 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @default 'automatic'
    */
-  insetAdjustment?: InsetAdjustmentBehavior;
+  insetAdjustment?: InsetAdjustment;
 
   /**
    * A component that is fixed at the top of the Sheet content.
