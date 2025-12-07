@@ -98,6 +98,21 @@ export interface BlurOptions {
 }
 
 /**
+ * Inset adjustment behavior for the sheet content.
+ */
+export type InsetAdjustment =
+  /**
+   * Automatically adjusts the sheet height to account for system insets (safe area).
+   * This ensures the sheet content is properly inset from system UI elements.
+   */
+  | 'automatic'
+  /**
+   * Does not adjust the sheet height for system insets.
+   * The sheet height is calculated purely from the detent values.
+   */
+  | 'never';
+
+/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios
@@ -297,6 +312,17 @@ export interface TrueSheetProps extends ViewProps {
    * @default false
    */
   edgeToEdgeFullScreen?: boolean;
+
+  /**
+   * Controls how the sheet adjusts its height for system insets (safe area).
+   *
+   * - `'automatic'`: Adds the bottom safe area inset to the sheet height,
+   *    ensuring content is properly inset from system UI elements.
+   * - `'never'`: Does not adjust for insets; height is calculated purely from detent values.
+   *
+   * @default 'automatic'
+   */
+  insetAdjustment?: InsetAdjustment;
 
   /**
    * A component that is fixed at the top of the Sheet content.

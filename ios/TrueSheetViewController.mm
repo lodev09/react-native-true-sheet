@@ -24,6 +24,7 @@
   CGFloat _lastPosition;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
+  BOOL _pendingDetentsChange;
 
   CADisplayLink *_transitioningTimer;
   UIView *_transitionFakeView;
@@ -64,6 +65,7 @@
     _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
+    _insetAdjustment = @"automatic";
     _resolvedDetentPositions = [NSMutableArray array];
     _hasPresentedController = NO;
   }
@@ -94,6 +96,27 @@
 
 - (CGFloat)screenHeight {
   return UIScreen.mainScreen.bounds.size.height;
+}
+
+- (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
+  if ([_insetAdjustment isEqualToString:@"automatic"]) {
+    return 0;
+  }
+  
+  if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
+    return 0;
+  }
+  
+  // On iOS 26+, returns 0 for small detents (height <= 150)
+  // Floating sheets don't need adjustment
+  if (@available(iOS 26.0, *)) {
+    if (height <= 150) {
+      return 0;
+    }
+  }
+  
+  UIWindow *window = [WindowUtil keyWindow];
+  return window ? window.safeAreaInsets.bottom : 0;
 }
 
 - (NSInteger)currentDetentIndex {
@@ -260,8 +283,9 @@
     BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
     BOOL realtime = !hasPresentedController;
 
-    if (_pendingContentSizeChange) {
+    if (_pendingContentSizeChange || _pendingDetentsChange) {
       _pendingContentSizeChange = NO;
+      _pendingDetentsChange = NO;
       realtime = NO;
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     }
@@ -639,6 +663,11 @@
   [self setupSheetDetents];
 }
 
+- (void)setupSheetDetentsForDetentsChange {
+  _pendingDetentsChange = YES;
+  [self setupSheetDetents];
+}
+
 - (void)setupSheetDetents {
   UISheetPresentationController *sheet = self.sheetPresentationController;
   if (!sheet)
@@ -715,13 +744,15 @@
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
                                                              height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
+  CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         CGFloat maxValue =
                           self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                        return fmin(height, maxValue);
+                        CGFloat adjustedHeight = height - bottomAdjustment;
+                        return fmin(adjustedHeight, maxValue);
                       }];
 }
 

@@ -47,6 +47,7 @@ export interface NativeProps extends ViewProps {
   // String properties - use empty string as default to avoid nil insertion
   blurTint?: WithDefault<string, ''>;
   keyboardMode?: WithDefault<'resize' | 'pan', 'resize'>;
+  insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 
   // Blur options
   blurOptions?: BlurOptionsType;

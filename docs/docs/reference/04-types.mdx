@@ -99,6 +99,21 @@ Options for customizing the grabber (drag handle) appearance.
 | `cornerRadius` | `number` | The corner radius of the grabber pill. | `height / 2` |
 | `color` | `ColorValue` | The color of the grabber. Uses native styling when not provided. | |
 
+## `InsetAdjustment`
+
+Controls how the bottom safe area inset affects detent heights. Only applies on iPhone.
+
+```tsx
+<TrueSheet insetAdjustment="never">
+  <View />
+</TrueSheet>
+```
+
+| Value | Description |
+| - | - |
+| `"automatic"` | System handles insets automatically. This is the default behavior. |
+| `"never"` | Subtract bottom inset from detent heights for more precise sizing. |
+
 ## `DetentInfoEventPayload`
 
 `Object` that comes with most sheet events.

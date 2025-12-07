@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -34,10 +34,12 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
+  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -73,6 +75,10 @@ export const MapScreen = () => {
     ],
   }));
 
+  useEffect(() => {
+    console.log(`${insets.top}, ${insets.bottom}`);
+  }, [insets]);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -100,9 +106,10 @@ export const MapScreen = () => {
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
+        // insetAdjustment="never"
         edgeToEdgeFullScreen
         style={styles.content}
-        backgroundColor={Platform.select({ android: DARK })}
+        backgroundColor={Platform.select({ default: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
@@ -116,8 +123,10 @@ export const MapScreen = () => {
         // onPositionChange={(e) => {
         //   'worklet';
 
-        //   const { detent, position, index } = e.nativeEvent;
-        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
+        //   const { detent, position, index, realtime } = e.nativeEvent;
+        //   console.log(
+        //     `position change with height: ${height}, index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`
+        //   );
         // }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
@@ -167,17 +176,44 @@ export const MapScreen = () => {
         />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
-        <Button text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.rowButton}
+            text="Open Modal"
+            onPress={() => navigation.navigate('ModalStack')}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Sheet Navigator"
+            onPress={() => navigation.navigate('SheetStack')}
+          />
+        </View>
         <Spacer />
-        <Button
-          text={showExtraContent ? 'Remove Content' : 'Add Content'}
-          onPress={() => setShowExtraContent(!showExtraContent)}
-        />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.rowButton}
+            text={showExtraContent ? 'Remove Content' : 'Add Content'}
+            onPress={() => setShowExtraContent(!showExtraContent)}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Expand"
+            onPress={() => sheetRef.current?.resize(2)}
+          />
+        </View>
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.rowButton}
+            text="Collapse"
+            onPress={() => sheetRef.current?.resize(0)}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Dismiss"
+            onPress={() => sheetRef.current?.dismiss()}
+          />
+        </View>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
@@ -225,5 +261,12 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 24,
     color: GRAY,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: GAP,
+  },
+  rowButton: {
+    flex: 1,
   },
 });

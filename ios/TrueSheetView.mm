@@ -50,6 +50,7 @@ using namespace facebook::react;
   BOOL _scrollable;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
+  BOOL _pendingLayoutUpdate;
 }
 
 #pragma mark - Initialization
@@ -111,6 +112,13 @@ using namespace facebook::react;
   NSMutableArray *detents = [NSMutableArray new];
   for (const auto &detent : newProps.detents) {
     [detents addObject:@(detent)];
+  }
+
+  if (oldProps) {
+    const auto &prevProps = *std::static_pointer_cast<TrueSheetViewProps const>(oldProps);
+    if (newProps.detents != prevProps.detents || newProps.insetAdjustment != prevProps.insetAdjustment) {
+      _pendingLayoutUpdate = YES;
+    }
   }
   _controller.detents = detents;
 
@@ -178,6 +186,8 @@ using namespace facebook::react;
   _initialDetentAnimated = newProps.initialDetentAnimated;
   _scrollable = newProps.scrollable;
 
+  _controller.insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
+
   if (_containerView) {
     _containerView.scrollViewPinningEnabled = _scrollable;
   }
@@ -218,13 +228,21 @@ using namespace facebook::react;
   }
 
   if (_controller.isPresented) {
+    BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
+    _pendingLayoutUpdate = NO;
+
     [_controller.sheetPresentationController animateChanges:^{
       [self->_controller setupSheetProps];
-      [self->_controller setupSheetDetents];
+      if (pendingLayoutUpdate) {
+        [self->_controller setupSheetDetentsForDetentsChange];
+      } else {
+        [self->_controller setupSheetDetents];
+      }
       [self->_controller applyActiveDetent];
     }];
     [_controller setupDraggable];
   } else if (_initialDetentIndex >= 0) {
+    _pendingLayoutUpdate = NO;
     [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
   }
 }

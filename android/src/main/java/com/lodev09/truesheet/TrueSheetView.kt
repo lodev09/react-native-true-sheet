@@ -299,6 +299,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.edgeToEdgeFullScreen = edgeToEdgeFullScreen
   }
 
+  fun setInsetAdjustment(insetAdjustment: String) {
+    viewController.insetAdjustment = insetAdjustment
+  }
+
   // ==================== State Management ====================
 
   /**
