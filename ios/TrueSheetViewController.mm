@@ -102,11 +102,11 @@
   if ([_insetAdjustment isEqualToString:@"automatic"]) {
     return 0;
   }
-  
+
   if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
     return 0;
   }
-  
+
   // On iOS 26+, returns 0 for small detents (height <= 150)
   // Floating sheets don't need adjustment
   if (@available(iOS 26.0, *)) {
@@ -114,7 +114,7 @@
       return 0;
     }
   }
-  
+
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
 }
@@ -393,14 +393,6 @@
 
   if (!self.draggable) {
     [GestureUtil setPanGesturesEnabled:NO forView:presentedView];
-
-    TrueSheetContentView *contentView = [self findContentView:presentedView];
-    if (contentView) {
-      RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
-      if (scrollViewComponent && scrollViewComponent.scrollView) {
-        [GestureUtil setPanGesturesEnabled:NO forView:scrollViewComponent.scrollView];
-      }
-    }
     return;
   }
 
@@ -423,14 +415,6 @@
     return;
 
   [GestureUtil setPanGesturesEnabled:self.draggable forView:presentedView];
-
-  TrueSheetContentView *contentView = [self findContentView:presentedView];
-  if (contentView) {
-    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
-    if (scrollViewComponent && scrollViewComponent.scrollView) {
-      [GestureUtil setPanGesturesEnabled:self.draggable forView:scrollViewComponent.scrollView];
-    }
-  }
 }
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
@@ -832,6 +816,9 @@
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
+
+  // When draggable is disabled, prevent scrolling from expanding the sheet
+  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];
