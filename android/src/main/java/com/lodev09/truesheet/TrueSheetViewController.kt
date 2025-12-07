@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -168,10 +169,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   val bottomInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getNavigationBarHeight(reactContext) else 0
+    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(this).bottom else 0
 
   val topInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getStatusBarHeight(reactContext) else 0
+    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(this).top else 0
 
   /** Edge-to-edge enabled by default on API 36+, or when explicitly configured. */
   private val edgeToEdgeEnabled: Boolean
@@ -192,8 +193,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   init {
-    screenHeight = ScreenUtils.getScreenHeight(reactContext)
-    screenWidth = ScreenUtils.getScreenWidth(reactContext)
+    screenHeight = ScreenUtils.getScreenHeight(this)
+    screenWidth = ScreenUtils.getScreenWidth(this)
     jSPointerDispatcher = JSPointerDispatcher(this)
   }
 
@@ -628,14 +629,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
 
     val footerHeight = footerView.height
-    val totalHeight = screenHeight + bottomInset
-    var footerY = (totalHeight - bottomSheet.top - footerHeight).toFloat()
+    val sheetHeight = bottomSheet.height
+    val sheetTop = bottomSheet.top
+
+    // Footer Y relative to sheet: place at bottom of sheet container minus footer height
+    var footerY = (sheetHeight - sheetTop - footerHeight).toFloat()
 
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
     }
 
-    val maxAllowedY = (totalHeight - topInset - footerHeight).toFloat()
+    // Clamp to prevent footer from going above visible area
+    val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
   }
 
@@ -892,7 +897,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     val oldScreenHeight = screenHeight
-    screenHeight = ScreenUtils.getScreenHeight(reactContext)
+    screenHeight = ScreenUtils.getScreenHeight(this)
 
     if (isPresented && oldScreenHeight != screenHeight && oldScreenHeight > 0) {
       setupSheetDetents()

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -74,6 +74,10 @@ export const MapScreen = () => {
       },
     ],
   }));
+
+  useEffect(() => {
+    console.log(insets.top, insets.bottom);
+  }, [insets]);
 
   return (
     <View style={styles.container}>
