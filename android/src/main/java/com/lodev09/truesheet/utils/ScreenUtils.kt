@@ -62,54 +62,25 @@ object ScreenUtils {
   }
 
   /**
-   * Calculate the screen height
+   * Calculate the screen height using the same method as React Native's useWindowDimensions.
+   * This returns the window height which automatically accounts for edge-to-edge mode.
    *
    * @param context React context
-   * @param edgeToEdge Whether edge-to-edge mode is enabled
+
    * @return Screen height in pixels
    */
-  @SuppressLint("InternalInsetResource", "DiscouragedApi")
-  fun getScreenHeight(context: ReactContext, edgeToEdge: Boolean): Int {
-    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val displayMetrics = DisplayMetrics()
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      context.display?.getRealMetrics(displayMetrics)
-    } else {
-      @Suppress("DEPRECATION")
-      windowManager.defaultDisplay.getMetrics(displayMetrics)
-    }
-
-    val screenHeight = displayMetrics.heightPixels
-
-    return if (edgeToEdge) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        screenHeight
-      } else {
-        screenHeight + getNavigationBarHeight(context)
-      }
-    } else {
-      screenHeight - getStatusBarHeight(context) - getNavigationBarHeight(context)
-    }
+  fun getScreenHeight(context: ReactContext): Int {
+    return context.resources.displayMetrics.heightPixels
   }
 
   /**
-   * Get the screen width
+   * Get the screen width using the same method as React Native's useWindowDimensions.
    *
    * @param context React context
    * @return Screen width in pixels
    */
   fun getScreenWidth(context: ReactContext): Int {
-    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      windowManager.currentWindowMetrics.bounds.width()
-    } else {
-      val displayMetrics = DisplayMetrics()
-      @Suppress("DEPRECATION")
-      windowManager.defaultDisplay.getMetrics(displayMetrics)
-      displayMetrics.widthPixels
-    }
+    return context.resources.displayMetrics.widthPixels
   }
 
   /**
