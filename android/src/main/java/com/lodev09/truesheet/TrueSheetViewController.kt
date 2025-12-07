@@ -171,8 +171,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val topInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
 
-  /** Auto add bottom inset for consistency with IOS **/
-  val contentBottomInset: Int = bottomInset
+  var insetAdjustment: String = "automatic"
+
+  /** Auto add bottom inset for consistency with iOS when insetAdjustment is 'automatic' */
+  val contentBottomInset: Int
+    get() = if (insetAdjustment == "automatic") bottomInset else 0
 
   /** Edge-to-edge enabled by default on API 36+, or when explicitly configured. */
   private val edgeToEdgeEnabled: Boolean

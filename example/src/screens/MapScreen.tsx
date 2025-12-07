@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -34,10 +34,12 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
+  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -73,6 +75,10 @@ export const MapScreen = () => {
     ],
   }));
 
+  useEffect(() => {
+    console.log(`${insets.top}, ${insets.bottom}`);
+  }, [insets]);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -100,6 +106,7 @@ export const MapScreen = () => {
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
+        // insetAdjustment="never"
         // edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
@@ -117,7 +124,9 @@ export const MapScreen = () => {
         //   'worklet';
 
         //   const { detent, position, index, realtime } = e.nativeEvent;
-        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`);
+        //   console.log(
+        //     `position change with height: ${height}, index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`
+        //   );
         // }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(

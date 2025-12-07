@@ -64,6 +64,7 @@
     _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
+    _insetAdjustment = @"automatic";
     _resolvedDetentPositions = [NSMutableArray array];
     _hasPresentedController = NO;
   }
@@ -94,6 +95,15 @@
 
 - (CGFloat)screenHeight {
   return UIScreen.mainScreen.bounds.size.height;
+}
+
+- (CGFloat)bottomInset {
+  UIWindow *window = [WindowUtil keyWindow];
+  return window ? window.safeAreaInsets.bottom : 0;
+}
+
+- (CGFloat)contentBottomInset {
+  return [_insetAdjustment isEqualToString:@"automatic"] ? self.bottomInset : 0;
 }
 
 - (NSInteger)currentDetentIndex {
@@ -715,13 +725,15 @@
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
                                                              height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
+  CGFloat bottomInset = self.contentBottomInset;
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         CGFloat maxValue =
                           self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
-                        return fmin(height, maxValue);
+                        CGFloat adjustedHeight = height - bottomInset;
+                        return fmin(adjustedHeight, maxValue);
                       }];
 }
 

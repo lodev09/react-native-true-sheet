@@ -196,6 +196,11 @@ class TrueSheetViewManager :
     view.setEdgeToEdgeFullScreen(edgeToEdgeFullScreen)
   }
 
+  @ReactProp(name = "insetAdjustment")
+  override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
+    view.setInsetAdjustment(insetAdjustment ?: "automatic")
+  }
+
   @ReactProp(name = "scrollable", defaultBoolean = false)
   override fun setScrollable(view: TrueSheetView, value: Boolean) {
     // iOS-specific prop - no-op on Android
