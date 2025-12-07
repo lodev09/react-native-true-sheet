@@ -73,6 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetProps;
 - (void)setupSheetDetents;
 - (void)setupSheetDetentsForSizeChange;
+- (void)setupSheetDetentsForDetentsChange;
 - (void)setupDraggable;
 
 @end

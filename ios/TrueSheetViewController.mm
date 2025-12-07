@@ -24,6 +24,7 @@
   CGFloat _lastPosition;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
+  BOOL _pendingDetentsChange;
 
   CADisplayLink *_transitioningTimer;
   UIView *_transitionFakeView;
@@ -97,13 +98,15 @@
   return UIScreen.mainScreen.bounds.size.height;
 }
 
-- (CGFloat)bottomInset {
+- (CGFloat)contentBottomInset {
+  if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
+    return 0;
+  }
+  if ([_insetAdjustment isEqualToString:@"automatic"]) {
+    return 0;
+  }
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
-}
-
-- (CGFloat)contentBottomInset {
-  return [_insetAdjustment isEqualToString:@"automatic"] ? 0 : self.bottomInset;
 }
 
 - (NSInteger)currentDetentIndex {
@@ -270,8 +273,9 @@
     BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
     BOOL realtime = !hasPresentedController;
 
-    if (_pendingContentSizeChange) {
+    if (_pendingContentSizeChange || _pendingDetentsChange) {
       _pendingContentSizeChange = NO;
+      _pendingDetentsChange = NO;
       realtime = NO;
       [self storeResolvedPositionForIndex:self.currentDetentIndex];
     }
@@ -646,6 +650,11 @@
 
 - (void)setupSheetDetentsForSizeChange {
   _pendingContentSizeChange = YES;
+  [self setupSheetDetents];
+}
+
+- (void)setupSheetDetentsForDetentsChange {
+  _pendingDetentsChange = YES;
   [self setupSheetDetents];
 }
 
