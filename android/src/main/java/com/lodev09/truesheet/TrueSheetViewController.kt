@@ -515,14 +515,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       when (detents.size) {
         1 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(peekHeight.toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          halfExpandedRatio = minOf(peekHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - peekHeight
           isFitToContents = expandedOffset == 0
         }
 
         2 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / screenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - getDetentHeight(detents[1])
           isFitToContents = expandedOffset == 0
         }
