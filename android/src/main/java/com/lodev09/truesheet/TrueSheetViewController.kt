@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -115,7 +116,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var currentDetentIndex: Int = -1
     private set
 
-
   private var isDragging = false
   private var isDismissing = false
   private var isReconfiguring = false
@@ -170,6 +170,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   val topInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
+
+  /** Auto add bottom inset for consistency with IOS **/
+  val contentBottomInset: Int = bottomInset
 
   /** Edge-to-edge enabled by default on API 36+, or when explicitly configured. */
   private val edgeToEdgeEnabled: Boolean
@@ -505,6 +508,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isReconfiguring = true
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
+    val edgeToEdgeTopInset: Int = if (!edgeToEdgeFullScreen) topInset else 0
 
     behavior.apply {
       isFitToContents = false
@@ -515,29 +519,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       when (detents.size) {
         1 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(peekHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = screenHeight - peekHeight
+          val adjustedPeekHeight = peekHeight - edgeToEdgeTopInset
+          halfExpandedRatio = minOf(adjustedPeekHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - peekHeight)
           isFitToContents = expandedOffset == 0
         }
 
         2 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = screenHeight - getDetentHeight(detents[1])
+          val maxDetentHeight = getDetentHeight(detents[1])
+          halfExpandedRatio = minOf((maxDetentHeight - edgeToEdgeTopInset).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - maxDetentHeight)
           isFitToContents = expandedOffset == 0
         }
 
         3 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          // Use real device height for consistent ratio calculation across API levels
-          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
-          expandedOffset = screenHeight - getDetentHeight(detents[2])
+          val midDetentHeight = getDetentHeight(detents[1])
+          halfExpandedRatio = minOf((midDetentHeight - edgeToEdgeTopInset).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - getDetentHeight(detents[2]))
         }
       }
 
       if (oldExpandOffset != expandedOffset || expandedOffset == 0) {
         val offset = if (expandedOffset == 0) topInset else 0
-        val newHeight = screenHeight - expandedOffset - offset
+        val newHeight = realHeight - expandedOffset - offset
         delegate?.viewControllerDidChangeSize(width, newHeight)
       }
 
@@ -661,9 +667,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     return realHeight - sheetView.top
   }
 
-  private fun getPositionDp(visibleSheetHeight: Int): Float {
-    return (screenHeight - visibleSheetHeight).pxToDp()
-  }
+  private fun getPositionDp(visibleSheetHeight: Int): Float = (screenHeight - visibleSheetHeight).pxToDp()
 
   private fun emitChangePositionDelegate(sheetView: View, realtime: Boolean) {
     if (sheetView.top == lastEmittedPositionPx) return
@@ -786,19 +790,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
       // Auto height: add bottomInset to content to match iOS behavior
-      contentHeight + headerHeight + bottomInset
-    } else if (detent == 1.0) {
-      // Full screen: no bottomInset needed
-      screenHeight
+      contentHeight + headerHeight + contentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
       // Fractional detent: add bottomInset to match iOS behavior
-      (detent * screenHeight).toInt() + bottomInset
+      (detent * screenHeight).toInt() + contentBottomInset
     }
 
-    val maxAllowedHeight = screenHeight
+    val maxAllowedHeight = screenHeight + contentBottomInset
     return maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
 

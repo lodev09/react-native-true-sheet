@@ -74,9 +74,7 @@ object ScreenUtils {
    * @param reactContext The ReactContext to get resources from
    * @return Screen height in pixels
    */
-  fun getScreenHeight(reactContext: ReactContext): Int {
-    return reactContext.resources.displayMetrics.heightPixels
-  }
+  fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
 
   /**
    * Get the real physical device screen height, including system bars.
@@ -103,9 +101,7 @@ object ScreenUtils {
    * @param reactContext The ReactContext to get resources from
    * @return Screen width in pixels
    */
-  fun getScreenWidth(reactContext: ReactContext): Int {
-    return reactContext.resources.displayMetrics.widthPixels
-  }
+  fun getScreenWidth(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.widthPixels
 
   /**
    * Get the location of a view in screen coordinates
@@ -118,5 +114,4 @@ object ScreenUtils {
     view.getLocationOnScreen(location)
     return location
   }
-
 }

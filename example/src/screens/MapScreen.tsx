@@ -167,17 +167,24 @@ export const MapScreen = () => {
         />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
-        <Button text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />
+        <View style={styles.buttonRow}>
+          <Button style={styles.rowButton} text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
+          <Button style={styles.rowButton} text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />
+        </View>
         <Spacer />
-        <Button
-          text={showExtraContent ? 'Remove Content' : 'Add Content'}
-          onPress={() => setShowExtraContent(!showExtraContent)}
-        />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
-        <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.rowButton}
+            text={showExtraContent ? 'Remove Content' : 'Add Content'}
+            onPress={() => setShowExtraContent(!showExtraContent)}
+          />
+          <Button style={styles.rowButton} text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        </View>
+        <View style={styles.buttonRow}>
+          <Button style={styles.rowButton} text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+          <Button style={styles.rowButton} text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        </View>
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
@@ -225,5 +232,12 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 24,
     color: GRAY,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: GAP,
+  },
+  rowButton: {
+    flex: 1,
   },
 });
