@@ -142,7 +142,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var grabber: Boolean = true
   var grabberOptions: GrabberOptions? = null
   var sheetCornerRadius: Float = -1f
-  var sheetBackgroundColor: Int = 0
+  var sheetBackgroundColor: Int? = null
   var edgeToEdgeFullScreen: Boolean = false
 
   var dismissible: Boolean = true
@@ -574,7 +574,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val cornerRadius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
     val outerRadii = floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f)
-    val backgroundColor = if (sheetBackgroundColor != 0) sheetBackgroundColor else getDefaultBackgroundColor()
+    val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
 
     bottomSheet.background = ShapeDrawable(RoundRectShape(outerRadii, null, null)).apply {
       paint.color = backgroundColor

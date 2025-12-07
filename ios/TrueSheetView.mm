@@ -123,8 +123,7 @@ using namespace facebook::react;
   _controller.detents = detents;
 
   // Background color
-  _controller.backgroundColor =
-    newProps.background == 0 ? nil : RCTUIColorFromSharedColor(SharedColor(newProps.background));
+  _controller.backgroundColor = RCTUIColorFromSharedColor(newProps.backgroundColor);
 
   // Blur tint
   _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;

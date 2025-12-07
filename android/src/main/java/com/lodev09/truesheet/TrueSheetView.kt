@@ -267,7 +267,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.sheetCornerRadius = radius
   }
 
-  fun setSheetBackgroundColor(color: Int) {
+  fun setSheetBackgroundColor(color: Int?) {
     if (viewController.sheetBackgroundColor == color) return
     viewController.sheetBackgroundColor = color
   }
