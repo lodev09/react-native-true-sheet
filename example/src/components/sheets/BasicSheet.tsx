@@ -8,7 +8,6 @@ import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { Spacer } from '../Spacer';
 import { useAppNavigation } from '../../hooks';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface BasicSheetProps extends TrueSheetProps {}
 
@@ -17,7 +16,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
   const navigation = useAppNavigation();
-  const insets = useSafeAreaInsets();
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -57,7 +55,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
     <TrueSheet
       detents={['auto', 0.8, 1]}
       ref={sheetRef}
-      style={[styles.content, { paddingBottom: insets.bottom + FOOTER_HEIGHT + SPACING }]}
+      style={styles.content}
       onDragChange={(e) =>
         console.log(
           `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
@@ -136,6 +134,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING,
     paddingTop: SPACING * 2,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
 });

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -34,12 +34,10 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
-  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -70,7 +68,7 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: -(height - animatedPosition.value), // Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
+        translateY: Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
       },
     ],
   }));
@@ -97,13 +95,13 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 0.5, 1]}
+        detents={[HEADER_HEIGHT / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
         edgeToEdgeFullScreen
-        style={[styles.content, { paddingBottom: insets.bottom }]}
+        style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
@@ -115,14 +113,12 @@ export const MapScreen = () => {
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
-        onPositionChange={(e) => {
-          'worklet';
+        // onPositionChange={(e) => {
+        //   'worklet';
 
-          const { detent, position, index } = e.nativeEvent;
-          console.log(
-            `position change, screen: ${height}, index: ${index}, detent: ${detent}, position: ${position}`
-          );
-        }}
+        //   const { detent, position, index } = e.nativeEvent;
+        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
+        // }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
@@ -169,18 +165,18 @@ export const MapScreen = () => {
           disabled={scrollViewLoading}
           onPress={presentScrollViewSheet}
         />
-        {/*<Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />*/}
-        {/*<Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />*/}
-        {/*<Button text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />*/}
-        {/*<Button text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />*/}
+        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+        <Button text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
+        <Button text="Sheet Navigator" onPress={() => navigation.navigate('SheetStack')} />
         <Spacer />
         <Button
           text={showExtraContent ? 'Remove Content' : 'Add Content'}
           onPress={() => setShowExtraContent(!showExtraContent)}
         />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        {/*<Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />*/}
-        {/*<Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />*/}
+        <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
         <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
@@ -196,7 +192,7 @@ const styles = StyleSheet.create({
   floatingControl: {
     position: 'absolute',
     right: SPACING,
-    bottom: 0,
+    bottom: SPACING,
     height: SPACING * 3,
     width: SPACING * 3,
     borderRadius: (SPACING * 3) / 2,
@@ -214,8 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    borderColor: 'blue',
-    // padding: SPACING,
+    padding: SPACING,
     gap: GAP,
   },
   heading: {
