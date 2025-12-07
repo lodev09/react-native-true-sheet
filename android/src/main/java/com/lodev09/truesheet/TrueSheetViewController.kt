@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -116,8 +115,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var currentDetentIndex: Int = -1
     private set
 
-  // Resolved detent positions (Y coordinate when sheet rests at each detent)
-  private val resolvedDetentPositions = mutableListOf<Int>()
 
   private var isDragging = false
   private var isDismissing = false
@@ -265,7 +262,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupGrabber()
 
       sheetContainer?.post {
-        storeResolvedPosition(currentDetentIndex)
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
         positionFooter()
       }
@@ -337,8 +333,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
               if (isReconfiguring) return
 
               getDetentInfoForState(newState)?.let { detentInfo ->
-                storeResolvedPosition(detentInfo.index)
-
                 if (isDragging) {
                   val detent = getDetentValueForIndex(detentInfo.index)
                   delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
@@ -509,19 +503,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun setupSheetDetents() {
     val behavior = this.behavior ?: return
 
-    if (resolvedDetentPositions.size != detents.size) {
-      resolvedDetentPositions.clear()
-      repeat(detents.size) { resolvedDetentPositions.add(0) }
-    }
-
-    for (i in detents.indices) {
-      if (detents[i] == -1.0) {
-        val detentHeight = getDetentHeight(detents[i])
-        resolvedDetentPositions[i] = screenHeight - detentHeight
-      }
-    }
-
     isReconfiguring = true
+    val realHeight = ScreenUtils.getRealScreenHeight(this)
 
     behavior.apply {
       isFitToContents = false
@@ -546,13 +529,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         3 -> {
           setPeekHeight(getDetentHeight(detents[0]), isPresented)
-          val detentHeight = getDetentHeight(detents[1])
           // Use real device height for consistent ratio calculation across API levels
-          val realHeight = ScreenUtils.getRealScreenHeight(this@TrueSheetViewController)
-          Log.d(TAG_NAME, "setupSheetDetents: API=${android.os.Build.VERSION.SDK_INT}, screenHeight=$screenHeight, realHeight=$realHeight, detentHeight=$detentHeight")
-          halfExpandedRatio = minOf(detentHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+          halfExpandedRatio = minOf(getDetentHeight(detents[1]).toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
           expandedOffset = screenHeight - getDetentHeight(detents[2])
-          Log.d(TAG_NAME, "  halfExpandedRatio=$halfExpandedRatio, expandedOffset=$expandedOffset")
         }
       }
 
@@ -696,43 +675,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
-  private fun storeResolvedPosition(index: Int) {
-    if (index < 0 || index >= resolvedDetentPositions.size) return
-    val sheetTop = bottomSheetView?.top ?: return
+  /**
+   * Get the expected sheetTop position for a detent index.
+   */
+  private fun getSheetTopForDetentIndex(index: Int): Int {
     val realHeight = ScreenUtils.getRealScreenHeight(this)
-    // Only store if sheetTop is valid (greater than 0 and less than real screen height)
-    if (sheetTop in 1..<realHeight) {
-      resolvedDetentPositions[index] = sheetTop
-    }
-  }
-
-  fun storeCurrentResolvedPosition() {
-    storeResolvedPosition(currentDetentIndex)
-  }
-
-  private fun getEstimatedPositionForIndex(index: Int): Int {
-    val realHeight = ScreenUtils.getRealScreenHeight(this)
-    if (index < 0 || index >= resolvedDetentPositions.size) return realHeight
-
-    val storedPos = resolvedDetentPositions[index]
-    if (storedPos > 0) return storedPos
-
-    if (index < detents.size) {
-      val detentHeight = getDetentHeight(detents[index])
-      return realHeight - detentHeight
-    }
-
-    return realHeight
+    if (index < 0 || index >= detents.size) return realHeight
+    val detentHeight = getDetentHeight(detents[index])
+    return realHeight - detentHeight
   }
 
   /** Returns (fromIndex, toIndex, progress) for interpolation, or null if < 2 detents. */
   private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
-    val count = resolvedDetentPositions.size
+    val count = detents.size
     if (count < 2) return null
 
     val realHeight = ScreenUtils.getRealScreenHeight(this)
-    val firstPos = getEstimatedPositionForIndex(0)
-    val lastPos = getEstimatedPositionForIndex(count - 1)
+    val firstPos = getSheetTopForDetentIndex(0)
+    val lastPos = getSheetTopForDetentIndex(count - 1)
 
     if (positionPx > firstPos) {
       val range = realHeight - firstPos
@@ -745,8 +705,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     for (i in 0 until count - 1) {
-      val pos = getEstimatedPositionForIndex(i)
-      val nextPos = getEstimatedPositionForIndex(i + 1)
+      val pos = getSheetTopForDetentIndex(i)
+      val nextPos = getSheetTopForDetentIndex(i + 1)
 
       if (positionPx in nextPos..pos) {
         val range = pos - nextPos
@@ -760,7 +720,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /** Returns continuous index (e.g., 0.5 = halfway between detent 0 and 1). */
   private fun getInterpolatedIndexForPosition(positionPx: Int): Float {
-    val count = resolvedDetentPositions.size
+    val count = detents.size
     if (count == 0) return -1f
     if (count == 1) return 0f
 
@@ -773,7 +733,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   /** Returns interpolated screen fraction for position. */
   private fun getInterpolatedDetentForPosition(positionPx: Int): Float {
-    val count = resolvedDetentPositions.size
+    val count = detents.size
     if (count == 0) return 0f
 
     val segment = findSegmentForPosition(positionPx) ?: return getDetentValueForIndex(0)
@@ -921,7 +881,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       this.post {
         positionFooter()
-        storeResolvedPosition(currentDetentIndex)
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
       }
     }
