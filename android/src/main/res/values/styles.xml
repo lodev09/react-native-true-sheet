@@ -15,8 +15,7 @@
     <style name="TrueSheetEdgeToEdgeEnabledDialog" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="enableEdgeToEdge">true</item>
-<!--        <item name="android:navigationBarColor">@android:color/transparent</item>-->
-        <item name="android:navigationBarColor">#90000000</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/TrueSheetAnimation</item>
     </style>
 </resources>

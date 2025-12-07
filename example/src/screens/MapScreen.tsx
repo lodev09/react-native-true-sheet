@@ -45,12 +45,14 @@ export const MapScreen = () => {
   const navigation = useAppNavigation();
 
   const sheetRef = useRef<TrueSheet>(null);
+  const minHeight = HEADER_HEIGHT + Platform.select({ android: SPACING, default: 0 });
 
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
+
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
   const [showExtraContent, setShowExtraContent] = useState(false);
 
@@ -101,7 +103,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[HEADER_HEIGHT / height, 'auto', 1]}
+        detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -109,7 +111,7 @@ export const MapScreen = () => {
         // insetAdjustment="never"
         edgeToEdgeFullScreen
         style={styles.content}
-        backgroundColor={Platform.select({ default: DARK })}
+        backgroundColor={Platform.select({ android: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`

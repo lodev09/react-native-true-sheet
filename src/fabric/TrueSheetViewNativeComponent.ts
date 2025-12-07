@@ -1,4 +1,4 @@
-import type { ViewProps } from 'react-native';
+import type { ColorValue, ViewProps } from 'react-native';
 import type {
   DirectEventHandler,
   Double,
@@ -39,8 +39,10 @@ export interface NativeProps extends ViewProps {
 
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>;
-  background?: WithDefault<Int32, 0>;
   cornerRadius?: WithDefault<Double, -1>;
+
+  // Color properties
+  backgroundColor?: ColorValue;
   initialDetentIndex?: WithDefault<Int32, -1>;
   dimmedDetentIndex?: WithDefault<Int32, 0>;
 

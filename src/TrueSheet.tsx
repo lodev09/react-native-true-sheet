@@ -408,7 +408,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         detents={resolvedDetents}
         blurTint={blurTint}
         blurOptions={blurOptions}
-        background={(processColor(backgroundColor) as number) ?? 0}
+        backgroundColor={backgroundColor}
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={{
