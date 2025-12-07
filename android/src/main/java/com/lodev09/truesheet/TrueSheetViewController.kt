@@ -166,10 +166,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   val bottomInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(this).bottom else 0
+    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
 
   val topInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(this).top else 0
+    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
 
   /** Edge-to-edge enabled by default on API 36+, or when explicitly configured. */
   private val edgeToEdgeEnabled: Boolean
@@ -190,8 +190,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   init {
-    screenHeight = ScreenUtils.getScreenHeight(this)
-    screenWidth = ScreenUtils.getScreenWidth(this)
+    screenHeight = ScreenUtils.getScreenHeight(reactContext)
+    screenWidth = ScreenUtils.getScreenWidth(reactContext)
     jSPointerDispatcher = JSPointerDispatcher(this)
   }
 
@@ -424,7 +424,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   val currentSheetTop: Int
-    get() = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
+    get() = bottomSheetView?.top ?: screenHeight
 
   fun getExpectedSheetTop(detentIndex: Int): Int {
     if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
@@ -504,7 +504,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val behavior = this.behavior ?: return
 
     isReconfiguring = true
-    val realHeight = ScreenUtils.getRealScreenHeight(this)
+    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
 
     behavior.apply {
       isFitToContents = false
@@ -657,7 +657,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Uses real screen height for consistency across API levels.
    */
   private fun getVisibleSheetHeight(sheetView: View): Int {
-    val realHeight = ScreenUtils.getRealScreenHeight(sheetView)
+    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     return realHeight - sheetView.top
   }
 
@@ -679,7 +679,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Get the expected sheetTop position for a detent index.
    */
   private fun getSheetTopForDetentIndex(index: Int): Int {
-    val realHeight = ScreenUtils.getRealScreenHeight(this)
+    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     if (index < 0 || index >= detents.size) return realHeight
     val detentHeight = getDetentHeight(detents[index])
     return realHeight - detentHeight
@@ -690,7 +690,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val count = detents.size
     if (count < 2) return null
 
-    val realHeight = ScreenUtils.getRealScreenHeight(this)
+    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val firstPos = getSheetTopForDetentIndex(0)
     val lastPos = getSheetTopForDetentIndex(count - 1)
 
@@ -785,12 +785,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun getDetentHeight(detent: Double): Int {
     val height: Int = if (detent == -1.0) {
-      contentHeight + headerHeight
+      // Auto height: add bottomInset to content to match iOS behavior
+      contentHeight + headerHeight + bottomInset
+    } else if (detent == 1.0) {
+      // Full screen: no bottomInset needed
+      screenHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      (detent * screenHeight).toInt()
+      // Fractional detent: add bottomInset to match iOS behavior
+      (detent * screenHeight).toInt() + bottomInset
     }
 
     val maxAllowedHeight = screenHeight
@@ -875,7 +880,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     val oldScreenHeight = screenHeight
-    screenHeight = ScreenUtils.getScreenHeight(this)
+    screenHeight = ScreenUtils.getScreenHeight(reactContext)
 
     if (isPresented && oldScreenHeight != screenHeight && oldScreenHeight > 0) {
       setupSheetDetents()

@@ -5,6 +5,7 @@ import android.os.Build
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import com.facebook.react.bridge.ReactContext
 import kotlin.math.min
 
 /**
@@ -51,16 +52,18 @@ object ScreenUtils {
   }
 
   /**
-   * Get safe area insets from a view, using API-appropriate methods.
+   * Get safe area insets from ReactContext using the activity's decor view.
    *
-   * @param view The view to get insets from
+   * @param reactContext The ReactContext to get insets from
    * @return Insets with top (status bar) and bottom (navigation bar) values in pixels
    */
-  fun getInsets(view: View): Insets {
+  fun getInsets(reactContext: ReactContext): Insets {
+    val activity = reactContext.currentActivity ?: return Insets(0, 0)
+    val decorView = activity.window?.decorView ?: return Insets(0, 0)
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      getInsetsR(view)
+      getInsetsR(decorView)
     } else {
-      getInsetsLegacy(view)
+      getInsetsLegacy(decorView)
     } ?: Insets(0, 0)
   }
 
@@ -68,23 +71,23 @@ object ScreenUtils {
    * Calculate the screen height using the same method as React Native's useWindowDimensions.
    * This returns the window height which automatically accounts for edge-to-edge mode.
    *
-   * @param view Any view to get resources from
+   * @param reactContext The ReactContext to get resources from
    * @return Screen height in pixels
    */
-  fun getScreenHeight(view: View): Int {
-    return view.resources.displayMetrics.heightPixels
+  fun getScreenHeight(reactContext: ReactContext): Int {
+    return reactContext.resources.displayMetrics.heightPixels
   }
 
   /**
    * Get the real physical device screen height, including system bars.
    * This is consistent across all API levels.
    *
-   * @param view Any view to get context from
+   * @param reactContext The ReactContext to get context from
    * @return Real screen height in pixels
    */
   @Suppress("DEPRECATION")
-  fun getRealScreenHeight(view: View): Int {
-    val windowManager = view.context.getSystemService(WindowManager::class.java)
+  fun getRealScreenHeight(reactContext: ReactContext): Int {
+    val windowManager = reactContext.getSystemService(WindowManager::class.java)
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       windowManager.currentWindowMetrics.bounds.height()
     } else {
@@ -97,11 +100,11 @@ object ScreenUtils {
   /**
    * Get the screen width using the same method as React Native's useWindowDimensions.
    *
-   * @param view Any view to get resources from
+   * @param reactContext The ReactContext to get resources from
    * @return Screen width in pixels
    */
-  fun getScreenWidth(view: View): Int {
-    return view.resources.displayMetrics.widthPixels
+  fun getScreenWidth(reactContext: ReactContext): Int {
+    return reactContext.resources.displayMetrics.widthPixels
   }
 
   /**
@@ -116,11 +119,4 @@ object ScreenUtils {
     return location
   }
 
-  /**
-   * Get the Y coordinate of a view in screen coordinates
-   *
-   * @param view The view to get screen Y coordinate for
-   * @return Y coordinate in screen space
-   */
-  fun getScreenY(view: View): Int = getScreenLocation(view)[1]
 }
