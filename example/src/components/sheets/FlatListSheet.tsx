@@ -20,6 +20,8 @@ export const FlatListSheet = forwardRef((props: FlatListSheetProps, ref: Ref<Tru
       keyboardMode="pan"
       edgeToEdgeFullScreen
       scrollable
+      draggable={false}
+      dismissible={false}
       header={
         <Header>
           <Input />
