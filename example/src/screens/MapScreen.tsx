@@ -70,14 +70,10 @@ export const MapScreen = () => {
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: height - animatedPosition.value, // Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
+        translateY: -(height - animatedPosition.value), // Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
       },
     ],
   }));
-
-  useEffect(() => {
-    console.log(insets.top, insets.bottom);
-  }, [insets]);
 
   return (
     <View style={styles.container}>
@@ -101,7 +97,7 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={['auto', 1]}
+        detents={[0.5, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
@@ -119,12 +115,14 @@ export const MapScreen = () => {
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
-        // onPositionChange={(e) => {
-        //   'worklet';
+        onPositionChange={(e) => {
+          'worklet';
 
-        //   const { detent, position, index } = e.nativeEvent;
-        //   console.log(`position change index: ${index}, detent: ${detent}, position: ${position}`);
-        // }}
+          const { detent, position, index } = e.nativeEvent;
+          console.log(
+            `position change, screen: ${height}, index: ${index}, detent: ${detent}, position: ${position}`
+          );
+        }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
@@ -216,7 +214,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    backgroundColor: 'red',
     borderColor: 'blue',
     // padding: SPACING,
     gap: GAP,

@@ -265,9 +265,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupGrabber()
 
       sheetContainer?.post {
-        val positionPx = bottomSheetView?.let { ScreenUtils.getScreenY(it) } ?: screenHeight
         storeResolvedPosition(currentDetentIndex)
-        emitChangePositionDelegate(positionPx, realtime = false)
+        bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
         positionFooter()
       }
 
@@ -289,7 +288,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       isDismissing = true
       emitWillDismissEvents()
-      emitChangePositionDelegate(screenHeight, realtime = false)
+      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
     }
 
     dialog.setOnDismissListener {
@@ -305,9 +304,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
-          val positionPx = getCurrentPositionPx(sheetView)
 
-          emitChangePositionDelegate(positionPx, realtime = true)
+          emitChangePositionDelegate(sheetView, realtime = true)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -494,7 +492,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     emitWillDismissEvents()
 
     this.post {
-      emitChangePositionDelegate(screenHeight, realtime = false)
+      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
     }
 
     if (!animated) {
@@ -670,13 +668,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Position & Drag Handling
   // ====================================================================
 
-  private fun emitChangePositionDelegate(positionPx: Int, realtime: Boolean) {
-    if (positionPx == lastEmittedPositionPx) return
+  private fun getVisibleSheetHeight(sheetView: View): Int {
+    return sheetView.height - sheetView.top
+  }
 
-    lastEmittedPositionPx = positionPx
-    val position = positionPx.pxToDp()
-    val interpolatedIndex = getInterpolatedIndexForPosition(positionPx)
-    val detent = getInterpolatedDetentForPosition(positionPx)
+  private fun getPositionDp(visibleSheetHeight: Int): Float {
+    return (screenHeight - visibleSheetHeight).pxToDp()
+  }
+
+  private fun emitChangePositionDelegate(sheetView: View, realtime: Boolean) {
+    if (sheetView.top == lastEmittedPositionPx) return
+
+    lastEmittedPositionPx = sheetView.top
+    val position = getPositionDp(getVisibleSheetHeight(sheetView))
+    val interpolatedIndex = getInterpolatedIndexForPosition(sheetView.top)
+    val detent = getInterpolatedDetentForPosition(sheetView.top)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
@@ -781,11 +787,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val screenY = ScreenUtils.getScreenY(sheetView)
-    return DetentInfo(currentDetentIndex, screenY.pxToDp())
+    val position = getPositionDp(getVisibleSheetHeight(sheetView))
+    return DetentInfo(currentDetentIndex, position)
   }
-
-  private fun getCurrentPositionPx(sheetView: View): Int = ScreenUtils.getScreenY(sheetView)
 
   private fun handleDragBegin(sheetView: View) {
     val detentInfo = getCurrentDetentInfo(sheetView)
@@ -865,15 +869,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   private fun getPositionForDetentIndex(index: Int): Float {
-    if (index < 0 || index >= detents.size) return 0f
+    if (index < 0 || index >= detents.size) return screenHeight.pxToDp()
 
     bottomSheetView?.let {
-      val screenY = ScreenUtils.getScreenY(it)
-      if (screenY > 0) return screenY.pxToDp()
+      val visibleSheetHeight = getVisibleSheetHeight(it)
+      if (visibleSheetHeight > 0) return getPositionDp(visibleSheetHeight)
     }
 
     val detentHeight = getDetentHeight(detents[index])
-    return (screenHeight - detentHeight).pxToDp()
+    return getPositionDp(detentHeight)
   }
 
   fun getDetentInfoForIndex(index: Int) = getDetentInfoForState(getStateForDetentIndex(index)) ?: DetentInfo(0, 0f)
