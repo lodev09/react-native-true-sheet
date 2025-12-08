@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Animated from 'react-native-reanimated';
 
 import { TrueSheet } from '../TrueSheet';
+import { useReanimatedPositionChangeHandler } from '../reanimated/useReanimatedPositionChangeHandler';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -40,29 +41,19 @@ type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
   emit: EmitFn;
   routeKey: string;
   closing?: boolean;
-  useReanimated?: boolean;
   children: React.ReactNode;
 };
 
-function TrueSheetScreen({
-  detentIndex,
-  resizeKey,
-  navigation,
-  emit,
-  routeKey,
-  closing,
-  useReanimated,
-  detents,
-  children,
-  ...sheetProps
-}: TrueSheetScreenProps) {
+function useSheetScreenState(
+  props: Pick<TrueSheetScreenProps, 'detentIndex' | 'closing' | 'navigation' | 'routeKey' | 'emit'>
+) {
+  const { detentIndex, closing, navigation, routeKey, emit } = props;
+
   const ref = useRef<TrueSheet>(null);
   const isDismissedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
-  // Capture initial detent index only once
   const initialDetentIndexRef = useRef(detentIndex);
 
-  // Handle closing state change - dismiss the sheet and wait for animation
   useEffect(() => {
     if (closing && !isDismissedRef.current) {
       isDismissedRef.current = true;
@@ -71,21 +62,17 @@ function TrueSheetScreen({
         navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
       })();
     } else if (closing && isDismissedRef.current) {
-      // Sheet was already dismissed by user swipe, just remove
       navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
     }
   }, [closing, navigation, routeKey]);
 
-  // Handle resize - resizeKey ensures effect runs even when resizing to same index
   useEffect(() => {
-    // Skip first render - initialDetentIndex handles initial presentation
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       return;
     }
-
     ref.current?.resize(detentIndex);
-  }, [detentIndex, resizeKey]);
+  }, [detentIndex]);
 
   const emitEvent = useCallback(
     (
@@ -102,29 +89,22 @@ function TrueSheetScreen({
   );
 
   const onWillPresent = useCallback(
-    (e: WillPresentEvent) => {
-      emitEvent('sheetWillPresent', e.nativeEvent);
-    },
+    (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
     [emitEvent]
   );
 
   const onDidPresent = useCallback(
-    (e: DidPresentEvent) => {
-      emitEvent('sheetDidPresent', e.nativeEvent);
-    },
+    (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
     [emitEvent]
   );
 
   const onWillDismiss = useCallback(
-    (_e: WillDismissEvent) => {
-      emitEvent('sheetWillDismiss', undefined);
-    },
+    (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
     [emitEvent]
   );
 
   const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
-    // User dismissed the sheet by swiping down
     if (!isDismissedRef.current) {
       isDismissedRef.current = true;
       navigation.goBack();
@@ -132,72 +112,100 @@ function TrueSheetScreen({
   }, [emitEvent, navigation]);
 
   const onDetentChange = useCallback(
-    (e: DetentChangeEvent) => {
-      emitEvent('sheetDetentChange', e.nativeEvent);
-    },
+    (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
     [emitEvent]
   );
 
   const onDragBegin = useCallback(
-    (e: DragBeginEvent) => {
-      emitEvent('sheetDragBegin', e.nativeEvent);
-    },
+    (e: DragBeginEvent) => emitEvent('sheetDragBegin', e.nativeEvent),
     [emitEvent]
   );
 
   const onDragChange = useCallback(
-    (e: DragChangeEvent) => {
-      emitEvent('sheetDragChange', e.nativeEvent);
-    },
+    (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),
     [emitEvent]
   );
 
   const onDragEnd = useCallback(
-    (e: DragEndEvent) => {
-      emitEvent('sheetDragEnd', e.nativeEvent);
-    },
-    [emitEvent]
-  );
-
-  const onPositionChange = useCallback(
-    (e: PositionChangeEvent) => {
-      emitEvent('sheetPositionChange', e.nativeEvent);
-    },
+    (e: DragEndEvent) => emitEvent('sheetDragEnd', e.nativeEvent),
     [emitEvent]
   );
 
   const onWillFocus = useCallback(
-    (_e: WillFocusEvent) => {
-      emitEvent('sheetWillFocus', undefined);
-    },
+    (_e: WillFocusEvent) => emitEvent('sheetWillFocus', undefined),
     [emitEvent]
   );
 
   const onDidFocus = useCallback(
-    (_e: DidFocusEvent) => {
-      emitEvent('sheetDidFocus', undefined);
-    },
+    (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
     [emitEvent]
   );
 
   const onWillBlur = useCallback(
-    (_e: WillBlurEvent) => {
-      emitEvent('sheetWillBlur', undefined);
-    },
+    (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
     [emitEvent]
   );
 
   const onDidBlur = useCallback(
-    (_e: DidBlurEvent) => {
-      emitEvent('sheetDidBlur', undefined);
-    },
+    (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
     [emitEvent]
   );
 
-  const SheetComponent = useReanimated ? AnimatedTrueSheet : TrueSheet;
+  return {
+    ref,
+    initialDetentIndexRef,
+    emitEvent,
+    onWillPresent,
+    onDidPresent,
+    onWillDismiss,
+    onDidDismiss,
+    onDetentChange,
+    onDragBegin,
+    onDragChange,
+    onDragEnd,
+    onWillFocus,
+    onDidFocus,
+    onWillBlur,
+    onDidBlur,
+  };
+}
+
+function TrueSheetScreen({
+  detentIndex,
+  resizeKey: _resizeKey,
+  navigation,
+  emit,
+  routeKey,
+  closing,
+  detents,
+  children,
+  ...sheetProps
+}: TrueSheetScreenProps) {
+  const {
+    ref,
+    initialDetentIndexRef,
+    emitEvent,
+    onWillPresent,
+    onDidPresent,
+    onWillDismiss,
+    onDidDismiss,
+    onDetentChange,
+    onDragBegin,
+    onDragChange,
+    onDragEnd,
+    onWillFocus,
+    onDidFocus,
+    onWillBlur,
+    onDidBlur,
+  } = useSheetScreenState({ detentIndex, closing, navigation, routeKey, emit });
+
+  const onPositionChange = useCallback(
+    (e: PositionChangeEvent) => emitEvent('sheetPositionChange', e.nativeEvent),
+    [emitEvent]
+  );
 
   return (
-    <SheetComponent
+    <TrueSheet
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
       initialDetentIndex={initialDetentIndexRef.current}
@@ -218,7 +226,67 @@ function TrueSheetScreen({
       {...sheetProps}
     >
       {children}
-    </SheetComponent>
+    </TrueSheet>
+  );
+}
+
+function ReanimatedTrueSheetScreen({
+  detentIndex,
+  resizeKey: _resizeKey,
+  navigation,
+  emit,
+  routeKey,
+  closing,
+  detents,
+  children,
+  ...sheetProps
+}: TrueSheetScreenProps) {
+  const {
+    ref,
+    initialDetentIndexRef,
+    emitEvent,
+    onWillPresent,
+    onDidPresent,
+    onWillDismiss,
+    onDidDismiss,
+    onDetentChange,
+    onDragBegin,
+    onDragChange,
+    onDragEnd,
+    onWillFocus,
+    onDidFocus,
+    onWillBlur,
+    onDidBlur,
+  } = useSheetScreenState({ detentIndex, closing, navigation, routeKey, emit });
+
+  const onPositionChange = useReanimatedPositionChangeHandler((payload) => {
+    'worklet';
+    emitEvent('sheetPositionChange', payload);
+  });
+
+  return (
+    <AnimatedTrueSheet
+      ref={ref}
+      name={`navigation-sheet-${routeKey}`}
+      initialDetentIndex={initialDetentIndexRef.current}
+      detents={detents}
+      onWillPresent={onWillPresent}
+      onDidPresent={onDidPresent}
+      onWillDismiss={onWillDismiss}
+      onDidDismiss={onDidDismiss}
+      onDetentChange={onDetentChange}
+      onDragBegin={onDragBegin}
+      onDragChange={onDragChange}
+      onDragEnd={onDragEnd}
+      onPositionChange={onPositionChange}
+      onWillFocus={onWillFocus}
+      onDidFocus={onDidFocus}
+      onWillBlur={onWillBlur}
+      onDidBlur={onDidBlur}
+      {...sheetProps}
+    >
+      {children}
+    </AnimatedTrueSheet>
   );
 }
 
@@ -235,11 +303,18 @@ interface TrueSheetViewProps {
   useReanimated?: boolean;
 }
 
-export function TrueSheetView({ state, navigation, descriptors }: TrueSheetViewProps) {
+export function TrueSheetView({
+  state,
+  navigation,
+  descriptors,
+  useReanimated,
+}: TrueSheetViewProps) {
   // First route is the base screen, rest are sheets
   const [baseRoute, ...sheetRoutes] = state.routes;
 
   const baseDescriptor = baseRoute ? descriptors[baseRoute.key] : null;
+
+  const ScreenComponent = useReanimated ? ReanimatedTrueSheetScreen : TrueSheetScreen;
 
   return (
     <>
@@ -259,7 +334,7 @@ export function TrueSheetView({ state, navigation, descriptors }: TrueSheetViewP
         const resolvedIndex = clampDetentIndex(route.resizeIndex ?? detentIndex, detents.length);
 
         return (
-          <TrueSheetScreen
+          <ScreenComponent
             key={route.key}
             routeKey={route.key}
             closing={route.closing}
@@ -271,7 +346,7 @@ export function TrueSheetView({ state, navigation, descriptors }: TrueSheetViewP
             {...sheetProps}
           >
             {render()}
-          </TrueSheetScreen>
+          </ScreenComponent>
         );
       })}
     </>
