@@ -98,12 +98,16 @@ export const createTrueSheetNavigator = <
     };
     Navigator: ReturnType<typeof createTrueSheetNavigatorComponent>;
   },
-  const Config extends StaticConfig<TypeBag> & TrueSheetNavigatorConfig = StaticConfig<TypeBag> &
-    TrueSheetNavigatorConfig,
+  const Config extends
+    | (StaticConfig<TypeBag> & TrueSheetNavigatorConfig)
+    | TrueSheetNavigatorConfig =
+    | (StaticConfig<TypeBag> & TrueSheetNavigatorConfig)
+    | TrueSheetNavigatorConfig,
 >(
   config?: Config
 ): TypedNavigator<TypeBag, Config> => {
-  const { reanimated = false, ...staticConfig } = config ?? {};
+  const { reanimated = false, ...staticConfig } = (config ?? {}) as TrueSheetNavigatorConfig &
+    Partial<StaticConfig<TypeBag>>;
   return createNavigatorFactory(createTrueSheetNavigatorComponent(reanimated))(
     staticConfig as Config
   );

@@ -10,7 +10,7 @@ import { Button, DemoContent } from '../components';
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import type { AppStackParamList, SheetStackParamList } from '../types';
 
-const Sheet = createTrueSheetNavigator<SheetStackParamList>();
+const Sheet = createTrueSheetNavigator<SheetStackParamList>({ reanimated: true });
 
 const HomeScreen = () => {
   const navigation = useTrueSheetNavigation<SheetStackParamList>();

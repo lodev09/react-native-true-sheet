@@ -1,10 +1,6 @@
-import Animated from 'react-native-reanimated';
-
-import { TrueSheet } from '../../TrueSheet';
-import { useReanimatedPositionChangeHandler } from '../../reanimated/useReanimatedPositionChangeHandler';
+import { scheduleOnRN } from 'react-native-worklets';
+import { ReanimatedTrueSheet } from '../../reanimated/ReanimatedTrueSheet';
 import { useSheetScreenState, type TrueSheetScreenProps } from './useSheetScreenState';
-
-const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 
 export function ReanimatedTrueSheetScreen({
   detentIndex,
@@ -17,7 +13,7 @@ export function ReanimatedTrueSheetScreen({
   children,
   ...sheetProps
 }: TrueSheetScreenProps) {
-  const { ref, initialDetentIndex, emitEvent, eventHandlers } = useSheetScreenState({
+  const { ref, initialDetentIndex, eventHandlers } = useSheetScreenState({
     detentIndex,
     closing,
     navigation,
@@ -25,22 +21,22 @@ export function ReanimatedTrueSheetScreen({
     emit,
   });
 
-  const onPositionChange = useReanimatedPositionChangeHandler((payload) => {
-    'worklet';
-    emitEvent('sheetPositionChange', payload);
-  });
+  const { onPositionChange, ...restEventHandlers } = eventHandlers;
 
   return (
-    <AnimatedTrueSheet
+    <ReanimatedTrueSheet
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
       initialDetentIndex={initialDetentIndex}
       detents={detents}
-      onPositionChange={onPositionChange}
-      {...eventHandlers}
+      onPositionChange={(e) => {
+        'worklet';
+        scheduleOnRN(onPositionChange, e);
+      }}
+      {...restEventHandlers}
       {...sheetProps}
     >
       {children}
-    </AnimatedTrueSheet>
+    </ReanimatedTrueSheet>
   );
 }

@@ -1,5 +1,5 @@
 import type { ParamListBase } from '@react-navigation/native';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { TrueSheet } from '../../TrueSheet';
 import type {
@@ -11,6 +11,7 @@ import type {
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
+  PositionChangeEvent,
   PositionChangeEventPayload,
   WillBlurEvent,
   WillDismissEvent,
@@ -67,100 +68,44 @@ export function useSheetScreenState(
     ref.current?.resize(detentIndex);
   }, [detentIndex]);
 
-  const emitEvent = useCallback(
-    (
-      type: keyof TrueSheetNavigationEventMap,
-      data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
-    ) => {
-      emit({
-        type,
-        target: routeKey,
-        data,
-      } as Parameters<EmitFn>[0]);
-    },
-    [emit, routeKey]
-  );
+  const emitEvent = (
+    type: keyof TrueSheetNavigationEventMap,
+    data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
+  ) => {
+    emit({
+      type,
+      target: routeKey,
+      data,
+    } as Parameters<EmitFn>[0]);
+  };
 
-  const onWillPresent = useCallback(
-    (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onDidPresent = useCallback(
-    (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onWillDismiss = useCallback(
-    (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
-    [emitEvent]
-  );
-
-  const onDidDismiss = useCallback(() => {
+  const onDidDismiss = () => {
     emitEvent('sheetDidDismiss', undefined);
     if (!isDismissedRef.current) {
       isDismissedRef.current = true;
       navigation.goBack();
     }
-  }, [emitEvent, navigation]);
-
-  const onDetentChange = useCallback(
-    (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onDragBegin = useCallback(
-    (e: DragBeginEvent) => emitEvent('sheetDragBegin', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onDragChange = useCallback(
-    (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onDragEnd = useCallback(
-    (e: DragEndEvent) => emitEvent('sheetDragEnd', e.nativeEvent),
-    [emitEvent]
-  );
-
-  const onWillFocus = useCallback(
-    (_e: WillFocusEvent) => emitEvent('sheetWillFocus', undefined),
-    [emitEvent]
-  );
-
-  const onDidFocus = useCallback(
-    (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
-    [emitEvent]
-  );
-
-  const onWillBlur = useCallback(
-    (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
-    [emitEvent]
-  );
-
-  const onDidBlur = useCallback(
-    (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
-    [emitEvent]
-  );
+  };
 
   return {
     ref,
     initialDetentIndex: initialDetentIndexRef.current,
     emitEvent,
     eventHandlers: {
-      onWillPresent,
-      onDidPresent,
-      onWillDismiss,
+      onWillPresent: (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
+      onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
+      onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
       onDidDismiss,
-      onDetentChange,
-      onDragBegin,
-      onDragChange,
-      onDragEnd,
-      onWillFocus,
-      onDidFocus,
-      onWillBlur,
-      onDidBlur,
+      onDetentChange: (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
+      onDragBegin: (e: DragBeginEvent) => emitEvent('sheetDragBegin', e.nativeEvent),
+      onDragChange: (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),
+      onDragEnd: (e: DragEndEvent) => emitEvent('sheetDragEnd', e.nativeEvent),
+      onPositionChange: (e: PositionChangeEvent) =>
+        emitEvent('sheetPositionChange', e.nativeEvent),
+      onWillFocus: (_e: WillFocusEvent) => emitEvent('sheetWillFocus', undefined),
+      onDidFocus: (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
+      onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
+      onDidBlur: (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
     },
   };
 }

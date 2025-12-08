@@ -1,7 +1,4 @@
-import { useCallback } from 'react';
-
 import { TrueSheet } from '../../TrueSheet';
-import type { PositionChangeEvent } from '../../TrueSheet.types';
 import { useSheetScreenState, type TrueSheetScreenProps } from './useSheetScreenState';
 
 export function TrueSheetScreen({
@@ -15,7 +12,7 @@ export function TrueSheetScreen({
   children,
   ...sheetProps
 }: TrueSheetScreenProps) {
-  const { ref, initialDetentIndex, emitEvent, eventHandlers } = useSheetScreenState({
+  const { ref, initialDetentIndex, eventHandlers } = useSheetScreenState({
     detentIndex,
     closing,
     navigation,
@@ -23,18 +20,12 @@ export function TrueSheetScreen({
     emit,
   });
 
-  const onPositionChange = useCallback(
-    (e: PositionChangeEvent) => emitEvent('sheetPositionChange', e.nativeEvent),
-    [emitEvent]
-  );
-
   return (
     <TrueSheet
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
       initialDetentIndex={initialDetentIndex}
       detents={detents}
-      onPositionChange={onPositionChange}
       {...eventHandlers}
       {...sheetProps}
     >
