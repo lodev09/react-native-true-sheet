@@ -5,11 +5,11 @@ import type {
   TrueSheetNavigationHelpers,
   TrueSheetNavigationState,
 } from './types';
-import { TrueSheetScreen, type TrueSheetScreenProps } from './screen';
+import { TrueSheetScreen, type ReanimatedTrueSheetScreenProps } from './screen';
 
-let ReanimatedTrueSheetScreen: React.ComponentType<TrueSheetScreenProps> | null = null;
+let ReanimatedTrueSheetScreen: React.ComponentType<ReanimatedTrueSheetScreenProps> | null = null;
 
-const getReanimatedScreen = (): React.ComponentType<TrueSheetScreenProps> => {
+const getReanimatedScreen = (): React.ComponentType<ReanimatedTrueSheetScreenProps> => {
   if (!ReanimatedTrueSheetScreen) {
     ReanimatedTrueSheetScreen =
       require('./screen/ReanimatedTrueSheetScreen').ReanimatedTrueSheetScreen;
@@ -26,21 +26,13 @@ interface TrueSheetViewProps {
   state: TrueSheetNavigationState<ParamListBase>;
   navigation: TrueSheetNavigationHelpers;
   descriptors: TrueSheetDescriptorMap;
-  reanimated?: boolean;
 }
 
-export const TrueSheetView = ({
-  state,
-  navigation,
-  descriptors,
-  reanimated,
-}: TrueSheetViewProps) => {
+export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewProps) => {
   // First route is the base screen, rest are sheets
   const [baseRoute, ...sheetRoutes] = state.routes;
 
   const baseDescriptor = baseRoute ? descriptors[baseRoute.key] : null;
-
-  const ScreenComponent = reanimated ? getReanimatedScreen() : TrueSheetScreen;
 
   return (
     <>
@@ -56,11 +48,37 @@ export const TrueSheetView = ({
         }
 
         const { options, navigation: screenNavigation, render } = descriptor;
-        const { detentIndex = 0, detents = DEFAULT_DETENTS, ...sheetProps } = options;
+        const {
+          detentIndex = 0,
+          detents = DEFAULT_DETENTS,
+          reanimated,
+          reanimatedPositionChangeHandler,
+          ...sheetProps
+        } = options;
         const resolvedIndex = clampDetentIndex(route.resizeIndex ?? detentIndex, detents.length);
 
+        if (reanimated) {
+          const ReanimatedScreen = getReanimatedScreen();
+          return (
+            <ReanimatedScreen
+              key={route.key}
+              routeKey={route.key}
+              closing={route.closing}
+              detentIndex={resolvedIndex}
+              resizeKey={route.resizeKey}
+              detents={detents}
+              navigation={screenNavigation}
+              emit={navigation.emit}
+              reanimatedPositionChangeHandler={reanimatedPositionChangeHandler}
+              {...sheetProps}
+            >
+              {render()}
+            </ReanimatedScreen>
+          );
+        }
+
         return (
-          <ScreenComponent
+          <TrueSheetScreen
             key={route.key}
             routeKey={route.key}
             closing={route.closing}
@@ -72,7 +90,7 @@ export const TrueSheetView = ({
             {...sheetProps}
           >
             {render()}
-          </ScreenComponent>
+          </TrueSheetScreen>
         );
       })}
     </>

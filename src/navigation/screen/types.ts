@@ -1,17 +1,20 @@
 import type { ParamListBase } from '@react-navigation/native';
 
-import type {
-  TrueSheetNavigationHelpers,
-  TrueSheetNavigationOptions,
-  TrueSheetNavigationProp,
-} from '../types';
+import type { TrueSheetProps } from '../../TrueSheet.types';
+import type { TrueSheetNavigationHelpers, TrueSheetNavigationProp } from '../types';
 
-export type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
+export interface TrueSheetScreenProps {
   detentIndex: number;
   resizeKey?: number;
   navigation: TrueSheetNavigationProp<ParamListBase>;
   emit: TrueSheetNavigationHelpers['emit'];
   routeKey: string;
   closing?: boolean;
+  detents: TrueSheetProps['detents'];
   children: React.ReactNode;
-};
+  [key: string]: unknown;
+}
+
+export interface ReanimatedTrueSheetScreenProps extends TrueSheetScreenProps {
+  reanimatedPositionChangeHandler?: TrueSheetProps['onPositionChange'];
+}

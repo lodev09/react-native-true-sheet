@@ -9,6 +9,7 @@ import {
 import { Button, DemoContent } from '../components';
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import type { AppStackParamList, SheetStackParamList } from '../types';
+import { useReanimatedPositionChangeHandler } from '@lodev09/react-native-true-sheet/reanimated';
 
 const Sheet = createTrueSheetNavigator<SheetStackParamList>();
 
@@ -66,6 +67,10 @@ const SettingsSheet = () => {
 };
 
 export const SheetNavigator = () => {
+  const positionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
+    'worklet';
+    console.log(payload.position);
+  });
   return (
     <Sheet.Navigator
       screenListeners={{
@@ -93,11 +98,11 @@ export const SheetNavigator = () => {
         sheetDragEnd: (e) => {
           console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
         },
-        sheetPositionChange: (e) => {
-          console.log(
-            `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
-          );
-        },
+        // sheetPositionChange: (e) => {
+        //   console.log(
+        //     `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
+        //   );
+        // },
         sheetWillFocus: () => {
           console.log('[SheetNavigator] sheetWillFocus');
         },
@@ -130,6 +135,8 @@ export const SheetNavigator = () => {
           detents: ['auto', 1],
           backgroundColor: DARK,
           cornerRadius: 16,
+          reanimated: true,
+          reanimatedPositionChangeHandler: positionChangeHandler,
         }}
       />
     </Sheet.Navigator>

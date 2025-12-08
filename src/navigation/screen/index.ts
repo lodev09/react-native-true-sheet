@@ -1,2 +1,3 @@
 export { TrueSheetScreen } from './TrueSheetScreen';
-export type { TrueSheetScreenProps } from './types';
+export { useSheetScreenState } from './useSheetScreenState';
+export type { TrueSheetScreenProps, ReanimatedTrueSheetScreenProps } from './types';

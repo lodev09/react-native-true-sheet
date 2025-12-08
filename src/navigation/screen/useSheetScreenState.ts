@@ -17,18 +17,26 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from '../../TrueSheet.types';
-import type { TrueSheetNavigationEventMap, TrueSheetNavigationHelpers } from '../types';
+import type {
+  TrueSheetNavigationEventMap,
+  TrueSheetNavigationHelpers,
+  TrueSheetNavigationProp,
+} from '../types';
 import { TrueSheetActions } from '../TrueSheetRouter';
-import type { TrueSheetScreenProps } from './types';
+import type { ParamListBase } from '@react-navigation/native';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
-export const useSheetScreenState = (
-  props: Pick<
-    TrueSheetScreenProps,
-    'detentIndex' | 'resizeKey' | 'closing' | 'navigation' | 'routeKey' | 'emit'
-  >
-) => {
+interface UseSheetScreenStateProps {
+  detentIndex: number;
+  resizeKey?: number;
+  closing?: boolean;
+  navigation: TrueSheetNavigationProp<ParamListBase>;
+  routeKey: string;
+  emit: EmitFn;
+}
+
+export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const { detentIndex, resizeKey, closing, navigation, routeKey, emit } = props;
 
   const ref = useRef<TrueSheet>(null);

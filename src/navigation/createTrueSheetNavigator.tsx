@@ -18,52 +18,33 @@ import type {
   TrueSheetNavigatorProps,
 } from './types';
 
-const createTrueSheetNavigatorComponent = (reanimated: boolean) => {
-  const TrueSheetNavigator = ({
+const TrueSheetNavigator = ({
+  id,
+  initialRouteName,
+  children,
+  screenListeners,
+  screenOptions,
+}: TrueSheetNavigatorProps) => {
+  const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
+    TrueSheetNavigationState<ParamListBase>,
+    TrueSheetRouterOptions,
+    TrueSheetActionHelpers<ParamListBase>,
+    TrueSheetNavigationOptions,
+    TrueSheetNavigationEventMap
+  >(TrueSheetRouter, {
     id,
     initialRouteName,
     children,
     screenListeners,
     screenOptions,
-  }: TrueSheetNavigatorProps) => {
-    const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
-      TrueSheetNavigationState<ParamListBase>,
-      TrueSheetRouterOptions,
-      TrueSheetActionHelpers<ParamListBase>,
-      TrueSheetNavigationOptions,
-      TrueSheetNavigationEventMap
-    >(TrueSheetRouter, {
-      id,
-      initialRouteName,
-      children,
-      screenListeners,
-      screenOptions,
-    });
+  });
 
-    return (
-      <NavigationContent>
-        <TrueSheetView
-          state={state}
-          navigation={navigation}
-          descriptors={descriptors}
-          reanimated={reanimated}
-        />
-      </NavigationContent>
-    );
-  };
-
-  return TrueSheetNavigator;
+  return (
+    <NavigationContent>
+      <TrueSheetView state={state} navigation={navigation} descriptors={descriptors} />
+    </NavigationContent>
+  );
 };
-
-export interface TrueSheetNavigatorConfig {
-  /**
-   * Use animated TrueSheet component (via Reanimated's `createAnimatedComponent`).
-   * This enables driving animations from `onPositionChange` using Reanimated.
-   *
-   * @default false
-   */
-  reanimated?: boolean;
-}
 
 /**
  * Creates a TrueSheet navigator.
@@ -98,19 +79,11 @@ export const createTrueSheetNavigator = <
     NavigationList: {
       [RouteName in keyof ParamList]: TrueSheetNavigationProp<ParamList, RouteName, NavigatorID>;
     };
-    Navigator: ReturnType<typeof createTrueSheetNavigatorComponent>;
+    Navigator: typeof TrueSheetNavigator;
   },
-  const Config extends
-    | (StaticConfig<TypeBag> & TrueSheetNavigatorConfig)
-    | TrueSheetNavigatorConfig =
-    | (StaticConfig<TypeBag> & TrueSheetNavigatorConfig)
-    | TrueSheetNavigatorConfig,
+  const Config extends StaticConfig<TypeBag> = StaticConfig<TypeBag>,
 >(
   config?: Config
 ): TypedNavigator<TypeBag, Config> => {
-  const { reanimated = false, ...staticConfig } = (config ?? {}) as TrueSheetNavigatorConfig &
-    Partial<StaticConfig<TypeBag>>;
-  return createNavigatorFactory(createTrueSheetNavigatorComponent(reanimated))(
-    staticConfig as Config
-  );
+  return createNavigatorFactory(TrueSheetNavigator)(config);
 };
