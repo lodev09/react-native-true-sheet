@@ -12,9 +12,9 @@ import type {
 import type {
   DetentInfoEventPayload,
   PositionChangeEventPayload,
-  PositionChangeEvent,
   TrueSheetProps,
 } from '../TrueSheet.types';
+import type { PositionChangeHandler } from './screen/types';
 
 export type TrueSheetNavigationEventMap = {
   /**
@@ -158,26 +158,24 @@ export type TrueSheetNavigationOptions = Pick<
   reanimated?: boolean;
 
   /**
-   * A reanimated position change handler created by `useReanimatedPositionChangeHandler`.
-   * Only used when `reanimated` is enabled.
+   * A callback that receives position change events.
+   * When `reanimated` is enabled, this must be a worklet function.
    *
    * @example
    * ```tsx
-   * const positionHandler = useReanimatedPositionChangeHandler((payload) => {
-   *   'worklet';
-   *   animatedValue.value = payload.position;
-   * });
-   *
    * <Navigator.Screen
    *   name="Sheet"
    *   options={{
    *     reanimated: true,
-   *     reanimatedPositionChangeHandler: positionHandler,
+   *     positionChangeHandler: (payload) => {
+   *       'worklet';
+   *       animatedValue.value = payload.position;
+   *     },
    *   }}
    * />
    * ```
    */
-  reanimatedPositionChangeHandler?: (e: PositionChangeEvent) => void;
+  positionChangeHandler?: PositionChangeHandler;
 };
 
 export type TrueSheetNavigatorProps = DefaultNavigatorOptions<

@@ -107,44 +107,30 @@ All [TrueSheet props](/reference/configuration) are available as screen options,
 |--------|------|-------------|
 | `detentIndex` | `number` | The detent index to present at. Defaults to `0`. |
 | `reanimated` | `boolean` | Enable worklet-based position events for this screen. |
-| `reanimatedPositionChangeHandler` | `function` | A handler from `useReanimatedPositionChangeHandler` for position changes. |
+| `positionChangeHandler` | `function` | A callback that receives position change events. When `reanimated` is enabled, this must be a worklet function. |
 
 ### Reanimated Integration
 
 Enable worklet-based position events for smooth UI thread animations:
 
 ```tsx
-import { useReanimatedPositionChangeHandler } from '@lodev09/react-native-true-sheet/reanimated';
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
-
-const DetailsSheet = () => {
-  const animatedPosition = useSharedValue(0);
-
-  const positionHandler = useReanimatedPositionChangeHandler((payload) => {
-    'worklet';
-    animatedPosition.value = payload.position;
-  });
-
-  const positionStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -animatedPosition.value }]
-  }))
-
-  return <Animated.View style={positionStyle} />
-}
-
 // In your navigator
 <Sheet.Screen
   name="Details"
   component={DetailsSheet}
   options={{
     reanimated: true,
-    reanimatedPositionChangeHandler: positionHandler,
+    positionChangeHandler: (payload) => {
+      'worklet';
+      // Access payload.position, payload.detentIndex, etc.
+      console.log(payload.position);
+    },
   }}
 />
 ```
 
 :::note
-When `reanimated: true` is set, `react-native-reanimated` must be installed. The integration is lazy-loaded, so screens without `reanimated: true` don't require reanimated.
+When `reanimated: true` is set, `react-native-reanimated` must be installed and `positionChangeHandler` must be a worklet function. The integration is lazy-loaded, so screens without `reanimated: true` don't require reanimated.
 :::
 
 ### Screen Listeners
