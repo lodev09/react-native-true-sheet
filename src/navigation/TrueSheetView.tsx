@@ -9,19 +9,18 @@ import { TrueSheetScreen, type TrueSheetScreenProps } from './screen';
 
 let ReanimatedTrueSheetScreen: React.ComponentType<TrueSheetScreenProps> | null = null;
 
-function getReanimatedScreen(): React.ComponentType<TrueSheetScreenProps> {
+const getReanimatedScreen = (): React.ComponentType<TrueSheetScreenProps> => {
   if (!ReanimatedTrueSheetScreen) {
     ReanimatedTrueSheetScreen =
       require('./screen/ReanimatedTrueSheetScreen').ReanimatedTrueSheetScreen;
   }
   return ReanimatedTrueSheetScreen!;
-}
+};
 
 const DEFAULT_DETENTS: ('auto' | number)[] = ['auto'];
 
-function clampDetentIndex(index: number, detentsLength: number): number {
-  return Math.min(index, Math.max(detentsLength - 1, 0));
-}
+const clampDetentIndex = (index: number, detentsLength: number): number =>
+  Math.min(index, Math.max(detentsLength - 1, 0));
 
 interface TrueSheetViewProps {
   state: TrueSheetNavigationState<ParamListBase>;
@@ -30,7 +29,12 @@ interface TrueSheetViewProps {
   reanimated?: boolean;
 }
 
-export function TrueSheetView({ state, navigation, descriptors, reanimated }: TrueSheetViewProps) {
+export const TrueSheetView = ({
+  state,
+  navigation,
+  descriptors,
+  reanimated,
+}: TrueSheetViewProps) => {
   // First route is the base screen, rest are sheets
   const [baseRoute, ...sheetRoutes] = state.routes;
 
@@ -73,4 +77,4 @@ export function TrueSheetView({ state, navigation, descriptors, reanimated }: Tr
       })}
     </>
   );
-}
+};

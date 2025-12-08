@@ -18,14 +18,14 @@ import type {
   TrueSheetNavigatorProps,
 } from './types';
 
-function createTrueSheetNavigatorComponent(reanimated: boolean) {
-  return function TrueSheetNavigator({
+const createTrueSheetNavigatorComponent = (reanimated: boolean) => {
+  const TrueSheetNavigator = ({
     id,
     initialRouteName,
     children,
     screenListeners,
     screenOptions,
-  }: TrueSheetNavigatorProps) {
+  }: TrueSheetNavigatorProps) => {
     const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
       TrueSheetNavigationState<ParamListBase>,
       TrueSheetRouterOptions,
@@ -51,7 +51,9 @@ function createTrueSheetNavigatorComponent(reanimated: boolean) {
       </NavigationContent>
     );
   };
-}
+
+  return TrueSheetNavigator;
+};
 
 export interface TrueSheetNavigatorConfig {
   /**

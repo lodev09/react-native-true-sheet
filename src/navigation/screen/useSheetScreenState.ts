@@ -23,12 +23,12 @@ import type { TrueSheetScreenProps } from './types';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
-export function useSheetScreenState(
+export const useSheetScreenState = (
   props: Pick<
     TrueSheetScreenProps,
     'detentIndex' | 'resizeKey' | 'closing' | 'navigation' | 'routeKey' | 'emit'
   >
-) {
+) => {
   const { detentIndex, resizeKey, closing, navigation, routeKey, emit } = props;
 
   const ref = useRef<TrueSheet>(null);
@@ -95,4 +95,4 @@ export function useSheetScreenState(
       onDidBlur: (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
     },
   };
-}
+};

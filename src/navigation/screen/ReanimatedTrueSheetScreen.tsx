@@ -3,7 +3,7 @@ import { ReanimatedTrueSheet } from '../../reanimated/ReanimatedTrueSheet';
 import type { TrueSheetScreenProps } from './types';
 import { useSheetScreenState } from './useSheetScreenState';
 
-export function ReanimatedTrueSheetScreen({
+export const ReanimatedTrueSheetScreen = ({
   detentIndex,
   resizeKey,
   navigation,
@@ -13,7 +13,7 @@ export function ReanimatedTrueSheetScreen({
   detents,
   children,
   ...sheetProps
-}: TrueSheetScreenProps) {
+}: TrueSheetScreenProps) => {
   const { ref, initialDetentIndex, eventHandlers } = useSheetScreenState({
     detentIndex,
     resizeKey,
@@ -41,4 +41,4 @@ export function ReanimatedTrueSheetScreen({
       {children}
     </ReanimatedTrueSheet>
   );
-}
+};
