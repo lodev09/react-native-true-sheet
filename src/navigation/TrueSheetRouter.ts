@@ -35,20 +35,14 @@ export type TrueSheetActionType =
 
 export const TrueSheetActions = {
   ...StackActions,
-  resize(index: number): TrueSheetActionType {
-    return { type: 'RESIZE', index };
-  },
-  dismiss(): TrueSheetActionType {
-    return { type: 'DISMISS' };
-  },
-  remove(): TrueSheetActionType {
-    return { type: 'REMOVE' };
-  },
+  resize: (index: number): TrueSheetActionType => ({ type: 'RESIZE', index }),
+  dismiss: (): TrueSheetActionType => ({ type: 'DISMISS' }),
+  remove: (): TrueSheetActionType => ({ type: 'REMOVE' }),
 };
 
-export function TrueSheetRouter(
+export const TrueSheetRouter = (
   routerOptions: StackRouterOptions
-): Router<TrueSheetNavigationState<ParamListBase>, TrueSheetActionType> {
+): Router<TrueSheetNavigationState<ParamListBase>, TrueSheetActionType> => {
   const baseRouter = StackRouter(routerOptions) as unknown as Router<
     TrueSheetNavigationState<ParamListBase>,
     TrueSheetActionType
@@ -169,4 +163,4 @@ export function TrueSheetRouter(
 
     actionCreators: TrueSheetActions,
   };
-}
+};

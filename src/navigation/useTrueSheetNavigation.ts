@@ -21,8 +21,6 @@ import type { TrueSheetNavigationProp } from './types';
  * }
  * ```
  */
-export function useTrueSheetNavigation<
+export const useTrueSheetNavigation = <
   T extends ParamListBase = ParamListBase,
->(): TrueSheetNavigationProp<T> {
-  return useNavigation<TrueSheetNavigationProp<T>>();
-}
+>(): TrueSheetNavigationProp<T> => useNavigation<TrueSheetNavigationProp<T>>();
