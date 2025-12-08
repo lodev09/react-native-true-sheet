@@ -46,7 +46,7 @@ function createTrueSheetNavigatorComponent(reanimated: boolean) {
           state={state}
           navigation={navigation}
           descriptors={descriptors}
-          useReanimated={reanimated}
+          reanimated={reanimated}
         />
       </NavigationContent>
     );
