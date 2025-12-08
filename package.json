@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "The true native bottom sheet experience for your React Native Apps.",
   "source": "./src/index.ts",
   "main": "./lib/module/index.js",
