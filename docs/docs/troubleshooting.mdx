@@ -30,6 +30,35 @@ return (
 Note that we are using `flexGrow` instead of `flex` here. For some weird reason, `flex` does not work correctly. See [below](#weird-layout-render).
 :::
 
+## Touch Events Not Working on Android
+
+On physical Android devices, touch events on buttons and pressables inside TrueSheet may not fire correctly. This appears to be a React Native Fabric limitation with modals.
+
+Related: [#163](https://github.com/lodev09/react-native-true-sheet/issues/163), [#288](https://github.com/lodev09/react-native-true-sheet/issues/288)
+
+**Workarounds:**
+
+1. Use touchable components from [`react-native-gesture-handler`](https://docs.swmansion.com/react-native-gesture-handler/docs/) instead of React Native's built-in components.
+
+2. Set an explicit `width` on `GestureHandlerRootView` to fix first-render layout issues:
+
+```tsx
+import { useWindowDimensions } from 'react-native'
+import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler'
+
+const { width } = useWindowDimensions()
+
+return (
+  <TrueSheet ref={sheet}>
+    <GestureHandlerRootView style={{ flexGrow: 1, width }}>
+      <TouchableOpacity onPress={handlePress}>
+        {/* ... */}
+      </TouchableOpacity>
+    </GestureHandlerRootView>
+  </TrueSheet>
+)
+```
+
 ## Unable to Drag on Android
 
 If sheet contains `ScrollView` and the content height is smaller than the sheet height, scrolling may not work properly due to a React Native framework limitation. This is because the `ScrollView` won't be scrollable when there's no overflow.
