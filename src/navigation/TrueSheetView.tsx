@@ -1,5 +1,6 @@
 import type { ParamListBase } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef } from 'react';
+import Animated from 'react-native-reanimated';
 
 import { TrueSheet } from '../TrueSheet';
 import type {
@@ -28,6 +29,8 @@ import type {
 } from './types';
 import { TrueSheetActions } from './TrueSheetRouter';
 
+const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
+
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
 type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
@@ -37,6 +40,7 @@ type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
   emit: EmitFn;
   routeKey: string;
   closing?: boolean;
+  useReanimated?: boolean;
   children: React.ReactNode;
 };
 
@@ -47,6 +51,7 @@ function TrueSheetScreen({
   emit,
   routeKey,
   closing,
+  useReanimated,
   detents,
   children,
   ...sheetProps
@@ -189,8 +194,10 @@ function TrueSheetScreen({
     [emitEvent]
   );
 
+  const SheetComponent = useReanimated ? AnimatedTrueSheet : TrueSheet;
+
   return (
-    <TrueSheet
+    <SheetComponent
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
       initialDetentIndex={initialDetentIndexRef.current}
@@ -211,7 +218,7 @@ function TrueSheetScreen({
       {...sheetProps}
     >
       {children}
-    </TrueSheet>
+    </SheetComponent>
   );
 }
 
@@ -225,6 +232,7 @@ interface TrueSheetViewProps {
   state: TrueSheetNavigationState<ParamListBase>;
   navigation: TrueSheetNavigationHelpers;
   descriptors: TrueSheetDescriptorMap;
+  useReanimated?: boolean;
 }
 
 export function TrueSheetView({ state, navigation, descriptors }: TrueSheetViewProps) {
