@@ -1,4 +1,3 @@
-import type { ParamListBase } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
 
 import { TrueSheet } from '../../TrueSheet';
@@ -18,30 +17,19 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from '../../TrueSheet.types';
-import type {
-  TrueSheetNavigationEventMap,
-  TrueSheetNavigationHelpers,
-  TrueSheetNavigationOptions,
-  TrueSheetNavigationProp,
-} from '../types';
+import type { TrueSheetNavigationEventMap, TrueSheetNavigationHelpers } from '../types';
 import { TrueSheetActions } from '../TrueSheetRouter';
+import type { TrueSheetScreenProps } from './types';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
-export type TrueSheetScreenProps = Omit<TrueSheetNavigationOptions, 'detentIndex'> & {
-  detentIndex: number;
-  resizeKey?: number;
-  navigation: TrueSheetNavigationProp<ParamListBase>;
-  emit: EmitFn;
-  routeKey: string;
-  closing?: boolean;
-  children: React.ReactNode;
-};
-
 export function useSheetScreenState(
-  props: Pick<TrueSheetScreenProps, 'detentIndex' | 'closing' | 'navigation' | 'routeKey' | 'emit'>
+  props: Pick<
+    TrueSheetScreenProps,
+    'detentIndex' | 'resizeKey' | 'closing' | 'navigation' | 'routeKey' | 'emit'
+  >
 ) {
-  const { detentIndex, closing, navigation, routeKey, emit } = props;
+  const { detentIndex, resizeKey, closing, navigation, routeKey, emit } = props;
 
   const ref = useRef<TrueSheet>(null);
   const isDismissedRef = useRef(false);
@@ -66,7 +54,7 @@ export function useSheetScreenState(
       return;
     }
     ref.current?.resize(detentIndex);
-  }, [detentIndex]);
+  }, [detentIndex, resizeKey]);
 
   const emitEvent = (
     type: keyof TrueSheetNavigationEventMap,
@@ -100,8 +88,7 @@ export function useSheetScreenState(
       onDragBegin: (e: DragBeginEvent) => emitEvent('sheetDragBegin', e.nativeEvent),
       onDragChange: (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),
       onDragEnd: (e: DragEndEvent) => emitEvent('sheetDragEnd', e.nativeEvent),
-      onPositionChange: (e: PositionChangeEvent) =>
-        emitEvent('sheetPositionChange', e.nativeEvent),
+      onPositionChange: (e: PositionChangeEvent) => emitEvent('sheetPositionChange', e.nativeEvent),
       onWillFocus: (_e: WillFocusEvent) => emitEvent('sheetWillFocus', undefined),
       onDidFocus: (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
       onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),

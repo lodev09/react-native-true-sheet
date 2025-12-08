@@ -1,9 +1,10 @@
 import { TrueSheet } from '../../TrueSheet';
-import { useSheetScreenState, type TrueSheetScreenProps } from './useSheetScreenState';
+import type { TrueSheetScreenProps } from './types';
+import { useSheetScreenState } from './useSheetScreenState';
 
 export function TrueSheetScreen({
   detentIndex,
-  resizeKey: _resizeKey,
+  resizeKey,
   navigation,
   emit,
   routeKey,
@@ -14,6 +15,7 @@ export function TrueSheetScreen({
 }: TrueSheetScreenProps) {
   const { ref, initialDetentIndex, eventHandlers } = useSheetScreenState({
     detentIndex,
+    resizeKey,
     closing,
     navigation,
     routeKey,

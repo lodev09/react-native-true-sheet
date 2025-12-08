@@ -1,10 +1,11 @@
 import { scheduleOnRN } from 'react-native-worklets';
 import { ReanimatedTrueSheet } from '../../reanimated/ReanimatedTrueSheet';
-import { useSheetScreenState, type TrueSheetScreenProps } from './useSheetScreenState';
+import type { TrueSheetScreenProps } from './types';
+import { useSheetScreenState } from './useSheetScreenState';
 
 export function ReanimatedTrueSheetScreen({
   detentIndex,
-  resizeKey: _resizeKey,
+  resizeKey,
   navigation,
   emit,
   routeKey,
@@ -15,6 +16,7 @@ export function ReanimatedTrueSheetScreen({
 }: TrueSheetScreenProps) {
   const { ref, initialDetentIndex, eventHandlers } = useSheetScreenState({
     detentIndex,
+    resizeKey,
     closing,
     navigation,
     routeKey,
