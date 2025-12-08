@@ -37,8 +37,8 @@ export const ReanimatedTrueSheetScreen = ({
       name={`navigation-sheet-${routeKey}`}
       initialDetentIndex={initialDetentIndex}
       detents={detents}
-      {...eventHandlers}
       onPositionChange={reanimatedPositionChangeHandler ?? onPositionChange}
+      {...eventHandlers}
       {...sheetProps}
     >
       {children}
