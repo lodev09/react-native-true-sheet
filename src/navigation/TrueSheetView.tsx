@@ -5,8 +5,7 @@ import type {
   TrueSheetNavigationHelpers,
   TrueSheetNavigationState,
 } from './types';
-import { TrueSheetScreen } from './TrueSheetScreen';
-import { ReanimatedTrueSheetScreen } from './ReanimatedTrueSheetScreen';
+import { TrueSheetScreen, ReanimatedTrueSheetScreen } from './screen';
 
 const DEFAULT_DETENTS: ('auto' | number)[] = ['auto'];
 

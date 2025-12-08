@@ -1,8 +1,8 @@
 import Animated from 'react-native-reanimated';
 
-import { TrueSheet } from '../TrueSheet';
-import { useReanimatedPositionChangeHandler } from '../reanimated/useReanimatedPositionChangeHandler';
-import { useSheetScreenState, type TrueSheetScreenProps } from './TrueSheetScreen';
+import { TrueSheet } from '../../TrueSheet';
+import { useReanimatedPositionChangeHandler } from '../../reanimated/useReanimatedPositionChangeHandler';
+import { useSheetScreenState, type TrueSheetScreenProps } from './useSheetScreenState';
 
 const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 

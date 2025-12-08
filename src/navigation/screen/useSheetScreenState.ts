@@ -1,7 +1,7 @@
 import type { ParamListBase } from '@react-navigation/native';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
-import { TrueSheet } from '../TrueSheet';
+import { TrueSheet } from '../../TrueSheet';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -11,20 +11,19 @@ import type {
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
-  PositionChangeEvent,
   PositionChangeEventPayload,
   WillBlurEvent,
   WillDismissEvent,
   WillFocusEvent,
   WillPresentEvent,
-} from '../TrueSheet.types';
+} from '../../TrueSheet.types';
 import type {
   TrueSheetNavigationEventMap,
   TrueSheetNavigationHelpers,
   TrueSheetNavigationOptions,
   TrueSheetNavigationProp,
-} from './types';
-import { TrueSheetActions } from './TrueSheetRouter';
+} from '../types';
+import { TrueSheetActions } from '../TrueSheetRouter';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
@@ -162,64 +161,4 @@ export function useSheetScreenState(
     onWillBlur,
     onDidBlur,
   };
-}
-
-export function TrueSheetScreen({
-  detentIndex,
-  resizeKey: _resizeKey,
-  navigation,
-  emit,
-  routeKey,
-  closing,
-  detents,
-  children,
-  ...sheetProps
-}: TrueSheetScreenProps) {
-  const {
-    ref,
-    initialDetentIndexRef,
-    emitEvent,
-    onWillPresent,
-    onDidPresent,
-    onWillDismiss,
-    onDidDismiss,
-    onDetentChange,
-    onDragBegin,
-    onDragChange,
-    onDragEnd,
-    onWillFocus,
-    onDidFocus,
-    onWillBlur,
-    onDidBlur,
-  } = useSheetScreenState({ detentIndex, closing, navigation, routeKey, emit });
-
-  const onPositionChange = useCallback(
-    (e: PositionChangeEvent) => emitEvent('sheetPositionChange', e.nativeEvent),
-    [emitEvent]
-  );
-
-  return (
-    <TrueSheet
-      ref={ref}
-      name={`navigation-sheet-${routeKey}`}
-      initialDetentIndex={initialDetentIndexRef.current}
-      detents={detents}
-      onWillPresent={onWillPresent}
-      onDidPresent={onDidPresent}
-      onWillDismiss={onWillDismiss}
-      onDidDismiss={onDidDismiss}
-      onDetentChange={onDetentChange}
-      onDragBegin={onDragBegin}
-      onDragChange={onDragChange}
-      onDragEnd={onDragEnd}
-      onPositionChange={onPositionChange}
-      onWillFocus={onWillFocus}
-      onDidFocus={onDidFocus}
-      onWillBlur={onWillBlur}
-      onDidBlur={onDidBlur}
-      {...sheetProps}
-    >
-      {children}
-    </TrueSheet>
-  );
 }
