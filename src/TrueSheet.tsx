@@ -34,7 +34,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, processColor, StyleSheet, findNodeHandle, View } from 'react-native';
+import { Platform, StyleSheet, findNodeHandle, View, processColor } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -413,7 +413,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         grabber={grabber}
         grabberOptions={{
           ...grabberOptions,
-          color: (processColor(grabberOptions?.color) as number) ?? 0,
+          color: processColor(grabberOptions?.color),
         }}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}

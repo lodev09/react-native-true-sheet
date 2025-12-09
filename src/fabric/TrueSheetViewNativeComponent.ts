@@ -1,4 +1,4 @@
-import type { ColorValue, ViewProps } from 'react-native';
+import type { ColorValue, ProcessedColorValue, ViewProps } from 'react-native';
 import type {
   DirectEventHandler,
   Double,
@@ -12,7 +12,7 @@ type GrabberOptionsType = Readonly<{
   height?: Double;
   topMargin?: Double;
   cornerRadius?: WithDefault<Double, -1>;
-  color?: Int32;
+  color?: ProcessedColorValue | null;
 }>;
 
 type BlurOptionsType = Readonly<{
