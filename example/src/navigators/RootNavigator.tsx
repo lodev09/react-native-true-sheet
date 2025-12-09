@@ -7,11 +7,13 @@ import type { AppStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+const INITIAL_ROUTE_NAME: keyof AppStackParamList = 'Map';
+
 export const RootNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
-      initialRouteName="Map"
+      initialRouteName={INITIAL_ROUTE_NAME}
     >
       <Stack.Screen
         options={{ presentation: 'fullScreenModal', headerShown: false }}
