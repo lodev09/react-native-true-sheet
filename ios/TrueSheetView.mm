@@ -60,6 +60,9 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const TrueSheetViewProps>();
     _props = defaultProps;
 
+    self.hidden = YES;
+    self.userInteractionEnabled = NO;
+
     _controller = [[TrueSheetViewController alloc] init];
     _controller.delegate = self;
 
