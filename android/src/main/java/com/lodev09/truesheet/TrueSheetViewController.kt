@@ -696,22 +696,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Returns (fromIndex, toIndex, progress) for interpolation, or null if < 2 detents. */
   private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
     val count = detents.size
-    if (count < 2) return null
+    if (count == 0) return null
 
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val firstPos = getSheetTopForDetentIndex(0)
-    val lastPos = getSheetTopForDetentIndex(count - 1)
 
+    // Above first detent - interpolating toward closed
     if (positionPx > firstPos) {
       val range = realHeight - firstPos
       val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }
 
+    // Single detent - at or above the detent
+    if (count == 1) return Triple(0, 0, 0f)
+
+    val lastPos = getSheetTopForDetentIndex(count - 1)
+
+    // Below last detent
     if (positionPx < lastPos) {
       return Triple(count - 1, count - 1, 0f)
     }
 
+    // Between detents
     for (i in 0 until count - 1) {
       val pos = getSheetTopForDetentIndex(i)
       val nextPos = getSheetTopForDetentIndex(i + 1)
@@ -730,7 +737,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getInterpolatedIndexForPosition(positionPx: Int): Float {
     val count = detents.size
     if (count == 0) return -1f
-    if (count == 1) return 0f
 
     val segment = findSegmentForPosition(positionPx) ?: return 0f
     val (fromIndex, _, progress) = segment

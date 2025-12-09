@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -34,12 +34,10 @@ import {
   ScrollViewSheet,
 } from '../components/sheets';
 import { useAppNavigation } from '../hooks';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
-  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -76,10 +74,6 @@ export const MapScreen = () => {
       },
     ],
   }));
-
-  useEffect(() => {
-    console.log(`${insets.top}, ${insets.bottom}`);
-  }, [insets]);
 
   return (
     <View style={styles.container}>
