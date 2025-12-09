@@ -556,26 +556,9 @@
     return NO;
   }
 
-  if (count == 1) {
-    CGFloat detentPos = [self estimatedPositionForIndex:0];
-    CGFloat range = self.screenHeight - detentPos;
-
-    if (position > detentPos) {
-      // Between closed and the single detent
-      *outIndex = -1;
-      *outProgress = range > 0 ? (position - detentPos) / range : 0;
-      return NO;
-    }
-
-    // At or above the detent
-    *outIndex = 0;
-    *outProgress = 0;
-    return NO;
-  }
-
   CGFloat firstPos = [self estimatedPositionForIndex:0];
-  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
 
+  // Above first detent - interpolating toward closed
   if (position > firstPos) {
     CGFloat range = self.screenHeight - firstPos;
     *outIndex = -1;
@@ -583,12 +566,23 @@
     return NO;
   }
 
+  // Single detent - at or above the detent
+  if (count == 1) {
+    *outIndex = 0;
+    *outProgress = 0;
+    return NO;
+  }
+
+  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
+
+  // Below last detent
   if (position < lastPos) {
     *outIndex = count - 1;
     *outProgress = 0;
     return NO;
   }
 
+  // Between detents
   for (NSInteger i = 0; i < count - 1; i++) {
     CGFloat pos = [self estimatedPositionForIndex:i];
     CGFloat nextPos = [self estimatedPositionForIndex:i + 1];

@@ -701,27 +701,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val firstPos = getSheetTopForDetentIndex(0)
 
-    // Handle single detent case - interpolate between closed and the detent
-    if (count == 1) {
-      if (positionPx > firstPos) {
-        val range = realHeight - firstPos
-        val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
-        return Triple(-1, 0, progress)
-      }
-      return Triple(0, 0, 0f)
-    }
-    val lastPos = getSheetTopForDetentIndex(count - 1)
-
+    // Above first detent - interpolating toward closed
     if (positionPx > firstPos) {
       val range = realHeight - firstPos
       val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }
 
+    // Single detent - at or above the detent
+    if (count == 1) return Triple(0, 0, 0f)
+
+    val lastPos = getSheetTopForDetentIndex(count - 1)
+
+    // Below last detent
     if (positionPx < lastPos) {
       return Triple(count - 1, count - 1, 0f)
     }
 
+    // Between detents
     for (i in 0 until count - 1) {
       val pos = getSheetTopForDetentIndex(i)
       val nextPos = getSheetTopForDetentIndex(i + 1)
