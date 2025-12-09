@@ -557,6 +557,17 @@
   }
 
   if (count == 1) {
+    CGFloat detentPos = [self estimatedPositionForIndex:0];
+    CGFloat range = self.screenHeight - detentPos;
+
+    if (position > detentPos) {
+      // Between closed and the single detent
+      *outIndex = -1;
+      *outProgress = range > 0 ? (position - detentPos) / range : 0;
+      return NO;
+    }
+
+    // At or above the detent
     *outIndex = 0;
     *outProgress = 0;
     return NO;

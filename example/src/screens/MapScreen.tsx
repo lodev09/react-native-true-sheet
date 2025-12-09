@@ -39,7 +39,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const MapScreen = () => {
-  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
   const navigation = useAppNavigation();
@@ -77,10 +76,6 @@ export const MapScreen = () => {
     ],
   }));
 
-  useEffect(() => {
-    console.log(`${insets.top}, ${insets.bottom}`);
-  }, [insets]);
-
   return (
     <View style={styles.container}>
       <MapView
@@ -103,11 +98,11 @@ export const MapScreen = () => {
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[minHeight / height, 'auto', 1]}
+        detents={[1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}
-        dismissible={false}
+        // dismissible={false}
         // insetAdjustment="never"
         edgeToEdgeFullScreen
         style={styles.content}
@@ -122,14 +117,14 @@ export const MapScreen = () => {
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
-        // onPositionChange={(e) => {
-        //   'worklet';
+        onPositionChange={(e) => {
+          'worklet';
 
-        //   const { detent, position, index, realtime } = e.nativeEvent;
-        //   console.log(
-        //     `position change with height: ${height}, index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`
-        //   );
-        // }}
+          const { detent, position, index, realtime } = e.nativeEvent;
+          console.log(
+            `position change with height: ${height}, index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`
+          );
+        }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
