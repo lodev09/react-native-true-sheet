@@ -130,7 +130,7 @@ class TrueSheetViewManager :
       } else {
         null
       },
-      color = if (options.hasKey("color") && options.getInt("color") != 0) options.getInt("color") else null
+      color = if (options.hasKey("color") && !options.isNull("color")) options.getInt("color") else null
     )
     view.setGrabberOptions(grabberOptions)
   }

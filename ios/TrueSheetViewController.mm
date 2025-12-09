@@ -859,6 +859,9 @@
     _grabberView.color = options[@"color"];
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
+
+    // Ensure grabber is above container/header views
+    [self.view bringSubviewToFront:_grabberView];
   } else {
     sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
