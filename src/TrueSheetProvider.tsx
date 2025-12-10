@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { TrueSheet } from './TrueSheet';
-import type { TrueSheetMethods } from './TrueSheet.types';
+import type { TrueSheetContextMethods } from './TrueSheet.types';
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
@@ -13,17 +13,17 @@ export interface TrueSheetProviderProps {
  * since TrueSheet uses static instance methods internally.
  */
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
-  return <>{children}</>;
+  return children;
 }
 
 /**
  * Hook to control TrueSheet instances by name.
  * On native, this maps directly to TrueSheet static methods.
  */
-export function useTrueSheet(): TrueSheetMethods {
+export function useTrueSheet(): TrueSheetContextMethods {
   return {
-    present: (name: string, index: number = 0) => TrueSheet.present(name, index),
-    dismiss: (name: string) => TrueSheet.dismiss(name),
-    resize: (name: string, index: number) => TrueSheet.resize(name, index),
+    present: TrueSheet.present,
+    dismiss: TrueSheet.dismiss,
+    resize: TrueSheet.resize,
   };
 }

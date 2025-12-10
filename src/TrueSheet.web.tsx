@@ -26,9 +26,10 @@ import {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { TrueSheetContext, type TrueSheetInstanceMethods } from './TrueSheetProvider.web';
+import { BottomSheetContext } from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
+  TrueSheetRef,
   DetentChangeEvent,
   DidBlurEvent,
   DidDismissEvent,
@@ -53,12 +54,6 @@ const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) =
   if (isValidElement(slot)) return slot;
   return createElement(slot);
 };
-
-export interface TrueSheetRef {
-  present: (index?: number, animated?: boolean) => Promise<void>;
-  dismiss: (animated?: boolean) => Promise<void>;
-  resize: (index: number) => Promise<void>;
-}
 
 export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
   const {
@@ -96,7 +91,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   } = props;
 
   const { height: windowHeight } = useWindowDimensions();
-  const sheetContext = useContext(TrueSheetContext);
+  const bottomSheetContext = useContext(BottomSheetContext);
   const modalRef = useRef<BottomSheetModal>(null);
   const initialDetentIndexRef = useRef(initialDetentIndex);
   const currentIndexRef = useRef(0);
@@ -311,7 +306,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   // For scrollable, we render the child directly
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
 
-  const sheetMethodsRef = useRef<TrueSheetInstanceMethods>({
+  const sheetMethodsRef = useRef<TrueSheetRef>({
     present: async (index = 0) => {
       setSnapIndex(index);
       isPresenting.current = true;
@@ -331,14 +326,14 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   // Register with context provider
   useEffect(() => {
     if (name) {
-      sheetContext?.register(name, sheetMethodsRef);
+      bottomSheetContext?.register(name, sheetMethodsRef);
     }
     return () => {
       if (name) {
-        sheetContext?.unregister(name);
+        bottomSheetContext?.unregister(name);
       }
     };
-  }, [name, sheetContext]);
+  }, [name]);
 
   // Auto-present on mount if initialDetentIndex is set
   useEffect(() => {

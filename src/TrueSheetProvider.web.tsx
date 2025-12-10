@@ -1,25 +1,13 @@
 import { createContext, useContext, useRef, type ReactNode, type RefObject } from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import type { TrueSheetContextMethods, TrueSheetRef } from './TrueSheet.types';
 
-import type { TrueSheetMethods } from './TrueSheet.types';
-
-/**
- * Internal methods for a single sheet instance (used by context registration).
- */
-export interface TrueSheetInstanceMethods {
-  present: (index?: number) => Promise<void>;
-  dismiss: () => Promise<void>;
-  resize: (index: number) => Promise<void>;
-}
-
-interface TrueSheetContextValue {
-  register: (name: string, methods: RefObject<TrueSheetInstanceMethods>) => void;
+interface BottomSheetContextValue extends TrueSheetContextMethods {
+  register: (name: string, methods: RefObject<TrueSheetRef>) => void;
   unregister: (name: string) => void;
-  present: (name: string, index?: number) => Promise<void>;
-  dismiss: (name: string) => Promise<void>;
-  resize: (name: string, index: number) => Promise<void>;
 }
 
-export const TrueSheetContext = createContext<TrueSheetContextValue | null>(null);
+export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
@@ -30,9 +18,9 @@ export interface TrueSheetProviderProps {
  * Required to wrap your app for sheet management via useTrueSheet hook.
  */
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
-  const sheetsRef = useRef<Map<string, RefObject<TrueSheetInstanceMethods>>>(new Map());
+  const sheetsRef = useRef<Map<string, RefObject<TrueSheetRef>>>(new Map());
 
-  const register = (name: string, methods: RefObject<TrueSheetInstanceMethods>) => {
+  const register = (name: string, methods: RefObject<TrueSheetRef>) => {
     sheetsRef.current.set(name, methods);
   };
 
@@ -68,9 +56,9 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   };
 
   return (
-    <TrueSheetContext.Provider value={{ register, unregister, present, dismiss, resize }}>
-      {children}
-    </TrueSheetContext.Provider>
+    <BottomSheetContext.Provider value={{ register, unregister, present, dismiss, resize }}>
+      <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
+    </BottomSheetContext.Provider>
   );
 }
 
@@ -78,8 +66,8 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
  * Hook to control TrueSheet instances by name.
  * On web, this uses the TrueSheetContext from TrueSheetProvider.
  */
-export function useTrueSheet(): TrueSheetMethods {
-  const context = useContext(TrueSheetContext);
+export function useTrueSheet(): TrueSheetContextMethods {
+  const context = useContext(BottomSheetContext);
 
   if (!context) {
     throw new Error('useTrueSheet must be used within a TrueSheetProvider');
