@@ -43,7 +43,7 @@
   ],
   "scripts": {
     "example": "yarn workspace react-native-true-sheet-example",
-    "expo": "yarn workspace expo-example",
+    "expo-example": "yarn workspace expo-example",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
