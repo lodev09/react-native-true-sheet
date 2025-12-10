@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@gorhom/bottom-sheet": "^5.2.8",
     "@lodev09/react-native-true-sheet": "*",
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.27",
@@ -25,6 +26,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

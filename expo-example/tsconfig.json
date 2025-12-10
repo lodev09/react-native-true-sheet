@@ -1,7 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "paths": {
+      "@lodev09/react-native-true-sheet": ["../src/index"],
+      "@lodev09/react-native-true-sheet/reanimated": ["../src/reanimated/index"],
+      "@lodev09/react-native-true-sheet/navigation": ["../src/navigation/index"]
+    }
   },
   "include": [
     "**/*.ts",
