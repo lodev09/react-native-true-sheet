@@ -10,6 +10,7 @@ import {
 
 import type {
   TrueSheetProps,
+  TrueSheetRef,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
@@ -56,7 +57,10 @@ interface TrueSheetState {
   shouldRenderNativeView: boolean;
 }
 
-export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
+export class TrueSheet
+  extends PureComponent<TrueSheetProps, TrueSheetState>
+  implements TrueSheetRef
+{
   displayName = 'TrueSheet';
 
   private readonly nativeRef: RefObject<NativeRef | null>;

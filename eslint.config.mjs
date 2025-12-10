@@ -20,6 +20,7 @@ export default defineConfig([
     plugins: { prettier },
     rules: {
       'react/react-in-jsx-scope': 'off',
+      'react-hooks/exhaustive-deps': 'off',
       'prettier/prettier': [
         'warn',
         {
@@ -34,6 +35,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: ['node_modules/', 'lib/', 'docs/', 'jest.setup.js'],
+    ignores: ['node_modules/', 'lib/', 'docs/', 'jest.setup.js', 'expo-example/.expo/'],
   },
 ]);

@@ -1,0 +1,85 @@
+---
+title: Web Support
+description: Use TrueSheet on the web with @gorhom/bottom-sheet.
+keywords: [bottom sheet web, react native web, bottom sheet browser, expo web]
+---
+
+import stacking from './web.gif'
+
+Yes, `TrueSheet` supports web! Using [@gorhom/bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet) under the hood. This allows you to use the same API across iOS, Android, and Web.
+
+<img alt="stacking" src={stacking} width="300"/>
+
+## Installation
+
+In addition to `@lodev09/react-native-true-sheet`, install the required web dependencies. Follow the [@gorhom/bottom-sheet installation guide](https://gorhom.dev/react-native-bottom-sheet#installation).
+
+## Setup
+
+Wrap your app with `TrueSheetProvider`:
+
+```tsx {1,5-7}
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet'
+
+const App = () => {
+  return (
+    <TrueSheetProvider>
+      <YourApp />
+    </TrueSheetProvider>
+  )
+}
+```
+
+:::tip
+On native platforms, `TrueSheetProvider` is a simple pass-through component, so you can safely wrap your entire app without any performance impact.
+:::
+
+## Using the Hook
+
+Use the `useTrueSheet` hook to control sheets by name:
+
+```tsx {1,4,7-8}
+import { TrueSheet, useTrueSheet } from '@lodev09/react-native-true-sheet'
+
+const MyComponent = () => {
+  const { present, dismiss } = useTrueSheet()
+
+  return (
+    <>
+      <Button onPress={() => present('my-sheet')} title="Open" />
+      <Button onPress={() => dismiss('my-sheet')} title="Close" />
+
+      <TrueSheet name="my-sheet" detents={[0.5, 1]}>
+        <View>
+          <Text>Hello from the sheet!</Text>
+        </View>
+      </TrueSheet>
+    </>
+  )
+}
+```
+
+## Using Refs
+
+You can also use refs to control sheets directly:
+
+```tsx {1,5,9}
+import { useRef } from 'react'
+import { TrueSheet, type TrueSheetRef } from '@lodev09/react-native-true-sheet'
+
+const MyComponent = () => {
+  const sheetRef = useRef<TrueSheetRef>(null)
+
+  return (
+    <>
+      <Button onPress={() => sheetRef.current?.present()} title="Open" />
+
+      <TrueSheet ref={sheetRef} detents={[0.5, 1]}>
+        <View>
+          <Text>Hello from the sheet!</Text>
+        </View>
+      </TrueSheet>
+    </>
+  )
+}
+```

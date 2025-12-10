@@ -43,6 +43,7 @@
   ],
   "scripts": {
     "example": "yarn workspace react-native-true-sheet-example",
+    "expo-example": "yarn workspace expo-example",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -84,6 +85,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
     "@evilmartians/lefthook": "^2.0.4",
+    "@gorhom/bottom-sheet": "^5.2.8",
     "@react-native/babel-preset": "^0.82.1",
     "@react-native/eslint-config": "^0.82.1",
     "@react-navigation/native": "^7.1.6",
@@ -114,13 +116,17 @@
     "@types/react": "19.1.1"
   },
   "peerDependencies": {
-    "@react-navigation/native": ">=6.0.0",
+    "@gorhom/bottom-sheet": ">=5",
+    "@react-navigation/native": ">=7",
     "react": "*",
     "react-native": "*",
-    "react-native-reanimated": ">=4.0.0",
+    "react-native-reanimated": ">=4",
     "react-native-worklets": "*"
   },
   "peerDependenciesMeta": {
+    "@gorhom/bottom-sheet": {
+      "optional": true
+    },
     "@react-navigation/native": {
       "optional": true
     },
@@ -133,6 +139,7 @@
   },
   "workspaces": [
     "example",
+    "expo-example",
     "docs"
   ],
   "packageManager": "yarn@4.11.0",
