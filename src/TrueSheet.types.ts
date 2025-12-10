@@ -41,6 +41,30 @@ export type WillBlurEvent = NativeSyntheticEvent<null>;
 export type BackPressEvent = NativeSyntheticEvent<null>;
 
 /**
+ * Methods for controlling TrueSheet instances.
+ * Returned by the `useTrueSheet` hook.
+ */
+export interface TrueSheetMethods {
+  /**
+   * Present a sheet by name.
+   * @param name - The name of the sheet to present
+   * @param index - The detent index to present at (default: 0)
+   */
+  present: (name: string, index?: number) => Promise<void>;
+  /**
+   * Dismiss a sheet by name.
+   * @param name - The name of the sheet to dismiss
+   */
+  dismiss: (name: string) => Promise<void>;
+  /**
+   * Resize a sheet by name.
+   * @param name - The name of the sheet to resize
+   * @param index - The detent index to resize to
+   */
+  resize: (name: string, index: number) => Promise<void>;
+}
+
+/**
  * Options for customizing the grabber (drag handle) appearance.
  */
 export interface GrabberOptions {
