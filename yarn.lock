@@ -3825,6 +3825,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gorhom/bottom-sheet@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@gorhom/bottom-sheet@npm:5.2.8"
+  dependencies:
+    "@gorhom/portal": "npm:1.0.14"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-native": "*"
+    react: "*"
+    react-native: "*"
+    react-native-gesture-handler: ">=2.16.1"
+    react-native-reanimated: "*"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-native":
+      optional: true
+  checksum: 10c0/9bb71a375cdcaec650e8c84ab5e3e42f55b3ae19d9e08cf90688cf72706588d211f3aeef28b857a37e9e411efa8fdf038429c90a8855167c7ab3dce5c595dfca
+  languageName: node
+  linkType: hard
+
+"@gorhom/portal@npm:1.0.14":
+  version: 1.0.14
+  resolution: "@gorhom/portal@npm:1.0.14"
+  dependencies:
+    nanoid: "npm:^3.3.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/86f33afc2ac2656a86a6f3fd1e41565419839576ede2c38333434a93a0a2fe4fb6fc18ab3360579427f2a1fc3b4564b933cc5ae1793a7e2825c93860a00b215f
+  languageName: node
+  linkType: hard
+
 "@hapi/hoek@npm:^9.0.0, @hapi/hoek@npm:^9.3.0":
   version: 9.3.0
   resolution: "@hapi/hoek@npm:9.3.0"
@@ -4587,6 +4621,7 @@ __metadata:
     "@eslint/eslintrc": "npm:^3.3.1"
     "@eslint/js": "npm:^9.35.0"
     "@evilmartians/lefthook": "npm:^2.0.4"
+    "@gorhom/bottom-sheet": "npm:^5.2.8"
     "@react-native/babel-preset": "npm:^0.82.1"
     "@react-native/eslint-config": "npm:^0.82.1"
     "@react-navigation/native": "npm:^7.1.6"
@@ -4613,12 +4648,15 @@ __metadata:
     turbo: "npm:^2.5.6"
     typescript: "npm:^5.9.2"
   peerDependencies:
-    "@react-navigation/native": ">=6.0.0"
+    "@gorhom/bottom-sheet": ">=5"
+    "@react-navigation/native": ">=7"
     react: "*"
     react-native: "*"
-    react-native-reanimated: ">=4.0.0"
+    react-native-reanimated: ">=4"
     react-native-worklets: "*"
   peerDependenciesMeta:
+    "@gorhom/bottom-sheet":
+      optional: true
     "@react-navigation/native":
       optional: true
     react-native-reanimated:
@@ -17156,7 +17194,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11, nanoid@npm:^3.3.7, nanoid@npm:^3.3.8":
+"nanoid@npm:^3.3.1, nanoid@npm:^3.3.11, nanoid@npm:^3.3.7, nanoid@npm:^3.3.8":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
   bin:
