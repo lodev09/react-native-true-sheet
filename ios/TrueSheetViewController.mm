@@ -8,6 +8,7 @@
 
 #import "TrueSheetViewController.h"
 #import "TrueSheetContentView.h"
+#import "TrueSheetContainerView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetGrabberView.h"
 #import "utils/GestureUtil.h"
@@ -25,7 +26,6 @@
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
-
   CADisplayLink *_transitioningTimer;
   UIView *_transitionFakeView;
   BOOL _isDragging;
@@ -33,12 +33,16 @@
   BOOL _isTrackingPositionFromLayout;
 
   __weak TrueSheetViewController *_parentSheetController;
+  BOOL _needsAccessibilityFocus;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
 
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
   BOOL _hasPresentedController;
+
+  UIViewController *_presentingControllerForAccessibility;
+  BOOL _presenterAccessibilityHiddenWasSet;
 }
 
 #pragma mark - Initialization
@@ -147,6 +151,130 @@
   return -1;
 }
 
+#pragma mark - Accessibility
+
+- (UIView *)accessibleRootView {
+  return self.presentedView ?: self.view;
+}
+
+- (void)configureGrabberAccessibility:(UIView *)grabber {
+  NSInteger detentCount = self.detents.count;
+  NSInteger currentIndex = self.currentDetentIndex;
+  BOOL hasMultipleDetents = detentCount > 1;
+  BOOL isExpanded = hasMultipleDetents && currentIndex >= 0 && currentIndex == detentCount - 1;
+  BOOL isCollapsed = hasMultipleDetents && currentIndex <= 0;
+
+  grabber.isAccessibilityElement = YES;
+  grabber.accessibilityLabel = @"Sheet handle";
+
+  NSString *hint = nil;
+  if (self.grabber && self.draggable && hasMultipleDetents) {
+    if (isCollapsed) {
+      hint = @"Double tap to expand the sheet.";
+    } else if (isExpanded) {
+      hint = @"Double tap to collapse the sheet.";
+    } else {
+      hint = @"Double tap to move the sheet.";
+    }
+  }
+  grabber.accessibilityHint = hint;
+
+  if (detentCount > 0 && currentIndex >= 0) {
+    grabber.accessibilityValue = [NSString stringWithFormat:@"Position %ld of %ld",
+                                                             (long)(currentIndex + 1),
+                                                             (long)detentCount];
+  } else {
+    grabber.accessibilityValue = nil;
+  }
+
+  UIAccessibilityTraits traits = UIAccessibilityTraitButton;
+#ifdef UIAccessibilityTraitExpanded
+  if (isExpanded) {
+    traits |= UIAccessibilityTraitExpanded;
+  }
+#endif
+  grabber.accessibilityTraits = traits;
+}
+
+- (void)refreshAccessibilityElementsForModalView:(UIView *)modalView container:(TrueSheetContainerView *_Nullable)container {
+  NSMutableArray *accessibilityOrder = [NSMutableArray array];
+
+  // Add custom grabber if visible
+  if (_grabberView && !_grabberView.hidden && _grabberView.alpha > 0.01) {
+    [self configureGrabberAccessibility:_grabberView];
+    [accessibilityOrder addObject:_grabberView];
+  }
+
+  if (container) {
+    [accessibilityOrder addObject:container];
+  }
+
+  modalView.accessibilityElements = accessibilityOrder.count > 0 ? accessibilityOrder : nil;
+}
+
+- (TrueSheetContainerView *)findContainerView:(UIView *)view {
+  if (!view) {
+    return nil;
+  }
+
+  if ([view isKindOfClass:[TrueSheetContainerView class]]) {
+    return (TrueSheetContainerView *)view;
+  }
+
+  for (UIView *subview in view.subviews) {
+    TrueSheetContainerView *found = [self findContainerView:subview];
+    if (found) {
+      return found;
+    }
+  }
+
+  return nil;
+}
+
+
+
+- (void)updatePresentingAccessibilityHidden:(BOOL)hidden {
+  UIViewController *presentingViewController = self.presentingViewController;
+  if (!presentingViewController) {
+    return;
+  }
+
+  UIView *containerView = presentingViewController.view;
+  if (!containerView) {
+    return;
+  }
+
+  if (hidden) {
+    _presentingControllerForAccessibility = presentingViewController;
+    _presenterAccessibilityHiddenWasSet = containerView.accessibilityElementsHidden;
+    containerView.accessibilityElementsHidden = YES;
+  } else {
+    if (_presentingControllerForAccessibility == presentingViewController) {
+      containerView.accessibilityElementsHidden = _presenterAccessibilityHiddenWasSet;
+    }
+    _presentingControllerForAccessibility = nil;
+  }
+}
+
+
+- (void)requestAccessibilityFocusIfNeeded {
+  if (!_needsAccessibilityFocus || !UIAccessibilityIsVoiceOverRunning()) {
+    return;
+  }
+
+  UIView *modalView = self.accessibleRootView;
+  if (!modalView) {
+    return;
+  }
+
+  _needsAccessibilityFocus = NO;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, modalView);
+  });
+}
+
+
+
 #pragma mark - View Lifecycle
 
 - (void)viewDidLoad {
@@ -155,11 +283,17 @@
 
   _grabberView = [[TrueSheetGrabberView alloc] init];
   _grabberView.hidden = YES;
+  _grabberView.isAccessibilityElement = YES;
+  _grabberView.accessibilityTraits |= UIAccessibilityTraitButton;
+  _grabberView.accessibilityLabel = @"Sheet handle";
   [_grabberView addToView:self.view];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+
+  [self updatePresentingAccessibilityHidden:YES];
+  _needsAccessibilityFocus = YES;
 
   if (!_isPresented) {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -195,6 +329,13 @@
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
 
+  [self requestAccessibilityFocusIfNeeded];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self refreshAccessibilityElementsForModalView:[self accessibleRootView]
+                                         container:[self findContainerView:[self accessibleRootView]]];
+  });
+
   if (!_isPresented) {
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
@@ -229,6 +370,9 @@
   [super viewWillDisappear:animated];
 
   if (self.isDismissing) {
+    [self updatePresentingAccessibilityHidden:NO];
+    _needsAccessibilityFocus = NO;
+
     dispatch_async(dispatch_get_main_queue(), ^{
       if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
         [self.delegate viewControllerWillBlur];
@@ -296,6 +440,8 @@
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+
+  [self requestAccessibilityFocusIfNeeded];
 
   if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
     [self.delegate viewControllerDidChangeSize:self.view.frame.size];
@@ -869,7 +1015,8 @@
     [self.view bringSubviewToFront:_grabberView];
   } else {
     sheet.prefersGrabberVisible = showGrabber;
-    _grabberView.hidden = YES;
+    // Keep the custom grabber view for accessibility but it's not styled so it's hidden
+    _grabberView.hidden = !showGrabber;
   }
 }
 
@@ -886,6 +1033,12 @@
       }
     });
   }
+
+  // Refresh accessibility cues (label/value/traits) when detent changes
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self refreshAccessibilityElementsForModalView:[self accessibleRootView]
+                                         container:[self findContainerView:[self accessibleRootView]]];
+  });
 }
 
 #pragma mark - RNSDismissibleModalProtocol
