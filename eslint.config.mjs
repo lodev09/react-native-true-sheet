@@ -34,6 +34,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: ['node_modules/', 'lib/', 'docs/', 'jest.setup.js'],
+    ignores: ['node_modules/', 'lib/', 'docs/', 'jest.setup.js', 'expo-example/.expo/'],
   },
 ]);

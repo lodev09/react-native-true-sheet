@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-example",
-    "slug": "expo-example",
+    "name": "TrueSheetExpoExample",
+    "slug": "TrueSheetExpoExample",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -35,7 +35,8 @@
       "expo-router"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactNativeHostedTabNav": true
     }
   }
 }
