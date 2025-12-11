@@ -6,8 +6,8 @@ import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
-import { Button, DemoContent } from '../components';
-import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
+import { Button, DemoContent } from '@example/shared/components';
+import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetStackParamList } from '../types';
 
 const Sheet = createTrueSheetNavigator<SheetStackParamList>();

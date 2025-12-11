@@ -1,7 +1,7 @@
 import { withLayoutContext } from 'expo-router';
 import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
 
-import { DARK } from '../../src/utils';
+import { DARK } from '@example/shared/utils';
 
 const { Navigator } = createTrueSheetNavigator();
 

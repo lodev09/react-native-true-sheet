@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
 
-import { Button, DemoContent } from '../../src/components';
-import { GAP, LIGHT_GRAY, SPACING } from '../../src/utils';
+import { Button, DemoContent } from '@example/shared/components';
+import { GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 
 export default function DetailsSheet() {
   const navigation = useTrueSheetNavigation();

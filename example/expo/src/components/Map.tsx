@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import MapView, { type MapViewProps } from 'react-native-maps';
 
-import { BLUE } from '../utils';
+import { BLUE } from '@example/shared/utils';
 
 export const Map = (props: MapViewProps) => {
   const { style, ...rest } = props;

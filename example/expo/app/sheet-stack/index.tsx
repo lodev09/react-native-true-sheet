@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
 
-import { Button } from '../../src/components';
-import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../../src/utils';
+import { Button } from '@example/shared/components';
+import { BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 
 export default function SheetHomeScreen() {
   const navigation = useTrueSheetNavigation();

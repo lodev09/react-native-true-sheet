@@ -8,8 +8,8 @@ import {
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, DemoContent } from '.';
-import { BLUE, DARK_BLUE, GAP, SPACING } from '../utils';
+import { Button, DemoContent } from '@example/shared/components';
+import { BLUE, DARK_BLUE, GAP, SPACING } from '@example/shared/utils';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
