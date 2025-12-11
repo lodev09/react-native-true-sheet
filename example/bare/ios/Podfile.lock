@@ -2845,7 +2845,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
-  - RNTrueSheet (from `../..`)
+  - RNTrueSheet (from `../../..`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (~> 0.7.1)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -3011,7 +3011,7 @@ EXTERNAL SOURCES:
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNTrueSheet:
-    :path: "../.."
+    :path: "../../.."
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
   Yoga:
