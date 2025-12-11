@@ -157,13 +157,15 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/bare/node_modules",
       "<rootDir>/example/expo/node_modules",
+      "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
       "<rootDir>/docs/build"
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "<rootDir>/src/__mocks__/"
+      "<rootDir>/src/__mocks__/",
+      "<rootDir>/example/"
     ]
   },
   "commitlint": {
