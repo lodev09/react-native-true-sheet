@@ -114,6 +114,22 @@ Controls how the bottom safe area inset affects detent heights.
 | `"automatic"` | System handles insets automatically. This is the default behavior. |
 | `"never"` | TrueSheet will keep the layout as-is for precise sizing. |
 
+## `StackBehavior`
+
+Defines the stack behavior when a modal is presented while another is visible. Web only.
+
+```tsx
+<TrueSheet stackBehavior="push">
+  <View />
+</TrueSheet>
+```
+
+| Value | Description |
+| - | - |
+| `"push"` | Mount the modal on top of the current one. |
+| `"switch"` | Minimize the current modal then mount the new one. This is the default behavior. |
+| `"replace"` | Dismiss the current modal then mount the new one. |
+
 ## `DetentInfoEventPayload`
 
 `Object` that comes with most sheet events.

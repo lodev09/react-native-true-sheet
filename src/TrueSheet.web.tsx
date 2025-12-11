@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -90,10 +91,13 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     onDidFocus,
     onWillBlur,
     onDidBlur,
+    stackBehavior = 'switch',
     style,
   } = props;
 
   const { height: windowHeight } = useWindowDimensions();
+  const defaultName = useId();
+  const sheetName = name ?? defaultName;
   const bottomSheetContext = useContext(BottomSheetContext);
   const modalRef = useRef<BottomSheetModal>(null);
   const initialDetentIndexRef = useRef(initialDetentIndex);
@@ -347,15 +351,11 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 
   // Register with context provider
   useEffect(() => {
-    if (name) {
-      bottomSheetContext?.register(name, sheetMethodsRef);
-    }
+    bottomSheetContext?.register(sheetName, sheetMethodsRef);
     return () => {
-      if (name) {
-        bottomSheetContext?.unregister(name);
-      }
+      bottomSheetContext?.unregister(sheetName);
     };
-  }, [name]);
+  }, [sheetName]);
 
   // Auto-present on mount if initialDetentIndex is set
   useEffect(() => {
@@ -375,7 +375,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   return (
     <BottomSheetModal
       ref={modalRef}
-      name={name}
+      name={sheetName}
       style={[
         styles.root,
         { backgroundColor, borderTopLeftRadius: cornerRadius, borderTopRightRadius: cornerRadius },
@@ -394,7 +394,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
       maxDynamicContentSize={maxHeight}
       snapPoints={snapPoints.length > 0 ? snapPoints : undefined}
       onDismiss={handleDismiss}
-      stackBehavior="switch"
+      stackBehavior={stackBehavior}
       backdropComponent={backdropComponent}
       backgroundComponent={null}
       footerComponent={footerComponent}
