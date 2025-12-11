@@ -4,3 +4,4 @@ export * from './DemoContent';
 export * from './Button';
 export * from './Spacer';
 export * from './Input';
+export * from './Map';

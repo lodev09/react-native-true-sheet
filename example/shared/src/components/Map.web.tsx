@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
-import { BLUE } from '@example/shared/utils';
+import { BLUE } from '../utils';
 
 export const Map = (props: ViewProps) => {
   const { style, ...rest } = props;
