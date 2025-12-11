@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ModalScreen, TestScreen } from '../screens';
+import { ModalScreen, TestScreen } from '@example/shared/screens';
 import type { ModalStackParamList } from '../types';
 
 const ModalStack = createNativeStackNavigator<ModalStackParamList>();

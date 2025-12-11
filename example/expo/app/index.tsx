@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import { MapScreen } from '../src/screens';
+import { MapScreen } from '@example/shared/screens';
 import { Map } from '../src/components';
 
 export default function Index() {

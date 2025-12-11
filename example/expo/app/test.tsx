@@ -1,4 +1,4 @@
-import { TestScreen } from '../src/screens';
+import { TestScreen } from '@example/shared/screens';
 
 export default function Test() {
   return <TestScreen />;

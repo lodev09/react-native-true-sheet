@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import { StandardScreen } from '../src/screens';
+import { StandardScreen } from '@example/shared/screens';
 
 export default function Standard() {
   const router = useRouter();

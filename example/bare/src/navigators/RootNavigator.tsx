@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, StandardScreen, TestScreen } from '../screens';
+import { MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
 import { Map } from '../components';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
