@@ -3459,7 +3459,7 @@ __metadata:
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
     "@example/shared": "npm:*"
-    "@lodev09/react-native-true-sheet": "npm:*"
+    "@lodev09/react-native-true-sheet": "workspace:*"
     "@react-native-community/cli": "npm:20.0.0"
     "@react-native-community/cli-platform-android": "npm:20.0.0"
     "@react-native-community/cli-platform-ios": "npm:20.0.0"
@@ -3489,7 +3489,7 @@ __metadata:
     "@example/shared": "npm:*"
     "@expo/vector-icons": "npm:^15.0.3"
     "@gorhom/bottom-sheet": "npm:^5.2.8"
-    "@lodev09/react-native-true-sheet": "npm:*"
+    "@lodev09/react-native-true-sheet": "workspace:*"
     "@react-navigation/native": "npm:^7.1.8"
     "@types/react": "npm:~19.1.0"
     "@types/react-native-maps": "npm:^0.24.2"
@@ -3500,6 +3500,7 @@ __metadata:
     expo-router: "npm:~6.0.17"
     expo-splash-screen: "npm:~31.0.12"
     expo-status-bar: "npm:~3.0.9"
+    expo-system-ui: "npm:~6.0.9"
     expo-web-browser: "npm:~15.0.10"
     react: "npm:19.1.0"
     react-dom: "npm:19.1.0"
@@ -4746,27 +4747,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lodev09/react-native-true-sheet@npm:*":
-  version: 3.2.2
-  resolution: "@lodev09/react-native-true-sheet@npm:3.2.2"
-  peerDependencies:
-    "@react-navigation/native": ">=6.0.0"
-    react: "*"
-    react-native: "*"
-    react-native-reanimated: ">=4.0.0"
-    react-native-worklets: "*"
-  peerDependenciesMeta:
-    "@react-navigation/native":
-      optional: true
-    react-native-reanimated:
-      optional: true
-    react-native-worklets:
-      optional: true
-  checksum: 10c0/2b8fa59c04bf4a4a5e5f127e783f2836fcdcbc56af80b732d4a15374236327c0badfbcd10ba72aa53fd700eef0e7ed5ea278f2a2ab850b7d0430ebf8f0a08bb8
-  languageName: node
-  linkType: hard
-
-"@lodev09/react-native-true-sheet@workspace:.":
+"@lodev09/react-native-true-sheet@workspace:*, @lodev09/react-native-true-sheet@workspace:.":
   version: 0.0.0-use.local
   resolution: "@lodev09/react-native-true-sheet@workspace:."
   dependencies:
@@ -11691,6 +11672,23 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/b35ed996a3da45a657075447bbf687dad4e7d5321129182e58737ea0fa4aeb8bb145bbe20967abd6823587a738e4c6fd62c41d18d8c11094ff926e2079c02fc2
+  languageName: node
+  linkType: hard
+
+"expo-system-ui@npm:~6.0.9":
+  version: 6.0.9
+  resolution: "expo-system-ui@npm:6.0.9"
+  dependencies:
+    "@react-native/normalize-colors": "npm:0.81.5"
+    debug: "npm:^4.3.2"
+  peerDependencies:
+    expo: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10c0/316882a2fd55c63d46d1c05b15b13764c001c10cd283ae96b7e2dce735a31f21c984fd5a4c01b6bb5fe8588c4acd27709c7b31a57fcd45b6b9b0dac1be9e86c6
   languageName: node
   linkType: hard
 

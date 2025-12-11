@@ -13,62 +13,34 @@ step() {
   echo -e "\n${BLUE}▶${NC} ${BOLD}$1${NC}"
 }
 
-section() {
-  echo -e "\n${CYAN}━━━ $1 ━━━${NC}"
-}
-
 success() {
   echo -e "${GREEN}✓${NC} $1"
 }
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-section "DEPENDENCIES"
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 step "Installing dependencies"
-yarn && success "Dependencies installed"
+yarn >/dev/null && success "Dependencies installed"
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-section "CLEANUP"
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-step "Cleaning Watchman"
-watchman watch-del ./ ; watchman watch-project ./
+step "Cleaning watchman"
+watchman watch-del-all >/dev/null || true
 rm -rf $TMPDIR/metro-*
 success "Watchman cache cleared"
 
-step "Cleaning up Simulator cache"
+step "Cleaning up simulator cache"
 rm -rf ~/Library/Developer/CoreSimulator/Caches
 success "Simulator cache cleared"
 
-step "Removing temp directories"
-del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build
-success "Temp directories removed"
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-section "BARE EXAMPLE"
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-step "Cleaning Android"
+step "Cleaning bare example"
+del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build >/dev/null || true
 cd example/bare/android
-./gradlew clean && success "Android cleaned"
+./gradlew clean -q
 cd ../../..
+npx pod-install example/bare >/dev/null
+success "Bare example cleaned"
 
-step "Installing pods"
-npx pod-install example/bare && success "Pods installed"
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-section "EXPO EXAMPLE"
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-step "Prebuilding Expo"
-yarn expo prebuild:clean && success "Expo prebuild complete"
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-section "BUILD"
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+step "Prebuilding expo example"
+yarn expo prebuild:clean --no-install >/dev/null && success "Expo prebuild complete"
 
 step "Building with bob"
-bob build && success "Build complete"
+bob build >/dev/null && success "Build complete"
 
 echo -e "\n${GREEN}${BOLD}All done!${NC}"
