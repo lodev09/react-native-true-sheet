@@ -57,15 +57,10 @@ step() {
   return $exit_code
 }
 
-step "Installing dependencies" "Dependencies installed" yarn
-
 clean_watchman() {
   watchman watch-del-all 2>/dev/null || true
   rm -rf $TMPDIR/metro-*
 }
-step "Cleaning watchman" "Watchman cache cleared" clean_watchman
-
-step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 
 clean_bare() {
   del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build 2>/dev/null || true
@@ -74,10 +69,12 @@ clean_bare() {
   cd ../../..
   npx pod-install example/bare
 }
+
+step "Installing dependencies" "Dependencies installed" yarn
+step "Cleaning watchman" "Watchman cache cleared" clean_watchman
+step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 step "Cleaning bare example" "Bare example cleaned" clean_bare
-
 step "Prebuilding expo example" "Expo prebuild complete" yarn expo prebuild:clean --no-install
-
 step "Building with bob" "Build complete" bob build
 
-echo -e "\n${GREEN}${BOLD}All done!${NC}"
+echo -e "${GREEN}${BOLD}All done!${NC}"
