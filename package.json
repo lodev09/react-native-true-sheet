@@ -52,8 +52,8 @@
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objclint.sh && scripts/ktlint.sh",
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
-    "release": "release-it --only-version && npm publish",
-    "release:beta": "yarn release --preRelease=beta && npm publish"
+    "release": "release-it",
+    "release:beta": "yarn release --preRelease=beta"
   },
   "keywords": [
     "react-native",
