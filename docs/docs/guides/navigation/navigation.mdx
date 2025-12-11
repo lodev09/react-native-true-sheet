@@ -161,33 +161,42 @@ When `reanimated: true` is set, `react-native-reanimated` must be installed and 
 ```
 app/
 ├── _layout.tsx          # TrueSheet navigator
-├── (main)/              # Base content
-│   ├── _layout.tsx      # Stack or Tabs
-│   └── index.tsx
+├── index.tsx            # Base content
 └── details.tsx          # Sheet screen
 ```
 
 ```tsx
 // app/_layout.tsx
 import { withLayoutContext } from 'expo-router';
-import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
+import {
+  createTrueSheetNavigator,
+  type TrueSheetNavigationEventMap,
+  type TrueSheetNavigationOptions,
+  type TrueSheetNavigationState,
+} from '@lodev09/react-native-true-sheet/navigation';
+import type { ParamListBase } from '@react-navigation/native';
 
 const { Navigator } = createTrueSheetNavigator();
-export default withLayoutContext(Navigator);
-```
 
-```tsx
-// app/details.tsx
-export const unstable_settings = {
-  options: { detents: ['auto', 1], cornerRadius: 16 },
-};
+const Sheet = withLayoutContext<
+  TrueSheetNavigationOptions,
+  typeof Navigator,
+  TrueSheetNavigationState<ParamListBase>,
+  TrueSheetNavigationEventMap
+>(Navigator);
 
-export default function DetailsSheet() {
-  const navigation = useTrueSheetNavigation();
+export default function SheetLayout() {
   return (
-    <View>
-      <Button title="Close" onPress={() => navigation.goBack()} />
-    </View>
+    <Sheet>
+      <Sheet.Screen name="index" />
+      <Sheet.Screen
+        name="details"
+        options={{
+          detents: ['auto', 1],
+          cornerRadius: 16,
+        }}
+      />
+    </Sheet>
   );
 }
 ```

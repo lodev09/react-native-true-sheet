@@ -1,12 +1,23 @@
 import { withLayoutContext } from 'expo-router';
-import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation';
+import {
+  createTrueSheetNavigator,
+  type TrueSheetNavigationEventMap,
+  type TrueSheetNavigationOptions,
+  type TrueSheetNavigationState,
+} from '@lodev09/react-native-true-sheet/navigation';
 
 import { DARK } from '@example/shared/utils';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import type { ParamListBase } from '@react-navigation/native';
 
 const { Navigator } = createTrueSheetNavigator();
 
-export const Sheet = withLayoutContext(Navigator);
+export const Sheet = withLayoutContext<
+  TrueSheetNavigationOptions,
+  typeof Navigator,
+  TrueSheetNavigationState<ParamListBase>,
+  TrueSheetNavigationEventMap
+>(Navigator);
 
 export const unstable_settings = {
   initialRouteName: 'index',
