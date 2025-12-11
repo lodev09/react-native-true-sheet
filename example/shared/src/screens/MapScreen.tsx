@@ -21,6 +21,8 @@ import {
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
 import { Button, DemoContent, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
@@ -41,7 +43,7 @@ export interface MapScreenProps {
   onNavigateToSheetStack?: () => void;
 }
 
-export const MapScreen = ({
+const MapScreenInner = ({
   MapComponent,
   onNavigateToModal,
   onNavigateToSheetStack,
@@ -50,7 +52,7 @@ export const MapScreen = ({
   const { animatedPosition } = useReanimatedTrueSheet();
 
   const sheetRef = useRef<TrueSheet>(null);
-  const minHeight = HEADER_HEIGHT + Platform.select({ android: SPACING, default: 0 });
+  const minHeight = HEADER_HEIGHT + Platform.select({ ios: 0, default: SPACING });
 
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
@@ -98,7 +100,7 @@ export const MapScreen = ({
         dismissible={false}
         edgeToEdgeFullScreen
         style={styles.content}
-        backgroundColor={Platform.select({ android: DARK })}
+        backgroundColor={Platform.select({ ios: undefined, default: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
@@ -200,6 +202,16 @@ export const MapScreen = ({
   );
 };
 
+export const MapScreen = (props: MapScreenProps) => {
+  return (
+    <TrueSheetProvider>
+      <ReanimatedTrueSheetProvider>
+        <MapScreenInner {...props} />
+      </ReanimatedTrueSheetProvider>
+    </TrueSheetProvider>
+  );
+};
+
 const styles = StyleSheet.create({
   floatingControl: {
     position: 'absolute',
@@ -208,7 +220,7 @@ const styles = StyleSheet.create({
     height: SPACING * 3,
     width: SPACING * 3,
     borderRadius: (SPACING * 3) / 2,
-    backgroundColor: Platform.select({ ios: 'rgba(0, 0, 0, 0.3)', android: DARK }),
+    backgroundColor: Platform.select({ ios: 'rgba(0, 0, 0, 0.3)', default: DARK }),
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: Platform.select({ ios: StyleSheet.hairlineWidth }),
     elevation: 4,
@@ -218,9 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  map: StyleSheet.absoluteFill,
   content: {
     padding: SPACING,
     gap: GAP,

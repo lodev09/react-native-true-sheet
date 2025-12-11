@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
-import { DARK_GRAY } from '../utils';
+import { LIGHT_GRAY } from '../utils';
 
 export const Map = (props: ViewProps) => {
   const { style, ...rest } = props;
@@ -11,6 +11,6 @@ export const Map = (props: ViewProps) => {
 const styles = StyleSheet.create({
   map: {
     flex: 1,
-    backgroundColor: DARK_GRAY,
+    backgroundColor: LIGHT_GRAY,
   },
 });

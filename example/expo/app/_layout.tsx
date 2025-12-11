@@ -6,7 +6,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
-import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 import 'react-native-reanimated';
 
 export {
@@ -51,21 +50,19 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <TrueSheetProvider>
-        <ReanimatedTrueSheetProvider>
-          <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
-            <Stack.Screen name="test" options={{ title: 'Test' }} />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: 'fullScreenModal', headerShown: false }}
-            />
-            <Stack.Screen
-              name="(sheet)"
-              options={{ presentation: 'fullScreenModal', headerShown: false }}
-            />
-          </Stack>
-        </ReanimatedTrueSheetProvider>
+        <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
+          <Stack.Screen name="test" options={{ title: 'Test' }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: 'fullScreenModal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="sheet"
+            options={{ presentation: 'fullScreenModal', headerShown: false }}
+          />
+        </Stack>
       </TrueSheetProvider>
     </ThemeProvider>
   );

@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
-import { BORDER_RADIUS, GRAY, INPUT_HEIGHT, SPACING } from '../utils';
+import { BORDER_RADIUS, LIGHT_GRAY, INPUT_HEIGHT, SPACING } from '../utils';
 
 export const Input = () => {
   return (
@@ -8,7 +8,7 @@ export const Input = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter some text..."
-        placeholderTextColor={GRAY}
+        placeholderTextColor={LIGHT_GRAY}
       />
     </View>
   );
@@ -19,11 +19,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: SPACING,
     height: INPUT_HEIGHT,
-    borderRadius: Platform.select({ ios: BORDER_RADIUS * 6, android: BORDER_RADIUS * 3 }),
+    borderRadius: Platform.select({ ios: BORDER_RADIUS * 6, default: BORDER_RADIUS * 3 }),
     justifyContent: 'center',
   },
   input: {
     fontSize: 16,
     height: INPUT_HEIGHT,
+    color: 'white',
   },
 });

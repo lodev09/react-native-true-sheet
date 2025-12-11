@@ -15,8 +15,8 @@ export default function SheetHomeScreen() {
           Using createTrueSheetNavigator with expo-router's withLayoutContext.
         </Text>
       </View>
-      <Button text="Open Details Sheet" onPress={() => router.push('/details')} />
-      <Button text="Open Settings Sheet" onPress={() => router.push('/settings')} />
+      <Button text="Open Details Sheet" onPress={() => router.push('/sheet/details')} />
+      <Button text="Open Settings Sheet" onPress={() => router.push('/sheet/settings')} />
       <Button text="Navigate to Test" onPress={() => router.push('/test')} />
       <Button text="Go Back" onPress={() => router.back()} />
     </View>
