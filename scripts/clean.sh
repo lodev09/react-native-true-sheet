@@ -21,9 +21,9 @@ step "Installing dependencies"
 yarn && success "Dependencies installed"
 
 step "Cleaning Android"
-cd example/android
+cd example/bare/android
 ./gradlew clean && success "Android cleaned"
-cd ../..
+cd ../../..
 
 step "Cleaning Watchman"
 watchman watch-del ./ ; watchman watch-project ./
@@ -36,11 +36,11 @@ rm -rf ~/Library/Developer/CoreSimulator/Caches
 success "Simulator cache cleared"
 
 step "Removing temp directories"
-del-cli android/build example/android/build example/android/app/build example/ios/build
+del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build
 success "Temp directories removed"
 
 step "Installing pods"
-npx pod-install example && success "Pods installed"
+npx pod-install example/bare && success "Pods installed"
 
 step "Building with bob"
 bob build && success "Build complete"
