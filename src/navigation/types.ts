@@ -142,6 +142,7 @@ export type TrueSheetNavigationOptions = Pick<
   | 'pageSizing'
   | 'header'
   | 'footer'
+  | 'insetAdjustment'
   | 'stackBehavior'
 > & {
   /**
