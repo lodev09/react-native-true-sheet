@@ -11,10 +11,10 @@ export const Button = (props: ButtonProps) => {
   const { text, style, loading, ...rest } = props;
   return (
     <Pressable
-      style={({ pressed, hovered }) => [
+      style={(state) => [
         styles.button,
-        pressed && styles.pressed,
-        typeof style === 'function' ? style({ pressed, hovered }) : style,
+        state.pressed && styles.pressed,
+        typeof style === 'function' ? style(state) : style,
       ]}
       {...rest}
     >

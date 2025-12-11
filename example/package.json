@@ -11,8 +11,10 @@
     "doctor": "react-native doctor"
   },
   "dependencies": {
+    "@lodev09/react-native-true-sheet": "*",
     "@react-navigation/native": "^7.1.21",
     "@react-navigation/native-stack": "^7.7.0",
+    "@truesheet/example-shared": "*",
     "react": "19.1.1",
     "react-native": "0.82.1",
     "react-native-gesture-handler": "^2.29.1",

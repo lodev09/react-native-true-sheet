@@ -7,15 +7,16 @@ import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { Spacer } from '../Spacer';
-import { useAppNavigation } from '../../hooks';
 
-interface BasicSheetProps extends TrueSheetProps {}
+interface BasicSheetProps extends TrueSheetProps {
+  onNavigateToModal?: () => void;
+}
 
 export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet>) => {
+  const { onNavigateToModal, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
-  const navigation = useAppNavigation();
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -28,16 +29,12 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   };
 
   const presentChild = async () => {
-    // Note: no need to dismiss this sheet 😎
     await childSheet.current?.present();
-
     console.log('Child sheet presented!');
   };
 
   const presentPromptSheet = async () => {
-    // Note: we need to dismiss this sheet first
     await sheetRef.current?.dismiss();
-
     await TrueSheet.present('prompt-sheet');
   };
 
@@ -92,11 +89,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         )
       }
       onMount={() => {
-        // sheetRef.current?.present(1)
         console.log('BasicSheet is ready!');
       }}
       footer={<Footer />}
-      {...props}
+      {...rest}
     >
       {Array.from({ length: contentCount }, (_, i) => (
         <DemoContent key={i} color={DARK_BLUE} />
@@ -110,7 +106,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Spacer />
       <Button text="Present Child Sheet" onPress={presentChild} />
       <Button text="Present PromptSheet" onPress={presentPromptSheet} />
-      <Button text="Navigate to Modal" onPress={() => navigation.navigate('ModalStack')} />
+      {onNavigateToModal && <Button text="Navigate to Modal" onPress={onNavigateToModal} />}
       <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
 

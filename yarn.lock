@@ -6465,6 +6465,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@truesheet/example-shared@npm:*, @truesheet/example-shared@workspace:example-shared":
+  version: 0.0.0-use.local
+  resolution: "@truesheet/example-shared@workspace:example-shared"
+  dependencies:
+    "@types/react": "npm:19.1.1"
+    react-native-gesture-handler: "npm:^2.29.1"
+    react-native-reanimated: "npm:^4.2.0"
+    react-native-safe-area-context: "npm:^5.5.2"
+    typescript: "npm:^5.9.2"
+  peerDependencies:
+    "@lodev09/react-native-true-sheet": "*"
+    react: "*"
+    react-native: "*"
+    react-native-gesture-handler: "*"
+    react-native-reanimated: "*"
+    react-native-safe-area-context: "*"
+  languageName: unknown
+  linkType: soft
+
 "@trysound/sax@npm:0.2.0":
   version: 0.2.0
   resolution: "@trysound/sax@npm:0.2.0"
@@ -11450,6 +11469,7 @@ __metadata:
     "@gorhom/bottom-sheet": "npm:^5.2.8"
     "@lodev09/react-native-true-sheet": "npm:*"
     "@react-navigation/native": "npm:^7.1.8"
+    "@truesheet/example-shared": "npm:*"
     "@types/react": "npm:~19.1.0"
     "@types/react-native-maps": "npm:^0.24.2"
     expo: "npm:~54.0.27"
@@ -19720,6 +19740,7 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
+    "@lodev09/react-native-true-sheet": "npm:*"
     "@react-native-community/cli": "npm:20.0.0"
     "@react-native-community/cli-platform-android": "npm:20.0.0"
     "@react-native-community/cli-platform-ios": "npm:20.0.0"
@@ -19728,6 +19749,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.82.1"
     "@react-navigation/native": "npm:^7.1.21"
     "@react-navigation/native-stack": "npm:^7.7.0"
+    "@truesheet/example-shared": "npm:*"
     "@types/react": "npm:19.1.1"
     react: "npm:19.1.1"
     react-native: "npm:0.82.1"

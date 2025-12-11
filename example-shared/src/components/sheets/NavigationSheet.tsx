@@ -5,24 +5,22 @@ import type { TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { Button } from '../Button';
 import { GAP, SPACING } from '../../utils';
-import { useAppNavigation } from '../../hooks';
 
-export const NavigationSheet = forwardRef<TrueSheet, TrueSheetProps>((props, ref) => {
-  const navigation = useAppNavigation();
+interface NavigationSheetProps extends TrueSheetProps {
+  onOpenModal?: () => void;
+}
 
-  const handleOpenModal = () => {
-    navigation.navigate('ModalStack');
-  };
+export const NavigationSheet = forwardRef<TrueSheet, NavigationSheetProps>((props, ref) => {
+  const { onOpenModal, ...rest } = props;
 
   return (
-    <TrueSheet ref={ref} detents={['auto']} dimmed={false} {...props}>
+    <TrueSheet ref={ref} detents={['auto']} dimmed={false} {...rest}>
       <View style={styles.container}>
         <Text style={styles.title}>Navigation Sheet</Text>
         <Text style={styles.description}>
-          This sheet demonstrates opening a React Navigation fullScreenModal from within a
-          TrueSheet.
+          This sheet demonstrates opening a fullScreenModal from within a TrueSheet.
         </Text>
-        <Button text="Open Full Screen Modal" onPress={handleOpenModal} />
+        {onOpenModal && <Button text="Open Full Screen Modal" onPress={onOpenModal} />}
       </View>
     </TrueSheet>
   );
