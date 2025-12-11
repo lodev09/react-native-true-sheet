@@ -1,5 +1,5 @@
 {
-  "name": "react-native-true-sheet-example",
+  "name": "@truesheet/bare-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {

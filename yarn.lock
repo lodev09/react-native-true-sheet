@@ -6465,9 +6465,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@truesheet/example-shared@npm:*, @truesheet/example-shared@workspace:example-shared":
+"@truesheet/bare-example@workspace:examples/bare":
   version: 0.0.0-use.local
-  resolution: "@truesheet/example-shared@workspace:example-shared"
+  resolution: "@truesheet/bare-example@workspace:examples/bare"
+  dependencies:
+    "@babel/core": "npm:^7.25.2"
+    "@babel/preset-env": "npm:^7.25.3"
+    "@babel/runtime": "npm:^7.25.0"
+    "@lodev09/react-native-true-sheet": "npm:*"
+    "@react-native-community/cli": "npm:20.0.0"
+    "@react-native-community/cli-platform-android": "npm:20.0.0"
+    "@react-native-community/cli-platform-ios": "npm:20.0.0"
+    "@react-native/babel-preset": "npm:0.82.1"
+    "@react-native/metro-config": "npm:0.82.1"
+    "@react-native/typescript-config": "npm:0.82.1"
+    "@react-navigation/native": "npm:^7.1.21"
+    "@react-navigation/native-stack": "npm:^7.7.0"
+    "@truesheet/example-shared": "npm:*"
+    "@types/react": "npm:19.1.1"
+    react: "npm:19.1.1"
+    react-native: "npm:0.82.1"
+    react-native-builder-bob: "npm:^0.40.15"
+    react-native-gesture-handler: "npm:^2.29.1"
+    react-native-maps: "npm:^1.26.18"
+    react-native-monorepo-config: "npm:^0.1.9"
+    react-native-reanimated: "npm:^4.1.5"
+    react-native-safe-area-context: "npm:^5.5.2"
+    react-native-screens: "patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch"
+    react-native-worklets: "npm:^0.6.1"
+  languageName: unknown
+  linkType: soft
+
+"@truesheet/example-shared@npm:*, @truesheet/example-shared@workspace:examples/shared":
+  version: 0.0.0-use.local
+  resolution: "@truesheet/example-shared@workspace:examples/shared"
   dependencies:
     "@types/react": "npm:19.1.1"
     react-native-gesture-handler: "npm:^2.29.1"
@@ -6481,6 +6512,41 @@ __metadata:
     react-native-gesture-handler: "*"
     react-native-reanimated: "*"
     react-native-safe-area-context: "*"
+  languageName: unknown
+  linkType: soft
+
+"@truesheet/expo-example@workspace:examples/expo":
+  version: 0.0.0-use.local
+  resolution: "@truesheet/expo-example@workspace:examples/expo"
+  dependencies:
+    "@expo/vector-icons": "npm:^15.0.3"
+    "@gorhom/bottom-sheet": "npm:^5.2.8"
+    "@lodev09/react-native-true-sheet": "npm:*"
+    "@react-navigation/native": "npm:^7.1.8"
+    "@truesheet/example-shared": "npm:*"
+    "@types/react": "npm:~19.1.0"
+    "@types/react-native-maps": "npm:^0.24.2"
+    expo: "npm:~54.0.27"
+    expo-constants: "npm:~18.0.11"
+    expo-font: "npm:~14.0.10"
+    expo-linking: "npm:~8.0.10"
+    expo-router: "npm:~6.0.17"
+    expo-splash-screen: "npm:~31.0.12"
+    expo-status-bar: "npm:~3.0.9"
+    expo-web-browser: "npm:~15.0.10"
+    react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
+    react-native: "npm:0.81.5"
+    react-native-gesture-handler: "npm:~2.28.0"
+    react-native-maps: "npm:^1.26.20"
+    react-native-monorepo-config: "npm:^0.1.9"
+    react-native-reanimated: "npm:^4.2.0"
+    react-native-safe-area-context: "npm:~5.6.0"
+    react-native-screens: "npm:~4.16.0"
+    react-native-web: "npm:~0.21.0"
+    react-native-worklets: "npm:^0.7.0"
+    react-test-renderer: "npm:19.1.0"
+    typescript: "npm:~5.9.2"
   languageName: unknown
   linkType: soft
 
@@ -11460,41 +11526,6 @@ __metadata:
   checksum: 10c0/3d76c1aa2419cad2e064cd59f18d0af8f70e97a3e5edf8283dc530d5dbf61860625f559af2b0b5fa206a99564f79e40e177df771ccc09cceba3e3b5504c93812
   languageName: node
   linkType: hard
-
-"expo-example@workspace:expo-example":
-  version: 0.0.0-use.local
-  resolution: "expo-example@workspace:expo-example"
-  dependencies:
-    "@expo/vector-icons": "npm:^15.0.3"
-    "@gorhom/bottom-sheet": "npm:^5.2.8"
-    "@lodev09/react-native-true-sheet": "npm:*"
-    "@react-navigation/native": "npm:^7.1.8"
-    "@truesheet/example-shared": "npm:*"
-    "@types/react": "npm:~19.1.0"
-    "@types/react-native-maps": "npm:^0.24.2"
-    expo: "npm:~54.0.27"
-    expo-constants: "npm:~18.0.11"
-    expo-font: "npm:~14.0.10"
-    expo-linking: "npm:~8.0.10"
-    expo-router: "npm:~6.0.17"
-    expo-splash-screen: "npm:~31.0.12"
-    expo-status-bar: "npm:~3.0.9"
-    expo-web-browser: "npm:~15.0.10"
-    react: "npm:19.1.0"
-    react-dom: "npm:19.1.0"
-    react-native: "npm:0.81.5"
-    react-native-gesture-handler: "npm:~2.28.0"
-    react-native-maps: "npm:^1.26.20"
-    react-native-monorepo-config: "npm:^0.1.9"
-    react-native-reanimated: "npm:^4.2.0"
-    react-native-safe-area-context: "npm:~5.6.0"
-    react-native-screens: "npm:~4.16.0"
-    react-native-web: "npm:~0.21.0"
-    react-native-worklets: "npm:^0.7.0"
-    react-test-renderer: "npm:19.1.0"
-    typescript: "npm:~5.9.2"
-  languageName: unknown
-  linkType: soft
 
 "expo-file-system@npm:~19.0.20":
   version: 19.0.20
@@ -19732,37 +19763,6 @@ __metadata:
   checksum: 10c0/9947fd60699d3c1de2c278279fb4504acf912ffb638bafdedd88063b4483a7bae225548f4b43eaffb27e019e7c88ed649b40edab6375d76010a1deb98554dbbd
   languageName: node
   linkType: hard
-
-"react-native-true-sheet-example@workspace:example":
-  version: 0.0.0-use.local
-  resolution: "react-native-true-sheet-example@workspace:example"
-  dependencies:
-    "@babel/core": "npm:^7.25.2"
-    "@babel/preset-env": "npm:^7.25.3"
-    "@babel/runtime": "npm:^7.25.0"
-    "@lodev09/react-native-true-sheet": "npm:*"
-    "@react-native-community/cli": "npm:20.0.0"
-    "@react-native-community/cli-platform-android": "npm:20.0.0"
-    "@react-native-community/cli-platform-ios": "npm:20.0.0"
-    "@react-native/babel-preset": "npm:0.82.1"
-    "@react-native/metro-config": "npm:0.82.1"
-    "@react-native/typescript-config": "npm:0.82.1"
-    "@react-navigation/native": "npm:^7.1.21"
-    "@react-navigation/native-stack": "npm:^7.7.0"
-    "@truesheet/example-shared": "npm:*"
-    "@types/react": "npm:19.1.1"
-    react: "npm:19.1.1"
-    react-native: "npm:0.82.1"
-    react-native-builder-bob: "npm:^0.40.15"
-    react-native-gesture-handler: "npm:^2.29.1"
-    react-native-maps: "npm:^1.26.18"
-    react-native-monorepo-config: "npm:^0.1.9"
-    react-native-reanimated: "npm:^4.1.5"
-    react-native-safe-area-context: "npm:^5.5.2"
-    react-native-screens: "patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch"
-    react-native-worklets: "npm:^0.6.1"
-  languageName: unknown
-  linkType: soft
 
 "react-native-web@npm:~0.21.0":
   version: 0.21.2
