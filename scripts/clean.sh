@@ -18,31 +18,29 @@ success() {
 }
 
 step "Installing dependencies"
-yarn && success "Dependencies installed"
+yarn >/dev/null && success "Dependencies installed"
 
-step "Cleaning Android"
-cd example/android
-./gradlew clean && success "Android cleaned"
-cd ../..
-
-step "Cleaning Watchman"
-watchman watch-del ./ ; watchman watch-project ./
+step "Cleaning watchman"
+watchman watch-del-all >/dev/null || true
 rm -rf $TMPDIR/metro-*
 success "Watchman cache cleared"
 
-step "Cleaning up Simulator cache"
-# fixes "Unable to boot Simulator" error
+step "Cleaning up simulator cache"
 rm -rf ~/Library/Developer/CoreSimulator/Caches
 success "Simulator cache cleared"
 
-step "Removing temp directories"
-del-cli android/build example/android/build example/android/app/build example/ios/build
-success "Temp directories removed"
+step "Cleaning bare example"
+del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build >/dev/null || true
+cd example/bare/android
+./gradlew clean -q
+cd ../../..
+npx pod-install example/bare >/dev/null
+success "Bare example cleaned"
 
-step "Installing pods"
-npx pod-install example && success "Pods installed"
+step "Prebuilding expo example"
+yarn expo prebuild:clean --no-install >/dev/null && success "Expo prebuild complete"
 
 step "Building with bob"
-bob build && success "Build complete"
+bob build >/dev/null && success "Build complete"
 
 echo -e "\n${GREEN}${BOLD}All done!${NC}"

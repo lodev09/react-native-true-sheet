@@ -1,0 +1,44 @@
+{
+  "name": "@example/bare",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android --list-devices",
+    "ios": "react-native run-ios --list-devices",
+    "start": "react-native start",
+    "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
+    "build:ios": "react-native build-ios --mode Debug",
+    "doctor": "react-native doctor"
+  },
+  "dependencies": {
+    "@example/shared": "*",
+    "@lodev09/react-native-true-sheet": "workspace:*",
+    "@react-navigation/native": "^7.1.21",
+    "@react-navigation/native-stack": "^7.7.0",
+    "react": "19.1.1",
+    "react-native": "0.82.1",
+    "react-native-gesture-handler": "^2.29.1",
+    "react-native-maps": "^1.26.18",
+    "react-native-reanimated": "^4.1.5",
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch",
+    "react-native-worklets": "^0.6.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.0.0",
+    "@react-native-community/cli-platform-android": "20.0.0",
+    "@react-native-community/cli-platform-ios": "20.0.0",
+    "@react-native/babel-preset": "0.82.1",
+    "@react-native/metro-config": "0.82.1",
+    "@react-native/typescript-config": "0.82.1",
+    "@types/react": "19.1.1",
+    "react-native-builder-bob": "^0.40.15",
+    "react-native-monorepo-config": "^0.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

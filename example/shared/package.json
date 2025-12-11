@@ -1,0 +1,32 @@
+{
+  "name": "@example/shared",
+  "version": "0.0.0",
+  "private": true,
+  "source": "./src/index.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./sheets": "./src/components/sheets/index.ts",
+    "./screens": "./src/screens/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "peerDependencies": {
+    "@lodev09/react-native-true-sheet": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-maps": "*",
+    "react-native-reanimated": "*",
+    "react-native-safe-area-context": "*"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.1",
+    "react-native-gesture-handler": "^2.29.1",
+    "react-native-maps": "^1.26.20",
+    "react-native-reanimated": "^4.2.0",
+    "react-native-safe-area-context": "^5.5.2",
+    "typescript": "^5.9.2"
+  }
+}

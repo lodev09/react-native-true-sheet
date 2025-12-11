@@ -42,8 +42,8 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-true-sheet-example",
-    "expo-example": "yarn workspace expo-example",
+    "example": "yarn workspace @example/bare",
+    "expo": "yarn workspace @example/expo",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -140,8 +140,9 @@
     }
   },
   "workspaces": [
-    "example",
-    "expo-example",
+    "example/bare",
+    "example/expo",
+    "example/shared",
     "docs"
   ],
   "packageManager": "yarn@4.11.0",
@@ -154,14 +155,17 @@
       "node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-worklets|react-native-worklets-core)/)"
     ],
     "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
+      "<rootDir>/example/bare/node_modules",
+      "<rootDir>/example/expo/node_modules",
+      "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
       "<rootDir>/docs/build"
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "<rootDir>/src/__mocks__/"
+      "<rootDir>/src/__mocks__/",
+      "<rootDir>/example/"
     ]
   },
   "commitlint": {
