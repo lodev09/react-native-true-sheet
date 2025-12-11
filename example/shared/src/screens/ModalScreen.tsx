@@ -1,17 +1,19 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useRouter } from 'expo-router';
 
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Spacer } from '../components';
 import { PromptSheet, FlatListSheet } from '../components/sheets';
 
-export const ModalScreen = () => {
+export interface ModalScreenProps {
+  onNavigateToTest?: () => void;
+  onDismiss?: () => void;
+}
+
+export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) => {
   const promptSheet = useRef<TrueSheet>(null);
   const flatlistSheet = useRef<TrueSheet>(null);
-
-  const router = useRouter();
 
   return (
     <View style={styles.content}>
@@ -25,8 +27,8 @@ export const ModalScreen = () => {
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
       <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
       <Spacer />
-      <Button text="Navigate Test" onPress={() => router.push('/test')} />
-      <Button text="Dismiss Modal" onPress={() => router.back()} />
+      <Button text="Navigate Test" onPress={onNavigateToTest} />
+      <Button text="Dismiss Modal" onPress={onDismiss} />
 
       <PromptSheet ref={promptSheet} />
       <FlatListSheet ref={flatlistSheet} />

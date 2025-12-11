@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./components": "./src/components/index.ts",
     "./sheets": "./src/components/sheets/index.ts",
+    "./screens": "./src/screens/index.ts",
     "./utils": "./src/utils/index.ts"
   },
   "peerDependencies": {

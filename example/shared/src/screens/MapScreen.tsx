@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentType } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -20,7 +20,6 @@ import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
-import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import { Button, DemoContent, Header, Spacer } from '../components';
@@ -33,14 +32,22 @@ import {
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
-import { useAppNavigation } from '../hooks';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
-export const MapScreen = () => {
+export interface MapScreenProps {
+  MapComponent: ComponentType<{ style?: StyleProp<ViewStyle> }>;
+  onNavigateToModal?: () => void;
+  onNavigateToSheetStack?: () => void;
+}
+
+export const MapScreen = ({
+  MapComponent,
+  onNavigateToModal,
+  onNavigateToSheetStack,
+}: MapScreenProps) => {
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
-  const navigation = useAppNavigation();
 
   const sheetRef = useRef<TrueSheet>(null);
   const minHeight = HEADER_HEIGHT + Platform.select({ android: SPACING, default: 0 });
@@ -77,20 +84,7 @@ export const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        initialCamera={{
-          altitude: 18000,
-          zoom: 14,
-          center: {
-            latitude: 9.306743705457553,
-            longitude: 123.30474002203727,
-          },
-          pitch: 0,
-          heading: 0,
-        }}
-        userInterfaceStyle="dark"
-      />
+      <MapComponent style={styles.map} />
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
@@ -102,7 +96,6 @@ export const MapScreen = () => {
         initialDetentIndex={0}
         dimmedDetentIndex={2}
         dismissible={false}
-        // insetAdjustment="never"
         edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ android: DARK })}
@@ -116,14 +109,6 @@ export const MapScreen = () => {
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
           );
         }}
-        // onPositionChange={(e) => {
-        //   'worklet';
-
-        //   const { detent, position, index, realtime } = e.nativeEvent;
-        //   console.log(
-        //     `position change with height: ${height}, index: ${index}, detent: ${detent}, position: ${position}, realtime: ${realtime}`
-        //   );
-        // }}
         onDidPresent={(e: DidPresentEvent) => {
           console.log(
             `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
@@ -142,7 +127,6 @@ export const MapScreen = () => {
           console.log('sheet is blurred');
         }}
         onMount={() => {
-          // sheetRef.current?.present(1)
           console.log('sheet is ready!');
         }}
         onDetentChange={(e: DetentChangeEvent) => {
@@ -159,7 +143,7 @@ export const MapScreen = () => {
         header={<Header />}
       >
         <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet 💩</Text>
+          <Text style={styles.title}>True Sheet</Text>
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
@@ -173,15 +157,11 @@ export const MapScreen = () => {
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <View style={styles.buttonRow}>
-          <Button
-            style={styles.rowButton}
-            text="Open Modal"
-            onPress={() => navigation.navigate('ModalStack')}
-          />
+          <Button style={styles.rowButton} text="Open Modal" onPress={onNavigateToModal} />
           <Button
             style={styles.rowButton}
             text="Sheet Navigator"
-            onPress={() => navigation.navigate('SheetStack')}
+            onPress={onNavigateToSheetStack}
           />
         </View>
         <Spacer />
@@ -239,7 +219,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
   },
   content: {
     padding: SPACING,
@@ -251,7 +231,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     lineHeight: 30,
-    fontWeight: 500,
+    fontWeight: '500',
     color: 'white',
   },
   subtitle: {

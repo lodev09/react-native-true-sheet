@@ -1,3 +1,5 @@
 import { TestScreen } from '../src/screens';
 
-export default TestScreen;
+export default function Test() {
+  return <TestScreen />;
+}

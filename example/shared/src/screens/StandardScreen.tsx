@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useRouter } from 'expo-router';
 
 import {
   BasicSheet,
@@ -15,7 +14,17 @@ import {
 import { Button, Spacer } from '../components';
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 
-export const StandardScreen = () => {
+export interface StandardScreenProps {
+  onNavigateToTest?: () => void;
+  onNavigateToModal?: () => void;
+  onNavigateToMap?: () => void;
+}
+
+export const StandardScreen = ({
+  onNavigateToTest,
+  onNavigateToModal,
+  onNavigateToMap,
+}: StandardScreenProps) => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
@@ -23,8 +32,6 @@ export const StandardScreen = () => {
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
   const navigationSheet = useRef<TrueSheet>(null);
-
-  const router = useRouter();
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -38,10 +45,10 @@ export const StandardScreen = () => {
         <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
       </View>
 
-      <Button text="Navigate to Test" onPress={() => router.push('/test')} />
-      <Button text="Open Modal" onPress={() => router.push('/modal')} />
+      <Button text="Navigate to Test" onPress={onNavigateToTest} />
+      <Button text="Open Modal" onPress={onNavigateToModal} />
       <Button text="Open Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
-      <Button text="Navigate to Map" onPress={() => router.push('/')} />
+      <Button text="Navigate to Map" onPress={onNavigateToMap} />
       <Spacer />
       <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
       <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
