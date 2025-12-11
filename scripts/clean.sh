@@ -9,38 +9,75 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+spinner_pid=""
+
+cleanup() {
+  if [ -n "$spinner_pid" ]; then
+    kill $spinner_pid 2>/dev/null
+    wait $spinner_pid 2>/dev/null
+  fi
+  printf "\n"
+  exit 1
+}
+trap cleanup INT TERM
+
 step() {
-  echo -e "\n${BLUE}▶${NC} ${BOLD}$1${NC}"
+  local msg="$1"
+  local success_msg="$2"
+  shift 2
+  local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+
+  # Start spinner in background
+  (
+    while true; do
+      for frame in "${frames[@]}"; do
+        printf "\r${CYAN}%s${NC} %s" "$frame" "$msg"
+        sleep 0.08
+      done
+    done
+  ) &
+  spinner_pid=$!
+
+  # Run the command
+  "$@" >/dev/null 2>&1
+  local exit_code=$?
+
+  # Stop spinner
+  kill $spinner_pid 2>/dev/null
+  wait $spinner_pid 2>/dev/null
+
+  # Show result
+  if [ $exit_code -eq 0 ]; then
+    printf "\r${GREEN}✓${NC} ${BOLD}%s${NC}\n" "$msg"
+    echo -e "${GREEN}→${NC} $success_msg\n"
+  else
+    printf "\r${RED}✗${NC} ${BOLD}%s${NC}\n" "$msg"
+  fi
+
+  return $exit_code
 }
 
-success() {
-  echo -e "${GREEN}✓${NC} $1"
+step "Installing dependencies" "Dependencies installed" yarn
+
+clean_watchman() {
+  watchman watch-del-all 2>/dev/null || true
+  rm -rf $TMPDIR/metro-*
 }
+step "Cleaning watchman" "Watchman cache cleared" clean_watchman
 
-step "Installing dependencies"
-yarn >/dev/null && success "Dependencies installed"
+step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 
-step "Cleaning watchman"
-watchman watch-del-all >/dev/null || true
-rm -rf $TMPDIR/metro-*
-success "Watchman cache cleared"
+clean_bare() {
+  del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build 2>/dev/null || true
+  cd example/bare/android
+  ./gradlew clean -q
+  cd ../../..
+  npx pod-install example/bare
+}
+step "Cleaning bare example" "Bare example cleaned" clean_bare
 
-step "Cleaning up simulator cache"
-rm -rf ~/Library/Developer/CoreSimulator/Caches
-success "Simulator cache cleared"
+step "Prebuilding expo example" "Expo prebuild complete" yarn expo prebuild:clean --no-install
 
-step "Cleaning bare example"
-del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build >/dev/null || true
-cd example/bare/android
-./gradlew clean -q
-cd ../../..
-npx pod-install example/bare >/dev/null
-success "Bare example cleaned"
-
-step "Prebuilding expo example"
-yarn expo prebuild:clean --no-install >/dev/null && success "Expo prebuild complete"
-
-step "Building with bob"
-bob build >/dev/null && success "Build complete"
+step "Building with bob" "Build complete" bob build
 
 echo -e "\n${GREEN}${BOLD}All done!${NC}"
