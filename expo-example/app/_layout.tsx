@@ -58,6 +58,10 @@ function RootLayoutNav() {
             name="modal"
             options={{ presentation: 'fullScreenModal', headerShown: false }}
           />
+          <Stack.Screen
+            name="sheet-stack"
+            options={{ presentation: 'fullScreenModal', headerShown: false }}
+          />
         </Stack>
       </ReanimatedTrueSheetProvider>
     </ThemeProvider>

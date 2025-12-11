@@ -20,11 +20,10 @@ import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
-import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
-import { Button, DemoContent, Header, Spacer } from '../components';
+import { Button, DemoContent, Header, Map, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
@@ -77,20 +76,7 @@ export const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        initialCamera={{
-          altitude: 18000,
-          zoom: 14,
-          center: {
-            latitude: 9.306743705457553,
-            longitude: 123.30474002203727,
-          },
-          pitch: 0,
-          heading: 0,
-        }}
-        userInterfaceStyle="dark"
-      />
+      <Map />
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
@@ -170,8 +156,8 @@ export const MapScreen = () => {
           />
           <Button
             style={styles.rowButton}
-            text="Standard"
-            onPress={() => router.push('/standard')}
+            text="Sheet Navigator"
+            onPress={() => router.push('/sheet-stack')}
           />
         </View>
         <Spacer />
@@ -226,9 +212,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: BLUE,
     justifyContent: 'center',
-    flex: 1,
-  },
-  map: {
     flex: 1,
   },
   content: {
