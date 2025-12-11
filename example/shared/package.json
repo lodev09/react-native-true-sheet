@@ -1,5 +1,5 @@
 {
-  "name": "@truesheet/example-shared",
+  "name": "@example/shared",
   "version": "0.0.0",
   "private": true,
   "source": "./src/index.ts",

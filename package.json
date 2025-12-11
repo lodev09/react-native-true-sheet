@@ -42,8 +42,8 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @truesheet/bare-example",
-    "expo": "yarn workspace @truesheet/expo-example",
+    "example": "yarn workspace @example/bare",
+    "expo": "yarn workspace @example/expo",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -140,9 +140,9 @@
     }
   },
   "workspaces": [
-    "examples/bare",
-    "examples/expo",
-    "examples/shared",
+    "example/bare",
+    "example/expo",
+    "example/shared",
     "docs"
   ],
   "packageManager": "yarn@4.11.0",
@@ -155,8 +155,8 @@
       "node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-worklets|react-native-worklets-core)/)"
     ],
     "modulePathIgnorePatterns": [
-      "<rootDir>/examples/bare/node_modules",
-      "<rootDir>/examples/expo/node_modules",
+      "<rootDir>/example/bare/node_modules",
+      "<rootDir>/example/expo/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
       "<rootDir>/docs/build"

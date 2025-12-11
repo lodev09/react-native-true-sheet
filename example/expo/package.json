@@ -1,5 +1,5 @@
 {
-  "name": "@truesheet/expo-example",
+  "name": "@example/expo",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -11,11 +11,11 @@
     "prebuild:clean": "expo prebuild --clean"
   },
   "dependencies": {
+    "@example/shared": "*",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@lodev09/react-native-true-sheet": "*",
     "@react-navigation/native": "^7.1.8",
-    "@truesheet/example-shared": "*",
     "expo": "~54.0.27",
     "expo-constants": "~18.0.11",
     "expo-font": "~14.0.10",
