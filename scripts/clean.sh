@@ -42,6 +42,9 @@ success "Temp directories removed"
 step "Installing pods"
 npx pod-install example/bare && success "Pods installed"
 
+step "Prebuilding Expo"
+yarn expo prebuild:clean && success "Expo prebuild complete"
+
 step "Building with bob"
 bob build && success "Build complete"
 
