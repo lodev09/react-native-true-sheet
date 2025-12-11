@@ -3,19 +3,20 @@ import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigat
 
 import { Button, DemoContent } from '@example/shared/components';
 import { GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
+import { useRouter } from 'expo-router';
 
-export default function DetailsSheet() {
+export default function SettingsSheet() {
   const navigation = useTrueSheetNavigation();
+  const router = useRouter();
 
   return (
     <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Details Sheet</Text>
-      <Text style={styles.sheetSubtitle}>This is a sheet screen using expo-router.</Text>
+      <Text style={styles.sheetTitle}>Settings Sheet</Text>
+      <Text style={styles.sheetSubtitle}>Another sheet in the navigation stack.</Text>
       <DemoContent />
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
-        <Button text="Open Settings" onPress={() => navigation.navigate('settings')} />
-        <Button text="Go Back" onPress={() => navigation.goBack()} />
+        <Button text="Go Back" onPress={() => router.back()} />
       </View>
     </View>
   );

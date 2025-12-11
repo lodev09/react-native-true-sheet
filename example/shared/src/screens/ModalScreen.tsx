@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import type { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Spacer } from '../components';
@@ -16,23 +16,25 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   const flatlistSheet = useRef<TrueSheet>(null);
 
   return (
-    <View style={styles.content}>
-      <View style={styles.heading}>
-        <Text style={styles.title}>Modal Screen</Text>
-        <Text style={styles.subtitle}>
-          This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
-        </Text>
+    <TrueSheetProvider>
+      <View style={styles.content}>
+        <View style={styles.heading}>
+          <Text style={styles.title}>Modal Screen</Text>
+          <Text style={styles.subtitle}>
+            This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
+          </Text>
+        </View>
+
+        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+        <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
+        <Spacer />
+        <Button text="Navigate Test" onPress={onNavigateToTest} />
+        <Button text="Dismiss Modal" onPress={onDismiss} />
+
+        <PromptSheet ref={promptSheet} />
+        <FlatListSheet ref={flatlistSheet} />
       </View>
-
-      <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-      <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
-      <Spacer />
-      <Button text="Navigate Test" onPress={onNavigateToTest} />
-      <Button text="Dismiss Modal" onPress={onDismiss} />
-
-      <PromptSheet ref={promptSheet} />
-      <FlatListSheet ref={flatlistSheet} />
-    </View>
+    </TrueSheetProvider>
   );
 };
 

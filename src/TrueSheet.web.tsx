@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -47,7 +48,10 @@ import type {
 } from './TrueSheet.types';
 
 const DEFAULT_CORNER_RADIUS = 16;
+
 const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
+const DEFAULT_GRABBER_WIDTH = 32;
+const DEFAULT_GRABBER_HEIGHT = 4;
 
 const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) => {
   if (!slot) return null;
@@ -87,10 +91,13 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     onDidFocus,
     onWillBlur,
     onDidBlur,
+    stackBehavior = 'switch',
     style,
   } = props;
 
   const { height: windowHeight } = useWindowDimensions();
+  const defaultName = useId();
+  const sheetName = name ?? defaultName;
   const bottomSheetContext = useContext(BottomSheetContext);
   const modalRef = useRef<BottomSheetModal>(null);
   const initialDetentIndexRef = useRef(initialDetentIndex);
@@ -286,22 +293,20 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
       if (!grabber) {
         return null;
       }
+
+      const height = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
+      const borderRadius = grabberOptions?.cornerRadius ?? height / 2;
+
       return (
         <BottomSheetHandle
           {...handleProps}
-          style={[
-            styles.handle,
-            grabberOptions?.topMargin !== undefined && { paddingTop: grabberOptions.topMargin },
-          ]}
-          indicatorStyle={[
-            styles.handleIndicator,
-            grabberOptions?.width !== undefined && { width: grabberOptions.width },
-            grabberOptions?.height !== undefined && { height: grabberOptions.height },
-            grabberOptions?.cornerRadius !== undefined && {
-              borderRadius: grabberOptions.cornerRadius,
-            },
-            { backgroundColor: grabberOptions?.color ?? DEFAULT_GRABBER_COLOR },
-          ]}
+          style={[styles.handle, { paddingTop: grabberOptions?.topMargin }]}
+          indicatorStyle={{
+            height,
+            borderRadius,
+            width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
+            backgroundColor: grabberOptions?.color ?? DEFAULT_GRABBER_COLOR,
+          }}
         />
       );
     },
@@ -346,15 +351,11 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 
   // Register with context provider
   useEffect(() => {
-    if (name) {
-      bottomSheetContext?.register(name, sheetMethodsRef);
-    }
+    bottomSheetContext?.register(sheetName, sheetMethodsRef);
     return () => {
-      if (name) {
-        bottomSheetContext?.unregister(name);
-      }
+      bottomSheetContext?.unregister(sheetName);
     };
-  }, [name]);
+  }, [sheetName]);
 
   // Auto-present on mount if initialDetentIndex is set
   useEffect(() => {
@@ -374,7 +375,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   return (
     <BottomSheetModal
       ref={modalRef}
-      name={name}
+      name={sheetName}
       style={[
         styles.root,
         { backgroundColor, borderTopLeftRadius: cornerRadius, borderTopRightRadius: cornerRadius },
@@ -393,15 +394,14 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
       maxDynamicContentSize={maxHeight}
       snapPoints={snapPoints.length > 0 ? snapPoints : undefined}
       onDismiss={handleDismiss}
-      stackBehavior="switch"
+      stackBehavior={stackBehavior}
       backdropComponent={backdropComponent}
+      backgroundComponent={null}
       footerComponent={footerComponent}
     >
       <ContainerComponent>
-        <View style={[styles.container, style]}>
-          {renderSlot(header)}
-          {children}
-        </View>
+        {renderSlot(header)}
+        <View style={style}>{children}</View>
       </ContainerComponent>
     </BottomSheetModal>
   );
@@ -411,18 +411,13 @@ const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
   },
-  container: {},
   handle: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1,
+    zIndex: 999,
     paddingVertical: 10,
     pointerEvents: 'none',
-  },
-  handleIndicator: {
-    width: 36,
-    height: 5,
   },
 });

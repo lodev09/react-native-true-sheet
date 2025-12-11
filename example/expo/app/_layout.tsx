@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
-import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import 'react-native-reanimated';
 
 export {
@@ -49,7 +49,7 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <ReanimatedTrueSheetProvider>
+      <TrueSheetProvider>
         <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
@@ -59,11 +59,11 @@ function RootLayoutNav() {
             options={{ presentation: 'fullScreenModal', headerShown: false }}
           />
           <Stack.Screen
-            name="(sheet)"
+            name="sheet"
             options={{ presentation: 'fullScreenModal', headerShown: false }}
           />
         </Stack>
-      </ReanimatedTrueSheetProvider>
+      </TrueSheetProvider>
     </ThemeProvider>
   );
 }

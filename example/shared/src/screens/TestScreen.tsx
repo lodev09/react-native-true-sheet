@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, SPACING } from '../utils';
 import { Button } from '../components';
@@ -12,14 +12,16 @@ export const TestScreen = () => {
   const flatListSheet = useRef<TrueSheet>(null);
 
   return (
-    <View style={styles.content}>
-      <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-      <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+    <TrueSheetProvider>
+      <View style={styles.content}>
+        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
 
-      <BasicSheet ref={basicSheet} />
-      <PromptSheet ref={promptSheet} />
-      <FlatListSheet ref={flatListSheet} />
-    </View>
+        <BasicSheet ref={basicSheet} />
+        <PromptSheet ref={promptSheet} />
+        <FlatListSheet ref={flatListSheet} />
+      </View>
+    </TrueSheetProvider>
   );
 };
 
