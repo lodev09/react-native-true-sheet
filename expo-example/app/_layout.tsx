@@ -4,10 +4,9 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { useColorScheme } from 'react-native';
+import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '../components/useColorScheme';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -15,8 +14,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -51,12 +49,17 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <TrueSheetProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      <ReanimatedTrueSheetProvider>
+        <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
+          <Stack.Screen name="test" options={{ title: 'Test' }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: 'fullScreenModal', headerShown: false }}
+          />
         </Stack>
-      </TrueSheetProvider>
+      </ReanimatedTrueSheetProvider>
     </ThemeProvider>
   );
 }

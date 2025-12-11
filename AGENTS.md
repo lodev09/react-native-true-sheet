@@ -22,7 +22,9 @@ src/
 ├── specs/            # TurboModule spec
 ├── reanimated/       # Reanimated integration
 ├── navigation/       # React Navigation integration
+│   └── screen/       # Screen components for navigator
 ├── TrueSheet.tsx     # Main React component
+├── TrueSheetProvider.tsx
 └── TrueSheet.types.ts
 
 ios/
@@ -30,9 +32,10 @@ ios/
 ├── TrueSheetViewController.mm # UIViewController for sheet presentation
 ├── TrueSheetModule.mm         # TurboModule
 ├── TrueSheet*View.mm          # Container, Content, Header, Footer views
-├── core/                      # Core UI components (GrabberView, BlurView)
-├── events/                    # Event classes
-└── utils/                     # Utility classes
+├── TrueSheetComponentDescriptor.h
+├── core/                      # GrabberView, BlurView
+├── events/                    # Lifecycle, State, Drag, Focus events
+└── utils/                     # Layout, Gesture, Window utilities
 
 android/.../truesheet/
 ├── TrueSheetView.kt           # Host view
@@ -40,13 +43,14 @@ android/.../truesheet/
 ├── TrueSheetModule.kt         # TurboModule
 ├── TrueSheet*View.kt          # Container, Content, Header, Footer views
 ├── TrueSheet*ViewManager.kt   # View managers
-├── core/                      # Core components (GrabberView, DialogObserver, etc.)
-├── events/                    # Event classes
-└── utils/                     # Utility classes
+├── TrueSheetPackage.kt
+├── core/                      # GrabberView, DialogObserver, RNScreensFragmentObserver
+├── events/                    # Lifecycle, State, Drag, Focus events
+└── utils/                     # ScreenUtils
 
 common/cpp/.../TrueSheetSpec/
-├── TrueSheetViewState.h/.cpp         # Shared state
-├── TrueSheetViewShadowNode.h/.cpp    # Custom shadow node
+├── TrueSheetViewState.cpp/.h
+├── TrueSheetViewShadowNode.cpp/.h
 └── TrueSheetViewComponentDescriptor.h
 ```
 

@@ -100,6 +100,9 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   const isMinimized = useRef(false);
   const isDragging = useRef(false);
 
+  const presentResolver = useRef<(() => void) | null>(null);
+  const dismissResolver = useRef<(() => void) | null>(null);
+
   const animatedPosition = useSharedValue(windowHeight);
   const animatedIndex = useSharedValue(0);
 
@@ -158,6 +161,12 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
       if (isPresenting.current) {
         isPresenting.current = false;
 
+        // Resolve present promise
+        if (presentResolver.current) {
+          presentResolver.current();
+          presentResolver.current = null;
+        }
+
         onDidPresent?.({
           nativeEvent: {
             index,
@@ -184,6 +193,12 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   );
 
   const handleDismiss = useCallback(() => {
+    // Resolve dismiss promise
+    if (dismissResolver.current) {
+      dismissResolver.current();
+      dismissResolver.current = null;
+    }
+
     onDidDismiss?.({ nativeEvent: null } as DidDismissEvent);
 
     // Reset states since sheet is being dismissed
@@ -307,14 +322,20 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
 
   const sheetMethodsRef = useRef<TrueSheetRef>({
-    present: async (index = 0) => {
-      setSnapIndex(index);
-      isPresenting.current = true;
-      modalRef.current?.present();
+    present: (index = 0) => {
+      return new Promise<void>((resolve) => {
+        presentResolver.current = resolve;
+        setSnapIndex(index);
+        isPresenting.current = true;
+        modalRef.current?.present();
+      });
     },
-    dismiss: async () => {
-      isDismissing.current = true;
-      modalRef.current?.dismiss();
+    dismiss: () => {
+      return new Promise<void>((resolve) => {
+        dismissResolver.current = resolve;
+        isDismissing.current = true;
+        modalRef.current?.dismiss();
+      });
     },
     resize: async (index: number) => {
       modalRef.current?.snapToIndex(index);

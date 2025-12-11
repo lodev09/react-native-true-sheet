@@ -1,0 +1,85 @@
+import { useRef } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { useRouter } from 'expo-router';
+
+import {
+  BasicSheet,
+  BlankSheet,
+  FlatListSheet,
+  GestureSheet,
+  NavigationSheet,
+  PromptSheet,
+  ScrollViewSheet,
+} from '../components/sheets';
+import { Button, Spacer } from '../components';
+import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
+
+export const StandardScreen = () => {
+  const basicSheet = useRef<TrueSheet>(null);
+  const promptSheet = useRef<TrueSheet>(null);
+  const scrollViewSheet = useRef<TrueSheet>(null);
+  const flatListSheet = useRef<TrueSheet>(null);
+  const gestureSheet = useRef<TrueSheet>(null);
+  const blankSheet = useRef<TrueSheet>(null);
+  const navigationSheet = useRef<TrueSheet>(null);
+
+  const router = useRouter();
+
+  const presentBasicSheet = async (index = 0) => {
+    await basicSheet.current?.present(index);
+    console.log('Sheet 1 present async');
+  };
+
+  return (
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>True Sheet</Text>
+        <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+      </View>
+
+      <Button text="Navigate to Test" onPress={() => router.push('/test')} />
+      <Button text="Open Modal" onPress={() => router.push('/modal')} />
+      <Button text="Open Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
+      <Button text="Navigate to Map" onPress={() => router.push('/')} />
+      <Spacer />
+      <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+      <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+      <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+      <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+      <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+
+      <BasicSheet ref={basicSheet} />
+      <PromptSheet ref={promptSheet} />
+      <ScrollViewSheet ref={scrollViewSheet} />
+      <FlatListSheet ref={flatListSheet} />
+      <GestureSheet ref={gestureSheet} />
+      <BlankSheet ref={blankSheet} />
+      <NavigationSheet ref={navigationSheet} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  content: {
+    backgroundColor: BLUE,
+    justifyContent: 'center',
+    flex: 1,
+    padding: SPACING,
+    gap: GAP,
+  },
+  heading: {
+    marginBottom: SPACING * 2,
+  },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '500',
+    color: 'white',
+  },
+  subtitle: {
+    lineHeight: 24,
+    color: LIGHT_GRAY,
+  },
+});
