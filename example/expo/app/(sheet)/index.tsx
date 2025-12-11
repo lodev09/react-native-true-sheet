@@ -1,12 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
 
 import { Button } from '@example/shared/components';
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 
 export default function SheetHomeScreen() {
-  const navigation = useTrueSheetNavigation();
   const router = useRouter();
 
   return (
@@ -17,8 +15,8 @@ export default function SheetHomeScreen() {
           Using createTrueSheetNavigator with expo-router's withLayoutContext.
         </Text>
       </View>
-      <Button text="Open Details Sheet" onPress={() => navigation.navigate('details')} />
-      <Button text="Open Settings Sheet" onPress={() => navigation.navigate('settings')} />
+      <Button text="Open Details Sheet" onPress={() => router.push('/details')} />
+      <Button text="Open Settings Sheet" onPress={() => router.push('/settings')} />
       <Button text="Navigate to Test" onPress={() => router.push('/test')} />
       <Button text="Go Back" onPress={() => router.back()} />
     </View>

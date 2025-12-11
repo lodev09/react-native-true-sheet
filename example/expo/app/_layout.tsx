@@ -59,7 +59,7 @@ function RootLayoutNav() {
             options={{ presentation: 'fullScreenModal', headerShown: false }}
           />
           <Stack.Screen
-            name="sheet-stack"
+            name="(sheet)"
             options={{ presentation: 'fullScreenModal', headerShown: false }}
           />
         </Stack>

@@ -10,7 +10,7 @@ export default function Index() {
     <MapScreen
       MapComponent={Map}
       onNavigateToModal={() => router.push('/modal')}
-      onNavigateToSheetStack={() => router.push('/sheet-stack')}
+      onNavigateToSheetStack={() => router.push('/(sheet)')}
     />
   );
 }

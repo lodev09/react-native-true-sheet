@@ -7,6 +7,10 @@ const { Navigator } = createTrueSheetNavigator();
 
 export const Sheet = withLayoutContext(Navigator);
 
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 export default function SheetStackLayout() {
   return (
     <Sheet
