@@ -42,7 +42,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @example/bare",
+    "bare": "yarn workspace @example/bare",
     "expo": "yarn workspace @example/expo",
     "docs": "yarn workspace docs",
     "test": "jest",

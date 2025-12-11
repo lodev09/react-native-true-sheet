@@ -9,7 +9,9 @@ We want this community to be friendly and respectful to each other. Please follo
 This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
 
 - The library package in the root directory.
-- An example app in the `example/` directory.
+- A bare React Native example app in `example/bare/`.
+- An Expo example app in `example/expo/`.
+- Shared example code in `example/shared/`.
 
 To get started with the project, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See the [`.nvmrc`](./.nvmrc) file for the version used in this project.
 
@@ -23,38 +25,56 @@ yarn
 
 This will check that all required tools and dependencies are installed and configured correctly. If any issues are found, follow the recommended fixes or refer to the [React Native environment setup guide](https://reactnative.dev/docs/environment-setup).
 
-The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
+The example apps demonstrate usage of the library. You need to run them to test any changes you make.
 
-It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
+They are configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example apps. Changes to the library's JavaScript code will be reflected without a rebuild, but native code changes will require a rebuild.
 
-Before running the example app, verify that your development environment is properly configured by running:
+### Bare React Native Example
+
+Before running the bare example, verify that your development environment is properly configured by running:
 
 ```sh
-yarn example doctor
+yarn bare doctor
 ```
 
-If you want to use Android Studio or Xcode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/TrueSheetExample.xcworkspace` in Xcode and find the source files at `Pods > Development Pods > react-native-true-sheet`.
+If you want to use Android Studio or Xcode to edit the native code, you can open `example/bare/android` or `example/bare/ios` respectively. To edit Objective-C files, open `example/bare/ios/TrueSheetExample.xcworkspace` in Xcode and find the source files at `Pods > Development Pods > react-native-true-sheet`.
 
-To edit the Java or Kotlin files, open `example/android` in Android studio and find the source files at `react-native-true-sheet` under `Android`.
+To edit Kotlin files, open `example/bare/android` in Android Studio and find the source files at `react-native-true-sheet` under `Android`.
+
+### Expo Example
+
+The Expo example requires prebuilding before running on a device:
+
+```sh
+yarn expo prebuild
+```
 
 You can use various commands from the root directory to work with the project.
 
-To start the packager:
+To start the packager for the bare example:
 
 ```sh
-yarn example start
+yarn bare start
 ```
 
-To run the example app on Android:
+To run the bare example on Android:
 
 ```sh
-yarn example android
+yarn bare android
 ```
 
-To run the example app on iOS:
+To run the bare example on iOS:
 
 ```sh
-yarn example ios
+yarn bare ios
+```
+
+Similarly, for the Expo example:
+
+```sh
+yarn expo start
+yarn expo android
+yarn expo ios
 ```
 
 To confirm that the app is running with the new architecture, you can check the Metro logs for a message like this:
@@ -110,9 +130,12 @@ The `package.json` file contains various scripts for common tasks:
 - `yarn typecheck`: type-check files with TypeScript.
 - `yarn lint`: lint files with [ESLint](https://eslint.org/).
 - `yarn test`: run unit tests with [Jest](https://jestjs.io/).
-- `yarn example start`: start the Metro server for the example app.
-- `yarn example android`: run the example app on Android.
-- `yarn example ios`: run the example app on iOS.
+- `yarn bare start`: start the Metro server for the bare example.
+- `yarn bare android`: run the bare example on Android.
+- `yarn bare ios`: run the bare example on iOS.
+- `yarn expo start`: start the Metro server for the Expo example.
+- `yarn expo android`: run the Expo example on Android.
+- `yarn expo ios`: run the Expo example on iOS.
 
 ### Sending a pull request
 
