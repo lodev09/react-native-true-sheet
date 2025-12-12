@@ -373,26 +373,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun setupModalObserver() {
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
-      onModalWillPresent = {
-        if (isPresented) {
-          delegate?.viewControllerWillBlur()
-        }
-      },
       onModalPresented = {
         if (isPresented) {
           hideDialog()
-          delegate?.viewControllerDidBlur()
-        }
-      },
-      onModalWillDismiss = {
-        if (isPresented) {
-          delegate?.viewControllerWillFocus()
         }
       },
       onModalDismissed = {
         if (isPresented) {
           showDialog()
-          delegate?.viewControllerDidFocus()
         }
       }
     )
