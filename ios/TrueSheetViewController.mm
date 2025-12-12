@@ -38,7 +38,6 @@
   TrueSheetGrabberView *_grabberView;
 
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
-  BOOL _hasPresentedController;
 }
 
 #pragma mark - Initialization
@@ -67,7 +66,6 @@
     _blurInteraction = YES;
     _insetAdjustment = @"automatic";
     _resolvedDetentPositions = [NSMutableArray array];
-    _hasPresentedController = NO;
   }
   return self;
 }
@@ -315,58 +313,6 @@
   }
 
   _isTrackingPositionFromLayout = NO;
-}
-
-#pragma mark - Presentation Tracking (RN Screens)
-
-- (void)presentViewController:(UIViewController *)viewControllerToPresent
-                     animated:(BOOL)flag
-                   completion:(void (^)(void))completion {
-  BOOL isExternalController = ![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]];
-
-  if (isExternalController && !_hasPresentedController) {
-    _hasPresentedController = YES;
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
-      [self.delegate viewControllerWillBlur];
-    }
-  }
-
-  [super presentViewController:viewControllerToPresent
-                      animated:flag
-                    completion:^{
-                      if (isExternalController && self->_hasPresentedController) {
-                        if ([self.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
-                          [self.delegate viewControllerDidBlur];
-                        }
-                      }
-                      if (completion) {
-                        completion();
-                      }
-                    }];
-}
-
-- (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion {
-  UIViewController *presented = self.presentedViewController;
-  BOOL isExternalController = presented && ![presented isKindOfClass:[TrueSheetViewController class]];
-
-  if (isExternalController && _hasPresentedController) {
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
-      [self.delegate viewControllerWillFocus];
-    }
-  }
-
-  [super dismissViewControllerAnimated:flag
-                            completion:^{
-                              if (isExternalController && self->_hasPresentedController) {
-                                self->_hasPresentedController = NO;
-                                if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
-                                  [self.delegate viewControllerDidFocus];
-                                }
-                              }
-                              if (completion) {
-                                completion();
-                              }
-                            }];
 }
 
 #pragma mark - Position & Gesture Handling
