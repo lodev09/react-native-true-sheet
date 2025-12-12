@@ -11,6 +11,9 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -222,6 +225,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       window?.apply {
         windowAnimation = attributes.windowAnimations
+        // Disable default keyboard avoidance - sheet handles it via setupKeyboardAnimation
+        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
 
       setupModalObserver()
@@ -269,6 +274,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       resetAnimation()
       setupBackground()
       setupGrabber()
+      setupKeyboardAnimation()
 
       sheetContainer?.post {
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
@@ -560,6 +566,56 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     bottomSheet.addView(grabberView)
+  }
+
+  /** Sets up keyboard animation callback for smooth IME transitions. */
+  fun setupKeyboardAnimation() {
+    val bottomSheet = bottomSheetView ?: return
+
+    ViewCompat.setWindowInsetsAnimationCallback(
+      bottomSheet,
+      object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
+        private var startImeHeight = 0
+        private var endImeHeight = 0
+
+        private fun getKeyboardHeight(rootInsets: WindowInsetsCompat?): Int {
+          if (rootInsets == null) return 0
+          return rootInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+        }
+
+        override fun onPrepare(animation: WindowInsetsAnimationCompat) {
+          startImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
+        }
+
+        override fun onStart(
+          animation: WindowInsetsAnimationCompat,
+          bounds: WindowInsetsAnimationCompat.BoundsCompat
+        ): WindowInsetsAnimationCompat.BoundsCompat {
+          endImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
+          return bounds
+        }
+
+        override fun onProgress(
+          insets: WindowInsetsCompat,
+          runningAnimations: List<WindowInsetsAnimationCompat>
+        ): WindowInsetsCompat {
+          val imeAnimation = runningAnimations.find {
+            it.typeMask and WindowInsetsCompat.Type.ime() != 0
+          } ?: return insets
+
+          val fraction = imeAnimation.interpolatedFraction
+          val currentImeHeight = (startImeHeight + (endImeHeight - startImeHeight) * fraction).toInt()
+          bottomSheet.translationY = -currentImeHeight.toFloat()
+
+          return insets
+        }
+
+        override fun onEnd(animation: WindowInsetsAnimationCompat) {
+          val finalImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
+          bottomSheet.translationY = -finalImeHeight.toFloat()
+        }
+      }
+    )
   }
 
   fun setupBackground() {
