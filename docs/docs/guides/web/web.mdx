@@ -61,25 +61,22 @@ const MyComponent = () => {
 
 ## Using Refs
 
-You can also use refs to control sheets directly:
+You can also use refs to control sheets directly as you would do normally.
 
-```tsx {1,5,9}
-import { useRef } from 'react'
-import { TrueSheet, type TrueSheetRef } from '@lodev09/react-native-true-sheet'
+## Scrollable Content
 
-const MyComponent = () => {
-  const sheetRef = useRef<TrueSheetRef>(null)
+For scrollable content on web, use the [scrollable components](https://gorhom.dev/react-native-bottom-sheet/scrollables) from `@gorhom/bottom-sheet`:
 
-  return (
-    <>
-      <Button onPress={() => sheetRef.current?.present()} title="Open" />
+```tsx
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 
-      <TrueSheet ref={sheetRef} detents={[0.5, 1]}>
-        <View>
-          <Text>Hello from the sheet!</Text>
-        </View>
-      </TrueSheet>
-    </>
-  )
-}
+<TrueSheet scrollable detents={[0.5, 1]}>
+  <BottomSheetScrollView>
+    {/* Your scrollable content */}
+  </BottomSheetScrollView>
+</TrueSheet>
 ```
+
+:::note
+On native platforms, standard React Native scrollables work without any changes.
+:::

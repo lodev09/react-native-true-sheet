@@ -23,6 +23,7 @@ import {
   type BottomSheetHandleProps,
   BottomSheetModal,
   BottomSheetView,
+  BottomSheetScrollView,
   type SNAP_POINT_TYPE,
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
@@ -401,7 +402,11 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     >
       <ContainerComponent>
         {renderSlot(header)}
-        <View style={style}>{children}</View>
+        {scrollable ? (
+          <BottomSheetScrollView contentContainerStyle={style}>{children}</BottomSheetScrollView>
+        ) : (
+          <View style={style}>{children}</View>
+        )}
       </ContainerComponent>
     </BottomSheetModal>
   );
