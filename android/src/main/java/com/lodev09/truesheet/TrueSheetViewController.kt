@@ -116,6 +116,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var currentDetentIndex: Int = -1
     private set
 
+  private var lastStateWidth: Int = 0
+  private var lastStateHeight: Int = 0
   private var isDragging = false
   private var isDismissing = false
   private var isReconfiguring = false
@@ -132,8 +134,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Configuration Properties
   // ====================================================================
 
-  var screenHeight = 0
-  var screenWidth = 0
+  val screenHeight: Int
+    get() = ScreenUtils.getScreenHeight(reactContext)
+  val screenWidth: Int
+    get() = ScreenUtils.getScreenWidth(reactContext)
+
   var maxSheetHeight: Int? = null
   var detents = mutableListOf(0.5, 1.0)
 
@@ -196,8 +201,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   init {
-    screenHeight = ScreenUtils.getScreenHeight(reactContext)
-    screenWidth = ScreenUtils.getScreenWidth(reactContext)
     jSPointerDispatcher = JSPointerDispatcher(this)
   }
 
@@ -520,8 +523,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       isFitToContents = false
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
-      val oldExpandOffset = expandedOffset
-
       val maxAvailableHeight = realHeight - edgeToEdgeTopInset
 
       setPeekHeight(getDetentHeight(detents[0]), isPresented)
@@ -539,10 +540,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - maxDetentHeight)
       isFitToContents = detents.size < 3 && expandedOffset == 0
 
-      if (oldExpandOffset != expandedOffset || expandedOffset == 0) {
-        val offset = if (expandedOffset == 0) topInset else 0
-        val newHeight = realHeight - expandedOffset - offset
-        delegate?.viewControllerDidChangeSize(width, newHeight)
+      val offset = if (expandedOffset == 0) topInset else 0
+      val newHeight = realHeight - expandedOffset - offset
+      val newWidth = minOf(screenWidth, maxWidth)
+
+      if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
+        lastStateWidth = newWidth
+        lastStateHeight = newHeight
+        delegate?.viewControllerDidChangeSize(newWidth, newHeight)
       }
 
       if (isPresented) {
@@ -883,22 +888,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
+
     if (w == oldw && h == oldh) return
+    if (!isPresented) return
 
     // Skip continuous size changes when fullScreen + edge-to-edge
-    if (h + topInset > screenHeight && isExpanded && oldw == w) {
+    if (h + topInset >= screenHeight && isExpanded && oldw == w) {
       return
     }
 
-    val oldScreenHeight = screenHeight
-    screenHeight = ScreenUtils.getScreenHeight(reactContext)
-
-    if (isPresented && oldScreenHeight != screenHeight && oldScreenHeight > 0) {
+    this.post {
       setupSheetDetents()
-      this.post {
-        positionFooter()
-        bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
-      }
+      positionFooter()
+      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
     }
   }
 

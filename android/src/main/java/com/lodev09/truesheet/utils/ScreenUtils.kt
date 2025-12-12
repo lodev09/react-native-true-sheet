@@ -68,15 +68,6 @@ object ScreenUtils {
   }
 
   /**
-   * Calculate the screen height using the same method as React Native's useWindowDimensions.
-   * This returns the window height which automatically accounts for edge-to-edge mode.
-   *
-   * @param reactContext The ReactContext to get resources from
-   * @return Screen height in pixels
-   */
-  fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
-
-  /**
    * Get the real physical device screen height, including system bars.
    * This is consistent across all API levels.
    *
@@ -102,6 +93,15 @@ object ScreenUtils {
    * @return Screen width in pixels
    */
   fun getScreenWidth(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.widthPixels
+
+  /**
+   * Calculate the screen height using the same method as React Native's useWindowDimensions.
+   * This returns the window height which automatically accounts for edge-to-edge mode.
+   *
+   * @param reactContext The ReactContext to get resources from
+   * @return Screen height in pixels
+   */
+  fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
 
   /**
    * Get the location of a view in screen coordinates

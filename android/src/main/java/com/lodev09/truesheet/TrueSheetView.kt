@@ -45,7 +45,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       // Immediately update state with screen width during first state update
       // This ensures we have initial width for content layout before presenting
       if (field == null && value != null) {
-        updateState(viewController.screenWidth, 0)
+        updateState(viewController.screenWidth, viewController.screenHeight)
       }
       field = value
     }
@@ -352,7 +352,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Uses post to ensure all layout passes complete before reconfiguring.
    */
   fun updateSheetIfNeeded() {
-    if (!viewController.isPresented || isSheetUpdatePending) return
+    if (!viewController.isPresented) return
+    if (isSheetUpdatePending) return
 
     isSheetUpdatePending = true
     viewController.post {
