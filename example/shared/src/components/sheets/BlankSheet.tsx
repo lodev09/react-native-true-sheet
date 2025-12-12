@@ -13,7 +13,7 @@ export const BlankSheet = forwardRef<TrueSheet, BlankSheetProps>((props, ref) =>
       detents={[0.5, 1]}
       blurTint="dark"
       backgroundColor={DARK}
-      keyboardMode="pan"
+
       style={styles.content}
       {...props}
     >

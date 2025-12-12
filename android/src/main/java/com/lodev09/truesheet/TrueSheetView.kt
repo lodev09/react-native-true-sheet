@@ -272,10 +272,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.sheetBackgroundColor = color
   }
 
-  fun setSoftInputMode(mode: Int) {
-    viewController.setSoftInputMode(mode)
-  }
-
   fun setDismissible(dismissible: Boolean) {
     viewController.dismissible = dismissible
   }

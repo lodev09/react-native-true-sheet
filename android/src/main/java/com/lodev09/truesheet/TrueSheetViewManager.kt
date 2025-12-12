@@ -172,15 +172,6 @@ class TrueSheetViewManager :
     }
   }
 
-  @ReactProp(name = "keyboardMode")
-  override fun setKeyboardMode(view: TrueSheetView, mode: String?) {
-    val softInputMode = when (mode) {
-      "pan" -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
-      else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-    }
-    view.setSoftInputMode(softInputMode)
-  }
-
   @ReactProp(name = "blurTint")
   override fun setBlurTint(view: TrueSheetView, tint: String?) {
     // iOS-specific prop - no-op on Android

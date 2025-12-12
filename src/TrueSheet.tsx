@@ -364,7 +364,7 @@ export class TrueSheet
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
-      keyboardMode = 'resize',
+
       dimmedDetentIndex,
       blurTint,
       blurOptions,
@@ -421,7 +421,7 @@ export class TrueSheet
         }}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
-        keyboardMode={keyboardMode}
+
         initialDetentIndex={initialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}

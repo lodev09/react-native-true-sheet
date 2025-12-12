@@ -412,15 +412,6 @@ export interface TrueSheetProps extends ViewProps {
   scrollable?: boolean;
 
   /**
-   * Determines how the software keyboard will impact the layout of the sheet.
-   * Set to `pan` if you're working with `FlatList` with a `TextInput`.
-   *
-   * @platform android
-   * @default resize
-   */
-  keyboardMode?: 'resize' | 'pan';
-
-  /**
    * Defines the stack behavior when a modal is presented.
    * - `push`: Mount the modal on top of the current one.
    * - `switch`: Minimize the current modal then mount the new one.

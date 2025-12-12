@@ -683,10 +683,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior?.state = getStateForDetentIndex(index)
   }
 
-  fun setSoftInputMode(mode: Int) {
-    dialog?.window?.setSoftInputMode(mode)
-  }
-
   fun getDefaultBackgroundColor(): Int {
     val typedValue = TypedValue()
     return if (reactContext.theme.resolveAttribute(
