@@ -110,13 +110,13 @@ Use this event when you need smooth, continuous position tracking for animations
 
 This is called when the sheet is about to gain focus. This happens:
 - When the sheet is being presented (along with `onWillPresent`)
-- When a sheet or `react-native-screens` modal presented on top of it begins dismissing
+- When another sheet presented on top of it begins dismissing
 
 ## `onDidFocus`
 
 This is called when the sheet has gained focus. This happens:
 - When the sheet has been presented (along with `onDidPresent`)
-- When a sheet or `react-native-screens` modal presented on top of it is dismissed
+- When another sheet presented on top of it is dismissed
 
 Useful for refreshing data or re-enabling interactions.
 
@@ -124,13 +124,13 @@ Useful for refreshing data or re-enabling interactions.
 
 This is called when the sheet is about to lose focus. This happens:
 - When the sheet is being dismissed (along with `onWillDismiss`)
-- When another sheet or `react-native-screens` modal is about to be presented on top of it
+- When another sheet is about to be presented on top of it
 
 ## `onDidBlur`
 
 This is called when the sheet has lost focus. This happens:
 - When the sheet has been dismissed (along with `onDidDismiss`)
-- When another sheet or `react-native-screens` modal is presented on top of it
+- When another sheet is presented on top of it
 
 Useful for pausing updates or disabling interactions.
 
