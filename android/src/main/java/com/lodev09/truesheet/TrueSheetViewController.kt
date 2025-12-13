@@ -127,6 +127,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
 
+  /** Tracks if this sheet was hidden due to a RN Screens modal (vs sheet stacking) */
+  private var wasHiddenByModal = false
+
   var presentPromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
 
@@ -265,6 +268,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isDismissing = false
     isPresented = false
     isDialogVisible = false
+    wasHiddenByModal = false
     lastEmittedPositionPx = -1
   }
 
@@ -381,13 +385,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
       onModalPresented = {
-        if (isPresented) {
+        if (isPresented && isDialogVisible) {
           hideDialog()
+          wasHiddenByModal = true
         }
       },
       onModalDismissed = {
-        if (isPresented) {
+        // Only show if we were the one hidden by modal, not by sheet stacking
+        if (isPresented && wasHiddenByModal) {
           showDialog()
+          wasHiddenByModal = false
         }
       }
     )

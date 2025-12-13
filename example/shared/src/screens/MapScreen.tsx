@@ -1,4 +1,4 @@
-import { useRef, useState, type ComponentType } from 'react';
+import { useCallback, useRef, useState, type ComponentType } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -34,6 +34,7 @@ import {
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -84,6 +85,11 @@ const MapScreenInner = ({
     ],
   }));
 
+  useFocusEffect(useCallback(() => {
+    console.log('focused');
+    gestureSheet.current?.present();
+  }, []))
+
   return (
     <View style={styles.container}>
       <MapComponent style={styles.map} />
@@ -93,7 +99,7 @@ const MapScreenInner = ({
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
-        detents={[minHeight / height, 'auto', 1]}
+        detents={[minHeight / height, 0.8, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={2}

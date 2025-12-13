@@ -20,11 +20,11 @@ object TrueSheetDialogObserver {
       val parentSheet = presentedSheetStack.lastOrNull()
         ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
 
-      // Hide parent if the new sheet would cover it
+      // Hide parent only if parent is taller than the new sheet (would be visible behind it)
       parentSheet?.let {
         val parentTop = it.viewController.currentSheetTop
         val newSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
-        if (!it.viewController.isExpanded && parentTop <= newSheetTop) {
+        if (!it.viewController.isExpanded && parentTop < newSheetTop) {
           it.viewController.hideDialog(emitPosition = true)
         }
       }

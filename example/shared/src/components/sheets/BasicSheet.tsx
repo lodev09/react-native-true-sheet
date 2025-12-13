@@ -7,6 +7,7 @@ import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { Spacer } from '../Spacer';
+import { useNavigation } from '@react-navigation/native';
 
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
@@ -17,6 +18,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
+
+  const navigation = useNavigation();
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -50,7 +53,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
   return (
     <TrueSheet
-      detents={['auto', 0.8, 1]}
+      detents={[0.8, 1]}
       ref={sheetRef}
       style={styles.content}
       onDragChange={(e) =>
@@ -108,6 +111,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text="Present PromptSheet" onPress={presentPromptSheet} />
       {onNavigateToModal && <Button text="Navigate to Modal" onPress={onNavigateToModal} />}
       <Spacer />
+      <Button text="Open Modal" onPress={() => navigation.navigate('ModalStack')} />
       <Button text="Dismiss" onPress={dismiss} />
 
       <TrueSheet
