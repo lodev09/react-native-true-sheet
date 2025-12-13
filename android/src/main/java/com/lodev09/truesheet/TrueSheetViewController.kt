@@ -27,9 +27,9 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.TrueSheetKeyboardHandler
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
+import com.lodev09.truesheet.core.TrueSheetKeyboardHandler
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)

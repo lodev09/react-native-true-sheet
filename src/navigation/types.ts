@@ -138,7 +138,6 @@ export type TrueSheetNavigationOptions = Pick<
   | 'maxHeight'
   | 'edgeToEdgeFullScreen'
   | 'scrollable'
-
   | 'pageSizing'
   | 'header'
   | 'footer'

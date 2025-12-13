@@ -421,7 +421,6 @@ export class TrueSheet
         }}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
-
         initialDetentIndex={initialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}

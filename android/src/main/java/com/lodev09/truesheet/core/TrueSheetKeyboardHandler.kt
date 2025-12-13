@@ -76,10 +76,7 @@ class TrueSheetKeyboardHandler(
           return bounds
         }
 
-        override fun onProgress(
-          insets: WindowInsetsCompat,
-          runningAnimations: List<WindowInsetsAnimationCompat>
-        ): WindowInsetsCompat {
+        override fun onProgress(insets: WindowInsetsCompat, runningAnimations: List<WindowInsetsAnimationCompat>): WindowInsetsCompat {
           val imeAnimation = runningAnimations.find {
             it.typeMask and WindowInsetsCompat.Type.ime() != 0
           } ?: return insets
