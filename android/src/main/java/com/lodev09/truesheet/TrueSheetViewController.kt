@@ -514,9 +514,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (!animated) {
       dialog?.window?.setWindowAnimations(0)
+      post { dialog?.dismiss() }
+    } else {
+      dialog?.dismiss()
     }
-
-    dialog?.dismiss()
   }
 
   // ====================================================================
