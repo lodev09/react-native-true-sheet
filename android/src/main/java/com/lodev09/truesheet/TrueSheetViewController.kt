@@ -570,10 +570,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var keyboardHandler: TrueSheetKeyboardHandler? = null
 
-  /** Sets up keyboard handler for IME transitions. */
   fun setupKeyboardHandler() {
     val bottomSheet = bottomSheetView ?: return
-    keyboardHandler = TrueSheetKeyboardHandler(bottomSheet, reactContext) { topInset }
+    keyboardHandler = TrueSheetKeyboardHandler(bottomSheet, reactContext) { setupSheetDetents() }
     keyboardHandler?.setup()
   }
 
@@ -807,15 +806,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   private fun getDetentHeight(detent: Double): Int {
-    val height: Int = if (detent == -1.0) {
-      // Auto height: add bottomInset to content to match iOS behavior
-      contentHeight + headerHeight + contentBottomInset
+    val keyboardHeight = keyboardHandler?.currentImeHeight ?: 0
+
+    val height = if (detent == -1.0) {
+      contentHeight + headerHeight + contentBottomInset + keyboardHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      // Fractional detent: add bottomInset to match iOS behavior
-      (detent * screenHeight).toInt() + contentBottomInset
+      (detent * screenHeight).toInt() + contentBottomInset + keyboardHeight
     }
 
     val maxAllowedHeight = screenHeight + contentBottomInset
