@@ -631,7 +631,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetTop = bottomSheet.top
 
     // Footer Y relative to sheet: place at bottom of sheet container minus footer height
-    var footerY = (sheetHeight - sheetTop - footerHeight).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
 
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
@@ -805,9 +805,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Calculations
   // ====================================================================
 
-  private fun getDetentHeight(detent: Double): Int {
-    val keyboardHeight = keyboardHandler?.currentImeHeight ?: 0
+  private val keyboardHeight: Int
+    get() = keyboardHandler?.currentImeHeight ?: 0
 
+  private fun getDetentHeight(detent: Double): Int {
     val height = if (detent == -1.0) {
       contentHeight + headerHeight + contentBottomInset + keyboardHeight
     } else {
