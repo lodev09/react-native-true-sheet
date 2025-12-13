@@ -51,7 +51,7 @@ export interface TrueSheetRef {
    */
   present: (index?: number, animated?: boolean) => Promise<void>;
   /**
-   * Dismiss the sheet.
+   * Dismiss the sheet. If other sheets are presented on top, dismisses them instead.
    * @param animated - Whether to animate the dismissal (default: true)
    */
   dismiss: (animated?: boolean) => Promise<void>;
