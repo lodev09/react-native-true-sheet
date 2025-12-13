@@ -127,6 +127,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
 
+  /** Tracks if this sheet was hidden due to a RN Screens modal (vs sheet stacking) */
+  private var wasHiddenByModal = false
+
   var presentPromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
 
@@ -265,6 +268,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isDismissing = false
     isPresented = false
     isDialogVisible = false
+    wasHiddenByModal = false
     lastEmittedPositionPx = -1
   }
 
@@ -381,13 +385,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
       onModalPresented = {
-        if (isPresented) {
-          hideDialog()
+        if (isPresented && isDialogVisible) {
+          hideDialog(animated = true)
+          wasHiddenByModal = true
         }
       },
       onModalDismissed = {
-        if (isPresented) {
-          showDialog()
+        // Only show if we were the one hidden by modal, not by sheet stacking
+        if (isPresented && wasHiddenByModal) {
+          showDialog(animated = true)
+          wasHiddenByModal = false
         }
       }
     )
@@ -437,8 +444,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   /** Hides without dismissing. Used for sheet stacking and RN Screens modals. */
-  fun hideDialog(emitPosition: Boolean = false) {
+  fun hideDialog(emitPosition: Boolean = false, animated: Boolean = false) {
     isDialogVisible = false
+    if (animated) {
+      dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeAnimation)
+    }
     dialog?.window?.decorView?.visibility = INVISIBLE
     if (emitPosition) {
       emitDismissedPosition()
@@ -446,11 +456,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   /** Shows a previously hidden dialog. */
-  fun showDialog(emitPosition: Boolean = false) {
+  fun showDialog(emitPosition: Boolean = false, animated: Boolean = false) {
     isDialogVisible = true
     dialog?.window?.decorView?.visibility = VISIBLE
     if (emitPosition) {
       bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
+    }
+    if (animated) {
+      // Restore original animation after fade-in completes (100ms)
+      sheetContainer?.postDelayed({
+        dialog?.window?.setWindowAnimations(windowAnimation)
+      }, 100)
     }
   }
 
