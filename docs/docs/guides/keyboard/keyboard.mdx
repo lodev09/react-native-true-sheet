@@ -1,0 +1,39 @@
+---
+title: Keyboard Handling
+description: How TrueSheet handles keyboard visibility.
+keywords: [bottom sheet keyboard, bottom sheet input, bottom sheet text input]
+---
+
+import keyboard from './keyboard.gif'
+
+TrueSheet handles keyboard visibility natively on both iOS and Android. When a `TextInput` inside the sheet is focused, the sheet automatically adjusts to keep the input visible above the keyboard.
+
+<img alt="keyboard" src={keyboard} width="300"/>
+
+## How?
+
+The keyboard handling is built into the native implementation:
+
+- **iOS**: Uses `UISheetPresentationController`'s built-in keyboard avoidance
+- **Android**: Tracks keyboard height via `WindowInsetsAnimationCompat` and reconfigures sheet detents in real-time
+
+No additional configuration is required. Simply add your `TextInput` components inside the sheet:
+
+```tsx
+const App = () => {
+  return (
+    <TrueSheet ref={sheet} detents={['auto']}>
+      <View style={{ padding: 16 }}>
+        <TextInput
+          placeholder="Type something..."
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8 }}
+        />
+      </View>
+    </TrueSheet>
+  )
+}
+```
+
+## Footer Behavior
+
+When using a [`footer`](/reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
