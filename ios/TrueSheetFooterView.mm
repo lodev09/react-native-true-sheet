@@ -21,6 +21,7 @@ using namespace facebook::react;
 @implementation TrueSheetFooterView {
   CGFloat _lastHeight;
   BOOL _didInitialLayout;
+  NSLayoutConstraint *_bottomConstraint;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -37,6 +38,7 @@ using namespace facebook::react;
 
     _lastHeight = 0;
     _didInitialLayout = NO;
+    _bottomConstraint = nil;
   }
   return self;
 }
@@ -49,12 +51,22 @@ using namespace facebook::react;
 
   // Remove existing constraints before applying new ones
   [LayoutUtil unpinView:self fromParentView:parentView];
+  _bottomConstraint = nil;
 
-  // Pin footer to bottom and sides of container with specific height
-  [LayoutUtil pinView:self
-         toParentView:parentView
-                edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom
-               height:height];
+  self.translatesAutoresizingMaskIntoConstraints = NO;
+
+  // Pin footer to sides of container
+  [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
+  [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
+
+  // Store bottom constraint for keyboard adjustment
+  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor];
+  _bottomConstraint.active = YES;
+
+  // Apply height constraint
+  if (height > 0) {
+    [self.heightAnchor constraintEqualToConstant:height].active = YES;
+  }
 
   _lastHeight = height;
 }
@@ -89,11 +101,59 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  [self cleanupKeyboardHandler];
+
   // Remove footer constraints
   [LayoutUtil unpinView:self fromParentView:self.superview];
 
   _lastHeight = 0;
   _didInitialLayout = NO;
+  _bottomConstraint = nil;
+}
+
+#pragma mark - Keyboard Handling
+
+- (void)setupKeyboardHandler {
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(keyboardWillChangeFrame:)
+                                               name:UIKeyboardWillChangeFrameNotification
+                                             object:nil];
+}
+
+- (void)cleanupKeyboardHandler {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+}
+
+- (void)keyboardWillChangeFrame:(NSNotification *)notification {
+  if (!_bottomConstraint) {
+    return;
+  }
+
+  NSDictionary *userInfo = notification.userInfo;
+  CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+  NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+  UIViewAnimationOptions curve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] unsignedIntegerValue] << 16;
+
+  // Convert keyboard frame to window coordinates
+  UIWindow *window = self.window;
+  if (!window) {
+    return;
+  }
+
+  CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
+  CGFloat keyboardHeight = window.bounds.size.height - keyboardFrameInWindow.origin.y;
+
+  // Cap to ensure we don't go negative
+  CGFloat bottomOffset = MAX(0, keyboardHeight);
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     self->_bottomConstraint.constant = -bottomOffset;
+                     [self.superview layoutIfNeeded];
+                   }
+                   completion:nil];
 }
 
 @end

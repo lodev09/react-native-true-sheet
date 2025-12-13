@@ -427,6 +427,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
+  [_containerView setupKeyboardHandler];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 }
 
@@ -451,6 +452,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillDismiss {
+  [_containerView cleanupKeyboardHandler];
   [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
 }
 

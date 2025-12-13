@@ -179,6 +179,16 @@ using namespace facebook::react;
   }
 }
 
+#pragma mark - Keyboard Handling
+
+- (void)setupKeyboardHandler {
+  [_footerView setupKeyboardHandler];
+}
+
+- (void)cleanupKeyboardHandler {
+  [_footerView cleanupKeyboardHandler];
+}
+
 @end
 
 Class<RCTComponentViewProtocol> TrueSheetContainerViewCls(void) {

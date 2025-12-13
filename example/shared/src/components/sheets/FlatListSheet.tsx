@@ -17,7 +17,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       detents={[0.5, 1]}
       blurTint="dark"
       backgroundColor={DARK}
-      keyboardMode="pan"
       edgeToEdgeFullScreen
       scrollable
       header={

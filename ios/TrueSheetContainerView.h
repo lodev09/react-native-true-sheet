@@ -63,6 +63,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setupContentScrollViewPinning;
 
+/**
+ * Setup keyboard handler for footer
+ */
+- (void)setupKeyboardHandler;
+
+/**
+ * Cleanup keyboard handler for footer
+ */
+- (void)cleanupKeyboardHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

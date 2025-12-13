@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetFooterView : RCTViewComponentView
 
 - (void)setupConstraintsWithHeight:(CGFloat)height;
+- (void)setupKeyboardHandler;
+- (void)cleanupKeyboardHandler;
 
 @end
 
