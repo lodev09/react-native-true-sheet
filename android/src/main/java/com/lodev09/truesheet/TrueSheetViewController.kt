@@ -29,7 +29,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
-import com.lodev09.truesheet.core.TrueSheetKeyboardHandler
+import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
+import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -224,7 +225,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       window?.apply {
         windowAnimation = attributes.windowAnimations
-        // Disable default keyboard avoidance - sheet handles it via setupKeyboardHandler
+        // Disable default keyboard avoidance - sheet handles it via setupKeyboardObserver
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
 
@@ -255,7 +256,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setOnDismissListener(null)
     }
 
-    cleanupKeyboardHandler()
+    cleanupKeyboardObserver()
     cleanupModalObserver()
     sheetContainer?.removeView(this)
 
@@ -274,7 +275,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       resetAnimation()
       setupBackground()
       setupGrabber()
-      setupKeyboardHandler()
+      setupKeyboardObserver()
 
       sheetContainer?.post {
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
@@ -568,17 +569,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     bottomSheet.addView(grabberView)
   }
 
-  private var keyboardHandler: TrueSheetKeyboardHandler? = null
+  private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
-  fun setupKeyboardHandler() {
+  fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
-    keyboardHandler = TrueSheetKeyboardHandler(bottomSheet, reactContext) { setupSheetDetents() }
-    keyboardHandler?.setup()
+    keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
+      delegate = object : TrueSheetKeyboardObserverDelegate {
+        override fun keyboardHeightDidChange(height: Int) {
+          setupSheetDetents()
+        }
+      }
+      start()
+    }
   }
 
-  fun cleanupKeyboardHandler() {
-    keyboardHandler?.cleanup()
-    keyboardHandler = null
+  fun cleanupKeyboardObserver() {
+    keyboardObserver?.stop()
+    keyboardObserver = null
   }
 
   fun setupBackground() {
@@ -806,7 +813,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   private val keyboardHeight: Int
-    get() = keyboardHandler?.currentImeHeight ?: 0
+    get() = keyboardObserver?.currentHeight ?: 0
 
   private fun getDetentHeight(detent: Double): Int {
     val height = if (detent == -1.0) {

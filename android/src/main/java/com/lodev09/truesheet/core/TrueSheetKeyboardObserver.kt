@@ -9,23 +9,28 @@ import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
 
+interface TrueSheetKeyboardObserverDelegate {
+  fun keyboardHeightDidChange(height: Int)
+}
+
 /**
- * Tracks keyboard height and notifies on changes.
+ * Tracks keyboard height and notifies delegate on changes.
  * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardHandler(
+class TrueSheetKeyboardObserver(
   private val targetView: View,
-  private val reactContext: ThemedReactContext,
-  private val onKeyboardHeightChanged: (Int) -> Unit
+  private val reactContext: ThemedReactContext
 ) {
+
+  var delegate: TrueSheetKeyboardObserverDelegate? = null
+
+  var currentHeight: Int = 0
+    private set
 
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var activityRootView: View? = null
 
-  var currentImeHeight: Int = 0
-    private set
-
-  fun setup() {
+  fun start() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       setupAnimationCallback()
     } else {
@@ -33,7 +38,7 @@ class TrueSheetKeyboardHandler(
     }
   }
 
-  fun cleanup() {
+  fun stop() {
     globalLayoutListener?.let { listener ->
       activityRootView?.viewTreeObserver?.removeOnGlobalLayoutListener(listener)
       globalLayoutListener = null
@@ -42,11 +47,15 @@ class TrueSheetKeyboardHandler(
     ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
   }
 
-  private fun updateKeyboardHeight(height: Int) {
-    if (currentImeHeight != height) {
-      currentImeHeight = height
-      onKeyboardHeightChanged(height)
+  private fun updateHeight(height: Int) {
+    if (currentHeight != height) {
+      currentHeight = height
+      delegate?.keyboardHeightDidChange(height)
     }
+  }
+
+  private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int {
+    return insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
   }
 
   private fun setupAnimationCallback() {
@@ -55,10 +64,6 @@ class TrueSheetKeyboardHandler(
       object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
         private var startHeight = 0
         private var endHeight = 0
-
-        private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int {
-          return insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-        }
 
         override fun onPrepare(animation: WindowInsetsAnimationCompat) {
           startHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
@@ -82,13 +87,13 @@ class TrueSheetKeyboardHandler(
 
           val fraction = imeAnimation.interpolatedFraction
           val currentHeight = (startHeight + (endHeight - startHeight) * fraction).toInt()
-          updateKeyboardHeight(currentHeight)
+          updateHeight(currentHeight)
 
           return insets
         }
 
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
-          updateKeyboardHeight(getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView)))
+          updateHeight(getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView)))
         }
       }
     )
@@ -105,7 +110,7 @@ class TrueSheetKeyboardHandler(
       val screenHeight = rootView.height
       val keyboardHeight = screenHeight - rect.bottom
 
-      updateKeyboardHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
+      updateHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
