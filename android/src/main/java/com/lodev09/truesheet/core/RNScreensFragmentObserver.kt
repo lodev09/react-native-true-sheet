@@ -27,8 +27,8 @@ class RNScreensFragmentObserver(
     val fragmentManager = activity.supportFragmentManager
 
     fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
-      override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
-        super.onFragmentStarted(fm, fragment)
+      override fun onFragmentPreAttached(fm: FragmentManager, fragment: Fragment, context: android.content.Context) {
+        super.onFragmentPreAttached(fm, fragment, context)
 
         if (isModalFragment(fragment) && !activeModalFragments.contains(fragment)) {
           activeModalFragments.add(fragment)

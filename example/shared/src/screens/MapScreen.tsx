@@ -87,7 +87,9 @@ const MapScreenInner = ({
 
   useFocusEffect(useCallback(() => {
     console.log('focused');
-    gestureSheet.current?.present();
+    // requestAnimationFrame(() => {
+    //   gestureSheet.current?.present();
+    // })
   }, []))
 
   return (
