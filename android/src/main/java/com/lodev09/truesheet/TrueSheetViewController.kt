@@ -12,8 +12,6 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsAnimationCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -29,6 +27,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.GrabberOptions
+import com.lodev09.truesheet.core.TrueSheetKeyboardHandler
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.utils.ScreenUtils
@@ -225,7 +224,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       window?.apply {
         windowAnimation = attributes.windowAnimations
-        // Disable default keyboard avoidance - sheet handles it via setupKeyboardAnimation
+        // Disable default keyboard avoidance - sheet handles it via setupKeyboardHandler
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
 
@@ -256,6 +255,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setOnDismissListener(null)
     }
 
+    cleanupKeyboardHandler()
     cleanupModalObserver()
     sheetContainer?.removeView(this)
 
@@ -274,7 +274,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       resetAnimation()
       setupBackground()
       setupGrabber()
-      setupKeyboardAnimation()
+      setupKeyboardHandler()
 
       sheetContainer?.post {
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
@@ -568,62 +568,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     bottomSheet.addView(grabberView)
   }
 
-  /** Sets up keyboard animation callback for smooth IME transitions. */
-  fun setupKeyboardAnimation() {
+  private var keyboardHandler: TrueSheetKeyboardHandler? = null
+
+  /** Sets up keyboard handler for IME transitions. */
+  fun setupKeyboardHandler() {
     val bottomSheet = bottomSheetView ?: return
+    keyboardHandler = TrueSheetKeyboardHandler(bottomSheet, reactContext) { topInset }
+    keyboardHandler?.setup()
+  }
 
-    ViewCompat.setWindowInsetsAnimationCallback(
-      bottomSheet,
-      object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-        private var startImeHeight = 0
-        private var endImeHeight = 0
-
-        private fun getKeyboardHeight(rootInsets: WindowInsetsCompat?): Int {
-          if (rootInsets == null) return 0
-          return rootInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-        }
-
-        override fun onPrepare(animation: WindowInsetsAnimationCompat) {
-          startImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
-        }
-
-        override fun onStart(
-          animation: WindowInsetsAnimationCompat,
-          bounds: WindowInsetsAnimationCompat.BoundsCompat
-        ): WindowInsetsAnimationCompat.BoundsCompat {
-          endImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
-          return bounds
-        }
-
-        override fun onProgress(
-          insets: WindowInsetsCompat,
-          runningAnimations: List<WindowInsetsAnimationCompat>
-        ): WindowInsetsCompat {
-          val imeAnimation = runningAnimations.find {
-            it.typeMask and WindowInsetsCompat.Type.ime() != 0
-          } ?: return insets
-
-          val fraction = imeAnimation.interpolatedFraction
-          val currentImeHeight = (startImeHeight + (endImeHeight - startImeHeight) * fraction).toInt()
-
-          // Cap translation so sheet doesn't move beyond screen bounds
-          val maxTranslation = maxOf(0, bottomSheet.top - topInset)
-          val translation = minOf(currentImeHeight, maxTranslation)
-          bottomSheet.translationY = -translation.toFloat()
-
-          return insets
-        }
-
-        override fun onEnd(animation: WindowInsetsAnimationCompat) {
-          val finalImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
-
-          // Cap translation so sheet doesn't move beyond screen bounds
-          val maxTranslation = maxOf(0, bottomSheet.top - topInset)
-          val translation = minOf(finalImeHeight, maxTranslation)
-          bottomSheet.translationY = -translation.toFloat()
-        }
-      }
-    )
+  fun cleanupKeyboardHandler() {
+    keyboardHandler?.cleanup()
+    keyboardHandler = null
   }
 
   fun setupBackground() {
