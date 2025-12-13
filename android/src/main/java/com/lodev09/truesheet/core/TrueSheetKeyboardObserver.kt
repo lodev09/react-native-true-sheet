@@ -9,25 +9,28 @@ import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
 
+interface TrueSheetKeyboardObserverDelegate {
+  fun keyboardHeightDidChange(height: Int)
+}
+
 /**
- * Handles keyboard (IME) for sheet translation.
- * Uses WindowInsetsAnimationCompat for smooth animation on API 30+,
- * falls back to ViewTreeObserver on Activity's decor view for API 29 and below.
- *
- * @param targetView The view to translate (typically the bottom sheet)
- * @param reactContext The React context to get the current activity
- * @param topInset The top safe area inset to respect
+ * Tracks keyboard height and notifies delegate on changes.
+ * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardHandler(
+class TrueSheetKeyboardObserver(
   private val targetView: View,
-  private val reactContext: ThemedReactContext,
-  private val topInset: () -> Int
+  private val reactContext: ThemedReactContext
 ) {
+
+  var delegate: TrueSheetKeyboardObserverDelegate? = null
+
+  var currentHeight: Int = 0
+    private set
 
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var activityRootView: View? = null
 
-  fun setup() {
+  fun start() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       setupAnimationCallback()
     } else {
@@ -35,7 +38,7 @@ class TrueSheetKeyboardHandler(
     }
   }
 
-  fun cleanup() {
+  fun stop() {
     globalLayoutListener?.let { listener ->
       activityRootView?.viewTreeObserver?.removeOnGlobalLayoutListener(listener)
       globalLayoutListener = null
@@ -44,61 +47,60 @@ class TrueSheetKeyboardHandler(
     ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
   }
 
-  private fun applyTranslation(imeHeight: Int) {
-    // Cap translation so sheet doesn't move beyond screen bounds
-    val maxTranslation = maxOf(0, targetView.top - topInset())
-    val translation = minOf(imeHeight, maxTranslation)
-    targetView.translationY = -translation.toFloat()
+  private fun updateHeight(height: Int) {
+    if (currentHeight != height) {
+      currentHeight = height
+      delegate?.keyboardHeightDidChange(height)
+    }
   }
 
-  /** API 30+ smooth keyboard animation */
+  private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int {
+    return insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
+  }
+
   private fun setupAnimationCallback() {
     ViewCompat.setWindowInsetsAnimationCallback(
       targetView,
       object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-        private var startImeHeight = 0
-        private var endImeHeight = 0
-
-        private fun getKeyboardHeight(rootInsets: WindowInsetsCompat?): Int {
-          if (rootInsets == null) return 0
-          return rootInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-        }
+        private var startHeight = 0
+        private var endHeight = 0
 
         override fun onPrepare(animation: WindowInsetsAnimationCompat) {
-          startImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          startHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
         }
 
         override fun onStart(
           animation: WindowInsetsAnimationCompat,
           bounds: WindowInsetsAnimationCompat.BoundsCompat
         ): WindowInsetsAnimationCompat.BoundsCompat {
-          endImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
           return bounds
         }
 
-        override fun onProgress(insets: WindowInsetsCompat, runningAnimations: List<WindowInsetsAnimationCompat>): WindowInsetsCompat {
+        override fun onProgress(
+          insets: WindowInsetsCompat,
+          runningAnimations: List<WindowInsetsAnimationCompat>
+        ): WindowInsetsCompat {
           val imeAnimation = runningAnimations.find {
             it.typeMask and WindowInsetsCompat.Type.ime() != 0
           } ?: return insets
 
           val fraction = imeAnimation.interpolatedFraction
-          val currentImeHeight = (startImeHeight + (endImeHeight - startImeHeight) * fraction).toInt()
-          applyTranslation(currentImeHeight)
+          val currentHeight = (startHeight + (endHeight - startHeight) * fraction).toInt()
+          updateHeight(currentHeight)
 
           return insets
         }
 
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
-          applyTranslation(getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView)))
+          updateHeight(getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView)))
         }
       }
     )
   }
 
-  /** API 29 and below fallback using ViewTreeObserver on Activity's root view */
   private fun setupLegacyListener() {
     val rootView = reactContext.currentActivity?.window?.decorView?.rootView ?: return
-
     activityRootView = rootView
 
     globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
@@ -108,11 +110,7 @@ class TrueSheetKeyboardHandler(
       val screenHeight = rootView.height
       val keyboardHeight = screenHeight - rect.bottom
 
-      if (keyboardHeight > screenHeight * 0.15) {
-        applyTranslation(keyboardHeight)
-      } else {
-        applyTranslation(0)
-      }
+      updateHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)

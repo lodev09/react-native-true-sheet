@@ -29,7 +29,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
-import com.lodev09.truesheet.core.TrueSheetKeyboardHandler
+import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
+import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.ScreenUtils
 
 data class DetentInfo(val index: Int, val position: Float)
@@ -224,7 +225,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       window?.apply {
         windowAnimation = attributes.windowAnimations
-        // Disable default keyboard avoidance - sheet handles it via setupKeyboardHandler
+        // Disable default keyboard avoidance - sheet handles it via setupKeyboardObserver
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
 
@@ -255,7 +256,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setOnDismissListener(null)
     }
 
-    cleanupKeyboardHandler()
+    cleanupKeyboardObserver()
     cleanupModalObserver()
     sheetContainer?.removeView(this)
 
@@ -274,7 +275,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       resetAnimation()
       setupBackground()
       setupGrabber()
-      setupKeyboardHandler()
+      setupKeyboardObserver()
 
       sheetContainer?.post {
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
@@ -568,18 +569,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     bottomSheet.addView(grabberView)
   }
 
-  private var keyboardHandler: TrueSheetKeyboardHandler? = null
+  private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
-  /** Sets up keyboard handler for IME transitions. */
-  fun setupKeyboardHandler() {
+  fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
-    keyboardHandler = TrueSheetKeyboardHandler(bottomSheet, reactContext) { topInset }
-    keyboardHandler?.setup()
+    keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
+      delegate = object : TrueSheetKeyboardObserverDelegate {
+        override fun keyboardHeightDidChange(height: Int) {
+          setupSheetDetents()
+        }
+      }
+      start()
+    }
   }
 
-  fun cleanupKeyboardHandler() {
-    keyboardHandler?.cleanup()
-    keyboardHandler = null
+  fun cleanupKeyboardObserver() {
+    keyboardObserver?.stop()
+    keyboardObserver = null
   }
 
   fun setupBackground() {
@@ -632,7 +638,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetTop = bottomSheet.top
 
     // Footer Y relative to sheet: place at bottom of sheet container minus footer height
-    var footerY = (sheetHeight - sheetTop - footerHeight).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
 
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
@@ -806,16 +812,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Calculations
   // ====================================================================
 
+  private val keyboardHeight: Int
+    get() = keyboardObserver?.currentHeight ?: 0
+
   private fun getDetentHeight(detent: Double): Int {
-    val height: Int = if (detent == -1.0) {
-      // Auto height: add bottomInset to content to match iOS behavior
-      contentHeight + headerHeight + contentBottomInset
+    val height = if (detent == -1.0) {
+      contentHeight + headerHeight + contentBottomInset + keyboardHeight
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      // Fractional detent: add bottomInset to match iOS behavior
-      (detent * screenHeight).toInt() + contentBottomInset
+      (detent * screenHeight).toInt() + contentBottomInset + keyboardHeight
     }
 
     val maxAllowedHeight = screenHeight + contentBottomInset
