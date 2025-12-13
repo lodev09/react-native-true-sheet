@@ -605,14 +605,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
           val fraction = imeAnimation.interpolatedFraction
           val currentImeHeight = (startImeHeight + (endImeHeight - startImeHeight) * fraction).toInt()
-          bottomSheet.translationY = -currentImeHeight.toFloat()
+
+          // Cap translation so sheet doesn't move beyond screen bounds
+          val maxTranslation = maxOf(0, bottomSheet.top - topInset)
+          val translation = minOf(currentImeHeight, maxTranslation)
+          bottomSheet.translationY = -translation.toFloat()
 
           return insets
         }
 
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
           val finalImeHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(bottomSheet))
-          bottomSheet.translationY = -finalImeHeight.toFloat()
+
+          // Cap translation so sheet doesn't move beyond screen bounds
+          val maxTranslation = maxOf(0, bottomSheet.top - topInset)
+          val translation = minOf(finalImeHeight, maxTranslation)
+          bottomSheet.translationY = -translation.toFloat()
         }
       }
     )
