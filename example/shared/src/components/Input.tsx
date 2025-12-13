@@ -1,14 +1,15 @@
-import { Platform, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { BORDER_RADIUS, LIGHT_GRAY, INPUT_HEIGHT, SPACING } from '../utils';
 
-export const Input = () => {
+export const Input = (props: TextInputProps) => {
   return (
     <View style={styles.inputContainer}>
       <TextInput
         style={styles.input}
         placeholder="Enter some text..."
         placeholderTextColor={LIGHT_GRAY}
+        {...props}
       />
     </View>
   );

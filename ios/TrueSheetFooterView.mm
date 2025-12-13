@@ -124,8 +124,25 @@ using namespace facebook::react;
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
 }
 
+- (TrueSheetViewController *)findSheetViewController {
+  UIResponder *responder = self;
+  while (responder) {
+    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
+      return (TrueSheetViewController *)responder;
+    }
+    responder = responder.nextResponder;
+  }
+  return nil;
+}
+
 - (void)keyboardWillChangeFrame:(NSNotification *)notification {
   if (!_bottomConstraint) {
+    return;
+  }
+
+  // Only respond to keyboard if this sheet is the topmost presented controller
+  TrueSheetViewController *sheetController = [self findSheetViewController];
+  if (sheetController && !sheetController.isTopmostPresentedController) {
     return;
   }
 
