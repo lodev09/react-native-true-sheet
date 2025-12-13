@@ -17,10 +17,7 @@ interface TrueSheetKeyboardObserverDelegate {
  * Tracks keyboard height and notifies delegate on changes.
  * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardObserver(
-  private val targetView: View,
-  private val reactContext: ThemedReactContext
-) {
+class TrueSheetKeyboardObserver(private val targetView: View, private val reactContext: ThemedReactContext) {
 
   var delegate: TrueSheetKeyboardObserverDelegate? = null
 
@@ -54,9 +51,7 @@ class TrueSheetKeyboardObserver(
     }
   }
 
-  private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int {
-    return insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-  }
+  private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int = insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
 
   private fun setupAnimationCallback() {
     ViewCompat.setWindowInsetsAnimationCallback(
@@ -77,10 +72,7 @@ class TrueSheetKeyboardObserver(
           return bounds
         }
 
-        override fun onProgress(
-          insets: WindowInsetsCompat,
-          runningAnimations: List<WindowInsetsAnimationCompat>
-        ): WindowInsetsCompat {
+        override fun onProgress(insets: WindowInsetsCompat, runningAnimations: List<WindowInsetsAnimationCompat>): WindowInsetsCompat {
           val imeAnimation = runningAnimations.find {
             it.typeMask and WindowInsetsCompat.Type.ime() != 0
           } ?: return insets
