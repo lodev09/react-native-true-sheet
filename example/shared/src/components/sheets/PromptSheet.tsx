@@ -37,7 +37,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       dismissible={false}
       grabber={false}
       name="prompt-sheet"
-      detents={['auto', 0.8]}
+      detents={['auto']}
       style={styles.content}
       blurTint="dark"
       backgroundColor={DARK}
@@ -59,7 +59,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         console.log('Back button pressed!');
         sheetRef.current?.dismiss();
       }}
-      footer={<Footer />}
+      footer={<Footer onPress={() => console.log('footer pressed')} />}
       {...props}
     >
       <DemoContent color={DARK_BLUE} />
