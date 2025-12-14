@@ -100,8 +100,8 @@ const config: Config = {
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org/',
         '@type': 'WebSite',
-        'name': 'Guides',
-        'url': 'https://sheet.lodev09.com/category/guides',
+        'name': 'Configuration',
+        'url': 'https://sheet.lodev09.com/reference/configuration',
       }),
     },
   ],

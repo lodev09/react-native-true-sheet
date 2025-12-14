@@ -46,8 +46,8 @@ cd ios && pod install
 ## Documentation
 
 - [Example](example)
-- [Guides](https://sheet.lodev09.com/category/guides)
-- [Reference](https://sheet.lodev09.com/category/reference)
+- [Configuration](https://sheet.lodev09.com/reference/configuration)
+- [Lifecycle Events](https://sheet.lodev09.com/reference/events)
 - [Migrating to v3](https://sheet.lodev09.com/migration)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
