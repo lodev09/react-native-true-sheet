@@ -200,6 +200,9 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   );
 
   const handleDismiss = useCallback(() => {
+    // Remove from stack when dismissed
+    bottomSheetContext?.removeFromStack(sheetName);
+
     // Resolve dismiss promise
     if (dismissResolver.current) {
       dismissResolver.current();
@@ -212,7 +215,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     isMinimized.current = false;
     isDismissing.current = false;
     isDragging.current = false;
-  }, []);
+  }, [sheetName]);
 
   const handleAnimate = useCallback(
     (_fromIndex: number, toIndex: number) => {
@@ -326,22 +329,40 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   // For scrollable, we render the child directly
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
 
-  const sheetMethodsRef = useRef<TrueSheetRef>({
+  const dismissInternal = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      dismissResolver.current = resolve;
+      isDismissing.current = true;
+      modalRef.current?.dismiss();
+    });
+  }, []);
+
+  const sheetMethodsRef = useRef<TrueSheetRef & { dismissDirect?: () => Promise<void> }>({
     present: (index = 0) => {
       return new Promise<void>((resolve) => {
         presentResolver.current = resolve;
         setSnapIndex(index);
         isPresenting.current = true;
+        bottomSheetContext?.pushToStack(sheetName);
         modalRef.current?.present();
       });
     },
     dismiss: () => {
       return new Promise<void>((resolve) => {
-        dismissResolver.current = resolve;
-        isDismissing.current = true;
-        modalRef.current?.dismiss();
+        // iOS-like behavior: dismiss sheets above, but not itself.
+        // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
+        const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
+        const immediateChild = sheetsAbove[sheetsAbove.length - 1];
+        if (immediateChild) {
+          // Dismiss the immediate child - gorhom will dismiss all sheets above it
+          bottomSheetContext?.dismissDirect(immediateChild).then(resolve);
+          return;
+        }
+
+        dismissInternal().then(resolve);
       });
     },
+    dismissDirect: () => dismissInternal(),
     resize: async (index: number) => {
       modalRef.current?.snapToIndex(index);
     },
