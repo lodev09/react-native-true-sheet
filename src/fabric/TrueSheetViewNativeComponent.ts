@@ -13,6 +13,7 @@ type GrabberOptionsType = Readonly<{
   topMargin?: Double;
   cornerRadius?: WithDefault<Double, -1>;
   color?: ProcessedColorValue | null;
+  adaptive?: WithDefault<boolean, true>;
 }>;
 
 type BlurOptionsType = Readonly<{

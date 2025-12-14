@@ -85,6 +85,7 @@ Options for customizing the grabber (drag handle) appearance.
     topMargin: 10,
     cornerRadius: 3,
     color: '#FF0000',
+    adaptive: false,
   }}
 >
   <View />
@@ -98,6 +99,7 @@ Options for customizing the grabber (drag handle) appearance.
 | `topMargin` | `number` | The top margin from the sheet edge. | iOS: `5`, Android: `16` |
 | `cornerRadius` | `number` | The corner radius of the grabber pill. | `height / 2` |
 | `color` | `ColorValue` | The color of the grabber. Uses native styling when not provided. | |
+| `adaptive` | `boolean` | Whether the grabber adapts to light/dark mode. Uses vibrancy on iOS and theme-based colors on Android. | `true` |
 
 ## `InsetAdjustment`
 

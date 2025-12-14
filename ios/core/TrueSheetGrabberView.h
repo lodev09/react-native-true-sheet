@@ -31,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Custom color for the grabber (uses vibrancy effect when nil)
 @property (nonatomic, strong, nullable) UIColor *color;
 
+/// Whether the grabber color adapts to the background (default: YES)
+@property (nonatomic, strong, nullable) NSNumber *adaptive;
+
 /// Adds the grabber view to a parent view with proper constraints
 - (void)addToView:(UIView *)parentView;
 

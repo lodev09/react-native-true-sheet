@@ -8,7 +8,7 @@
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-<img alt="React Native True Sheet - IOS" src="docs/static/img/preview-ios.gif" height="500" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-android.gif" height="500" /><img alt="React Native True Sheet - Web" src="docs/static/img/preview-web.gif" height="500" />
+<img alt="React Native True Sheet - IOS" src="docs/static/img/preview-ios.gif" width="246 height="500" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-android.gif" width="246 height="500" /><img alt="React Native True Sheet - Web" src="docs/static/img/preview-web.gif" width="246 height="500" />
 
 ## Features
 

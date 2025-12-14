@@ -19,7 +19,8 @@ data class GrabberOptions(
   val height: Float? = null,
   val topMargin: Float? = null,
   val cornerRadius: Float? = null,
-  val color: Int? = null
+  val color: Int? = null,
+  val adaptive: Boolean = true
 )
 
 /**
@@ -34,6 +35,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     private const val DEFAULT_HEIGHT = 4f // dp
     private const val DEFAULT_TOP_MARGIN = 16f // dp
     private const val DEFAULT_ALPHA = 0.4f
+    private val DEFAULT_COLOR = Color.argb((DEFAULT_ALPHA * 255).toInt(), 73, 69, 79) // #49454F @ 40%
   }
 
   private val grabberWidth: Float
@@ -48,8 +50,11 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
   private val grabberCornerRadius: Float
     get() = options?.cornerRadius ?: (grabberHeight / 2)
 
+  private val isAdaptive: Boolean
+    get() = options?.adaptive ?: true
+
   private val grabberColor: Int
-    get() = getAdaptiveColor(options?.color)
+    get() = if (isAdaptive) getAdaptiveColor(options?.color) else options?.color ?: DEFAULT_COLOR
 
   init {
     layoutParams = FrameLayout.LayoutParams(
@@ -70,10 +75,6 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     elevation = 100f
   }
 
-  /**
-   * Gets an adaptive color based on the current light/dark mode.
-   * If a base color is provided, it blends with white/black based on the mode.
-   */
   private fun getAdaptiveColor(baseColor: Int? = null): Int {
     val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
     val isDarkMode = nightMode == Configuration.UI_MODE_NIGHT_YES
