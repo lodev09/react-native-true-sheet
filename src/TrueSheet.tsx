@@ -293,11 +293,6 @@ export class TrueSheet
     this.props.onBackPress?.(event);
   }
 
-  /**
-   * Present the Sheet by `index` (Promise-based)
-   * @param index - Detent index (default: 0)
-   * @param animated - Whether to animate the presentation (default: true)
-   */
   public async present(index: number = 0, animated: boolean = true): Promise<void> {
     const detentsLength = Math.min(this.props.detents?.length ?? 2, 3); // Max 3 detents
     if (index < 0 || index >= detentsLength) {
@@ -317,18 +312,10 @@ export class TrueSheet
     return TrueSheetModule?.presentByRef(this.handle, index, animated);
   }
 
-  /**
-   * Resizes the Sheet programmatically by `index`.
-   * This is an alias of the `present(index)` method.
-   */
   public async resize(index: number): Promise<void> {
     await this.present(index);
   }
 
-  /**
-   * Dismisses the Sheet
-   * @param animated - Whether to animate the dismissal (default: true)
-   */
   public async dismiss(animated: boolean = true): Promise<void> {
     return TrueSheetModule?.dismissByRef(this.handle, animated);
   }
