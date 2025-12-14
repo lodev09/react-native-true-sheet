@@ -2,11 +2,13 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
+import androidx.core.graphics.ColorUtils
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 
 /**
@@ -31,7 +33,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     private const val DEFAULT_WIDTH = 32f // dp
     private const val DEFAULT_HEIGHT = 4f // dp
     private const val DEFAULT_TOP_MARGIN = 16f // dp
-    private val DEFAULT_COLOR = Color.argb((0.4 * 255).toInt(), 73, 69, 79) // #49454F @ 40%
+    private const val DEFAULT_ALPHA = 0.4f
   }
 
   private val grabberWidth: Float
@@ -47,7 +49,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     get() = options?.cornerRadius ?: (grabberHeight / 2)
 
   private val grabberColor: Int
-    get() = options?.color ?: DEFAULT_COLOR
+    get() = getAdaptiveColor(options?.color)
 
   init {
     layoutParams = FrameLayout.LayoutParams(
@@ -66,5 +68,23 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
 
     // High elevation to ensure grabber appears above content views
     elevation = 100f
+  }
+
+  /**
+   * Gets an adaptive color based on the current light/dark mode.
+   * If a base color is provided, it blends with white/black based on the mode.
+   */
+  private fun getAdaptiveColor(baseColor: Int? = null): Int {
+    val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+    val isDarkMode = nightMode == Configuration.UI_MODE_NIGHT_YES
+    val modeColor = if (isDarkMode) Color.WHITE else Color.BLACK
+
+    return if (baseColor != null) {
+      // Blend user color with mode color for adaptive effect
+      val blendedColor = ColorUtils.blendARGB(baseColor, modeColor, 0.3f)
+      ColorUtils.setAlphaComponent(blendedColor, (DEFAULT_ALPHA * 255).toInt())
+    } else {
+      ColorUtils.setAlphaComponent(modeColor, (DEFAULT_ALPHA * 255).toInt())
+    }
   }
 }
