@@ -54,16 +54,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   self.userInteractionEnabled = NO;
   self.clipsToBounds = YES;
 
-  // Create blur effect for vibrancy base
-  UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial];
-  UIVibrancyEffect *vibrancyEffect = [UIVibrancyEffect effectForBlurEffect:blurEffect style:UIVibrancyEffectStyleFill];
-
-  // Create the vibrancy view that fills this view
-  _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:vibrancyEffect];
+  _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:nil];
   _vibrancyView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [self addSubview:_vibrancyView];
 
-  // Add a fill view inside vibrancy contentView
   _fillView = [[UIView alloc] init];
   _fillView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
@@ -95,8 +89,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   _vibrancyView.frame = self.bounds;
   _fillView.frame = _vibrancyView.contentView.bounds;
 
-  if ([self isAdaptive]) {
-    _vibrancyView.effect = [UIVibrancyEffect effectForBlurEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial] style:UIVibrancyEffectStyleFill];
+  if (self.isAdaptive) {
+    _vibrancyView.effect =
+      [UIVibrancyEffect effectForBlurEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial]
+                                      style:UIVibrancyEffectStyleFill];
     _vibrancyView.backgroundColor = _color;
     _fillView.hidden = NO;
   } else {
