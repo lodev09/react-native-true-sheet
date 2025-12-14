@@ -44,6 +44,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     <TrueSheet
       ref={ref}
       detents={[0.8, 1]}
+      name="scrollview"
       scrollable
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}

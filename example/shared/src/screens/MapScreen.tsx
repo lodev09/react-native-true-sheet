@@ -93,6 +93,7 @@ const MapScreenInner = ({
         onPress={() => sheetRef.current?.resize(0)}
       />
       <ReanimatedTrueSheet
+        name="main"
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
