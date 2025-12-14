@@ -40,6 +40,34 @@ export const TrueSheetActions = {
   remove: (): TrueSheetActionType => ({ type: 'REMOVE' }),
 };
 
+const ensureBaseRoute = <T extends { routes: { name: string }[] }>(
+  state: T,
+  baseRouteName: string | undefined,
+  routeParamList: Record<string, object | undefined> | undefined
+): T & { index: number; routes: T['routes'] } => {
+  if (!baseRouteName) {
+    return state as T & { index: number; routes: T['routes'] };
+  }
+
+  const hasBaseRoute = state.routes.some((r) => r.name === baseRouteName);
+
+  if (!hasBaseRoute) {
+    const baseRoute = {
+      key: `${baseRouteName}-${nanoid()}`,
+      name: baseRouteName,
+      params: routeParamList?.[baseRouteName],
+    };
+
+    return {
+      ...state,
+      index: state.routes.length,
+      routes: [baseRoute, ...state.routes],
+    } as T & { index: number; routes: T['routes'] };
+  }
+
+  return state as T & { index: number; routes: T['routes'] };
+};
+
 export const TrueSheetRouter = (
   routerOptions: StackRouterOptions
 ): Router<TrueSheetNavigationState<ParamListBase>, TrueSheetActionType> => {
@@ -54,9 +82,11 @@ export const TrueSheetRouter = (
 
     getInitialState(options) {
       const state = baseRouter.getInitialState(options);
+      const baseRouteName = routerOptions.initialRouteName ?? options.routeNames[0];
+      const stateWithBaseRoute = ensureBaseRoute(state, baseRouteName, options.routeParamList);
 
       return {
-        ...state,
+        ...stateWithBaseRoute,
         stale: false,
         type: 'true-sheet',
         key: `true-sheet-${nanoid()}`,
@@ -154,8 +184,11 @@ export const TrueSheetRouter = (
         routeGetIdList,
       });
 
+      const baseRouteName = routerOptions.initialRouteName ?? routeNames[0];
+      const stateWithBaseRoute = ensureBaseRoute(state, baseRouteName, routeParamList);
+
       return {
-        ...state,
+        ...stateWithBaseRoute,
         type: 'true-sheet',
         key: `true-sheet-${nanoid()}`,
       };

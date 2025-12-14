@@ -15,10 +15,13 @@
 + (nullable UIWindow *)keyWindow {
   NSSet<UIScene *> *connectedScenes = [UIApplication sharedApplication].connectedScenes;
 
+  UIWindow *fallbackWindow = nil;
+
   for (UIScene *scene in connectedScenes) {
     if ([scene isKindOfClass:[UIWindowScene class]]) {
       UIWindowScene *windowScene = (UIWindowScene *)scene;
 
+      // Check for foreground active first (preferred)
       if (windowScene.activationState == UISceneActivationStateForegroundActive) {
         for (UIWindow *window in windowScene.windows) {
           if (window.isKeyWindow) {
@@ -31,10 +34,23 @@
           return windowScene.windows.firstObject;
         }
       }
+
+      // Store a fallback window for transitional states (e.g., deep link handling from background or cold start)
+      if (fallbackWindow == nil && windowScene.windows.count > 0) {
+        for (UIWindow *window in windowScene.windows) {
+          if (window.isKeyWindow) {
+            fallbackWindow = window;
+            break;
+          }
+        }
+        if (fallbackWindow == nil) {
+          fallbackWindow = windowScene.windows.firstObject;
+        }
+      }
     }
   }
 
-  return nil;
+  return fallbackWindow;
 }
 
 @end
