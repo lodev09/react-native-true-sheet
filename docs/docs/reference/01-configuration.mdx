@@ -25,9 +25,9 @@ We use `ref` to reference our sheet and call the [imperative methods](/reference
 
 Array of detents you want the sheet to support. See [this guide](/guides/resizing) for example.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`SheetDetent[]`](/reference/types#sheetdetent) | `[0.5, 1]` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`SheetDetent[]`](/reference/types#sheetdetent) | `[0.5, 1]` | ✅ | ✅ | ✅ |
 
 :::info
 A sheet can only support up to **3** detents only! AKA **_collapsed_**, **_half-expanded_**, and **_expanded_**.
@@ -41,17 +41,17 @@ It's recommended to sort detents from **smallest to largest**.
 
 The name to reference this sheet. It has to be **_unique_**. You can then present this sheet globally using its name. See [this guide](/guides/global-methods) for example.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `string` | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `string` | | ✅ | ✅ | ✅ |
 
 ## `backgroundColor`
 
 The sheet's background color. Uses the system default when not provided.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `ColorValue` | _system default_ | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ColorValue` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
 When not provided, iOS uses the system background color, while Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
@@ -61,9 +61,9 @@ When not provided, iOS uses the system background color, while Android uses Mate
 
 The sheet corner radius.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `number` | _system default_ | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
 When not provided, iOS uses the device's native corner radius automatically, while Android defaults to `28` (following Material Design 3 guidelines).
@@ -73,33 +73,33 @@ When not provided, iOS uses the device's native corner radius automatically, whi
 
 Overrides `"large"` or `"100%"` height.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `number` | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | | ✅ | ✅ | ✅ |
 
 ## `edgeToEdgeFullScreen`
 
 Allows the sheet to extend behind the status bar when fully expanded in edge-to-edge mode. When `false` (default), the sheet stops at the bottom of the status bar.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `false` |  | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `false` |  | ✅ | |
 
 ## `dismissible`
 
 If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | ✅ |
 
 ## `draggable`
 
 If set to `false`, the sheet will disable dragging to resize. The sheet can only be resized programmatically using the [`resize`](/reference/methods#resize) method.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | ✅ |
 
 :::info
 When `draggable` is `false`, the [`grabber`](#grabber) is automatically hidden.
@@ -109,9 +109,9 @@ When `draggable` is `false`, the [`grabber`](#grabber) is automatically hidden.
 
 Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | ✅ |
 
 :::info
 This property is only used during the initial mount.
@@ -121,9 +121,9 @@ This property is only used during the initial mount.
 
 The detent index that the sheet should start to dim the background.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `number` | `0` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | `0` | ✅ | ✅ | |
 
 :::info
 This is ignored if `dimmed` is set to `false`.
@@ -133,26 +133,26 @@ This is ignored if `dimmed` is set to `false`.
 
 Initially present the sheet, after mounting, at a given detent index.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `number` | `-1` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | `-1` | ✅ | ✅ | ✅ |
 
 ## `initialDetentAnimated`
 
 Specify whether the sheet should animate after mounting.
 Used with `initialDetentIndex`.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | ✅ |
 
 ## `grabber`
 
 Shows a native grabber (or drag handle) on the sheet.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | ✅ |
 
 :::info
 iOS uses the native `UISheetPresentationController` grabber by default, while Android renders a native view following [Material Design 3 specifications](https://m3.material.io/components/bottom-sheets/specs) (32x4dp, centered, with the standard drag handle color).
@@ -164,9 +164,9 @@ When [`grabberOptions`](#grabberoptions) is provided, iOS uses a custom grabber 
 
 Options for customizing the grabber appearance. Only applies when [`grabber`](#grabber) is `true`.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`GrabberOptions`](/reference/types#grabberoptions) | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`GrabberOptions`](/reference/types#grabberoptions) | | ✅ | ✅ | |
 
 ```tsx
 <TrueSheet
@@ -190,17 +190,17 @@ On iOS, when `grabberOptions` is not provided, the native system grabber is used
 
 A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](/guides/header) for example.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `ComponentType<...> \| ReactElement` | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ComponentType<...> \| ReactElement` | | ✅ | ✅ | ✅ |
 
 ## `footer`
 
 A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `ComponentType<...> \| ReactElement` | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ComponentType<...> \| ReactElement` | | ✅ | ✅ | ✅ |
 
 ## `scrollable`
 
@@ -208,33 +208,33 @@ On iOS, automatically pins ScrollView or FlatList to fit within the sheet's avai
 
 On Android, it adds additional style to the content for scrollable to work.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
 | `boolean` | `false` | ✅ | ✅ | |
 
 ## `pageSizing`
 
 Controls the sheet presentation style on iPad. When enabled (true), uses a large page sheet for better readability. When disabled (false), uses a centered form sheet.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `boolean` | `true` | **_17+_** | |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | **_17+_** | | |
 
 ## `blurTint`
 
 The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`BlurTint`](/reference/types#blurtint) | | ✅ | |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BlurTint`](/reference/types#blurtint) | | ✅ | | |
 
 ## `blurOptions`
 
 Options for customizing the blur effect. Only applies when [`blurTint`](#blurtint) is set.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`BlurOptions`](/reference/types#bluroptions) | | ✅ | |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BlurOptions`](/reference/types#bluroptions) | | ✅ | | |
 
 ```tsx
 <TrueSheet
@@ -252,9 +252,9 @@ Options for customizing the blur effect. Only applies when [`blurTint`](#blurtin
 
 Controls how the bottom safe area inset affects detent heights.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| [`InsetAdjustment`](/reference/types#insetadjustment) | `"automatic"` | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`InsetAdjustment`](/reference/types#insetadjustment) | `"automatic"` | ✅ | ✅ | |
 
 ## `stackBehavior`
 
@@ -268,6 +268,6 @@ Defines the stack behavior when a modal is presented while another is visible. S
 
 The sheet's container style override.
 
-| Type | Default | 🍎 | 🤖 |
-| - | - | - | - |
-| `StyleProp<ViewStyle>` | | ✅ | ✅ |
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `StyleProp<ViewStyle>` | | ✅ | ✅ | ✅ |

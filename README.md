@@ -8,16 +8,17 @@
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-<img alt="React Native True Sheet - IOS" src="docs/static/img/preview-ios.gif" width="300" height="600" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-android.gif" width="300" height="600" />
+<img alt="React Native True Sheet - IOS" src="docs/static/img/preview-ios.gif" height="500" /><img alt="React Native True Sheet - Android" src="docs/static/img/preview-android.gif" height="500" /><img alt="React Native True Sheet - Web" src="docs/static/img/preview-web.gif" height="500" />
 
 ## Features
 
 * ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
-* 🚀 **Native** - Implemented in the native realm
-* 🎯 **Type-safe** - Full TypeScript support with Codegen-generated native interfaces
+* 🚀 **Fully Native** - Implemented in the native realm, zero JS hacks
 * ♿ **Accessible** - Native accessibility and screen reader support out of the box
 * 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/props#events)
-* 🪟 **Liquid Glass** - iOS 26+ Liquid Glass support out of the box. Featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
+* 🪟 **Liquid Glass** - [iOS 26+ Liquid Glass](https://sheet.lodev09.com/guides/liquid-glass) support out of the box, featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
+* 🐎 **Reanimated** - First-class support for [react-native-reanimated](https://sheet.lodev09.com/guides/reanimated)
+* 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
 ## Installation
 
