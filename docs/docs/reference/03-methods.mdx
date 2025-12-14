@@ -51,6 +51,10 @@ await sheet.current?.dismiss()
 await sheet.current?.dismiss(false)
 ```
 
+:::info Stacked Sheets
+When called on a sheet that has other sheets presented on top of it, `dismiss()` will dismiss all sheets above it but the sheet itself will remain presented. This matches iOS's native `UIViewController` behavior. See [Dismissing Stacked Sheets](/guides/stacking#dismissing-stacked-sheets) for more details.
+:::
+
 ### `resize`
 
 Resizes the sheet programmatically by `index`. The sheet must be presented before calling this method.

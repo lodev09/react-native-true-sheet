@@ -328,6 +328,18 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
+    // iOS-like behavior: calling dismiss on a presenting controller dismisses
+    // its presented controller (and everything above it), but NOT itself.
+    // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
+    val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(this)
+    if (sheetsAbove.isNotEmpty()) {
+      for (sheet in sheetsAbove) {
+        sheet.viewController.dismiss(animated)
+      }
+      promiseCallback()
+      return
+    }
+
     viewController.dismissPromise = promiseCallback
     viewController.dismiss(animated)
   }

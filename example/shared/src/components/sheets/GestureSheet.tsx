@@ -47,6 +47,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
   return (
     <TrueSheet
       detents={['auto']}
+      name="gesture"
       ref={sheetRef}
       style={styles.content}
       blurTint="dark"

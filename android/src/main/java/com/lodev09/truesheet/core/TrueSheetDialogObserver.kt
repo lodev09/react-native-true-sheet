@@ -54,6 +54,19 @@ object TrueSheetDialogObserver {
     }
   }
 
+  /**
+   * Returns all sheets presented on top of the given sheet (children/descendants).
+   * Returns them in reverse order (top-most first) for proper dismissal.
+   */
+  @JvmStatic
+  fun getSheetsAbove(sheetView: TrueSheetView): List<TrueSheetView> {
+    synchronized(presentedSheetStack) {
+      val index = presentedSheetStack.indexOf(sheetView)
+      if (index < 0 || index >= presentedSheetStack.size - 1) return emptyList()
+      return presentedSheetStack.subList(index + 1, presentedSheetStack.size).reversed()
+    }
+  }
+
   @JvmStatic
   fun removeSheet(sheetView: TrueSheetView) {
     synchronized(presentedSheetStack) {

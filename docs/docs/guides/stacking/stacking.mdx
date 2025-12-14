@@ -38,6 +38,20 @@ When Sheet 2 is dismissed, Sheet 1 will automatically be shown again.
 The previous sheet is only hidden if it's not fully expanded. When expanded, the new sheet simply presents on top.
 :::
 
+## Dismissing Stacked Sheets
+
+When you have stacked sheets, calling `dismiss()` on a sheet that has other sheets presented on top of it will dismiss all sheets above it, but the sheet itself will remain presented. This matches iOS's native `UIViewController` behavior.
+
+```tsx
+// If Sheet 1 → Sheet 2 → Sheet 3 (Sheet 1 presented Sheet 2, Sheet 2 presented Sheet 3)
+
+await sheet1.current?.dismiss() // Dismisses Sheet 2 and Sheet 3, Sheet 1 stays
+await sheet2.current?.dismiss() // Dismisses Sheet 3, Sheet 1 and Sheet 2 stay
+await sheet3.current?.dismiss() // Dismisses Sheet 3, Sheet 1 and Sheet 2 stay
+```
+
+This is useful when you need to dismiss all child sheets and return focus to a parent sheet without closing it.
+
 ## Stack Behavior (Web)
 
 On web, you can customize the stacking behavior using the [`stackBehavior`](https://gorhom.dev/react-native-bottom-sheet/modal/props#stackbehavior) prop:

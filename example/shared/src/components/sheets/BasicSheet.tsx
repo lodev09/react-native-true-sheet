@@ -51,6 +51,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   return (
     <TrueSheet
       detents={['auto', 0.8, 1]}
+      name="basic"
       ref={sheetRef}
       style={styles.content}
       onDragChange={(e) =>
@@ -112,6 +113,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
       <TrueSheet
         ref={childSheet}
+        name="basic-child"
         detents={['auto', 1]}
         backgroundColor={DARK}
         style={styles.content}

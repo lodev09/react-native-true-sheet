@@ -5,6 +5,10 @@ import type { TrueSheetContextMethods, TrueSheetRef } from './TrueSheet.types';
 interface BottomSheetContextValue extends TrueSheetContextMethods {
   register: (name: string, methods: RefObject<TrueSheetRef>) => void;
   unregister: (name: string) => void;
+  pushToStack: (name: string) => void;
+  removeFromStack: (name: string) => void;
+  getSheetsAbove: (name: string) => string[];
+  dismissDirect: (name: string) => Promise<void>;
 }
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
@@ -19,6 +23,7 @@ export interface TrueSheetProviderProps {
  */
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   const sheetsRef = useRef<Map<string, RefObject<TrueSheetRef>>>(new Map());
+  const presentedStackRef = useRef<string[]>([]);
 
   const register = (name: string, methods: RefObject<TrueSheetRef>) => {
     sheetsRef.current.set(name, methods);
@@ -26,6 +31,31 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
 
   const unregister = (name: string) => {
     sheetsRef.current.delete(name);
+  };
+
+  const pushToStack = (name: string) => {
+    const index = presentedStackRef.current.indexOf(name);
+    if (index >= 0) {
+      presentedStackRef.current.splice(index, 1);
+    }
+    presentedStackRef.current.push(name);
+  };
+
+  const removeFromStack = (name: string) => {
+    const index = presentedStackRef.current.indexOf(name);
+    if (index >= 0) {
+      presentedStackRef.current.splice(index, 1);
+    }
+  };
+
+  /**
+   * Returns all sheets presented on top of the given sheet.
+   * Returns them in reverse order (top-most first) for proper dismissal.
+   */
+  const getSheetsAbove = (name: string): string[] => {
+    const index = presentedStackRef.current.indexOf(name);
+    if (index < 0 || index >= presentedStackRef.current.length - 1) return [];
+    return presentedStackRef.current.slice(index + 1).reverse();
   };
 
   const present = async (name: string, index: number = 0) => {
@@ -46,6 +76,19 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     return sheet.current.dismiss();
   };
 
+  /**
+   * Dismisses a sheet directly without checking for sheets above.
+   * Used internally when batch-dismissing stacked sheets.
+   */
+  const dismissDirect = async (name: string) => {
+    const sheet = sheetsRef.current.get(name);
+    if (!sheet?.current) {
+      console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
+      return;
+    }
+    return (sheet.current as any).dismissDirect?.();
+  };
+
   const resize = async (name: string, index: number) => {
     const sheet = sheetsRef.current.get(name);
     if (!sheet?.current) {
@@ -56,7 +99,19 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   };
 
   return (
-    <BottomSheetContext.Provider value={{ register, unregister, present, dismiss, resize }}>
+    <BottomSheetContext.Provider
+      value={{
+        register,
+        unregister,
+        pushToStack,
+        removeFromStack,
+        getSheetsAbove,
+        dismissDirect,
+        present,
+        dismiss,
+        resize,
+      }}
+    >
       <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
     </BottomSheetContext.Provider>
   );
