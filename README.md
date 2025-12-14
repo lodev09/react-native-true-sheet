@@ -15,9 +15,10 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
 * 🚀 **Fully Native** - Implemented in the native realm, zero JS hacks
 * ♿ **Accessible** - Native accessibility and screen reader support out of the box
-* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/props#events)
+* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
 * 🪟 **Liquid Glass** - [iOS 26+ Liquid Glass](https://sheet.lodev09.com/guides/liquid-glass) support out of the box, featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
 * 🐎 **Reanimated** - First-class support for [react-native-reanimated](https://sheet.lodev09.com/guides/reanimated)
+* 🧭 **React Navigation** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) for seamless navigation integration
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
 ## Installation
@@ -49,9 +50,10 @@ cd ios && pod install
 - [Example](example)
 - [Configuration](https://sheet.lodev09.com/reference/configuration)
 - [Lifecycle Events](https://sheet.lodev09.com/reference/events)
-- [Migrating to v3](https://sheet.lodev09.com/migration)
+- [React Navigation](https://sheet.lodev09.com/guides/navigation)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
+- [Migrating to v3](https://sheet.lodev09.com/migration)
 
 ## Usage
 
