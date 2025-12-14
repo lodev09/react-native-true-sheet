@@ -55,18 +55,6 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (void)layoutSubviews {
-  [super layoutSubviews];
-
-  // Override Yoga layout to fill parent (controller's view)
-  if (self.superview) {
-    CGRect parentBounds = self.superview.bounds;
-    if (!CGRectEqualToRect(self.frame, parentBounds)) {
-      self.frame = parentBounds;
-    }
-  }
-}
-
 - (CGFloat)contentHeight {
   return _contentView ? _contentView.frame.size.height : 0;
 }
