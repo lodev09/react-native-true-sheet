@@ -808,6 +808,7 @@
     _grabberView.topMargin = options[@"topMargin"];
     _grabberView.cornerRadius = options[@"cornerRadius"];
     _grabberView.color = options[@"color"];
+    _grabberView.adaptive = options[@"adaptive"];
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
 

@@ -119,6 +119,14 @@ export interface GrabberOptions {
    * Uses native vibrancy/material styling when not provided.
    */
   color?: ColorValue;
+  /**
+   * Whether the grabber color adapts to light/dark mode.
+   * When enabled, the grabber uses vibrancy effect on iOS and
+   * adjusts color based on the current theme on Android.
+   *
+   * @default true
+   */
+  adaptive?: boolean;
 }
 
 /**

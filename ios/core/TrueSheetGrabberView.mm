@@ -44,6 +44,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   return _cornerRadius ? [_cornerRadius floatValue] : [self effectiveHeight] / 2.0;
 }
 
+- (BOOL)isAdaptive {
+  return _adaptive ? [_adaptive boolValue] : YES;
+}
+
 #pragma mark - Setup
 
 - (void)setupView {
@@ -91,11 +95,15 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   _vibrancyView.frame = self.bounds;
   _fillView.frame = _vibrancyView.contentView.bounds;
 
-  // Apply custom color to vibrancy view
-  if (_color) {
+  if ([self isAdaptive]) {
+    _vibrancyView.effect = [UIVibrancyEffect effectForBlurEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemChromeMaterial] style:UIVibrancyEffectStyleFill];
     _vibrancyView.backgroundColor = _color;
+    _fillView.hidden = NO;
   } else {
+    _vibrancyView.effect = nil;
     _vibrancyView.backgroundColor = nil;
+    _fillView.hidden = YES;
+    self.backgroundColor = _color ?: [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
   }
 }
 

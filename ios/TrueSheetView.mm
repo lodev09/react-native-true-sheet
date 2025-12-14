@@ -150,7 +150,7 @@ using namespace facebook::react;
   const auto &grabberOpts = newProps.grabberOptions;
   UIColor *grabberColor = RCTUIColorFromSharedColor(grabberOpts.color);
   BOOL hasGrabberOptions = grabberOpts.width > 0 || grabberOpts.height > 0 || grabberOpts.topMargin > 0 ||
-                           grabberOpts.cornerRadius >= 0 || grabberColor != nil;
+                           grabberOpts.cornerRadius >= 0 || grabberColor != nil || !grabberOpts.adaptive;
 
   if (hasGrabberOptions) {
     NSMutableDictionary *options = [NSMutableDictionary dictionary];
@@ -170,6 +170,7 @@ using namespace facebook::react;
     if (grabberColor) {
       options[@"color"] = grabberColor;
     }
+    options[@"adaptive"] = @(grabberOpts.adaptive);
 
     _controller.grabberOptions = options;
   } else {
