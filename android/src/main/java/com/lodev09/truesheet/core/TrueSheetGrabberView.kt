@@ -70,9 +70,6 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
       cornerRadius = grabberCornerRadius.dpToPx()
       setColor(grabberColor)
     }
-
-    // High elevation to ensure grabber appears above content views
-    elevation = 100f
   }
 
   private fun getAdaptiveColor(baseColor: Int? = null): Int {
