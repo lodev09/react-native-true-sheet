@@ -72,8 +72,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
 
     // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
-    private const val PRESENT_ANIMATION_DURATION = 200L
-    private const val DISMISS_ANIMATION_DURATION = 150L
+    private const val PRESENT_ANIMATION_DURATION = 250L
+    private const val DISMISS_ANIMATION_DURATION = 250L
   }
 
   // ====================================================================
