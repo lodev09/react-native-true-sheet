@@ -406,7 +406,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       onModalPresented = {
         if (isPresented && isDialogVisible) {
           isDialogVisible = false
-          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeAnimation)
+          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeOutAnimation)
           dialog?.window?.decorView?.visibility = INVISIBLE
           wasHiddenByModal = true
         }
@@ -416,10 +416,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
           dialog?.window?.decorView?.visibility = VISIBLE
-          // Restore original animation after fade-in completes (100ms)
-          sheetContainer?.postDelayed({
+          // Restore animation after visibility change to avoid slide animation
+          sheetContainer?.post {
             dialog?.window?.setWindowAnimations(windowAnimation)
-          }, 100)
+          }
           wasHiddenByModal = false
         }
       }
