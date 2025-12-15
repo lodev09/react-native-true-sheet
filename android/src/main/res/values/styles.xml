@@ -6,9 +6,8 @@
         <item name="android:windowExitAnimation">@anim/true_sheet_slide_out</item>
     </style>
 
-    <!-- Fast fade animation - used for hide/show when modal is presented -->
-    <style name="TrueSheetFadeAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@anim/true_sheet_fade_in</item>
+    <!-- Fade out only - used when hiding sheet for RN Screens modal -->
+    <style name="TrueSheetFadeOutAnimation" parent="Animation.AppCompat.Dialog">
         <item name="android:windowExitAnimation">@anim/true_sheet_fade_out</item>
     </style>
 
