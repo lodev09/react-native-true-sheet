@@ -12,7 +12,6 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
-import androidx.core.view.children
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -664,15 +663,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 
       if (dimmed) {
-        // Attach dim views (alpha controlled by updateDimAmount)
+        // Check if parent has a visible dim (alpha > 0)
+        val parentDimVisible = (parentSheetView?.viewController?.dimView?.alpha ?: 0f) > 0f
+
         if (dimView == null) {
           dimView = TrueSheetDimView(reactContext)
-        }
-        // Always attach to activity if no dim exists there yet
-        val activityDecorView = reactContext.currentActivity?.window?.decorView as? android.view.ViewGroup
-        val activityHasDim = activityDecorView?.children?.any { it is TrueSheetDimView } == true
-        if (!activityHasDim) {
-          dimView?.attach(null)
+          // Attach to activity only if parent's dim is not visible
+          if (!parentDimVisible) {
+            dimView?.attach(null)
+          }
         }
         // Also dim the parent's bottom sheet if there's a parent
         val parentBottomSheet = parentSheetView?.viewController?.bottomSheetView
