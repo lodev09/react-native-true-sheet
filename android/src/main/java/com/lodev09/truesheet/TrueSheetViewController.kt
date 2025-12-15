@@ -147,6 +147,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = ScreenUtils.getScreenHeight(reactContext)
   val screenWidth: Int
     get() = ScreenUtils.getScreenWidth(reactContext)
+  val realScreenHeight: Int
+    get() = ScreenUtils.getRealScreenHeight(reactContext)
 
   var maxSheetHeight: Int? = null
   var detents = mutableListOf(0.5, 1.0)
@@ -455,8 +457,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun getExpectedSheetTop(detentIndex: Int): Int {
     if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
-    val detentHeight = getDetentHeight(detents[detentIndex])
-    return screenHeight - detentHeight
+    return realScreenHeight - getDetentHeight(detents[detentIndex])
   }
 
   /** Hides without dismissing. Used for sheet stacking and RN Screens modals. */
@@ -500,7 +501,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (effectiveTop == lastEmittedPositionPx) return@setUpdateListener
 
         lastEmittedPositionPx = effectiveTop
-        val visibleHeight = ScreenUtils.getRealScreenHeight(reactContext) - effectiveTop
+        val visibleHeight = realScreenHeight - effectiveTop
         val position = getPositionDp(visibleHeight)
         val interpolatedIndex = getInterpolatedIndexForPosition(effectiveTop)
         val detent = getInterpolatedDetentForPosition(effectiveTop)
@@ -566,14 +567,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val behavior = this.behavior ?: return
 
     isReconfiguring = true
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val edgeToEdgeTopInset: Int = if (!edgeToEdgeFullScreen) topInset else 0
 
     behavior.apply {
       isFitToContents = false
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
-      val maxAvailableHeight = realHeight - edgeToEdgeTopInset
+      val maxAvailableHeight = realScreenHeight - edgeToEdgeTopInset
 
       setPeekHeight(getDetentHeight(detents[0]), isPresented)
 
@@ -585,13 +585,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val maxDetentHeight = getDetentHeight(detents.last())
 
       val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
-      halfExpandedRatio = minOf(adjustedHalfExpandedHeight.toFloat() / realHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
+      halfExpandedRatio = minOf(adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
 
-      expandedOffset = maxOf(edgeToEdgeTopInset, realHeight - maxDetentHeight)
+      expandedOffset = maxOf(edgeToEdgeTopInset, realScreenHeight - maxDetentHeight)
       isFitToContents = detents.size < 3 && expandedOffset == 0
 
       val offset = if (expandedOffset == 0) topInset else 0
-      val newHeight = realHeight - expandedOffset - offset
+      val newHeight = realScreenHeight - expandedOffset - offset
       val newWidth = minOf(screenWidth, maxWidth)
 
       if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
@@ -765,10 +765,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Calculate the visible sheet height from a sheet view.
    * Uses real screen height for consistency across API levels.
    */
-  private fun getVisibleSheetHeight(sheetView: View): Int {
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
-    return realHeight - sheetView.top
-  }
+  private fun getVisibleSheetHeight(sheetView: View): Int = realScreenHeight - sheetView.top
 
   private fun getPositionDp(visibleSheetHeight: Int): Float = (screenHeight - visibleSheetHeight).pxToDp()
 
@@ -792,10 +789,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Get the expected sheetTop position for a detent index.
    */
   private fun getSheetTopForDetentIndex(index: Int): Int {
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
-    if (index < 0 || index >= detents.size) return realHeight
-    val detentHeight = getDetentHeight(detents[index])
-    return realHeight - detentHeight
+    if (index < 0 || index >= detents.size) return realScreenHeight
+    return realScreenHeight - getDetentHeight(detents[index])
   }
 
   /** Returns (fromIndex, toIndex, progress) for interpolation, or null if < 2 detents. */
@@ -803,12 +798,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val count = detents.size
     if (count == 0) return null
 
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val firstPos = getSheetTopForDetentIndex(0)
 
     // Above first detent - interpolating toward closed
     if (positionPx > firstPos) {
-      val range = realHeight - firstPos
+      val range = realScreenHeight - firstPos
       val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }
