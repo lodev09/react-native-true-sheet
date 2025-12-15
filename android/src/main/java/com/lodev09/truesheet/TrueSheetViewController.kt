@@ -7,6 +7,7 @@ import android.graphics.drawable.shapes.RoundRectShape
 import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.animation.ValueAnimator
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
@@ -293,10 +294,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupBackground()
       setupGrabber()
       setupKeyboardObserver()
+
+      val toTop = getExpectedSheetTop(currentDetentIndex)
+      setupTransitionTracker(realScreenHeight, toTop, PRESENT_ANIMATION_DURATION)
       animateDimAlpha(show = true)
 
       sheetContainer?.post {
-        bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
         positionFooter()
       }
 
@@ -316,9 +319,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (isDismissing) return@setOnCancelListener
 
       isDismissing = true
+      val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
+      setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
       animateDimAlpha(show = false)
       emitWillDismissEvents()
-      emitDismissedPosition()
     }
 
     dialog.setOnDismissListener {
@@ -401,14 +405,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       reactContext = reactContext,
       onModalPresented = {
         if (isPresented && isDialogVisible) {
-          hideDialog(animated = true)
+          isDialogVisible = false
+          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeAnimation)
+          dialog?.window?.decorView?.visibility = INVISIBLE
           wasHiddenByModal = true
         }
       },
       onModalDismissed = {
         // Only show if we were the one hidden by modal, not by sheet stacking
         if (isPresented && wasHiddenByModal) {
-          showDialog(animated = true)
+          isDialogVisible = true
+          dialog?.window?.decorView?.visibility = VISIBLE
+          // Restore original animation after fade-in completes (100ms)
+          sheetContainer?.postDelayed({
+            dialog?.window?.setWindowAnimations(windowAnimation)
+          }, 100)
           wasHiddenByModal = false
         }
       }
@@ -462,34 +473,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun getExpectedSheetTop(detentIndex: Int): Int {
     if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
     return realScreenHeight - getDetentHeight(detents[detentIndex])
-  }
-
-  /** Hides without dismissing. Used for sheet stacking and RN Screens modals. */
-  fun hideDialog(emitPosition: Boolean = false, animated: Boolean = false) {
-    isDialogVisible = false
-    if (animated) {
-      dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeAnimation)
-    }
-    dialog?.window?.decorView?.visibility = INVISIBLE
-    if (emitPosition) {
-      emitDismissedPosition()
-    }
-  }
-
-  /** Shows a previously hidden dialog. */
-  fun showDialog(emitPosition: Boolean = false, animated: Boolean = false) {
-    isDialogVisible = true
-    dialog?.window?.decorView?.visibility = VISIBLE
-
-    if (emitPosition) {
-      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
-    }
-    if (animated) {
-      // Restore original animation after fade-in completes (100ms)
-      sheetContainer?.postDelayed({
-        dialog?.window?.setWindowAnimations(windowAnimation)
-      }, 100)
-    }
   }
 
   /** Translates the sheet when stacking. Pass 0 to reset. */
@@ -552,8 +535,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isDismissing) return
 
     isDismissing = true
+    val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
+    setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
     emitWillDismissEvents()
-    emitDismissedPosition()
 
     if (!animated) {
       dialog?.window?.setWindowAnimations(0)
@@ -629,6 +613,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
+  private var positionAnimator: ValueAnimator? = null
 
   fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
@@ -645,6 +630,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun cleanupKeyboardObserver() {
     keyboardObserver?.stop()
     keyboardObserver = null
+  }
+
+  private fun setupTransitionTracker(fromTop: Int, toTop: Int, duration: Long) {
+    positionAnimator?.cancel()
+    positionAnimator = ValueAnimator.ofInt(fromTop, toTop).apply {
+      this.duration = duration
+      interpolator = if (fromTop > toTop) {
+        android.view.animation.DecelerateInterpolator(2f) // present
+      } else {
+        android.view.animation.AccelerateInterpolator(2f) // dismiss
+      }
+      addUpdateListener { animator ->
+        val currentTop = animator.animatedValue as Int
+        if (currentTop == lastEmittedPositionPx) return@addUpdateListener
+
+        lastEmittedPositionPx = currentTop
+        val visibleHeight = realScreenHeight - currentTop
+        val position = getPositionDp(visibleHeight)
+        val interpolatedIndex = getInterpolatedIndexForPosition(currentTop)
+        val detent = getInterpolatedDetentForPosition(currentTop)
+        delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, true)
+      }
+      addListener(object : android.animation.AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animation: android.animation.Animator) {
+          positionAnimator = null
+        }
+      })
+      start()
+    }
   }
 
   fun setupBackground() {
@@ -783,12 +797,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val interpolatedIndex = getInterpolatedIndexForPosition(sheetView.top)
     val detent = getInterpolatedDetentForPosition(sheetView.top)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
-  }
-
-  private fun emitDismissedPosition() {
-    val position = screenHeight.pxToDp()
-    lastEmittedPositionPx = -1
-    delegate?.viewControllerDidChangePosition(-1f, position, 0f, false)
   }
 
   /**
