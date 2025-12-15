@@ -20,7 +20,7 @@ object TrueSheetDialogObserver {
       val parentSheet = presentedSheetStack.lastOrNull()
         ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
 
-      // Hide any parent sheets that would be visible behind the new sheet
+      // Translate parent sheets down to match the new sheet's position
       val newSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
       for (sheet in presentedSheetStack) {
         if (!sheet.viewController.isDialogVisible) continue
@@ -28,7 +28,8 @@ object TrueSheetDialogObserver {
 
         val sheetTop = sheet.viewController.currentSheetTop
         if (sheetTop < newSheetTop) {
-          sheet.viewController.hideDialog(emitPosition = true)
+          val translationY = newSheetTop - sheetTop
+          sheet.viewController.translateDialog(translationY)
         }
       }
 
@@ -49,7 +50,7 @@ object TrueSheetDialogObserver {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
       if (hadParent) {
-        presentedSheetStack.lastOrNull()?.viewController?.showDialog(emitPosition = true)
+        presentedSheetStack.lastOrNull()?.viewController?.translateDialog(0)
       }
     }
   }

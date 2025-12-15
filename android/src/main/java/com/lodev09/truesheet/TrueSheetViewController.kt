@@ -459,6 +459,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun showDialog(emitPosition: Boolean = false, animated: Boolean = false) {
     isDialogVisible = true
     dialog?.window?.decorView?.visibility = VISIBLE
+
     if (emitPosition) {
       bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
     }
@@ -468,6 +469,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         dialog?.window?.setWindowAnimations(windowAnimation)
       }, 100)
     }
+  }
+
+  /** Translates the sheet when stacking. Pass 0 to reset. */
+  fun translateDialog(translationY: Int) {
+    val bottomSheet = bottomSheetView ?: return
+    val duration = if (translationY > 0) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
+
+    bottomSheet.animate()
+      .translationY(translationY.toFloat())
+      .setDuration(duration)
+      .setUpdateListener {
+        val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
+        if (effectiveTop == lastEmittedPositionPx) return@setUpdateListener
+
+        lastEmittedPositionPx = effectiveTop
+        val visibleHeight = ScreenUtils.getRealScreenHeight(reactContext) - effectiveTop
+        val position = getPositionDp(visibleHeight)
+        val interpolatedIndex = getInterpolatedIndexForPosition(effectiveTop)
+        val detent = getInterpolatedDetentForPosition(effectiveTop)
+        delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, true)
+      }
+      .start()
   }
 
   // ====================================================================
