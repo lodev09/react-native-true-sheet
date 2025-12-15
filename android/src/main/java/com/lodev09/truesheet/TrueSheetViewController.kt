@@ -157,7 +157,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmedDetentIndex = 0
   var grabber: Boolean = true
   var grabberOptions: GrabberOptions? = null
-  var sheetCornerRadius: Float = -1f
+  var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
+    set(value) {
+      field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value
+      setupBackground()
+    }
   var sheetBackgroundColor: Int? = null
   var edgeToEdgeFullScreen: Boolean = false
 
@@ -646,8 +650,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun setupBackground() {
     val bottomSheet = bottomSheetView ?: return
 
-    val cornerRadius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
-    val outerRadii = floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f)
+    val outerRadii = floatArrayOf(
+      sheetCornerRadius, sheetCornerRadius, sheetCornerRadius, sheetCornerRadius, 0f, 0f, 0f, 0f
+    )
     val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
 
     bottomSheet.background = ShapeDrawable(RoundRectShape(outerRadii, null, null)).apply {
@@ -671,10 +676,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (dimView == null) dimView = TrueSheetDimView(reactContext)
         if (!parentDimVisible) dimView?.attach(null)
 
-        val parentBottomSheet = parentSheetView?.viewController?.bottomSheetView
+        val parentController = parentSheetView?.viewController
+        val parentBottomSheet = parentController?.bottomSheetView
         if (parentBottomSheet != null) {
           if (parentDimView == null) parentDimView = TrueSheetDimView(reactContext)
-          parentDimView?.attach(parentBottomSheet)
+          parentDimView?.attach(parentBottomSheet, parentController.sheetCornerRadius)
         }
       } else {
         dimView?.detach()
