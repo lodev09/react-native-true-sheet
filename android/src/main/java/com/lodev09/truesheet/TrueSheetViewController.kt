@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
+import androidx.core.view.children
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -30,6 +31,7 @@ import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
+import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.ScreenUtils
 
@@ -75,7 +77,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val PRESENT_ANIMATION_DURATION = 250L
     private const val DISMISS_ANIMATION_DURATION = 250L
 
-    private const val MAX_DIM_AMOUNT = 0.32f // M3 scrim opacity
+    private const val MAX_DIM_AMOUNT = 0.5f // M3 scrim opacity
   }
 
   // ====================================================================
@@ -89,6 +91,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ====================================================================
 
   private var dialog: BottomSheetDialog? = null
+  private var dimView: TrueSheetDimView? = null
+  private var parentDimView: TrueSheetDimView? = null
 
   private val behavior: BottomSheetBehavior<FrameLayout>?
     get() = dialog?.behavior
@@ -263,6 +267,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     cleanupKeyboardObserver()
     cleanupModalObserver()
+    dimView?.detach()
+    dimView = null
+    parentDimView?.detach()
+    parentDimView = null
     sheetContainer?.removeView(this)
 
     dialog = null
@@ -647,13 +655,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Configures dim and touch-through behavior based on detent index. */
   fun setupDimmedBackground(detentIndex: Int) {
     val dialog = this.dialog ?: return
+
     dialog.window?.apply {
       val touchOutside = findViewById<View>(com.google.android.material.R.id.touch_outside)
 
+      // Always disable window dim - we use custom dim view instead
+      clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+
       if (dimmed && detentIndex >= dimmedDetentIndex) {
         touchOutside.setOnTouchListener(null)
-        setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        setDimAmount(MAX_DIM_AMOUNT)
+        if (dimView == null) {
+          dimView = TrueSheetDimView(reactContext)
+        }
+        // Always attach to activity if no dim exists there yet
+        val activityDecorView = reactContext.currentActivity?.window?.decorView as? android.view.ViewGroup
+        val activityHasDim = activityDecorView?.children?.any { it is TrueSheetDimView } == true
+        if (!activityHasDim) {
+          dimView?.setDimAlpha(MAX_DIM_AMOUNT)
+          dimView?.attach(null)
+        }
+        // Also dim the parent's bottom sheet if there's a parent
+        val parentBottomSheet = parentSheetView?.viewController?.bottomSheetView
+        if (parentBottomSheet != null && parentDimView == null) {
+          parentDimView = TrueSheetDimView(reactContext)
+          parentDimView?.setDimAlpha(MAX_DIM_AMOUNT)
+          parentDimView?.attach(parentBottomSheet)
+        }
         dialog.setCanceledOnTouchOutside(dismissible)
       } else {
         touchOutside.setOnTouchListener { v, event ->
@@ -663,7 +690,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           target?.dispatchTouchEvent(event)
           false
         }
-        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        dimView?.detach()
+        dimView = null
+        parentDimView?.detach()
+        parentDimView = null
         dialog.setCanceledOnTouchOutside(false)
       }
     }
@@ -673,11 +703,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog?.window?.setWindowAnimations(windowAnimation)
   }
 
-  /** Updates window dim amount based on sheet position during drag. */
+  /** Updates custom dim view alpha based on sheet position during drag. */
   fun updateDimAmount(slideOffset: Float? = null) {
     if (!dimmed) return
 
-    val window = dialog?.window ?: return
     val bottomSheet = bottomSheetView ?: return
 
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
@@ -699,8 +728,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       (progress * MAX_DIM_AMOUNT).coerceIn(0f, MAX_DIM_AMOUNT)
     }
 
-    Log.d(TAG_NAME, "updateDimAmount: currentTop=$currentTop, currentDetentTop=$currentDetentTop, currentDetentIndex=$currentDetentIndex, dimAmount=${"%.4f".format(dimAmount)}")
-    window.setDimAmount(dimAmount)
+    dimView?.setDimAlpha(dimAmount)
+    parentDimView?.setDimAlpha(dimAmount)
   }
 
   /** Positions footer at bottom of sheet, adjusting during drag via slideOffset. */
