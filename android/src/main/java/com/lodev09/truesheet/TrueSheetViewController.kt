@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
@@ -7,7 +8,6 @@ import android.graphics.drawable.shapes.RoundRectShape
 import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
-import android.animation.ValueAnimator
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
@@ -661,7 +661,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
 
     val outerRadii = floatArrayOf(
-      sheetCornerRadius, sheetCornerRadius, sheetCornerRadius, sheetCornerRadius, 0f, 0f, 0f, 0f
+      sheetCornerRadius,
+      sheetCornerRadius,
+      sheetCornerRadius,
+      sheetCornerRadius,
+      0f,
+      0f,
+      0f,
+      0f
     )
     val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
 
