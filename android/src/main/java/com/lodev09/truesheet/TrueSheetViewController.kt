@@ -74,7 +74,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
     private const val PRESENT_ANIMATION_DURATION = 250L
-    private const val DISMISS_ANIMATION_DURATION = 250L
+    private const val DISMISS_ANIMATION_DURATION = 150L
   }
 
   // ====================================================================
