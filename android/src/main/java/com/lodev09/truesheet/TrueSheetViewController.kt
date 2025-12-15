@@ -662,8 +662,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       // Always disable window dim - we use custom dim view instead
       clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 
-      if (dimmed && detentIndex >= dimmedDetentIndex) {
-        touchOutside.setOnTouchListener(null)
+      if (dimmed) {
+        // Attach dim views (alpha controlled by updateDimAmount)
         if (dimView == null) {
           dimView = TrueSheetDimView(reactContext)
         }
@@ -671,17 +671,34 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val activityDecorView = reactContext.currentActivity?.window?.decorView as? android.view.ViewGroup
         val activityHasDim = activityDecorView?.children?.any { it is TrueSheetDimView } == true
         if (!activityHasDim) {
-          dimView?.setDimAlpha(MAX_DIM_AMOUNT)
           dimView?.attach(null)
         }
         // Also dim the parent's bottom sheet if there's a parent
         val parentBottomSheet = parentSheetView?.viewController?.bottomSheetView
         if (parentBottomSheet != null && parentDimView == null) {
           parentDimView = TrueSheetDimView(reactContext)
-          parentDimView?.setDimAlpha(MAX_DIM_AMOUNT)
           parentDimView?.attach(parentBottomSheet)
         }
-        dialog.setCanceledOnTouchOutside(dismissible)
+
+        // Set initial alpha based on detent
+        val initialAlpha = if (detentIndex >= dimmedDetentIndex) MAX_DIM_AMOUNT else 0f
+        dimView?.setDimAlpha(initialAlpha)
+        parentDimView?.setDimAlpha(initialAlpha)
+
+        // Configure touch behavior based on whether dim is visible
+        if (detentIndex >= dimmedDetentIndex) {
+          touchOutside.setOnTouchListener(null)
+          dialog.setCanceledOnTouchOutside(dismissible)
+        } else {
+          touchOutside.setOnTouchListener { v, event ->
+            event.setLocation(event.rawX - v.x, event.rawY - v.y)
+            val target = parentSheetView?.viewController?.dialog?.window?.decorView
+              ?: reactContext.currentActivity?.window?.decorView
+            target?.dispatchTouchEvent(event)
+            false
+          }
+          dialog.setCanceledOnTouchOutside(false)
+        }
       } else {
         touchOutside.setOnTouchListener { v, event ->
           event.setLocation(event.rawX - v.x, event.rawY - v.y)
@@ -712,20 +729,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val currentTop = bottomSheet.top
 
-    // Get the top position for the current detent (where dim should be MAX_DIM_AMOUNT)
-    val currentDetentTop = getSheetTopForDetentIndex(currentDetentIndex)
+    // Get the top position for dimmedDetentIndex (where dim should start)
+    val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
 
-    // Interpolate dim based on position relative to current detent
-    // At or above currentDetentTop = MAX_DIM_AMOUNT
-    // Below currentDetentTop (dragging down toward hidden) = interpolate toward 0
-    val dimAmount = if (currentTop <= currentDetentTop) {
-      MAX_DIM_AMOUNT
+    // Get the position below dimmedDetentIndex (where dim should be 0)
+    val belowDimmedTop = if (dimmedDetentIndex > 0) {
+      getSheetTopForDetentIndex(dimmedDetentIndex - 1)
     } else {
-      // Dragging down - interpolate from MAX_DIM_AMOUNT to 0
-      val distanceFromDetent = currentTop - currentDetentTop
-      val maxDistance = realHeight - currentDetentTop // distance from detent to fully hidden
-      val progress = 1f - (distanceFromDetent.toFloat() / maxDistance.toFloat())
-      (progress * MAX_DIM_AMOUNT).coerceIn(0f, MAX_DIM_AMOUNT)
+      realHeight // hidden
+    }
+
+    // Interpolate dim based on position relative to dimmedDetentIndex
+    val dimAmount = when {
+      // At or above dimmedDetentIndex = MAX_DIM_AMOUNT
+      currentTop <= dimmedDetentTop -> MAX_DIM_AMOUNT
+      // Below the threshold where dim should be 0
+      currentTop >= belowDimmedTop -> 0f
+      // Between dimmedDetentIndex and below = interpolate
+      else -> {
+        val totalDistance = belowDimmedTop - dimmedDetentTop
+        val currentDistance = currentTop - dimmedDetentTop
+        val progress = 1f - (currentDistance.toFloat() / totalDistance.toFloat())
+        (progress * MAX_DIM_AMOUNT).coerceIn(0f, MAX_DIM_AMOUNT)
+      }
     }
 
     dimView?.setDimAlpha(dimAmount)
