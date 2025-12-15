@@ -645,17 +645,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun setupDimmedBackground(detentIndex: Int) {
     val dialog = this.dialog ?: return
     dialog.window?.apply {
-      val view = findViewById<View>(com.google.android.material.R.id.touch_outside)
+      val touchOutside = findViewById<View>(com.google.android.material.R.id.touch_outside)
 
       if (dimmed && detentIndex >= dimmedDetentIndex) {
-        view.setOnTouchListener(null)
+        touchOutside.setOnTouchListener(null)
         setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         setDimAmount(0.32f) // M3 scrim opacity
         dialog.setCanceledOnTouchOutside(dismissible)
       } else {
-        view.setOnTouchListener { v, event ->
+        touchOutside.setOnTouchListener { v, event ->
           event.setLocation(event.rawX - v.x, event.rawY - v.y)
-          reactContext.currentActivity?.dispatchTouchEvent(event)
+          val target = parentSheetView?.viewController?.dialog?.window?.decorView
+            ?: reactContext.currentActivity?.window?.decorView
+          target?.dispatchTouchEvent(event)
           false
         }
         clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
