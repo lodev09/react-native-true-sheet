@@ -77,7 +77,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val PRESENT_ANIMATION_DURATION = 250L
     private const val DISMISS_ANIMATION_DURATION = 250L
 
-    private const val MAX_DIM_AMOUNT = 0.5f // M3 scrim opacity
   }
 
   // ====================================================================
@@ -721,56 +720,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun animateDimAlpha(show: Boolean) {
     if (!dimmed) return
 
-    val targetAlpha = if (show && currentDetentIndex >= dimmedDetentIndex) MAX_DIM_AMOUNT else 0f
     val duration = if (show) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
-
-    dimView?.animate()
-      ?.alpha(targetAlpha)
-      ?.setDuration(duration)
-      ?.start()
-
-    parentDimView?.animate()
-      ?.alpha(targetAlpha)
-      ?.setDuration(duration)
-      ?.start()
+    dimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
+    parentDimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
   }
 
   /** Updates custom dim view alpha based on sheet position during drag. */
   fun updateDimAmount(slideOffset: Float? = null) {
     if (!dimmed) return
 
-    val bottomSheet = bottomSheetView ?: return
-
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
-    val currentTop = bottomSheet.top
-
-    // Get the top position for dimmedDetentIndex (where dim should start)
-    val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
-
-    // Get the position below dimmedDetentIndex (where dim should be 0)
-    val belowDimmedTop = if (dimmedDetentIndex > 0) {
-      getSheetTopForDetentIndex(dimmedDetentIndex - 1)
-    } else {
-      realHeight // hidden
-    }
-
-    // Interpolate dim based on position relative to dimmedDetentIndex
-    val dimAmount = when {
-      // At or above dimmedDetentIndex = MAX_DIM_AMOUNT
-      currentTop <= dimmedDetentTop -> MAX_DIM_AMOUNT
-      // Below the threshold where dim should be 0
-      currentTop >= belowDimmedTop -> 0f
-      // Between dimmedDetentIndex and below = interpolate
-      else -> {
-        val totalDistance = belowDimmedTop - dimmedDetentTop
-        val currentDistance = currentTop - dimmedDetentTop
-        val progress = 1f - (currentDistance.toFloat() / totalDistance.toFloat())
-        (progress * MAX_DIM_AMOUNT).coerceIn(0f, MAX_DIM_AMOUNT)
-      }
-    }
-
-    dimView?.setDimAlpha(dimAmount)
-    parentDimView?.setDimAlpha(dimAmount)
+    val sheetTop = bottomSheetView?.top ?: return
+    dimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
+    parentDimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
   }
 
   /** Positions footer at bottom of sheet, adjusting during drag via slideOffset. */
