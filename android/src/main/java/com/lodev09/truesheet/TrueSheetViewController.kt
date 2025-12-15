@@ -341,7 +341,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
 
           positionFooter(slideOffset)
-          updateDimAmount(slideOffset)
+          updateDimAmount()
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -668,15 +668,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         if (dimView == null) {
           dimView = TrueSheetDimView(reactContext)
-          // Attach to activity only if parent's dim is not visible
-          if (!parentDimVisible) {
-            dimView?.attach(null)
-          }
         }
+        // Attach to activity only if parent's dim is not visible
+        if (!parentDimVisible) {
+          dimView?.attach(null)
+        }
+
         // Also dim the parent's bottom sheet if there's a parent
         val parentBottomSheet = parentSheetView?.viewController?.bottomSheetView
-        if (parentBottomSheet != null && parentDimView == null) {
-          parentDimView = TrueSheetDimView(reactContext)
+        if (parentBottomSheet != null) {
+          if (parentDimView == null) {
+            parentDimView = TrueSheetDimView(reactContext)
+          }
           parentDimView?.attach(parentBottomSheet)
         }
 
@@ -724,8 +727,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     parentDimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
   }
 
-  /** Updates custom dim view alpha based on sheet position during drag. */
-  fun updateDimAmount(slideOffset: Float? = null) {
+  /** Updates custom dim view alpha based on sheet position. */
+  fun updateDimAmount() {
     if (!dimmed) return
 
     val sheetTop = bottomSheetView?.top ?: return

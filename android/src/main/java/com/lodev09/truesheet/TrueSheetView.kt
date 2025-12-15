@@ -251,6 +251,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dimmed = dimmed
     if (viewController.isPresented) {
       viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.updateDimAmount()
     }
   }
 
@@ -259,6 +260,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.dimmedDetentIndex = index
     if (viewController.isPresented) {
       viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.updateDimAmount()
     }
   }
 
