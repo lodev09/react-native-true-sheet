@@ -74,6 +74,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
     private const val PRESENT_ANIMATION_DURATION = 250L
     private const val DISMISS_ANIMATION_DURATION = 250L
+
+    private const val MAX_DIM_AMOUNT = 0.32f // M3 scrim opacity
   }
 
   // ====================================================================
@@ -331,6 +333,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
 
           positionFooter(slideOffset)
+          updateDimAmount(slideOffset)
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -650,7 +653,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (dimmed && detentIndex >= dimmedDetentIndex) {
         touchOutside.setOnTouchListener(null)
         setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        setDimAmount(0.32f) // M3 scrim opacity
+        setDimAmount(MAX_DIM_AMOUNT)
         dialog.setCanceledOnTouchOutside(dismissible)
       } else {
         touchOutside.setOnTouchListener { v, event ->
@@ -668,6 +671,36 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun resetAnimation() {
     dialog?.window?.setWindowAnimations(windowAnimation)
+  }
+
+  /** Updates window dim amount based on sheet position during drag. */
+  fun updateDimAmount(slideOffset: Float? = null) {
+    if (!dimmed) return
+
+    val window = dialog?.window ?: return
+    val bottomSheet = bottomSheetView ?: return
+
+    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
+    val currentTop = bottomSheet.top
+
+    // Get the top position for the current detent (where dim should be MAX_DIM_AMOUNT)
+    val currentDetentTop = getSheetTopForDetentIndex(currentDetentIndex)
+
+    // Interpolate dim based on position relative to current detent
+    // At or above currentDetentTop = MAX_DIM_AMOUNT
+    // Below currentDetentTop (dragging down toward hidden) = interpolate toward 0
+    val dimAmount = if (currentTop <= currentDetentTop) {
+      MAX_DIM_AMOUNT
+    } else {
+      // Dragging down - interpolate from MAX_DIM_AMOUNT to 0
+      val distanceFromDetent = currentTop - currentDetentTop
+      val maxDistance = realHeight - currentDetentTop // distance from detent to fully hidden
+      val progress = 1f - (distanceFromDetent.toFloat() / maxDistance.toFloat())
+      (progress * MAX_DIM_AMOUNT).coerceIn(0f, MAX_DIM_AMOUNT)
+    }
+
+    Log.d(TAG_NAME, "updateDimAmount: currentTop=$currentTop, currentDetentTop=$currentDetentTop, currentDetentIndex=$currentDetentIndex, dimAmount=${"%.4f".format(dimAmount)}")
+    window.setDimAmount(dimAmount)
   }
 
   /** Positions footer at bottom of sheet, adjusting during drag via slideOffset. */
