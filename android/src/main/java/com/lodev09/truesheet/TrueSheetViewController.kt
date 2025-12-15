@@ -290,6 +290,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupBackground()
       setupGrabber()
       setupKeyboardObserver()
+      animateDimAlpha(show = true)
 
       sheetContainer?.post {
         bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
@@ -313,6 +314,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (isDismissing) return@setOnCancelListener
 
       isDismissing = true
+      animateDimAlpha(show = false)
       emitWillDismissEvents()
       emitDismissedPosition()
     }
@@ -680,11 +682,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           parentDimView?.attach(parentBottomSheet)
         }
 
-        // Set initial alpha based on detent
-        val initialAlpha = if (detentIndex >= dimmedDetentIndex) MAX_DIM_AMOUNT else 0f
-        dimView?.setDimAlpha(initialAlpha)
-        parentDimView?.setDimAlpha(initialAlpha)
-
         // Configure touch behavior based on whether dim is visible
         if (detentIndex >= dimmedDetentIndex) {
           touchOutside.setOnTouchListener(null)
@@ -718,6 +715,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun resetAnimation() {
     dialog?.window?.setWindowAnimations(windowAnimation)
+  }
+
+  /** Animates dim alpha during present/dismiss transitions. */
+  private fun animateDimAlpha(show: Boolean) {
+    if (!dimmed) return
+
+    val targetAlpha = if (show && currentDetentIndex >= dimmedDetentIndex) MAX_DIM_AMOUNT else 0f
+    val duration = if (show) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
+
+    dimView?.animate()
+      ?.alpha(targetAlpha)
+      ?.setDuration(duration)
+      ?.start()
+
+    parentDimView?.animate()
+      ?.alpha(targetAlpha)
+      ?.setDuration(duration)
+      ?.start()
   }
 
   /** Updates custom dim view alpha based on sheet position during drag. */
