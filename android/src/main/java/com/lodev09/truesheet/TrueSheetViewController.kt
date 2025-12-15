@@ -584,7 +584,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     bottomSheet.addView(grabberView)
-    grabberView.bringToFront()
   }
 
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
