@@ -295,10 +295,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
 
       sheetContainer?.postDelayed({
-        val detentInfo = getDetentInfoForIndex(currentDetentIndex)
-        val detent = getDetentValueForIndex(detentInfo.index)
+        val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
 
-        delegate?.viewControllerDidPresent(detentInfo.index, detentInfo.position, detent)
+        delegate?.viewControllerDidPresent(index, position, detent)
         parentSheetView?.viewControllerDidBlur()
         delegate?.viewControllerDidFocus()
 
@@ -434,6 +433,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dismissPromise = null
   }
 
+  /** Helper to get detent info with its screen fraction value. */
+  private fun getDetentInfoWithValue(index: Int): Triple<Int, Float, Float> {
+    val detentInfo = getDetentInfoForIndex(index)
+    val detent = getDetentValueForIndex(detentInfo.index)
+    return Triple(detentInfo.index, detentInfo.position, detent)
+  }
+
   // ====================================================================
   // MARK: - Dialog Visibility (for stacking)
   // ====================================================================
@@ -523,11 +529,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       setStateForDetentIndex(detentIndex)
 
-      val detentInfo = getDetentInfoForIndex(detentIndex)
-      val detent = getDetentValueForIndex(detentInfo.index)
+      val (index, position, detent) = getDetentInfoWithValue(detentIndex)
 
       parentSheetView?.viewControllerWillBlur()
-      delegate?.viewControllerWillPresent(detentInfo.index, detentInfo.position, detent)
+      delegate?.viewControllerWillPresent(index, position, detent)
       delegate?.viewControllerWillFocus()
 
       if (!animated) {
@@ -658,6 +663,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val touchOutside = findViewById<View>(com.google.android.material.R.id.touch_outside)
       clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 
+      val shouldDimAtDetent = dimmed && detentIndex >= dimmedDetentIndex
+
       if (dimmed) {
         val parentDimVisible = (parentSheetView?.viewController?.dimView?.alpha ?: 0f) > 0f
 
@@ -669,21 +676,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (parentDimView == null) parentDimView = TrueSheetDimView(reactContext)
           parentDimView?.attach(parentBottomSheet)
         }
+      } else {
+        dimView?.detach()
+        dimView = null
+        parentDimView?.detach()
+        parentDimView = null
+      }
 
-        if (detentIndex >= dimmedDetentIndex) {
-          touchOutside.setOnTouchListener(null)
-          dialog.setCanceledOnTouchOutside(dismissible)
-        } else {
-          touchOutside.setOnTouchListener { v, event ->
-            event.setLocation(event.rawX - v.x, event.rawY - v.y)
-            (
-              parentSheetView?.viewController?.dialog?.window?.decorView
-                ?: reactContext.currentActivity?.window?.decorView
-              )?.dispatchTouchEvent(event)
-            false
-          }
-          dialog.setCanceledOnTouchOutside(false)
-        }
+      if (shouldDimAtDetent) {
+        touchOutside.setOnTouchListener(null)
+        dialog.setCanceledOnTouchOutside(dismissible)
       } else {
         touchOutside.setOnTouchListener { v, event ->
           event.setLocation(event.rawX - v.x, event.rawY - v.y)
@@ -693,10 +695,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             )?.dispatchTouchEvent(event)
           false
         }
-        dimView?.detach()
-        dimView = null
-        parentDimView?.detach()
-        parentDimView = null
         dialog.setCanceledOnTouchOutside(false)
       }
     }
@@ -921,47 +919,37 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     return maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
 
-  private fun getStateForDetentIndex(index: Int): Int =
+  /** Maps detent index to BottomSheetBehavior state based on detent count. */
+  private fun getStateForDetentIndex(index: Int): Int {
+    val stateMap = getDetentStateMap() ?: return BottomSheetBehavior.STATE_HIDDEN
+    return stateMap.entries.find { it.value == index }?.key ?: BottomSheetBehavior.STATE_HIDDEN
+  }
+
+  /** Maps BottomSheetBehavior state to DetentInfo based on detent count. */
+  fun getDetentInfoForState(state: Int): DetentInfo? {
+    val stateMap = getDetentStateMap() ?: return null
+    val index = stateMap[state] ?: return null
+    return DetentInfo(index, getPositionForDetentIndex(index))
+  }
+
+  /** Returns state-to-index mapping based on detent count. */
+  private fun getDetentStateMap(): Map<Int, Int>? =
     when (detents.size) {
-      1 -> BottomSheetBehavior.STATE_EXPANDED
+      1 -> mapOf(
+        BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_EXPANDED to 0
+      )
 
-      2 -> when (index) {
-        0 -> BottomSheetBehavior.STATE_COLLAPSED
-        1 -> BottomSheetBehavior.STATE_EXPANDED
-        else -> BottomSheetBehavior.STATE_HIDDEN
-      }
+      2 -> mapOf(
+        BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_EXPANDED to 1
+      )
 
-      3 -> when (index) {
-        0 -> BottomSheetBehavior.STATE_COLLAPSED
-        1 -> BottomSheetBehavior.STATE_HALF_EXPANDED
-        2 -> BottomSheetBehavior.STATE_EXPANDED
-        else -> BottomSheetBehavior.STATE_HIDDEN
-      }
-
-      else -> BottomSheetBehavior.STATE_HIDDEN
-    }
-
-  fun getDetentInfoForState(state: Int): DetentInfo? =
-    when (detents.size) {
-      1 -> when (state) {
-        BottomSheetBehavior.STATE_COLLAPSED,
-        BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(0, getPositionForDetentIndex(0))
-
-        else -> null
-      }
-
-      2 -> when (state) {
-        BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, getPositionForDetentIndex(0))
-        BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(1, getPositionForDetentIndex(1))
-        else -> null
-      }
-
-      3 -> when (state) {
-        BottomSheetBehavior.STATE_COLLAPSED -> DetentInfo(0, getPositionForDetentIndex(0))
-        BottomSheetBehavior.STATE_HALF_EXPANDED -> DetentInfo(1, getPositionForDetentIndex(1))
-        BottomSheetBehavior.STATE_EXPANDED -> DetentInfo(2, getPositionForDetentIndex(2))
-        else -> null
-      }
+      3 -> mapOf(
+        BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_HALF_EXPANDED to 1,
+        BottomSheetBehavior.STATE_EXPANDED to 2
+      )
 
       else -> null
     }
