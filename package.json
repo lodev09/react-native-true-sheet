@@ -53,7 +53,7 @@
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
     "release": "release-it",
-    "release:beta": "yarn release -i prerelease"
+    "release:beta": "yarn release --preRelease=beta"
   },
   "keywords": [
     "react-native",
