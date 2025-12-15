@@ -339,7 +339,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
 
-          emitChangePositionDelegate(sheetView, realtime = true)
+          emitChangePositionDelegate(sheetView.top)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -485,14 +485,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       .setDuration(duration)
       .setUpdateListener {
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
-        if (effectiveTop == lastEmittedPositionPx) return@setUpdateListener
-
-        lastEmittedPositionPx = effectiveTop
-        val visibleHeight = realScreenHeight - effectiveTop
-        val position = getPositionDp(visibleHeight)
-        val interpolatedIndex = getInterpolatedIndexForPosition(effectiveTop)
-        val detent = getInterpolatedDetentForPosition(effectiveTop)
-        delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, true)
+        emitChangePositionDelegate(effectiveTop)
       }
       .start()
   }
@@ -642,15 +635,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         android.view.animation.AccelerateInterpolator(2f) // dismiss
       }
       addUpdateListener { animator ->
-        val currentTop = animator.animatedValue as Int
-        if (currentTop == lastEmittedPositionPx) return@addUpdateListener
-
-        lastEmittedPositionPx = currentTop
-        val visibleHeight = realScreenHeight - currentTop
-        val position = getPositionDp(visibleHeight)
-        val interpolatedIndex = getInterpolatedIndexForPosition(currentTop)
-        val detent = getInterpolatedDetentForPosition(currentTop)
-        delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, true)
+        emitChangePositionDelegate(animator.animatedValue as Int)
       }
       addListener(object : android.animation.AnimatorListenerAdapter() {
         override fun onAnimationEnd(animation: android.animation.Animator) {
@@ -659,6 +644,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       })
       start()
     }
+  }
+
+  private fun emitChangePositionDelegate(currentTop: Int, realtime: Boolean = true) {
+    if (currentTop == lastEmittedPositionPx) return
+
+    lastEmittedPositionPx = currentTop
+    val visibleHeight = realScreenHeight - currentTop
+    val position = getPositionDp(visibleHeight)
+    val interpolatedIndex = getInterpolatedIndexForPosition(currentTop)
+    val detent = getInterpolatedDetentForPosition(currentTop)
+    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
   fun setupBackground() {
@@ -788,16 +784,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getVisibleSheetHeight(sheetView: View): Int = realScreenHeight - sheetView.top
 
   private fun getPositionDp(visibleSheetHeight: Int): Float = (screenHeight - visibleSheetHeight).pxToDp()
-
-  private fun emitChangePositionDelegate(sheetView: View, realtime: Boolean) {
-    if (sheetView.top == lastEmittedPositionPx) return
-
-    lastEmittedPositionPx = sheetView.top
-    val position = getPositionDp(getVisibleSheetHeight(sheetView))
-    val interpolatedIndex = getInterpolatedIndexForPosition(sheetView.top)
-    val detent = getInterpolatedDetentForPosition(sheetView.top)
-    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
-  }
 
   /**
    * Get the expected sheetTop position for a detent index.
@@ -999,7 +985,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     this.post {
       setupSheetDetents()
       positionFooter()
-      bottomSheetView?.let { emitChangePositionDelegate(it, realtime = false) }
+      bottomSheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
     }
   }
 
