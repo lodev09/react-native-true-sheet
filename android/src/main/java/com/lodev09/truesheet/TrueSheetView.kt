@@ -387,6 +387,36 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.positionFooter()
   }
 
+  // ==================== Stack Translation ====================
+
+  /**
+   * Updates this sheet's translation based on its direct child's position.
+   * Propagates additional translation to parent so it stays behind this sheet.
+   */
+  fun updateTranslationForChild(childSheetTop: Int) {
+    if (!viewController.isDialogVisible || viewController.isExpanded) return
+
+    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
+    val newTranslation = maxOf(0, childSheetTop - mySheetTop)
+    val additionalTranslation = newTranslation - viewController.currentTranslationY
+
+    viewController.translateDialog(newTranslation)
+
+    if (additionalTranslation > 0) {
+      TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(additionalTranslation)
+    }
+  }
+
+  /**
+   * Adds translation to this sheet and propagates to parent.
+   */
+  private fun addTranslation(amount: Int) {
+    if (!viewController.isDialogVisible || viewController.isExpanded) return
+
+    viewController.translateDialog(viewController.currentTranslationY + amount)
+    TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
+  }
+
   companion object {
     const val TAG_NAME = "TrueSheet"
   }

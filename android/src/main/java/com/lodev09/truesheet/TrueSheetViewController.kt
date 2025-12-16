@@ -475,6 +475,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val currentSheetTop: Int
     get() = bottomSheetView?.top ?: screenHeight
 
+  val currentTranslationY: Int
+    get() = bottomSheetView?.translationY?.toInt() ?: 0
+
   fun getExpectedSheetTop(detentIndex: Int): Int {
     if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
     return realScreenHeight - getDetentHeight(detents[detentIndex])
