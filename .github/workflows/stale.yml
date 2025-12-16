@@ -22,5 +22,20 @@ jobs:
           days-before-close: 7
           stale-issue-label: 'stale'
           stale-pr-label: 'stale'
-          exempt-issue-labels: 'pinned,security,bug,enhancement'
+          exempt-issue-labels: 'pinned,security,enhancement'
           exempt-pr-labels: 'pinned,security'
+
+  stale-needs-repro:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          only-labels: 'needs repro'
+          stale-issue-message: 'This issue is missing a reproduction and has been marked as stale. It will be closed if no reproduction is provided.'
+          close-issue-message: 'This issue has been closed due to missing reproduction. Feel free to reopen with a minimal repro.'
+          days-before-stale: 14
+          days-before-close: 7
+          stale-issue-label: 'stale'
+          exempt-issue-labels: 'pinned,security'

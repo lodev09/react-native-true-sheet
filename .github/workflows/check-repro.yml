@@ -1,0 +1,124 @@
+name: Check for Repro
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  check-repro:
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs repro') ||
+      (github.event_name == 'issues' && github.event.action != 'labeled') ||
+      github.event_name == 'issue_comment'
+    permissions:
+      issues: write
+    steps:
+      - name: Check for reproduction link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+
+            const author = issue.user.login;
+            const user = comment ? comment.user.login : author;
+            const body = comment ? comment.body : issue.body || '';
+
+            // Only accept repos owned by the issue author or commenter
+            const reproPatterns = [
+              new RegExp(`https?://github\\.com/${user}/[^/\\s]+/?`, 'i'),
+              new RegExp(`https?://snack\\.expo\\.(dev|io)/[^\\s]+`, 'i'),
+              new RegExp(`https?://codesandbox\\.io/[^\\s]+`, 'i'),
+              new RegExp(`https?://stackblitz\\.com/[^\\s]+`, 'i'),
+            ];
+
+            const hasRepro = reproPatterns.some(pattern => pattern.test(body));
+            const labels = issue.labels.map(l => l.name);
+            const hasNeedsReproLabel = labels.includes('needs repro');
+            const hasReproProvidedLabel = labels.includes('repro provided');
+
+            if (hasRepro) {
+              // Valid repro found - add repro-provided label, remove needs-repro
+              if (!hasReproProvidedLabel) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['repro provided']
+                });
+              }
+
+              if (hasNeedsReproLabel) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: 'needs repro'
+                  });
+                } catch (e) {
+                  if (!e.message.includes('Label does not exist')) throw e;
+                }
+
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `Thank you for providing a reproduction! We'll take a look at this issue soon.`
+                });
+              }
+            } else {
+              // No valid repro - only act on issue events, not comments
+              if (context.eventName !== 'issues') {
+                return;
+              }
+
+              const warningBody = `Hey @${author}! Thanks for opening the issue.
+
+            It looks like your issue is **missing a valid reproduction link**.
+
+            A minimal reproduction helps us investigate and fix the issue faster. Without one, we may not be able to help.
+
+            **Please provide one of the following:**
+            - A GitHub repository **under your username** with minimal reproduction code
+            - An [Expo Snack](https://snack.expo.dev) demonstrating the issue
+
+            **Tips for a good reproduction:**
+            - Keep it minimal - only include code necessary to reproduce the issue
+            - Make sure the repo/snack is public and accessible
+            - Don't link to your entire project or unrelated code
+
+            See ["How to create a Minimal, Reproducible Example"](https://stackoverflow.com/help/minimal-reproducible-example) for more guidance.
+
+            You can edit your original issue or leave a comment with the repro link. **Issues without reproductions may be closed after 14 days.**`;
+
+              // Check if we already commented
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+              });
+
+              if (comments.data.some(c => c.body.includes('missing a valid reproduction link'))) {
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: warningBody
+              });
+
+              if (!hasNeedsReproLabel) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['needs repro']
+                });
+              }
+            }

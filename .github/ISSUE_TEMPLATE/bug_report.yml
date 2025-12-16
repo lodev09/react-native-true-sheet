@@ -1,67 +1,93 @@
-name: 🐛 Bug report
+name: Bug Report
 description: Report a reproducible bug or regression in this library.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        # Bug report
+        # Bug Report
 
-        👋 Hi!
+        Thanks for taking the time to report a bug!
 
-        **Please fill the following carefully before opening a new issue ❗**
-        *(Your issue may be closed if it doesn't provide the required pieces of information)*
+        Please fill out the following carefully before opening a new issue.
+        **Issues missing required information may be closed without investigation.**
+
   - type: checkboxes
     attributes:
       label: Before submitting a new issue
-      description: Please perform simple checks first.
       options:
-        - label: I tested using the latest version of the library, as the bug might be already fixed.
+        - label: I tested using the **latest version** of the library.
           required: true
-        - label: I tested using a [supported version](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md) of react native.
+        - label: I tested using a [supported version](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md) of React Native.
           required: true
-        - label: I checked for possible duplicate issues, with possible answers.
+        - label: I checked for [existing issues](https://github.com/lodev09/react-native-true-sheet/issues) that might answer my question.
           required: true
+
   - type: textarea
     id: summary
     attributes:
-      label: Bug summary
-      description: |
-        Provide a clear and concise description of what the bug is.
-        If needed, you can also provide other samples: error messages / stack traces, screenshots, gifs, etc.
+      label: Bug Summary
+      description: Provide a clear and concise description of what the bug is.
+      placeholder: When I do X, I expect Y to happen, but Z happens instead.
     validations:
       required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Affected Platforms
+      description: Select all platforms where you experience this issue.
+      multiple: true
+      options:
+        - iOS
+        - Android
+    validations:
+      required: true
+
   - type: input
     id: library-version
     attributes:
-      label: Library version
-      description: What version of the library are you using?
+      label: Library Version
+      description: What version of @lodev09/react-native-true-sheet are you using?
       placeholder: "x.x.x"
     validations:
       required: true
+
   - type: textarea
     id: react-native-info
     attributes:
-      label: Environment info
-      description: Run `react-native info` in your terminal and paste the results here.
+      label: Environment Info
+      description: Run `npx react-native info` in your terminal and paste the results here.
       render: shell
     validations:
       required: true
+
   - type: textarea
     id: steps-to-reproduce
     attributes:
-      label: Steps to reproduce
-      description: |
-        You must provide a clear list of steps and code to reproduce the problem.
-      value: |
-        1. …
-        2. …
+      label: Steps to Reproduce
+      description: Provide a clear list of steps to reproduce the problem.
+      placeholder: |
+        1. Open the app
+        2. Navigate to...
+        3. Tap on...
+        4. See error
     validations:
       required: true
+
   - type: input
     id: reproducible-example
     attributes:
-      label: Reproducible example repository
-      description: Please provide a link to a repository on GitHub with a reproducible example.
+      label: Reproduction Repository
+      description: |
+        **A minimal reproduction is required.** Provide a link to a GitHub repository or Expo Snack.
+        Issues without reproductions may be closed and labeled as `needs-repro`.
+      placeholder: https://github.com/username/repo or https://snack.expo.dev/...
     validations:
       required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or screen recordings about the problem here.
