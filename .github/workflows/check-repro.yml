@@ -83,13 +83,8 @@ jobs:
             A minimal reproduction helps us investigate and fix the issue faster. Without one, we may not be able to help.
 
             **Please provide one of the following:**
-            - A GitHub repository **under your username** with minimal reproduction code
-            - An [Expo Snack](https://snack.expo.dev) demonstrating the issue
-
-            **Tips for a good reproduction:**
-            - Keep it minimal - only include code necessary to reproduce the issue
-            - Make sure the repo/snack is public and accessible
-            - Don't link to your entire project or unrelated code
+            - A GitHub repository **under your username**
+            - An [Expo Snack](https://snack.expo.dev)
 
             See ["How to create a Minimal, Reproducible Example"](https://stackoverflow.com/help/minimal-reproducible-example) for more guidance.
 
