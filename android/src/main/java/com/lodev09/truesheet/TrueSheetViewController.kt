@@ -408,6 +408,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           isDialogVisible = false
           dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeOutAnimation)
           dialog?.window?.decorView?.visibility = INVISIBLE
+          dimView?.visibility = INVISIBLE
+          parentDimView?.visibility = INVISIBLE
           wasHiddenByModal = true
         }
       },
@@ -416,6 +418,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
           dialog?.window?.decorView?.visibility = VISIBLE
+          dimView?.visibility = VISIBLE
+          parentDimView?.visibility = VISIBLE
           // Restore animation after visibility change to avoid slide animation
           sheetContainer?.post {
             dialog?.window?.setWindowAnimations(windowAnimation)
