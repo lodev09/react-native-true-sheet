@@ -781,19 +781,26 @@
 
   self.view.backgroundColor = self.backgroundColor;
 
-  BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:self.blurTint];
+  NSString *effectiveBlurTint = self.blurTint;
+  if (@available(iOS 26.0, *)) {
+    // iOS 26+ has defualt liquid glass effect
+  } else if ((!effectiveBlurTint || effectiveBlurTint.length == 0) && !self.backgroundColor) {
+    effectiveBlurTint = @"system-material";
+  }
+
+  BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:effectiveBlurTint];
 
   if (_blurView && blurTintChanged) {
     [_blurView removeFromSuperview];
     _blurView = nil;
   }
 
-  if (self.blurTint && self.blurTint.length > 0) {
+  if (effectiveBlurTint && effectiveBlurTint.length > 0) {
     if (!_blurView) {
       _blurView = [[TrueSheetBlurView alloc] init];
       [_blurView addToView:self.view];
     }
-    _blurView.blurTint = self.blurTint;
+    _blurView.blurTint = effectiveBlurTint;
     _blurView.blurIntensity = self.blurIntensity;
     _blurView.blurInteraction = self.blurInteraction;
     [_blurView applyBlurEffect];
