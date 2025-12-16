@@ -83,20 +83,6 @@ jobs:
                 });
               }
             } else {
-              // No valid repro - remove repro provided label if present
-              if (hasReproProvidedLabel) {
-                try {
-                  await github.rest.issues.removeLabel({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issue.number,
-                    name: 'repro provided'
-                  });
-                } catch (e) {
-                  if (!e.message.includes('Label does not exist')) throw e;
-                }
-              }
-
               // Only post warning comment on issue events, not comments
               if (context.eventName !== 'issues') {
                 return;
