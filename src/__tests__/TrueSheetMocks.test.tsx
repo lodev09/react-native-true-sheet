@@ -1,15 +1,19 @@
 import { Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 
-// Manually import the mock to test it
-
-const {
-  TrueSheet,
+// Import the mocks
+import { TrueSheet, TrueSheetProvider, useTrueSheet } from '../mocks';
+import {
+  createTrueSheetNavigator,
+  TrueSheetActions,
+  useTrueSheetNavigation,
+} from '../mocks/navigation';
+import {
   ReanimatedTrueSheet,
   ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
   useReanimatedPositionChangeHandler,
-} = require('../__mocks__');
+} from '../mocks/reanimated';
 
 describe('TrueSheet Mocks', () => {
   beforeEach(() => {
@@ -74,8 +78,83 @@ describe('TrueSheet Mocks', () => {
     });
   });
 
+  describe('TrueSheetProvider Mock', () => {
+    it('should render children without modification', () => {
+      const { getByText } = render(
+        <TrueSheetProvider>
+          <Text>Provider Content</Text>
+        </TrueSheetProvider>
+      );
+      expect(getByText('Provider Content')).toBeDefined();
+    });
+  });
+
+  describe('useTrueSheet Hook Mock', () => {
+    it('should return mock methods', () => {
+      const result = useTrueSheet();
+      expect(result.present).toBeDefined();
+      expect(result.dismiss).toBeDefined();
+      expect(result.resize).toBeDefined();
+    });
+  });
+
+  describe('createTrueSheetNavigator Mock', () => {
+    it('should return navigator components', () => {
+      const Navigator = createTrueSheetNavigator();
+      expect(Navigator.Navigator).toBeDefined();
+      expect(Navigator.Screen).toBeDefined();
+      expect(Navigator.Group).toBeDefined();
+    });
+
+    it('should be a jest mock function', () => {
+      jest.clearAllMocks();
+      createTrueSheetNavigator();
+      expect(createTrueSheetNavigator).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('TrueSheetActions Mock', () => {
+    it('should have all action creators', () => {
+      expect(TrueSheetActions.push).toBeDefined();
+      expect(TrueSheetActions.pop).toBeDefined();
+      expect(TrueSheetActions.popTo).toBeDefined();
+      expect(TrueSheetActions.popToTop).toBeDefined();
+      expect(TrueSheetActions.replace).toBeDefined();
+      expect(TrueSheetActions.resize).toBeDefined();
+      expect(TrueSheetActions.dismiss).toBeDefined();
+      expect(TrueSheetActions.remove).toBeDefined();
+    });
+
+    it('should return action objects', () => {
+      expect(TrueSheetActions.push('TestScreen')).toEqual({
+        type: 'PUSH',
+        payload: { name: 'TestScreen', params: undefined },
+      });
+      expect(TrueSheetActions.resize(1)).toEqual({ type: 'RESIZE', index: 1 });
+      expect(TrueSheetActions.dismiss()).toEqual({ type: 'DISMISS' });
+    });
+  });
+
+  describe('useTrueSheetNavigation Hook Mock', () => {
+    it('should return navigation object with all methods', () => {
+      const navigation = useTrueSheetNavigation();
+      expect(navigation.navigate).toBeDefined();
+      expect(navigation.goBack).toBeDefined();
+      expect(navigation.push).toBeDefined();
+      expect(navigation.pop).toBeDefined();
+      expect(navigation.resize).toBeDefined();
+      expect(navigation.dispatch).toBeDefined();
+    });
+
+    it('should be a jest mock function', () => {
+      jest.clearAllMocks();
+      useTrueSheetNavigation();
+      expect(useTrueSheetNavigation).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('ReanimatedTrueSheet Component Mock', () => {
-    it('should render as TrueSheet', () => {
+    it('should render children', () => {
       const { getByText } = render(
         <ReanimatedTrueSheet name="test" initialDetentIndex={0}>
           <Text>Reanimated Content</Text>
@@ -101,8 +180,10 @@ describe('TrueSheet Mocks', () => {
       const result = useReanimatedTrueSheet();
       expect(result.animatedPosition).toBeDefined();
       expect(result.animatedIndex).toBeDefined();
+      expect(result.animatedDetent).toBeDefined();
       expect(result.animatedPosition.value).toBe(0);
       expect(result.animatedIndex.value).toBe(-1);
+      expect(result.animatedDetent.value).toBe(0);
     });
 
     it('should be a jest mock function', () => {

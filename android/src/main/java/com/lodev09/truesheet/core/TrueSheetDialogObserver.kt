@@ -21,7 +21,7 @@ object TrueSheetDialogObserver {
         ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
 
       val childSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
-      updateParentTranslations(childSheetTop)
+      parentSheet?.updateTranslationForChild(childSheetTop)
 
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
@@ -55,13 +55,15 @@ object TrueSheetDialogObserver {
       val index = presentedSheetStack.indexOf(sheetView)
       if (index <= 0) return
 
+      val parentSheet = presentedSheetStack[index - 1]
+
       // Post to ensure layout is complete before reading position
       sheetView.viewController.post {
         val childMinSheetTop = sheetView.viewController.getExpectedSheetTop(0)
         val childCurrentSheetTop = sheetView.viewController.getExpectedSheetTop(sheetView.viewController.currentDetentIndex)
         // Cap to minimum detent position
         val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
-        updateParentTranslations(childSheetTop, untilIndex = index)
+        parentSheet.updateTranslationForChild(childSheetTop)
       }
     }
   }
@@ -94,23 +96,14 @@ object TrueSheetDialogObserver {
   }
 
   /**
-   * Translates parent sheets down to match the child sheet's position.
-   * @param childSheetTop The top position of the child sheet
-   * @param untilIndex If specified, only update sheets up to this index (exclusive)
+   * Gets the parent sheet of the given sheet, if any.
    */
-  private fun updateParentTranslations(childSheetTop: Int, untilIndex: Int = presentedSheetStack.size) {
-    for (i in 0 until untilIndex) {
-      val parentSheet = presentedSheetStack[i]
-      if (!parentSheet.viewController.isDialogVisible) continue
-      if (parentSheet.viewController.isExpanded) continue
-
-      val parentSheetTop = parentSheet.viewController.getExpectedSheetTop(parentSheet.viewController.currentDetentIndex)
-      if (parentSheetTop < childSheetTop) {
-        val translationY = childSheetTop - parentSheetTop
-        parentSheet.viewController.translateDialog(translationY)
-      } else {
-        parentSheet.viewController.translateDialog(0)
-      }
+  @JvmStatic
+  fun getParentSheet(sheetView: TrueSheetView): TrueSheetView? {
+    synchronized(presentedSheetStack) {
+      val index = presentedSheetStack.indexOf(sheetView)
+      if (index <= 0) return null
+      return presentedSheetStack[index - 1]
     }
   }
 }
