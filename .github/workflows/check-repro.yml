@@ -25,14 +25,8 @@ jobs:
 
             const author = issue.user.login;
             const user = comment ? comment.user.login : author;
+            const isComment = !!comment;
             const body = comment ? comment.body : issue.body || '';
-
-            // Extract the reproduction field from the issue body
-            const reproFieldMatch = body.match(/### Repro\s+([\s\S]*?)(?=###|$)/i);
-            const reproField = reproFieldMatch ? reproFieldMatch[1].trim() : '';
-
-            // Skip if repro field is empty, n/a, or similar
-            const invalidRepro = /^(n\/?a|none|no|nothing|-|\.+)?$/i.test(reproField);
 
             // Only accept repos owned by the issue author or commenter
             const reproPatterns = [
@@ -42,8 +36,18 @@ jobs:
               new RegExp(`https?://stackblitz\\.com/[^\\s]+`, 'i'),
             ];
 
-            // Check repro field specifically, not the entire body
-            const hasRepro = !invalidRepro && reproPatterns.some(pattern => pattern.test(reproField));
+            let hasRepro = false;
+
+            if (isComment) {
+              // For comments, check the entire comment body
+              hasRepro = reproPatterns.some(pattern => pattern.test(body));
+            } else {
+              // For issues, extract and check the Repro field specifically
+              const reproFieldMatch = body.match(/### Repro\s+([\s\S]*?)(?=###|$)/i);
+              const reproField = reproFieldMatch ? reproFieldMatch[1].trim() : '';
+              const invalidRepro = /^(n\/?a|none|no|nothing|-|\.+)?$/i.test(reproField);
+              hasRepro = !invalidRepro && reproPatterns.some(pattern => pattern.test(reproField));
+            }
             const labels = issue.labels.map(l => l.name);
             const hasNeedsReproLabel = labels.includes('needs repro');
             const hasReproProvidedLabel = labels.includes('repro provided');
@@ -75,7 +79,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issue.number,
-                  body: `Thank you for providing a reproduction! We'll take a look at this issue soon.`
+                  body: `Thank you for providing a repro! We'll take a look at this issue soon.`
                 });
               }
             } else {
