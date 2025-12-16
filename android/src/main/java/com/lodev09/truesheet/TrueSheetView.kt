@@ -384,9 +384,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
-    if (viewController.isPresented) {
-      viewController.positionFooter()
-    }
+    viewController.positionFooter()
   }
 
   companion object {
