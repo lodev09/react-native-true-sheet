@@ -27,6 +27,13 @@ jobs:
             const user = comment ? comment.user.login : author;
             const body = comment ? comment.body : issue.body || '';
 
+            // Extract the reproduction field from the issue body
+            const reproFieldMatch = body.match(/### Repro\s+([\s\S]*?)(?=###|$)/i);
+            const reproField = reproFieldMatch ? reproFieldMatch[1].trim() : '';
+
+            // Skip if repro field is empty, n/a, or similar
+            const invalidRepro = /^(n\/?a|none|no|nothing|-|\.+)?$/i.test(reproField);
+
             // Only accept repos owned by the issue author or commenter
             const reproPatterns = [
               new RegExp(`https?://github\\.com/${user}/[^/\\s]+/?`, 'i'),
@@ -35,7 +42,8 @@ jobs:
               new RegExp(`https?://stackblitz\\.com/[^\\s]+`, 'i'),
             ];
 
-            const hasRepro = reproPatterns.some(pattern => pattern.test(body));
+            // Check repro field specifically, not the entire body
+            const hasRepro = !invalidRepro && reproPatterns.some(pattern => pattern.test(reproField));
             const labels = issue.labels.map(l => l.name);
             const hasNeedsReproLabel = labels.includes('needs repro');
             const hasReproProvidedLabel = labels.includes('repro provided');
@@ -71,7 +79,21 @@ jobs:
                 });
               }
             } else {
-              // No valid repro - only act on issue events, not comments
+              // No valid repro - remove repro provided label if present
+              if (hasReproProvidedLabel) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: 'repro provided'
+                  });
+                } catch (e) {
+                  if (!e.message.includes('Label does not exist')) throw e;
+                }
+              }
+
+              // Only post warning comment on issue events, not comments
               if (context.eventName !== 'issues') {
                 return;
               }
