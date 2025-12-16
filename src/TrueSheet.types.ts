@@ -357,7 +357,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The blur effect style on iOS.
-   * Overrides `backgroundColor` if set.
+   * Blends with `backgroundColor` when provided.
    *
    * @platform ios
    */
