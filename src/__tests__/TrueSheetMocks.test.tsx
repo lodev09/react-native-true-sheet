@@ -4,6 +4,11 @@ import { render } from '@testing-library/react-native';
 // Import the mocks
 import { TrueSheet, TrueSheetProvider, useTrueSheet } from '../mocks';
 import {
+  createTrueSheetNavigator,
+  TrueSheetActions,
+  useTrueSheetNavigation,
+} from '../mocks/navigation';
+import {
   ReanimatedTrueSheet,
   ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
@@ -90,6 +95,61 @@ describe('TrueSheet Mocks', () => {
       expect(result.present).toBeDefined();
       expect(result.dismiss).toBeDefined();
       expect(result.resize).toBeDefined();
+    });
+  });
+
+  describe('createTrueSheetNavigator Mock', () => {
+    it('should return navigator components', () => {
+      const Navigator = createTrueSheetNavigator();
+      expect(Navigator.Navigator).toBeDefined();
+      expect(Navigator.Screen).toBeDefined();
+      expect(Navigator.Group).toBeDefined();
+    });
+
+    it('should be a jest mock function', () => {
+      jest.clearAllMocks();
+      createTrueSheetNavigator();
+      expect(createTrueSheetNavigator).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('TrueSheetActions Mock', () => {
+    it('should have all action creators', () => {
+      expect(TrueSheetActions.push).toBeDefined();
+      expect(TrueSheetActions.pop).toBeDefined();
+      expect(TrueSheetActions.popTo).toBeDefined();
+      expect(TrueSheetActions.popToTop).toBeDefined();
+      expect(TrueSheetActions.replace).toBeDefined();
+      expect(TrueSheetActions.resize).toBeDefined();
+      expect(TrueSheetActions.dismiss).toBeDefined();
+      expect(TrueSheetActions.remove).toBeDefined();
+    });
+
+    it('should return action objects', () => {
+      expect(TrueSheetActions.push('TestScreen')).toEqual({
+        type: 'PUSH',
+        payload: { name: 'TestScreen', params: undefined },
+      });
+      expect(TrueSheetActions.resize(1)).toEqual({ type: 'RESIZE', index: 1 });
+      expect(TrueSheetActions.dismiss()).toEqual({ type: 'DISMISS' });
+    });
+  });
+
+  describe('useTrueSheetNavigation Hook Mock', () => {
+    it('should return navigation object with all methods', () => {
+      const navigation = useTrueSheetNavigation();
+      expect(navigation.navigate).toBeDefined();
+      expect(navigation.goBack).toBeDefined();
+      expect(navigation.push).toBeDefined();
+      expect(navigation.pop).toBeDefined();
+      expect(navigation.resize).toBeDefined();
+      expect(navigation.dispatch).toBeDefined();
+    });
+
+    it('should be a jest mock function', () => {
+      jest.clearAllMocks();
+      useTrueSheetNavigation();
+      expect(useTrueSheetNavigation).toHaveBeenCalledTimes(1);
     });
   });
 
