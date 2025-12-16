@@ -24,7 +24,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.lodev09.truesheet.expo"
+      "package": "com.lodev09.truesheet.expo",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBeaou3cjmq_BED6HlTRdg5fSyArUCzoTM"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -32,7 +37,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      ["expo-router"],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyBeaou3cjmq_BED6HlTRdg5fSyArUCzoTM"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
