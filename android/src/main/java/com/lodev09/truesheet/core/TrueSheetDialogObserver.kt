@@ -20,18 +20,8 @@ object TrueSheetDialogObserver {
       val parentSheet = presentedSheetStack.lastOrNull()
         ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
 
-      // Translate parent sheets down to match the new sheet's position
-      val newSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
-      for (sheet in presentedSheetStack) {
-        if (!sheet.viewController.isDialogVisible) continue
-        if (sheet.viewController.isExpanded) continue
-
-        val sheetTop = sheet.viewController.currentSheetTop
-        if (sheetTop < newSheetTop) {
-          val translationY = newSheetTop - sheetTop
-          sheet.viewController.translateDialog(translationY)
-        }
-      }
+      val childSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
+      updateParentTranslations(childSheetTop)
 
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
@@ -43,7 +33,7 @@ object TrueSheetDialogObserver {
 
   /**
    * Called when a sheet has been dismissed.
-   * Shows the parent sheet if this sheet was stacked on it.
+   * Resets parent sheet translation if this sheet was stacked on it.
    */
   @JvmStatic
   fun onSheetDidDismiss(sheetView: TrueSheetView, hadParent: Boolean) {
@@ -58,7 +48,6 @@ object TrueSheetDialogObserver {
   /**
    * Called when a presented sheet's size changes (e.g., after setupSheetDetents).
    * Updates parent sheet translations to match the new sheet position.
-   * Translation is capped to the child's minimum detent height.
    */
   @JvmStatic
   fun onSheetSizeChanged(sheetView: TrueSheetView) {
@@ -68,25 +57,11 @@ object TrueSheetDialogObserver {
 
       // Post to ensure layout is complete before reading position
       sheetView.viewController.post {
-        // Use minimum detent (index 0) to cap translation
         val childMinSheetTop = sheetView.viewController.getExpectedSheetTop(0)
         val childCurrentSheetTop = sheetView.viewController.getExpectedSheetTop(sheetView.viewController.currentDetentIndex)
-        // Cap to minimum detent position (don't translate more than needed for smallest size)
+        // Cap to minimum detent position
         val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
-
-        for (i in 0 until index) {
-          val parentSheet = presentedSheetStack[i]
-          if (!parentSheet.viewController.isDialogVisible) continue
-          if (parentSheet.viewController.isExpanded) continue
-
-          val parentSheetTop = parentSheet.viewController.getExpectedSheetTop(parentSheet.viewController.currentDetentIndex)
-          if (parentSheetTop < childSheetTop) {
-            val translationY = childSheetTop - parentSheetTop
-            parentSheet.viewController.translateDialog(translationY)
-          } else {
-            parentSheet.viewController.translateDialog(0)
-          }
-        }
+        updateParentTranslations(childSheetTop, untilIndex = index)
       }
     }
   }
@@ -115,6 +90,27 @@ object TrueSheetDialogObserver {
   fun clear() {
     synchronized(presentedSheetStack) {
       presentedSheetStack.clear()
+    }
+  }
+
+  /**
+   * Translates parent sheets down to match the child sheet's position.
+   * @param childSheetTop The top position of the child sheet
+   * @param untilIndex If specified, only update sheets up to this index (exclusive)
+   */
+  private fun updateParentTranslations(childSheetTop: Int, untilIndex: Int = presentedSheetStack.size) {
+    for (i in 0 until untilIndex) {
+      val parentSheet = presentedSheetStack[i]
+      if (!parentSheet.viewController.isDialogVisible) continue
+      if (parentSheet.viewController.isExpanded) continue
+
+      val parentSheetTop = parentSheet.viewController.getExpectedSheetTop(parentSheet.viewController.currentDetentIndex)
+      if (parentSheetTop < childSheetTop) {
+        val translationY = childSheetTop - parentSheetTop
+        parentSheet.viewController.translateDialog(translationY)
+      } else {
+        parentSheet.viewController.translateDialog(0)
+      }
     }
   }
 }

@@ -368,7 +368,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     isSheetUpdatePending = true
     viewController.post {
       isSheetUpdatePending = false
-      viewController.setupSheetDetentsForSizeChange();
+      viewController.setupSheetDetentsForSizeChange()
       TrueSheetDialogObserver.onSheetSizeChanged(this)
     }
   }
