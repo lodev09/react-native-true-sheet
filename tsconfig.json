@@ -28,5 +28,5 @@
     "target": "ESNext",
     "verbatimModuleSyntax": true
   },
-  "exclude": ["lib", "build", "src/__mocks__", "docs"]
+  "exclude": ["lib", "build", "docs"]
 }

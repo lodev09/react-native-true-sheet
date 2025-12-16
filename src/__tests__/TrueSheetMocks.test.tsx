@@ -1,15 +1,14 @@
 import { Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 
-// Manually import the mock to test it
-
-const {
-  TrueSheet,
+// Import the mocks from the new locations
+import { TrueSheet, TrueSheetProvider, useTrueSheet } from '../mock';
+import {
   ReanimatedTrueSheet,
   ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
   useReanimatedPositionChangeHandler,
-} = require('../__mocks__');
+} from '../reanimated/mock';
 
 describe('TrueSheet Mocks', () => {
   beforeEach(() => {
@@ -74,8 +73,28 @@ describe('TrueSheet Mocks', () => {
     });
   });
 
+  describe('TrueSheetProvider Mock', () => {
+    it('should render children without modification', () => {
+      const { getByText } = render(
+        <TrueSheetProvider>
+          <Text>Provider Content</Text>
+        </TrueSheetProvider>
+      );
+      expect(getByText('Provider Content')).toBeDefined();
+    });
+  });
+
+  describe('useTrueSheet Hook Mock', () => {
+    it('should return mock methods', () => {
+      const result = useTrueSheet();
+      expect(result.present).toBeDefined();
+      expect(result.dismiss).toBeDefined();
+      expect(result.resize).toBeDefined();
+    });
+  });
+
   describe('ReanimatedTrueSheet Component Mock', () => {
-    it('should render as TrueSheet', () => {
+    it('should render children', () => {
       const { getByText } = render(
         <ReanimatedTrueSheet name="test" initialDetentIndex={0}>
           <Text>Reanimated Content</Text>
@@ -101,8 +120,10 @@ describe('TrueSheet Mocks', () => {
       const result = useReanimatedTrueSheet();
       expect(result.animatedPosition).toBeDefined();
       expect(result.animatedIndex).toBeDefined();
+      expect(result.animatedDetent).toBeDefined();
       expect(result.animatedPosition.value).toBe(0);
       expect(result.animatedIndex.value).toBe(-1);
+      expect(result.animatedDetent.value).toBe(0);
     });
 
     it('should be a jest mock function', () => {
