@@ -1,6 +1,6 @@
 import type { ParamListBase } from '@react-navigation/native';
 
-import type { TrueSheetNavigationProp } from './types';
+import type { TrueSheetNavigationProp } from '../navigation/types';
 
 /**
  * Mock createTrueSheetNavigator for testing.
@@ -60,7 +60,7 @@ export const useTrueSheetNavigation = jest.fn(
     }) as unknown as TrueSheetNavigationProp<T>
 );
 
-export type { TrueSheetActionType } from './TrueSheetRouter';
+export type { TrueSheetActionType } from '../navigation/TrueSheetRouter';
 export type { DetentInfoEventPayload, PositionChangeEventPayload } from '../TrueSheet.types';
 export type {
   TrueSheetNavigationEventMap,
@@ -69,4 +69,4 @@ export type {
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
   TrueSheetScreenProps,
-} from './types';
+} from '../navigation/types';

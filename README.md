@@ -91,10 +91,23 @@ export const App = () => {
 
 ## Testing
 
-TrueSheet includes built-in Jest mocks for easy testing. Simply mock the package in your tests:
+TrueSheet exports mocks for easy testing:
 
 ```tsx
-jest.mock('@lodev09/react-native-true-sheet');
+// Main component
+jest.mock('@lodev09/react-native-true-sheet', () =>
+  require('@lodev09/react-native-true-sheet/mock')
+);
+
+// Navigation (if using)
+jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
+  require('@lodev09/react-native-true-sheet/navigation/mock')
+);
+
+// Reanimated (if using)
+jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
+  require('@lodev09/react-native-true-sheet/reanimated/mock')
+);
 ```
 
 All methods (`present`, `dismiss`, `resize`) are mocked as Jest functions, allowing you to test your components without native dependencies.

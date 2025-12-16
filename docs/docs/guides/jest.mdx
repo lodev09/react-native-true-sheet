@@ -8,11 +8,25 @@ Testing components that use `TrueSheet` is straightforward with the built-in Jes
 
 ## Setup
 
-Add the mock to your Jest setup file.
+Add the mocks to your Jest setup file:
 
 ```js
 // jest.setup.js
-jest.mock('@lodev09/react-native-true-sheet');
+
+// Main component
+jest.mock('@lodev09/react-native-true-sheet', () =>
+  require('@lodev09/react-native-true-sheet/mock')
+);
+
+// Navigation (if using)
+jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
+  require('@lodev09/react-native-true-sheet/navigation/mock')
+);
+
+// Reanimated (if using)
+jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
+  require('@lodev09/react-native-true-sheet/reanimated/mock')
+);
 ```
 
 Configure Jest to use the setup file in your `package.json`:
@@ -25,6 +39,27 @@ Configure Jest to use the setup file in your `package.json`:
 }
 ```
 
+## Available Mocks
+
+### Main Module (`/mock`)
+
+- `TrueSheet` - Component with mocked `present`, `dismiss`, `resize` methods
+- `TrueSheetProvider` - Pass-through provider
+- `useTrueSheet` - Hook returning mocked methods
+
+### Navigation Module (`/navigation/mock`)
+
+- `createTrueSheetNavigator` - Mocked navigator factory
+- `TrueSheetActions` - Mocked action creators
+- `useTrueSheetNavigation` - Hook returning mocked navigation object
+
+### Reanimated Module (`/reanimated/mock`)
+
+- `ReanimatedTrueSheet` - Component with mocked methods
+- `ReanimatedTrueSheetProvider` - Pass-through provider
+- `useReanimatedTrueSheet` - Hook returning mocked shared values
+- `useReanimatedPositionChangeHandler` - Mocked handler hook
+
 ## Testing Static Methods
 
 All static methods are mocked as Jest functions.
@@ -34,13 +69,13 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 it('should present sheet', async () => {
   await TrueSheet.present('my-sheet', 0);
-  
+
   expect(TrueSheet.present).toHaveBeenCalledWith('my-sheet', 0);
 });
 
 it('should dismiss sheet', async () => {
   await TrueSheet.dismiss('my-sheet');
-  
+
   expect(TrueSheet.dismiss).toHaveBeenCalledWith('my-sheet');
 });
 ```
@@ -56,8 +91,26 @@ it('should render sheet content', () => {
       <Text>Sheet Content</Text>
     </TrueSheet>
   );
-  
+
   expect(getByText('Sheet Content')).toBeDefined();
+});
+```
+
+## Testing Reanimated Integration
+
+```tsx
+import {
+  useReanimatedTrueSheet,
+  ReanimatedTrueSheetProvider,
+} from '@lodev09/react-native-true-sheet/reanimated';
+
+it('should return mocked shared values', () => {
+  const { result } = renderHook(() => useReanimatedTrueSheet(), {
+    wrapper: ReanimatedTrueSheetProvider,
+  });
+
+  expect(result.current.animatedPosition.value).toBe(0);
+  expect(result.current.animatedIndex.value).toBe(-1);
 });
 ```
 

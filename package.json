@@ -11,6 +11,9 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./mock": "./lib/module/mocks/index.js",
+    "./navigation/mock": "./lib/module/mocks/navigation.js",
+    "./reanimated/mock": "./lib/module/mocks/reanimated.js",
     "./reanimated": {
       "source": "./src/reanimated/index.ts",
       "types": "./lib/typescript/src/reanimated/index.d.ts",

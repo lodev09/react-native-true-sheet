@@ -1,14 +1,14 @@
 import { Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 
-// Import the mocks from the new locations
-import { TrueSheet, TrueSheetProvider, useTrueSheet } from '../mock';
+// Import the mocks
+import { TrueSheet, TrueSheetProvider, useTrueSheet } from '../mocks';
 import {
   ReanimatedTrueSheet,
   ReanimatedTrueSheetProvider,
   useReanimatedTrueSheet,
   useReanimatedPositionChangeHandler,
-} from '../reanimated/mock';
+} from '../mocks/reanimated';
 
 describe('TrueSheet Mocks', () => {
   beforeEach(() => {
