@@ -56,6 +56,42 @@ object TrueSheetDialogObserver {
   }
 
   /**
+   * Called when a presented sheet's size changes (e.g., after setupSheetDetents).
+   * Updates parent sheet translations to match the new sheet position.
+   * Translation is capped to the child's minimum detent height.
+   */
+  @JvmStatic
+  fun onSheetSizeChanged(sheetView: TrueSheetView) {
+    synchronized(presentedSheetStack) {
+      val index = presentedSheetStack.indexOf(sheetView)
+      if (index <= 0) return
+
+      // Post to ensure layout is complete before reading position
+      sheetView.viewController.post {
+        // Use minimum detent (index 0) to cap translation
+        val childMinSheetTop = sheetView.viewController.getExpectedSheetTop(0)
+        val childCurrentSheetTop = sheetView.viewController.getExpectedSheetTop(sheetView.viewController.currentDetentIndex)
+        // Cap to minimum detent position (don't translate more than needed for smallest size)
+        val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
+
+        for (i in 0 until index) {
+          val parentSheet = presentedSheetStack[i]
+          if (!parentSheet.viewController.isDialogVisible) continue
+          if (parentSheet.viewController.isExpanded) continue
+
+          val parentSheetTop = parentSheet.viewController.getExpectedSheetTop(parentSheet.viewController.currentDetentIndex)
+          if (parentSheetTop < childSheetTop) {
+            val translationY = childSheetTop - parentSheetTop
+            parentSheet.viewController.translateDialog(translationY)
+          } else {
+            parentSheet.viewController.translateDialog(0)
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Returns all sheets presented on top of the given sheet (children/descendants).
    * Returns them in reverse order (top-most first) for proper dismissal.
    */

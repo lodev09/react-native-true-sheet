@@ -76,6 +76,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
     private const val PRESENT_ANIMATION_DURATION = 250L
     private const val DISMISS_ANIMATION_DURATION = 150L
+    private const val TRANSLATE_ANIMATION_DURATION = 100L
   }
 
   // ====================================================================
@@ -482,11 +483,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Translates the sheet when stacking. Pass 0 to reset. */
   fun translateDialog(translationY: Int) {
     val bottomSheet = bottomSheetView ?: return
-    val duration = if (translationY > 0) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
 
     bottomSheet.animate()
       .translationY(translationY.toFloat())
-      .setDuration(duration)
+      .setDuration(TRANSLATE_ANIMATION_DURATION)
       .setUpdateListener {
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
@@ -591,6 +591,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       isReconfiguring = false
     }
+  }
+
+  fun setupSheetDetentsForSizeChange() {
+    setupSheetDetents()
+    positionFooter()
   }
 
   fun setupGrabber() {

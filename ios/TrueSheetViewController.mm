@@ -594,8 +594,10 @@
 #pragma mark - Sheet Configuration
 
 - (void)setupSheetDetentsForSizeChange {
-  _pendingContentSizeChange = YES;
-  [self setupSheetDetents];
+  [self.sheetPresentationController animateChanges:^{
+    _pendingContentSizeChange = YES;
+    [self setupSheetDetents];
+  }];
 }
 
 - (void)setupSheetDetentsForDetentsChange {
