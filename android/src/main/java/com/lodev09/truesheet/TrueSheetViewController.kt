@@ -110,6 +110,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val headerHeight: Int
     get() = containerView?.headerHeight ?: 0
 
+  override val keyboardHeight: Int
+    get() = keyboardObserver?.currentHeight ?: 0
+
   // ====================================================================
   // MARK: - State
   // ====================================================================
@@ -117,12 +120,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Interaction state for the sheet */
   private sealed class InteractionState {
     data object Idle : InteractionState()
-    data class Dragging(val startDetentIndex: Int) : InteractionState()
+    data object Dragging : InteractionState()
     data object Reconfiguring : InteractionState()
   }
-
-  /** Keyboard-related state */
-  private data class KeyboardState(val preDetentIndex: Int = -1, val isTransitioning: Boolean = false)
 
   var isPresented = false
     private set
@@ -134,7 +134,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private set
 
   private var interactionState: InteractionState = InteractionState.Idle
-  private var keyboardState = KeyboardState()
   private var isDismissing = false
   private var wasHiddenByModal = false
   private var shouldAnimatePresent = true
@@ -294,7 +293,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     dialog = null
     interactionState = InteractionState.Idle
-    keyboardState = KeyboardState()
     isDismissing = false
     isPresented = false
     isDialogVisible = false
@@ -342,11 +340,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
 
-          val keyboardHeight = keyboardObserver?.currentHeight ?: 0
-          applyClampedTranslation(sheetView, -keyboardHeight.toFloat())
-
-          val effectiveTop = sheetView.top + sheetView.translationY.toInt()
-          emitChangePositionDelegate(effectiveTop)
+          emitChangePositionDelegate(sheetView.top)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -356,7 +350,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
 
           positionFooter(slideOffset)
-          updateDimAmount(effectiveTop)
+          updateDimAmount(sheetView.top)
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -391,23 +385,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
     val detentInfo = DetentInfo(index, position)
 
-    when (val state = interactionState) {
+    when (interactionState) {
       is InteractionState.Dragging -> {
         val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
-
-        // Dismiss keyboard if dragged down to a lower detent
-        if (detentInfo.index < state.startDetentIndex) {
-          val imm = reactContext.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
-            as? android.view.inputmethod.InputMethodManager
-          imm?.hideSoftInputFromWindow((dialog?.currentFocus ?: bottomSheetView)?.windowToken, 0)
-        }
 
         if (detentInfo.index != currentDetentIndex) {
           presentPromise?.invoke()
           presentPromise = null
           currentDetentIndex = detentInfo.index
-          keyboardState = KeyboardState()
           setupDimmedBackground(detentInfo.index)
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
         }
@@ -418,12 +404,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> {
         if (detentInfo.index != currentDetentIndex) {
           currentDetentIndex = detentInfo.index
-          if (!keyboardState.isTransitioning) {
-            val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
-            delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
-          }
+          val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
+          delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
         }
-        keyboardState = keyboardState.copy(isTransitioning = false)
       }
     }
   }
@@ -698,54 +681,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardWillShow(height: Int) {
-          if (!shouldHandleKeyboard()) return
-          if (detents.size > 1 && currentDetentIndex < detents.lastIndex) {
-            keyboardState = KeyboardState(
-              preDetentIndex = currentDetentIndex,
-              isTransitioning = true
-            )
-            setStateForDetentIndex(detents.lastIndex, resetKeyboardState = false)
-          }
-        }
+        override fun keyboardWillShow(height: Int) {}
 
-        override fun keyboardWillHide() {
-          if (!shouldHandleKeyboard()) return
-          if (keyboardState.preDetentIndex >= 0) {
-            keyboardState = keyboardState.copy(isTransitioning = true)
-            setStateForDetentIndex(keyboardState.preDetentIndex)
-          }
-        }
+        override fun keyboardWillHide() {}
 
         override fun keyboardDidChangeHeight(height: Int) {
           if (!shouldHandleKeyboard()) return
-          translateForKeyboard(height)
+          setupSheetDetents()
+          positionFooter()
         }
       }
       start()
     }
-  }
-
-  private fun translateForKeyboard(height: Int) {
-    val bottomSheet = bottomSheetView ?: return
-
-    applyClampedTranslation(bottomSheet, -height.toFloat())
-
-    val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
-    emitChangePositionDelegate(effectiveTop)
-    positionFooter()
-    updateDimAmount(effectiveTop)
-  }
-
-  private fun applyClampedTranslation(sheetView: View, targetTranslation: Float) {
-    if (targetTranslation >= 0) {
-      sheetView.translationY = targetTranslation
-      return
-    }
-
-    val maxTranslation = maxOf(0, sheetView.top - topInset)
-    val clampedOffset = minOf(-targetTranslation.toInt(), maxTranslation)
-    sheetView.translationY = -clampedOffset.toFloat()
   }
 
   fun cleanupKeyboardObserver() {
@@ -842,9 +789,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = bottomSheet.height
     val sheetTop = bottomSheet.top
 
-    footerView.translationY = bottomSheet.translationY
-
-    var footerY = (sheetHeight - sheetTop - footerHeight).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
     }
@@ -853,10 +798,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     footerView.y = minOf(footerY, maxAllowedY)
   }
 
-  fun setStateForDetentIndex(index: Int, resetKeyboardState: Boolean = true) {
-    if (resetKeyboardState) {
-      keyboardState = KeyboardState()
-    }
+  fun setStateForDetentIndex(index: Int) {
     behavior?.state = detentCalculator.getStateForDetentIndex(index)
   }
 
@@ -882,7 +824,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
-    interactionState = InteractionState.Dragging(startDetentIndex = currentDetentIndex)
+    interactionState = InteractionState.Dragging
   }
 
   private fun handleDragChange(sheetView: View) {
