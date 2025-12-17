@@ -10,7 +10,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
 
 interface TrueSheetKeyboardObserverDelegate {
-  fun keyboardHeightDidChange(height: Int)
+  fun keyboardWillChangeHeight(from: Int, to: Int)
+  fun keyboardDidChangeHeight(from: Int, to: Int, fraction: Float)
 }
 
 /**
@@ -44,10 +45,12 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
   }
 
-  private fun updateHeight(height: Int) {
-    if (currentHeight != height) {
-      currentHeight = height
-      delegate?.keyboardHeightDidChange(height)
+  private fun updateHeight(from: Int, to: Int, fraction: Float) {
+    val previousHeight = currentHeight
+    val newHeight = (from + (to - from) * fraction).toInt()
+    if (previousHeight != newHeight) {
+      currentHeight = newHeight
+      delegate?.keyboardDidChangeHeight(from, to, fraction)
     }
   }
 
@@ -69,6 +72,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           bounds: WindowInsetsAnimationCompat.BoundsCompat
         ): WindowInsetsAnimationCompat.BoundsCompat {
           endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          delegate?.keyboardWillChangeHeight(startHeight, endHeight)
           return bounds
         }
 
@@ -78,14 +82,14 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           } ?: return insets
 
           val fraction = imeAnimation.interpolatedFraction
-          val currentHeight = (startHeight + (endHeight - startHeight) * fraction).toInt()
-          updateHeight(currentHeight)
+          updateHeight(startHeight, endHeight, fraction)
 
           return insets
         }
 
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
-          updateHeight(getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView)))
+          val finalHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          updateHeight(startHeight, finalHeight, 1f)
         }
       }
     )
@@ -102,7 +106,13 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       val screenHeight = rootView.height
       val keyboardHeight = screenHeight - rect.bottom
 
-      updateHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
+      val newHeight = if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0
+      val previousHeight = currentHeight
+
+      if (previousHeight != newHeight) {
+        delegate?.keyboardWillChangeHeight(previousHeight, newHeight)
+        updateHeight(previousHeight, newHeight, 1f)
+      }
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)

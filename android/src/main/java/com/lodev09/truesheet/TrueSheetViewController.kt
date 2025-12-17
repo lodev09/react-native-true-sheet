@@ -625,12 +625,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardHeightDidChange(height: Int) {
-          setupSheetDetents()
+        override fun keyboardWillChangeHeight(from: Int, to: Int) {
+          // Update expandedOffset to prevent dragging beyond screen with keyboard
+        }
+
+        override fun keyboardDidChangeHeight(from: Int, to: Int, fraction: Float) {
+          translateForKeyboard(from, to, fraction)
         }
       }
       start()
     }
+  }
+
+  private fun translateForKeyboard(fromHeight: Int, toHeight: Int, fraction: Float) {
+    val bottomSheet = bottomSheetView ?: return
+    val currentKeyboardOffset = (fromHeight + (toHeight - fromHeight) * fraction).toInt()
+
+    // Clamp translation so sheet doesn't go beyond topInset
+    val maxTranslation = maxOf(0, bottomSheet.top - topInset)
+    val clampedOffset = minOf(currentKeyboardOffset, maxTranslation)
+    bottomSheet.translationY = -clampedOffset.toFloat()
+
+    val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
+    emitChangePositionDelegate(effectiveTop)
+    positionFooter()
+    updateDimAmount(effectiveTop)
   }
 
   fun cleanupKeyboardObserver() {
@@ -829,7 +848,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     footerView.translationY = bottomSheet.translationY
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight).toFloat()
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
     }
@@ -974,17 +993,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Calculations
   // ====================================================================
 
-  private val keyboardHeight: Int
-    get() = keyboardObserver?.currentHeight ?: 0
-
   private fun getDetentHeight(detent: Double): Int {
     val height = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset + keyboardHeight
+      contentHeight + headerHeight + contentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
       }
-      (detent * screenHeight).toInt() + contentBottomInset + keyboardHeight
+      (detent * screenHeight).toInt() + contentBottomInset
     }
 
     val maxAllowedHeight = screenHeight + contentBottomInset
