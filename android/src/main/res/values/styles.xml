@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Smooth slide animation for BottomSheetDialog -->
-    <style name="TrueSheetAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@anim/true_sheet_slide_in</item>
-        <item name="android:windowExitAnimation">@anim/true_sheet_slide_out</item>
-    </style>
-
     <!-- Fade out only - used when hiding sheet for RN Screens modal -->
     <style name="TrueSheetFadeOutAnimation" parent="Animation.AppCompat.Dialog">
         <item name="android:windowExitAnimation">@anim/true_sheet_fade_out</item>

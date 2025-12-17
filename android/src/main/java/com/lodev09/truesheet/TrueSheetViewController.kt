@@ -74,7 +74,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
 
-    // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
+    // Animation durations
     private const val PRESENT_ANIMATION_DURATION = 300L
     private const val DISMISS_ANIMATION_DURATION = 200L
     private const val TRANSLATE_ANIMATION_DURATION = 200L
@@ -294,6 +294,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
+      // Hide immediately to prevent flash before animation starts
+      bottomSheetView?.visibility = View.INVISIBLE
+
       isPresented = true
       isDialogVisible = true
       resetAnimation()
@@ -645,6 +648,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Start from off-screen (translated down)
     bottomSheet.translationY = fromY
 
+    // Post to next frame to ensure layout is complete before animating
+    bottomSheet.post {
+      bottomSheet.visibility = View.VISIBLE
+      startPresentAnimation(bottomSheet, fromY)
+    }
+  }
+
+  private fun startPresentAnimation(bottomSheet: View, fromY: Float) {
     presentAnimator?.cancel()
     presentAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
       duration = PRESENT_ANIMATION_DURATION
@@ -654,21 +665,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val fraction = animator.animatedValue as Float
         bottomSheet.translationY = fromY * fraction
 
-        // Log the actual top position during animation
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
-        Log.d(TAG_NAME, "animatePresent: bottomSheetView.top = ${bottomSheet.top}, translationY = ${bottomSheet.translationY}, effectiveTop = $effectiveTop")
-
         emitChangePositionDelegate(effectiveTop)
       }
 
       addListener(object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator) {
-          Log.d(TAG_NAME, "animatePresent started")
           animateDimAlpha(show = true)
         }
 
         override fun onAnimationEnd(animation: Animator) {
-          Log.d(TAG_NAME, "animatePresent ended, bottomSheetView.top = ${bottomSheet.top}")
           bottomSheet.translationY = 0f
           presentAnimator = null
 
@@ -707,8 +713,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val fromTop = bottomSheet.top + bottomSheet.translationY.toInt()
     val toY = (realScreenHeight - fromTop).toFloat()
 
-    Log.d(TAG_NAME, "animateDismiss setup: fromTop = $fromTop, toY = $toY, realScreenHeight = $realScreenHeight")
-
     dismissAnimator?.cancel()
     dismissAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
       duration = DISMISS_ANIMATION_DURATION
@@ -718,21 +722,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val fraction = animator.animatedValue as Float
         bottomSheet.translationY = toY * fraction
 
-        // Log the actual top position during animation
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
-        Log.d(TAG_NAME, "animateDismiss: bottomSheetView.top = ${bottomSheet.top}, translationY = ${bottomSheet.translationY}, effectiveTop = $effectiveTop")
-
         emitChangePositionDelegate(effectiveTop)
       }
 
       addListener(object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator) {
-          Log.d(TAG_NAME, "animateDismiss started")
           animateDimAlpha(show = false)
         }
 
         override fun onAnimationEnd(animation: Animator) {
-          Log.d(TAG_NAME, "animateDismiss ended")
           dismissAnimator = null
           onEnd()
         }
@@ -1068,7 +1067,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     bottomSheetView?.let {
       val visibleSheetHeight = getVisibleSheetHeight(it)
-      if (visibleSheetHeight > 0) return getPositionDp(visibleSheetHeight)
+      // Only use bottomSheetView if it's properly positioned (not full screen)
+      if (visibleSheetHeight > 0 && visibleSheetHeight < realScreenHeight) {
+        return getPositionDp(visibleSheetHeight)
+      }
     }
 
     val detentHeight = getDetentHeight(detents[index])
