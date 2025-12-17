@@ -10,8 +10,9 @@ import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
 
 interface TrueSheetKeyboardObserverDelegate {
-  fun keyboardWillChangeHeight(from: Int, to: Int)
-  fun keyboardDidChangeHeight(from: Int, to: Int, fraction: Float)
+  fun keyboardWillShow(height: Int)
+  fun keyboardWillHide()
+  fun keyboardDidChangeHeight(height: Int)
 }
 
 /**
@@ -46,11 +47,10 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   }
 
   private fun updateHeight(from: Int, to: Int, fraction: Float) {
-    val previousHeight = currentHeight
     val newHeight = (from + (to - from) * fraction).toInt()
-    if (previousHeight != newHeight) {
+    if (currentHeight != newHeight) {
       currentHeight = newHeight
-      delegate?.keyboardDidChangeHeight(from, to, fraction)
+      delegate?.keyboardDidChangeHeight(newHeight)
     }
   }
 
@@ -72,7 +72,11 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           bounds: WindowInsetsAnimationCompat.BoundsCompat
         ): WindowInsetsAnimationCompat.BoundsCompat {
           endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
-          delegate?.keyboardWillChangeHeight(startHeight, endHeight)
+          if (endHeight > startHeight) {
+            delegate?.keyboardWillShow(endHeight)
+          } else if (endHeight < startHeight) {
+            delegate?.keyboardWillHide()
+          }
           return bounds
         }
 
@@ -110,7 +114,11 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       val previousHeight = currentHeight
 
       if (previousHeight != newHeight) {
-        delegate?.keyboardWillChangeHeight(previousHeight, newHeight)
+        if (newHeight > previousHeight) {
+          delegate?.keyboardWillShow(newHeight)
+        } else if (newHeight < previousHeight) {
+          delegate?.keyboardWillHide()
+        }
         updateHeight(previousHeight, newHeight, 1f)
       }
     }

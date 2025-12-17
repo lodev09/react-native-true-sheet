@@ -131,6 +131,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var isReconfiguring = false
   private var lastEmittedPositionPx: Int = -1
   private var dragStartDetentIndex: Int = -1
+  private var preKeyboardDetentIndex: Int = -1
+  private var isKeyboardTransition = false
 
   /** Tracks if this sheet was hidden due to a RN Screens modal (vs sheet stacking) */
   private var wasHiddenByModal = false
@@ -385,15 +387,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
                     presentPromise?.invoke()
                     presentPromise = null
                     currentDetentIndex = detentInfo.index
+                    preKeyboardDetentIndex = -1
+                    isKeyboardTransition = false
                     setupDimmedBackground(detentInfo.index)
                     delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
                   }
 
                   isDragging = false
-                } else if (detentInfo.index != currentDetentIndex) {
-                  val detent = getDetentValueForIndex(detentInfo.index)
-                  currentDetentIndex = detentInfo.index
-                  delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+                  isKeyboardTransition = false
+                } else {
+                  if (detentInfo.index != currentDetentIndex) {
+                    currentDetentIndex = detentInfo.index
+                    // Skip emitting change event for keyboard-triggered detent changes
+                    if (!isKeyboardTransition) {
+                      val detent = getDetentValueForIndex(detentInfo.index)
+                      delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+                    }
+                  }
+                  isKeyboardTransition = false
                 }
               }
             }
@@ -637,23 +648,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardWillChangeHeight(from: Int, to: Int) {
-          // Update expandedOffset to prevent dragging beyond screen with keyboard
+        override fun keyboardWillShow(height: Int) {
+          // Save current detent and expand to last detent when keyboard shows
+          if (detents.size > 1 && currentDetentIndex < detents.lastIndex) {
+            preKeyboardDetentIndex = currentDetentIndex
+            isKeyboardTransition = true
+            setStateForDetentIndex(detents.lastIndex, resetKeyboardState = false)
+          }
         }
 
-        override fun keyboardDidChangeHeight(from: Int, to: Int, fraction: Float) {
-          translateForKeyboard(from, to, fraction)
+        override fun keyboardWillHide() {
+          // Restore to original detent when keyboard hides
+          if (preKeyboardDetentIndex >= 0) {
+            isKeyboardTransition = true
+            setStateForDetentIndex(preKeyboardDetentIndex)
+          }
+        }
+
+        override fun keyboardDidChangeHeight(height: Int) {
+          translateForKeyboard(height)
         }
       }
       start()
     }
   }
 
-  private fun translateForKeyboard(fromHeight: Int, toHeight: Int, fraction: Float) {
+  private fun translateForKeyboard(height: Int) {
     val bottomSheet = bottomSheetView ?: return
-    val currentKeyboardOffset = (fromHeight + (toHeight - fromHeight) * fraction).toInt()
 
-    applyClampedTranslation(bottomSheet, -currentKeyboardOffset.toFloat())
+    applyClampedTranslation(bottomSheet, -height.toFloat())
 
     val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
     emitChangePositionDelegate(effectiveTop)
@@ -881,7 +904,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     footerView.y = minOf(footerY, maxAllowedY)
   }
 
-  fun setStateForDetentIndex(index: Int) {
+  fun setStateForDetentIndex(index: Int, resetKeyboardState: Boolean = true) {
+    if (resetKeyboardState) {
+      preKeyboardDetentIndex = -1
+    }
     behavior?.state = getStateForDetentIndex(index)
   }
 
@@ -1055,6 +1081,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       2 -> mapOf(
         BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_HALF_EXPANDED to 1,
         BottomSheetBehavior.STATE_EXPANDED to 1
       )
 
