@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -27,11 +28,11 @@ class RNScreensFragmentObserver(
     val fragmentManager = activity.supportFragmentManager
 
     fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
-      override fun onFragmentAttached(fm: FragmentManager, fragment: Fragment, context: android.content.Context) {
-        super.onFragmentAttached(fm, fragment, context)
+      override fun onFragmentPreAttached(fm: FragmentManager, f: Fragment, context: Context) {
+        super.onFragmentPreAttached(fm, f, context)
 
-        if (isModalFragment(fragment) && !activeModalFragments.contains(fragment)) {
-          activeModalFragments.add(fragment)
+        if (isModalFragment(f) && !activeModalFragments.contains(f)) {
+          activeModalFragments.add(f)
 
           if (activeModalFragments.size == 1) {
             onModalPresented()
@@ -39,17 +40,10 @@ class RNScreensFragmentObserver(
         }
       }
 
-      override fun onFragmentStopped(fm: FragmentManager, fragment: Fragment) {
-        super.onFragmentStopped(fm, fragment)
-
-        // Ignore if app is in background (fragments stop with activity)
-        val activity = reactContext.currentActivity as? AppCompatActivity ?: return
-        if (!activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
-          return
-        }
-
-        if (activeModalFragments.contains(fragment)) {
-          activeModalFragments.remove(fragment)
+      override fun onFragmentDetached(fm: FragmentManager, f: Fragment) {
+        super.onFragmentDetached(fm, f)
+        if (activeModalFragments.contains(f)) {
+          activeModalFragments.remove(f)
 
           if (activeModalFragments.isEmpty()) {
             onModalDismissed()

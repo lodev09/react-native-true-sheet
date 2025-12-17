@@ -74,9 +74,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
 
     // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
-    private const val PRESENT_ANIMATION_DURATION = 250L
-    private const val DISMISS_ANIMATION_DURATION = 150L
-    private const val TRANSLATE_ANIMATION_DURATION = 100L
+    private const val PRESENT_ANIMATION_DURATION = 300L
+    private const val DISMISS_ANIMATION_DURATION = 200L
+    private const val TRANSLATE_ANIMATION_DURATION = 200L
   }
 
   // ====================================================================
@@ -417,14 +417,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       onModalDismissed = {
         // Only show if we were the one hidden by modal, not by sheet stacking
         if (isPresented && wasHiddenByModal) {
+          dialog?.window?.setWindowAnimations(windowAnimation)
+
           isDialogVisible = true
           dialog?.window?.decorView?.visibility = VISIBLE
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
-          // Restore animation after visibility change to avoid slide animation
-          sheetContainer?.post {
-            dialog?.window?.setWindowAnimations(windowAnimation)
-          }
           wasHiddenByModal = false
         }
       }
@@ -471,9 +469,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val sheetTop = bottomSheetView?.top ?: return false
       return sheetTop <= topInset
     }
-
-  val currentSheetTop: Int
-    get() = bottomSheetView?.top ?: screenHeight
 
   val currentTranslationY: Int
     get() = bottomSheetView?.translationY?.toInt() ?: 0
