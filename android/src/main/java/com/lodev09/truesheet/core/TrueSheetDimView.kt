@@ -13,7 +13,7 @@ import com.lodev09.truesheet.utils.ScreenUtils
 class TrueSheetDimView(private val reactContext: ThemedReactContext) : View(reactContext) {
 
   companion object {
-    private const val MAX_ALPHA = 0.4f
+    private const val MAX_ALPHA = 0.5f
   }
 
   private var targetView: ViewGroup? = null
@@ -46,11 +46,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) : View(reac
   fun detach() {
     targetView?.removeView(this)
     targetView = null
-  }
-
-  fun animateAlpha(show: Boolean, duration: Long, dimmedDetentIndex: Int, currentDetentIndex: Int) {
-    val targetAlpha = if (show && currentDetentIndex >= dimmedDetentIndex) MAX_ALPHA else 0f
-    animate().alpha(targetAlpha).setDuration(duration).start()
   }
 
   fun interpolateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int) {

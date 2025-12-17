@@ -1,26 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Smooth slide animation for BottomSheetDialog -->
-    <style name="TrueSheetAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@anim/true_sheet_slide_in</item>
-        <item name="android:windowExitAnimation">@anim/true_sheet_slide_out</item>
+    <!-- No animation style - animations handled programmatically -->
+    <style name="TrueSheetNoAnimation" parent="Animation.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@null</item>
     </style>
 
-    <!-- Fade out only - used when hiding sheet for RN Screens modal -->
-    <style name="TrueSheetFadeOutAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowExitAnimation">@anim/true_sheet_fade_out</item>
-    </style>
-
-    <!-- Default BottomSheetDialog style with smooth animations -->
+    <!-- Default BottomSheetDialog style with programmatic animations -->
     <style name="TrueSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="android:windowAnimationStyle">@style/TrueSheetAnimation</item>
+        <item name="android:windowAnimationStyle">@style/TrueSheetNoAnimation</item>
     </style>
 
-    <!-- BottomSheetDialog style with edge-to-edge and smooth animations -->
+    <!-- BottomSheetDialog style with edge-to-edge and programmatic animations -->
     <style name="TrueSheetEdgeToEdgeEnabledDialog" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="enableEdgeToEdge">true</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowAnimationStyle">@style/TrueSheetAnimation</item>
+        <item name="android:windowAnimationStyle">@style/TrueSheetNoAnimation</item>
     </style>
 </resources>

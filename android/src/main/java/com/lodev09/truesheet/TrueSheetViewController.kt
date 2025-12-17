@@ -1,18 +1,15 @@
 package com.lodev09.truesheet
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
-import androidx.core.view.ViewCompat
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -29,6 +26,11 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
+import com.lodev09.truesheet.core.TrueSheetAnimator
+import com.lodev09.truesheet.core.TrueSheetAnimatorProvider
+import com.lodev09.truesheet.core.TrueSheetDetentCalculator
+import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
+import com.lodev09.truesheet.core.TrueSheetDialogObserver
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -62,21 +64,18 @@ interface TrueSheetViewControllerDelegate {
 @SuppressLint("ClickableViewAccessibility", "ViewConstructor")
 class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
-  RootView {
+  RootView,
+  TrueSheetDetentMeasurements,
+  TrueSheetAnimatorProvider {
 
   companion object {
     const val TAG_NAME = "TrueSheet"
 
     private const val MAX_HALF_EXPANDED_RATIO = 0.999f
-
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
-
-    // Animation durations from res/anim/true_sheet_slide_in.xml and true_sheet_slide_out.xml
-    private const val PRESENT_ANIMATION_DURATION = 250L
-    private const val DISMISS_ANIMATION_DURATION = 150L
-    private const val TRANSLATE_ANIMATION_DURATION = 100L
+    private const val TRANSLATE_ANIMATION_DURATION = 200L
   }
 
   // ====================================================================
@@ -99,21 +98,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val sheetContainer: FrameLayout?
     get() = this.parent as? FrameLayout
 
-  private val bottomSheetView: FrameLayout?
+  override val bottomSheetView: FrameLayout?
     get() = dialog?.findViewById(com.google.android.material.R.id.design_bottom_sheet)
 
   private val containerView: TrueSheetContainerView?
     get() = if (this.isNotEmpty()) getChildAt(0) as? TrueSheetContainerView else null
 
-  private val contentHeight: Int
+  override val contentHeight: Int
     get() = containerView?.contentHeight ?: 0
 
-  private val headerHeight: Int
+  override val headerHeight: Int
     get() = containerView?.headerHeight ?: 0
+
+  override val keyboardHeight: Int
+    get() = keyboardObserver?.currentHeight ?: 0
 
   // ====================================================================
   // MARK: - State
   // ====================================================================
+
+  /** Interaction state for the sheet */
+  private sealed class InteractionState {
+    data object Idle : InteractionState()
+    data class Dragging(val startTop: Int, val startKeyboardHeight: Int, val shouldDismissKeyboard: Boolean = false) : InteractionState()
+    data object Reconfiguring : InteractionState()
+  }
 
   var isPresented = false
     private set
@@ -124,16 +133,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var currentDetentIndex: Int = -1
     private set
 
+  private var interactionState: InteractionState = InteractionState.Idle
+  private var isDismissing = false
+  private var wasHiddenByModal = false
+  private var shouldAnimatePresent = true
+
   private var lastStateWidth: Int = 0
   private var lastStateHeight: Int = 0
-  private var isDragging = false
-  private var isDismissing = false
-  private var isReconfiguring = false
-  private var windowAnimation: Int = 0
   private var lastEmittedPositionPx: Int = -1
-
-  /** Tracks if this sheet was hidden due to a RN Screens modal (vs sheet stacking) */
-  private var wasHiddenByModal = false
 
   var presentPromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
@@ -142,18 +149,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var parentSheetView: TrueSheetView? = null
 
   // ====================================================================
+  // MARK: - Helper Classes
+  // ====================================================================
+
+  private val sheetAnimator = TrueSheetAnimator(this)
+  private var keyboardObserver: TrueSheetKeyboardObserver? = null
+  private var rnScreensObserver: RNScreensFragmentObserver? = null
+
+  // ====================================================================
   // MARK: - Configuration Properties
   // ====================================================================
 
-  val screenHeight: Int
+  override val screenHeight: Int
     get() = ScreenUtils.getScreenHeight(reactContext)
   val screenWidth: Int
     get() = ScreenUtils.getScreenWidth(reactContext)
-  val realScreenHeight: Int
+  override val realScreenHeight: Int
     get() = ScreenUtils.getRealScreenHeight(reactContext)
 
-  var maxSheetHeight: Int? = null
-  var detents = mutableListOf(0.5, 1.0)
+  override var maxSheetHeight: Int? = null
+  override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   var dimmed = true
   var dimmedDetentIndex = 0
@@ -162,7 +177,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
       field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value
-      setupBackground()
+      if (isPresented) setupBackground()
     }
   var sheetBackgroundColor: Int? = null
   var edgeToEdgeFullScreen: Boolean = false
@@ -195,11 +210,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var insetAdjustment: String = "automatic"
 
-  /** Auto add bottom inset for consistency with iOS when insetAdjustment is 'automatic' */
-  val contentBottomInset: Int
+  override val contentBottomInset: Int
     get() = if (insetAdjustment == "automatic") bottomInset else 0
 
-  /** Edge-to-edge enabled by default on API 36+, or when explicitly configured. */
   private val edgeToEdgeEnabled: Boolean
     get() {
       val defaultEnabled = android.os.Build.VERSION.SDK_INT >= 36
@@ -210,8 +223,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val jSTouchDispatcher = JSTouchDispatcher(this)
   private var jSPointerDispatcher: JSPointerDispatcher? = null
 
-  /** Hides/shows the sheet when RN Screens modals are presented/dismissed. */
-  private var rnScreensObserver: RNScreensFragmentObserver? = null
+  /** Single instance that reads current values via TrueSheetDetentMeasurements interface */
+  private val detentCalculator = TrueSheetDetentCalculator(this)
 
   // ====================================================================
   // MARK: - Initialization
@@ -238,8 +251,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setContentView(this@TrueSheetViewController)
 
       window?.apply {
-        windowAnimation = attributes.windowAnimations
-        // Disable default keyboard avoidance - sheet handles it via setupKeyboardObserver
+        setWindowAnimations(0)
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
 
@@ -272,6 +284,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     cleanupKeyboardObserver()
     cleanupModalObserver()
+    sheetAnimator.cancel()
     dimView?.detach()
     dimView = null
     parentDimView?.detach()
@@ -279,58 +292,45 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetContainer?.removeView(this)
 
     dialog = null
-    isDragging = false
+    interactionState = InteractionState.Idle
     isDismissing = false
     isPresented = false
     isDialogVisible = false
     wasHiddenByModal = false
     lastEmittedPositionPx = -1
+    shouldAnimatePresent = true
   }
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
+      bottomSheetView?.visibility = VISIBLE
       isPresented = true
       isDialogVisible = true
-      resetAnimation()
-      setupBackground()
-      setupGrabber()
+
       setupKeyboardObserver()
 
-      val toTop = getExpectedSheetTop(currentDetentIndex)
-      setupTransitionTracker(realScreenHeight, toTop, PRESENT_ANIMATION_DURATION)
-      animateDimAlpha(show = true)
-
-      sheetContainer?.post {
+      if (shouldAnimatePresent) {
+        val toTop = getExpectedSheetTop(currentDetentIndex)
+        sheetAnimator.animatePresent(
+          toTop = toTop,
+          onUpdate = { effectiveTop ->
+            emitChangePositionDelegate(effectiveTop)
+            positionFooter()
+            updateDimAmount(effectiveTop)
+          },
+          onEnd = { finishPresent() }
+        )
+      } else {
+        val toTop = getExpectedSheetTop(currentDetentIndex)
+        emitChangePositionDelegate(toTop)
         positionFooter()
+        finishPresent()
       }
-
-      sheetContainer?.postDelayed({
-        val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
-
-        delegate?.viewControllerDidPresent(index, position, detent)
-        parentSheetView?.viewControllerDidBlur()
-        delegate?.viewControllerDidFocus()
-
-        presentPromise?.invoke()
-        presentPromise = null
-      }, PRESENT_ANIMATION_DURATION)
-    }
-
-    dialog.setOnCancelListener {
-      if (isDismissing) return@setOnCancelListener
-
-      isDismissing = true
-      val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
-      setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
-      animateDimAlpha(show = false)
-      emitWillDismissEvents()
     }
 
     dialog.setOnDismissListener {
-      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-        emitDidDismissEvents()
-        cleanupDialog()
-      }, DISMISS_ANIMATION_DURATION)
+      emitDidDismissEvents()
+      cleanupDialog()
     }
   }
 
@@ -350,7 +350,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
 
           positionFooter(slideOffset)
-          updateDimAmount()
+          updateDimAmount(sheetView.top)
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -369,30 +369,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
             BottomSheetBehavior.STATE_EXPANDED,
             BottomSheetBehavior.STATE_COLLAPSED,
-            BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-              if (isReconfiguring) return
-
-              getDetentInfoForState(newState)?.let { detentInfo ->
-                if (isDragging) {
-                  val detent = getDetentValueForIndex(detentInfo.index)
-                  delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
-
-                  if (detentInfo.index != currentDetentIndex) {
-                    presentPromise?.invoke()
-                    presentPromise = null
-                    currentDetentIndex = detentInfo.index
-                    setupDimmedBackground(detentInfo.index)
-                    delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
-                  }
-
-                  isDragging = false
-                } else if (detentInfo.index != currentDetentIndex) {
-                  val detent = getDetentValueForIndex(detentInfo.index)
-                  currentDetentIndex = detentInfo.index
-                  delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
-                }
-              }
-            }
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> handleStateSettled(sheetView, newState)
 
             else -> {}
           }
@@ -401,30 +378,78 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     )
   }
 
+  private fun handleStateSettled(sheetView: View, newState: Int) {
+    if (interactionState is InteractionState.Reconfiguring) return
+
+    val index = detentCalculator.getDetentIndexForState(newState) ?: return
+    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val detentInfo = DetentInfo(index, position)
+
+    when (interactionState) {
+      is InteractionState.Dragging -> {
+        val draggingState = interactionState as InteractionState.Dragging
+        val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
+        delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
+
+        // Dismiss keyboard if dragged past threshold
+        if (draggingState.shouldDismissKeyboard) {
+          val imm = reactContext.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+            as? android.view.inputmethod.InputMethodManager
+          imm?.hideSoftInputFromWindow((dialog?.currentFocus ?: bottomSheetView)?.windowToken, 0)
+        }
+
+        if (detentInfo.index != currentDetentIndex) {
+          presentPromise?.invoke()
+          presentPromise = null
+          currentDetentIndex = detentInfo.index
+          setupDimmedBackground(detentInfo.index)
+          delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+        }
+
+        interactionState = InteractionState.Idle
+      }
+
+      else -> {
+        if (detentInfo.index != currentDetentIndex) {
+          currentDetentIndex = detentInfo.index
+          val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
+          delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+        }
+      }
+    }
+  }
+
   private fun setupModalObserver() {
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
       onModalPresented = {
         if (isPresented && isDialogVisible) {
           isDialogVisible = false
-          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFadeOutAnimation)
-          dialog?.window?.decorView?.visibility = INVISIBLE
+          wasHiddenByModal = true
+
+          bottomSheetView?.animate()?.alpha(0f)?.setDuration(200)?.start()
           dimView?.visibility = INVISIBLE
           parentDimView?.visibility = INVISIBLE
-          wasHiddenByModal = true
+          dialog?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+          )
         }
       },
-      onModalDismissed = {
-        // Only show if we were the one hidden by modal, not by sheet stacking
+      onModalWillDismiss = {
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
-          dialog?.window?.decorView?.visibility = VISIBLE
+
+          dialog?.window?.clearFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+          )
+          bottomSheetView?.alpha = 1f
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
-          // Restore animation after visibility change to avoid slide animation
-          sheetContainer?.post {
-            dialog?.window?.setWindowAnimations(windowAnimation)
-          }
+        }
+      },
+      onModalDidDismiss = {
+        if (isPresented && wasHiddenByModal) {
           wasHiddenByModal = false
         }
       }
@@ -435,6 +460,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun cleanupModalObserver() {
     rnScreensObserver?.stop()
     rnScreensObserver = null
+  }
+
+  // ====================================================================
+  // MARK: - Event Emission
+  // ====================================================================
+
+  private fun emitWillPresentEvents() {
+    val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
+    parentSheetView?.viewControllerWillBlur()
+    delegate?.viewControllerWillPresent(index, position, detent)
+    delegate?.viewControllerWillFocus()
   }
 
   private fun emitWillDismissEvents() {
@@ -455,11 +491,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dismissPromise = null
   }
 
-  /** Helper to get detent info with its screen fraction value. */
+  private fun emitChangePositionDelegate(currentTop: Int, realtime: Boolean = true) {
+    if (currentTop == lastEmittedPositionPx) return
+
+    lastEmittedPositionPx = currentTop
+    val visibleHeight = realScreenHeight - currentTop
+    val position = detentCalculator.getPositionDp(visibleHeight)
+    val interpolatedIndex = detentCalculator.getInterpolatedIndexForPosition(currentTop)
+    val detent = detentCalculator.getInterpolatedDetentForPosition(currentTop)
+    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
+  }
+
   private fun getDetentInfoWithValue(index: Int): Triple<Int, Float, Float> {
-    val detentInfo = getDetentInfoForIndex(index)
-    val detent = getDetentValueForIndex(detentInfo.index)
-    return Triple(detentInfo.index, detentInfo.position, detent)
+    val state = detentCalculator.getStateForDetentIndex(index)
+    val detentIndex = detentCalculator.getDetentIndexForState(state) ?: 0
+    val position = getPositionForDetentIndex(detentIndex)
+    val detent = detentCalculator.getDetentValueForIndex(detentIndex)
+    return Triple(detentIndex, position, detent)
   }
 
   // ====================================================================
@@ -472,18 +520,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return sheetTop <= topInset
     }
 
-  val currentSheetTop: Int
-    get() = bottomSheetView?.top ?: screenHeight
-
   val currentTranslationY: Int
     get() = bottomSheetView?.translationY?.toInt() ?: 0
 
   fun getExpectedSheetTop(detentIndex: Int): Int {
     if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
-    return realScreenHeight - getDetentHeight(detents[detentIndex])
+    return realScreenHeight - detentCalculator.getDetentHeight(detents[detentIndex])
   }
 
-  /** Translates the sheet when stacking. Pass 0 to reset. */
   fun translateDialog(translationY: Int) {
     val bottomSheet = bottomSheetView ?: return
 
@@ -512,20 +556,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresented) {
       setStateForDetentIndex(detentIndex)
     } else {
+      shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
-      isDragging = false
+      interactionState = InteractionState.Idle
+
+      emitWillPresentEvents()
+
       setupSheetDetents()
       setStateForDetentIndex(detentIndex)
+      setupBackground()
+      setupGrabber()
 
-      val (index, position, detent) = getDetentInfoWithValue(detentIndex)
-
-      parentSheetView?.viewControllerWillBlur()
-      delegate?.viewControllerWillPresent(index, position, detent)
-      delegate?.viewControllerWillFocus()
-
-      if (!animated) {
-        dialog.window?.setWindowAnimations(0)
-      }
+      bottomSheetView?.visibility = INVISIBLE
 
       dialog.show()
     }
@@ -535,16 +577,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isDismissing) return
 
     isDismissing = true
-    val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
-    setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
     emitWillDismissEvents()
 
-    if (!animated) {
-      dialog?.window?.setWindowAnimations(0)
-      post { dialog?.dismiss() }
+    if (animated) {
+      sheetAnimator.animateDismiss(
+        onUpdate = { effectiveTop ->
+          emitChangePositionDelegate(effectiveTop)
+          positionFooter()
+          updateDimAmount(effectiveTop)
+        },
+        onEnd = { dialog?.dismiss() }
+      )
     } else {
+      emitChangePositionDelegate(realScreenHeight)
       dialog?.dismiss()
     }
+  }
+
+  private fun finishPresent() {
+    val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
+    delegate?.viewControllerDidPresent(index, position, detent)
+    parentSheetView?.viewControllerDidBlur()
+    delegate?.viewControllerDidFocus()
+
+    presentPromise?.invoke()
+    presentPromise = null
   }
 
   // ====================================================================
@@ -554,7 +611,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun setupSheetDetents() {
     val behavior = this.behavior ?: return
 
-    isReconfiguring = true
+    interactionState = InteractionState.Reconfiguring
     val edgeToEdgeTopInset: Int = if (!edgeToEdgeFullScreen) topInset else 0
 
     behavior.apply {
@@ -563,14 +620,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       val maxAvailableHeight = realScreenHeight - edgeToEdgeTopInset
 
-      setPeekHeight(getDetentHeight(detents[0]), isPresented)
+      setPeekHeight(detentCalculator.getDetentHeight(detents[0]), isPresented)
 
       val halfExpandedDetentHeight = when (detents.size) {
         1 -> peekHeight
-        else -> getDetentHeight(detents[1])
+        else -> detentCalculator.getDetentHeight(detents[1])
       }
 
-      val maxDetentHeight = getDetentHeight(detents.last())
+      val maxDetentHeight = detentCalculator.getDetentHeight(detents.last())
 
       val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
       halfExpandedRatio = minOf(adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat(), MAX_HALF_EXPANDED_RATIO)
@@ -592,7 +649,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         setStateForDetentIndex(currentDetentIndex)
       }
 
-      isReconfiguring = false
+      interactionState = InteractionState.Idle
     }
   }
 
@@ -617,15 +674,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     bottomSheet.addView(grabberView)
   }
 
-  private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var positionAnimator: ValueAnimator? = null
+  // ====================================================================
+  // MARK: - Keyboard Handling
+  // ====================================================================
+
+  private fun shouldHandleKeyboard(): Boolean {
+    if (wasHiddenByModal) return false
+
+    val parentView = parentSheetView ?: return true
+    return TrueSheetDialogObserver.getSheetsAbove(parentView).firstOrNull()?.viewController == this
+  }
 
   fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardHeightDidChange(height: Int) {
+        override fun keyboardWillShow(height: Int) {}
+
+        override fun keyboardWillHide() {}
+
+        override fun keyboardDidChangeHeight(height: Int) {
+          if (!shouldHandleKeyboard()) return
           setupSheetDetents()
+          positionFooter()
         }
       }
       start()
@@ -637,37 +708,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     keyboardObserver = null
   }
 
-  private fun setupTransitionTracker(fromTop: Int, toTop: Int, duration: Long) {
-    positionAnimator?.cancel()
-    positionAnimator = ValueAnimator.ofInt(fromTop, toTop).apply {
-      this.duration = duration
-      interpolator = if (fromTop > toTop) {
-        android.view.animation.DecelerateInterpolator(2f) // present
-      } else {
-        android.view.animation.AccelerateInterpolator(2f) // dismiss
-      }
-      addUpdateListener { animator ->
-        emitChangePositionDelegate(animator.animatedValue as Int)
-      }
-      addListener(object : android.animation.AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: android.animation.Animator) {
-          positionAnimator = null
-        }
-      })
-      start()
-    }
-  }
-
-  private fun emitChangePositionDelegate(currentTop: Int, realtime: Boolean = true) {
-    if (currentTop == lastEmittedPositionPx) return
-
-    lastEmittedPositionPx = currentTop
-    val visibleHeight = realScreenHeight - currentTop
-    val position = getPositionDp(visibleHeight)
-    val interpolatedIndex = getInterpolatedIndexForPosition(currentTop)
-    val detent = getInterpolatedDetentForPosition(currentTop)
-    delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
-  }
+  // ====================================================================
+  // MARK: - Background & Dimming
+  // ====================================================================
 
   fun setupBackground() {
     val bottomSheet = bottomSheetView ?: return
@@ -719,8 +762,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
 
       if (shouldDimAtDetent) {
-        touchOutside.setOnTouchListener(null)
-        dialog.setCanceledOnTouchOutside(dismissible)
+        touchOutside.setOnTouchListener { _, event ->
+          if (event.action == MotionEvent.ACTION_UP && dismissible) {
+            dismiss()
+          }
+          true
+        }
       } else {
         touchOutside.setOnTouchListener { v, event ->
           event.setLocation(event.rawX - v.x, event.rawY - v.y)
@@ -735,25 +782,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  fun resetAnimation() {
-    dialog?.window?.setWindowAnimations(windowAnimation)
-  }
-
-  private fun animateDimAlpha(show: Boolean) {
+  fun updateDimAmount(sheetTop: Int? = null) {
     if (!dimmed) return
-    val duration = if (show) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
-    dimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
-    parentDimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
+    val top = sheetTop ?: bottomSheetView?.top ?: return
+    dimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
+    parentDimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
   }
 
-  fun updateDimAmount() {
-    if (!dimmed) return
-    val sheetTop = bottomSheetView?.top ?: return
-    dimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
-    parentDimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
-  }
-
-  /** Positions footer at bottom of sheet, adjusting during drag via slideOffset. */
   fun positionFooter(slideOffset: Float? = null) {
     val footerView = containerView?.footerView ?: return
     val bottomSheet = bottomSheetView ?: return
@@ -762,20 +797,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = bottomSheet.height
     val sheetTop = bottomSheet.top
 
-    // Footer Y relative to sheet: place at bottom of sheet container minus footer height
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
-
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
     }
 
-    // Clamp to prevent footer from going above visible area
     val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
   }
 
   fun setStateForDetentIndex(index: Int) {
-    behavior?.state = getStateForDetentIndex(index)
+    behavior?.state = detentCalculator.getStateForDetentIndex(index)
   }
 
   fun getDefaultBackgroundColor(): Int {
@@ -793,193 +825,65 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // ====================================================================
-  // MARK: - Position & Drag Handling
+  // MARK: - Drag Handling
   // ====================================================================
 
-  /**
-   * Calculate the visible sheet height from a sheet view.
-   * Uses real screen height for consistency across API levels.
-   */
-  private fun getVisibleSheetHeight(sheetView: View): Int = realScreenHeight - sheetView.top
-
-  private fun getPositionDp(visibleSheetHeight: Int): Float = (screenHeight - visibleSheetHeight).pxToDp()
-
-  /**
-   * Get the expected sheetTop position for a detent index.
-   */
-  private fun getSheetTopForDetentIndex(index: Int): Int {
-    if (index < 0 || index >= detents.size) return realScreenHeight
-    return realScreenHeight - getDetentHeight(detents[index])
-  }
-
-  /** Returns (fromIndex, toIndex, progress) for interpolation, or null if < 2 detents. */
-  private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
-    val count = detents.size
-    if (count == 0) return null
-
-    val firstPos = getSheetTopForDetentIndex(0)
-
-    // Above first detent - interpolating toward closed
-    if (positionPx > firstPos) {
-      val range = realScreenHeight - firstPos
-      val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
-      return Triple(-1, 0, progress)
-    }
-
-    // Single detent - at or above the detent
-    if (count == 1) return Triple(0, 0, 0f)
-
-    val lastPos = getSheetTopForDetentIndex(count - 1)
-
-    // Below last detent
-    if (positionPx < lastPos) {
-      return Triple(count - 1, count - 1, 0f)
-    }
-
-    // Between detents
-    for (i in 0 until count - 1) {
-      val pos = getSheetTopForDetentIndex(i)
-      val nextPos = getSheetTopForDetentIndex(i + 1)
-
-      if (positionPx in nextPos..pos) {
-        val range = pos - nextPos
-        val progress = if (range > 0) (pos - positionPx).toFloat() / range else 0f
-        return Triple(i, i + 1, maxOf(0f, minOf(1f, progress)))
-      }
-    }
-
-    return Triple(count - 1, count - 1, 0f)
-  }
-
-  /** Returns continuous index (e.g., 0.5 = halfway between detent 0 and 1). */
-  private fun getInterpolatedIndexForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return -1f
-
-    val segment = findSegmentForPosition(positionPx) ?: return 0f
-    val (fromIndex, _, progress) = segment
-
-    if (fromIndex == -1) return -progress
-    return fromIndex + progress
-  }
-
-  /** Returns interpolated screen fraction for position. */
-  private fun getInterpolatedDetentForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return 0f
-
-    val segment = findSegmentForPosition(positionPx) ?: return getDetentValueForIndex(0)
-    val (fromIndex, toIndex, progress) = segment
-
-    if (fromIndex == -1) {
-      val firstDetent = getDetentValueForIndex(0)
-      return maxOf(0f, firstDetent * (1 - progress))
-    }
-
-    val fromDetent = getDetentValueForIndex(fromIndex)
-    val toDetent = getDetentValueForIndex(toIndex)
-    return fromDetent + progress * (toDetent - fromDetent)
-  }
-
-  /** Returns raw screen fraction for index (without bottomInset). */
-  private fun getDetentValueForIndex(index: Int): Float {
-    if (index < 0 || index >= detents.size) return 0f
-    val value = detents[index]
-    return if (value == -1.0) {
-      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
-    } else {
-      value.toFloat()
-    }
-  }
-
-  private fun getCurrentDetentInfo(sheetView: View): DetentInfo {
-    val position = getPositionDp(getVisibleSheetHeight(sheetView))
-    return DetentInfo(currentDetentIndex, position)
-  }
-
   private fun handleDragBegin(sheetView: View) {
-    val detentInfo = getCurrentDetentInfo(sheetView)
-    val detent = getDetentValueForIndex(detentInfo.index)
-    delegate?.viewControllerDidDragBegin(detentInfo.index, detentInfo.position, detent)
-    isDragging = true
+    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
+    delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
+    interactionState = InteractionState.Dragging(
+      startTop = sheetView.top,
+      startKeyboardHeight = keyboardHeight
+    )
   }
 
   private fun handleDragChange(sheetView: View) {
-    if (!isDragging) return
-    val detentInfo = getCurrentDetentInfo(sheetView)
-    val detent = getDetentValueForIndex(detentInfo.index)
-    delegate?.viewControllerDidDragChange(detentInfo.index, detentInfo.position, detent)
-  }
+    val draggingState = interactionState as? InteractionState.Dragging ?: return
+    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
+    delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
 
-  // ====================================================================
-  // MARK: - Detent Calculations
-  // ====================================================================
+    // Dismiss keyboard if dragged below original position (without keyboard)
+    if (draggingState.startKeyboardHeight > 0) {
+      val detentTopWithoutKeyboard = getExpectedSheetTop(currentDetentIndex) + draggingState.startKeyboardHeight
+      val shouldDismiss = sheetView.top >= detentTopWithoutKeyboard
 
-  private val keyboardHeight: Int
-    get() = keyboardObserver?.currentHeight ?: 0
-
-  private fun getDetentHeight(detent: Double): Int {
-    val height = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset + keyboardHeight
-    } else {
-      if (detent <= 0.0 || detent > 1.0) {
-        throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
+      if (shouldDismiss != draggingState.shouldDismissKeyboard) {
+        android.util.Log.d(
+          TAG_NAME,
+          "shouldDismissKeyboard changed to: $shouldDismiss (currentTop: ${sheetView.top}, detentTop: $detentTopWithoutKeyboard)"
+        )
+        interactionState = draggingState.copy(shouldDismissKeyboard = shouldDismiss)
       }
-      (detent * screenHeight).toInt() + contentBottomInset + keyboardHeight
     }
-
-    val maxAllowedHeight = screenHeight + contentBottomInset
-    return maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
 
-  /** Maps detent index to BottomSheetBehavior state based on detent count. */
-  private fun getStateForDetentIndex(index: Int): Int {
-    val stateMap = getDetentStateMap() ?: return BottomSheetBehavior.STATE_HIDDEN
-    return stateMap.entries.find { it.value == index }?.key ?: BottomSheetBehavior.STATE_HIDDEN
-  }
+  // ====================================================================
+  // MARK: - Detent Helpers
+  // ====================================================================
 
-  /** Maps BottomSheetBehavior state to DetentInfo based on detent count. */
   fun getDetentInfoForState(state: Int): DetentInfo? {
-    val stateMap = getDetentStateMap() ?: return null
-    val index = stateMap[state] ?: return null
+    val index = detentCalculator.getDetentIndexForState(state) ?: return null
     return DetentInfo(index, getPositionForDetentIndex(index))
   }
-
-  /** Returns state-to-index mapping based on detent count. */
-  private fun getDetentStateMap(): Map<Int, Int>? =
-    when (detents.size) {
-      1 -> mapOf(
-        BottomSheetBehavior.STATE_COLLAPSED to 0,
-        BottomSheetBehavior.STATE_EXPANDED to 0
-      )
-
-      2 -> mapOf(
-        BottomSheetBehavior.STATE_COLLAPSED to 0,
-        BottomSheetBehavior.STATE_EXPANDED to 1
-      )
-
-      3 -> mapOf(
-        BottomSheetBehavior.STATE_COLLAPSED to 0,
-        BottomSheetBehavior.STATE_HALF_EXPANDED to 1,
-        BottomSheetBehavior.STATE_EXPANDED to 2
-      )
-
-      else -> null
-    }
 
   private fun getPositionForDetentIndex(index: Int): Float {
     if (index < 0 || index >= detents.size) return screenHeight.pxToDp()
 
     bottomSheetView?.let {
-      val visibleSheetHeight = getVisibleSheetHeight(it)
-      if (visibleSheetHeight > 0) return getPositionDp(visibleSheetHeight)
+      val visibleSheetHeight = detentCalculator.getVisibleSheetHeight(it.top)
+      if (visibleSheetHeight > 0 && visibleSheetHeight < realScreenHeight) {
+        return detentCalculator.getPositionDp(visibleSheetHeight)
+      }
     }
 
-    val detentHeight = getDetentHeight(detents[index])
-    return getPositionDp(detentHeight)
+    val detentHeight = detentCalculator.getDetentHeight(detents[index])
+    return detentCalculator.getPositionDp(detentHeight)
   }
 
-  fun getDetentInfoForIndex(index: Int) = getDetentInfoForState(getStateForDetentIndex(index)) ?: DetentInfo(0, 0f)
+  fun getDetentInfoForIndex(index: Int): DetentInfo =
+    getDetentInfoForState(detentCalculator.getStateForDetentIndex(index)) ?: DetentInfo(0, 0f)
 
   // ====================================================================
   // MARK: - RootView Implementation
@@ -995,11 +899,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (w == oldw && h == oldh) return
     if (!isPresented) return
-
-    // Skip continuous size changes when fullScreen + edge-to-edge
-    if (h + topInset >= screenHeight && isExpanded && oldw == w) {
-      return
-    }
+    if (h + topInset >= screenHeight && isExpanded && oldw == w) return
 
     this.post {
       setupSheetDetents()
@@ -1016,7 +916,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Touch Event Handling
   // ====================================================================
 
-  /** Forwards touch events to footer which is positioned outside normal hierarchy. */
   override fun dispatchTouchEvent(event: MotionEvent): Boolean {
     val footer = containerView?.footerView
     if (footer != null && footer.isVisible) {

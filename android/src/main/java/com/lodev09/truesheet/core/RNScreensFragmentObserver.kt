@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -14,7 +15,8 @@ private const val RN_SCREENS_PACKAGE = "com.swmansion.rnscreens"
 class RNScreensFragmentObserver(
   private val reactContext: ReactContext,
   private val onModalPresented: () -> Unit,
-  private val onModalDismissed: () -> Unit
+  private val onModalWillDismiss: () -> Unit,
+  private val onModalDidDismiss: () -> Unit
 ) {
   private var fragmentLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
@@ -27,11 +29,11 @@ class RNScreensFragmentObserver(
     val fragmentManager = activity.supportFragmentManager
 
     fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
-      override fun onFragmentAttached(fm: FragmentManager, fragment: Fragment, context: android.content.Context) {
-        super.onFragmentAttached(fm, fragment, context)
+      override fun onFragmentAttached(fm: FragmentManager, f: Fragment, context: Context) {
+        super.onFragmentAttached(fm, f, context)
 
-        if (isModalFragment(fragment) && !activeModalFragments.contains(fragment)) {
-          activeModalFragments.add(fragment)
+        if (isModalFragment(f) && !activeModalFragments.contains(f)) {
+          activeModalFragments.add(f)
 
           if (activeModalFragments.size == 1) {
             onModalPresented()
@@ -39,8 +41,8 @@ class RNScreensFragmentObserver(
         }
       }
 
-      override fun onFragmentStopped(fm: FragmentManager, fragment: Fragment) {
-        super.onFragmentStopped(fm, fragment)
+      override fun onFragmentStopped(fm: FragmentManager, f: Fragment) {
+        super.onFragmentStopped(fm, f)
 
         // Ignore if app is in background (fragments stop with activity)
         val activity = reactContext.currentActivity as? AppCompatActivity ?: return
@@ -48,11 +50,21 @@ class RNScreensFragmentObserver(
           return
         }
 
-        if (activeModalFragments.contains(fragment)) {
-          activeModalFragments.remove(fragment)
+        if (activeModalFragments.contains(f)) {
+          if (activeModalFragments.size == 1) {
+            onModalWillDismiss()
+          }
+        }
+      }
+
+      override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+        super.onFragmentDestroyed(fm, f)
+
+        if (activeModalFragments.contains(f)) {
+          activeModalFragments.remove(f)
 
           if (activeModalFragments.isEmpty()) {
-            onModalDismissed()
+            onModalDidDismiss()
           }
         }
       }

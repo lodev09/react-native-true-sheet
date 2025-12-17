@@ -102,29 +102,30 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
     Handler(Looper.getMainLooper()).post {
       try {
         // First try to get from registry (faster)
-        val view = getSheetByTag(tag)
+        var view = getSheetByTag(tag)
 
-        if (view != null) {
-          closure(view)
-        } else {
-          // Fallback to UIManager resolution
+        // Fallback to UIManager resolution
+        if (view == null) {
           val manager = UIManagerHelper.getUIManagerForReactTag(reactApplicationContext, tag)
           val resolvedView = manager?.resolveView(tag)
 
-          if (resolvedView == null) {
-            promise.reject("VIEW_NOT_FOUND", "TrueSheetView with tag $tag not found")
-            return@post
-          }
-
           if (resolvedView is TrueSheetView) {
-            closure(resolvedView)
-          } else {
+            view = resolvedView
+          } else if (resolvedView != null) {
             promise.reject(
               "INVALID_VIEW_TYPE",
               "View with tag $tag is not a TrueSheetView (got ${resolvedView::class.simpleName})"
             )
+            return@post
           }
         }
+
+        if (view == null) {
+          promise.reject("VIEW_NOT_FOUND", "TrueSheetView with tag $tag not found")
+          return@post
+        }
+
+        closure(view)
       } catch (e: Exception) {
         promise.reject("OPERATION_FAILED", "Failed to execute operation: ${e.message}", e)
       }
