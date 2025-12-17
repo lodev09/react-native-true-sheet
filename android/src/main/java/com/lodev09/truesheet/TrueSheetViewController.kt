@@ -331,7 +331,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
 
-          emitChangePositionDelegate(sheetView.top)
+          // Recalculate translation based on current keyboard height and sheet position
+          val keyboardHeight = keyboardObserver?.currentHeight ?: 0
+          applyClampedTranslation(sheetView, -keyboardHeight.toFloat())
+
+          val effectiveTop = sheetView.top + sheetView.translationY.toInt()
+          emitChangePositionDelegate(effectiveTop)
 
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
@@ -341,7 +346,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
 
           positionFooter(slideOffset)
-          updateDimAmount()
+          updateDimAmount(effectiveTop)
         }
 
         override fun onStateChanged(sheetView: View, newState: Int) {
@@ -641,15 +646,27 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
     val currentKeyboardOffset = (fromHeight + (toHeight - fromHeight) * fraction).toInt()
 
-    // Clamp translation so sheet doesn't go beyond topInset
-    val maxTranslation = maxOf(0, bottomSheet.top - topInset)
-    val clampedOffset = minOf(currentKeyboardOffset, maxTranslation)
-    bottomSheet.translationY = -clampedOffset.toFloat()
+    applyClampedTranslation(bottomSheet, -currentKeyboardOffset.toFloat())
 
     val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
     emitChangePositionDelegate(effectiveTop)
     positionFooter()
     updateDimAmount(effectiveTop)
+  }
+
+  /**
+   * Applies translationY to the sheet, clamping so the effective top
+   * (top + translationY) never goes above topInset.
+   */
+  private fun applyClampedTranslation(sheetView: View, targetTranslation: Float) {
+    if (targetTranslation >= 0) {
+      sheetView.translationY = targetTranslation
+      return
+    }
+
+    val maxTranslation = maxOf(0, sheetView.top - topInset)
+    val clampedOffset = minOf(-targetTranslation.toInt(), maxTranslation)
+    sheetView.translationY = -clampedOffset.toFloat()
   }
 
   fun cleanupKeyboardObserver() {
