@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -163,7 +164,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
       field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value
-      setupBackground()
+      if (isPresented) setupBackground()
     }
   var sheetBackgroundColor: Int? = null
   var edgeToEdgeFullScreen: Boolean = false
@@ -239,6 +240,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setContentView(this@TrueSheetViewController)
 
       window?.apply {
+        // Disable default animation as we are using custom animation
+        setWindowAnimations(0)
+
         // Keyboard avoidance handled by TrueSheetKeyboardObserver
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
       }
@@ -296,27 +300,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog.setOnShowListener {
       val bottomSheet = bottomSheetView ?: return@setOnShowListener
 
-      // Hide to prevent flash before animation
-      bottomSheet.visibility = View.INVISIBLE
-
       isPresented = true
       isDialogVisible = true
-      setupBackground()
-      setupGrabber()
-      setupKeyboardObserver()
 
+      val toTop = getExpectedSheetTop(currentDetentIndex)
       if (shouldAnimatePresent) {
-        val toTop = getExpectedSheetTop(currentDetentIndex)
         val fromY = (realScreenHeight - toTop).toFloat()
-
         bottomSheet.translationY = fromY
-        bottomSheet.post {
-          bottomSheet.visibility = View.VISIBLE
-          startPresentAnimation(bottomSheet, fromY)
-        }
+        startPresentAnimation(fromY)
       } else {
-        bottomSheet.translationY = 0f
-        bottomSheet.visibility = View.VISIBLE
+        emitChangePositionDelegate(toTop)
+        positionFooter()
         finishPresent()
       }
     }
@@ -500,8 +494,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     } else {
       currentDetentIndex = detentIndex
       isDragging = false
-      setupSheetDetents()
-      setStateForDetentIndex(detentIndex)
 
       val (index, position, detent) = getDetentInfoWithValue(detentIndex)
 
@@ -510,6 +502,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate?.viewControllerWillFocus()
 
       shouldAnimatePresent = animated
+
+      setupSheetDetents()
+      setStateForDetentIndex(detentIndex)
+      setupBackground()
+      setupGrabber()
+      setupKeyboardObserver()
+
       dialog.show()
     }
   }
@@ -520,12 +519,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isDismissing = true
     emitWillDismissEvents()
 
-    if (!animated) {
-      dialog?.dismiss()
-    } else {
+    if (animated) {
       animateDismiss {
         dialog?.dismiss()
       }
+    } else {
+      emitChangePositionDelegate(realScreenHeight)
+      dialog?.dismiss()
     }
   }
 
@@ -620,7 +620,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var presentAnimator: ValueAnimator? = null
 
-  private fun startPresentAnimation(bottomSheet: View, fromY: Float) {
+  private fun startPresentAnimation(fromY: Float) {
+    val bottomSheet = bottomSheetView ?: return
+
     presentAnimator?.cancel()
     presentAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
       duration = PRESENT_ANIMATION_DURATION
@@ -653,8 +655,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishPresent() {
-    sheetContainer?.post { positionFooter() }
-
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)
     parentSheetView?.viewControllerDidBlur()
