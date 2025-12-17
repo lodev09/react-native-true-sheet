@@ -305,6 +305,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       isPresented = true
       isDialogVisible = true
 
+      setupKeyboardObserver()
+
       if (shouldAnimatePresent) {
         animatePresent {
           finishPresent()
@@ -397,20 +399,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       onModalPresented = {
         if (isPresented && isDialogVisible) {
           isDialogVisible = false
-          dialog?.window?.decorView?.visibility = INVISIBLE
+          wasHiddenByModal = true
+
+          bottomSheetView?.animate()
+            ?.alpha(0f)
+            ?.setDuration(200)
+            ?.start()
           dimView?.visibility = INVISIBLE
           parentDimView?.visibility = INVISIBLE
-          wasHiddenByModal = true
+          dialog?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+          )
         }
       },
       onModalDismissed = {
         // Only show if we were the one hidden by modal, not by sheet stacking
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
-          dialog?.window?.decorView?.visibility = VISIBLE
+          wasHiddenByModal = false
+
+          dialog?.window?.clearFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+          )
+          bottomSheetView?.alpha = 1f
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
-          wasHiddenByModal = false
         }
       }
     )
@@ -511,7 +525,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setStateForDetentIndex(detentIndex)
       setupBackground()
       setupGrabber()
-      setupKeyboardObserver()
 
       // Hide bottomSheetView to avoid flash
       bottomSheetView?.visibility = INVISIBLE
