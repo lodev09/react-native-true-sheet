@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
@@ -272,6 +273,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     cleanupKeyboardObserver()
     cleanupModalObserver()
+    presentAnimator?.cancel()
+    presentAnimator = null
+    dismissAnimator?.cancel()
+    dismissAnimator = null
     dimView?.detach()
     dimView = null
     parentDimView?.detach()
@@ -296,41 +301,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupGrabber()
       setupKeyboardObserver()
 
-      val toTop = getExpectedSheetTop(currentDetentIndex)
-      setupTransitionTracker(realScreenHeight, toTop, PRESENT_ANIMATION_DURATION)
-      animateDimAlpha(show = true)
-
-      sheetContainer?.post {
-        positionFooter()
-      }
-
-      sheetContainer?.postDelayed({
-        val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
-
-        delegate?.viewControllerDidPresent(index, position, detent)
-        parentSheetView?.viewControllerDidBlur()
-        delegate?.viewControllerDidFocus()
-
-        presentPromise?.invoke()
-        presentPromise = null
-      }, PRESENT_ANIMATION_DURATION)
+      // Run programmatic present animation
+      animatePresent()
     }
 
-    dialog.setOnCancelListener {
-      if (isDismissing) return@setOnCancelListener
-
-      isDismissing = true
-      val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
-      setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
-      animateDimAlpha(show = false)
-      emitWillDismissEvents()
-    }
+    // Note: We don't use setOnCancelListener because the dialog's cancel
+    // triggers internal dismiss before we can animate. Instead, we handle
+    // touch-outside via the touch_outside view in setupDimmedBackground.
 
     dialog.setOnDismissListener {
-      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-        emitDidDismissEvents()
-        cleanupDialog()
-      }, DISMISS_ANIMATION_DURATION)
+      emitDidDismissEvents()
+      cleanupDialog()
     }
   }
 
@@ -355,6 +336,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun onStateChanged(sheetView: View, newState: Int) {
           if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+            // Behavior already animated to hidden, just dismiss
             if (isDismissing) return
             isDismissing = true
             emitWillDismissEvents()
@@ -530,15 +512,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isDismissing) return
 
     isDismissing = true
-    val fromTop = bottomSheetView?.top ?: getExpectedSheetTop(currentDetentIndex)
-    setupTransitionTracker(fromTop, realScreenHeight, DISMISS_ANIMATION_DURATION)
     emitWillDismissEvents()
 
     if (!animated) {
-      dialog?.window?.setWindowAnimations(0)
-      post { dialog?.dismiss() }
-    } else {
       dialog?.dismiss()
+    } else {
+      animateDismiss {
+        dialog?.dismiss()
+      }
     }
   }
 
@@ -653,6 +634,121 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  private var presentAnimator: ValueAnimator? = null
+
+  private fun animatePresent() {
+    val bottomSheet = bottomSheetView ?: return
+
+    val toTop = getExpectedSheetTop(currentDetentIndex)
+    val fromY = (realScreenHeight - toTop).toFloat()
+
+    // Start from off-screen (translated down)
+    bottomSheet.translationY = fromY
+
+    presentAnimator?.cancel()
+    presentAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
+      duration = PRESENT_ANIMATION_DURATION
+      interpolator = android.view.animation.DecelerateInterpolator()
+
+      addUpdateListener { animator ->
+        val fraction = animator.animatedValue as Float
+        bottomSheet.translationY = fromY * fraction
+
+        // Log the actual top position during animation
+        val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
+        Log.d(TAG_NAME, "animatePresent: bottomSheetView.top = ${bottomSheet.top}, translationY = ${bottomSheet.translationY}, effectiveTop = $effectiveTop")
+
+        emitChangePositionDelegate(effectiveTop)
+      }
+
+      addListener(object : Animator.AnimatorListener {
+        override fun onAnimationStart(animation: Animator) {
+          Log.d(TAG_NAME, "animatePresent started")
+          animateDimAlpha(show = true)
+        }
+
+        override fun onAnimationEnd(animation: Animator) {
+          Log.d(TAG_NAME, "animatePresent ended, bottomSheetView.top = ${bottomSheet.top}")
+          bottomSheet.translationY = 0f
+          presentAnimator = null
+
+          sheetContainer?.post {
+            positionFooter()
+          }
+
+          val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
+          delegate?.viewControllerDidPresent(index, position, detent)
+          parentSheetView?.viewControllerDidBlur()
+          delegate?.viewControllerDidFocus()
+
+          presentPromise?.invoke()
+          presentPromise = null
+        }
+
+        override fun onAnimationCancel(animation: Animator) {
+          presentAnimator = null
+        }
+
+        override fun onAnimationRepeat(animation: Animator) {}
+      })
+
+      start()
+    }
+  }
+
+  private var dismissAnimator: ValueAnimator? = null
+
+  private fun animateDismiss(onEnd: () -> Unit) {
+    val bottomSheet = bottomSheetView ?: run {
+      onEnd()
+      return
+    }
+
+    val fromTop = bottomSheet.top + bottomSheet.translationY.toInt()
+    val toY = (realScreenHeight - fromTop).toFloat()
+
+    Log.d(TAG_NAME, "animateDismiss setup: fromTop = $fromTop, toY = $toY, realScreenHeight = $realScreenHeight")
+
+    dismissAnimator?.cancel()
+    dismissAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+      duration = DISMISS_ANIMATION_DURATION
+      interpolator = android.view.animation.AccelerateInterpolator()
+
+      addUpdateListener { animator ->
+        val fraction = animator.animatedValue as Float
+        bottomSheet.translationY = toY * fraction
+
+        // Log the actual top position during animation
+        val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
+        Log.d(TAG_NAME, "animateDismiss: bottomSheetView.top = ${bottomSheet.top}, translationY = ${bottomSheet.translationY}, effectiveTop = $effectiveTop")
+
+        emitChangePositionDelegate(effectiveTop)
+      }
+
+      addListener(object : Animator.AnimatorListener {
+        override fun onAnimationStart(animation: Animator) {
+          Log.d(TAG_NAME, "animateDismiss started")
+          animateDimAlpha(show = false)
+        }
+
+        override fun onAnimationEnd(animation: Animator) {
+          Log.d(TAG_NAME, "animateDismiss ended")
+          dismissAnimator = null
+          onEnd()
+        }
+
+        override fun onAnimationCancel(animation: Animator) {
+          dismissAnimator = null
+          onEnd()
+        }
+
+        override fun onAnimationRepeat(animation: Animator) {}
+      })
+
+      start()
+    }
+  }
+
   private fun emitChangePositionDelegate(currentTop: Int, realtime: Boolean = true) {
     if (currentTop == lastEmittedPositionPx) return
 
@@ -714,8 +810,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
 
       if (shouldDimAtDetent) {
-        touchOutside.setOnTouchListener(null)
-        dialog.setCanceledOnTouchOutside(dismissible)
+        // Handle touch-outside ourselves to run custom dismiss animation
+        touchOutside.setOnTouchListener { _, event ->
+          if (event.action == MotionEvent.ACTION_UP && dismissible) {
+            dismiss()
+          }
+          true
+        }
       } else {
         touchOutside.setOnTouchListener { v, event ->
           event.setLocation(event.rawX - v.x, event.rawY - v.y)
