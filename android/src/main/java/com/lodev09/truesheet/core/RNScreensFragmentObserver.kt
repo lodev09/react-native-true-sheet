@@ -40,8 +40,15 @@ class RNScreensFragmentObserver(
         }
       }
 
-      override fun onFragmentDetached(fm: FragmentManager, f: Fragment) {
-        super.onFragmentDetached(fm, f)
+      override fun onFragmentStopped(fm: FragmentManager, f: Fragment) {
+        super.onFragmentStopped(fm, f)
+
+        // Ignore if app is in background (fragments stop with activity)
+        val activity = reactContext.currentActivity as? AppCompatActivity ?: return
+        if (!activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+          return
+        }
+
         if (activeModalFragments.contains(f)) {
           activeModalFragments.remove(f)
 

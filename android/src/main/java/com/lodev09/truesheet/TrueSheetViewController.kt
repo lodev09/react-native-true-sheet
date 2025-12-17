@@ -294,8 +294,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
+      Log.d(TAG_NAME, "onShow: bottomSheetView.top = ${bottomSheetView?.top}, visibility = ${bottomSheetView?.visibility}")
+
       // Hide immediately to prevent flash before animation starts
       bottomSheetView?.visibility = View.INVISIBLE
+
+      Log.d(TAG_NAME, "onShow after hide: bottomSheetView.visibility = ${bottomSheetView?.visibility}")
 
       isPresented = true
       isDialogVisible = true
@@ -402,8 +406,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       onModalDismissed = {
         // Only show if we were the one hidden by modal, not by sheet stacking
         if (isPresented && wasHiddenByModal) {
-          dialog?.window?.setWindowAnimations(windowAnimation)
-
           isDialogVisible = true
           dialog?.window?.decorView?.visibility = VISIBLE
           dimView?.visibility = VISIBLE
@@ -667,6 +669,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
+        positionFooter()
       }
 
       addListener(object : Animator.AnimatorListener {
@@ -724,6 +727,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
+        positionFooter()
       }
 
       addListener(object : Animator.AnimatorListener {
@@ -856,6 +860,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerHeight = footerView.height
     val sheetHeight = bottomSheet.height
     val sheetTop = bottomSheet.top
+
+    // Apply same translationY as bottomSheet during animations
+    footerView.translationY = bottomSheet.translationY
 
     // Footer Y relative to sheet: place at bottom of sheet container minus footer height
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
