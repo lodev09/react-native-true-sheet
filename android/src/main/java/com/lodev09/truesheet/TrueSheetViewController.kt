@@ -143,6 +143,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Tracks whether the current presentation should be animated
   private var shouldAnimatePresent = true
 
+  private var presentAnimator: ValueAnimator? = null
+  private var dismissAnimator: ValueAnimator? = null
+
   // ====================================================================
   // MARK: - Configuration Properties
   // ====================================================================
@@ -298,17 +301,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
-      val bottomSheet = bottomSheetView ?: return@setOnShowListener
-
+      bottomSheetView?.visibility = VISIBLE
       isPresented = true
       isDialogVisible = true
 
-      val toTop = getExpectedSheetTop(currentDetentIndex)
       if (shouldAnimatePresent) {
-        val fromY = (realScreenHeight - toTop).toFloat()
-        bottomSheet.translationY = fromY
-        startPresentAnimation(fromY)
+        animatePresent {
+          finishPresent()
+        }
       } else {
+        val toTop = getExpectedSheetTop(currentDetentIndex)
         emitChangePositionDelegate(toTop)
         positionFooter()
         finishPresent()
@@ -420,6 +422,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     rnScreensObserver = null
   }
 
+  private fun emitWillPresentEvents() {
+    val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
+    parentSheetView?.viewControllerWillBlur()
+    delegate?.viewControllerWillPresent(index, position, detent)
+    delegate?.viewControllerWillFocus()
+  }
+
   private fun emitWillDismissEvents() {
     delegate?.viewControllerWillBlur()
     delegate?.viewControllerWillDismiss()
@@ -492,22 +501,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresented) {
       setStateForDetentIndex(detentIndex)
     } else {
+      shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       isDragging = false
 
-      val (index, position, detent) = getDetentInfoWithValue(detentIndex)
-
-      parentSheetView?.viewControllerWillBlur()
-      delegate?.viewControllerWillPresent(index, position, detent)
-      delegate?.viewControllerWillFocus()
-
-      shouldAnimatePresent = animated
+      emitWillPresentEvents()
 
       setupSheetDetents()
       setStateForDetentIndex(detentIndex)
       setupBackground()
       setupGrabber()
       setupKeyboardObserver()
+
+      // Hide bottomSheetView to avoid flash
+      bottomSheetView?.visibility = INVISIBLE
 
       dialog.show()
     }
@@ -618,10 +625,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     keyboardObserver = null
   }
 
-  private var presentAnimator: ValueAnimator? = null
+  private fun finishPresent() {
+    val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
+    delegate?.viewControllerDidPresent(index, position, detent)
+    parentSheetView?.viewControllerDidBlur()
+    delegate?.viewControllerDidFocus()
 
-  private fun startPresentAnimation(fromY: Float) {
-    val bottomSheet = bottomSheetView ?: return
+    presentPromise?.invoke()
+    presentPromise = null
+  }
+
+
+  private fun animatePresent(onEnd: () -> Unit) {
+    val bottomSheet = bottomSheetView ?: run {
+      onEnd()
+      return
+    }
+
+    val toTop = getExpectedSheetTop(currentDetentIndex)
+    val fromY = (realScreenHeight - toTop).toFloat()
 
     presentAnimator?.cancel()
     presentAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
@@ -642,29 +664,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onAnimationEnd(animation: android.animation.Animator) {
           bottomSheet.translationY = 0f
           presentAnimator = null
-          finishPresent()
+          onEnd()
         }
 
         override fun onAnimationCancel(animation: android.animation.Animator) {
           presentAnimator = null
+          onEnd()
         }
       })
 
       start()
     }
   }
-
-  private fun finishPresent() {
-    val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
-    delegate?.viewControllerDidPresent(index, position, detent)
-    parentSheetView?.viewControllerDidBlur()
-    delegate?.viewControllerDidFocus()
-
-    presentPromise?.invoke()
-    presentPromise = null
-  }
-
-  private var dismissAnimator: ValueAnimator? = null
 
   private fun animateDismiss(onEnd: () -> Unit) {
     val bottomSheet = bottomSheetView ?: run {
