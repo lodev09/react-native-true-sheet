@@ -120,7 +120,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Interaction state for the sheet */
   private sealed class InteractionState {
     data object Idle : InteractionState()
-    data object Dragging : InteractionState()
+    data class Dragging(
+      val startTop: Int,
+      val startKeyboardHeight: Int,
+      val shouldDismissKeyboard: Boolean = false
+    ) : InteractionState()
     data object Reconfiguring : InteractionState()
   }
 
@@ -387,8 +391,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     when (interactionState) {
       is InteractionState.Dragging -> {
+        val draggingState = interactionState as InteractionState.Dragging
         val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
+
+        // Dismiss keyboard if dragged past threshold
+        if (draggingState.shouldDismissKeyboard) {
+          val imm = reactContext.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+            as? android.view.inputmethod.InputMethodManager
+          imm?.hideSoftInputFromWindow((dialog?.currentFocus ?: bottomSheetView)?.windowToken, 0)
+        }
 
         if (detentInfo.index != currentDetentIndex) {
           presentPromise?.invoke()
@@ -824,14 +836,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
-    interactionState = InteractionState.Dragging
+    interactionState = InteractionState.Dragging(
+      startTop = sheetView.top,
+      startKeyboardHeight = keyboardHeight
+    )
   }
 
   private fun handleDragChange(sheetView: View) {
-    if (interactionState !is InteractionState.Dragging) return
+    val draggingState = interactionState as? InteractionState.Dragging ?: return
     val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
+
+    // Dismiss keyboard if dragged below original position (without keyboard)
+    if (draggingState.startKeyboardHeight > 0) {
+      val detentTopWithoutKeyboard = getExpectedSheetTop(currentDetentIndex) + draggingState.startKeyboardHeight
+      val shouldDismiss = sheetView.top >= detentTopWithoutKeyboard
+
+      if (shouldDismiss != draggingState.shouldDismissKeyboard) {
+        android.util.Log.d(TAG_NAME, "shouldDismissKeyboard changed to: $shouldDismiss (currentTop: ${sheetView.top}, detentTop: $detentTopWithoutKeyboard)")
+        interactionState = draggingState.copy(shouldDismissKeyboard = shouldDismiss)
+      }
+    }
   }
 
   // ====================================================================
