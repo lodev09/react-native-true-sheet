@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetDetentMeasurements;
 
 @interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate,
-                                                       TrueSheetDetentMeasurements
+                                       TrueSheetDetentMeasurements
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
                                        ,
                                        RNSDismissibleModalProtocol

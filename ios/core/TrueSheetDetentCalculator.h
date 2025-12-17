@@ -56,9 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
  outIndex: The lower detent index of the segment (-1 if above first detent)
  outProgress: Progress within the segment (0-1)
  */
-- (BOOL)findSegmentForPosition:(CGFloat)position
-                      outIndex:(NSInteger *)outIndex
-                   outProgress:(CGFloat *)outProgress;
+- (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress;
 
 /**
  Returns a continuous index value representing position between detents.

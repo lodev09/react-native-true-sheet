@@ -70,9 +70,7 @@
   }
 }
 
-- (BOOL)findSegmentForPosition:(CGFloat)position
-                      outIndex:(NSInteger *)outIndex
-                   outProgress:(CGFloat *)outProgress {
+- (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
   NSInteger count = _resolvedDetentPositions.count;
   if (count == 0) {
     *outIndex = -1;

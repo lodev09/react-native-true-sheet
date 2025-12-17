@@ -30,6 +30,7 @@ import com.lodev09.truesheet.core.TrueSheetAnimator
 import com.lodev09.truesheet.core.TrueSheetAnimatorProvider
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
 import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
+import com.lodev09.truesheet.core.TrueSheetDialogObserver
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetGrabberView
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -444,10 +445,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           )
         }
       },
-      onModalDismissed = {
+      onModalWillDismiss = {
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
-          wasHiddenByModal = false
 
           dialog?.window?.clearFlags(
             WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -455,6 +455,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           bottomSheetView?.alpha = 1f
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
+        }
+      },
+      onModalDidDismiss = {
+        if (isPresented && wasHiddenByModal) {
+          wasHiddenByModal = false
         }
       }
     )
@@ -682,11 +687,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Keyboard Handling
   // ====================================================================
 
+  private fun shouldHandleKeyboard(): Boolean {
+    if (wasHiddenByModal) return false
+
+    val parentView = parentSheetView ?: return true
+    return TrueSheetDialogObserver.getSheetsAbove(parentView).firstOrNull()?.viewController == this
+  }
+
   fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
+          if (!shouldHandleKeyboard()) return
           if (detents.size > 1 && currentDetentIndex < detents.lastIndex) {
             keyboardState = KeyboardState(
               preDetentIndex = currentDetentIndex,
@@ -697,6 +710,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardWillHide() {
+          if (!shouldHandleKeyboard()) return
           if (keyboardState.preDetentIndex >= 0) {
             keyboardState = keyboardState.copy(isTransitioning = true)
             setStateForDetentIndex(keyboardState.preDetentIndex)
@@ -704,6 +718,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
+          if (!shouldHandleKeyboard()) return
           translateForKeyboard(height)
         }
       }

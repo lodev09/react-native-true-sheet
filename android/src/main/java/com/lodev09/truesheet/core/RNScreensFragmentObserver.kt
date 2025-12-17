@@ -15,7 +15,8 @@ private const val RN_SCREENS_PACKAGE = "com.swmansion.rnscreens"
 class RNScreensFragmentObserver(
   private val reactContext: ReactContext,
   private val onModalPresented: () -> Unit,
-  private val onModalDismissed: () -> Unit
+  private val onModalWillDismiss: () -> Unit,
+  private val onModalDidDismiss: () -> Unit
 ) {
   private var fragmentLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
@@ -50,10 +51,20 @@ class RNScreensFragmentObserver(
         }
 
         if (activeModalFragments.contains(f)) {
+          if (activeModalFragments.size == 1) {
+            onModalWillDismiss()
+          }
+        }
+      }
+
+      override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+        super.onFragmentDestroyed(fm, f)
+
+        if (activeModalFragments.contains(f)) {
           activeModalFragments.remove(f)
 
           if (activeModalFragments.isEmpty()) {
-            onModalDismissed()
+            onModalDidDismiss()
           }
         }
       }
