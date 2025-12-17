@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { DARK_BLUE, SPACING } from '../utils';
+import { BUTTON_HEIGHT, DARK_BLUE, SPACING } from '../utils';
 
 interface ButtonProps extends PressableProps {
   text: string;
@@ -26,9 +26,9 @@ export const Button = (props: ButtonProps) => {
 
 const styles = StyleSheet.create({
   button: {
-    height: 44,
+    height: BUTTON_HEIGHT,
     padding: 12,
-    borderRadius: 44,
+    borderRadius: BUTTON_HEIGHT,
     backgroundColor: DARK_BLUE,
     alignItems: 'center',
     justifyContent: 'center',

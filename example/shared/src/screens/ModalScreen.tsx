@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '../utils';
-import { Button, Spacer } from '../components';
+import { Button, Input, Spacer } from '../components';
 import { PromptSheet, FlatListSheet } from '../components/sheets';
 
 export interface ModalScreenProps {
@@ -24,7 +24,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
             This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
           </Text>
         </View>
-
+        <Input />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
         <Spacer />
