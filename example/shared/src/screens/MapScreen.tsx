@@ -90,23 +90,29 @@ const MapScreenInner = ({
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
-        onPress={() => sheetRef.current?.resize(0)}
+        onPress={() => sheetRef.current?.present(1)}
       />
       <ReanimatedTrueSheet
         name="main"
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
-        initialDetentIndex={0}
+        // initialDetentIndex={0}
         dimmedDetentIndex={1}
-        dismissible={false}
+        // dismissible={false}
         edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ ios: undefined, default: DARK })}
-        onLayout={(e: LayoutChangeEvent) => {
-          console.log(
-            `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
-          );
+        onLayout={(_e: LayoutChangeEvent) => {
+          // console.log(
+          //   `sheet layout width: ${_e.nativeEvent.layout.width}, height: ${_e.nativeEvent.layout.height}`
+          // );
         }}
+        // onPositionChange={(e) => {
+        //   'worklet';
+        //   console.log(
+        //     `position changed: ${e.nativeEvent.position}, realtime: ${e.nativeEvent.realtime}`
+        //   );
+        // }}
         onWillPresent={(e: WillPresentEvent) => {
           console.log(
             `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`

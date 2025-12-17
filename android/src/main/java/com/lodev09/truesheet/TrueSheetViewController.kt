@@ -670,12 +670,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
         positionFooter()
+        updateDimAmount(effectiveTop)
       }
 
       addListener(object : Animator.AnimatorListener {
-        override fun onAnimationStart(animation: Animator) {
-          animateDimAlpha(show = true)
-        }
+        override fun onAnimationStart(animation: Animator) {}
 
         override fun onAnimationEnd(animation: Animator) {
           bottomSheet.translationY = 0f
@@ -728,12 +727,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
         positionFooter()
+        updateDimAmount(effectiveTop)
       }
 
       addListener(object : Animator.AnimatorListener {
-        override fun onAnimationStart(animation: Animator) {
-          animateDimAlpha(show = false)
-        }
+        override fun onAnimationStart(animation: Animator) {}
 
         override fun onAnimationEnd(animation: Animator) {
           dismissAnimator = null
@@ -838,18 +836,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dialog?.window?.setWindowAnimations(windowAnimation)
   }
 
-  private fun animateDimAlpha(show: Boolean) {
+  fun updateDimAmount(sheetTop: Int? = null) {
     if (!dimmed) return
-    val duration = if (show) PRESENT_ANIMATION_DURATION else DISMISS_ANIMATION_DURATION
-    dimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
-    parentDimView?.animateAlpha(show, duration, dimmedDetentIndex, currentDetentIndex)
-  }
-
-  fun updateDimAmount() {
-    if (!dimmed) return
-    val sheetTop = bottomSheetView?.top ?: return
-    dimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
-    parentDimView?.interpolateAlpha(sheetTop, dimmedDetentIndex, ::getSheetTopForDetentIndex)
+    val top = sheetTop ?: bottomSheetView?.top ?: return
+    dimView?.interpolateAlpha(top, dimmedDetentIndex, ::getSheetTopForDetentIndex)
+    parentDimView?.interpolateAlpha(top, dimmedDetentIndex, ::getSheetTopForDetentIndex)
   }
 
   /** Positions footer at bottom of sheet, adjusting during drag via slideOffset. */
