@@ -120,11 +120,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /** Interaction state for the sheet */
   private sealed class InteractionState {
     data object Idle : InteractionState()
-    data class Dragging(
-      val startTop: Int,
-      val startKeyboardHeight: Int,
-      val shouldDismissKeyboard: Boolean = false
-    ) : InteractionState()
+    data class Dragging(val startTop: Int, val startKeyboardHeight: Int, val shouldDismissKeyboard: Boolean = false) : InteractionState()
     data object Reconfiguring : InteractionState()
   }
 
@@ -854,7 +850,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val shouldDismiss = sheetView.top >= detentTopWithoutKeyboard
 
       if (shouldDismiss != draggingState.shouldDismissKeyboard) {
-        android.util.Log.d(TAG_NAME, "shouldDismissKeyboard changed to: $shouldDismiss (currentTop: ${sheetView.top}, detentTop: $detentTopWithoutKeyboard)")
+        android.util.Log.d(
+          TAG_NAME,
+          "shouldDismissKeyboard changed to: $shouldDismiss (currentTop: ${sheetView.top}, detentTop: $detentTopWithoutKeyboard)"
+        )
         interactionState = draggingState.copy(shouldDismissKeyboard = shouldDismiss)
       }
     }
