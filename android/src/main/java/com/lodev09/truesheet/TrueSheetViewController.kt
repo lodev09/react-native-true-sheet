@@ -130,6 +130,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var isDismissing = false
   private var isReconfiguring = false
   private var lastEmittedPositionPx: Int = -1
+  private var dragStartDetentIndex: Int = -1
 
   /** Tracks if this sheet was hidden due to a RN Screens modal (vs sheet stacking) */
   private var wasHiddenByModal = false
@@ -373,6 +374,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
                 if (isDragging) {
                   val detent = getDetentValueForIndex(detentInfo.index)
                   delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
+
+                  // Dismiss keyboard if dragged down to a lower detent
+                  if (detentInfo.index < dragStartDetentIndex) {
+                    val imm = reactContext.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+                    imm?.hideSoftInputFromWindow((dialog?.currentFocus ?: bottomSheetView)?.windowToken, 0)
+                  }
 
                   if (detentInfo.index != currentDetentIndex) {
                     presentPromise?.invoke()
@@ -996,6 +1003,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val detentInfo = getCurrentDetentInfo(sheetView)
     val detent = getDetentValueForIndex(detentInfo.index)
     delegate?.viewControllerDidDragBegin(detentInfo.index, detentInfo.position, detent)
+    dragStartDetentIndex = currentDetentIndex
     isDragging = true
   }
 

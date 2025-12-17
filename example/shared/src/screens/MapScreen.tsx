@@ -94,7 +94,7 @@ const MapScreenInner = ({
       />
       <ReanimatedTrueSheet
         name="main"
-        detents={[minHeight / height, 'auto', 1]}
+        detents={[minHeight / height, 'auto']}
         ref={sheetRef}
         initialDetentIndex={0}
         dimmedDetentIndex={1}
