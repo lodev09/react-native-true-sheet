@@ -6,6 +6,12 @@
         <item name="android:windowExitAnimation">@null</item>
     </style>
 
+    <!-- Fast fade out animation for hiding sheet when rn-screen is presented -->
+    <style name="TrueSheetFastFadeOut" parent="Animation.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@anim/fast_fade_out</item>
+    </style>
+
     <!-- Default BottomSheetDialog style with programmatic animations -->
     <style name="TrueSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowAnimationStyle">@style/TrueSheetNoAnimation</item>

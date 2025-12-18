@@ -427,23 +427,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           isDialogVisible = false
           wasHiddenByModal = true
 
-          bottomSheetView?.animate()?.alpha(0f)?.setDuration(200)?.start()
+          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFastFadeOut)
+          dialog?.window?.decorView?.visibility = GONE
           dimView?.visibility = INVISIBLE
           parentDimView?.visibility = INVISIBLE
-          dialog?.window?.setFlags(
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-          )
         }
       },
       onModalWillDismiss = {
         if (isPresented && wasHiddenByModal) {
           isDialogVisible = true
 
-          dialog?.window?.clearFlags(
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-          )
-          bottomSheetView?.alpha = 1f
+          dialog?.window?.setWindowAnimations(0)
+          dialog?.window?.decorView?.visibility = VISIBLE
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
         }
