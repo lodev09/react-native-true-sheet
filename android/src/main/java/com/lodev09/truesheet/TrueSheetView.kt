@@ -43,7 +43,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var eventDispatcher: EventDispatcher? = null
 
   // Initial present configuration (set by ViewManager before mount)
-  var pendingInitialPresent: Boolean = false
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
@@ -105,7 +104,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.createDialog()
 
       if (initialDetentIndex >= 0) {
-        pendingInitialPresent = true
+        post { present(initialDetentIndex, initialDetentAnimated) { } }
       }
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
@@ -292,16 +291,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Uses post() to ensure all layout passes complete before reconfiguring.
    */
   fun updateSheetIfNeeded() {
-    if (!viewController.isPresented) {
-      // Handle initial present if pending
-      if (pendingInitialPresent) {
-        viewController.setupSheetDetents()
-        present(initialDetentIndex, initialDetentAnimated) { }
-        pendingInitialPresent = false
-      }
-      return
-    }
-
+    if (!viewController.isPresented) return
     if (isSheetUpdatePending) return
 
     isSheetUpdatePending = true

@@ -346,7 +346,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       emitWillPresentEvents()
 
-      setupSheetDetents()
       setupBackground()
       setupGrabber()
       setupKeyboardObserver()
@@ -532,9 +531,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     setupDimmedBackground(detentIndex)
-    setStateForDetentIndex(detentIndex)
 
-    if (!isPresented) {
+    if (isPresented) {
+      setStateForDetentIndex(detentIndex)
+    } else {
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
@@ -542,6 +542,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       // Position off-screen until animation starts
       bottomSheetView?.translationY = realScreenHeight.toFloat()
       bottomSheetView?.visibility = INVISIBLE
+
+      setupSheetDetents()
+      setStateForDetentIndex(detentIndex)
 
       dialog.show()
     }
