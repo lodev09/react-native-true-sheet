@@ -12,6 +12,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 interface TrueSheetKeyboardObserverDelegate {
   fun keyboardWillShow(height: Int)
   fun keyboardWillHide()
+  fun keyboardDidHide()
   fun keyboardDidChangeHeight(height: Int)
 }
 
@@ -29,6 +30,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   var targetHeight: Int = 0
     private set
 
+  private var isHiding: Boolean = false
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var activityRootView: View? = null
 
@@ -76,9 +78,10 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
         ): WindowInsetsAnimationCompat.BoundsCompat {
           endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
           targetHeight = endHeight
+          isHiding = endHeight < startHeight
           if (endHeight > startHeight) {
             delegate?.keyboardWillShow(endHeight)
-          } else if (endHeight < startHeight) {
+          } else if (isHiding) {
             delegate?.keyboardWillHide()
           }
           return bounds
@@ -98,6 +101,10 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
           val finalHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
           updateHeight(startHeight, finalHeight, 1f)
+          if (isHiding) {
+            delegate?.keyboardDidHide()
+            isHiding = false
+          }
         }
       }
     )
@@ -125,6 +132,9 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           delegate?.keyboardWillHide()
         }
         updateHeight(previousHeight, newHeight, 1f)
+        if (newHeight == 0 && previousHeight > 0) {
+          delegate?.keyboardDidHide()
+        }
       }
     }
 

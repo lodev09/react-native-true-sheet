@@ -14,7 +14,7 @@ interface TrueSheetDetentMeasurements {
   val headerHeight: Int
   val contentBottomInset: Int
   val maxSheetHeight: Int?
-  val keyboardHeight: Int
+  val keyboardInset: Int
 }
 
 /**
@@ -30,7 +30,7 @@ class TrueSheetDetentCalculator(private val measurements: TrueSheetDetentMeasure
   private val headerHeight: Int get() = measurements.headerHeight
   private val contentBottomInset: Int get() = measurements.contentBottomInset
   private val maxSheetHeight: Int? get() = measurements.maxSheetHeight
-  private val keyboardHeight: Int get() = measurements.keyboardHeight
+  private val keyboardInset: Int get() = measurements.keyboardInset
 
   /**
    * Calculate the height in pixels for a given detent value.
@@ -46,7 +46,7 @@ class TrueSheetDetentCalculator(private val measurements: TrueSheetDetentMeasure
       (detent * screenHeight).toInt() + contentBottomInset
     }
 
-    val height = baseHeight + keyboardHeight
+    val height = baseHeight + keyboardInset
     val maxAllowedHeight = screenHeight + contentBottomInset
     return maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
