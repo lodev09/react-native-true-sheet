@@ -425,40 +425,54 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
       onModalPresented = {
-        if (isPresented && isDialogVisible) {
-          isDialogVisible = false
-          wasHiddenByModal = true
-
-          // Set alpha to 0 before hiding
-          dimView?.alpha = 0f
-          parentDimView?.alpha = 0f
-
-          dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFastFadeOut)
-          dialog?.window?.decorView?.visibility = GONE
-          dimView?.visibility = INVISIBLE
-          parentDimView?.visibility = INVISIBLE
+        if (isPresented && isDialogVisible && isTopmostSheet) {
+          hideForModal()
         }
       },
       onModalWillDismiss = {
-        if (isPresented && wasHiddenByModal) {
-          isDialogVisible = true
-
-          dialog?.window?.setWindowAnimations(0)
-          dialog?.window?.decorView?.visibility = VISIBLE
-          dimView?.visibility = VISIBLE
-          parentDimView?.visibility = VISIBLE
-
-          // Animate alpha back to correct value
-          updateDimAmount(animated = true)
+        if (isPresented && wasHiddenByModal && isTopmostSheet) {
+          showAfterModal()
         }
       },
       onModalDidDismiss = {
         if (isPresented && wasHiddenByModal) {
           wasHiddenByModal = false
+          parentSheetView?.viewController?.let { parent ->
+            post { parent.showAfterModal() }
+          }
         }
       }
     )
     rnScreensObserver?.start()
+  }
+
+  private fun hideForModal() {
+    isDialogVisible = false
+    wasHiddenByModal = true
+
+    // Set alpha to 0 before hiding
+    dimView?.alpha = 0f
+    parentDimView?.alpha = 0f
+
+    dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFastFadeOut)
+    dialog?.window?.decorView?.visibility = GONE
+    dimView?.visibility = INVISIBLE
+    parentDimView?.visibility = INVISIBLE
+
+    // Hide parent sheet as well
+    parentSheetView?.viewController?.hideForModal()
+  }
+
+  private fun showAfterModal() {
+    isDialogVisible = true
+
+    dialog?.window?.setWindowAnimations(0)
+    dialog?.window?.decorView?.visibility = VISIBLE
+    dimView?.visibility = VISIBLE
+    parentDimView?.visibility = VISIBLE
+
+    // Animate alpha back to correct value
+    updateDimAmount(animated = true)
   }
 
   private fun cleanupModalObserver() {
@@ -682,11 +696,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Keyboard Handling
   // ====================================================================
 
+  private val isTopmostSheet: Boolean
+    get() {
+      val hostView = delegate as? TrueSheetView ?: return true
+      return TrueSheetDialogObserver.isTopmostSheet(hostView)
+    }
+
   private fun shouldHandleKeyboard(): Boolean {
     if (wasHiddenByModal) return false
-
-    val parentView = parentSheetView ?: return true
-    return TrueSheetDialogObserver.getSheetsAbove(parentView).firstOrNull()?.viewController == this
+    return isTopmostSheet
   }
 
   fun setupKeyboardObserver() {

@@ -106,4 +106,14 @@ object TrueSheetDialogObserver {
       return presentedSheetStack[index - 1]
     }
   }
+
+  /**
+   * Returns true if the given sheet is the topmost presented sheet.
+   */
+  @JvmStatic
+  fun isTopmostSheet(sheetView: TrueSheetView): Boolean {
+    synchronized(presentedSheetStack) {
+      return presentedSheetStack.lastOrNull() == sheetView
+    }
+  }
 }
