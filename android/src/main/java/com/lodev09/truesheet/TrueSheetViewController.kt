@@ -387,7 +387,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!sheetAnimator.isAnimating) {
       emitChangePositionDelegate(sheetView.top)
 
-      if (!isKeyboardTransitioning) {
+      if (isKeyboardTransitioning) {
+        positionFooter()
+      } else {
         positionFooter(slideOffset)
         updateDimAmount(sheetView.top)
       }
