@@ -598,7 +598,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       peekHeight = peekHeight,
       halfExpandedRatio = halfExpandedRatio,
       expandedOffset = expandedOffset,
-      fitToContents = fitToContents
+      fitToContents = fitToContents,
+      animate = isPresented
     )
 
     val offset = if (expandedOffset == 0) topInset else 0
@@ -729,23 +730,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerView = containerView?.footerView ?: return
     val bottomSheet = bottomSheetView ?: return
 
-    // Post to ensure layout is complete before positioning
-    footerView.post {
-      val footerHeight = footerView.height
-      val sheetHeight = bottomSheet.height
-      val sheetTop = bottomSheet.top
+    val footerHeight = footerView.height
+    val sheetHeight = bottomSheet.height
+    val sheetTop = bottomSheet.top
 
-      var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
 
-      // Adjust during dismiss animation when slideOffset is negative
-      if (slideOffset != null && slideOffset < 0) {
-        footerY -= (footerHeight * slideOffset)
-      }
-
-      // Clamp to prevent footer going above safe area
-      val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
-      footerView.y = minOf(footerY, maxAllowedY)
+    // Adjust during dismiss animation when slideOffset is negative
+    if (slideOffset != null && slideOffset < 0) {
+      footerY -= (footerHeight * slideOffset)
     }
+
+    // Clamp to prevent footer going above safe area
+    val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
+    footerView.y = minOf(footerY, maxAllowedY)
   }
 
   // =============================================================================

@@ -269,14 +269,15 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
     halfExpandedRatio: Float,
     expandedOffset: Int,
     fitToContents: Boolean,
-    skipCollapsed: Boolean = false
+    skipCollapsed: Boolean = false,
+    animate: Boolean = false
   ) {
     val behavior = this.behavior ?: return
 
     behavior.apply {
       isFitToContents = fitToContents
       this.skipCollapsed = skipCollapsed
-      this.peekHeight = peekHeight
+      setPeekHeight(peekHeight, animate)
       this.halfExpandedRatio = halfExpandedRatio.coerceIn(0f, 0.999f)
       this.expandedOffset = expandedOffset
     }
