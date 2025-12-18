@@ -340,9 +340,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun setupDialogListeners(dialog: BottomSheetDialog) {
     dialog.setOnShowListener {
       bottomSheetView?.visibility = VISIBLE
+
       isPresented = true
       isDialogVisible = true
 
+      emitWillPresentEvents()
+
+      setupSheetDetents()
+      setupBackground()
+      setupGrabber()
       setupKeyboardObserver()
 
       if (shouldAnimatePresent) {
@@ -376,8 +382,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun onSlide(sheetView: View, slideOffset: Float) {
           val behavior = behavior ?: return
 
-          emitChangePositionDelegate(sheetView.top)
-
           when (behavior.state) {
             BottomSheetBehavior.STATE_DRAGGING,
             BottomSheetBehavior.STATE_SETTLING -> handleDragChange(sheetView)
@@ -385,9 +389,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             else -> { }
           }
 
-          if (!isKeyboardTransitioning) {
-            positionFooter(slideOffset)
-            updateDimAmount(sheetView.top)
+          if (!sheetAnimator.isAnimating) {
+            emitChangePositionDelegate(sheetView.top)
+
+            if (!isKeyboardTransitioning) {
+              positionFooter(slideOffset)
+              updateDimAmount(sheetView.top)
+            }
           }
         }
 
@@ -524,22 +532,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     setupDimmedBackground(detentIndex)
+    setStateForDetentIndex(detentIndex)
 
-    if (isPresented) {
-      setStateForDetentIndex(detentIndex)
-    } else {
+    if (!isPresented) {
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
 
-      emitWillPresentEvents()
-
-      setupSheetDetents()
-      setStateForDetentIndex(detentIndex)
-      setupBackground()
-      setupGrabber()
-
-      // Hide until animation starts
+      // Position off-screen until animation starts
+      bottomSheetView?.translationY = realScreenHeight.toFloat()
       bottomSheetView?.visibility = INVISIBLE
 
       dialog.show()
@@ -958,7 +959,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Skip reconfiguration if expanded and only height changed (e.g., keyboard)
     if (h + topInset >= screenHeight && isExpanded && oldw == w) return
 
-    this.post {
+    post {
       setupSheetDetents()
       positionFooter()
       bottomSheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }

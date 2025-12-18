@@ -3,6 +3,7 @@ package com.lodev09.truesheet.core
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
@@ -28,6 +29,8 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
 
   private var presentAnimator: ValueAnimator? = null
   private var dismissAnimator: ValueAnimator? = null
+
+  var isAnimating: Boolean = false
 
   /**
    * Animate the sheet presenting from bottom of screen to target position.
@@ -57,14 +60,20 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
       }
 
       addListener(object : AnimatorListenerAdapter() {
+        override fun onAnimationStart(animation: Animator) {
+          isAnimating = true
+        }
+
         override fun onAnimationEnd(animation: Animator) {
           bottomSheet.translationY = 0f
           presentAnimator = null
+          isAnimating = false
           onEnd()
         }
 
         override fun onAnimationCancel(animation: Animator) {
           presentAnimator = null
+          isAnimating = false
           onEnd()
         }
       })
@@ -101,13 +110,19 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
       }
 
       addListener(object : AnimatorListenerAdapter() {
+        override fun onAnimationStart(animation: Animator) {
+          isAnimating = true
+        }
+
         override fun onAnimationEnd(animation: Animator) {
           dismissAnimator = null
+          isAnimating = false
           onEnd()
         }
 
         override fun onAnimationCancel(animation: Animator) {
           dismissAnimator = null
+          isAnimating = false
           onEnd()
         }
       })
@@ -125,10 +140,4 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
     dismissAnimator?.cancel()
     dismissAnimator = null
   }
-
-  /**
-   * Check if any animation is currently running.
-   */
-  val isAnimating: Boolean
-    get() = presentAnimator?.isRunning == true || dismissAnimator?.isRunning == true
 }

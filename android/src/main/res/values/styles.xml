@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- No animation style - animations handled programmatically -->
-    <style name="TrueSheetNoAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@null</item>
-        <item name="android:windowExitAnimation">@null</item>
-    </style>
-
     <!-- Fast fade out animation for hiding sheet when rn-screen is presented -->
     <style name="TrueSheetFastFadeOut" parent="Animation.AppCompat.Dialog">
         <item name="android:windowEnterAnimation">@null</item>
@@ -14,7 +8,7 @@
 
     <!-- Default BottomSheetDialog style with programmatic animations -->
     <style name="TrueSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="android:windowAnimationStyle">@style/TrueSheetNoAnimation</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 
     <!-- BottomSheetDialog style with edge-to-edge and programmatic animations -->
@@ -22,6 +16,6 @@
         <item name="android:windowIsFloating">false</item>
         <item name="enableEdgeToEdge">true</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowAnimationStyle">@style/TrueSheetNoAnimation</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>

@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
@@ -30,6 +29,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate {
 
+  companion object {
+    const val TAG_NAME = "TrueSheet"
+  }
+
+  // ==================== Properties ====================
+
   internal val viewController: TrueSheetViewController = TrueSheetViewController(reactContext)
 
   private val containerView: TrueSheetContainerView?
@@ -37,25 +42,28 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   var eventDispatcher: EventDispatcher? = null
 
+  // Initial present configuration (set by ViewManager before mount)
+  var pendingInitialPresent: Boolean = false
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
 
   var stateWrapper: StateWrapper? = null
     set(value) {
-      // Immediately update state with screen width during first state update
-      // This ensures we have initial width for content layout before presenting
+      // On first state wrapper assignment, immediately update state with screen dimensions.
+      // This ensures Yoga has initial width/height for content layout before presenting.
       if (field == null && value != null) {
         updateState(viewController.screenWidth, viewController.screenHeight)
       }
       field = value
     }
 
-  // Track last dimensions to avoid unnecessary state updates
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
 
-  // Flag to prevent multiple pending sheet updates
+  // Debounce flag to coalesce rapid layout changes into a single sheet update
   private var isSheetUpdatePending: Boolean = false
+
+  // ==================== Initialization ====================
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -64,6 +72,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Hide the host view - actual content is rendered in the dialog window
     visibility = GONE
   }
+
+  // ==================== ReactViewGroup Overrides ====================
 
   override fun dispatchProvideStructure(structure: ViewStructure) {
     super.dispatchProvideStructure(structure)
@@ -76,7 +86,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     right: Int,
     bottom: Int
   ) {
-    // Do nothing as we are laid out by UIManager
+    // No-op: layout is managed by React Native's UIManager
   }
 
   override fun setId(id: Int) {
@@ -85,19 +95,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     TrueSheetModule.registerView(this, id)
   }
 
-  /**
-   * Called by the manager after all properties are set.
-   * Reconfigures the sheet if it's currently presented.
-   */
-  fun finalizeUpdates() {
-    if (viewController.isPresented) {
-      viewController.setupBackground()
-      viewController.setupGrabber()
-      updateSheetIfNeeded()
-    }
-  }
-
-  // ==================== View Management ====================
+  // ==================== View Hierarchy Management ====================
 
   override fun addView(child: View?, index: Int) {
     viewController.addView(child, index)
@@ -106,9 +104,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       child.delegate = this
       viewController.createDialog()
 
-      // Present at initial detent after layout pass when content height is available
       if (initialDetentIndex >= 0) {
-        post { present(initialDetentIndex, initialDetentAnimated) { } }
+        pendingInitialPresent = true
       }
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
@@ -117,6 +114,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun getChildCount(): Int = viewController.childCount
+
   override fun getChildAt(index: Int): View? = viewController.getChildAt(index)
 
   override fun removeViewAt(index: Int) {
@@ -127,9 +125,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.removeView(child)
   }
 
-  // Accessibility events are handled by the dialog's host view
+  // Accessibility: delegate to dialog's host view since this view is hidden
   override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {}
   override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean = false
+
+  // ==================== Lifecycle ====================
+
+  override fun onHostResume() {
+    finalizeUpdates()
+  }
+
+  override fun onHostPause() {}
+
+  override fun onHostDestroy() {
+    onDropInstance()
+  }
 
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
@@ -142,24 +152,205 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.delegate = null
   }
 
-  override fun onHostResume() {
-    finalizeUpdates()
+  /**
+   * Called by the ViewManager after all properties are set.
+   * Reconfigures the sheet if it's currently presented.
+   */
+  fun finalizeUpdates() {
+    if (viewController.isPresented) {
+      viewController.setupBackground()
+      viewController.setupGrabber()
+      updateSheetIfNeeded()
+    }
   }
 
-  override fun onHostPause() {
+  // ==================== Property Setters ====================
+
+  fun setMaxHeight(height: Int) {
+    if (viewController.maxSheetHeight == height) return
+    viewController.maxSheetHeight = height
   }
 
-  override fun onHostDestroy() {
-    onDropInstance()
+  fun setDimmed(dimmed: Boolean) {
+    if (viewController.dimmed == dimmed) return
+    viewController.dimmed = dimmed
+    if (viewController.isPresented) {
+      viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.updateDimAmount()
+    }
   }
 
-  // ==================== TrueSheetViewControllerDelegate Implementation ====================
+  fun setDimmedDetentIndex(index: Int) {
+    if (viewController.dimmedDetentIndex == index) return
+    viewController.dimmedDetentIndex = index
+    if (viewController.isPresented) {
+      viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.updateDimAmount()
+    }
+  }
+
+  fun setCornerRadius(radius: Float) {
+    if (viewController.sheetCornerRadius == radius) return
+    viewController.sheetCornerRadius = radius
+  }
+
+  fun setSheetBackgroundColor(color: Int?) {
+    if (viewController.sheetBackgroundColor == color) return
+    viewController.sheetBackgroundColor = color
+  }
+
+  fun setDismissible(dismissible: Boolean) {
+    viewController.dismissible = dismissible
+  }
+
+  fun setDraggable(draggable: Boolean) {
+    viewController.draggable = draggable
+  }
+
+  fun setGrabber(grabber: Boolean) {
+    viewController.grabber = grabber
+  }
+
+  fun setGrabberOptions(options: GrabberOptions?) {
+    viewController.grabberOptions = options
+  }
+
+  fun setDetents(newDetents: MutableList<Double>) {
+    viewController.detents = newDetents
+  }
+
+  fun setEdgeToEdgeFullScreen(edgeToEdgeFullScreen: Boolean) {
+    viewController.edgeToEdgeFullScreen = edgeToEdgeFullScreen
+  }
+
+  fun setInsetAdjustment(insetAdjustment: String) {
+    viewController.insetAdjustment = insetAdjustment
+  }
+
+  // ==================== State Management ====================
+
+  /**
+   * Updates the Fabric state with container dimensions for Yoga layout.
+   * Converts pixel values to density-independent pixels (dp).
+   */
+  fun updateState(width: Int, height: Int) {
+    if (width == lastContainerWidth && height == lastContainerHeight) return
+
+    lastContainerWidth = width
+    lastContainerHeight = height
+
+    val sw = stateWrapper ?: return
+    val newStateData = WritableNativeMap()
+    newStateData.putDouble("containerWidth", width.toFloat().pxToDp().toDouble())
+    newStateData.putDouble("containerHeight", height.toFloat().pxToDp().toDouble())
+    sw.updateState(newStateData)
+  }
+
+  // ==================== Sheet Actions ====================
+
+  @UiThread
+  fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
+    if (!viewController.isPresented) {
+      // Register with observer to track sheet stack hierarchy
+      viewController.parentSheetView = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
+    }
+    viewController.presentPromise = promiseCallback
+    viewController.present(detentIndex, animated)
+  }
+
+  @UiThread
+  fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
+    // iOS-like behavior: calling dismiss on a presenting controller dismisses
+    // its presented controller (and everything above it), but NOT itself.
+    // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
+    val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(this)
+    if (sheetsAbove.isNotEmpty()) {
+      for (sheet in sheetsAbove) {
+        sheet.viewController.dismiss(animated)
+      }
+      promiseCallback()
+      return
+    }
+
+    viewController.dismissPromise = promiseCallback
+    viewController.dismiss(animated)
+  }
+
+  @UiThread
+  fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
+    if (!viewController.isPresented) {
+      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
+      promiseCallback()
+      return
+    }
+
+    present(detentIndex, true, promiseCallback)
+  }
+
+  /**
+   * Debounced sheet update to handle rapid content/header size changes.
+   * Uses post() to ensure all layout passes complete before reconfiguring.
+   */
+  fun updateSheetIfNeeded() {
+    if (!viewController.isPresented) {
+      // Handle initial present if pending
+      if (pendingInitialPresent) {
+        viewController.setupSheetDetents()
+        present(initialDetentIndex, initialDetentAnimated) { }
+        pendingInitialPresent = false
+      }
+      return
+    }
+
+    if (isSheetUpdatePending) return
+
+    isSheetUpdatePending = true
+    viewController.post {
+      isSheetUpdatePending = false
+      viewController.setupSheetDetentsForSizeChange()
+      TrueSheetDialogObserver.onSheetSizeChanged(this)
+    }
+  }
+
+  // ==================== Sheet Stack Translation ====================
+
+  /**
+   * Updates this sheet's translation based on its child sheet's position.
+   * When a child sheet is presented, parent sheets slide down to create a stacked appearance.
+   * Propagates additional translation to parent so the entire stack stays visually consistent.
+   */
+  fun updateTranslationForChild(childSheetTop: Int) {
+    if (!viewController.isDialogVisible || viewController.isExpanded) return
+
+    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
+    val newTranslation = maxOf(0, childSheetTop - mySheetTop)
+    val additionalTranslation = newTranslation - viewController.currentTranslationY
+
+    viewController.translateDialog(newTranslation)
+
+    // Propagate any additional translation up the stack
+    if (additionalTranslation > 0) {
+      TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(additionalTranslation)
+    }
+  }
+
+  /**
+   * Recursively adds translation to this sheet and all parent sheets.
+   */
+  private fun addTranslation(amount: Int) {
+    if (!viewController.isDialogVisible || viewController.isExpanded) return
+
+    viewController.translateDialog(viewController.currentTranslationY + amount)
+    TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
+  }
+
+  // ==================== TrueSheetViewControllerDelegate ====================
 
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
 
-    // Enable touch event dispatching to React Native
+    // Enable touch event dispatching to React Native while sheet is visible
     viewController.eventDispatcher = eventDispatcher
     containerView?.footerView?.eventDispatcher = eventDispatcher
   }
@@ -173,7 +364,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
 
-    // Disable touch event dispatching
+    // Disable touch event dispatching when sheet is dismissing
     viewController.eventDispatcher = null
     containerView?.footerView?.eventDispatcher = null
   }
@@ -239,141 +430,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
   }
 
-  // ==================== Property Setters (forward to controller) ====================
-
-  fun setMaxHeight(height: Int) {
-    if (viewController.maxSheetHeight == height) return
-    viewController.maxSheetHeight = height
-  }
-
-  fun setDimmed(dimmed: Boolean) {
-    if (viewController.dimmed == dimmed) return
-    viewController.dimmed = dimmed
-    if (viewController.isPresented) {
-      viewController.setupDimmedBackground(viewController.currentDetentIndex)
-      viewController.updateDimAmount()
-    }
-  }
-
-  fun setDimmedDetentIndex(index: Int) {
-    if (viewController.dimmedDetentIndex == index) return
-    viewController.dimmedDetentIndex = index
-    if (viewController.isPresented) {
-      viewController.setupDimmedBackground(viewController.currentDetentIndex)
-      viewController.updateDimAmount()
-    }
-  }
-
-  fun setCornerRadius(radius: Float) {
-    if (viewController.sheetCornerRadius == radius) return
-    viewController.sheetCornerRadius = radius
-  }
-
-  fun setSheetBackgroundColor(color: Int?) {
-    if (viewController.sheetBackgroundColor == color) return
-    viewController.sheetBackgroundColor = color
-  }
-
-  fun setDismissible(dismissible: Boolean) {
-    viewController.dismissible = dismissible
-  }
-
-  fun setDraggable(draggable: Boolean) {
-    viewController.draggable = draggable
-  }
-
-  fun setGrabber(grabber: Boolean) {
-    viewController.grabber = grabber
-  }
-
-  fun setGrabberOptions(options: GrabberOptions?) {
-    viewController.grabberOptions = options
-  }
-
-  fun setDetents(newDetents: MutableList<Double>) {
-    viewController.detents = newDetents
-  }
-  fun setEdgeToEdgeFullScreen(edgeToEdgeFullScreen: Boolean) {
-    viewController.edgeToEdgeFullScreen = edgeToEdgeFullScreen
-  }
-
-  fun setInsetAdjustment(insetAdjustment: String) {
-    viewController.insetAdjustment = insetAdjustment
-  }
-
-  // ==================== State Management ====================
-
-  /**
-   * Updates the Fabric state with container dimensions for Yoga layout.
-   */
-  fun updateState(width: Int, height: Int) {
-    if (width == lastContainerWidth && height == lastContainerHeight) return
-
-    lastContainerWidth = width
-    lastContainerHeight = height
-
-    val sw = stateWrapper ?: return
-    val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", width.toFloat().pxToDp().toDouble())
-    newStateData.putDouble("containerHeight", height.toFloat().pxToDp().toDouble())
-    sw.updateState(newStateData)
-  }
-
-  @UiThread
-  fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    if (!viewController.isPresented) {
-      viewController.parentSheetView = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
-    }
-    viewController.presentPromise = promiseCallback
-    viewController.present(detentIndex, animated)
-  }
-
-  @UiThread
-  fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
-    // iOS-like behavior: calling dismiss on a presenting controller dismisses
-    // its presented controller (and everything above it), but NOT itself.
-    // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
-    val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(this)
-    if (sheetsAbove.isNotEmpty()) {
-      for (sheet in sheetsAbove) {
-        sheet.viewController.dismiss(animated)
-      }
-      promiseCallback()
-      return
-    }
-
-    viewController.dismissPromise = promiseCallback
-    viewController.dismiss(animated)
-  }
-
-  @UiThread
-  fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
-    if (!viewController.isPresented) {
-      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
-      promiseCallback()
-      return
-    }
-
-    present(detentIndex, true, promiseCallback)
-  }
-
-  /**
-   * Debounced sheet update to handle rapid content/header size changes.
-   * Uses post to ensure all layout passes complete before reconfiguring.
-   */
-  fun updateSheetIfNeeded() {
-    if (!viewController.isPresented) return
-    if (isSheetUpdatePending) return
-
-    isSheetUpdatePending = true
-    viewController.post {
-      isSheetUpdatePending = false
-      viewController.setupSheetDetentsForSizeChange()
-      TrueSheetDialogObserver.onSheetSizeChanged(this)
-    }
-  }
-
-  // ==================== TrueSheetContainerViewDelegate Implementation ====================
+  // ==================== TrueSheetContainerViewDelegate ====================
 
   override fun containerViewContentDidChangeSize(width: Int, height: Int) {
     updateSheetIfNeeded()
@@ -384,40 +441,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
+    // Footer changes don't affect detents, only reposition it
     viewController.positionFooter()
-  }
-
-  // ==================== Stack Translation ====================
-
-  /**
-   * Updates this sheet's translation based on its direct child's position.
-   * Propagates additional translation to parent so it stays behind this sheet.
-   */
-  fun updateTranslationForChild(childSheetTop: Int) {
-    if (!viewController.isDialogVisible || viewController.isExpanded) return
-
-    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
-    val newTranslation = maxOf(0, childSheetTop - mySheetTop)
-    val additionalTranslation = newTranslation - viewController.currentTranslationY
-
-    viewController.translateDialog(newTranslation)
-
-    if (additionalTranslation > 0) {
-      TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(additionalTranslation)
-    }
-  }
-
-  /**
-   * Adds translation to this sheet and propagates to parent.
-   */
-  private fun addTranslation(amount: Int) {
-    if (!viewController.isDialogVisible || viewController.isExpanded) return
-
-    viewController.translateDialog(viewController.currentTranslationY + amount)
-    TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
-  }
-
-  companion object {
-    const val TAG_NAME = "TrueSheet"
   }
 }
