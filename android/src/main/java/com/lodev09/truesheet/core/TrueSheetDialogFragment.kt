@@ -145,6 +145,8 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
     dialog.window?.apply {
       setWindowAnimations(0)
       setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+      // Clear default dim - TrueSheet uses custom TrueSheetDimView for dimming
+      clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
     }
 
     dialog.setOnShowListener {
@@ -290,7 +292,7 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
   /**
    * Update draggable state.
    */
-  fun setDraggable(enabled: Boolean) {
+  fun updateDraggable(enabled: Boolean) {
     draggable = enabled
     behavior?.isDraggable = enabled
     if (isAdded) setupGrabber()

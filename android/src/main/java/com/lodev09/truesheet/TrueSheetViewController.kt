@@ -175,7 +175,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var draggable: Boolean = true
     set(value) {
       field = value
-      dialogFragment?.setDraggable(value)
+      dialogFragment?.updateDraggable(value)
     }
 
   // =============================================================================
@@ -319,6 +319,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     emitWillPresentEvents()
 
+    setupSheetDetents()
+    setStateForDetentIndex(currentDetentIndex)
+    setupDimmedBackground(currentDetentIndex)
     setupKeyboardObserver()
 
     if (shouldAnimatePresent) {
@@ -507,18 +510,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    setupDimmedBackground(detentIndex)
-
     if (isPresented) {
+      setupDimmedBackground(detentIndex)
       setStateForDetentIndex(detentIndex)
     } else {
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
 
-      setupSheetDetents()
-
-      // Show the fragment
+      // Show the fragment - detents are configured in onDialogShow
       if (!fragment.isAdded) {
         fragment.show(activity.supportFragmentManager, FRAGMENT_TAG)
       }
@@ -527,8 +527,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       activity.supportFragmentManager.executePendingTransactions()
       bottomSheetView?.translationY = realScreenHeight.toFloat()
       bottomSheetView?.visibility = INVISIBLE
-
-      setStateForDetentIndex(detentIndex)
     }
   }
 
@@ -727,23 +725,27 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun positionFooter(slideOffset: Float? = null) {
+    if (!isPresented) return
     val footerView = containerView?.footerView ?: return
     val bottomSheet = bottomSheetView ?: return
 
-    val footerHeight = footerView.height
-    val sheetHeight = bottomSheet.height
-    val sheetTop = bottomSheet.top
+    // Post to ensure layout is complete before positioning
+    footerView.post {
+      val footerHeight = footerView.height
+      val sheetHeight = bottomSheet.height
+      val sheetTop = bottomSheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
+      var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
 
-    // Adjust during dismiss animation when slideOffset is negative
-    if (slideOffset != null && slideOffset < 0) {
-      footerY -= (footerHeight * slideOffset)
+      // Adjust during dismiss animation when slideOffset is negative
+      if (slideOffset != null && slideOffset < 0) {
+        footerY -= (footerHeight * slideOffset)
+      }
+
+      // Clamp to prevent footer going above safe area
+      val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
+      footerView.y = minOf(footerY, maxAllowedY)
     }
-
-    // Clamp to prevent footer going above safe area
-    val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
-    footerView.y = minOf(footerY, maxAllowedY)
   }
 
   // =============================================================================
