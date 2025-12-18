@@ -80,7 +80,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     const val TAG_NAME = "TrueSheet"
 
     // Prevents fully expanded ratio which causes behavior issues
-    private const val MAX_HALF_EXPANDED_RATIO = 0.999f
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
@@ -604,10 +603,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       val maxDetentHeight = detentCalculator.getDetentHeight(detents.last())
 
       val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
-      halfExpandedRatio = minOf(
-        adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat(),
-        MAX_HALF_EXPANDED_RATIO
-      )
+      halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
+        .coerceIn(0f, 0.999f)
 
       expandedOffset = maxOf(edgeToEdgeTopInset, realScreenHeight - maxDetentHeight)
 
