@@ -55,7 +55,9 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) : View(reac
 
     return when {
       sheetTop <= dimmedDetentTop -> MAX_ALPHA
+
       sheetTop >= belowDimmedTop -> 0f
+
       else -> {
         val progress = 1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)
         (progress * MAX_ALPHA).coerceIn(0f, MAX_ALPHA)

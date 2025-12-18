@@ -670,9 +670,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Rounded corners only on top
     val outerRadii = floatArrayOf(
-      sheetCornerRadius, sheetCornerRadius,
-      sheetCornerRadius, sheetCornerRadius,
-      0f, 0f, 0f, 0f
+      sheetCornerRadius,
+      sheetCornerRadius,
+      sheetCornerRadius,
+      sheetCornerRadius,
+      0f,
+      0f,
+      0f,
+      0f
     )
     val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
 
