@@ -26,6 +26,9 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   var currentHeight: Int = 0
     private set
 
+  var targetHeight: Int = 0
+    private set
+
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var activityRootView: View? = null
 
@@ -72,6 +75,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           bounds: WindowInsetsAnimationCompat.BoundsCompat
         ): WindowInsetsAnimationCompat.BoundsCompat {
           endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          targetHeight = endHeight
           if (endHeight > startHeight) {
             delegate?.keyboardWillShow(endHeight)
           } else if (endHeight < startHeight) {
@@ -114,6 +118,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       val previousHeight = currentHeight
 
       if (previousHeight != newHeight) {
+        targetHeight = newHeight
         if (newHeight > previousHeight) {
           delegate?.keyboardWillShow(newHeight)
         } else if (newHeight < previousHeight) {

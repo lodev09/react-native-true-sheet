@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -111,7 +112,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = containerView?.headerHeight ?: 0
 
   override val keyboardHeight: Int
-    get() = keyboardObserver?.currentHeight ?: 0
+    get() = keyboardObserver?.targetHeight ?: 0
 
   // ====================================================================
   // MARK: - State
@@ -684,14 +685,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val bottomSheet = bottomSheetView ?: return
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardWillShow(height: Int) {}
+        override fun keyboardWillShow(height: Int) {
+          if (!shouldHandleKeyboard()) return
+          setupSheetDetents()
+          setStateForDetentIndex(detents.size - 1)
+        }
 
-        override fun keyboardWillHide() {}
+        override fun keyboardWillHide() {
+          if (!shouldHandleKeyboard()) return
+          setupSheetDetents()
+        }
 
         override fun keyboardDidChangeHeight(height: Int) {
           if (!shouldHandleKeyboard()) return
-          setupSheetDetents()
-          positionFooter()
+          positionFooter(keyboardHeight = height)
         }
       }
       start()
@@ -784,15 +791,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     parentDimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
   }
 
-  fun positionFooter(slideOffset: Float? = null) {
+  fun positionFooter(slideOffset: Float? = null, keyboardHeight: Int? = null) {
     val footerView = containerView?.footerView ?: return
     val bottomSheet = bottomSheetView ?: return
 
     val footerHeight = footerView.height
     val sheetHeight = bottomSheet.height
     val sheetTop = bottomSheet.top
+    val effectiveKeyboardHeight = keyboardHeight ?: this.keyboardHeight
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardHeight).toFloat()
+    var footerY = (sheetHeight - sheetTop - footerHeight - effectiveKeyboardHeight).toFloat()
     if (slideOffset != null && slideOffset < 0) {
       footerY -= (footerHeight * slideOffset)
     }
