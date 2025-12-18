@@ -429,6 +429,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           isDialogVisible = false
           wasHiddenByModal = true
 
+          // Set alpha to 0 before hiding
+          dimView?.alpha = 0f
+          parentDimView?.alpha = 0f
+
           dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFastFadeOut)
           dialog?.window?.decorView?.visibility = GONE
           dimView?.visibility = INVISIBLE
@@ -443,6 +447,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           dialog?.window?.decorView?.visibility = VISIBLE
           dimView?.visibility = VISIBLE
           parentDimView?.visibility = VISIBLE
+
+          // Animate alpha back to correct value
+          updateDimAmount(animated = true)
         }
       },
       onModalDidDismiss = {
@@ -793,11 +800,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  fun updateDimAmount(sheetTop: Int? = null) {
+  fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
     val top = (sheetTop ?: bottomSheetView?.top ?: return) + currentKeyboardInset
-    dimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
-    parentDimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
+
+    if (animated) {
+      val targetAlpha = dimView?.calculateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex) ?: 0f
+      dimView?.animate()?.alpha(targetAlpha)?.setDuration(200)?.start()
+      parentDimView?.animate()?.alpha(targetAlpha)?.setDuration(200)?.start()
+    } else {
+      dimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
+      parentDimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
+    }
   }
 
   fun positionFooter(slideOffset: Float? = null) {

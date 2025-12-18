@@ -48,20 +48,22 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) : View(reac
     targetView = null
   }
 
-  fun interpolateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int) {
+  fun calculateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
     val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
 
-    alpha = when {
+    return when {
       sheetTop <= dimmedDetentTop -> MAX_ALPHA
-
       sheetTop >= belowDimmedTop -> 0f
-
       else -> {
         val progress = 1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)
         (progress * MAX_ALPHA).coerceIn(0f, MAX_ALPHA)
       }
     }
+  }
+
+  fun interpolateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int) {
+    alpha = calculateAlpha(sheetTop, dimmedDetentIndex, getSheetTopForDetentIndex)
   }
 }
