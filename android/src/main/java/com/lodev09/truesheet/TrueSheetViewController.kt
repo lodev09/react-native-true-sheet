@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
+import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
@@ -320,7 +321,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     emitWillPresentEvents()
 
     setupSheetDetents()
-    setStateForDetentIndex(currentDetentIndex)
     setupDimmedBackground(currentDetentIndex)
     setupKeyboardObserver()
 
@@ -387,9 +387,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!sheetAnimator.isAnimating) {
       emitChangePositionDelegate(sheetView.top)
 
-      if (isKeyboardTransitioning) {
-        positionFooter()
-      } else {
+      if (!isKeyboardTransitioning) {
         positionFooter(slideOffset)
         updateDimAmount(sheetView.top)
       }
@@ -525,7 +523,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         fragment.show(activity.supportFragmentManager, FRAGMENT_TAG)
       }
 
-      // Position off-screen until animation starts (done after show schedules the transaction)
+      // Execute pending transactions to ensure fragment is added
       activity.supportFragmentManager.executePendingTransactions()
       bottomSheetView?.translationY = realScreenHeight.toFloat()
       bottomSheetView?.visibility = INVISIBLE
@@ -783,7 +781,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           isKeyboardTransitioning = false
         }
 
-        override fun keyboardDidChangeHeight(height: Int) {}
+        override fun keyboardDidChangeHeight(height: Int) {
+          if (!shouldHandleKeyboard()) return
+          positionFooter()
+        }
       }
       start()
     }
