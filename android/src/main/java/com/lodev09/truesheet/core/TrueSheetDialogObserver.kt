@@ -40,7 +40,7 @@ object TrueSheetDialogObserver {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
       if (hadParent) {
-        presentedSheetStack.lastOrNull()?.viewController?.translateDialog(0)
+        presentedSheetStack.lastOrNull()?.resetTranslation()
       }
     }
   }

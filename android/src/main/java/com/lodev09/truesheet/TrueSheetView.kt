@@ -310,7 +310,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Propagates additional translation to parent so the entire stack stays visually consistent.
    */
   fun updateTranslationForChild(childSheetTop: Int) {
-    if (!viewController.isDialogVisible || viewController.isExpanded) return
+    if (viewController.isExpanded) return
 
     val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
     val newTranslation = maxOf(0, childSheetTop - mySheetTop)
@@ -328,10 +328,22 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Recursively adds translation to this sheet and all parent sheets.
    */
   private fun addTranslation(amount: Int) {
-    if (!viewController.isDialogVisible || viewController.isExpanded) return
+    if (viewController.isExpanded) return
 
     viewController.translateDialog(viewController.currentTranslationY + amount)
     TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
+  }
+
+  /**
+   * Resets this sheet's translation and updates parent sheets.
+   * This sheet resets to 0 (it's now topmost), but parent recalculates based on this sheet's position.
+   */
+  fun resetTranslation() {
+    viewController.translateDialog(0)
+
+    // Parent should recalculate its translation based on this sheet's position
+    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
+    TrueSheetDialogObserver.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
   }
 
   // ==================== TrueSheetViewControllerDelegate ====================
