@@ -63,9 +63,7 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16f // dp
 
-    fun newInstance(): TrueSheetDialogFragment {
-      return TrueSheetDialogFragment()
-    }
+    fun newInstance(): TrueSheetDialogFragment = TrueSheetDialogFragment()
   }
 
   // =============================================================================
@@ -165,25 +163,22 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
     dialog.behavior.maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
     // Handle back press
-    dialog.onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-      override fun handleOnBackPressed() {
-        delegate?.onBackPressed()
-        if (dismissible) {
-          dismiss()
+    dialog.onBackPressedDispatcher.addCallback(
+      this,
+      object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+          delegate?.onBackPressed()
+          if (dismissible) {
+            dismiss()
+          }
         }
       }
-    })
+    )
 
     return dialog
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-    return contentView
-  }
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? = contentView
 
   override fun onCancel(dialog: android.content.DialogInterface) {
     super.onCancel(dialog)
@@ -227,10 +222,14 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
 
     // Rounded corners only on top
     val outerRadii = floatArrayOf(
-      radius, radius,
-      radius, radius,
-      0f, 0f,
-      0f, 0f
+      radius,
+      radius,
+      radius,
+      radius,
+      0f,
+      0f,
+      0f,
+      0f
     )
     val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor(ctx)
 
