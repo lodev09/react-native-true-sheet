@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.util.Log
+import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
@@ -38,7 +39,7 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
    * @param onUpdate Called on each animation frame with the effective top position
    * @param onEnd Called when animation completes or is cancelled
    */
-  fun animatePresent(toTop: Int, onUpdate: (effectiveTop: Int) -> Unit, onEnd: () -> Unit) {
+  fun animatePresent(toTop: Int, onStart: () -> Unit, onUpdate: (effectiveTop: Int) -> Unit, onEnd: () -> Unit) {
     val bottomSheet = provider.bottomSheetView ?: run {
       onEnd()
       return
@@ -54,20 +55,19 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
 
       addUpdateListener { animator ->
         val fraction = animator.animatedValue as Float
-        // Calculate effective top based on animation progress
         val effectiveTop = fromTop - (distance * fraction).toInt()
-        // Adjust translationY to compensate for bottomSheet.top position
-        bottomSheet.translationY = (effectiveTop - bottomSheet.top).toFloat()
+        bottomSheet.y = effectiveTop.toFloat()
         onUpdate(effectiveTop)
       }
 
       addListener(object : AnimatorListenerAdapter() {
         override fun onAnimationStart(animation: Animator) {
+          onStart()
           isAnimating = true
         }
 
         override fun onAnimationEnd(animation: Animator) {
-          bottomSheet.translationY = 0f
+          bottomSheet.y = toTop.toFloat()
           presentAnimator = null
           isAnimating = false
           onEnd()
@@ -95,8 +95,8 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
       return
     }
 
-    val fromTop = bottomSheet.top + bottomSheet.translationY.toInt()
-    val toY = (provider.realScreenHeight - fromTop).toFloat()
+    val fromTop = bottomSheet.y.toInt()
+    val toTop = provider.realScreenHeight
 
     dismissAnimator?.cancel()
     dismissAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
@@ -105,9 +105,8 @@ class TrueSheetAnimator(private val provider: TrueSheetAnimatorProvider) {
 
       addUpdateListener { animator ->
         val fraction = animator.animatedValue as Float
-        bottomSheet.translationY = toY * fraction
-
-        val effectiveTop = bottomSheet.top + bottomSheet.translationY.toInt()
+        val effectiveTop = fromTop + ((toTop - fromTop) * fraction).toInt()
+        bottomSheet.y = effectiveTop.toFloat()
         onUpdate(effectiveTop)
       }
 

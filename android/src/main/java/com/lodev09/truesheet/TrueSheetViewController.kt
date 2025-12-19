@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
+import androidx.core.view.postDelayed
 import com.facebook.react.R
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -119,7 +120,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var interactionState: InteractionState = InteractionState.Idle
   private var isDismissing = false
   private var wasHiddenByModal = false
-  private var shouldAnimatePresent = true
+  private var shouldAnimatePresent = false
+  private var wasPresentingWithAnimation = false
+  private var isPresentingWithoutAnimation = false
 
   private var lastStateWidth: Int = 0
   private var lastStateHeight: Int = 0
@@ -312,6 +315,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - TrueSheetDialogFragmentDelegate
   // =============================================================================
 
+  override fun onDialogCreated() {
+    bottomSheetView?.visibility = INVISIBLE
+
+    // Ensure sheet starts off-screen to prevent flicker
+    bottomSheetView?.y = realScreenHeight.toFloat()
+  }
+
   override fun onDialogShow() {
     bottomSheetView?.visibility = VISIBLE
 
@@ -325,21 +335,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setupKeyboardObserver()
 
     if (shouldAnimatePresent) {
-      val toTop = getExpectedSheetTop(currentDetentIndex)
-      sheetAnimator.animatePresent(
-        toTop = toTop,
-        onUpdate = { effectiveTop ->
-          emitChangePositionDelegate(effectiveTop)
-          positionFooter()
-          updateDimAmount(effectiveTop)
-        },
-        onEnd = { finishPresent() }
-      )
+      wasPresentingWithAnimation = true
+      post {
+        val toTop = getExpectedSheetTop(currentDetentIndex)
+        sheetAnimator.animatePresent(
+          toTop = toTop,
+          onUpdate = { effectiveTop ->
+            emitChangePositionDelegate(effectiveTop)
+            positionFooter()
+            updateDimAmount(effectiveTop)
+          },
+          onStart = { wasPresentingWithAnimation = false },
+          onEnd = { finishPresent() }
+        )
+      }
     } else {
-      val toTop = getExpectedSheetTop(currentDetentIndex)
-      emitChangePositionDelegate(toTop)
-      positionFooter()
-      finishPresent()
+      isPresentingWithoutAnimation = true
+
+      post {
+        val toTop = getExpectedSheetTop(currentDetentIndex)
+        bottomSheetView?.y = toTop.toFloat()
+
+        emitChangePositionDelegate(toTop)
+        updateDimAmount(toTop)
+        positionFooter()
+        finishPresent()
+      }
     }
   }
 
@@ -378,6 +399,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Skip if our custom animator is handling the animation
     if (sheetAnimator.isAnimating) return
 
+    // Keep it off screen to prevent flicker
+    if (wasPresentingWithAnimation) {
+      sheetView.y = realScreenHeight.toFloat()
+      return
+    }
+
+    // When presenting without animation, keep the sheet at the target position
+    if (isPresentingWithoutAnimation) {
+      sheetView.y = getExpectedSheetTop(currentDetentIndex).toFloat()
+      return
+    }
+
     val behavior = behavior ?: return
 
     when (behavior.state) {
@@ -401,6 +434,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
     if (interactionState is InteractionState.Reconfiguring) return
+
+    // Reset non-animated presentation flag once behavior has settled at the target
+    if (isPresentingWithoutAnimation) {
+      val targetTop = getExpectedSheetTop(currentDetentIndex)
+      sheetView.y = targetTop.toFloat()
+
+      isPresentingWithoutAnimation = false
+    }
 
     val index = detentCalculator.getDetentIndexForState(newState) ?: return
     val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
@@ -526,7 +567,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Execute pending transactions to ensure fragment is added
       activity.supportFragmentManager.executePendingTransactions()
-      bottomSheetView?.visibility = INVISIBLE
     }
   }
 

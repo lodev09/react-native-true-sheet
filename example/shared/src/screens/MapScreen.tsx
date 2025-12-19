@@ -90,13 +90,14 @@ const MapScreenInner = ({
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
-        onPress={() => sheetRef.current?.resize(1)}
+        onPress={() => sheetRef.current?.present(1)}
       />
       <ReanimatedTrueSheet
         name="main"
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
-        initialDetentIndex={0}
+        initialDetentIndex={1}
+        initialDetentAnimated={false}
         dimmedDetentIndex={1}
         dismissible={false}
         edgeToEdgeFullScreen

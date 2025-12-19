@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +27,7 @@ import com.lodev09.truesheet.utils.ScreenUtils
 // =============================================================================
 
 interface TrueSheetDialogFragmentDelegate {
+  fun onDialogCreated()
   fun onDialogShow()
   fun onDialogDismiss()
   fun onDialogCancel()
@@ -122,13 +124,6 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
   // MARK: - Lifecycle
   // =============================================================================
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    // Prevent dialog from being recreated on configuration change
-    // The controller manages state separately
-    retainInstance = true
-  }
-
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val ctx = reactContext ?: requireContext()
 
@@ -153,6 +148,7 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
       setupGrabber()
       // Re-apply dismissible after show since behavior may reset it
       dialog.behavior.isHideable = dismissible
+
       delegate?.onDialogShow()
     }
 
@@ -179,6 +175,10 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? = contentView
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    delegate?.onDialogCreated()
+  }
 
   override fun onCancel(dialog: android.content.DialogInterface) {
     super.onCancel(dialog)
