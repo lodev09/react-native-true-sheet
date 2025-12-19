@@ -526,7 +526,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Execute pending transactions to ensure fragment is added
       activity.supportFragmentManager.executePendingTransactions()
-      bottomSheetView?.translationY = realScreenHeight.toFloat()
       bottomSheetView?.visibility = INVISIBLE
     }
   }
