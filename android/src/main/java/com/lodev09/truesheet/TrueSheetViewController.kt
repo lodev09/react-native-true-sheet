@@ -375,6 +375,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   override fun onSlide(sheetView: View, slideOffset: Float) {
+    // Skip if our custom animator is handling the animation
+    if (sheetAnimator.isAnimating) return
+
     val behavior = behavior ?: return
 
     when (behavior.state) {
@@ -384,13 +387,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
-    if (!sheetAnimator.isAnimating) {
-      emitChangePositionDelegate(sheetView.top)
+    emitChangePositionDelegate(sheetView.top)
 
-      if (!isKeyboardTransitioning) {
-        positionFooter(slideOffset)
-        updateDimAmount(sheetView.top)
-      }
+    if (!isKeyboardTransitioning) {
+      positionFooter(slideOffset)
+      updateDimAmount(sheetView.top)
     }
   }
 

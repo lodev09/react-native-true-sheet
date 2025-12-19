@@ -153,6 +153,8 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
       setupBottomSheetBehavior()
       setupBackground()
       setupGrabber()
+      // Re-apply dismissible after show since behavior may reset it
+      dialog.behavior.isHideable = dismissible
       delegate?.onDialogShow()
     }
 
