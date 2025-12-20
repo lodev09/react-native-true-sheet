@@ -18,7 +18,7 @@ object TrueSheetDialogObserver {
   fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
     synchronized(presentedSheetStack) {
       val parentSheet = presentedSheetStack.lastOrNull()
-        ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
+        ?.takeIf { it.viewController.isPresented && it.viewController.isSheetVisible }
 
       val childSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
       parentSheet?.updateTranslationForChild(childSheetTop)

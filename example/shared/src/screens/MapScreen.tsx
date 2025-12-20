@@ -96,8 +96,8 @@ const MapScreenInner = ({
         name="main"
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
-        initialDetentIndex={1}
-        initialDetentAnimated={false}
+        // initialDetentIndex={1}
+        // initialDetentAnimated={false}
         dimmedDetentIndex={1}
         dismissible={false}
         edgeToEdgeFullScreen

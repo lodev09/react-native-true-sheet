@@ -19,8 +19,9 @@ import com.lodev09.truesheet.core.TrueSheetDialogObserver
 import com.lodev09.truesheet.events.*
 
 /**
- * Main TrueSheet host view that manages the sheet dialog and dispatches events to JavaScript.
- * This view is hidden (GONE) and delegates all rendering to TrueSheetViewController in a dialog window.
+ * Main TrueSheet host view that manages the sheet and dispatches events to JavaScript.
+ * This view is hidden (GONE) and delegates all rendering to TrueSheetViewController
+ * using a CoordinatorLayout approach (no separate dialog window).
  */
 @SuppressLint("ViewConstructor")
 class TrueSheetView(private val reactContext: ThemedReactContext) :
@@ -101,7 +102,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     if (child is TrueSheetContainerView) {
       child.delegate = this
-      viewController.createDialog()
+      viewController.createSheet()
 
       if (initialDetentIndex >= 0) {
         post { present(initialDetentIndex, initialDetentAnimated) { } }
@@ -317,7 +318,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val newTranslation = maxOf(0, childSheetTop - mySheetTop)
     val additionalTranslation = newTranslation - viewController.currentTranslationY
 
-    viewController.translateDialog(newTranslation)
+    viewController.translateSheet(newTranslation)
 
     // Propagate any additional translation up the stack
     if (additionalTranslation > 0) {
@@ -331,7 +332,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun addTranslation(amount: Int) {
     if (viewController.isExpanded) return
 
-    viewController.translateDialog(viewController.currentTranslationY + amount)
+    viewController.translateSheet(viewController.currentTranslationY + amount)
     TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
   }
 
@@ -340,7 +341,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * This sheet resets to 0 (it's now topmost), but parent recalculates based on this sheet's position.
    */
   fun resetTranslation() {
-    viewController.translateDialog(0)
+    viewController.translateSheet(0)
 
     // Parent should recalculate its translation based on this sheet's position
     val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)

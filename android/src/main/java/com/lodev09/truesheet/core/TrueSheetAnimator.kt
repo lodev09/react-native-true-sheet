@@ -7,13 +7,11 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
-import android.widget.FrameLayout
-
 /**
  * Provides the bottom sheet view and screen measurements for animations.
  */
 interface TrueSheetAnimatorProvider {
-  val bottomSheetView: FrameLayout?
+  val bottomSheetView: View?
   val realScreenHeight: Int
 }
 
