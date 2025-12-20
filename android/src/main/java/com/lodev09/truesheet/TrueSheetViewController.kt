@@ -847,9 +847,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Drag Handling
   // =============================================================================
 
-  private fun getPositionDpForView(sheetView: View): Float {
-    return detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
-  }
+  private fun getPositionDpForView(sheetView: View): Float =
+    detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
 
   private fun handleDragBegin(sheetView: View) {
     val position = getPositionDpForView(sheetView)

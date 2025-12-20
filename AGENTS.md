@@ -18,37 +18,95 @@ React Native Fabric (New Architecture) bottom sheet library for iOS and Android.
 
 ```
 src/
-├── fabric/           # Native component specs (codegen input)
-├── specs/            # TurboModule spec
-├── reanimated/       # Reanimated integration
-├── navigation/       # React Navigation integration
-│   └── screen/       # Screen components for navigator
-├── TrueSheet.tsx     # Main React component
+├── fabric/                    # Native component specs (codegen input)
+│   ├── TrueSheetViewNativeComponent.ts
+│   ├── TrueSheetContainerViewNativeComponent.ts
+│   ├── TrueSheetContentViewNativeComponent.ts
+│   ├── TrueSheetHeaderViewNativeComponent.ts
+│   └── TrueSheetFooterViewNativeComponent.ts
+├── specs/                     # TurboModule spec
+│   └── NativeTrueSheetModule.ts
+├── reanimated/                # Reanimated integration
+│   ├── ReanimatedTrueSheet.tsx
+│   ├── ReanimatedTrueSheet.web.tsx
+│   ├── ReanimatedTrueSheetProvider.tsx
+│   ├── useReanimatedPositionChangeHandler.ts
+│   └── useReanimatedPositionChangeHandler.web.ts
+├── navigation/                # React Navigation integration
+│   ├── createTrueSheetNavigator.tsx
+│   ├── TrueSheetRouter.ts
+│   ├── TrueSheetView.tsx
+│   ├── useTrueSheetNavigation.ts
+│   ├── types.ts
+│   └── screen/                # Screen components for navigator
+│       ├── TrueSheetScreen.tsx
+│       ├── ReanimatedTrueSheetScreen.tsx
+│       ├── useSheetScreenState.ts
+│       └── types.ts
+├── mocks/                     # Testing mocks
+├── __tests__/                 # Unit tests
+├── TrueSheet.tsx              # Main React component
+├── TrueSheet.web.tsx          # Web implementation
 ├── TrueSheetProvider.tsx
-└── TrueSheet.types.ts
+├── TrueSheetProvider.web.tsx
+├── TrueSheet.types.ts
+└── index.ts
 
 ios/
-├── TrueSheetView.mm           # Host view (Fabric component)
-├── TrueSheetViewController.mm # UIViewController for sheet presentation
-├── TrueSheetModule.mm         # TurboModule
-├── TrueSheet*View.mm          # Container, Content, Header, Footer views
+├── TrueSheetView.mm/.h              # Host view (Fabric component)
+├── TrueSheetViewController.mm/.h    # UIViewController for sheet presentation
+├── TrueSheetModule.mm/.h            # TurboModule
+├── TrueSheetContainerView.mm/.h     # Container view
+├── TrueSheetContentView.mm/.h       # Content view
+├── TrueSheetHeaderView.mm/.h        # Header view
+├── TrueSheetFooterView.mm/.h        # Footer view
 ├── TrueSheetComponentDescriptor.h
-├── core/                      # GrabberView, BlurView
-├── events/                    # Lifecycle, State, Drag, Focus events
-└── utils/                     # Layout, Gesture, Window utilities
+├── core/
+│   ├── TrueSheetGrabberView.mm/.h
+│   ├── TrueSheetBlurView.mm/.h
+│   └── TrueSheetDetentCalculator.mm/.h
+├── events/
+│   ├── TrueSheetLifecycleEvents.mm/.h
+│   ├── TrueSheetStateEvents.mm/.h
+│   ├── TrueSheetDragEvents.mm/.h
+│   └── TrueSheetFocusEvents.mm/.h
+└── utils/
+    ├── LayoutUtil.mm/.h
+    ├── GestureUtil.mm/.h
+    └── WindowUtil.mm/.h
 
-android/.../truesheet/
-├── TrueSheetView.kt           # Host view
-├── TrueSheetViewController.kt # Dialog/BottomSheet controller
-├── TrueSheetModule.kt         # TurboModule
-├── TrueSheet*View.kt          # Container, Content, Header, Footer views
-├── TrueSheet*ViewManager.kt   # View managers
+android/src/main/java/com/lodev09/truesheet/
+├── TrueSheetView.kt                 # Host view
+├── TrueSheetViewController.kt       # Dialog/BottomSheet controller
+├── TrueSheetModule.kt               # TurboModule
+├── TrueSheetContainerView.kt        # Container view
+├── TrueSheetContentView.kt          # Content view
+├── TrueSheetHeaderView.kt           # Header view
+├── TrueSheetFooterView.kt           # Footer view
+├── TrueSheetViewManager.kt          # View manager for TrueSheetView
+├── TrueSheetContainerViewManager.kt
+├── TrueSheetContentViewManager.kt
+├── TrueSheetHeaderViewManager.kt
+├── TrueSheetFooterViewManager.kt
 ├── TrueSheetPackage.kt
-├── core/                      # GrabberView, DialogObserver, RNScreensFragmentObserver
-├── events/                    # Lifecycle, State, Drag, Focus events
-└── utils/                     # ScreenUtils
+├── core/
+│   ├── TrueSheetGrabberView.kt
+│   ├── TrueSheetDialogFragment.kt
+│   ├── TrueSheetDialogObserver.kt
+│   ├── TrueSheetAnimator.kt
+│   ├── TrueSheetKeyboardObserver.kt
+│   ├── TrueSheetDetentCalculator.kt
+│   ├── TrueSheetDimView.kt
+│   └── RNScreensFragmentObserver.kt
+├── events/
+│   ├── TrueSheetLifecycleEvents.kt
+│   ├── TrueSheetStateEvents.kt
+│   ├── TrueSheetDragEvents.kt
+│   └── TrueSheetFocusEvents.kt
+└── utils/
+    └── ScreenUtils.kt
 
-common/cpp/.../TrueSheetSpec/
+common/cpp/react/renderer/components/TrueSheetSpec/
 ├── TrueSheetViewState.cpp/.h
 ├── TrueSheetViewShadowNode.cpp/.h
 └── TrueSheetViewComponentDescriptor.h
