@@ -39,7 +39,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   }
 
   var delegate: TrueSheetDimViewDelegate? = null
-  var dismissible: Boolean = true
 
   private var targetView: ViewGroup? = null
 
@@ -59,9 +58,7 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
 
     // Handle taps on the dim view
     setOnClickListener {
-      if (dismissible) {
-        delegate?.dimViewDidTap()
-      }
+      delegate?.dimViewDidTap()
     }
   }
 

@@ -129,6 +129,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var isDismissing = false
   private var wasHiddenByModal = false
   private var shouldAnimatePresent = false
+  private var isPresentAnimating = false
 
   private var lastStateWidth: Int = 0
   private var lastStateHeight: Int = 0
@@ -180,7 +181,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     set(value) {
       field = value
       behavior?.isHideable = value
-      dimView?.dismissible = value
     }
 
   var draggable: Boolean = true
@@ -322,6 +322,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
+    isPresentAnimating = false
     lastEmittedPositionPx = -1
     shouldAnimatePresent = true
   }
@@ -372,6 +373,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun dimViewDidTap() {
+    // If there's a child sheet on top, dismiss it instead
+    val hostView = delegate as? TrueSheetView
+    if (hostView != null) {
+      val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(hostView)
+      val topmostChild = sheetsAbove.firstOrNull()
+      if (topmostChild != null && topmostChild.viewController.dismissible) {
+        topmostChild.viewController.dismiss(animated = true)
+        return
+      }
+    }
+
     if (dismissible) {
       dismiss(animated = true)
     }
@@ -445,6 +457,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val index = detentCalculator.getDetentIndexForState(newState) ?: return
     val position = getPositionDpForView(sheetView)
     val detentInfo = DetentInfo(index, position)
+
+    // Handle present animation completion
+    if (isPresentAnimating) {
+      isPresentAnimating = false
+      finishPresent()
+      return
+    }
 
     when (interactionState) {
       is InteractionState.Dragging -> {
@@ -620,7 +639,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheet.setupBackground()
     sheet.setupGrabber()
 
-    finishPresent();
+    if (shouldAnimatePresent) {
+      isPresentAnimating = true
+      // finishPresent() is called in handleStateSettled() after animation completes
+    } else {
+      finishPresent()
+    }
   }
 
   fun dismiss(animated: Boolean = true) {
@@ -778,7 +802,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (dimView == null) {
         dimView = TrueSheetDimView(reactContext).apply {
           delegate = this@TrueSheetViewController
-          dismissible = this@TrueSheetViewController.dismissible
         }
       }
       if (!parentDimVisible) {
@@ -792,7 +815,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (parentDimView == null) {
           parentDimView = TrueSheetDimView(reactContext).apply {
             delegate = this@TrueSheetViewController
-            dismissible = this@TrueSheetViewController.dismissible
           }
         }
         parentDimView?.attach(parentBottomSheet, parentController.sheetCornerRadius)

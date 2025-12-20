@@ -105,7 +105,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.createSheet()
 
       if (initialDetentIndex >= 0) {
-        post { present(initialDetentIndex, initialDetentAnimated) { } }
+        present(initialDetentIndex, initialDetentAnimated) { }
       }
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
