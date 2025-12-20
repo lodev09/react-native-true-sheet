@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -260,6 +259,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return TrueSheetDialogObserver.isTopmostSheet(hostView)
     }
 
+  private val dimViews: List<TrueSheetDimView>
+    get() = listOfNotNull(dimView, parentDimView)
+
   // =============================================================================
   // MARK: - Initialization
   // =============================================================================
@@ -276,19 +278,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (dialogFragment != null) return
 
     dialogFragment = TrueSheetDialogFragment.newInstance().apply {
-      this.delegate = this@TrueSheetViewController
-      this.contentView = this@TrueSheetViewController
-      this.reactContext = this@TrueSheetViewController.reactContext
-      this.sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
-      this.sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
-      this.edgeToEdgeFullScreen = this@TrueSheetViewController.edgeToEdgeFullScreen
-      this.grabberEnabled = this@TrueSheetViewController.grabber
-      this.grabberOptions = this@TrueSheetViewController.grabberOptions
-      this.dismissible = this@TrueSheetViewController.dismissible
-      this.draggable = this@TrueSheetViewController.draggable
+      delegate = this@TrueSheetViewController
+      contentView = this@TrueSheetViewController
+      syncFragmentProperties(this)
     }
 
     setupModalObserver()
+  }
+
+  private fun syncFragmentProperties(fragment: TrueSheetDialogFragment) {
+    fragment.apply {
+      reactContext = this@TrueSheetViewController.reactContext
+      sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
+      sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
+      edgeToEdgeFullScreen = this@TrueSheetViewController.edgeToEdgeFullScreen
+      grabberEnabled = this@TrueSheetViewController.grabber
+      grabberOptions = this@TrueSheetViewController.grabberOptions
+      dismissible = this@TrueSheetViewController.dismissible
+      draggable = this@TrueSheetViewController.draggable
+    }
   }
 
   private fun cleanupDialog() {
@@ -340,11 +348,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val toTop = getExpectedSheetTop(currentDetentIndex)
         sheetAnimator.animatePresent(
           toTop = toTop,
-          onUpdate = { effectiveTop ->
-            emitChangePositionDelegate(effectiveTop)
-            positionFooter()
-            updateDimAmount(effectiveTop)
-          },
+          onUpdate = { effectiveTop -> updateSheetVisuals(effectiveTop) },
           onStart = { wasPresentingWithAnimation = false },
           onEnd = { finishPresent() }
         )
@@ -356,9 +360,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val toTop = getExpectedSheetTop(currentDetentIndex)
         bottomSheetView?.y = toTop.toFloat()
 
-        emitChangePositionDelegate(toTop)
-        updateDimAmount(toTop)
-        positionFooter()
+        updateSheetVisuals(toTop)
         finishPresent()
       }
     }
@@ -444,7 +446,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     val index = detentCalculator.getDetentIndexForState(newState) ?: return
-    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val position = getPositionDpForView(sheetView)
     val detentInfo = DetentInfo(index, position)
 
     when (interactionState) {
@@ -515,13 +517,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     wasHiddenByModal = true
 
     // Prepare for fast fade out
-    dimView?.alpha = 0f
-    parentDimView?.alpha = 0f
+    dimViews.forEach { it.alpha = 0f }
 
     dialog?.window?.setWindowAnimations(com.lodev09.truesheet.R.style.TrueSheetFastFadeOut)
     dialog?.window?.decorView?.visibility = GONE
-    dimView?.visibility = INVISIBLE
-    parentDimView?.visibility = INVISIBLE
+    dimViews.forEach { it.visibility = INVISIBLE }
 
     parentSheetView?.viewController?.hideForModal()
   }
@@ -531,8 +531,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     dialog?.window?.setWindowAnimations(0)
     dialog?.window?.decorView?.visibility = VISIBLE
-    dimView?.visibility = VISIBLE
-    parentDimView?.visibility = VISIBLE
+    dimViews.forEach { it.visibility = VISIBLE }
 
     updateDimAmount(animated = true)
   }
@@ -578,11 +577,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (animated) {
       sheetAnimator.animateDismiss(
-        onUpdate = { effectiveTop ->
-          emitChangePositionDelegate(effectiveTop)
-          positionFooter()
-          updateDimAmount(effectiveTop)
-        },
+        onUpdate = { effectiveTop -> updateSheetVisuals(effectiveTop) },
         onEnd = { dialogFragment?.dismiss() }
       )
     } else {
@@ -669,26 +664,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Grabber
+  // MARK: - Grabber & Background
   // =============================================================================
 
   fun setupGrabber() {
-    dialogFragment?.apply {
-      grabberEnabled = this@TrueSheetViewController.grabber
-      grabberOptions = this@TrueSheetViewController.grabberOptions
-      setupGrabber()
+    dialogFragment?.let {
+      syncFragmentProperties(it)
+      it.setupGrabber()
     }
   }
 
-  // =============================================================================
-  // MARK: - Background & Dimming
-  // =============================================================================
-
   fun setupBackground() {
-    dialogFragment?.apply {
-      sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
-      sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
-      setupBackground()
+    dialogFragment?.let {
+      syncFragmentProperties(it)
+      it.setupBackground()
     }
   }
 
@@ -753,11 +742,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         dimmedDetentIndex,
         detentCalculator::getSheetTopForDetentIndex
       ) ?: 0f
-      dimView?.animate()?.alpha(targetAlpha)?.setDuration(200)?.start()
-      parentDimView?.animate()?.alpha(targetAlpha)?.setDuration(200)?.start()
+      dimViews.forEach { it.animate().alpha(targetAlpha).setDuration(200).start() }
     } else {
-      dimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
-      parentDimView?.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex)
+      dimViews.forEach { it.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex) }
     }
   }
 
@@ -839,8 +826,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Drag Handling
   // =============================================================================
 
+  private fun getPositionDpForView(sheetView: View): Float {
+    return detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+  }
+
   private fun handleDragBegin(sheetView: View) {
-    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
     interactionState = InteractionState.Dragging(startTop = sheetView.top)
@@ -848,7 +839,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
-    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+    val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
   }
@@ -892,6 +883,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val interpolatedIndex = detentCalculator.getInterpolatedIndexForPosition(currentTop)
     val detent = detentCalculator.getInterpolatedDetentForPosition(currentTop)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
+  }
+
+  /**
+   * Updates position emission, footer, and dim amount together.
+   * This pattern is commonly used during animations and state changes.
+   */
+  private fun updateSheetVisuals(effectiveTop: Int, slideOffset: Float? = null) {
+    emitChangePositionDelegate(effectiveTop)
+    positionFooter(slideOffset)
+    updateDimAmount(effectiveTop)
   }
 
   // =============================================================================
