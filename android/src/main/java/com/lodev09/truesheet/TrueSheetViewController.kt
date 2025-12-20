@@ -24,8 +24,6 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
-import com.lodev09.truesheet.core.TrueSheetAnimator
-import com.lodev09.truesheet.core.TrueSheetAnimatorProvider
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
@@ -78,7 +76,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   RootView,
   TrueSheetDetentMeasurements,
-  TrueSheetAnimatorProvider,
   TrueSheetDimViewDelegate,
   TrueSheetCoordinatorLayout.Delegate {
 
@@ -88,6 +85,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
+    private const val DISMISS_DURATION = 200L
   }
 
   // =============================================================================
@@ -147,7 +145,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var parentSheetView: TrueSheetView? = null
 
   // Helper Objects
-  private val sheetAnimator = TrueSheetAnimator(this)
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
   private var rnScreensObserver: RNScreensFragmentObserver? = null
   private val detentCalculator = TrueSheetDetentCalculator(this)
@@ -197,9 +194,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Behavior
   private val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = sheetView?.behavior
-
-  override val bottomSheetView: TrueSheetBottomSheetView?
-    get() = sheetView
 
   private val containerView: TrueSheetContainerView?
     get() = if (this.isNotEmpty()) getChildAt(0) as? TrueSheetContainerView else null
@@ -300,7 +294,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     cleanupKeyboardObserver()
     cleanupModalObserver()
     cleanupBackCallback()
-    sheetAnimator.cancel()
+    sheetView?.animate()?.cancel()
 
     // Remove from activity
     removeFromActivity()
@@ -426,8 +420,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun handleSlide(sheetView: View, slideOffset: Float) {
-    // Skip if our custom animator is handling the animation
-    if (sheetAnimator.isAnimating) return
+    // Skip during dismiss animation
+    if (isDismissing) return
 
     val behavior = behavior ?: return
 
@@ -654,14 +648,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     emitWillDismissEvents()
 
     if (animated) {
-      sheetAnimator.animateDismiss(
-        onUpdate = { effectiveTop -> updateSheetVisuals(effectiveTop) },
-        onEnd = { finishDismiss() }
-      )
+      animateDismiss()
     } else {
       emitChangePositionDelegate(realScreenHeight)
       finishDismiss()
     }
+  }
+
+  private fun animateDismiss() {
+    val sheet = sheetView ?: run {
+      finishDismiss()
+      return
+    }
+
+    sheet.animate()
+      .y(realScreenHeight.toFloat())
+      .setDuration(DISMISS_DURATION)
+      .setInterpolator(android.view.animation.AccelerateInterpolator())
+      .setUpdateListener { updateSheetVisuals(sheet.y.toInt()) }
+      .withEndAction { finishDismiss() }
+      .start()
   }
 
   private fun finishPresent() {
