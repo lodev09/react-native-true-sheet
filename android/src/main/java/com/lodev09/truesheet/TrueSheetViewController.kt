@@ -545,6 +545,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     updateDimAmount(animated = true)
   }
 
+  /**
+   * Re-applies hidden state after returning from background.
+   * Android may restore dialog visibility on activity resume, so we need to hide it again.
+   */
+  fun reapplyHiddenState() {
+    if (!wasHiddenByModal) return
+
+    dialog?.window?.decorView?.visibility = GONE
+    dimViews.forEach { it.visibility = INVISIBLE }
+  }
+
   // =============================================================================
   // MARK: - Presentation
   // =============================================================================

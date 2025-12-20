@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.facebook.react.bridge.ReactContext
 
 private const val RN_SCREENS_PACKAGE = "com.swmansion.rnscreens"
@@ -19,7 +21,9 @@ class RNScreensFragmentObserver(
   private val onModalDidDismiss: () -> Unit
 ) {
   private var fragmentLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
+  private var activityLifecycleObserver: DefaultLifecycleObserver? = null
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
+  private var isActivityInForeground = true
 
   /**
    * Start observing fragment lifecycle events.
@@ -28,9 +32,24 @@ class RNScreensFragmentObserver(
     val activity = reactContext.currentActivity as? AppCompatActivity ?: return
     val fragmentManager = activity.supportFragmentManager
 
+    // Track activity foreground state to ignore fragment lifecycle events during background/foreground transitions
+    activityLifecycleObserver = object : DefaultLifecycleObserver {
+      override fun onResume(owner: LifecycleOwner) {
+        isActivityInForeground = true
+      }
+
+      override fun onPause(owner: LifecycleOwner) {
+        isActivityInForeground = false
+      }
+    }
+    activity.lifecycle.addObserver(activityLifecycleObserver!!)
+
     fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
       override fun onFragmentAttached(fm: FragmentManager, f: Fragment, context: Context) {
         super.onFragmentAttached(fm, f, context)
+
+        // Ignore if app is resuming from background
+        if (!isActivityInForeground) return
 
         if (isModalFragment(f) && !activeModalFragments.contains(f)) {
           activeModalFragments.add(f)
@@ -44,11 +63,8 @@ class RNScreensFragmentObserver(
       override fun onFragmentStopped(fm: FragmentManager, f: Fragment) {
         super.onFragmentStopped(fm, f)
 
-        // Ignore if app is in background (fragments stop with activity)
-        val activity = reactContext.currentActivity as? AppCompatActivity ?: return
-        if (!activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
-          return
-        }
+        // Ignore if app is going to background (fragments stop with activity)
+        if (!isActivityInForeground) return
 
         if (activeModalFragments.contains(f)) {
           if (activeModalFragments.size == 1) {
@@ -77,11 +93,18 @@ class RNScreensFragmentObserver(
    * Stop observing and cleanup.
    */
   fun stop() {
+    val activity = reactContext.currentActivity as? AppCompatActivity
+
     fragmentLifecycleCallback?.let { callback ->
-      val activity = reactContext.currentActivity as? AppCompatActivity
       activity?.supportFragmentManager?.unregisterFragmentLifecycleCallbacks(callback)
     }
     fragmentLifecycleCallback = null
+
+    activityLifecycleObserver?.let { observer ->
+      activity?.lifecycle?.removeObserver(observer)
+    }
+    activityLifecycleObserver = null
+
     activeModalFragments.clear()
   }
 

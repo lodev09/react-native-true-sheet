@@ -131,6 +131,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Lifecycle ====================
 
   override fun onHostResume() {
+    viewController.reapplyHiddenState()
     finalizeUpdates()
   }
 
