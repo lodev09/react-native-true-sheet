@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -424,8 +425,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     emitChangePositionDelegate(sheetView.top)
 
-    if (!isKeyboardTransitioning) {
+    // On older APIs, use onSlide for footer positioning during keyboard transitions
+    val useLegacyKeyboardHandling = Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+    if (!isKeyboardTransitioning || useLegacyKeyboardHandling) {
       positionFooter(slideOffset)
+    }
+
+    if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
   }
@@ -784,6 +790,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun setupKeyboardObserver() {
     val bottomSheet = bottomSheetView ?: return
+    cleanupKeyboardObserver()
     keyboardObserver = TrueSheetKeyboardObserver(bottomSheet, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {

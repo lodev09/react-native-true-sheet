@@ -20,7 +20,10 @@ interface TrueSheetKeyboardObserverDelegate {
  * Tracks keyboard height and notifies delegate on changes.
  * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardObserver(private val targetView: View, private val reactContext: ThemedReactContext) {
+class TrueSheetKeyboardObserver(
+  private val targetView: View,
+  private val reactContext: ThemedReactContext
+) {
 
   var delegate: TrueSheetKeyboardObserverDelegate? = null
 
@@ -111,8 +114,12 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   }
 
   private fun setupLegacyListener() {
+    // Ensure we don't add duplicate listeners
+    if (globalLayoutListener != null) return
+
     val rootView = reactContext.currentActivity?.window?.decorView?.rootView ?: return
     activityRootView = rootView
+
 
     globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
       val rect = Rect()
@@ -122,22 +129,30 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       val keyboardHeight = screenHeight - rect.bottom
 
       val newHeight = if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0
-      val previousHeight = currentHeight
 
-      if (previousHeight != newHeight) {
-        targetHeight = newHeight
-        if (newHeight > previousHeight) {
-          delegate?.keyboardWillShow(newHeight)
-        } else if (newHeight < previousHeight) {
-          delegate?.keyboardWillHide()
-        }
-        updateHeight(previousHeight, newHeight, 1f)
-        if (newHeight == 0 && previousHeight > 0) {
-          delegate?.keyboardDidHide()
-        }
+      // Skip if already at this height
+      if (targetHeight == newHeight) return@OnGlobalLayoutListener
+
+      val previousHeight = currentHeight
+      targetHeight = newHeight
+      isHiding = newHeight < previousHeight
+
+      if (newHeight > previousHeight) {
+        delegate?.keyboardWillShow(newHeight)
+      } else if (isHiding) {
+        delegate?.keyboardWillHide()
+      }
+
+      // On legacy API, keyboard has already animated - just update immediately
+      updateHeight(previousHeight, newHeight, 1f)
+
+      if (isHiding && newHeight == 0) {
+        delegate?.keyboardDidHide()
+        isHiding = false
       }
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
   }
+
 }
