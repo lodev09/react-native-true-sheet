@@ -158,15 +158,12 @@ class TrueSheetDialogFragment : BottomSheetDialogFragment() {
     dialog.behavior.isDraggable = draggable
     dialog.behavior.maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
 
-    // Handle back press
+    // Handle back press - delegate to controller for animated dismiss
     dialog.onBackPressedDispatcher.addCallback(
       this,
       object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
           delegate?.onBackPressed()
-          if (dismissible) {
-            dismiss()
-          }
         }
       }
     )

@@ -438,6 +438,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onBackPressed() {
     delegate?.viewControllerDidBackPress()
+    if (dismissible) {
+      dismiss(animated = true)
+    }
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
