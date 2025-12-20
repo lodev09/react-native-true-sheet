@@ -77,7 +77,7 @@ ios/
 
 android/src/main/java/com/lodev09/truesheet/
 ├── TrueSheetView.kt                 # Host view
-├── TrueSheetViewController.kt       # Dialog/BottomSheet controller
+├── TrueSheetViewController.kt       # BottomSheet controller
 ├── TrueSheetModule.kt               # TurboModule
 ├── TrueSheetContainerView.kt        # Container view
 ├── TrueSheetContentView.kt          # Content view
@@ -90,19 +90,19 @@ android/src/main/java/com/lodev09/truesheet/
 ├── TrueSheetFooterViewManager.kt
 ├── TrueSheetPackage.kt
 ├── core/
-│   ├── TrueSheetGrabberView.kt
-│   ├── TrueSheetDialogFragment.kt
-│   ├── TrueSheetDialogObserver.kt
-│   ├── TrueSheetAnimator.kt
-│   ├── TrueSheetKeyboardObserver.kt
+│   ├── TrueSheetBottomSheetView.kt
+│   ├── TrueSheetCoordinatorLayout.kt
 │   ├── TrueSheetDetentCalculator.kt
+│   ├── TrueSheetDialogObserver.kt
 │   ├── TrueSheetDimView.kt
+│   ├── TrueSheetGrabberView.kt
+│   ├── TrueSheetKeyboardObserver.kt
 │   └── RNScreensFragmentObserver.kt
 ├── events/
-│   ├── TrueSheetLifecycleEvents.kt
-│   ├── TrueSheetStateEvents.kt
 │   ├── TrueSheetDragEvents.kt
-│   └── TrueSheetFocusEvents.kt
+│   ├── TrueSheetFocusEvents.kt
+│   ├── TrueSheetLifecycleEvents.kt
+│   └── TrueSheetStateEvents.kt
 └── utils/
     └── ScreenUtils.kt
 

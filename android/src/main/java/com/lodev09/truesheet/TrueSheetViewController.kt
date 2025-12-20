@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -579,6 +580,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupDimmedBackground(detentIndex)
       setStateForDetentIndex(detentIndex)
     } else {
+      Log.d(TAG_NAME, "present ${animated}")
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
@@ -620,9 +622,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun onSheetShow() {
     val sheet = sheetView ?: return
 
-    isPresented = true
-    isSheetVisible = true
-
     emitWillPresentEvents()
 
     setupSheetDetents()
@@ -633,12 +632,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheet.setupBackground()
     sheet.setupGrabber()
 
+    Log.d(TAG_NAME, "$shouldAnimatePresent")
+
     if (shouldAnimatePresent) {
       isPresentAnimating = true
-      // finishPresent() is called in handleStateSettled() after animation completes
+      post { setStateForDetentIndex(currentDetentIndex) }
     } else {
+      setStateForDetentIndex(currentDetentIndex)
       finishPresent()
     }
+
+    isPresented = true
+    isSheetVisible = true
   }
 
   fun dismiss(animated: Boolean = true) {
@@ -740,12 +745,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     if (isPresented) {
-      if (shouldAnimatePresent) {
-        // Post to allow layout to complete before animating
-        sheetView?.post { setStateForDetentIndex(currentDetentIndex) }
-      } else {
-        setStateForDetentIndex(currentDetentIndex)
-      }
+      setStateForDetentIndex(currentDetentIndex)
     }
 
     interactionState = InteractionState.Idle
