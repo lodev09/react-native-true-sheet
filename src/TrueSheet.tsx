@@ -35,7 +35,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, StyleSheet, findNodeHandle, View, processColor } from 'react-native';
+import { Platform, StyleSheet, findNodeHandle, processColor } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -43,9 +43,6 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n' +
   '- You are using the new architecture (Fabric)\n';
-
-// Material Design 3 minimum touch target
-const ANDROID_HITBOX_HEIGHT = 48;
 
 if (!TrueSheetModule) {
   throw new Error(LINKING_ERROR);
@@ -448,9 +445,6 @@ export class TrueSheet
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
-            {Platform.OS === 'android' && grabber && draggable && (
-              <View collapsable={false} style={styles.grabberHitbox} />
-            )}
           </TrueSheetContainerViewNativeComponent>
         )}
       </TrueSheetViewNativeComponent>
@@ -484,12 +478,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-  },
-  grabberHitbox: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: ANDROID_HITBOX_HEIGHT,
   },
 });
