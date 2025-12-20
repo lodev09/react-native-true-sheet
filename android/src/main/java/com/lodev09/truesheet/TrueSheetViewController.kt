@@ -595,8 +595,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val behavior = params.behavior as BottomSheetBehavior<TrueSheetBottomSheetView>
 
     // Configure behavior
-    behavior.isHideable = dismissible
+    behavior.isHideable = true
     behavior.isDraggable = draggable
+    behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 
     // Add sheet to coordinator
@@ -640,6 +641,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishPresent() {
+    // Restore isHideable to actual value after present animation
+    behavior?.isHideable = dismissible
+
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)
     parentSheetView?.viewControllerDidBlur()
@@ -706,7 +710,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     if (isPresented) {
-      setStateForDetentIndex(currentDetentIndex)
+      if (shouldAnimatePresent) {
+        // Post to allow layout to complete before animating
+        sheetView?.post { setStateForDetentIndex(currentDetentIndex) }
+      } else {
+        setStateForDetentIndex(currentDetentIndex)
+      }
     }
 
     interactionState = InteractionState.Idle

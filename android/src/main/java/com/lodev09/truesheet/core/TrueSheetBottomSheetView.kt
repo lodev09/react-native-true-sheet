@@ -62,8 +62,6 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
    */
   fun createLayoutParams(): CoordinatorLayout.LayoutParams {
     val behavior = BottomSheetBehavior<TrueSheetBottomSheetView>().apply {
-      // Start hidden, will be shown during present animation
-      state = BottomSheetBehavior.STATE_HIDDEN
       isHideable = true
       maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
     }
