@@ -66,12 +66,11 @@ interface TrueSheetViewControllerDelegate {
 // =============================================================================
 
 /**
- * Manages the bottom sheet using CoordinatorLayout + BottomSheetBehavior.
+ * Controls the presentation and behavior of a bottom sheet.
  *
- * This approach keeps the sheet in the same activity window (no separate dialog window),
- * which allows touch events to pass through to underlying views when the sheet is not
- * covering them. This solves the touch lag issue when sheets are presented over
- * interactive components like Maps.
+ * Uses CoordinatorLayout with BottomSheetBehavior to manage the sheet within the activity window,
+ * enabling touch pass-through to underlying views. Handles detent configuration, drag interactions,
+ * keyboard avoidance, dimmed backgrounds, back button, and lifecycle events for stacked sheets.
  */
 @SuppressLint("ClickableViewAccessibility", "ViewConstructor")
 class TrueSheetViewController(private val reactContext: ThemedReactContext) :
