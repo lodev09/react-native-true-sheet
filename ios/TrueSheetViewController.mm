@@ -504,8 +504,10 @@
 
 - (void)setupSheetDetents {
   UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet)
+  if (!sheet) {
+    RCTLogError(@"TrueSheet: sheetPresentationController is nil in setupSheetDetents");
     return;
+  }
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedPositions];
@@ -592,8 +594,10 @@
 
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index {
   UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet)
+  if (!sheet) {
+    RCTLogError(@"TrueSheet: sheetPresentationController is nil in detentIdentifierForIndex");
     return UISheetPresentationControllerDetentIdentifierMedium;
+  }
 
   UISheetPresentationControllerDetentIdentifier identifier = UISheetPresentationControllerDetentIdentifierMedium;
   if (index >= 0 && index < (NSInteger)sheet.detents.count) {
@@ -612,8 +616,10 @@
 
 - (void)applyActiveDetent {
   UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet)
+  if (!sheet) {
+    RCTLogError(@"TrueSheet: sheetPresentationController is nil in applyActiveDetent");
     return;
+  }
 
   NSInteger detentCount = _detents.count;
   if (detentCount == 0)

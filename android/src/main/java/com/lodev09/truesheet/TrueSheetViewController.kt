@@ -366,19 +366,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun dimViewDidTap() {
-    // If there's a child sheet on top, dismiss it instead
     val hostView = delegate as? TrueSheetView
-    if (hostView != null) {
-      val sheetsAbove = TrueSheetStackManager.getSheetsAbove(hostView)
-      val topmostChild = sheetsAbove.firstOrNull()
-      if (topmostChild != null && topmostChild.viewController.dismissible) {
+    if (hostView == null) {
+      RNLog.e(reactContext, "TrueSheet: Expected delegate to be TrueSheetView")
+      return
+    }
+
+    // If there's a child sheet on top, handle it instead
+    val topmostChild = TrueSheetStackManager.getSheetsAbove(hostView).firstOrNull()
+    if (topmostChild != null) {
+      if (topmostChild.viewController.dismissible) {
         topmostChild.viewController.dismiss(animated = true)
-        return
       }
+      return
     }
 
     if (dismissible) {
       dismiss(animated = true)
+    } else if (parentSheetView == null && currentDetentIndex > 0) {
+      setStateForDetentIndex(0)
     }
   }
 
@@ -612,15 +618,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun onSheetShow() {
-    if (sheetView == null) return
+    val sheet = sheetView ?: run {
+      RNLog.e(reactContext, "TrueSheet: sheetView is null in onSheetShow")
+      return
+    }
 
     emitWillPresentEvents()
 
     setupSheetDetents()
     setupDimmedBackground(currentDetentIndex)
     setupKeyboardObserver()
-    sheetView?.setupBackground()
-    sheetView?.setupGrabber()
+    sheet.setupBackground()
+    sheet.setupGrabber()
 
     if (shouldAnimatePresent) {
       isPresentAnimating = true
@@ -688,7 +697,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun setupSheetDetents() {
-    val behavior = this.behavior ?: return
+    val behavior = this.behavior ?: run {
+      RNLog.e(reactContext, "TrueSheet: behavior is null in setupSheetDetents")
+      return
+    }
 
     interactionState = InteractionState.Reconfiguring
 
@@ -771,7 +783,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun setupDimmedBackground(detentIndex: Int) {
-    val coordinator = this.coordinatorLayout ?: return
+    val coordinator = this.coordinatorLayout ?: run {
+      RNLog.e(reactContext, "TrueSheet: coordinatorLayout is null in setupDimmedBackground")
+      return
+    }
 
     if (dimmed) {
       val parentDimVisible = (parentSheetView?.viewController?.dimView?.alpha ?: 0f) > 0f
@@ -855,7 +870,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupKeyboardObserver() {
-    val coordinator = coordinatorLayout ?: return
+    val coordinator = coordinatorLayout ?: run {
+      RNLog.e(reactContext, "TrueSheet: coordinatorLayout is null in setupKeyboardObserver")
+      return
+    }
     cleanupKeyboardObserver()
     keyboardObserver = TrueSheetKeyboardObserver(coordinator, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
