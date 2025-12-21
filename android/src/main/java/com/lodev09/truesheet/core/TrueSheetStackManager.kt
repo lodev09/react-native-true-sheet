@@ -6,7 +6,7 @@ import com.lodev09.truesheet.TrueSheetView
  * Manages TrueSheet stacking behavior.
  * Tracks presented sheets and handles visibility when sheets stack on top of each other.
  */
-object TrueSheetDialogObserver {
+object TrueSheetStackManager {
 
   private val presentedSheetStack = mutableListOf<TrueSheetView>()
 
@@ -18,7 +18,7 @@ object TrueSheetDialogObserver {
   fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
     synchronized(presentedSheetStack) {
       val parentSheet = presentedSheetStack.lastOrNull()
-        ?.takeIf { it.viewController.isPresented && it.viewController.isDialogVisible }
+        ?.takeIf { it.viewController.isPresented && it.viewController.isSheetVisible }
 
       val childSheetTop = sheetView.viewController.getExpectedSheetTop(detentIndex)
       parentSheet?.updateTranslationForChild(childSheetTop)

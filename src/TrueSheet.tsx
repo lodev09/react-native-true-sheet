@@ -354,7 +354,6 @@ export class TrueSheet
       blurOptions,
       cornerRadius,
       maxHeight,
-      edgeToEdgeFullScreen,
       scrollable = false,
       pageSizing = true,
       children,
@@ -410,7 +409,6 @@ export class TrueSheet
         dismissible={dismissible}
         draggable={draggable}
         maxHeight={maxHeight}
-        edgeToEdgeFullScreen={edgeToEdgeFullScreen}
         scrollable={scrollable}
         pageSizing={pageSizing}
         insetAdjustment={insetAdjustment}

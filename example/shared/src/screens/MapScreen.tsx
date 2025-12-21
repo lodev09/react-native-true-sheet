@@ -97,10 +97,8 @@ const MapScreenInner = ({
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={1}
-        initialDetentAnimated={false}
         dimmedDetentIndex={1}
         dismissible={false}
-        edgeToEdgeFullScreen
         style={styles.content}
         backgroundColor={Platform.select({ ios: undefined, default: DARK })}
         onLayout={(e: LayoutChangeEvent) => {

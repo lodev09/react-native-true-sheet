@@ -378,15 +378,6 @@ export interface TrueSheetProps extends ViewProps {
   maxHeight?: number;
 
   /**
-   * Allows the sheet to extend behind the status bar when fully expanded in edge-to-edge mode.
-   * When false (default), the sheet stops at the bottom of the status bar.
-   *
-   * @platform android
-   * @default false
-   */
-  edgeToEdgeFullScreen?: boolean;
-
-  /**
    * Controls how the sheet adjusts its height for system insets (safe area).
    *
    * - `'automatic'`: Adds the bottom safe area inset to the sheet height,
