@@ -10,9 +10,11 @@ jobs:
   check-repro:
     runs-on: ubuntu-latest
     if: >
-      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs repro') ||
-      (github.event_name == 'issues' && github.event.action != 'labeled') ||
-      github.event_name == 'issue_comment'
+      github.event.issue.pull_request == null && (
+        (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs repro') ||
+        (github.event_name == 'issues' && github.event.action != 'labeled') ||
+        github.event_name == 'issue_comment'
+      )
     permissions:
       issues: write
     steps:
