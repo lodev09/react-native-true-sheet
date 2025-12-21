@@ -638,6 +638,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       post { setStateForDetentIndex(currentDetentIndex) }
     } else {
       setStateForDetentIndex(currentDetentIndex)
+      emitChangePositionDelegate(getExpectedSheetTop(currentDetentIndex))
       updateDimAmount()
       finishPresent()
     }
@@ -706,20 +707,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val maxAvailableHeight = realScreenHeight - topInset
 
-    val peekHeight = detentCalculator.getDetentHeight(detents[0])
+    val peekHeight = minOf(detentCalculator.getDetentHeight(detents[0]), maxAvailableHeight)
 
     val halfExpandedDetentHeight = when (detents.size) {
       1 -> peekHeight
       else -> detentCalculator.getDetentHeight(detents[1])
     }
 
-    val maxDetentHeight = detentCalculator.getDetentHeight(detents.last())
+    val maxDetentHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
 
     val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
     val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
       .coerceIn(0f, 0.999f)
 
-    val expandedOffset = maxOf(topInset, realScreenHeight - maxDetentHeight)
+    val expandedOffset = realScreenHeight - maxDetentHeight
 
     // fitToContents works better with <= 2 detents when no expanded offset
     val fitToContents = detents.size < 3 && expandedOffset == 0
