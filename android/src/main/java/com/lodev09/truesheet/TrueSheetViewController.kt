@@ -882,9 +882,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupKeyboardObserver() {
-    val sheet = sheetView ?: return
+    val coordinator = coordinatorLayout ?: return
     cleanupKeyboardObserver()
-    keyboardObserver = TrueSheetKeyboardObserver(sheet, reactContext).apply {
+    keyboardObserver = TrueSheetKeyboardObserver(coordinator, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
