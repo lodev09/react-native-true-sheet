@@ -214,17 +214,6 @@ Navigate directly from sheets - they remain visible when presenting modals on to
 navigation.navigate('SomeScreen')
 ```
 
-### Focus Events
-
-Respond when sheets lose/regain focus due to modals:
-
-```tsx
-<TrueSheet
-  onDidBlur={() => console.log('Lost focus')}
-  onDidFocus={() => console.log('Regained focus')}
->
-```
-
 ### Presenting on Screen Focus
 
 When using `useFocusEffect`, delay presentation to avoid iOS issues:

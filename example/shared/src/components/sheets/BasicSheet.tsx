@@ -2,7 +2,7 @@ import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'rea
 import { StyleSheet } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
+import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -96,7 +96,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       footer={<Footer />}
       {...rest}
     >
-      {Array.from({ length: contentCount }, (_, i) => (
+      {times(contentCount, (i) => (
         <DemoContent key={i} color={DARK_BLUE} />
       ))}
       <Input />

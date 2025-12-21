@@ -72,8 +72,10 @@ TrueSheet's blur effect props work seamlessly with Liquid Glass on iOS 26+. You 
 ```tsx
 <TrueSheet
   blurTint="system-material"
-  blurIntensity={80}
-  blurInteraction={false}
+  blurOptions={{
+    intensity: 80,
+    interaction: false
+  }}
 />
 ```
 
