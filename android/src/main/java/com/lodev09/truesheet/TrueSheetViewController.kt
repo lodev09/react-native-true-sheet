@@ -29,7 +29,7 @@ import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayoutDelegate
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
-import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
+import com.lodev09.truesheet.core.TrueSheetDetentCalculatorDelegate
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -77,7 +77,7 @@ interface TrueSheetViewControllerDelegate {
 class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   RootView,
-  TrueSheetDetentMeasurements,
+  TrueSheetDetentCalculatorDelegate,
   TrueSheetDimViewDelegate,
   TrueSheetCoordinatorLayoutDelegate,
   TrueSheetBottomSheetViewDelegate {
@@ -108,8 +108,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var delegate: TrueSheetViewControllerDelegate? = null
 
   // CoordinatorLayout components (replaces DialogFragment)
+  internal var sheetView: TrueSheetBottomSheetView? = null
   private var coordinatorLayout: TrueSheetCoordinatorLayout? = null
-  private var sheetView: TrueSheetBottomSheetView? = null
   private var dimView: TrueSheetDimView? = null
   private var parentDimView: TrueSheetDimView? = null
 
@@ -150,7 +150,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
   private var rnScreensObserver: RNScreensFragmentObserver? = null
-  private val detentCalculator = TrueSheetDetentCalculator(this)
+  internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
+    delegate = this@TrueSheetViewController
+  }
 
   // Touch Dispatchers
   internal var eventDispatcher: EventDispatcher? = null
@@ -164,15 +166,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Appearance Configuration
   var dimmed = true
   var dimmedDetentIndex = 0
-  var grabber: Boolean = true
-  var grabberOptions: GrabberOptions? = null
-  var sheetBackgroundColor: Int? = null
+  override var grabber: Boolean = true
+  override var grabberOptions: GrabberOptions? = null
+  override var sheetBackgroundColor: Int? = null
   var insetAdjustment: String = "automatic"
 
-  var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
+  override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
       field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value
-      sheetView?.sheetCornerRadius = field
       if (isPresented) sheetView?.setupBackground()
     }
 
@@ -281,13 +282,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = this@TrueSheetViewController
     }
 
-    // Create bottom sheet view
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
       delegate = this@TrueSheetViewController
-      sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
-      sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
-      grabberEnabled = this@TrueSheetViewController.grabber
-      grabberOptions = this@TrueSheetViewController.grabberOptions
     }
 
     setupModalObserver()
@@ -525,25 +521,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     rnScreensObserver = null
   }
 
+  private fun setSheetVisibility(visible: Boolean) {
+    coordinatorLayout?.visibility = if (visible) VISIBLE else GONE
+    dimViews.forEach { it.visibility = if (visible) VISIBLE else INVISIBLE }
+  }
+
   private fun hideForModal() {
     isSheetVisible = false
     wasHiddenByModal = true
-
-    // Prepare for fast fade out
     dimViews.forEach { it.alpha = 0f }
-
-    coordinatorLayout?.visibility = GONE
-    dimViews.forEach { it.visibility = INVISIBLE }
-
+    setSheetVisibility(false)
     parentSheetView?.viewController?.hideForModal()
   }
 
   private fun showAfterModal() {
     isSheetVisible = true
-
-    coordinatorLayout?.visibility = VISIBLE
-    dimViews.forEach { it.visibility = VISIBLE }
-
+    setSheetVisibility(true)
     updateDimAmount(animated = true)
   }
 
@@ -553,9 +546,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   fun reapplyHiddenState() {
     if (!wasHiddenByModal) return
-
-    coordinatorLayout?.visibility = GONE
-    dimViews.forEach { it.visibility = INVISIBLE }
+    setSheetVisibility(false)
   }
 
   // =============================================================================
@@ -621,24 +612,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun onSheetShow() {
-    val sheet = sheetView ?: return
+    if (sheetView == null) return
 
     emitWillPresentEvents()
 
     setupSheetDetents()
     setupDimmedBackground(currentDetentIndex)
     setupKeyboardObserver()
-
-    // Setup appearance
-    sheet.setupBackground()
-    sheet.setupGrabber()
+    sheetView?.setupBackground()
+    sheetView?.setupGrabber()
 
     if (shouldAnimatePresent) {
       isPresentAnimating = true
       post { setStateForDetentIndex(currentDetentIndex) }
     } else {
       setStateForDetentIndex(currentDetentIndex)
-      emitChangePositionDelegate(getExpectedSheetTop(currentDetentIndex))
+      emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
       updateDimAmount()
       finishPresent()
     }
@@ -778,29 +767,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Grabber & Background
+  // MARK: - Dimmed Background
   // =============================================================================
-
-  fun setupGrabber() {
-    sheetView?.apply {
-      grabberEnabled = this@TrueSheetViewController.grabber
-      grabberOptions = this@TrueSheetViewController.grabberOptions
-      setupGrabber()
-    }
-  }
-
-  fun setupBackground() {
-    sheetView?.apply {
-      sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
-      sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
-      setupBackground()
-    }
-  }
 
   fun setupDimmedBackground(detentIndex: Int) {
     val coordinator = this.coordinatorLayout ?: return
-
-    val shouldDimAtDetent = dimmed && detentIndex >= dimmedDetentIndex
 
     if (dimmed) {
       val parentDimVisible = (parentSheetView?.viewController?.dimView?.alpha ?: 0f) > 0f
@@ -998,11 +969,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
   // MARK: - Detent Helpers
   // =============================================================================
-
-  fun getExpectedSheetTop(detentIndex: Int): Int {
-    if (detentIndex < 0 || detentIndex >= detents.size) return screenHeight
-    return realScreenHeight - detentCalculator.getDetentHeight(detents[detentIndex])
-  }
 
   fun translateSheet(translationY: Int) {
     val sheet = sheetView ?: return

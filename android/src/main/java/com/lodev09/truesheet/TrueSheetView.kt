@@ -165,8 +165,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   fun finalizeUpdates() {
     if (viewController.isPresented) {
-      viewController.setupBackground()
-      viewController.setupGrabber()
+      viewController.sheetView?.setupBackground()
+      viewController.sheetView?.setupGrabber()
       updateSheetIfNeeded()
     }
   }
@@ -316,7 +316,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun updateTranslationForChild(childSheetTop: Int) {
     if (!viewController.isSheetVisible || viewController.isExpanded) return
 
-    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
+    val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
     val newTranslation = maxOf(0, childSheetTop - mySheetTop)
     val additionalTranslation = newTranslation - viewController.currentTranslationY
 
@@ -346,7 +346,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.translateSheet(0)
 
     // Parent should recalculate its translation based on this sheet's position
-    val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
+    val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
     TrueSheetStackManager.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
   }
 

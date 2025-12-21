@@ -14,6 +14,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 interface TrueSheetBottomSheetViewDelegate {
   val isTopmostSheet: Boolean
+  val sheetCornerRadius: Float
+  val sheetBackgroundColor: Int?
+  val grabber: Boolean
+  val grabberOptions: GrabberOptions?
 }
 
 /**
@@ -36,13 +40,6 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // MARK: - Properties
   // =============================================================================
 
-  // Configuration
-  var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
-  var sheetBackgroundColor: Int? = null
-  var grabberEnabled: Boolean = true
-  var grabberOptions: GrabberOptions? = null
-
-  // Reference to the controller for checking state during layout
   var delegate: TrueSheetBottomSheetViewDelegate? = null
 
   // Behavior reference (set after adding to CoordinatorLayout)
@@ -95,24 +92,20 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // =============================================================================
 
   fun setupBackground() {
-    val radius = if (sheetCornerRadius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else sheetCornerRadius
+    val radius = delegate?.sheetCornerRadius ?: DEFAULT_CORNER_RADIUS.dpToPx()
+    val effectiveRadius = if (radius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else radius
 
-    // Rounded corners only on top
     val outerRadii = floatArrayOf(
-      radius,
-      radius, // top-left
-      radius,
-      radius, // top-right
-      0f,
-      0f, // bottom-right
-      0f,
-      0f // bottom-left
+      effectiveRadius, effectiveRadius, // top-left
+      effectiveRadius, effectiveRadius, // top-right
+      0f, 0f, // bottom-right
+      0f, 0f  // bottom-left
     )
 
-    val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
+    val color = delegate?.sheetBackgroundColor ?: getDefaultBackgroundColor()
 
     background = ShapeDrawable(RoundRectShape(outerRadii, null, null)).apply {
-      paint.color = backgroundColor
+      paint.color = color
     }
     clipToOutline = true
   }
@@ -136,17 +129,16 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // =============================================================================
 
   fun setupGrabber() {
-    // Remove existing grabber
     findViewWithTag<View>(GRABBER_TAG)?.let { removeView(it) }
 
+    val isEnabled = delegate?.grabber ?: true
     val isDraggable = behavior?.isDraggable ?: true
-    if (!grabberEnabled || !isDraggable) return
+    if (!isEnabled || !isDraggable) return
 
-    val grabberView = TrueSheetGrabberView(reactContext, grabberOptions).apply {
+    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
       tag = GRABBER_TAG
     }
 
-    // Add grabber at the top of the sheet (index 0)
     addView(grabberView, 0)
   }
 }

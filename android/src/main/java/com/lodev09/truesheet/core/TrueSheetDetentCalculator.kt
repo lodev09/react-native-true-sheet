@@ -1,12 +1,14 @@
 package com.lodev09.truesheet.core
 
 import com.facebook.react.uimanager.PixelUtil.pxToDp
+import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.util.RNLog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /**
  * Provides screen dimensions and content measurements for detent calculations.
  */
-interface TrueSheetDetentMeasurements {
+interface TrueSheetDetentCalculatorDelegate {
   val screenHeight: Int
   val realScreenHeight: Int
   val detents: MutableList<Double>
@@ -19,18 +21,19 @@ interface TrueSheetDetentMeasurements {
 
 /**
  * Handles all detent-related calculations for the bottom sheet.
- * Takes a measurements provider to always read current values.
  */
-class TrueSheetDetentCalculator(private val measurements: TrueSheetDetentMeasurements) {
+class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
 
-  private val screenHeight: Int get() = measurements.screenHeight
-  private val realScreenHeight: Int get() = measurements.realScreenHeight
-  private val detents: List<Double> get() = measurements.detents
-  private val contentHeight: Int get() = measurements.contentHeight
-  private val headerHeight: Int get() = measurements.headerHeight
-  private val contentBottomInset: Int get() = measurements.contentBottomInset
-  private val maxSheetHeight: Int? get() = measurements.maxSheetHeight
-  private val keyboardInset: Int get() = measurements.keyboardInset
+  var delegate: TrueSheetDetentCalculatorDelegate? = null
+
+  private val screenHeight: Int get() = delegate?.screenHeight ?: 0
+  private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
+  private val detents: List<Double> get() = delegate?.detents ?: emptyList()
+  private val contentHeight: Int get() = delegate?.contentHeight ?: 0
+  private val headerHeight: Int get() = delegate?.headerHeight ?: 0
+  private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
+  private val maxSheetHeight: Int? get() = delegate?.maxSheetHeight
+  private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
    * Calculate the height in pixels for a given detent value.
@@ -55,7 +58,10 @@ class TrueSheetDetentCalculator(private val measurements: TrueSheetDetentMeasure
    * Get the expected sheet top position for a detent index.
    */
   fun getSheetTopForDetentIndex(index: Int): Int {
-    if (index < 0 || index >= detents.size) return realScreenHeight
+    if (index < 0 || index >= detents.size) {
+      RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
+      return realScreenHeight
+    }
     return realScreenHeight - getDetentHeight(detents[index])
   }
 
