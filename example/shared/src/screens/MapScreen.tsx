@@ -90,7 +90,7 @@ const MapScreenInner = ({
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
-        onPress={() => sheetRef.current?.present(1, false)}
+        onPress={() => sheetRef.current?.present(1)}
       />
       <ReanimatedTrueSheet
         name="main"

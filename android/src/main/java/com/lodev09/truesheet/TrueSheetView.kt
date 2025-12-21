@@ -46,6 +46,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Initial present configuration (set by ViewManager before mount)
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
+  private var hasInitialPresented: Boolean = false
 
   var stateWrapper: StateWrapper? = null
     set(value) {
@@ -104,7 +105,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       child.delegate = this
       viewController.createSheet()
 
-      if (initialDetentIndex >= 0) {
+      if (initialDetentIndex >= 0 && !hasInitialPresented) {
+        hasInitialPresented = true
         present(initialDetentIndex, initialDetentAnimated) { }
       }
 

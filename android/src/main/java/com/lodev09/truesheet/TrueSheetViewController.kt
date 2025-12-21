@@ -580,7 +580,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupDimmedBackground(detentIndex)
       setStateForDetentIndex(detentIndex)
     } else {
-      Log.d(TAG_NAME, "present ${animated}")
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
@@ -632,13 +631,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheet.setupBackground()
     sheet.setupGrabber()
 
-    Log.d(TAG_NAME, "$shouldAnimatePresent")
-
     if (shouldAnimatePresent) {
       isPresentAnimating = true
       post { setStateForDetentIndex(currentDetentIndex) }
     } else {
       setStateForDetentIndex(currentDetentIndex)
+      updateDimAmount()
       finishPresent()
     }
 
