@@ -2,11 +2,13 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.Outline
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -112,6 +114,12 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
     background = ShapeDrawable(RoundRectShape(outerRadii, null, null)).apply {
       paint.color = color
+    }
+
+    outlineProvider = object : ViewOutlineProvider() {
+      override fun getOutline(view: View, outline: Outline) {
+        outline.setRoundRect(0, 0, view.width, view.height, effectiveRadius)
+      }
     }
     clipToOutline = true
   }
