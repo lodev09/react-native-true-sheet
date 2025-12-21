@@ -190,6 +190,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (isPresented) sheetView?.setupGrabber()
     }
 
+  val isDimmedAtCurrentDetent: Boolean
+    get() = dimmed && currentDetentIndex >= dimmedDetentIndex
+
   // =============================================================================
   // MARK: - Computed Properties
   // =============================================================================
@@ -364,19 +367,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun dimViewDidTap() {
-    val hostView = delegate as? TrueSheetView
-    if (hostView == null) {
-      RNLog.e(reactContext, "TrueSheet: Expected delegate to be TrueSheetView")
+    val hostView = delegate as? TrueSheetView ?: return
+
+    val children = TrueSheetStackManager.getSheetsAbove(hostView)
+    val topmostChild = children.firstOrNull()?.viewController
+
+    // If topmost child is dimmed, only handle that child
+    if (topmostChild?.isDimmedAtCurrentDetent == true) {
+      if (topmostChild.dismissible) {
+        topmostChild.dismiss(animated = true)
+      }
       return
     }
 
-    // If there's a child sheet on top, handle it instead
-    val topmostChild = TrueSheetStackManager.getSheetsAbove(hostView).firstOrNull()
-    if (topmostChild != null) {
-      if (topmostChild.viewController.dismissible) {
-        topmostChild.viewController.dismiss(animated = true)
-      }
-      return
+    // Pass through to parent - dismiss all if possible
+    val allDismissible = dismissible && children.all { it.viewController.dismissible }
+    if (allDismissible) {
+      children.forEach { it.viewController.dismiss(animated = true) }
     }
 
     dismissOrCollapseToLowest()
@@ -670,7 +677,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun dismissOrCollapseToLowest() {
     if (dismissible) {
       dismiss(animated = true)
-    } else if (parentSheetView == null && dimmedDetentIndex > 0) {
+    } else if (parentSheetView == null && isDimmedAtCurrentDetent && dimmedDetentIndex > 0) {
       setStateForDetentIndex(dimmedDetentIndex - 1)
     }
   }
