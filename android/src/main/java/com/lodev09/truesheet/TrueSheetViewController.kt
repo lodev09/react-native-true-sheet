@@ -26,7 +26,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
+import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
+import com.lodev09.truesheet.core.TrueSheetCoordinatorLayoutDelegate
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
 import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
 import com.lodev09.truesheet.core.TrueSheetDialogObserver
@@ -78,7 +80,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   RootView,
   TrueSheetDetentMeasurements,
   TrueSheetDimViewDelegate,
-  TrueSheetCoordinatorLayout.Delegate {
+  TrueSheetCoordinatorLayoutDelegate,
+  TrueSheetBottomSheetViewDelegate {
 
   companion object {
     const val TAG_NAME = "TrueSheet"
@@ -251,7 +254,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val currentTranslationY: Int
     get() = sheetView?.translationY?.toInt() ?: 0
 
-  private val isTopmostSheet: Boolean
+  override val isTopmostSheet: Boolean
     get() {
       val hostView = delegate as? TrueSheetView ?: return true
       return TrueSheetDialogObserver.isTopmostSheet(hostView)
@@ -282,6 +285,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Create bottom sheet view
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
+      delegate = this@TrueSheetViewController
       sheetCornerRadius = this@TrueSheetViewController.sheetCornerRadius
       sheetBackgroundColor = this@TrueSheetViewController.sheetBackgroundColor
       grabberEnabled = this@TrueSheetViewController.grabber

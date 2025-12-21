@@ -7,6 +7,10 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 
+interface TrueSheetCoordinatorLayoutDelegate {
+  fun coordinatorLayoutDidLayout(changed: Boolean)
+}
+
 /**
  * Custom CoordinatorLayout that hosts the bottom sheet and dim view.
  * Implements ReactPointerEventsView to allow touch events to pass through
@@ -17,11 +21,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   CoordinatorLayout(context),
   ReactPointerEventsView {
 
-  interface Delegate {
-    fun coordinatorLayoutDidLayout(changed: Boolean)
-  }
-
-  var delegate: Delegate? = null
+  var delegate: TrueSheetCoordinatorLayoutDelegate? = null
 
   init {
     // Fill the entire screen

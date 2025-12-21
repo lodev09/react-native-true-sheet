@@ -12,6 +12,10 @@ import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
+interface TrueSheetBottomSheetViewDelegate {
+  val isTopmostSheet: Boolean
+}
+
 /**
  * The bottom sheet view that holds the content.
  * This view has BottomSheetBehavior attached via CoordinatorLayout.LayoutParams.
@@ -38,6 +42,9 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   var grabberEnabled: Boolean = true
   var grabberOptions: GrabberOptions? = null
 
+  // Reference to the controller for checking state during layout
+  var delegate: TrueSheetBottomSheetViewDelegate? = null
+
   // Behavior reference (set after adding to CoordinatorLayout)
   val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = (layoutParams as? CoordinatorLayout.LayoutParams)
@@ -51,6 +58,13 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     // Allow content to extend beyond bounds (for footer positioning)
     clipChildren = false
     clipToPadding = false
+  }
+
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    // Skip layout for parent sheets to prevent BottomSheetBehavior from resetting translation
+    if (delegate?.isTopmostSheet == false) return
+
+    super.onLayout(changed, left, top, right, bottom)
   }
 
   // =============================================================================
