@@ -9,13 +9,11 @@
 #import "TrueSheetDetentCalculator.h"
 
 @implementation TrueSheetDetentCalculator {
-  __weak id<TrueSheetDetentMeasurements> _measurements;
   NSMutableArray<NSNumber *> *_resolvedDetentPositions;
 }
 
-- (instancetype)initWithMeasurements:(id<TrueSheetDetentMeasurements>)measurements {
+- (instancetype)init {
   if (self = [super init]) {
-    _measurements = measurements;
     _resolvedDetentPositions = [NSMutableArray array];
   }
   return self;
@@ -24,12 +22,12 @@
 #pragma mark - Public Methods
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
-  NSArray<NSNumber *> *detents = _measurements.detents;
+  NSArray<NSNumber *> *detents = self.delegate.detents;
   if (index >= 0 && index < (NSInteger)detents.count) {
     CGFloat value = [detents[index] doubleValue];
     if (value == -1) {
-      CGFloat autoHeight = [_measurements.contentHeight floatValue] + [_measurements.headerHeight floatValue];
-      return autoHeight / _measurements.screenHeight;
+      CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue];
+      return autoHeight / self.delegate.screenHeight;
     }
     return value;
   }
@@ -46,7 +44,7 @@
     return storedPos;
   }
 
-  CGFloat screenHeight = _measurements.screenHeight;
+  CGFloat screenHeight = self.delegate.screenHeight;
   CGFloat detentValue = [self detentValueForIndex:index];
   CGFloat basePosition = screenHeight - (detentValue * screenHeight);
 
@@ -66,7 +64,7 @@
 
 - (void)storeResolvedPositionForIndex:(NSInteger)index {
   if (index >= 0 && index < (NSInteger)_resolvedDetentPositions.count) {
-    _resolvedDetentPositions[index] = @(_measurements.currentPosition);
+    _resolvedDetentPositions[index] = @(self.delegate.currentPosition);
   }
 }
 
@@ -78,7 +76,7 @@
     return NO;
   }
 
-  CGFloat screenHeight = _measurements.screenHeight;
+  CGFloat screenHeight = self.delegate.screenHeight;
   CGFloat firstPos = [self estimatedPositionForIndex:0];
 
   // Above first detent - interpolating toward closed

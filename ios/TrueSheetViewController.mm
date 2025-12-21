@@ -65,7 +65,8 @@
 
     _blurInteraction = YES;
     _insetAdjustment = @"automatic";
-    _detentCalculator = [[TrueSheetDetentCalculator alloc] initWithMeasurements:self];
+    _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
+    _detentCalculator.delegate = self;
   }
   return self;
 }

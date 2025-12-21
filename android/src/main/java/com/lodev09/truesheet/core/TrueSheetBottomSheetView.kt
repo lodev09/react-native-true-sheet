@@ -96,10 +96,14 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     val effectiveRadius = if (radius < 0) DEFAULT_CORNER_RADIUS.dpToPx() else radius
 
     val outerRadii = floatArrayOf(
-      effectiveRadius, effectiveRadius, // top-left
-      effectiveRadius, effectiveRadius, // top-right
-      0f, 0f, // bottom-right
-      0f, 0f  // bottom-left
+      effectiveRadius,
+      effectiveRadius, // top-left
+      effectiveRadius,
+      effectiveRadius, // top-right
+      0f,
+      0f, // bottom-right
+      0f,
+      0f // bottom-left
     )
 
     val color = delegate?.sheetBackgroundColor ?: getDefaultBackgroundColor()

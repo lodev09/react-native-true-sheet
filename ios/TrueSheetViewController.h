@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "core/TrueSheetDetentCalculator.h"
 
 #if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
 #import <RNScreens/RNSDismissibleModalProtocol.h>
@@ -40,10 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@protocol TrueSheetDetentMeasurements;
-
 @interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate,
-                                       TrueSheetDetentMeasurements
+                                       TrueSheetDetentCalculatorDelegate
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
                                        ,
                                        RNSDismissibleModalProtocol

@@ -60,7 +60,9 @@ object TrueSheetStackManager {
       // Post to ensure layout is complete before reading position
       sheetView.viewController.post {
         val childMinSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(0)
-        val childCurrentSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(sheetView.viewController.currentDetentIndex)
+        val childCurrentSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(
+          sheetView.viewController.currentDetentIndex
+        )
         // Cap to minimum detent position
         val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
         parentSheet.updateTranslationForChild(childSheetTop)

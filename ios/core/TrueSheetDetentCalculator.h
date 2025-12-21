@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
  Protocol that provides dynamic measurements for detent calculations.
  Implemented by TrueSheetViewController to supply real-time values.
  */
-@protocol TrueSheetDetentMeasurements <NSObject>
+@protocol TrueSheetDetentCalculatorDelegate <NSObject>
 
 @property (nonatomic, readonly) CGFloat screenHeight;
 @property (nonatomic, readonly) CGFloat currentPosition;
@@ -26,11 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Encapsulates all detent-related calculations for the sheet.
- Uses the TrueSheetDetentMeasurements protocol to read dynamic values.
  */
 @interface TrueSheetDetentCalculator : NSObject
 
-- (instancetype)initWithMeasurements:(id<TrueSheetDetentMeasurements>)measurements;
+@property (nonatomic, weak, nullable) id<TrueSheetDetentCalculatorDelegate> delegate;
 
 /**
  Returns the detent value (0-1 fraction) for a given index.
