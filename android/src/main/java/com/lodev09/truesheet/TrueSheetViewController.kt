@@ -30,7 +30,7 @@ import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayoutDelegate
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
 import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
-import com.lodev09.truesheet.core.TrueSheetDialogObserver
+import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -256,7 +256,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val isTopmostSheet: Boolean
     get() {
       val hostView = delegate as? TrueSheetView ?: return true
-      return TrueSheetDialogObserver.isTopmostSheet(hostView)
+      return TrueSheetStackManager.isTopmostSheet(hostView)
     }
 
   private val dimViews: List<TrueSheetDimView>
@@ -374,7 +374,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // If there's a child sheet on top, dismiss it instead
     val hostView = delegate as? TrueSheetView
     if (hostView != null) {
-      val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(hostView)
+      val sheetsAbove = TrueSheetStackManager.getSheetsAbove(hostView)
       val topmostChild = sheetsAbove.firstOrNull()
       if (topmostChild != null && topmostChild.viewController.dismissible) {
         topmostChild.viewController.dismiss(animated = true)

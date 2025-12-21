@@ -6,7 +6,7 @@ import com.lodev09.truesheet.TrueSheetView
  * Manages TrueSheet stacking behavior.
  * Tracks presented sheets and handles visibility when sheets stack on top of each other.
  */
-object TrueSheetDialogObserver {
+object TrueSheetStackManager {
 
   private val presentedSheetStack = mutableListOf<TrueSheetView>()
 

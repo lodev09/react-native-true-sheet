@@ -2,9 +2,10 @@
 
 ## Rules
 
-1. I will do builds and UI test myself.
+1. YOU MUST NOT do builds unless you are told to.
 2. YOU MUST NOT commit changes yourself until I explicitly tell you to.
 3. YOU MUST NOT create summary documents unless you are told to.
+4. YOU MUST NOT add code comments that are obvious.
 
 ## Project Overview
 
@@ -31,20 +32,28 @@ src/
 │   ├── ReanimatedTrueSheet.web.tsx
 │   ├── ReanimatedTrueSheetProvider.tsx
 │   ├── useReanimatedPositionChangeHandler.ts
-│   └── useReanimatedPositionChangeHandler.web.ts
+│   ├── useReanimatedPositionChangeHandler.web.ts
+│   └── index.ts
 ├── navigation/                # React Navigation integration
 │   ├── createTrueSheetNavigator.tsx
 │   ├── TrueSheetRouter.ts
 │   ├── TrueSheetView.tsx
 │   ├── useTrueSheetNavigation.ts
 │   ├── types.ts
+│   ├── index.ts
 │   └── screen/                # Screen components for navigator
 │       ├── TrueSheetScreen.tsx
 │       ├── ReanimatedTrueSheetScreen.tsx
 │       ├── useSheetScreenState.ts
-│       └── types.ts
+│       ├── types.ts
+│       └── index.ts
 ├── mocks/                     # Testing mocks
+│   ├── navigation.ts
+│   ├── reanimated.ts
+│   └── index.ts
 ├── __tests__/                 # Unit tests
+│   ├── TrueSheet.test.tsx
+│   └── TrueSheetMocks.test.tsx
 ├── TrueSheet.tsx              # Main React component
 ├── TrueSheet.web.tsx          # Web implementation
 ├── TrueSheetProvider.tsx
@@ -93,7 +102,7 @@ android/src/main/java/com/lodev09/truesheet/
 │   ├── TrueSheetBottomSheetView.kt
 │   ├── TrueSheetCoordinatorLayout.kt
 │   ├── TrueSheetDetentCalculator.kt
-│   ├── TrueSheetDialogObserver.kt
+│   ├── TrueSheetStackManager.kt
 │   ├── TrueSheetDimView.kt
 │   ├── TrueSheetGrabberView.kt
 │   ├── TrueSheetKeyboardObserver.kt

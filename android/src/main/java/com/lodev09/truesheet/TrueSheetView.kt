@@ -15,7 +15,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.TrueSheetDialogObserver
+import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
 
 /**
@@ -147,7 +147,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
     TrueSheetModule.unregisterView(id)
-    TrueSheetDialogObserver.removeSheet(this)
+    TrueSheetStackManager.removeSheet(this)
 
     if (viewController.isPresented) {
       viewController.dismiss()
@@ -255,7 +255,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
     if (!viewController.isPresented) {
       // Register with observer to track sheet stack hierarchy
-      viewController.parentSheetView = TrueSheetDialogObserver.onSheetWillPresent(this, detentIndex)
+      viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
     }
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
@@ -266,7 +266,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // iOS-like behavior: calling dismiss on a presenting controller dismisses
     // its presented controller (and everything above it), but NOT itself.
     // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
-    val sheetsAbove = TrueSheetDialogObserver.getSheetsAbove(this)
+    val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
     if (sheetsAbove.isNotEmpty()) {
       for (sheet in sheetsAbove) {
         sheet.viewController.dismiss(animated)
@@ -302,7 +302,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.post {
       isSheetUpdatePending = false
       viewController.setupSheetDetentsForSizeChange()
-      TrueSheetDialogObserver.onSheetSizeChanged(this)
+      TrueSheetStackManager.onSheetSizeChanged(this)
     }
   }
 
@@ -324,7 +324,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Propagate any additional translation up the stack
     if (additionalTranslation > 0) {
-      TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(additionalTranslation)
+      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation)
     }
   }
 
@@ -335,7 +335,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isExpanded) return
 
     viewController.translateSheet(viewController.currentTranslationY + amount)
-    TrueSheetDialogObserver.getParentSheet(this)?.addTranslation(amount)
+    TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount)
   }
 
   /**
@@ -347,7 +347,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Parent should recalculate its translation based on this sheet's position
     val mySheetTop = viewController.getExpectedSheetTop(viewController.currentDetentIndex)
-    TrueSheetDialogObserver.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
+    TrueSheetStackManager.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
   }
 
   // ==================== TrueSheetViewControllerDelegate ====================
@@ -379,7 +379,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    TrueSheetDialogObserver.onSheetDidDismiss(this, hadParent)
+    TrueSheetStackManager.onSheetDidDismiss(this, hadParent)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {

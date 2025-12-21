@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.interfaces.TurboModule
 import com.facebook.react.uimanager.UIManagerHelper
-import com.lodev09.truesheet.core.TrueSheetDialogObserver
+import com.lodev09.truesheet.core.TrueSheetStackManager
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -28,7 +28,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
     synchronized(viewRegistry) {
       viewRegistry.clear()
     }
-    TrueSheetDialogObserver.clear()
+    TrueSheetStackManager.clear()
   }
 
   /**
