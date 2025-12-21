@@ -97,7 +97,6 @@ const MapScreenInner = ({
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={1}
-        // initialDetentAnimated={false}
         dimmedDetentIndex={1}
         dismissible={false}
         style={styles.content}

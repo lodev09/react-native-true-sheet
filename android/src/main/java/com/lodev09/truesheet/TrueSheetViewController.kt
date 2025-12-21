@@ -30,11 +30,11 @@ import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayoutDelegate
 import com.lodev09.truesheet.core.TrueSheetDetentCalculator
 import com.lodev09.truesheet.core.TrueSheetDetentMeasurements
-import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
+import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.ScreenUtils
 
 // =============================================================================
