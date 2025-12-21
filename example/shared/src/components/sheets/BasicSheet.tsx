@@ -55,7 +55,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       name="basic"
       ref={sheetRef}
       style={styles.content}
-      backgroundColor="transparent"
       onDragChange={(e) =>
         console.log(
           `drag changed at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`

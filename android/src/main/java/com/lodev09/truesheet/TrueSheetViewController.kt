@@ -2,7 +2,6 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -891,9 +890,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     keyboardObserver = TrueSheetKeyboardObserver(coordinator, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
+          isKeyboardTransitioning = true
           if (!shouldHandleKeyboard()) return
           detentIndexBeforeKeyboard = currentDetentIndex
-          isKeyboardTransitioning = true
           setupSheetDetents()
           setStateForDetentIndex(detents.size - 1)
         }
@@ -908,7 +907,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardDidHide() {
-          if (!shouldHandleKeyboard()) return
           isKeyboardTransitioning = false
         }
 

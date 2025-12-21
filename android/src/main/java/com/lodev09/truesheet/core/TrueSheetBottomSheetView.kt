@@ -60,11 +60,13 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     clipToPadding = false
   }
 
-  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-    // Skip layout for parent sheets to prevent BottomSheetBehavior from resetting translation
-    if (delegate?.isTopmostSheet == false) return
-
-    super.onLayout(changed, left, top, right, bottom)
+  override fun setTranslationY(translationY: Float) {
+    // Skip resetting translation to 0 for parent sheets (non-topmost)
+    // This prevents keyboard inset animations from resetting parent sheet translation
+    if (delegate?.isTopmostSheet == false && translationY == 0f && this.translationY != 0f) {
+      return
+    }
+    super.setTranslationY(translationY)
   }
 
   // =============================================================================
@@ -97,10 +99,14 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
     // Rounded corners only on top
     val outerRadii = floatArrayOf(
-      radius, radius,  // top-left
-      radius, radius,  // top-right
-      0f, 0f,          // bottom-right
-      0f, 0f           // bottom-left
+      radius,
+      radius, // top-left
+      radius,
+      radius, // top-right
+      0f,
+      0f, // bottom-right
+      0f,
+      0f // bottom-left
     )
 
     val backgroundColor = sheetBackgroundColor ?: getDefaultBackgroundColor()
