@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -84,6 +85,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       CoordinatorLayout.LayoutParams.MATCH_PARENT
     ).apply {
       this.behavior = behavior
+      this.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
     }
   }
 
