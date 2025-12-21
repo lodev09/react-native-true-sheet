@@ -88,6 +88,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
+    private const val MODAL_FADE_DURATION = 150L
   }
 
   // =============================================================================
@@ -534,14 +535,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun hideForModal() {
     isSheetVisible = false
     wasHiddenByModal = true
-    dimViews.forEach { it.alpha = 0f }
-    setSheetVisibility(false)
-    parentSheetView?.viewController?.hideForModal()
+
+    val sheet = sheetView ?: run {
+      setSheetVisibility(false)
+      parentSheetView?.viewController?.hideForModal()
+      return
+    }
+
+    dimViews.forEach { it.animate().alpha(0f).setDuration(MODAL_FADE_DURATION).start() }
+    sheet.animate()
+      .alpha(0f)
+      .setDuration(MODAL_FADE_DURATION)
+      .withEndAction {
+        setSheetVisibility(false)
+        parentSheetView?.viewController?.hideForModal()
+      }
+      .start()
   }
 
   private fun showAfterModal() {
     isSheetVisible = true
     setSheetVisibility(true)
+    sheetView?.alpha = 1f
     updateDimAmount(animated = true)
   }
 
