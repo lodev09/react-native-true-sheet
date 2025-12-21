@@ -66,8 +66,11 @@ class RNScreensFragmentObserver(
         // Ignore if app is going to background (fragments stop with activity)
         if (!isActivityInForeground) return
 
-        if (activeModalFragments.contains(f)) {
-          if (activeModalFragments.size == 1) {
+        // Only trigger when fragment is being removed (not just stopped for navigation)
+        if (activeModalFragments.contains(f) && f.isRemoving) {
+          activeModalFragments.remove(f)
+
+          if (activeModalFragments.isEmpty()) {
             onModalWillDismiss()
           }
         }
@@ -76,12 +79,8 @@ class RNScreensFragmentObserver(
       override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
         super.onFragmentDestroyed(fm, f)
 
-        if (activeModalFragments.contains(f)) {
-          activeModalFragments.remove(f)
-
-          if (activeModalFragments.isEmpty()) {
-            onModalDidDismiss()
-          }
+        if (activeModalFragments.isEmpty()) {
+          onModalDidDismiss()
         }
       }
     }
