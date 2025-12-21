@@ -534,14 +534,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun hideForModal() {
-    isSheetVisible = false
-    wasHiddenByModal = true
-
     val sheet = sheetView ?: run {
-      setSheetVisibility(false)
-      parentSheetView?.viewController?.hideForModal()
+      RNLog.e(reactContext, "TrueSheet: sheetView is null in hideForModal")
       return
     }
+
+    isSheetVisible = false
+    wasHiddenByModal = true
 
     dimViews.forEach { it.animate().alpha(0f).setDuration(MODAL_FADE_DURATION).start() }
     sheet.animate()
@@ -549,9 +548,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       .setDuration(MODAL_FADE_DURATION)
       .withEndAction {
         setSheetVisibility(false)
-        parentSheetView?.viewController?.hideForModal()
       }
       .start()
+
+    // This will hide parent sheets first
+    parentSheetView?.viewController?.hideForModal()
   }
 
   private fun showAfterModal() {

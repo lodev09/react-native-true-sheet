@@ -192,7 +192,7 @@ const MapScreenInner = ({
             onPress={() => sheetRef.current?.dismiss()}
           />
         </View>
-        <BasicSheet ref={basicSheet} />
+        <BasicSheet ref={basicSheet} onNavigateToModal={onNavigateToModal} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <GestureSheet ref={gestureSheet} />

@@ -334,7 +334,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Recursively adds translation to this sheet and all parent sheets.
    */
   private fun addTranslation(amount: Int) {
-    if (!viewController.isSheetVisible || viewController.isExpanded) return
+    if (viewController.isExpanded) return
 
     viewController.translateSheet(viewController.currentTranslationY + amount)
     TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount)
