@@ -38,32 +38,4 @@ By default, when edge-to-edge is enabled, the sheet respects the status bar and 
 </TrueSheet>
 ```
 
-## Full Screen Mode
-
-If you want the sheet to extend behind the status bar for a true full-screen experience, use the `edgeToEdgeFullScreen` prop:
-
-```tsx {2}
-<TrueSheet
-  edgeToEdgeFullScreen
-  ref={sheet}
->
-  <View />
-</TrueSheet>
-```
-
-When `edgeToEdgeFullScreen` is enabled:
-- ✅ The sheet extends behind the status bar when fully expanded
-- ✅ The footer (if present) still respects the status bar to prevent overlap
-
-:::tip
-Use `edgeToEdgeFullScreen` when you want maximum screen real estate, such as for image galleries or immersive content.
-:::
-
-## Summary
-
-| Prop | Behavior |
-| - | - |
-| Default (no prop) | Sheet stops at status bar bottom |
-| `edgeToEdgeFullScreen` | Sheet extends behind status bar |
-
-Both modes work seamlessly with edge-to-edge enabled and provide automatic status bar detection.
+TrueSheet works seamlessly with edge-to-edge enabled and provides automatic status bar detection.

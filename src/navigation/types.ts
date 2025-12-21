@@ -136,7 +136,6 @@ export type TrueSheetNavigationOptions = Pick<
   | 'blurTint'
   | 'blurOptions'
   | 'maxHeight'
-  | 'edgeToEdgeFullScreen'
   | 'scrollable'
   | 'pageSizing'
   | 'header'

@@ -167,7 +167,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var grabber: Boolean = true
   var grabberOptions: GrabberOptions? = null
   var sheetBackgroundColor: Int? = null
-  var edgeToEdgeFullScreen: Boolean = false
   var insetAdjustment: String = "automatic"
 
   var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
@@ -702,11 +701,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val behavior = this.behavior ?: return
 
     interactionState = InteractionState.Reconfiguring
-    val edgeToEdgeTopInset: Int = if (!edgeToEdgeFullScreen) topInset else 0
 
     behavior.isFitToContents = false
 
-    val maxAvailableHeight = realScreenHeight - edgeToEdgeTopInset
+    val maxAvailableHeight = realScreenHeight - topInset
 
     val peekHeight = detentCalculator.getDetentHeight(detents[0])
 
@@ -721,7 +719,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
       .coerceIn(0f, 0.999f)
 
-    val expandedOffset = maxOf(edgeToEdgeTopInset, realScreenHeight - maxDetentHeight)
+    val expandedOffset = maxOf(topInset, realScreenHeight - maxDetentHeight)
 
     // fitToContents works better with <= 2 detents when no expanded offset
     val fitToContents = detents.size < 3 && expandedOffset == 0

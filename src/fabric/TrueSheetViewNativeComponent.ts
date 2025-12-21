@@ -62,7 +62,6 @@ export interface NativeProps extends ViewProps {
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
   initialDetentAnimated?: WithDefault<boolean, true>;
-  edgeToEdgeFullScreen?: WithDefault<boolean, false>;
   scrollable?: WithDefault<boolean, false>;
   pageSizing?: WithDefault<boolean, true>;
 

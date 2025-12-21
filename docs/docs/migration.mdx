@@ -33,7 +33,7 @@ Several props have been renamed for better clarity:
 | `initialIndexAnimated` | `initialDetentAnimated` |
 | `contentContainerStyle` | _(removed - no longer needed)_ |
 | `FooterComponent` | `footer` |
-| `edgeToEdge` | `edgeToEdgeFullScreen` |
+| `edgeToEdge` | _(removed)_ |
 | `onPresent` | `onDidPresent` |
 | `onDismiss` | `onDidDismiss` |
 | `onSizeChange` | `onDetentChange` |
@@ -61,7 +61,6 @@ Several props have been renamed for better clarity:
   initialDetentIndex={1}
   initialDetentAnimated={false}
   footer={<MyFooter />}
-  edgeToEdgeFullScreen
   onDidPresent={(e) => console.log(e.nativeEvent)}
   onDidDismiss={() => console.log('dismissed')}
   onDetentChange={(e) => console.log(e.nativeEvent)}
@@ -221,13 +220,7 @@ In v2, setting `blurTint` would completely override the `backgroundColor`. In v3
 
 ### 1. Automatic Edge-to-Edge Detection (Android)
 
-TrueSheet now automatically detects and adapts to Android's edge-to-edge display mode. By default, the sheet respects the status bar when fully expanded.
-
-For a true full-screen experience where the sheet extends behind the status bar, use the new `edgeToEdgeFullScreen` prop:
-
-```tsx
-<TrueSheet edgeToEdgeFullScreen />
-```
+TrueSheet now automatically detects and adapts to Android's edge-to-edge display mode. The sheet respects the status bar when fully expanded.
 
 :::info
 This feature is **Android-only** and requires React Native 0.81+ with `edgeToEdgeEnabled=true` in your `android/gradle.properties`.
@@ -441,7 +434,7 @@ See the [React Navigation guide](/guides/navigation) for more details.
    - Replace `initialIndex` with `initialDetentIndex`
    - Replace `initialIndexAnimated` with `initialDetentAnimated`
    - Replace `FooterComponent` with `footer`
-   - Replace `edgeToEdge` with `edgeToEdgeFullScreen`
+   - Remove `edgeToEdge` prop (no longer needed)
    - Replace `onPresent` with `onDidPresent`
    - Replace `onDismiss` with `onDidDismiss`
    - Replace `onSizeChange` with `onDetentChange`

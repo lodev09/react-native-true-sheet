@@ -183,11 +183,6 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
-  @ReactProp(name = "edgeToEdgeFullScreen", defaultBoolean = false)
-  override fun setEdgeToEdgeFullScreen(view: TrueSheetView, edgeToEdgeFullScreen: Boolean) {
-    view.setEdgeToEdgeFullScreen(edgeToEdgeFullScreen)
-  }
-
   @ReactProp(name = "insetAdjustment")
   override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
     view.setInsetAdjustment(insetAdjustment ?: "automatic")
