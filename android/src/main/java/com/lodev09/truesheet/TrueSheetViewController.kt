@@ -336,9 +336,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     backCallback = object : OnBackPressedCallback(true) {
       override fun handleOnBackPressed() {
         delegate?.viewControllerDidBackPress()
-        if (dismissible) {
-          dismiss(animated = true)
-        }
+        dismissOrCollapseToLowest()
       }
     }
 
@@ -381,11 +379,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    if (dismissible) {
-      dismiss(animated = true)
-    } else if (parentSheetView == null && currentDetentIndex > 0) {
-      setStateForDetentIndex(0)
-    }
+    dismissOrCollapseToLowest()
   }
 
   // =============================================================================
@@ -670,6 +664,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     } else {
       emitChangePositionDelegate(realScreenHeight)
       finishDismiss()
+    }
+  }
+
+  private fun dismissOrCollapseToLowest() {
+    if (dismissible) {
+      dismiss(animated = true)
+    } else if (parentSheetView == null && dimmedDetentIndex > 0) {
+      setStateForDetentIndex(dimmedDetentIndex - 1)
     }
   }
 
