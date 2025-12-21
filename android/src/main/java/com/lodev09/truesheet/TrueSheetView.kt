@@ -309,12 +309,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Sheet Stack Translation ====================
 
   /**
-   * Updates this sheet's translation based on its child sheet's position.
-   * When a child sheet is presented, parent sheets slide down to create a stacked appearance.
+   * Updates this sheet's translation and disables dragging when a child sheet is presented.
+   * Parent sheets slide down to create a stacked appearance.
    * Propagates additional translation to parent so the entire stack stays visually consistent.
    */
   fun updateTranslationForChild(childSheetTop: Int) {
     if (!viewController.isSheetVisible || viewController.isExpanded) return
+
+    viewController.sheetView?.behavior?.isDraggable = false
 
     val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
     val newTranslation = maxOf(0, childSheetTop - mySheetTop)
@@ -339,10 +341,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   /**
-   * Resets this sheet's translation and updates parent sheets.
-   * This sheet resets to 0 (it's now topmost), but parent recalculates based on this sheet's position.
+   * Resets this sheet's translation and restores dragging when it becomes topmost.
+   * Parent recalculates its translation based on this sheet's position.
    */
   fun resetTranslation() {
+    viewController.sheetView?.behavior?.isDraggable = viewController.draggable
     viewController.translateSheet(0)
 
     // Parent should recalculate its translation based on this sheet's position
