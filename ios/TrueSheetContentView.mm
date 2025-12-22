@@ -14,6 +14,7 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
 
@@ -128,6 +129,9 @@ using namespace facebook::react;
 
 - (RCTScrollViewComponentView *)findScrollViewInSubviews:(NSArray<UIView *> *)subviews {
   for (UIView *subview in subviews) {
+    if ([subview isKindOfClass:TrueSheetView.class]) {
+      continue;
+    }
     if ([subview isKindOfClass:RCTScrollViewComponentView.class]) {
       return (RCTScrollViewComponentView *)subview;
     }
@@ -161,7 +165,7 @@ using namespace facebook::react;
     CGFloat closestDistance = CGFLOAT_MAX;
 
     for (UIView *sibling in self.subviews) {
-      if (sibling == scrollView) {
+      if (sibling == scrollView || [sibling isKindOfClass:TrueSheetView.class]) {
         continue;
       }
 
