@@ -24,6 +24,7 @@ class RNScreensFragmentObserver(
   private var activityLifecycleObserver: DefaultLifecycleObserver? = null
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
   private var isActivityInForeground = true
+  private var pendingDismissRunnable: Runnable? = null
 
   /**
    * Start observing fragment lifecycle events.
@@ -52,6 +53,9 @@ class RNScreensFragmentObserver(
         if (!isActivityInForeground) return
 
         if (isModalFragment(f) && !activeModalFragments.contains(f)) {
+          // Cancel any pending dismiss since a modal is being presented
+          cancelPendingDismiss()
+
           activeModalFragments.add(f)
 
           if (activeModalFragments.size == 1) {
@@ -71,7 +75,8 @@ class RNScreensFragmentObserver(
           activeModalFragments.remove(f)
 
           if (activeModalFragments.isEmpty()) {
-            onModalWillDismiss()
+            // Post dismiss to allow fragment attach to cancel if navigation is happening
+            schedulePendingDismiss()
           }
         }
       }
@@ -79,7 +84,7 @@ class RNScreensFragmentObserver(
       override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
         super.onFragmentDestroyed(fm, f)
 
-        if (activeModalFragments.isEmpty()) {
+        if (activeModalFragments.isEmpty() && pendingDismissRunnable == null) {
           onModalDidDismiss()
         }
       }
@@ -94,6 +99,8 @@ class RNScreensFragmentObserver(
   fun stop() {
     val activity = reactContext.currentActivity as? AppCompatActivity
 
+    cancelPendingDismiss()
+
     fragmentLifecycleCallback?.let { callback ->
       activity?.supportFragmentManager?.unregisterFragmentLifecycleCallbacks(callback)
     }
@@ -105,6 +112,31 @@ class RNScreensFragmentObserver(
     activityLifecycleObserver = null
 
     activeModalFragments.clear()
+  }
+
+  private fun schedulePendingDismiss() {
+    val activity = reactContext.currentActivity ?: return
+    val decorView = activity.window?.decorView ?: return
+
+    cancelPendingDismiss()
+
+    pendingDismissRunnable = Runnable {
+      pendingDismissRunnable = null
+      if (activeModalFragments.isEmpty()) {
+        onModalWillDismiss()
+      }
+    }
+    decorView.post(pendingDismissRunnable)
+  }
+
+  private fun cancelPendingDismiss() {
+    val activity = reactContext.currentActivity ?: return
+    val decorView = activity.window?.decorView ?: return
+
+    pendingDismissRunnable?.let {
+      decorView.removeCallbacks(it)
+      pendingDismissRunnable = null
+    }
   }
 
   companion object {
