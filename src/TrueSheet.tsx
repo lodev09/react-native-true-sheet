@@ -359,7 +359,9 @@ export class TrueSheet
       children,
       style,
       header,
+      headerStyle,
       footer,
+      footerStyle,
       insetAdjustment = 'automatic',
       ...rest
     } = this.props;
@@ -431,7 +433,7 @@ export class TrueSheet
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={containerStyle}>
             {header && (
-              <TrueSheetHeaderViewNativeComponent style={styles.header}>
+              <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
@@ -439,7 +441,7 @@ export class TrueSheet
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
-              <TrueSheetFooterViewNativeComponent style={styles.footer}>
+              <TrueSheetFooterViewNativeComponent style={[styles.footer, footerStyle]}>
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}

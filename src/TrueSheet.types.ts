@@ -1,5 +1,11 @@
 import type { ComponentType, ReactElement } from 'react';
-import type { ColorValue, NativeSyntheticEvent, ViewProps } from 'react-native';
+import type {
+  ColorValue,
+  NativeSyntheticEvent,
+  StyleProp,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
 
 export interface DetentInfoEventPayload {
   /**
@@ -400,9 +406,19 @@ export interface TrueSheetProps extends ViewProps {
   header?: ComponentType<unknown> | ReactElement;
 
   /**
+   * Style for the header container.
+   */
+  headerStyle?: StyleProp<ViewStyle>;
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   footer?: ComponentType<unknown> | ReactElement;
+
+  /**
+   * Style for the footer container.
+   */
+  footerStyle?: StyleProp<ViewStyle>;
 
   /**
    * On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space.

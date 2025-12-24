@@ -76,7 +76,9 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     grabberOptions,
     maxHeight,
     header,
+    headerStyle,
     footer,
+    footerStyle,
     onMount,
     onWillPresent,
     onDidPresent,
@@ -323,12 +325,15 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     () =>
       footer
         ? (footerProps: BottomSheetFooterProps) => (
-            <BottomSheetFooter style={styles.footer} {...footerProps}>
+            <BottomSheetFooter
+              style={StyleSheet.flatten([styles.footer, footerStyle])}
+              {...footerProps}
+            >
               {renderSlot(footer)}
             </BottomSheetFooter>
           )
         : undefined,
-    [footer]
+    [footer, footerStyle]
   );
 
   // For scrollable, we render the child directly
@@ -412,7 +417,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 
   const sheetContent = (
     <ContainerComponent>
-      {renderSlot(header)}
+      {header && <View style={headerStyle}>{renderSlot(header)}</View>}
       {scrollable ? children : <View style={style}>{children}</View>}
     </ContainerComponent>
   );
