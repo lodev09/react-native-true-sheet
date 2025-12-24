@@ -431,6 +431,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
+    boxShadow: '0px -2px 16px 0px rgba(9, 10, 9, 0.08)',
   },
   handle: {
     position: 'absolute',
