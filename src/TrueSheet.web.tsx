@@ -323,7 +323,9 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     () =>
       footer
         ? (footerProps: BottomSheetFooterProps) => (
-            <BottomSheetFooter {...footerProps}>{renderSlot(footer)}</BottomSheetFooter>
+            <BottomSheetFooter style={styles.footer} {...footerProps}>
+              {renderSlot(footer)}
+            </BottomSheetFooter>
           )
         : undefined,
     [footer]
@@ -472,5 +474,8 @@ const styles = StyleSheet.create({
     zIndex: 999,
     paddingVertical: 10,
     pointerEvents: 'none',
+  },
+  footer: {
+    pointerEvents: 'box-none',
   },
 });
