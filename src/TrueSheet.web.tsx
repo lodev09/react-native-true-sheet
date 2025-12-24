@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 
-import {
+import BottomSheet, {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
   BottomSheetFooter,
@@ -99,7 +99,8 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   const defaultName = useId();
   const sheetName = name ?? defaultName;
   const bottomSheetContext = useContext(BottomSheetContext);
-  const modalRef = useRef<BottomSheetModal>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const initialDetentIndexRef = useRef(initialDetentIndex);
   const currentIndexRef = useRef(0);
   const isPresenting = useRef(false);
@@ -115,6 +116,8 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 
   const [snapIndex, setSnapIndex] = useState(initialDetentIndex);
   const [isMounted, setIsMounted] = useState(false);
+
+  const isNonModal = stackBehavior === 'none';
 
   useDerivedValue(() => {
     onPositionChange?.({
@@ -333,9 +336,13 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     return new Promise<void>((resolve) => {
       dismissResolver.current = resolve;
       isDismissing.current = true;
-      modalRef.current?.dismiss();
+      if (isNonModal) {
+        bottomSheetRef.current?.close();
+      } else {
+        bottomSheetModalRef.current?.dismiss();
+      }
     });
-  }, []);
+  }, [isNonModal]);
 
   const sheetMethodsRef = useRef<TrueSheetRef & { dismissDirect?: () => Promise<void> }>({
     present: (index = 0) => {
@@ -343,8 +350,12 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
         presentResolver.current = resolve;
         setSnapIndex(index);
         isPresenting.current = true;
-        bottomSheetContext?.pushToStack(sheetName);
-        modalRef.current?.present();
+        if (isNonModal) {
+          bottomSheetRef.current?.snapToIndex(index);
+        } else {
+          bottomSheetContext?.pushToStack(sheetName);
+          bottomSheetModalRef.current?.present();
+        }
       });
     },
     dismiss: () => {
@@ -364,7 +375,11 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     },
     dismissDirect: () => dismissInternal(),
     resize: async (index: number) => {
-      modalRef.current?.snapToIndex(index);
+      if (isNonModal) {
+        bottomSheetRef.current?.snapToIndex(index);
+      } else {
+        bottomSheetModalRef.current?.snapToIndex(index);
+      }
     },
   });
 
@@ -393,37 +408,53 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     }
   }, [isMounted, onMount]);
 
+  const sheetContent = (
+    <ContainerComponent>
+      {renderSlot(header)}
+      {scrollable ? children : <View style={style}>{children}</View>}
+    </ContainerComponent>
+  );
+
+  const sharedProps = {
+    style: [
+      styles.root,
+      { backgroundColor, borderTopLeftRadius: cornerRadius, borderTopRightRadius: cornerRadius },
+    ],
+    index: snapIndex,
+    enablePanDownToClose: dismissible,
+    enableContentPanningGesture: draggable,
+    enableHandlePanningGesture: draggable,
+    animatedPosition,
+    animatedIndex,
+    handleComponent,
+    onChange: handleChange,
+    onAnimate: handleAnimate,
+    enableDynamicSizing: hasAutoDetent,
+    maxDynamicContentSize: maxHeight,
+    snapPoints: snapPoints.length > 0 ? snapPoints : undefined,
+    backdropComponent,
+    backgroundComponent: null,
+    footerComponent,
+  };
+
+  if (isNonModal) {
+    return (
+      <BottomSheet ref={bottomSheetRef} onClose={handleDismiss} {...sharedProps}>
+        {sheetContent}
+      </BottomSheet>
+    );
+  }
+
   return (
     <BottomSheetModal
-      ref={modalRef}
+      ref={bottomSheetModalRef}
       name={sheetName}
-      style={[
-        styles.root,
-        { backgroundColor, borderTopLeftRadius: cornerRadius, borderTopRightRadius: cornerRadius },
-      ]}
-      index={snapIndex}
       animateOnMount
-      enablePanDownToClose={dismissible}
-      enableContentPanningGesture={draggable}
-      enableHandlePanningGesture={draggable}
-      animatedPosition={animatedPosition}
-      animatedIndex={animatedIndex}
-      handleComponent={handleComponent}
-      onChange={handleChange}
-      onAnimate={handleAnimate}
-      enableDynamicSizing={hasAutoDetent}
-      maxDynamicContentSize={maxHeight}
-      snapPoints={snapPoints.length > 0 ? snapPoints : undefined}
       onDismiss={handleDismiss}
       stackBehavior={stackBehavior}
-      backdropComponent={backdropComponent}
-      backgroundComponent={null}
-      footerComponent={footerComponent}
+      {...sharedProps}
     >
-      <ContainerComponent>
-        {renderSlot(header)}
-        {scrollable ? children : <View style={style}>{children}</View>}
-      </ContainerComponent>
+      {sheetContent}
     </BottomSheetModal>
   );
 });

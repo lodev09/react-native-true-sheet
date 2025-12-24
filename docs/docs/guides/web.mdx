@@ -80,3 +80,22 @@ import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 :::note
 On native platforms, standard React Native scrollables work without any changes.
 :::
+
+## Stack Behavior
+
+Control how sheets stack when presenting multiple sheets using the `stackBehavior` prop:
+
+| Value | Description |
+|-------|-------------|
+| `push` | Mount the modal on top of the current one |
+| `switch` | Minimize the current modal then mount the new one (default) |
+| `replace` | Dismiss the current modal then mount the new one |
+| `none` | Use a regular BottomSheet instead of BottomSheetModal |
+
+```tsx
+<TrueSheet stackBehavior="none" detents={[0.5, 1]}>
+  {/* Content */}
+</TrueSheet>
+```
+
+Use `stackBehavior="none"` when you need a non-modal sheet that doesn't participate in the modal stack.

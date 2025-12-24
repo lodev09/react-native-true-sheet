@@ -168,7 +168,12 @@ export type StackBehavior =
   /**
    * Dismiss the current modal then mount the new one.
    */
-  | 'replace';
+  | 'replace'
+  /**
+   * Use a regular BottomSheet instead of BottomSheetModal.
+   * This bypasses the modal stack entirely.
+   */
+  | 'none';
 
 /**
  * Inset adjustment behavior for the sheet content.
@@ -415,6 +420,7 @@ export interface TrueSheetProps extends ViewProps {
    * - `push`: Mount the modal on top of the current one.
    * - `switch`: Minimize the current modal then mount the new one.
    * - `replace`: Dismiss the current modal then mount the new one.
+   * - `none`: Use a regular BottomSheet instead of BottomSheetModal.
    *
    * @platform web
    * @default 'switch'
