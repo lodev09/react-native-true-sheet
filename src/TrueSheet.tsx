@@ -431,7 +431,7 @@ export class TrueSheet
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={containerStyle}>
             {header && (
-              <TrueSheetHeaderViewNativeComponent>
+              <TrueSheetHeaderViewNativeComponent style={styles.header}>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
@@ -453,6 +453,7 @@ export class TrueSheet
 const styles = StyleSheet.create({
   sheetView: {
     zIndex: -9999,
+    pointerEvents: 'box-none',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -472,7 +473,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: 0,
   },
+  header: {
+    pointerEvents: 'box-none',
+  },
   footer: {
+    pointerEvents: 'box-none',
     position: 'absolute',
     left: 0,
     right: 0,
