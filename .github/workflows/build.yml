@@ -105,40 +105,26 @@ jobs:
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
 
+      - name: Cache iOS build
+        if: env.turbo_cache_hit != 1
+        id: ios-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/Library/Caches/ccache
+            ~/Library/Developer/Xcode/DerivedData
+            example/bare/ios/Pods
+          key: ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-
+            ${{ runner.os }}-ios-
+
       - name: Install ccache
         if: env.turbo_cache_hit != 1
         run: brew install ccache
 
-      - name: Cache ccache
-        if: env.turbo_cache_hit != 1
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-ios-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-ios-
-
-      - name: Cache Xcode Derived Data
-        if: env.turbo_cache_hit != 1
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-derived-data-${{ hashFiles('example/bare/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-derived-data-
-
-      - name: Cache CocoaPods
-        if: env.turbo_cache_hit != 1
-        id: cocoapods-cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: example/bare/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/bare/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
       - name: Install cocoapods
-        if: env.turbo_cache_hit != 1 && steps.cocoapods-cache.outputs.cache-hit != 'true'
+        if: env.turbo_cache_hit != 1 && steps.ios-cache.outputs.cache-hit != 'true'
         run: |
           cd example/bare
           bundle install
