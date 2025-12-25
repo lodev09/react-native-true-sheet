@@ -48,10 +48,29 @@ import type {
 } from './TrueSheet.types';
 
 const DEFAULT_CORNER_RADIUS = 16;
+const DEFAULT_ELEVATION = 4;
 
 const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
 const DEFAULT_GRABBER_WIDTH = 32;
 const DEFAULT_GRABBER_HEIGHT = 4;
+
+/**
+ * Converts elevation to CSS box-shadow based on Material Design 3 elevation system.
+ * Uses a combination of ambient and key shadows for realistic depth.
+ */
+const getElevationShadow = (elevation: number): string => {
+  if (elevation <= 0) return 'none';
+
+  const ambientY = elevation * 0.5;
+  const ambientBlur = elevation * 1.5;
+  const ambientOpacity = 0.08 + elevation * 0.01;
+
+  const keyY = elevation;
+  const keyBlur = elevation * 2;
+  const keyOpacity = 0.12 + elevation * 0.02;
+
+  return `0px ${ambientY}px ${ambientBlur}px rgba(0, 0, 0, ${ambientOpacity}), 0px ${keyY}px ${keyBlur}px rgba(0, 0, 0, ${keyOpacity})`;
+};
 
 const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) => {
   if (!slot) return null;
@@ -72,6 +91,7 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     initialDetentIndex = -1,
     backgroundColor = '#ffffff',
     cornerRadius = DEFAULT_CORNER_RADIUS,
+    elevation = DEFAULT_ELEVATION,
     grabber = true,
     grabberOptions,
     maxHeight,
@@ -425,7 +445,12 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
   const sharedProps = {
     style: [
       styles.root,
-      { backgroundColor, borderTopLeftRadius: cornerRadius, borderTopRightRadius: cornerRadius },
+      {
+        backgroundColor,
+        borderTopLeftRadius: cornerRadius,
+        borderTopRightRadius: cornerRadius,
+        boxShadow: getElevationShadow(elevation),
+      },
     ],
     index: snapIndex,
     enablePanDownToClose: dismissible,
@@ -469,7 +494,6 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    boxShadow: '0px -2px 16px 0px rgba(9, 10, 9, 0.08)',
   },
   handle: {
     position: 'absolute',

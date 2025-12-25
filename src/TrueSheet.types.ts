@@ -403,6 +403,7 @@ export interface TrueSheetProps extends ViewProps {
    * The elevation (shadow depth) of the sheet.
    *
    * @platform android
+   * @platform web
    * @default 4
    */
   elevation?: number;
