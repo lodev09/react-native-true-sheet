@@ -322,6 +322,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isKeyboardTransitioning = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
+    detentIndexBeforeKeyboard = -1
     shouldAnimatePresent = true
   }
 
@@ -474,8 +475,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
 
         if (detentInfo.index != currentDetentIndex) {
-          presentPromise?.invoke()
-          presentPromise = null
           currentDetentIndex = detentInfo.index
           setupDimmedBackground(detentInfo.index)
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
@@ -921,7 +920,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard()) return
           setupSheetDetents()
-          if (detentIndexBeforeKeyboard >= 0) {
+          if (!isDismissing && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
             detentIndexBeforeKeyboard = -1
           }
