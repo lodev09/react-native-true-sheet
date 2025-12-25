@@ -123,6 +123,14 @@
   return window ? window.safeAreaInsets.bottom : 0;
 }
 
+- (BOOL)isDesignCompatibilityMode {
+  if (@available(iOS 26.0, *)) {
+    NSNumber *value = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"];
+    return value.boolValue;
+  }
+  return NO;
+}
+
 - (NSInteger)currentDetentIndex {
   UISheetPresentationController *sheet = self.sheet;
   if (!sheet)
@@ -661,12 +669,19 @@
 }
 
 - (void)setupBackground {
+  BOOL useBackgroundEffect = NO;
+  if (@available(iOS 26.1, *)) {
+    useBackgroundEffect = !self.isDesignCompatibilityMode;
+  }
+
   // iOS 26.1+: use native backgroundEffect when only backgroundBlur is set (no backgroundColor)
   if (@available(iOS 26.1, *)) {
-    if (!self.backgroundColor && self.backgroundBlur && self.backgroundBlur.length > 0) {
-      UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
-      self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
-      return;
+    if (useBackgroundEffect) {
+      if (!self.backgroundColor && self.backgroundBlur && self.backgroundBlur.length > 0) {
+        UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
+        self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
+        return;
+      }
     }
   }
 
@@ -696,12 +711,13 @@
   }
 
   if (@available(iOS 26.1, *)) {
-    if (self.backgroundColor) {
+    if (useBackgroundEffect && self.backgroundColor) {
       self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
+      return;
     }
-  } else {
-    self.view.backgroundColor = self.backgroundColor;
   }
+
+  self.view.backgroundColor = self.backgroundColor;
 }
 
 - (void)setupGrabber {
