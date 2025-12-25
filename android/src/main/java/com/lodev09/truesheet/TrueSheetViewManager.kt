@@ -198,6 +198,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "elevation", defaultDouble = -1.0)
+  override fun setElevation(view: TrueSheetView, elevation: Double) {
+    view.setSheetElevation(elevation.toFloat())
+  }
+
   companion object {
     const val REACT_CLASS = "TrueSheetView"
     const val TAG_NAME = "TrueSheet"

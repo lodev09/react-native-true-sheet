@@ -222,6 +222,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.grabberOptions = options
   }
 
+  fun setSheetElevation(elevation: Float) {
+    viewController.sheetElevation = elevation
+  }
+
   fun setDetents(newDetents: MutableList<Double>) {
     viewController.detents = newDetents
   }

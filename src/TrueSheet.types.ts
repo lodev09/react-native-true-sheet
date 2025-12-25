@@ -400,6 +400,15 @@ export interface TrueSheetProps extends ViewProps {
   insetAdjustment?: InsetAdjustment;
 
   /**
+   * The elevation (shadow depth) of the sheet.
+   *
+   * @platform android
+   * @platform web
+   * @default 4
+   */
+  elevation?: number;
+
+  /**
    * A component that is fixed at the top of the Sheet content.
    * Useful for search bars, titles, or other header content.
    */

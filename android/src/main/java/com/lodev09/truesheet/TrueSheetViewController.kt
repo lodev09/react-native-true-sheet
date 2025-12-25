@@ -178,6 +178,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (isPresented) sheetView?.setupBackground()
     }
 
+  override var sheetElevation: Float = -1f
+    set(value) {
+      field = value
+      if (isPresented) sheetView?.setupElevation()
+    }
+
   var dismissible: Boolean = true
     set(value) {
       field = value
@@ -647,6 +653,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setupDimmedBackground(currentDetentIndex)
     setupKeyboardObserver()
     sheet.setupBackground()
+    sheet.setupElevation()
     sheet.setupGrabber()
 
     if (shouldAnimatePresent) {
