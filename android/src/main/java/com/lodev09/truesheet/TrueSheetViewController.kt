@@ -35,6 +35,7 @@ import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
+import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 
 // =============================================================================
@@ -318,8 +319,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
+    isKeyboardTransitioning = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
+    detentIndexBeforeKeyboard = -1
     shouldAnimatePresent = true
   }
 
@@ -407,6 +410,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (newState == BottomSheetBehavior.STATE_HIDDEN) {
       if (isDismissing) return
       isDismissing = true
+      dismissKeyboard()
       emitWillDismissEvents()
       finishDismiss()
       return
@@ -471,8 +475,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
 
         if (detentInfo.index != currentDetentIndex) {
-          presentPromise?.invoke()
-          presentPromise = null
           currentDetentIndex = detentInfo.index
           setupDimmedBackground(detentInfo.index)
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
@@ -665,6 +667,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isDismissing) return
 
     isDismissing = true
+    dismissKeyboard()
     emitWillDismissEvents()
 
     if (animated) {
@@ -673,6 +676,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       emitChangePositionDelegate(realScreenHeight)
       finishDismiss()
     }
+  }
+
+  private fun dismissKeyboard() {
+    KeyboardUtils.dismiss(reactContext)
   }
 
   private fun dismissOrCollapseToLowest() {
@@ -845,7 +852,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
-    val top = (sheetTop ?: sheetView?.top ?: return) + currentKeyboardInset
+    val keyboardOffset = if (isDismissing) 0 else currentKeyboardInset
+    val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
 
     if (animated) {
       val targetAlpha = dimView?.calculateAlpha(
@@ -912,7 +920,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard()) return
           setupSheetDetents()
-          if (detentIndexBeforeKeyboard >= 0) {
+          if (!isDismissing && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
             detentIndexBeforeKeyboard = -1
           }
