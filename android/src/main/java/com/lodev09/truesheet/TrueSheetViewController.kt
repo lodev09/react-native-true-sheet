@@ -1,11 +1,13 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -318,6 +320,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
+    isKeyboardTransitioning = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     shouldAnimatePresent = true
@@ -407,6 +410,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (newState == BottomSheetBehavior.STATE_HIDDEN) {
       if (isDismissing) return
       isDismissing = true
+      dismissKeyboard()
       emitWillDismissEvents()
       finishDismiss()
       return
@@ -426,9 +430,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun handleSlide(sheetView: View, slideOffset: Float) {
-    // Skip during dismiss animation
-    if (isDismissing) return
-
     val behavior = behavior ?: return
 
     when (behavior.state) {
@@ -665,6 +666,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isDismissing) return
 
     isDismissing = true
+    dismissKeyboard()
     emitWillDismissEvents()
 
     if (animated) {
@@ -672,6 +674,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     } else {
       emitChangePositionDelegate(realScreenHeight)
       finishDismiss()
+    }
+  }
+
+  private fun dismissKeyboard() {
+    val imm = reactContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    reactContext.currentActivity?.currentFocus?.let { focusedView ->
+      imm?.hideSoftInputFromWindow(focusedView.windowToken, 0)
     }
   }
 
@@ -845,7 +854,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
-    val top = (sheetTop ?: sheetView?.top ?: return) + currentKeyboardInset
+    val keyboardOffset = if (isDismissing) 0 else currentKeyboardInset
+    val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
 
     if (animated) {
       val targetAlpha = dimView?.calculateAlpha(
