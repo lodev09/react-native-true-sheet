@@ -11,6 +11,7 @@
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
 #import "core/TrueSheetGrabberView.h"
+#import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
 #import "utils/WindowUtil.h"
 
@@ -77,6 +78,10 @@
 
 #pragma mark - Computed Properties
 
+- (UISheetPresentationController *)sheet {
+  return self.sheetPresentationController;
+}
+
 - (BOOL)isTopmostPresentedController {
   if (!self.isViewLoaded || self.view.window == nil) {
     return NO;
@@ -85,7 +90,7 @@
 }
 
 - (UIView *)presentedView {
-  return self.sheetPresentationController.presentedView;
+  return self.sheet.presentedView;
 }
 
 - (CGFloat)currentPosition {
@@ -119,7 +124,7 @@
 }
 
 - (NSInteger)currentDetentIndex {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
+  UISheetPresentationController *sheet = self.sheet;
   if (!sheet)
     return -1;
 
@@ -134,7 +139,6 @@
         return i;
       }
     } else {
-      // iOS 15 only supports medium/large system detents
       if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierMedium]) {
         return 0;
       } else if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierLarge]) {
@@ -491,7 +495,7 @@
 #pragma mark - Sheet Configuration
 
 - (void)setupSheetDetentsForSizeChange {
-  [self.sheetPresentationController animateChanges:^{
+  [self.sheet animateChanges:^{
     _pendingContentSizeChange = YES;
     [self setupSheetDetents];
   }];
@@ -503,7 +507,7 @@
 }
 
 - (void)setupSheetDetents {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
+  UISheetPresentationController *sheet = self.sheet;
   if (!sheet) {
     RCTLogError(@"TrueSheet: sheetPresentationController is nil in setupSheetDetents");
     return;
@@ -593,7 +597,7 @@
 }
 
 - (UISheetPresentationControllerDetentIdentifier)detentIdentifierForIndex:(NSInteger)index {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
+  UISheetPresentationController *sheet = self.sheet;
   if (!sheet) {
     RCTLogError(@"TrueSheet: sheetPresentationController is nil in detentIdentifierForIndex");
     return UISheetPresentationControllerDetentIdentifierMedium;
@@ -615,8 +619,7 @@
 }
 
 - (void)applyActiveDetent {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet) {
+  if (!self.sheet) {
     RCTLogError(@"TrueSheet: sheetPresentationController is nil in applyActiveDetent");
     return;
   }
@@ -638,7 +641,7 @@
 
   UISheetPresentationControllerDetentIdentifier identifier = [self detentIdentifierForIndex:clampedIndex];
   if (identifier) {
-    sheet.selectedDetentIdentifier = identifier;
+    self.sheet.selectedDetentIdentifier = identifier;
   }
 }
 
@@ -657,36 +660,19 @@
   [self applyActiveDetent];
 }
 
-- (void)setupSheetProps {
-  UISheetPresentationController *sheet = self.sheetPresentationController;
-  if (!sheet) {
-    RCTLogWarn(
-      @"TrueSheet: No sheet presentation controller available. Ensure the view controller is presented modally.");
-    return;
+- (void)setupBackground {
+  // iOS 26.1+: use native backgroundEffect when only blurTint is set (no backgroundColor)
+  if (@available(iOS 26.1, *)) {
+    if (!self.backgroundColor && self.blurTint && self.blurTint.length > 0) {
+      UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.blurTint];
+      self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
+      return;
+    }
   }
-
-  sheet.delegate = self;
-
-  if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = self.pageSizing;
-  }
-
-  sheet.prefersEdgeAttachedInCompactHeight = YES;
-
-  // When draggable is disabled, prevent scrolling from expanding the sheet
-  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
-
-  if (self.cornerRadius) {
-    sheet.preferredCornerRadius = [self.cornerRadius floatValue];
-  } else {
-    sheet.preferredCornerRadius = UISheetPresentationControllerAutomaticDimension;
-  }
-
-  self.view.backgroundColor = self.backgroundColor;
 
   NSString *effectiveBlurTint = self.blurTint;
   if (@available(iOS 26.0, *)) {
-    // iOS 26+ has defualt liquid glass effect
+    // iOS 26+ has default liquid glass effect
   } else if ((!effectiveBlurTint || effectiveBlurTint.length == 0) && !self.backgroundColor) {
     effectiveBlurTint = @"system-material";
   }
@@ -709,10 +695,20 @@
     [_blurView applyBlurEffect];
   }
 
+  if (@available(iOS 26.1, *)) {
+    if (self.backgroundColor) {
+      self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
+    }
+  } else {
+    self.view.backgroundColor = self.backgroundColor;
+  }
+}
+
+- (void)setupGrabber {
   BOOL showGrabber = self.grabber && self.draggable;
 
   if (self.grabberOptions) {
-    sheet.prefersGrabberVisible = NO;
+    self.sheet.prefersGrabberVisible = NO;
 
     NSDictionary *options = self.grabberOptions;
     _grabberView.grabberWidth = options[@"width"];
@@ -724,12 +720,38 @@
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
 
-    // Ensure grabber is above container/header views
     [self.view bringSubviewToFront:_grabberView];
   } else {
-    sheet.prefersGrabberVisible = showGrabber;
+    self.sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
   }
+}
+
+- (void)setupSheetProps {
+  UISheetPresentationController *sheet = self.sheet;
+  if (!sheet) {
+    RCTLogWarn(
+      @"TrueSheet: No sheet presentation controller available. Ensure the view controller is presented modally.");
+    return;
+  }
+
+  sheet.delegate = self;
+
+  if (@available(iOS 17.0, *)) {
+    sheet.prefersPageSizing = self.pageSizing;
+  }
+
+  sheet.prefersEdgeAttachedInCompactHeight = YES;
+  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
+
+  if (self.cornerRadius) {
+    sheet.preferredCornerRadius = [self.cornerRadius floatValue];
+  } else {
+    sheet.preferredCornerRadius = UISheetPresentationControllerAutomaticDimension;
+  }
+
+  [self setupBackground];
+  [self setupGrabber];
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
