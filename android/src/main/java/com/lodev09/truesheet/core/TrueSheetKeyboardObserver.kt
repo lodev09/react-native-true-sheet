@@ -8,6 +8,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
+import com.lodev09.truesheet.utils.KeyboardUtils
 
 interface TrueSheetKeyboardObserverDelegate {
   fun keyboardWillShow(height: Int)
@@ -59,7 +60,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     }
   }
 
-  private fun getKeyboardHeight(insets: WindowInsetsCompat?): Int = insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
+  private fun getKeyboardHeight(): Int = KeyboardUtils.getKeyboardHeight(targetView)
 
   private fun setupAnimationCallback() {
     ViewCompat.setWindowInsetsAnimationCallback(
@@ -69,14 +70,14 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
         private var endHeight = 0
 
         override fun onPrepare(animation: WindowInsetsAnimationCompat) {
-          startHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          startHeight = getKeyboardHeight()
         }
 
         override fun onStart(
           animation: WindowInsetsAnimationCompat,
           bounds: WindowInsetsAnimationCompat.BoundsCompat
         ): WindowInsetsAnimationCompat.BoundsCompat {
-          endHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          endHeight = getKeyboardHeight()
           targetHeight = endHeight
           isHiding = endHeight < startHeight
           if (endHeight > startHeight) {
@@ -99,7 +100,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
         }
 
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
-          val finalHeight = getKeyboardHeight(ViewCompat.getRootWindowInsets(targetView))
+          val finalHeight = getKeyboardHeight()
           updateHeight(startHeight, finalHeight, 1f)
           if (isHiding) {
             delegate?.keyboardDidHide()

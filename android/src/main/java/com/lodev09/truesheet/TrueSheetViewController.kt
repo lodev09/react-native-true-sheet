@@ -1,13 +1,11 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -37,6 +35,7 @@ import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
+import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 
 // =============================================================================
@@ -678,10 +677,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun dismissKeyboard() {
-    val imm = reactContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-    reactContext.currentActivity?.currentFocus?.let { focusedView ->
-      imm?.hideSoftInputFromWindow(focusedView.windowToken, 0)
-    }
+    KeyboardUtils.dismiss(reactContext)
   }
 
   private fun dismissOrCollapseToLowest() {
