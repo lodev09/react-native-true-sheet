@@ -39,7 +39,7 @@
 
   // Create animator only once
   if (!_blurAnimator) {
-    UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.blurTint];
+    UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
     UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
 
     __weak __typeof(self) weakSelf = self;

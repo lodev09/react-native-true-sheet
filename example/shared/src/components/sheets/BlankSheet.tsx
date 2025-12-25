@@ -11,7 +11,7 @@ export const BlankSheet = forwardRef<TrueSheet, BlankSheetProps>((props, ref) =>
     <TrueSheet
       ref={ref}
       detents={[0.5, 1]}
-      blurTint="dark"
+      backgroundBlur="dark"
       backgroundColor={DARK}
       style={styles.content}
       {...props}

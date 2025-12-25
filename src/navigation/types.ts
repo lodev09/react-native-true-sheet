@@ -133,7 +133,7 @@ export type TrueSheetNavigationOptions = Pick<
   | 'grabberOptions'
   | 'dimmed'
   | 'dimmedDetentIndex'
-  | 'blurTint'
+  | 'backgroundBlur'
   | 'blurOptions'
   | 'maxHeight'
   | 'scrollable'

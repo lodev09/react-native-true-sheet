@@ -228,17 +228,17 @@ Controls the sheet presentation style on iPad. When enabled (true), uses a large
 | - | - | - | - | - |
 | `boolean` | `true` | **_17+_** | | |
 
-## `blurTint`
+## `backgroundBlur`
 
 The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`BlurTint`](/reference/types#blurtint) | | ✅ | | |
+| [`BackgroundBlur`](/reference/types#backgroundblur) | | ✅ | | |
 
 ## `blurOptions`
 
-Options for customizing the blur effect. Only applies when [`blurTint`](#blurtint) is set.
+Options for customizing the blur effect. Only applies when [`backgroundBlur`](#backgroundblur) is set.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -246,7 +246,7 @@ Options for customizing the blur effect. Only applies when [`blurTint`](#blurtin
 
 ```tsx
 <TrueSheet
-  blurTint="dark"
+  backgroundBlur="dark"
   blurOptions={{
     intensity: 80,
     interaction: false,

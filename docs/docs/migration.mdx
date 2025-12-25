@@ -199,21 +199,21 @@ The `backgroundColor` prop no longer defaults to `"white"`. It now uses the **sy
 <TrueSheet backgroundColor="white" />
 ```
 
-#### `blurTint` No Longer Overrides `backgroundColor`
+#### `backgroundBlur` No Longer Overrides `backgroundColor`
 
-In v2, setting `blurTint` would completely override the `backgroundColor`. In v3, `blurTint` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
+In v2, setting `backgroundBlur` (previously `blurTint`) would completely override the `backgroundColor`. In v3, `backgroundBlur` now **applies a blur effect over** the `backgroundColor`, allowing you to combine both for richer visual effects.
 
 **Migration:**
 
 ```tsx
-// ❌ v2 - blurTint overrides backgroundColor (backgroundColor is ignored)
-<TrueSheet backgroundColor="red" blurTint="light" />
+// ❌ v2 - backgroundBlur overrides backgroundColor (backgroundColor is ignored)
+<TrueSheet backgroundColor="red" backgroundBlur="light" />
 
-// ✅ v3 - blurTint applies over backgroundColor (red + light blur)
-<TrueSheet backgroundColor="red" blurTint="light" />
+// ✅ v3 - backgroundBlur applies over backgroundColor (red + light blur)
+<TrueSheet backgroundColor="red" backgroundBlur="light" />
 
 // If you want only blur without background color:
-<TrueSheet blurTint="light" />
+<TrueSheet backgroundBlur="light" />
 ```
 
 ## New Features in v3
@@ -368,7 +368,7 @@ Version 3 introduces new props for fine-grained control over the blur effect on 
 
 ```tsx
 <TrueSheet
-  blurTint="light"
+  backgroundBlur="light"
   blurOptions={{
     intensity: 80,
     interaction: false,

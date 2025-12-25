@@ -67,11 +67,11 @@ npx expo run:ios
 
 ## Blur Effect with Liquid Glass
 
-TrueSheet's blur effect props work seamlessly with Liquid Glass on iOS 26+. You can use `blurTint`, `blurIntensity`, and `blurInteraction` to customize the blur appearance:
+TrueSheet's blur effect props work seamlessly with Liquid Glass on iOS 26+. You can use `backgroundBlur` and `blurOptions` to customize the blur appearance:
 
 ```tsx
 <TrueSheet
-  blurTint="system-material"
+  backgroundBlur="system-material"
   blurOptions={{
     intensity: 80,
     interaction: false
@@ -79,7 +79,7 @@ TrueSheet's blur effect props work seamlessly with Liquid Glass on iOS 26+. You 
 />
 ```
 
-See the [Configuration reference](/reference/configuration#blurtint) for all blur options.
+See the [Configuration reference](/reference/configuration#backgroundblur) for all blur options.
 
 ## Learn More
 

@@ -661,35 +661,35 @@
 }
 
 - (void)setupBackground {
-  // iOS 26.1+: use native backgroundEffect when only blurTint is set (no backgroundColor)
+  // iOS 26.1+: use native backgroundEffect when only backgroundBlur is set (no backgroundColor)
   if (@available(iOS 26.1, *)) {
-    if (!self.backgroundColor && self.blurTint && self.blurTint.length > 0) {
-      UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.blurTint];
+    if (!self.backgroundColor && self.backgroundBlur && self.backgroundBlur.length > 0) {
+      UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
       self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
       return;
     }
   }
 
-  NSString *effectiveBlurTint = self.blurTint;
+  NSString *effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
-  } else if ((!effectiveBlurTint || effectiveBlurTint.length == 0) && !self.backgroundColor) {
-    effectiveBlurTint = @"system-material";
+  } else if ((!effectiveBackgroundBlur || effectiveBackgroundBlur.length == 0) && !self.backgroundColor) {
+    effectiveBackgroundBlur = @"system-material";
   }
 
-  BOOL blurTintChanged = ![_blurView.blurTint isEqualToString:effectiveBlurTint];
+  BOOL blurChanged = ![_blurView.backgroundBlur isEqualToString:effectiveBackgroundBlur];
 
-  if (_blurView && blurTintChanged) {
+  if (_blurView && blurChanged) {
     [_blurView removeFromSuperview];
     _blurView = nil;
   }
 
-  if (effectiveBlurTint && effectiveBlurTint.length > 0) {
+  if (effectiveBackgroundBlur && effectiveBackgroundBlur.length > 0) {
     if (!_blurView) {
       _blurView = [[TrueSheetBlurView alloc] init];
       [_blurView addToView:self.view];
     }
-    _blurView.blurTint = effectiveBlurTint;
+    _blurView.backgroundBlur = effectiveBackgroundBlur;
     _blurView.blurIntensity = self.blurIntensity;
     _blurView.blurInteraction = self.blurInteraction;
     [_blurView applyBlurEffect];

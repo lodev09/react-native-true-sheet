@@ -19,7 +19,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
     <TrueSheet
       ref={ref}
       detents={[0.5, 1]}
-      blurTint="dark"
+      backgroundBlur="dark"
       backgroundColor={DARK}
       scrollable
       header={
