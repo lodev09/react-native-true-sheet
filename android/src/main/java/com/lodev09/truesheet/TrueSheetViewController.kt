@@ -429,6 +429,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun handleSlide(sheetView: View, slideOffset: Float) {
+    // Skip during dismiss animation
+    if (isDismissing) return
+
     val behavior = behavior ?: return
 
     when (behavior.state) {
