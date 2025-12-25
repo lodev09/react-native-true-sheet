@@ -350,7 +350,7 @@ export class TrueSheet
       initialDetentAnimated = true,
 
       dimmedDetentIndex,
-      blurTint,
+      backgroundBlur,
       blurOptions,
       cornerRadius,
       maxHeight,
@@ -395,7 +395,7 @@ export class TrueSheet
         ref={this.nativeRef}
         style={styles.sheetView}
         detents={resolvedDetents}
-        blurTint={blurTint}
+        backgroundBlur={backgroundBlur}
         blurOptions={blurOptions}
         backgroundColor={backgroundColor}
         cornerRadius={cornerRadius}

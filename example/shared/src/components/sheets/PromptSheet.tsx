@@ -39,7 +39,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       name="prompt-sheet"
       detents={['auto']}
       style={styles.content}
-      blurTint="dark"
+      backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
       onDidPresent={(e) =>

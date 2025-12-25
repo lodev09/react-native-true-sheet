@@ -173,8 +173,8 @@ class TrueSheetViewManager :
     }
   }
 
-  @ReactProp(name = "blurTint")
-  override fun setBlurTint(view: TrueSheetView, tint: String?) {
+  @ReactProp(name = "backgroundBlur")
+  override fun setBackgroundBlur(view: TrueSheetView, tint: String?) {
     // iOS-specific prop - no-op on Android
   }
 

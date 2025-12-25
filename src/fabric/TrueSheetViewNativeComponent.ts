@@ -48,7 +48,7 @@ export interface NativeProps extends ViewProps {
   dimmedDetentIndex?: WithDefault<Int32, 0>;
 
   // String properties - use empty string as default to avoid nil insertion
-  blurTint?: WithDefault<string, ''>;
+  backgroundBlur?: WithDefault<string, ''>;
 
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 

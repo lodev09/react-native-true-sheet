@@ -137,7 +137,7 @@ export interface GrabberOptions {
 
 /**
  * Options for customizing the blur effect.
- * Only applies when `blurTint` is set.
+ * Only applies when `backgroundBlur` is set.
  *
  * @platform ios
  */
@@ -201,7 +201,7 @@ export type InsetAdjustment =
  *
  * @platform ios
  */
-export type BlurTint =
+export type BackgroundBlur =
   | 'light'
   | 'dark'
   | 'default'
@@ -372,11 +372,11 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @platform ios
    */
-  blurTint?: BlurTint;
+  backgroundBlur?: BackgroundBlur;
 
   /**
    * Options for customizing the blur effect.
-   * Only applies when `blurTint` is set.
+   * Only applies when `backgroundBlur` is set.
    *
    * @platform ios
    */

@@ -7,47 +7,10 @@
 //
 
 #import "TrueSheetBlurView.h"
+#import "BlurUtil.h"
 
 @implementation TrueSheetBlurView {
   UIViewPropertyAnimator *_blurAnimator;
-}
-
-#pragma mark - Private
-
-+ (UIBlurEffectStyle)blurEffectStyleFromString:(NSString *)tintString {
-  static NSDictionary<NSString *, NSNumber *> *styleMap = nil;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    styleMap = @{
-      @"dark" : @(UIBlurEffectStyleDark),
-      @"light" : @(UIBlurEffectStyleLight),
-      @"extra-light" : @(UIBlurEffectStyleExtraLight),
-      @"regular" : @(UIBlurEffectStyleRegular),
-      @"prominent" : @(UIBlurEffectStyleProminent),
-      @"system-ultra-thin-material" : @(UIBlurEffectStyleSystemUltraThinMaterial),
-      @"system-thin-material" : @(UIBlurEffectStyleSystemThinMaterial),
-      @"system-material" : @(UIBlurEffectStyleSystemMaterial),
-      @"system-thick-material" : @(UIBlurEffectStyleSystemThickMaterial),
-      @"system-chrome-material" : @(UIBlurEffectStyleSystemChromeMaterial),
-      @"system-ultra-thin-material-light" : @(UIBlurEffectStyleSystemUltraThinMaterialLight),
-      @"system-thin-material-light" : @(UIBlurEffectStyleSystemThinMaterialLight),
-      @"system-material-light" : @(UIBlurEffectStyleSystemMaterialLight),
-      @"system-thick-material-light" : @(UIBlurEffectStyleSystemThickMaterialLight),
-      @"system-chrome-material-light" : @(UIBlurEffectStyleSystemChromeMaterialLight),
-      @"system-ultra-thin-material-dark" : @(UIBlurEffectStyleSystemUltraThinMaterialDark),
-      @"system-thin-material-dark" : @(UIBlurEffectStyleSystemThinMaterialDark),
-      @"system-material-dark" : @(UIBlurEffectStyleSystemMaterialDark),
-      @"system-thick-material-dark" : @(UIBlurEffectStyleSystemThickMaterialDark),
-      @"system-chrome-material-dark" : @(UIBlurEffectStyleSystemChromeMaterialDark),
-    };
-  });
-
-  NSNumber *style = styleMap[tintString];
-  if (style) {
-    return (UIBlurEffectStyle)[style integerValue];
-  }
-
-  return UIBlurEffectStyleLight;
 }
 
 #pragma mark - Initialization
@@ -76,7 +39,7 @@
 
   // Create animator only once
   if (!_blurAnimator) {
-    UIBlurEffectStyle style = [TrueSheetBlurView blurEffectStyleFromString:self.blurTint];
+    UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
     UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
 
     __weak __typeof(self) weakSelf = self;

@@ -134,7 +134,7 @@ using namespace facebook::react;
   _controller.backgroundColor = RCTUIColorFromSharedColor(newProps.backgroundColor);
 
   // Blur tint
-  _controller.blurTint = !newProps.blurTint.empty() ? RCTNSStringFromString(newProps.blurTint) : nil;
+  _controller.backgroundBlur = !newProps.backgroundBlur.empty() ? RCTNSStringFromString(newProps.backgroundBlur) : nil;
 
   // Blur options
   const auto &blurOpts = newProps.blurOptions;

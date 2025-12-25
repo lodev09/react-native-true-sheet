@@ -50,7 +50,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
       name="gesture"
       ref={sheetRef}
       style={styles.content}
-      blurTint="dark"
+      backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={() => console.log('Gesture sheet dismissed!')}
       onDidPresent={(e) =>
