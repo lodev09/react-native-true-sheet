@@ -18,6 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 interface TrueSheetBottomSheetViewDelegate {
   val isTopmostSheet: Boolean
   val sheetCornerRadius: Float
+  val sheetElevation: Float
   val sheetBackgroundColor: Int?
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
@@ -37,6 +38,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     private const val GRABBER_TAG = "TrueSheetGrabber"
     private const val DEFAULT_CORNER_RADIUS = 16f // dp
     private const val DEFAULT_MAX_WIDTH = 640 // dp
+    private const val DEFAULT_ELEVATION = 4f // dp
   }
 
   // =============================================================================
@@ -136,6 +138,12 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     } else {
       Color.WHITE
     }
+  }
+
+  fun setupElevation() {
+    val value = delegate?.sheetElevation ?: DEFAULT_ELEVATION
+    val effectiveElevation = if (value < 0) DEFAULT_ELEVATION else value
+    elevation = effectiveElevation.dpToPx()
   }
 
   // =============================================================================
