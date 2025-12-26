@@ -16,17 +16,39 @@ TrueSheet **supports Liquid Glass by default** on iOS 26+, giving your sheets a 
 
 Liquid Glass is a visual effect introduced in iOS 26 that provides a translucent, frosted glass appearance with a subtle blur. It's part of Apple's latest design language and is automatically applied to native sheet presentations.
 
-## Default Behavior
-
-By default, TrueSheet enables Liquid Glass on iOS 26+ devices:
-
-When running on iOS 26+, the sheet will automatically display with the Liquid Glass effect.
+By default, TrueSheet enables Liquid Glass on iOS 26+ devices when no [`backgroundColor`](/reference/configuration#backgroundcolor) or [`backgroundBlur`](/reference/configuration#backgroundblur) is provided. The sheet will automatically display with the Liquid Glass effect.
 
 ## Disabling Liquid Glass
 
-If you prefer the classic sheet appearance without Liquid Glass, you can disable it by setting `UIDesignRequiresCompatibility` to `true` in your `Info.plist`:
+If you prefer the classic sheet appearance without Liquid Glass, there are two options:
 
-### Using Info.plist
+### Using `backgroundColor` or `backgroundBlur`
+
+Setting [`backgroundColor`](/reference/configuration#backgroundcolor) or [`backgroundBlur`](/reference/configuration#backgroundblur) (or both) on the sheet will disable the Liquid Glass effect for that specific sheet.
+
+```tsx
+<TrueSheet backgroundColor="#ffffff">
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+```tsx
+<TrueSheet backgroundBlur="system-material">
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+This approach allows you to disable Liquid Glass on a per-sheet basis while keeping it enabled for other sheets in your app.
+
+:::note
+This only works on iOS 26.1 and above.
+:::
+
+### Using `UIDesignRequiresCompatibility`
+
+Set `UIDesignRequiresCompatibility` to `true` in your `Info.plist` to disable Liquid Glass.
+
+#### Using Info.plist
 
 Add the following key to your `ios/YourApp/Info.plist`:
 
@@ -42,7 +64,7 @@ Add the following key to your `ios/YourApp/Info.plist`:
 </plist>
 ```
 
-### Using Expo Config Plugin
+#### Using Expo Config Plugin
 
 If you're using Expo, you can configure this through your `app.json` or `app.config.js`:
 
@@ -65,21 +87,9 @@ npx expo prebuild --clean
 npx expo run:ios
 ```
 
-## Blur Effect with Liquid Glass
-
-TrueSheet's blur effect props work seamlessly with Liquid Glass on iOS 26+. You can use `backgroundBlur` and `blurOptions` to customize the blur appearance:
-
-```tsx
-<TrueSheet
-  backgroundBlur="system-material"
-  blurOptions={{
-    intensity: 80,
-    interaction: false
-  }}
-/>
-```
-
-See the [Configuration reference](/reference/configuration#backgroundblur) for all blur options.
+:::note
+This setting disables the Liquid Glass UI across your entire app, not just for sheets. See [Apple's documentation](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UIDesignRequiresCompatibility) for more details.
+:::
 
 ## Learn More
 

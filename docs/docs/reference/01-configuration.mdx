@@ -54,8 +54,42 @@ The sheet's background color. Uses the system default when not provided.
 | `ColorValue` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
-When not provided, iOS uses the system background color, while Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+When not provided, iOS 26+ uses the default [Liquid Glass](/guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+
+On iOS 26.1+, setting this prop will override the default [Liquid Glass](/guides/liquid-glass) effect.
 :::
+
+## `backgroundBlur`
+
+The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BackgroundBlur`](/reference/types#backgroundblur) | | ✅ | | |
+
+:::info
+On iOS 26.1+, setting this prop will override the default [Liquid Glass](/guides/liquid-glass) effect.
+:::
+
+## `blurOptions`
+
+Options for customizing the blur effect. Only applies when [`backgroundBlur`](#backgroundblur) is set.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BlurOptions`](/reference/types#bluroptions) | | ✅ | | |
+
+```tsx
+<TrueSheet
+  backgroundBlur="dark"
+  blurOptions={{
+    intensity: 80,
+    interaction: false,
+  }}
+>
+  <View />
+</TrueSheet>
+```
 
 ## `cornerRadius`
 
@@ -235,34 +269,6 @@ Controls the sheet presentation style on iPad. When enabled (true), uses a large
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `boolean` | `true` | **_17+_** | | |
-
-## `backgroundBlur`
-
-The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`BackgroundBlur`](/reference/types#backgroundblur) | | ✅ | | |
-
-## `blurOptions`
-
-Options for customizing the blur effect. Only applies when [`backgroundBlur`](#backgroundblur) is set.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`BlurOptions`](/reference/types#bluroptions) | | ✅ | | |
-
-```tsx
-<TrueSheet
-  backgroundBlur="dark"
-  blurOptions={{
-    intensity: 80,
-    interaction: false,
-  }}
->
-  <View />
-</TrueSheet>
-```
 
 ## `insetAdjustment`
 
