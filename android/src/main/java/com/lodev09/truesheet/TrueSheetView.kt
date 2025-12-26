@@ -46,7 +46,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Initial present configuration (set by ViewManager before mount)
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
-  private var hasInitialPresented: Boolean = false
+  private var pendingInitialPresentation: Boolean = false
 
   var stateWrapper: StateWrapper? = null
     set(value) {
@@ -98,6 +98,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== View Hierarchy Management ====================
 
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    presentInitialDetentIfNeeded()
+  }
+
   override fun addView(child: View?, index: Int) {
     viewController.addView(child, index)
 
@@ -105,17 +110,26 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       child.delegate = this
       viewController.createSheet()
 
-      if (initialDetentIndex >= 0 && !hasInitialPresented) {
-        hasInitialPresented = true
-        if (initialDetentAnimated) {
-          present(initialDetentIndex, true) { }
-        } else {
-          post { present(initialDetentIndex, false) { } }
-        }
+      if (initialDetentIndex >= 0 && !viewController.isPresented) {
+        pendingInitialPresentation = true
+        presentInitialDetentIfNeeded()
       }
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
+    }
+  }
+
+  private fun presentInitialDetentIfNeeded() {
+    if (!pendingInitialPresentation || initialDetentIndex < 0 || viewController.isPresented || !isAttachedToWindow) {
+      return
+    }
+
+    pendingInitialPresentation = false
+    if (initialDetentAnimated) {
+      present(initialDetentIndex, true) { }
+    } else {
+      post { present(initialDetentIndex, false) { } }
     }
   }
 
