@@ -675,12 +675,20 @@
   }
 
   // iOS 26.1+: use native backgroundEffect when only backgroundBlur is set (no backgroundColor)
+  // Fall back to TrueSheetBlurView when blur intensity is set (not 100%) since
+  // sheet.backgroundEffect doesn't support intensity control
   if (@available(iOS 26.1, *)) {
     if (useBackgroundEffect) {
+      BOOL hasCustomIntensity = self.blurIntensity && [self.blurIntensity floatValue] < 100;
       if (!self.backgroundColor && self.backgroundBlur && self.backgroundBlur.length > 0) {
-        UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
-        self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
-        return;
+        if (hasCustomIntensity) {
+          // Clear native effect to allow custom blur view with intensity
+          self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
+        } else {
+          UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
+          self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
+          return;
+        }
       }
     }
   }
