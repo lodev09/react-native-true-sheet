@@ -21,12 +21,12 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     console.log('Sheet prompt dismissed!');
   };
 
-  const dismiss = async () => {
+  const handleDismissPress = async () => {
     await sheetRef.current?.dismiss();
     console.log('Sheet prompt dismiss asynced');
   };
 
-  const submit = async () => {
+  const handleSubmitPress = async () => {
     setIsSubmitted(true);
   };
 
@@ -35,7 +35,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   return (
     <TrueSheet
       ref={sheetRef}
-      dismissible={false}
       grabber={false}
       name="prompt-sheet"
       detents={['auto']}
@@ -68,8 +67,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       <DemoContent color={DARK_BLUE} />
       <Input ref={inputRef} />
       {isSubmitted && <Input />}
-      <Button text="Submit" onPress={submit} />
-      <Button text="Dismiss" onPress={dismiss} />
+      <Button text="Submit" onPress={handleSubmitPress} />
+      <Button text="Dismiss" onPress={handleDismissPress} />
     </TrueSheet>
   );
 });

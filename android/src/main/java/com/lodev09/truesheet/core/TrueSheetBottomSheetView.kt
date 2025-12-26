@@ -63,9 +63,8 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   override fun setTranslationY(translationY: Float) {
-    // Skip resetting translation to 0 for parent sheets (non-topmost)
     // This prevents keyboard inset animations from resetting parent sheet translation
-    if (delegate?.isTopmostSheet == false && translationY == 0f && this.translationY != 0f) {
+    if (translationY == 0f && this.translationY != 0f) {
       return
     }
     super.setTranslationY(translationY)
