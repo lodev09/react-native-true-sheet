@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
@@ -12,6 +12,7 @@ interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const inputRef = useRef<TextInput>(null);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -42,11 +43,13 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
-      onDidPresent={(e) =>
+      onDidPresent={(e) => {
         console.log(
           `Sheet prompt presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
-        )
-      }
+        );
+
+        inputRef.current?.focus();
+      }}
       onDetentChange={(e) =>
         console.log(
           `Detent changed to index:`,
@@ -63,7 +66,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       {...props}
     >
       <DemoContent color={DARK_BLUE} />
-      <Input />
+      <Input ref={inputRef} />
       {isSubmitted && <Input />}
       <Button text="Submit" onPress={submit} />
       <Button text="Dismiss" onPress={dismiss} />

@@ -1,11 +1,13 @@
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { LIGHT_GRAY, INPUT_HEIGHT, SPACING } from '../utils';
+import { forwardRef } from 'react';
 
-export const Input = (props: TextInputProps) => {
+export const Input = forwardRef<TextInput, TextInputProps>((props, ref) => {
   return (
     <View style={styles.inputContainer}>
       <TextInput
+        ref={ref}
         style={styles.input}
         placeholder="Enter some text..."
         placeholderTextColor={LIGHT_GRAY}
@@ -13,7 +15,7 @@ export const Input = (props: TextInputProps) => {
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   inputContainer: {

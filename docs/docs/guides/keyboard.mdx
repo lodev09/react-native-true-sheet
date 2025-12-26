@@ -37,3 +37,21 @@ const App = () => {
 ## Footer Behavior
 
 When using a [`footer`](/reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
+
+## Autofocus Limitation
+
+Avoid using `autoFocus` on `TextInput` components inside the sheet. The keyboard may appear before the sheet has finished presenting, causing layout issues.
+
+Instead, focus the input programmatically after the sheet has presented:
+
+```tsx {4,7}
+const inputRef = useRef<TextInput>(null)
+
+const handlePresent = () => {
+  inputRef.current?.focus()
+}
+
+<TrueSheet onDidPresent={handlePresent}>
+  <TextInput ref={inputRef} placeholder="Type something..." />
+</TrueSheet>
+```
