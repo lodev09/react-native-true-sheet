@@ -757,7 +757,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
     val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
-      .coerceIn(0f, 0.999f)
 
     val expandedOffset = realScreenHeight - maxDetentHeight
 
@@ -802,7 +801,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       isFitToContents = fitToContents
       skipCollapsed = false
       setPeekHeight(peekHeight, animate)
-      this.halfExpandedRatio = halfExpandedRatio.coerceIn(0f, 0.999f)
+      this.halfExpandedRatio = halfExpandedRatio.coerceIn(0.01f, 0.999f)
       this.expandedOffset = expandedOffset
     }
   }

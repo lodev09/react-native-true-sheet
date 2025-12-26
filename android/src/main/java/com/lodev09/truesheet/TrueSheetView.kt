@@ -154,7 +154,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     TrueSheetStackManager.removeSheet(this)
 
     if (viewController.isPresented) {
-      viewController.dismiss()
+      viewController.dismiss(animated = false)
     }
     viewController.delegate = null
   }

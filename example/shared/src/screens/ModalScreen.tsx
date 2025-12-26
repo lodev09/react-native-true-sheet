@@ -31,7 +31,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Button text="Navigate Test" onPress={onNavigateToTest} />
         <Button text="Dismiss Modal" onPress={onDismiss} />
 
-        <PromptSheet ref={promptSheet} />
+        <PromptSheet ref={promptSheet} dimmed={false} />
         <FlatListSheet ref={flatlistSheet} />
       </View>
     </TrueSheetProvider>
