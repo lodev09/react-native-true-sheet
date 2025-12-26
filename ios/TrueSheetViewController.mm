@@ -13,6 +13,7 @@
 #import "core/TrueSheetGrabberView.h"
 #import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
+#import "utils/PlatformUtil.h"
 #import "utils/WindowUtil.h"
 
 #import <React/RCTLog.h>
@@ -669,6 +670,7 @@
 }
 
 - (void)setupBackground {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
   BOOL useBackgroundEffect = NO;
   if (@available(iOS 26.1, *)) {
     useBackgroundEffect = !self.isDesignCompatibilityMode;
@@ -692,6 +694,7 @@
       }
     }
   }
+#endif
 
   NSString *effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
@@ -718,12 +721,14 @@
     [_blurView applyBlurEffect];
   }
 
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
   if (@available(iOS 26.1, *)) {
     if (useBackgroundEffect && self.backgroundColor) {
       self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
       return;
     }
   }
+#endif
 
   self.view.backgroundColor = self.backgroundColor;
 }
