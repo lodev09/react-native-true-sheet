@@ -51,7 +51,7 @@ using namespace facebook::react;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
-  BOOL _pendingInitialPresentation;
+  BOOL _didInitiallyPresent;
 }
 
 #pragma mark - Initialization
@@ -74,7 +74,6 @@ using namespace facebook::react;
     _initialDetentAnimated = YES;
     _scrollable = NO;
     _isSheetUpdatePending = NO;
-    _pendingInitialPresentation = NO;
   }
   return self;
 }
@@ -85,13 +84,14 @@ using namespace facebook::react;
   if (!self.window)
     return;
 
-  // Register with TurboModule when tag is set
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
 
-  // Handle pending initial presentation after view is in window hierarchy
-  [self presentInitialDetentIfNeeded];
+  if (_initialDetentIndex >= 0 && !_didInitiallyPresent) {
+    _didInitiallyPresent = YES;
+    [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+  }
 }
 
 - (void)dealloc {
@@ -252,8 +252,6 @@ using namespace facebook::react;
     [_controller setupDraggable];
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
-    _pendingInitialPresentation = YES;
-    [self presentInitialDetentIfNeeded];
   }
 }
 
@@ -500,14 +498,6 @@ using namespace facebook::react;
 }
 
 #pragma mark - Private Helpers
-
-- (void)presentInitialDetentIfNeeded {
-  if (!_pendingInitialPresentation || _initialDetentIndex < 0 || _controller.isPresented || !self.window)
-    return;
-
-  _pendingInitialPresentation = NO;
-  [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
-}
 
 - (UIViewController *)findPresentingViewController {
   UIWindow *keyWindow = [WindowUtil keyWindow];
