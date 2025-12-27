@@ -295,8 +295,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
       delegate = this@TrueSheetViewController
     }
-
-    setupModalObserver()
   }
 
   private fun cleanupSheet() {
@@ -594,11 +592,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    val activity = reactContext.currentActivity ?: run {
-      RNLog.w(reactContext, "TrueSheet: No activity available for presentation.")
-      return
-    }
-
     if (isPresented) {
       setupDimmedBackground(detentIndex)
       setStateForDetentIndex(detentIndex)
@@ -611,14 +604,38 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetInCoordinator(coordinator, sheet)
 
       // Add coordinator to activity
+      val activity = reactContext.currentActivity ?: run {
+        RNLog.w(reactContext, "TrueSheet: No activity available for presentation.")
+        return
+      }
+
       val contentView = activity.findViewById<ViewGroup>(android.R.id.content)
       contentView?.addView(coordinator)
 
-      // Setup back button handling
+      emitWillPresentEvents()
+
+      setupSheetDetents()
+      setupDimmedBackground(currentDetentIndex)
+      setupKeyboardObserver()
+      setupModalObserver()
       setupBackCallback()
 
-      // Start presentation
-      onSheetShow()
+      sheet.setupBackground()
+      sheet.setupElevation()
+      sheet.setupGrabber()
+
+      if (shouldAnimatePresent) {
+        isPresentAnimating = true
+        post { setStateForDetentIndex(currentDetentIndex) }
+      } else {
+        setStateForDetentIndex(currentDetentIndex)
+        emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
+        updateDimAmount()
+        finishPresent()
+      }
+
+      isPresented = true
+      isSheetVisible = true
     }
   }
 
@@ -639,35 +656,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Add sheet to coordinator
     coordinator.addView(sheet, params)
-  }
-
-  private fun onSheetShow() {
-    val sheet = sheetView ?: run {
-      RNLog.e(reactContext, "TrueSheet: sheetView is null in onSheetShow")
-      return
-    }
-
-    emitWillPresentEvents()
-
-    setupSheetDetents()
-    setupDimmedBackground(currentDetentIndex)
-    setupKeyboardObserver()
-    sheet.setupBackground()
-    sheet.setupElevation()
-    sheet.setupGrabber()
-
-    if (shouldAnimatePresent) {
-      isPresentAnimating = true
-      post { setStateForDetentIndex(currentDetentIndex) }
-    } else {
-      setStateForDetentIndex(currentDetentIndex)
-      emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
-      updateDimAmount()
-      finishPresent()
-    }
-
-    isPresented = true
-    isSheetVisible = true
   }
 
   fun dismiss(animated: Boolean = true) {
