@@ -258,13 +258,14 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  _lastStateSize = CGSizeZero;
-
   if (_controller && _controller.presentingViewController) {
     [_controller dismissViewControllerAnimated:YES completion:nil];
   }
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+
+  _lastStateSize = CGSizeZero;
+  _didInitiallyPresent = NO;
 }
 
 #pragma mark - Child Component Mounting

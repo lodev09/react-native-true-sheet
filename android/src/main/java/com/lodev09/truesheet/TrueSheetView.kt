@@ -154,13 +154,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
-    TrueSheetModule.unregisterView(id)
-    TrueSheetStackManager.removeSheet(this)
 
     if (viewController.isPresented) {
       viewController.dismiss(animated = false)
     }
+
+    TrueSheetModule.unregisterView(id)
+    TrueSheetStackManager.removeSheet(this)
+
     viewController.delegate = null
+    didInitiallyPresent = false
   }
 
   /**
