@@ -26,6 +26,7 @@ step() {
   local success_msg="$2"
   shift 2
   local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local error_file=$(mktemp)
 
   # Start spinner in background
   (
@@ -38,8 +39,8 @@ step() {
   ) &
   spinner_pid=$!
 
-  # Run the command
-  "$@" >/dev/null 2>&1
+  # Run the command, capture output for errors
+  "$@" >"$error_file" 2>&1
   local exit_code=$?
 
   # Stop spinner
@@ -52,9 +53,14 @@ step() {
     echo -e "${GREEN}→${NC} $success_msg\n"
   else
     printf "\r${RED}✗${NC} ${BOLD}%s${NC}\n" "$msg"
+    if [ -s "$error_file" ]; then
+      echo -e "${RED}→${NC} $(cat "$error_file")\n"
+    fi
+    rm -f "$error_file"
+    exit 1
   fi
 
-  return $exit_code
+  rm -f "$error_file"
 }
 
 clean_watchman() {
@@ -74,7 +80,7 @@ step "Installing dependencies" "Dependencies installed" yarn
 step "Cleaning watchman" "Watchman cache cleared" clean_watchman
 step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 step "Cleaning bare example" "Bare example cleaned" clean_bare
-step "Prebuilding expo example" "Expo prebuild complete" yarn expo prebuild:clean --no-install
+step "Prebuilding expo example" "Expo prebuild complete" yarn expo prebuild --no-install
 step "Building with bob" "Build complete" bob build
 
 echo -e "${GREEN}${BOLD}All done!${NC}"
