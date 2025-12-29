@@ -18,7 +18,6 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   return (
     <TrueSheetProvider>
       <View style={styles.content}>
-        <Button text="Dismiss Modal" onPress={onDismiss} />
         <View style={styles.heading}>
           <Text style={styles.title}>Modal Screen</Text>
           <Text style={styles.subtitle}>
@@ -26,6 +25,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
           </Text>
         </View>
         <Input />
+        <Button text="Dismiss Modal" onPress={onDismiss} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
         <Spacer />
