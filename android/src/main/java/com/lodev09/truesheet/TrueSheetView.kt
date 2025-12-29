@@ -487,15 +487,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
-    var contentView: ViewGroup? = null
 
     while (current != null) {
       if (current is ViewGroup && current.id == android.R.id.content) {
-        contentView = current
+        return current
       }
       current = current.parent
     }
 
-    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
+    return reactContext.currentActivity?.findViewById(android.R.id.content)
   }
 }
