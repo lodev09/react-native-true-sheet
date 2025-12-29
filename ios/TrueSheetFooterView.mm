@@ -62,7 +62,8 @@ using namespace facebook::react;
   [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
 
   // Store bottom constraint for keyboard adjustment, preserving current keyboard offset
-  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor constant:-_currentKeyboardOffset];
+  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor
+                                                        constant:-_currentKeyboardOffset];
   _bottomConstraint.active = YES;
 
   // Apply height constraint
