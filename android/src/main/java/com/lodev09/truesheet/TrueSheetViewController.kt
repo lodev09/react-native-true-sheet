@@ -110,7 +110,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // CoordinatorLayout components (replaces DialogFragment)
   internal var sheetView: TrueSheetBottomSheetView? = null
-  private var coordinatorLayout: TrueSheetCoordinatorLayout? = null
+  internal var coordinatorLayout: TrueSheetCoordinatorLayout? = null
   private var dimView: TrueSheetDimView? = null
   private var parentDimView: TrueSheetDimView? = null
 
@@ -303,9 +303,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
-    // Remove from activity
-    removeFromActivity()
-
     // Cleanup dim views
     dimView?.detach()
     dimView = null
@@ -328,12 +325,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
     shouldAnimatePresent = true
-  }
-
-  private fun removeFromActivity() {
-    val coordinator = coordinatorLayout ?: return
-    val contentView = reactContext.currentActivity?.findViewById<ViewGroup>(android.R.id.content)
-    contentView?.removeView(coordinator)
   }
 
   // =============================================================================
@@ -602,15 +593,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       // Setup sheet in coordinator layout
       setupSheetInCoordinator(coordinator, sheet)
-
-      // Add coordinator to activity
-      val activity = reactContext.currentActivity ?: run {
-        RNLog.w(reactContext, "TrueSheet: No activity available for presentation.")
-        return
-      }
-
-      val contentView = activity.findViewById<ViewGroup>(android.R.id.content)
-      contentView?.addView(coordinator)
 
       emitWillPresentEvents()
 

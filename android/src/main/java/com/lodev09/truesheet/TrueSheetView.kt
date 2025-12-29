@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
@@ -63,6 +64,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // Debounce flag to coalesce rapid layout changes into a single sheet update
   private var isSheetUpdatePending: Boolean = false
+
+  // Root container for the coordinator layout (activity or Modal dialog content view)
+  private var rootContainerView: ViewGroup? = null
 
   // ==================== Initialization ====================
 
@@ -265,6 +269,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
     if (!viewController.isPresented) {
+      // Attach coordinator to the root container
+      rootContainerView = findRootContainerView()
+      viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
+
       // Register with observer to track sheet stack hierarchy
       viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
     }
@@ -390,6 +398,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidDismiss(hadParent: Boolean) {
+    // Detach coordinator from the root container view
+    viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
+    rootContainerView = null
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
@@ -463,5 +475,27 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
     // Footer changes don't affect detents, only reposition it
     viewController.positionFooter()
+  }
+
+  // ==================== Private Helpers ====================
+
+  /**
+   * Find the root container view for presenting the sheet.
+   * This traverses up the view hierarchy to find the content view (android.R.id.content)
+   * of whichever window this view is in - whether that's the activity's window or a
+   * Modal's dialog window.
+   */
+  private fun findRootContainerView(): ViewGroup? {
+    var current: android.view.ViewParent? = parent
+    var contentView: ViewGroup? = null
+
+    while (current != null) {
+      if (current is ViewGroup && current.id == android.R.id.content) {
+        contentView = current
+      }
+      current = current.parent
+    }
+
+    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
   }
 }
