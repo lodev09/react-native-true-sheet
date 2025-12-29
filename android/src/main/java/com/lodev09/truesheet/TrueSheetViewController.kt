@@ -139,7 +139,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
-  private var isKeyboardTransitioning: Boolean = false
 
   // Promises
   var presentPromise: (() -> Unit)? = null
@@ -238,6 +237,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val currentKeyboardInset: Int
     get() = keyboardObserver?.currentHeight ?: 0
 
+  private val isKeyboardTransitioning: Boolean
+    get() = keyboardObserver?.isTransitioning ?: false
+
   val bottomInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
 
@@ -320,7 +322,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
-    isKeyboardTransitioning = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
@@ -901,7 +902,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     keyboardObserver = TrueSheetKeyboardObserver(coordinator, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
-          isKeyboardTransitioning = true
           if (!shouldHandleKeyboard()) return
           detentIndexBeforeKeyboard = currentDetentIndex
           setupSheetDetents()
@@ -918,9 +918,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
         }
 
-        override fun keyboardDidHide() {
-          isKeyboardTransitioning = false
-        }
+        override fun keyboardDidHide() {}
 
         override fun keyboardDidChangeHeight(height: Int) {
           if (!shouldHandleKeyboard()) return
