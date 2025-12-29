@@ -21,7 +21,10 @@ interface TrueSheetKeyboardObserverDelegate {
  * Tracks keyboard height and notifies delegate on changes.
  * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardObserver(private val targetView: View, private val reactContext: ThemedReactContext) {
+class TrueSheetKeyboardObserver(
+  private val targetView: View,
+  private val reactContext: ThemedReactContext
+) {
 
   var delegate: TrueSheetKeyboardObserverDelegate? = null
 
@@ -30,6 +33,20 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
 
   var targetHeight: Int = 0
     private set
+
+  var isTransitioning: Boolean = false
+    private set
+
+  fun isFocusedViewWithinSheet(sheetView: View): Boolean {
+    val focusedView = reactContext.currentActivity?.currentFocus ?: return false
+    var current: View? = focusedView
+    while (current != null && current !== targetView) {
+      if (current === sheetView) return true
+      val parent = current.parent
+      current = if (parent is View) parent else null
+    }
+    return false
+  }
 
   private var isHiding: Boolean = false
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
@@ -80,6 +97,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           endHeight = getKeyboardHeight()
           targetHeight = endHeight
           isHiding = endHeight < startHeight
+          isTransitioning = true
           if (endHeight > startHeight) {
             delegate?.keyboardWillShow(endHeight)
           } else if (isHiding) {
@@ -102,6 +120,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
         override fun onEnd(animation: WindowInsetsAnimationCompat) {
           val finalHeight = getKeyboardHeight()
           updateHeight(startHeight, finalHeight, 1f)
+          isTransitioning = false
           if (isHiding) {
             delegate?.keyboardDidHide()
             isHiding = false
@@ -134,6 +153,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       targetHeight = newHeight
       isHiding = newHeight < previousHeight
 
+      isTransitioning = true
       if (newHeight > previousHeight) {
         delegate?.keyboardWillShow(newHeight)
       } else if (isHiding) {
@@ -142,6 +162,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
 
       // On legacy API, keyboard has already animated - just update immediately
       updateHeight(previousHeight, newHeight, 1f)
+      isTransitioning = false
 
       if (isHiding && newHeight == 0) {
         delegate?.keyboardDidHide()

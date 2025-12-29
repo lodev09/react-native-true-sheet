@@ -139,7 +139,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
-  private var isKeyboardTransitioning: Boolean = false
 
   // Promises
   var presentPromise: (() -> Unit)? = null
@@ -238,6 +237,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val currentKeyboardInset: Int
     get() = keyboardObserver?.currentHeight ?: 0
 
+  private val isKeyboardTransitioning: Boolean
+    get() = keyboardObserver?.isTransitioning ?: false
+
+  private fun isFocusedViewWithinSheet(): Boolean {
+    val sheet = sheetView ?: return false
+    return keyboardObserver?.isFocusedViewWithinSheet(sheet) ?: false
+  }
+
   val bottomInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
 
@@ -320,7 +327,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
-    isKeyboardTransitioning = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
@@ -872,9 +878,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Keyboard Handling
   // =============================================================================
 
-  private fun shouldHandleKeyboard(): Boolean {
+  private fun shouldHandleKeyboard(checkFocus: Boolean = true): Boolean {
     if (wasHiddenByModal) return false
-    return isTopmostSheet
+    if (!isTopmostSheet) return false
+    if (checkFocus && !isFocusedViewWithinSheet()) return false
+    return true
   }
 
   fun setupKeyboardObserver() {
@@ -886,7 +894,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     keyboardObserver = TrueSheetKeyboardObserver(coordinator, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
-          isKeyboardTransitioning = true
           if (!shouldHandleKeyboard()) return
           detentIndexBeforeKeyboard = currentDetentIndex
           setupSheetDetents()
@@ -894,7 +901,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardWillHide() {
-          if (!shouldHandleKeyboard()) return
+          if (!shouldHandleKeyboard(checkFocus = false)) return
+
           setupSheetDetents()
           if (!isDismissing && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
@@ -902,9 +910,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
         }
 
-        override fun keyboardDidHide() {
-          isKeyboardTransitioning = false
-        }
+        override fun keyboardDidHide() {}
 
         override fun keyboardDidChangeHeight(height: Int) {
           if (!shouldHandleKeyboard()) return
