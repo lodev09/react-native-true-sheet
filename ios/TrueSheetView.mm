@@ -96,7 +96,12 @@ using namespace facebook::react;
 
 - (void)dealloc {
   if (_controller && _controller.presentingViewController) {
-    [_controller dismissViewControllerAnimated:NO completion:nil];
+    // Find the root presenting controller to dismiss the entire stack
+    UIViewController *root = _controller.presentingViewController;
+    while (root.presentingViewController != nil) {
+      root = root.presentingViewController;
+    }
+    [root dismissViewControllerAnimated:YES completion:nil];
   }
 
   _controller.delegate = nil;
@@ -257,10 +262,6 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-
-  if (_controller && _controller.presentingViewController) {
-    [_controller dismissViewControllerAnimated:YES completion:nil];
-  }
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 

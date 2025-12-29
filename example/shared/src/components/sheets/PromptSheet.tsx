@@ -47,7 +47,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           `Sheet prompt presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         );
 
-        inputRef.current?.focus();
+        // inputRef.current?.focus();
       }}
       onDetentChange={(e) =>
         console.log(
