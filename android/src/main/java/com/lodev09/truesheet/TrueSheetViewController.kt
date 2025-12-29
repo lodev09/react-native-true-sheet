@@ -240,6 +240,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val isKeyboardTransitioning: Boolean
     get() = keyboardObserver?.isTransitioning ?: false
 
+  private fun isFocusedViewWithinSheet(): Boolean {
+    val sheet = sheetView ?: return false
+    return keyboardObserver?.isFocusedViewWithinSheet(sheet) ?: false
+  }
+
   val bottomInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
 
@@ -878,19 +883,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isTopmostSheet) return false
     if (checkFocus && !isFocusedViewWithinSheet()) return false
     return true
-  }
-
-  private fun isFocusedViewWithinSheet(): Boolean {
-    val focusedView = reactContext.currentActivity?.currentFocus ?: return false
-    val sheet = sheetView ?: return false
-    val coordinator = coordinatorLayout ?: return false
-    var current: View? = focusedView
-    while (current != null && current !== coordinator) {
-      if (current === sheet) return true
-      val parent = current.parent
-      current = if (parent is View) parent else null
-    }
-    return false
   }
 
   fun setupKeyboardObserver() {

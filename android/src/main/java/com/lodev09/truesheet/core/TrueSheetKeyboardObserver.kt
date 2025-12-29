@@ -21,7 +21,10 @@ interface TrueSheetKeyboardObserverDelegate {
  * Tracks keyboard height and notifies delegate on changes.
  * Uses WindowInsetsAnimationCompat on API 30+, ViewTreeObserver fallback on older versions.
  */
-class TrueSheetKeyboardObserver(private val targetView: View, private val reactContext: ThemedReactContext) {
+class TrueSheetKeyboardObserver(
+  private val targetView: View,
+  private val reactContext: ThemedReactContext
+) {
 
   var delegate: TrueSheetKeyboardObserverDelegate? = null
 
@@ -33,6 +36,17 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
 
   var isTransitioning: Boolean = false
     private set
+
+  fun isFocusedViewWithinSheet(sheetView: View): Boolean {
+    val focusedView = reactContext.currentActivity?.currentFocus ?: return false
+    var current: View? = focusedView
+    while (current != null && current !== targetView) {
+      if (current === sheetView) return true
+      val parent = current.parent
+      current = if (parent is View) parent else null
+    }
+    return false
+  }
 
   private var isHiding: Boolean = false
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
