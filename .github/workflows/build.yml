@@ -133,3 +133,14 @@ jobs:
       - name: Build example for iOS
         run: |
           yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+
+  build-status:
+    runs-on: ubuntu-latest
+    needs: [build-android, build-ios]
+    if: always()
+    steps:
+      - name: Check build status
+        run: |
+          if [[ "${{ needs.build-android.result }}" == "failure" || "${{ needs.build-ios.result }}" == "failure" ]]; then
+            exit 1
+          fi
