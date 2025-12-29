@@ -22,6 +22,7 @@ using namespace facebook::react;
   CGFloat _lastHeight;
   BOOL _didInitialLayout;
   NSLayoutConstraint *_bottomConstraint;
+  CGFloat _currentKeyboardOffset;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -39,6 +40,7 @@ using namespace facebook::react;
     _lastHeight = 0;
     _didInitialLayout = NO;
     _bottomConstraint = nil;
+    _currentKeyboardOffset = 0;
   }
   return self;
 }
@@ -59,8 +61,8 @@ using namespace facebook::react;
   [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
   [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
 
-  // Store bottom constraint for keyboard adjustment
-  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor];
+  // Store bottom constraint for keyboard adjustment, preserving current keyboard offset
+  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor constant:-_currentKeyboardOffset];
   _bottomConstraint.active = YES;
 
   // Apply height constraint
@@ -109,6 +111,7 @@ using namespace facebook::react;
   _lastHeight = 0;
   _didInitialLayout = NO;
   _bottomConstraint = nil;
+  _currentKeyboardOffset = 0;
 }
 
 #pragma mark - Keyboard Handling
@@ -162,6 +165,9 @@ using namespace facebook::react;
 
   // Cap to ensure we don't go negative
   CGFloat bottomOffset = MAX(0, keyboardHeight);
+
+  // Store the current keyboard offset so it persists through constraint recreation
+  _currentKeyboardOffset = bottomOffset;
 
   [UIView animateWithDuration:duration
                         delay:0
