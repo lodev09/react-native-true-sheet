@@ -59,10 +59,6 @@ The `auto` detent does not work well with `scrollable` on Android. Use fixed fra
 :::
 
 :::warning
-If your `ScrollView` content height is smaller than the sheet height, scrolling may not work properly. See [Troubleshooting](/troubleshooting#unable-to-drag-on-android) for more details.
-:::
-
-:::warning
 `RefreshControl` does not work with `nestedScrollEnabled` on Android due to how `SwipeRefreshLayout` interferes with the `BottomSheetBehavior`'s nested scrolling coordination. This is a known limitation of the Android platform.
 
 As a workaround, you can disable `nestedScrollEnabled` to make `RefreshControl` work, but the sheet will no longer be draggable from within the scroll view. In this case, ensure you have a draggable area outside the scroll view (e.g., a header with a grabber) to allow users to drag the sheet.

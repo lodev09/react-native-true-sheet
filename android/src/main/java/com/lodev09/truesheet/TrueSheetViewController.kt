@@ -170,6 +170,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var grabberOptions: GrabberOptions? = null
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: String = "automatic"
+  var scrollable: Boolean = false
+    set(value) {
+      field = value
+      coordinatorLayout?.scrollable = value
+    }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
@@ -297,6 +302,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Create coordinator layout
     coordinatorLayout = TrueSheetCoordinatorLayout(reactContext).apply {
       delegate = this@TrueSheetViewController
+      scrollable = this@TrueSheetViewController.scrollable
     }
 
     sheetView = TrueSheetBottomSheetView(reactContext).apply {

@@ -248,6 +248,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.insetAdjustment = insetAdjustment
   }
 
+  fun setScrollable(scrollable: Boolean) {
+    viewController.scrollable = scrollable
+  }
+
   // ==================== State Management ====================
 
   /**
