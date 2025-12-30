@@ -190,7 +190,7 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "scrollable", defaultBoolean = false)
   override fun setScrollable(view: TrueSheetView, value: Boolean) {
-    // iOS-specific prop - no-op on Android
+    view.setScrollable(value)
   }
 
   @ReactProp(name = "pageSizing", defaultBoolean = true)

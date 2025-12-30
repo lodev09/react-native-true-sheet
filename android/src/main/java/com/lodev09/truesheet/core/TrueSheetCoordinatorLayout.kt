@@ -18,12 +18,6 @@ interface TrueSheetCoordinatorLayoutDelegate {
  * Custom CoordinatorLayout that hosts the bottom sheet and dim view.
  * Implements ReactPointerEventsView to allow touch events to pass through
  * to underlying React Native views when appropriate.
- *
- * Also handles touch interception for ScrollViews that can't scroll (content < viewport),
- * allowing the sheet to be dragged in these cases.
- *
- * TODO: Remove this workaround once NestedScrollView is merged into react-native core.
- * See: https://github.com/facebook/react-native/pull/44099
  */
 @SuppressLint("ViewConstructor")
 class TrueSheetCoordinatorLayout(context: Context) :
@@ -31,6 +25,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   ReactPointerEventsView {
 
   var delegate: TrueSheetCoordinatorLayoutDelegate? = null
+  var scrollable: Boolean = false
 
   private val touchSlop: Int = ViewConfiguration.get(context).scaledTouchSlop
   private var dragging = false
@@ -61,7 +56,18 @@ class TrueSheetCoordinatorLayout(context: Context) :
   override val pointerEvents: PointerEvents
     get() = PointerEvents.BOX_NONE
 
+  /**
+   * Intercepts touch events for ScrollViews that can't scroll (content < viewport),
+   * allowing the sheet to be dragged in these cases.
+   *
+   * TODO: Remove this workaround once NestedScrollView is merged into react-native core.
+   * See: https://github.com/facebook/react-native/pull/44099
+   */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+    if (!scrollable) {
+      return super.onInterceptTouchEvent(ev)
+    }
+
     val scrollView = findScrollView(this)
     val cannotScroll = scrollView != null &&
       scrollView.scrollY == 0 &&
