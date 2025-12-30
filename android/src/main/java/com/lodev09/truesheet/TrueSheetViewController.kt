@@ -302,6 +302,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Create coordinator layout
     coordinatorLayout = TrueSheetCoordinatorLayout(reactContext).apply {
       delegate = this@TrueSheetViewController
+      scrollable = this@TrueSheetViewController.scrollable
     }
 
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
