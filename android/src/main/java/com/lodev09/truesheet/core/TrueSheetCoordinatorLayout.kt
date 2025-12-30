@@ -2,7 +2,10 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.view.View
+import android.view.MotionEvent
+import android.view.ViewConfiguration
+import android.view.ViewGroup
+import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
@@ -15,6 +18,9 @@ interface TrueSheetCoordinatorLayoutDelegate {
  * Custom CoordinatorLayout that hosts the bottom sheet and dim view.
  * Implements ReactPointerEventsView to allow touch events to pass through
  * to underlying React Native views when appropriate.
+ *
+ * Also handles touch interception for ScrollViews that can't scroll (content < viewport),
+ * allowing the sheet to be dragged in these cases.
  */
 @SuppressLint("ViewConstructor")
 class TrueSheetCoordinatorLayout(context: Context) :
@@ -23,14 +29,17 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
   var delegate: TrueSheetCoordinatorLayoutDelegate? = null
 
+  private val touchSlop: Int = ViewConfiguration.get(context).scaledTouchSlop
+  private var dragging = false
+  private var initialY = 0f
+  private var activePointerId = 0
+
   init {
-    // Fill the entire screen
     layoutParams = LayoutParams(
       LayoutParams.MATCH_PARENT,
       LayoutParams.MATCH_PARENT
     )
 
-    // Ensure we don't clip the sheet during animations
     clipChildren = false
     clipToPadding = false
   }
@@ -46,10 +55,74 @@ class TrueSheetCoordinatorLayout(context: Context) :
     delegate?.coordinatorLayoutDidLayout(changed)
   }
 
-  /**
-   * Allow pointer events to pass through to underlying views.
-   * The DimView and BottomSheetView handle their own touch interception.
-   */
   override val pointerEvents: PointerEvents
     get() = PointerEvents.BOX_NONE
+
+  override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+    val scrollView = findScrollView(this)
+    val cannotScroll = scrollView != null &&
+      scrollView.scrollY == 0 &&
+      !scrollView.canScrollVertically(1)
+
+    if (cannotScroll) {
+      when (ev.action and MotionEvent.ACTION_MASK) {
+        MotionEvent.ACTION_DOWN -> {
+          dragging = false
+          initialY = ev.y
+          activePointerId = ev.getPointerId(0)
+        }
+        MotionEvent.ACTION_MOVE -> {
+          val pointerIndex = ev.findPointerIndex(activePointerId)
+          if (pointerIndex != -1) {
+            val y = ev.getY(pointerIndex)
+            val deltaY = initialY - y
+            if (kotlin.math.abs(deltaY) > touchSlop) {
+              dragging = true
+              parent?.requestDisallowInterceptTouchEvent(true)
+            }
+          }
+        }
+        MotionEvent.ACTION_UP,
+        MotionEvent.ACTION_CANCEL -> {
+          dragging = false
+        }
+      }
+    } else {
+      dragging = false
+    }
+
+    return dragging || super.onInterceptTouchEvent(ev)
+  }
+
+  @SuppressLint("ClickableViewAccessibility")
+  override fun onTouchEvent(ev: MotionEvent): Boolean {
+    if (dragging) {
+      when (ev.action and MotionEvent.ACTION_MASK) {
+        MotionEvent.ACTION_UP,
+        MotionEvent.ACTION_CANCEL -> {
+          dragging = false
+        }
+      }
+      // Let parent CoordinatorLayout handle the touch for BottomSheetBehavior
+      return super.onTouchEvent(ev)
+    }
+    return super.onTouchEvent(ev)
+  }
+
+  private fun findScrollView(view: android.view.View): ScrollView? {
+    if (view is ScrollView) {
+      return view
+    }
+
+    if (view is ViewGroup) {
+      for (i in 0 until view.childCount) {
+        val scrollView = findScrollView(view.getChildAt(i))
+        if (scrollView != null) {
+          return scrollView
+        }
+      }
+    }
+
+    return null
+  }
 }
