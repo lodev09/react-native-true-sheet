@@ -86,6 +86,16 @@ return (
 )
 ```
 
+## Keyboard Covering TextInput on Android with Unistyles
+
+When using [`react-native-unistyles`](https://github.com/jpudysz/react-native-unistyles) alongside TrueSheet, the keyboard may cover the TextInput instead of the sheet repositioning itself. This is caused by Unistyles preventing TrueSheet from observing keyboard animation events on Android.
+
+Related: [#354](https://github.com/lodev09/react-native-true-sheet/issues/354)
+
+:::info
+A fix has been submitted to Unistyles. See [PR #1061](https://github.com/jpudysz/react-native-unistyles/pull/1061).
+:::
+
 ## Weird layout render
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
