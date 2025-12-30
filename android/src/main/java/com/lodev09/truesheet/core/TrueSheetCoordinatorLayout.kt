@@ -80,6 +80,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
           initialY = ev.y
           activePointerId = ev.getPointerId(0)
         }
+
         MotionEvent.ACTION_MOVE -> {
           val pointerIndex = ev.findPointerIndex(activePointerId)
           if (pointerIndex != -1) {
@@ -91,6 +92,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
             }
           }
         }
+
         MotionEvent.ACTION_UP,
         MotionEvent.ACTION_CANCEL -> {
           dragging = false
