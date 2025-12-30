@@ -63,6 +63,11 @@ step() {
   rm -f "$error_file"
 }
 
+install() {
+  rm -rf node_modules example/bare/node_modules example/expo/node_modules docs/node_modules
+  yarn
+}
+
 clean_watchman() {
   watchman watch-del-all 2>/dev/null || true
   rm -rf $TMPDIR/metro-*
@@ -76,7 +81,7 @@ clean_bare() {
   npx pod-install example/bare
 }
 
-step "Installing dependencies" "Dependencies installed" yarn
+step "Installing dependencies" "Dependencies installed" install
 step "Cleaning watchman" "Watchman cache cleared" clean_watchman
 step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 step "Cleaning bare example" "Bare example cleaned" clean_bare
