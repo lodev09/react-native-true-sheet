@@ -21,6 +21,9 @@ interface TrueSheetCoordinatorLayoutDelegate {
  *
  * Also handles touch interception for ScrollViews that can't scroll (content < viewport),
  * allowing the sheet to be dragged in these cases.
+ *
+ * TODO: Remove this workaround once NestedScrollView is merged into react-native core.
+ * See: https://github.com/facebook/react-native/pull/44099
  */
 @SuppressLint("ViewConstructor")
 class TrueSheetCoordinatorLayout(context: Context) :
