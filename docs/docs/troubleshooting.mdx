@@ -69,6 +69,28 @@ Related: [#354](https://github.com/lodev09/react-native-true-sheet/issues/354)
 A fix has been submitted to Unistyles. See [PR #1061](https://github.com/jpudysz/react-native-unistyles/pull/1061).
 :::
 
+## Blank Screen When Dismissing React Native Modal on iOS
+
+When presenting a TrueSheet on top of a React Native `<Modal>` and then dismissing the Modal (by setting `visible={false}`), the screen may go blank. This is a bug in React Native where dismissing a Modal that has another view controller presented on top of it only dismisses the topmost view controller, leaving the Modal in an inconsistent state.
+
+**Workaround:**
+
+Dismiss the sheet first before hiding the Modal:
+
+```tsx
+const sheet = useRef<TrueSheet>(null)
+const [modalVisible, setModalVisible] = useState(false)
+
+const closeModal = async () => {
+  await sheet.current?.dismiss()
+  setModalVisible(false)
+}
+```
+
+:::info
+A fix has been submitted to React Native. See [PR #55005](https://github.com/facebook/react-native/pull/55005).
+:::
+
 ## Weird layout render
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
