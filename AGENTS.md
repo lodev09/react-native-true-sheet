@@ -80,8 +80,10 @@ ios/
 │   ├── TrueSheetDragEvents.mm/.h
 │   └── TrueSheetFocusEvents.mm/.h
 └── utils/
-    ├── LayoutUtil.mm/.h
+    ├── BlurUtil.mm/.h
     ├── GestureUtil.mm/.h
+    ├── LayoutUtil.mm/.h
+    ├── PlatformUtil.h
     └── WindowUtil.mm/.h
 
 android/src/main/java/com/lodev09/truesheet/
@@ -113,6 +115,7 @@ android/src/main/java/com/lodev09/truesheet/
 │   ├── TrueSheetLifecycleEvents.kt
 │   └── TrueSheetStateEvents.kt
 └── utils/
+    ├── KeyboardUtils.kt
     └── ScreenUtils.kt
 
 common/cpp/react/renderer/components/TrueSheetSpec/
@@ -144,6 +147,16 @@ TrueSheetView (host view - hidden, manages state)
 1. Add `DirectEventHandler` to native component spec
 2. Create event class in `ios/events/` and `android/.../events/`
 3. Emit from native view
+
+### Creating a Pull Request
+
+When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
+
+1. **Summary** - Describe what the PR does and why
+2. **Type of Change** - Select one: Bug fix, New feature, Breaking change, or Documentation update
+3. **Test Plan** - Explain how the changes were tested
+4. **Screenshots / Videos** - Include if applicable
+5. **Checklist** - Mark platforms tested (iOS, Android, Web) and documentation updates
 
 ## Commands
 
