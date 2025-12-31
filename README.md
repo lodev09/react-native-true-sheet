@@ -31,6 +31,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 - React Native >= 0.76 (Expo SDK 52+)
 - New Architecture enabled (default in RN 0.76+)
+- Xcode 26.2 (strongly recommended for better library functionality)
 
 ### Expo
 
@@ -43,6 +44,27 @@ npx expo install @lodev09/react-native-true-sheet
 ```sh
 yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
+```
+
+### EAS Build (iOS)
+
+When using [EAS Build](https://docs.expo.dev/build/introduction/) to build your iOS app, you must configure your `eas.json` to use a build image that includes Xcode 26.2. Use `"image": "latest"` or choose from the [available build images](https://docs.expo.dev/build-reference/infrastructure/#ios-server-images):
+
+```json
+{
+  "build": {
+    "production": {
+      "ios": {
+        "image": "latest"
+      }
+    },
+    "development": {
+      "ios": {
+        "image": "latest"
+      }
+    }
+  }
+}
 ```
 
 ## Documentation
