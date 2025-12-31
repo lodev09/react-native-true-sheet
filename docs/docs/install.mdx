@@ -10,6 +10,7 @@ keywords: [bottom sheet installation, bottom sheet yarn, bottom sheet npm, ios b
 
 - React Native >= 0.76 (Expo SDK 52+)
 - New Architecture enabled (default in RN 0.76+)
+- Xcode 26.2 (strongly recommended for better library functionality)
 
 :::info
 This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). Use this with [Expo CNG](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
@@ -31,4 +32,25 @@ Then install the native dependencies:
 
 ```sh
 cd ios && pod install
+```
+
+## EAS Build (iOS)
+
+When using [EAS Build](https://docs.expo.dev/build/introduction/) to build your iOS app, you must configure your `eas.json` to use a build image that includes Xcode 26.2. Use `"image": "latest"` or choose from the [available build images](https://docs.expo.dev/build-reference/infrastructure/#ios-server-images):
+
+```json
+{
+  "build": {
+    "production": {
+      "ios": {
+        "image": "latest"
+      }
+    },
+    "development": {
+      "ios": {
+        "image": "latest"
+      }
+    }
+  }
+}
 ```
