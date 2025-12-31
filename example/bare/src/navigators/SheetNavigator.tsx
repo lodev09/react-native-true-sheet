@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -6,8 +8,8 @@ import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
-import { Button, DemoContent } from '@example/shared/components';
-import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
+import { Button, DemoContent, Footer } from '@example/shared/components';
+import { BLUE, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetStackParamList } from '../types';
 
 const Sheet = createTrueSheetNavigator<SheetStackParamList>();
@@ -34,9 +36,16 @@ const HomeScreen = () => {
 
 const DetailsSheet = () => {
   const navigation = useTrueSheetNavigation<SheetStackParamList>();
+  const sheetRef = useRef<TrueSheet>(null);
+
+  useEffect(() => {
+    navigation.setOptions({
+      footer: <Footer onPress={() => sheetRef.current?.present()} />,
+    });
+  }, [navigation]);
 
   return (
-    <View style={styles.sheetContent}>
+    <View style={[styles.sheetContent, { paddingBottom: FOOTER_HEIGHT + SPACING }]}>
       <Text style={styles.sheetTitle}>Details Sheet</Text>
       <Text style={styles.sheetSubtitle}>This is a sheet screen using react-navigation.</Text>
       <DemoContent />
@@ -45,6 +54,12 @@ const DetailsSheet = () => {
         <Button text="Open Settings" onPress={() => navigation.navigate('Settings')} />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
+      <TrueSheet ref={sheetRef} cornerRadius={12} detents={['auto']} backgroundColor={DARK}>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Footer Sheet</Text>
+          <Text style={styles.sheetSubtitle}>Presented from footer button!</Text>
+        </View>
+      </TrueSheet>
     </View>
   );
 };
@@ -121,6 +136,7 @@ export const SheetNavigator = () => {
         options={{
           detents: ['auto', 1],
           cornerRadius: 16,
+          backgroundColor: DARK,
         }}
       />
       <Sheet.Screen

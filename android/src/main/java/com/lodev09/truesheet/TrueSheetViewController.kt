@@ -45,6 +45,7 @@ import com.lodev09.truesheet.utils.ScreenUtils
 data class DetentInfo(val index: Int, val position: Float)
 
 interface TrueSheetViewControllerDelegate {
+  val eventDispatcher: EventDispatcher?
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
@@ -155,9 +156,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // Touch Dispatchers
-  internal var eventDispatcher: EventDispatcher? = null
   private val jsTouchDispatcher = JSTouchDispatcher(this)
-  private var jsPointerDispatcher: JSPointerDispatcher? = null
+  private val jsPointerDispatcher = JSPointerDispatcher(this)
+
+  private val eventDispatcher
+    get() = delegate?.eventDispatcher
 
   // Detent Configuration
   override var maxSheetHeight: Int? = null
@@ -283,14 +286,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private val dimViews: List<TrueSheetDimView>
     get() = listOfNotNull(dimView, parentDimView)
-
-  // =============================================================================
-  // MARK: - Initialization
-  // =============================================================================
-
-  init {
-    jsPointerDispatcher = JSPointerDispatcher(this)
-  }
 
   // =============================================================================
   // MARK: - Sheet Creation & Cleanup
@@ -1068,32 +1063,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  override fun handleException(t: Throwable) {
-    reactContext.reactApplicationContext.handleException(RuntimeException(t))
-  }
-
   // =============================================================================
-  // MARK: - Touch Event Handling
+  // MARK: - RootView Touch Handling
   // =============================================================================
 
   override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-    // Footer needs special handling since it's positioned absolutely
     val footer = containerView?.footerView
-    if (footer != null && footer.isVisible) {
+    if (footer != null && footer.isShown) {
       val footerLocation = ScreenUtils.getScreenLocation(footer)
-      val touchScreenX = event.rawX.toInt()
-      val touchScreenY = event.rawY.toInt()
+      val touchX = event.rawX.toInt()
+      val touchY = event.rawY.toInt()
 
-      // Check if touch is within footer bounds
-      if (touchScreenX >= footerLocation[0] &&
-        touchScreenX <= footerLocation[0] + footer.width &&
-        touchScreenY >= footerLocation[1] &&
-        touchScreenY <= footerLocation[1] + footer.height
+      if (touchX >= footerLocation[0] &&
+        touchX <= footerLocation[0] + footer.width &&
+        touchY >= footerLocation[1] &&
+        touchY <= footerLocation[1] + footer.height
       ) {
         val localEvent = MotionEvent.obtain(event)
         localEvent.setLocation(
-          (touchScreenX - footerLocation[0]).toFloat(),
-          (touchScreenY - footerLocation[1]).toFloat()
+          (touchX - footerLocation[0]).toFloat(),
+          (touchY - footerLocation[1]).toFloat()
         )
         val handled = footer.dispatchTouchEvent(localEvent)
         localEvent.recycle()
@@ -1106,7 +1095,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
       jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher?.handleMotionEvent(event, it, true)
+      jsPointerDispatcher.handleMotionEvent(event, it, true)
     }
     return super.onInterceptTouchEvent(event)
   }
@@ -1114,35 +1103,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun onTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
       jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher?.handleMotionEvent(event, it, false)
+      jsPointerDispatcher.handleMotionEvent(event, it, false)
     }
     super.onTouchEvent(event)
     return true
   }
 
   override fun onInterceptHoverEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let { jsPointerDispatcher?.handleMotionEvent(event, it, true) }
+    eventDispatcher?.let { jsPointerDispatcher.handleMotionEvent(event, it, true) }
     return super.onHoverEvent(event)
   }
 
   override fun onHoverEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let { jsPointerDispatcher?.handleMotionEvent(event, it, false) }
+    eventDispatcher?.let { jsPointerDispatcher.handleMotionEvent(event, it, false) }
     return super.onHoverEvent(event)
   }
 
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let {
       jsTouchDispatcher.onChildStartedNativeGesture(ev, it)
-      jsPointerDispatcher?.onChildStartedNativeGesture(childView, ev, it)
+      jsPointerDispatcher.onChildStartedNativeGesture(childView, ev, it)
     }
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
     eventDispatcher?.let { jsTouchDispatcher.onChildEndedNativeGesture(ev, it) }
-    jsPointerDispatcher?.onChildEndedNativeGesture()
+    jsPointerDispatcher.onChildEndedNativeGesture()
   }
 
-  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-    super.requestDisallowInterceptTouchEvent(disallowIntercept)
+  override fun handleException(t: Throwable) {
+    reactContext.reactApplicationContext.handleException(RuntimeException(t))
   }
 }
