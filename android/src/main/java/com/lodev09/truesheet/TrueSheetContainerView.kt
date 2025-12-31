@@ -3,9 +3,11 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 interface TrueSheetContainerViewDelegate {
+  val eventDispatcher: EventDispatcher?
   fun containerViewContentDidChangeSize(width: Int, height: Int)
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
@@ -31,6 +33,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var contentHeight: Int = 0
   var headerHeight: Int = 0
   var footerHeight: Int = 0
+
+  override val eventDispatcher: EventDispatcher?
+    get() = delegate?.eventDispatcher
 
   init {
     // Allow footer to position outside container bounds

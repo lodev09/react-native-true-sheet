@@ -42,7 +42,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private val containerView: TrueSheetContainerView?
     get() = viewController.getChildAt(0) as? TrueSheetContainerView
 
-  var eventDispatcher: EventDispatcher? = null
+  override var eventDispatcher: EventDispatcher? = null
 
   // Initial present configuration (set by ViewManager before mount)
   var initialDetentIndex: Int = -1
@@ -384,10 +384,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
-
-    // Enable touch event dispatching to React Native while sheet is visible
-    viewController.eventDispatcher = eventDispatcher
-    containerView?.footerView?.eventDispatcher = eventDispatcher
   }
 
   override fun viewControllerDidPresent(index: Int, position: Float, detent: Float) {
@@ -398,10 +394,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun viewControllerWillDismiss() {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
-
-    // Disable touch event dispatching when sheet is dismissing
-    viewController.eventDispatcher = null
-    containerView?.footerView?.eventDispatcher = null
   }
 
   override fun viewControllerDidDismiss(hadParent: Boolean) {

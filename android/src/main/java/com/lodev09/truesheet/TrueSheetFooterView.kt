@@ -11,10 +11,11 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * Delegate interface for footer view size changes
+ * Delegate interface for footer view size changes and event dispatching
  */
 interface TrueSheetFooterViewDelegate {
   fun footerViewDidChangeSize(width: Int, height: Int)
+  val eventDispatcher: EventDispatcher?
 }
 
 /**
@@ -30,7 +31,9 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   RootView {
 
   var delegate: TrueSheetFooterViewDelegate? = null
-  var eventDispatcher: EventDispatcher? = null
+
+  private val eventDispatcher: EventDispatcher?
+    get() = delegate?.eventDispatcher
 
   private var lastWidth = 0
   private var lastHeight = 0
