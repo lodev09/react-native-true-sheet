@@ -499,24 +499,20 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
+    var contentView: ViewGroup? = null
 
     while (current != null) {
       if (current is ViewGroup) {
-        if (current.javaClass.name == "com.swmansion.rnscreens.ScreenContentWrapper") {
+        if (current.javaClass.name == "com.swmansion.rnscreens.Screen") {
           return current
+        }
+        if (contentView == null && current.id == android.R.id.content) {
+          contentView = current
         }
       }
       current = current.parent
     }
 
-    current = parent
-    while (current != null) {
-      if (current is ViewGroup && current.id == android.R.id.content) {
-        return current
-      }
-      current = current.parent
-    }
-
-    return reactContext.currentActivity?.findViewById(android.R.id.content)
+    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
   }
 }
