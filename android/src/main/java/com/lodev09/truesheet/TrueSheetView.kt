@@ -151,7 +151,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Lifecycle ====================
 
   override fun onHostResume() {
-    viewController.reapplyHiddenState()
     finalizeUpdates()
   }
 
@@ -278,7 +277,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!viewController.isPresented) {
       // Attach coordinator to the root container
       rootContainerView = findRootContainerView()
-      viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
+      viewController.coordinatorLayout?.let { coordinator ->
+        rootContainerView?.let { container ->
+          container.addView(coordinator)
+
+          // Manually measure and layout for React Native views (they don't layout native children)
+          container.post {
+            if (container.width > 0 && container.height > 0) {
+              val widthSpec = View.MeasureSpec.makeMeasureSpec(container.width, View.MeasureSpec.EXACTLY)
+              val heightSpec = View.MeasureSpec.makeMeasureSpec(container.height, View.MeasureSpec.EXACTLY)
+              coordinator.measure(widthSpec, heightSpec)
+              coordinator.layout(0, 0, container.width, container.height)
+            }
+          }
+        }
+      }
 
       // Register with observer to track sheet stack hierarchy
       viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
@@ -487,6 +500,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
 
+    while (current != null) {
+      if (current is ViewGroup) {
+        if (current.javaClass.name == "com.swmansion.rnscreens.ScreenContentWrapper") {
+          return current
+        }
+      }
+      current = current.parent
+    }
+
+    current = parent
     while (current != null) {
       if (current is ViewGroup && current.id == android.R.id.content) {
         return current

@@ -23,7 +23,6 @@ import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.RNScreensFragmentObserver
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
@@ -90,7 +89,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
-    private const val MODAL_FADE_DURATION = 150L
   }
 
   // =============================================================================
@@ -130,7 +128,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var interactionState: InteractionState = InteractionState.Idle
   private var isDismissing = false
-  private var wasHiddenByModal = false
   private var shouldAnimatePresent = false
   private var isPresentAnimating = false
 
@@ -150,7 +147,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var rnScreensObserver: RNScreensFragmentObserver? = null
   internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
     delegate = this@TrueSheetViewController
   }
@@ -307,7 +303,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
-    cleanupModalObserver()
     cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
@@ -327,7 +322,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isDismissing = false
     isPresented = false
     isSheetVisible = false
-    wasHiddenByModal = false
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
@@ -498,84 +492,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Modal Observer (react-native-screens)
-  // =============================================================================
-
-  private fun setupModalObserver() {
-    rnScreensObserver = RNScreensFragmentObserver(
-      reactContext = reactContext,
-      onModalPresented = {
-        if (isPresented && isSheetVisible && isTopmostSheet) {
-          hideForModal()
-        }
-      },
-      onModalWillDismiss = {
-        if (isPresented && wasHiddenByModal && isTopmostSheet) {
-          showAfterModal()
-        }
-      },
-      onModalDidDismiss = {
-        if (isPresented && wasHiddenByModal) {
-          wasHiddenByModal = false
-          // Restore parent sheet after this sheet is restored
-          parentSheetView?.viewController?.let { parent ->
-            post { parent.showAfterModal() }
-          }
-        }
-      }
-    )
-    rnScreensObserver?.start()
-  }
-
-  private fun cleanupModalObserver() {
-    rnScreensObserver?.stop()
-    rnScreensObserver = null
-  }
-
-  private fun setSheetVisibility(visible: Boolean) {
-    coordinatorLayout?.visibility = if (visible) VISIBLE else GONE
-    dimViews.forEach { it.visibility = if (visible) VISIBLE else INVISIBLE }
-  }
-
-  private fun hideForModal() {
-    val sheet = sheetView ?: run {
-      RNLog.e(reactContext, "TrueSheet: sheetView is null in hideForModal")
-      return
-    }
-
-    isSheetVisible = false
-    wasHiddenByModal = true
-
-    dimViews.forEach { it.animate().alpha(0f).setDuration(MODAL_FADE_DURATION).start() }
-    sheet.animate()
-      .alpha(0f)
-      .setDuration(MODAL_FADE_DURATION)
-      .withEndAction {
-        setSheetVisibility(false)
-      }
-      .start()
-
-    // This will hide parent sheets first
-    parentSheetView?.viewController?.hideForModal()
-  }
-
-  private fun showAfterModal() {
-    isSheetVisible = true
-    setSheetVisibility(true)
-    sheetView?.alpha = 1f
-    updateDimAmount(animated = true)
-  }
-
-  /**
-   * Re-applies hidden state after returning from background.
-   * Android may restore visibility on activity resume, so we need to hide it again.
-   */
-  fun reapplyHiddenState() {
-    if (!wasHiddenByModal) return
-    setSheetVisibility(false)
-  }
-
-  // =============================================================================
   // MARK: - Presentation
   // =============================================================================
 
@@ -606,7 +522,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       setupDimmedBackground(currentDetentIndex)
       setupKeyboardObserver()
-      setupModalObserver()
       setupBackCallback()
 
       sheet.setupBackground()
@@ -880,7 +795,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   private fun shouldHandleKeyboard(checkFocus: Boolean = true): Boolean {
-    if (wasHiddenByModal) return false
     if (!isTopmostSheet) return false
     if (checkFocus && !isFocusedViewWithinSheet()) return false
     return true
