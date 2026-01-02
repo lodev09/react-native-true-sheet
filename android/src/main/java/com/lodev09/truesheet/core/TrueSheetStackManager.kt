@@ -22,8 +22,8 @@ object TrueSheetStackManager {
       val parentSheet = presentedSheetStack.lastOrNull()
         ?.takeIf {
           it.viewController.isPresented &&
-          it.viewController.isSheetVisible &&
-          it.rootContainerView == rootContainer
+            it.viewController.isSheetVisible &&
+            it.rootContainerView == rootContainer
         }
 
       val childSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(detentIndex)
