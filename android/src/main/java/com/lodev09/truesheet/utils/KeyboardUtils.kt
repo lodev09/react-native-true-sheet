@@ -49,10 +49,8 @@ object KeyboardUtils {
         ViewCompat.setWindowInsetsAnimationCallback(
           view,
           object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-            override fun onProgress(
-              insets: WindowInsetsCompat,
-              runningAnimations: List<WindowInsetsAnimationCompat>
-            ): WindowInsetsCompat = insets
+            override fun onProgress(insets: WindowInsetsCompat, runningAnimations: List<WindowInsetsAnimationCompat>): WindowInsetsCompat =
+              insets
 
             override fun onEnd(animation: WindowInsetsAnimationCompat) {
               ViewCompat.setWindowInsetsAnimationCallback(view, null)
