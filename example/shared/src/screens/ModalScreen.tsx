@@ -42,7 +42,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Spacer />
         <Button text="Navigate Test" onPress={onNavigateToTest} />
 
-        <PromptSheet initialDetentIndex={0} ref={promptSheet} dimmed={false} />
+        <PromptSheet ref={promptSheet} dimmed={false} />
         <FlatListSheet ref={flatlistSheet} />
 
         <Modal

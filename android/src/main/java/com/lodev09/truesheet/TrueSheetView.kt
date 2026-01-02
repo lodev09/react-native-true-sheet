@@ -18,6 +18,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
+import com.lodev09.truesheet.utils.KeyboardUtils
 
 /**
  * Main TrueSheet host view that manages the sheet and dispatches events to JavaScript.
@@ -276,6 +277,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
     if (!viewController.isPresented) {
+      // Only dismiss keyboard if the focused view is within a parent sheet (iOS-like behavior)
+      val parentSheet = TrueSheetStackManager.getTopmostSheet()
+      if (KeyboardUtils.isKeyboardVisible(reactContext) && parentSheet?.viewController?.isFocusedViewWithinSheet() == true) {
+        parentSheet.viewController.saveFocusedView()
+        KeyboardUtils.dismiss(this) {
+          post { present(detentIndex, animated, promiseCallback) }
+        }
+        return
+      }
+
       // Attach coordinator to the root container
       rootContainerView = findRootContainerView()
       viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
