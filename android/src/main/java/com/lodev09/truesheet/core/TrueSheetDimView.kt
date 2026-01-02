@@ -67,13 +67,29 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   /**
+   * Manually measures and lays out the dim view to match the target's dimensions.
+   * Required for React Native views which don't automatically layout native children.
+   */
+  private fun measureAndLayout(target: ViewGroup) {
+    target.post {
+      val width = target.width
+      val height = target.height
+      if (width > 0 && height > 0) {
+        val widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
+        val heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        measure(widthSpec, heightSpec)
+        layout(0, 0, width, height)
+      }
+    }
+  }
+
+  /**
    * Attaches this dim view to a target view group.
-   * For CoordinatorLayout usage, pass null to use the default (activity's decor view).
    * For stacked sheets, pass the parent sheet's bottom sheet view with corner radius.
    */
-  fun attach(view: ViewGroup? = null, cornerRadius: Float = 0f) {
+  fun attach(view: ViewGroup, cornerRadius: Float = 0f) {
     if (parent != null) return
-    targetView = view ?: reactContext.currentActivity?.window?.decorView as? ViewGroup
+    targetView = view
 
     if (cornerRadius > 0f) {
       outlineProvider = object : ViewOutlineProvider() {
@@ -87,7 +103,8 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
       clipToOutline = false
     }
 
-    targetView?.addView(this)
+    view.addView(this)
+    measureAndLayout(view)
   }
 
   /**
@@ -99,6 +116,7 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
     outlineProvider = null
     clipToOutline = false
     coordinator.addView(this, 0)
+    measureAndLayout(coordinator)
   }
 
   fun detach() {
