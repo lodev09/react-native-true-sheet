@@ -71,14 +71,14 @@ ios/
 ├── TrueSheetFooterView.mm/.h        # Footer view
 ├── TrueSheetComponentDescriptor.h
 ├── core/
-│   ├── TrueSheetGrabberView.mm/.h
 │   ├── TrueSheetBlurView.mm/.h
-│   └── TrueSheetDetentCalculator.mm/.h
+│   ├── TrueSheetDetentCalculator.mm/.h
+│   └── TrueSheetGrabberView.mm/.h
 ├── events/
-│   ├── TrueSheetLifecycleEvents.mm/.h
-│   ├── TrueSheetStateEvents.mm/.h
 │   ├── TrueSheetDragEvents.mm/.h
-│   └── TrueSheetFocusEvents.mm/.h
+│   ├── TrueSheetFocusEvents.mm/.h
+│   ├── TrueSheetLifecycleEvents.mm/.h
+│   └── TrueSheetStateEvents.mm/.h
 └── utils/
     ├── BlurUtil.mm/.h
     ├── GestureUtil.mm/.h
@@ -104,11 +104,10 @@ android/src/main/java/com/lodev09/truesheet/
 │   ├── TrueSheetBottomSheetView.kt
 │   ├── TrueSheetCoordinatorLayout.kt
 │   ├── TrueSheetDetentCalculator.kt
-│   ├── TrueSheetStackManager.kt
 │   ├── TrueSheetDimView.kt
 │   ├── TrueSheetGrabberView.kt
 │   ├── TrueSheetKeyboardObserver.kt
-│   └── RNScreensFragmentObserver.kt
+│   └── TrueSheetStackManager.kt
 ├── events/
 │   ├── TrueSheetDragEvents.kt
 │   ├── TrueSheetFocusEvents.kt
@@ -119,19 +118,34 @@ android/src/main/java/com/lodev09/truesheet/
     └── ScreenUtils.kt
 
 common/cpp/react/renderer/components/TrueSheetSpec/
-├── TrueSheetViewState.cpp/.h
+├── TrueSheetViewComponentDescriptor.h
 ├── TrueSheetViewShadowNode.cpp/.h
-└── TrueSheetViewComponentDescriptor.h
+└── TrueSheetViewState.cpp/.h
 ```
 
 ## View Hierarchy
 
+### iOS
 ```
 TrueSheetView (host view - hidden, manages state)
-└── TrueSheetContainerView (fills controller's view)
-    ├── TrueSheetHeaderView (optional)
-    ├── TrueSheetContentView
-    └── TrueSheetFooterView (optional)
+└── TrueSheetViewController.view (UISheetPresentationController)
+    └── TrueSheetContainerView (fills controller's view)
+        ├── TrueSheetHeaderView (optional)
+        ├── TrueSheetContentView
+        └── TrueSheetFooterView (optional)
+```
+
+### Android
+```
+TrueSheetView (host view - hidden, manages state)
+└── TrueSheetCoordinatorLayout (attached to root container)
+    ├── TrueSheetDimView (index 0, behind sheet)
+    └── TrueSheetBottomSheetView (BottomSheetBehavior)
+        └── TrueSheetViewController (RootView content)
+            └── TrueSheetContainerView
+                ├── TrueSheetHeaderView (optional)
+                ├── TrueSheetContentView
+                └── TrueSheetFooterView (optional)
 ```
 
 ## Common Tasks
@@ -157,7 +171,3 @@ When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
 3. **Test Plan** - Explain how the changes were tested
 4. **Screenshots / Videos** - Include if applicable
 5. **Checklist** - Mark platforms tested (iOS, Android, Web) and documentation updates
-
-## Commands
-
-See `package.json` scripts.
