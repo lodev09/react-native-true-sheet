@@ -19,7 +19,7 @@ class TrueSheetFooterViewManager : ViewGroupManager<TrueSheetFooterView>() {
 
   @ReactProp(name = "pointerEvents")
   fun setPointerEvents(view: TrueSheetFooterView, pointerEventsStr: String?) {
-    view.pointerEvents = PointerEvents.parsePointerEvents(pointerEventsStr)
+    view.setPointerEvents(PointerEvents.parsePointerEvents(pointerEventsStr))
   }
 
   companion object {

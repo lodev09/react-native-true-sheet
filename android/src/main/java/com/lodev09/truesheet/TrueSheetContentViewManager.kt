@@ -19,7 +19,7 @@ class TrueSheetContentViewManager : ViewGroupManager<TrueSheetContentView>() {
 
   @ReactProp(name = "pointerEvents")
   fun setPointerEvents(view: TrueSheetContentView, pointerEventsStr: String?) {
-    view.pointerEvents = PointerEvents.parsePointerEvents(pointerEventsStr)
+    view.setPointerEvents(PointerEvents.parsePointerEvents(pointerEventsStr))
   }
 
   companion object {

@@ -19,7 +19,7 @@ class TrueSheetHeaderViewManager : ViewGroupManager<TrueSheetHeaderView>() {
 
   @ReactProp(name = "pointerEvents")
   fun setPointerEvents(view: TrueSheetHeaderView, pointerEventsStr: String?) {
-    view.pointerEvents = PointerEvents.parsePointerEvents(pointerEventsStr)
+    view.setPointerEvents(PointerEvents.parsePointerEvents(pointerEventsStr))
   }
 
   companion object {
