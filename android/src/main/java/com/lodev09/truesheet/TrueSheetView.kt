@@ -66,7 +66,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private var isSheetUpdatePending: Boolean = false
 
   // Root container for the coordinator layout (activity or Modal dialog content view)
-  private var rootContainerView: ViewGroup? = null
+  internal var rootContainerView: ViewGroup? = null
 
   // ==================== Initialization ====================
 
@@ -151,7 +151,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Lifecycle ====================
 
   override fun onHostResume() {
-    viewController.reapplyHiddenState()
     finalizeUpdates()
   }
 
@@ -278,7 +277,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!viewController.isPresented) {
       // Attach coordinator to the root container
       rootContainerView = findRootContainerView()
-      viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
+      viewController.coordinatorLayout?.let { coordinator ->
+        rootContainerView?.let { container ->
+          container.addView(coordinator)
+
+          // Manually measure and layout for React Native views (they don't layout native children)
+          container.post {
+            if (container.width > 0 && container.height > 0) {
+              val widthSpec = View.MeasureSpec.makeMeasureSpec(container.width, View.MeasureSpec.EXACTLY)
+              val heightSpec = View.MeasureSpec.makeMeasureSpec(container.height, View.MeasureSpec.EXACTLY)
+              coordinator.measure(widthSpec, heightSpec)
+              coordinator.layout(0, 0, container.width, container.height)
+            }
+          }
+        }
+      }
 
       // Register with observer to track sheet stack hierarchy
       viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
@@ -486,14 +499,20 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
+    var contentView: ViewGroup? = null
 
     while (current != null) {
-      if (current is ViewGroup && current.id == android.R.id.content) {
-        return current
+      if (current is ViewGroup) {
+        if (current.javaClass.name == "com.swmansion.rnscreens.Screen") {
+          return current
+        }
+        if (contentView == null && current.id == android.R.id.content) {
+          contentView = current
+        }
       }
       current = current.parent
     }
 
-    return reactContext.currentActivity?.findViewById(android.R.id.content)
+    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
   }
 }
