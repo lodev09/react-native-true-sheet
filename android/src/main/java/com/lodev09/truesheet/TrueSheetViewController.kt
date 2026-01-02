@@ -205,9 +205,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (isPresented) sheetView?.setupGrabber()
     }
 
-  val isDimmedAtCurrentDetent: Boolean
-    get() = dimmed && currentDetentIndex >= dimmedDetentIndex
-
   // =============================================================================
   // MARK: - Computed Properties
   // =============================================================================
@@ -287,6 +284,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private val dimViews: List<TrueSheetDimView>
     get() = listOfNotNull(dimView, parentDimView)
+
+  val isDimmedAtCurrentDetent: Boolean
+    get() = isDimmedAtDetentIndex(currentDetentIndex)
+
+  fun isDimmedAtDetentIndex(index: Int): Boolean = dimmed && index >= dimmedDetentIndex
 
   // =============================================================================
   // MARK: - Sheet Creation & Cleanup
@@ -713,7 +715,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishDismiss() {
-    parentSheetView?.viewController?.restoreFocusedView()
+    restoreFocusedView()
     emitDidDismissEvents()
     cleanupSheet()
   }

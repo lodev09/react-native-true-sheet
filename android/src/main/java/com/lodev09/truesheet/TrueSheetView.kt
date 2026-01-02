@@ -277,10 +277,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
     if (!viewController.isPresented) {
-      // Only dismiss keyboard if the focused view is within a parent sheet (iOS-like behavior)
+      // Dismiss keyboard if focused view is within a sheet or if target detent will be dimmed
       val parentSheet = TrueSheetStackManager.getTopmostSheet()
-      if (KeyboardUtils.isKeyboardVisible(reactContext) && parentSheet?.viewController?.isFocusedViewWithinSheet() == true) {
-        parentSheet.viewController.saveFocusedView()
+      val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
+      val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
+      if (KeyboardUtils.isKeyboardVisible(reactContext) && shouldDismissKeyboard) {
+        viewController.saveFocusedView()
         KeyboardUtils.dismiss(this) {
           post { present(detentIndex, animated, promiseCallback) }
         }
