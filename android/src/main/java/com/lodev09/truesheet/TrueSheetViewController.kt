@@ -45,7 +45,6 @@ data class DetentInfo(val index: Int, val position: Float)
 
 interface TrueSheetViewControllerDelegate {
   val eventDispatcher: EventDispatcher?
-  val rootContainerView: ViewGroup?
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
@@ -720,15 +719,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (dimmed) {
       val parentDimVisible = (parentSheetView?.viewController?.dimView?.alpha ?: 0f) > 0f
-      val parentInSameContainer = parentSheetView?.rootContainerView == delegate?.rootContainerView
 
       if (dimView == null) {
         dimView = TrueSheetDimView(reactContext).apply {
           delegate = this@TrueSheetViewController
         }
       }
-      // Attach dimView if parent is not visible OR parent is in a different container (e.g., modal)
-      if (!parentDimVisible || !parentInSameContainer) {
+      if (!parentDimVisible) {
         dimView?.attachToCoordinator(coordinator)
       }
 

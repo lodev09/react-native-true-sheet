@@ -66,7 +66,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private var isSheetUpdatePending: Boolean = false
 
   // Root container for the coordinator layout (activity or Modal dialog content view)
-  override var rootContainerView: ViewGroup? = null
+  internal var rootContainerView: ViewGroup? = null
 
   // ==================== Initialization ====================
 
