@@ -15,6 +15,7 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
 
@@ -139,6 +140,16 @@ using namespace facebook::react;
   return nil;
 }
 
+- (BOOL)isFirstResponderWithinSheet {
+  TrueSheetViewController *sheetController = [self findSheetViewController];
+  if (!sheetController) {
+    return NO;
+  }
+
+  UIView *firstResponder = [sheetController.view findFirstResponder];
+  return firstResponder != nil;
+}
+
 - (void)keyboardWillChangeFrame:(NSNotification *)notification {
   if (!_bottomConstraint) {
     return;
@@ -147,6 +158,11 @@ using namespace facebook::react;
   // Only respond to keyboard if this sheet is the topmost presented controller
   TrueSheetViewController *sheetController = [self findSheetViewController];
   if (sheetController && !sheetController.isTopmostPresentedController) {
+    return;
+  }
+
+  // Only respond if the focused view is within this sheet
+  if (![self isFirstResponderWithinSheet]) {
     return;
   }
 
