@@ -9,6 +9,7 @@ import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.pxToDp
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
@@ -279,6 +280,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       rootContainerView = findRootContainerView()
       viewController.coordinatorLayout?.let { coordinator ->
         rootContainerView?.addView(coordinator)
+        coordinator.bringToFront()
+        coordinator.elevation = 30f.dpToPx()
         coordinator.post { measureCoordinatorLayout() }
       }
 
@@ -503,12 +506,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
     var contentView: ViewGroup? = null
+    var screenView: ViewGroup? = null
 
     while (current != null) {
       if (current is ViewGroup) {
-        if (current.javaClass.name == "com.swmansion.rnscreens.Screen") {
-          return current
-        }
+        if (current.javaClass.name == "com.swmansion.rnscreens.Screen") screenView = current
         if (contentView == null && current.id == android.R.id.content) {
           contentView = current
         }
@@ -516,6 +518,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       current = current.parent
     }
 
-    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
+    return contentView
+      ?: reactContext.currentActivity?.findViewById(android.R.id.content)
+      ?: screenView
   }
 }
