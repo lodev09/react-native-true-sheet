@@ -6,59 +6,6 @@ keywords: [bottom sheet troubleshooting, fixing bottom sheet, debugging bottom s
 
 # Troubleshooting
 
-## React Native Gesture Handler
-
-[`react-native-gesture-handler`](https://docs.swmansion.com/react-native-gesture-handler/docs/)
-
-On Android, [RNGH does not work](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation/#usage-with-modals-on-android) by default because modals are not located under React Native Root view in native hierarchy. To fix that, components need to be wrapped with `GestureHandlerRootView`.
-
-```tsx
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-```
-
-```tsx {3-5}
-return (
-  <TrueSheet ref={sheet}>
-    <GestureHandlerRootView style={{ flexGrow: 1 }}>
-      <View />
-    </GestureHandlerRootView>
-  </TrueSheet>
-)
-```
-
-:::info
-Note that we are using `flexGrow` instead of `flex` here. For some weird reason, `flex` does not work correctly. See [below](#weird-layout-render).
-:::
-
-## Touch Events Not Working on Android
-
-On physical Android devices, touch events on buttons and pressables inside TrueSheet may not fire correctly. This appears to be a React Native Fabric limitation with modals.
-
-Related: [#163](https://github.com/lodev09/react-native-true-sheet/issues/163), [#288](https://github.com/lodev09/react-native-true-sheet/issues/288)
-
-**Workarounds:**
-
-1. Use touchable components from [`react-native-gesture-handler`](https://docs.swmansion.com/react-native-gesture-handler/docs/) instead of React Native's built-in components.
-
-2. Set an explicit `width` on `GestureHandlerRootView` to fix first-render layout issues:
-
-```tsx
-import { useWindowDimensions } from 'react-native'
-import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler'
-
-const { width } = useWindowDimensions()
-
-return (
-  <TrueSheet ref={sheet}>
-    <GestureHandlerRootView style={{ flexGrow: 1, width }}>
-      <TouchableOpacity onPress={handlePress}>
-        {/* ... */}
-      </TouchableOpacity>
-    </GestureHandlerRootView>
-  </TrueSheet>
-)
-```
-
 ## Keyboard Covering TextInput on Android with Unistyles
 
 When using [`react-native-unistyles`](https://github.com/jpudysz/react-native-unistyles) alongside TrueSheet, the keyboard may cover the TextInput instead of the sheet repositioning itself. This is caused by Unistyles preventing TrueSheet from observing keyboard animation events on Android.
