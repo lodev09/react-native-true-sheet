@@ -151,6 +151,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Lifecycle ====================
 
   override fun onHostResume() {
+    viewController.reapplyHiddenState()
     finalizeUpdates()
   }
 
@@ -277,10 +278,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (!viewController.isPresented) {
       // Attach coordinator to the root container
       rootContainerView = findRootContainerView()
-      viewController.coordinatorLayout?.let { coordinator ->
-        rootContainerView?.addView(coordinator)
-        coordinator.post { measureCoordinatorLayout() }
-      }
+      viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
 
       // Register with observer to track sheet stack hierarchy
       viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
@@ -436,7 +434,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
     updateState(width, height)
-    measureCoordinatorLayout()
   }
 
   override fun viewControllerWillFocus() {
@@ -481,19 +478,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== Private Helpers ====================
 
-  private fun measureCoordinatorLayout() {
-    val coordinator = viewController.coordinatorLayout ?: return
-    val width = viewController.screenWidth
-    val height = viewController.realScreenHeight
-
-    if (width > 0 && height > 0) {
-      val widthSpec = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY)
-      val heightSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-      coordinator.measure(widthSpec, heightSpec)
-      coordinator.layout(0, 0, width, height)
-    }
-  }
-
   /**
    * Find the root container view for presenting the sheet.
    * This traverses up the view hierarchy to find the content view (android.R.id.content)
@@ -502,20 +486,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    */
   private fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
-    var contentView: ViewGroup? = null
 
     while (current != null) {
-      if (current is ViewGroup) {
-        if (current.javaClass.name == "com.swmansion.rnscreens.Screen") {
-          return current
-        }
-        if (contentView == null && current.id == android.R.id.content) {
-          contentView = current
-        }
+      if (current is ViewGroup && current.id == android.R.id.content) {
+        return current
       }
       current = current.parent
     }
 
-    return contentView ?: reactContext.currentActivity?.findViewById(android.R.id.content)
+    return reactContext.currentActivity?.findViewById(android.R.id.content)
   }
 }
