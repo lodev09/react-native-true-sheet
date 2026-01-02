@@ -361,6 +361,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  override fun coordinatorLayoutDidChangeConfiguration() {
+    if (!isPresented) return
+
+    updateStateDimensions()
+    sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+  }
+
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
   // =============================================================================
@@ -664,15 +671,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       animate = isPresented
     )
 
-    val offset = if (expandedOffset == 0) topInset else 0
-    val newHeight = realScreenHeight - expandedOffset - offset
-    val newWidth = minOf(screenWidth, DEFAULT_MAX_WIDTH.dpToPx().toInt())
-
-    if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
-      lastStateWidth = newWidth
-      lastStateHeight = newHeight
-      delegate?.viewControllerDidChangeSize(newWidth, newHeight)
-    }
+    updateStateDimensions(expandedOffset)
 
     if (isPresented) {
       setStateForDetentIndex(currentDetentIndex)
@@ -922,6 +921,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Helpers
   // =============================================================================
 
+  private fun updateStateDimensions(expandedOffset: Int? = null) {
+    val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
+    val topOffset = if (offset == 0) topInset else 0
+    val newHeight = realScreenHeight - offset - topOffset
+    val newWidth = minOf(screenWidth, DEFAULT_MAX_WIDTH.dpToPx().toInt())
+
+    if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
+      lastStateWidth = newWidth
+      lastStateHeight = newHeight
+      delegate?.viewControllerDidChangeSize(newWidth, newHeight)
+    }
+  }
+
   fun translateSheet(translationY: Int) {
     val sheet = sheetView ?: return
 
@@ -964,22 +976,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
     super.onInitializeAccessibilityNodeInfo(info)
     (getTag(R.id.react_test_id) as? String)?.let { info.viewIdResourceName = it }
-  }
-
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
-
-    if (w == oldw && h == oldh) return
-    if (!isPresented) return
-
-    // Skip reconfiguration if expanded and only height changed (e.g., keyboard)
-    if (h + topInset >= screenHeight && isExpanded && oldw == w) return
-
-    post {
-      setupSheetDetents()
-      positionFooter()
-      sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
-    }
   }
 
   // =============================================================================

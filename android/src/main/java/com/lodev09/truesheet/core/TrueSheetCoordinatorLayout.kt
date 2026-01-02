@@ -2,6 +2,7 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import com.facebook.react.uimanager.ReactPointerEventsView
 
 interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidLayout(changed: Boolean)
+  fun coordinatorLayoutDidChangeConfiguration()
 }
 
 /**
@@ -51,6 +53,11 @@ class TrueSheetCoordinatorLayout(context: Context) :
   ) {
     super.onLayout(changed, l, t, r, b)
     delegate?.coordinatorLayoutDidLayout(changed)
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration?) {
+    super.onConfigurationChanged(newConfig)
+    delegate?.coordinatorLayoutDidChangeConfiguration()
   }
 
   override val pointerEvents: PointerEvents

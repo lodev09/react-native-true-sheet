@@ -278,19 +278,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       // Attach coordinator to the root container
       rootContainerView = findRootContainerView()
       viewController.coordinatorLayout?.let { coordinator ->
-        rootContainerView?.let { container ->
-          container.addView(coordinator)
-
-          // Manually measure and layout for React Native views (they don't layout native children)
-          container.post {
-            if (container.width > 0 && container.height > 0) {
-              val widthSpec = View.MeasureSpec.makeMeasureSpec(container.width, View.MeasureSpec.EXACTLY)
-              val heightSpec = View.MeasureSpec.makeMeasureSpec(container.height, View.MeasureSpec.EXACTLY)
-              coordinator.measure(widthSpec, heightSpec)
-              coordinator.layout(0, 0, container.width, container.height)
-            }
-          }
-        }
+        rootContainerView?.addView(coordinator)
+        coordinator.post { measureCoordinatorLayout() }
       }
 
       // Register with observer to track sheet stack hierarchy
@@ -447,6 +436,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
     updateState(width, height)
+    measureCoordinatorLayout()
   }
 
   override fun viewControllerWillFocus() {
@@ -490,6 +480,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   // ==================== Private Helpers ====================
+
+  private fun measureCoordinatorLayout() {
+    val coordinator = viewController.coordinatorLayout ?: return
+    val width = viewController.screenWidth
+    val height = viewController.realScreenHeight
+
+    if (width > 0 && height > 0) {
+      val widthSpec = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY)
+      val heightSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+      coordinator.measure(widthSpec, heightSpec)
+      coordinator.layout(0, 0, width, height)
+    }
+  }
 
   /**
    * Find the root container view for presenting the sheet.

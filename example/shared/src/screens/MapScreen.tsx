@@ -192,11 +192,11 @@ const MapScreenInner = ({
             onPress={() => sheetRef.current?.dismiss()}
           />
         </View>
-        <BasicSheet ref={basicSheet} onNavigateToModal={onNavigateToModal} />
-        <PromptSheet ref={promptSheet} />
-        <ScrollViewSheet ref={scrollViewSheet} />
-        <GestureSheet ref={gestureSheet} />
       </ReanimatedTrueSheet>
+      <BasicSheet ref={basicSheet} onNavigateToModal={onNavigateToModal} />
+      <PromptSheet ref={promptSheet} />
+      <ScrollViewSheet ref={scrollViewSheet} />
+      <GestureSheet ref={gestureSheet} />
       <FlatListSheet ref={flatListSheet} />
     </View>
   );
