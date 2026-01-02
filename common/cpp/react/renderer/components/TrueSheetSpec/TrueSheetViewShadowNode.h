@@ -22,6 +22,12 @@ class JSI_EXPORT TrueSheetViewShadowNode final
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:
+  static ShadowNodeTraits BaseTraits() {
+    auto traits = ConcreteViewShadowNode::BaseTraits();
+    traits.set(ShadowNodeTraits::Trait::RootNodeKind);
+    return traits;
+  }
+
   void adjustLayoutWithState();
 };
 
