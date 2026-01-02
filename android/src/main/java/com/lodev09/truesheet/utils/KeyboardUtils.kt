@@ -1,6 +1,7 @@
 package com.lodev09.truesheet.utils
 
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
@@ -44,20 +45,24 @@ object KeyboardUtils {
     }
 
     if (onComplete != null) {
-      ViewCompat.setWindowInsetsAnimationCallback(
-        view,
-        object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-          override fun onProgress(
-            insets: WindowInsetsCompat,
-            runningAnimations: List<WindowInsetsAnimationCompat>
-          ): WindowInsetsCompat = insets
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        ViewCompat.setWindowInsetsAnimationCallback(
+          view,
+          object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
+            override fun onProgress(
+              insets: WindowInsetsCompat,
+              runningAnimations: List<WindowInsetsAnimationCompat>
+            ): WindowInsetsCompat = insets
 
-          override fun onEnd(animation: WindowInsetsAnimationCompat) {
-            ViewCompat.setWindowInsetsAnimationCallback(view, null)
-            onComplete()
+            override fun onEnd(animation: WindowInsetsAnimationCompat) {
+              ViewCompat.setWindowInsetsAnimationCallback(view, null)
+              onComplete()
+            }
           }
-        }
-      )
+        )
+      } else {
+        view.postDelayed({ onComplete() }, 120)
+      }
     }
 
     imm?.hideSoftInputFromWindow(focusedView.windowToken, 0)
