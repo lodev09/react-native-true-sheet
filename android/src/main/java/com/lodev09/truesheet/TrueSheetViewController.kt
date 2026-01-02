@@ -140,6 +140,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
+  private var focusedViewBeforeBlur: View? = null
 
   // Promises
   var presentPromise: (() -> Unit)? = null
@@ -248,7 +249,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val isKeyboardTransitioning: Boolean
     get() = keyboardObserver?.isTransitioning ?: false
 
-  private fun isFocusedViewWithinSheet(): Boolean {
+  fun isFocusedViewWithinSheet(): Boolean {
     val sheet = sheetView ?: return false
     return keyboardObserver?.isFocusedViewWithinSheet(sheet) ?: false
   }
@@ -331,6 +332,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
+    focusedViewBeforeBlur = null
     shouldAnimatePresent = true
   }
 
@@ -513,7 +515,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       reactContext = reactContext,
       onModalPresented = {
         if (isPresented && isSheetVisible && isTopmostSheet) {
-          hideForModal()
+          dismissKeyboard()
+          post { hideForModal() }
         }
       },
       onModalWillDismiss = {
@@ -710,6 +713,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishDismiss() {
+    parentSheetView?.viewController?.restoreFocusedView()
     emitDidDismissEvents()
     cleanupSheet()
   }
@@ -883,6 +887,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isTopmostSheet) return false
     if (checkFocus && !isFocusedViewWithinSheet()) return false
     return true
+  }
+
+  fun saveFocusedView() {
+    focusedViewBeforeBlur = reactContext.currentActivity?.currentFocus
+  }
+
+  fun restoreFocusedView() {
+    val viewToFocus = focusedViewBeforeBlur ?: return
+    focusedViewBeforeBlur = null
+
+    if (!viewToFocus.isAttachedToWindow) return
+    if (viewToFocus.requestFocus()) {
+      viewToFocus.postDelayed({
+        KeyboardUtils.show(viewToFocus)
+      }, 100)
+    }
   }
 
   fun setupKeyboardObserver() {

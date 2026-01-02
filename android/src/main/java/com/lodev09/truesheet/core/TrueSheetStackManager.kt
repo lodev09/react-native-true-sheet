@@ -133,4 +133,14 @@ object TrueSheetStackManager {
       return presentedSheetStack.lastOrNull { it.rootContainerView == rootContainer } == sheetView
     }
   }
+
+  /**
+   * Returns the topmost presented sheet, or null if none.
+   */
+  @JvmStatic
+  fun getTopmostSheet(): TrueSheetView? {
+    synchronized(presentedSheetStack) {
+      return presentedSheetStack.lastOrNull { it.viewController.isPresented && it.viewController.isSheetVisible }
+    }
+  }
 }
