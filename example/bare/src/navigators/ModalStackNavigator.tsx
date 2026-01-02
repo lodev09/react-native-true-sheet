@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ModalScreen, TestScreen } from '@example/shared/screens';
 import type { ModalStackParamList } from '../types';
+import { DARK_BLUE } from '@example/shared';
 
 const ModalStack = createNativeStackNavigator<ModalStackParamList>();
 
@@ -19,7 +20,12 @@ const ModalScreenWrapper = () => {
 
 export const ModalStackNavigator = () => {
   return (
-    <ModalStack.Navigator screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
+    <ModalStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: DARK_BLUE },
+        headerTintColor: 'white',
+      }}
+    >
       <ModalStack.Screen name="Modal" component={ModalScreenWrapper} />
       <ModalStack.Screen name="Test" component={TestScreen} />
     </ModalStack.Navigator>
