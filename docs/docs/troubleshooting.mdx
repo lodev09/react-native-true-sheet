@@ -6,16 +6,6 @@ keywords: [bottom sheet troubleshooting, fixing bottom sheet, debugging bottom s
 
 # Troubleshooting
 
-## Keyboard Covering TextInput on Android with Unistyles
-
-When using [`react-native-unistyles`](https://github.com/jpudysz/react-native-unistyles) alongside TrueSheet, the keyboard may cover the TextInput instead of the sheet repositioning itself. This is caused by Unistyles preventing TrueSheet from observing keyboard animation events on Android.
-
-Related: [#354](https://github.com/lodev09/react-native-true-sheet/issues/354)
-
-:::info
-A fix has been submitted to Unistyles. See [PR #1061](https://github.com/jpudysz/react-native-unistyles/pull/1061).
-:::
-
 ## Blank Screen When Dismissing React Native Modal on iOS
 
 When presenting a TrueSheet on top of a React Native `<Modal>` and then dismissing the Modal (by setting `visible={false}`), the screen may go blank. This is a bug in React Native where dismissing a Modal that has another view controller presented on top of it only dismisses the topmost view controller, leaving the Modal in an inconsistent state.
