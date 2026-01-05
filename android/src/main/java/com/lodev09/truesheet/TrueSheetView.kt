@@ -39,10 +39,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== Properties ====================
 
   internal val viewController: TrueSheetViewController = TrueSheetViewController(reactContext)
-
-  private val containerView: TrueSheetContainerView?
-    get() = viewController.getChildAt(0) as? TrueSheetContainerView
-
   override var eventDispatcher: EventDispatcher? = null
 
   // Initial present configuration (set by ViewManager before mount)
@@ -80,10 +76,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   // ==================== ReactViewGroup Overrides ====================
-
-  override fun dispatchProvideStructure(structure: ViewStructure) {
-    super.dispatchProvideStructure(structure)
-  }
 
   override fun onLayout(
     changed: Boolean,
