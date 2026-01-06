@@ -46,6 +46,7 @@ data class DetentInfo(val index: Int, val position: Float)
 
 interface TrueSheetViewControllerDelegate {
   val eventDispatcher: EventDispatcher?
+  fun findRootContainerView(): ViewGroup?
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
@@ -892,7 +893,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun saveFocusedView() {
-    focusedViewBeforeBlur = reactContext.currentActivity?.currentFocus
+    focusedViewBeforeBlur = delegate?.findRootContainerView()?.findFocus()
+      ?: reactContext.currentActivity?.currentFocus
   }
 
   fun restoreFocusedView() {
