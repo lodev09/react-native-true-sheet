@@ -2,9 +2,9 @@ import { useRef, useState, useEffect } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
-import { Button, DemoContent, Input, Spacer } from '../components';
-import { PromptSheet, FlatListSheet } from '../components/sheets';
+import { BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
+import { Button, Input, Spacer } from '../components';
+import { PromptSheet, FlatListSheet, ScrollViewSheet } from '../components/sheets';
 
 export interface ModalScreenProps {
   onNavigateToTest?: () => void;
@@ -16,12 +16,13 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   const flatlistSheet = useRef<TrueSheet>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const modalSimpleSheet = useRef<TrueSheet>(null);
+  const modalPromptSheet = useRef<TrueSheet>(null);
   const modalFlatlistSheet = useRef<TrueSheet>(null);
+  const modalScrollViewSheet = useRef<TrueSheet>(null);
 
   useEffect(() => {
     if (modalVisible) {
-      modalSimpleSheet.current?.present();
+      modalPromptSheet.current?.present();
     }
   }, [modalVisible]);
 
@@ -58,23 +59,18 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
                   This is a React Native Modal. You can present TrueSheets from here!
                 </Text>
               </View>
-              <Button text="Simple Sheet" onPress={() => modalSimpleSheet.current?.present()} />
+              <Button text="Prompt Sheet" onPress={() => modalPromptSheet.current?.present()} />
+              <Button
+                text="ScrollView Sheet"
+                onPress={() => modalScrollViewSheet.current?.present()}
+              />
               <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
               <Spacer />
               <Button text="Close Modal" onPress={() => setModalVisible(false)} />
 
-              <TrueSheet
-                ref={modalSimpleSheet}
-                detents={['auto']}
-                // initialDetentIndex={0}
-                dimmed={false}
-                style={styles.simpleSheet}
-                backgroundColor={DARK}
-              >
-                <DemoContent color={DARK_BLUE} text="Simple Sheet" />
-                <Button text="Dismiss" onPress={() => modalSimpleSheet.current?.dismiss()} />
-              </TrueSheet>
+              <PromptSheet ref={modalPromptSheet} />
               <FlatListSheet ref={modalFlatlistSheet} />
+              <ScrollViewSheet ref={modalScrollViewSheet} />
             </View>
           </TrueSheetProvider>
         </Modal>
@@ -95,10 +91,6 @@ const styles = StyleSheet.create({
     backgroundColor: DARK_GRAY,
     justifyContent: 'center',
     flex: 1,
-    padding: SPACING,
-    gap: GAP,
-  },
-  simpleSheet: {
     padding: SPACING,
     gap: GAP,
   },

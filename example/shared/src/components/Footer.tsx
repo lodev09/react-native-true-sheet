@@ -1,7 +1,7 @@
 import { Platform, StyleSheet, Text, View, type PressableProps, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK_GRAY, FOOTER_HEIGHT } from '../utils';
+import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
 
 const isIPad = Platform.OS === 'ios' && Platform.isPad;
 
@@ -28,10 +28,10 @@ const styles = StyleSheet.create({
   },
   container: {
     height: FOOTER_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: SPACING,
   },
   text: {
+    textAlign: 'center',
     color: '#fff',
   },
 });
