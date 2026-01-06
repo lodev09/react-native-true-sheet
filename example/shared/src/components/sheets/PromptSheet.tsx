@@ -1,23 +1,25 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react';
+import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
-import { DemoContent } from '../DemoContent';
+import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Footer } from '../Footer';
+import { Header } from '../Header';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const inputRef = useRef<TextInput>(null);
+  const input1Ref = useRef<TextInput>(null);
+  const input2Ref = useRef<TextInput>(null);
+  const input3Ref = useRef<TextInput>(null);
+  const textAreaRef = useRef<TextInput>(null);
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const inputRefs = [input1Ref, input2Ref, input3Ref, textAreaRef];
 
   const handleDismiss = () => {
-    setIsSubmitted(false);
     console.log('Sheet prompt dismissed!');
   };
 
@@ -26,8 +28,11 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     console.log('Sheet prompt dismiss asynced');
   };
 
-  const handleSubmitPress = async () => {
-    setIsSubmitted(true);
+  const handleSubmitPress = () => {
+    const currentIndex = inputRefs.findIndex((r) => r.current?.isFocused());
+    if (currentIndex >= 0 && currentIndex < inputRefs.length - 1) {
+      inputRefs[currentIndex + 1]?.current?.focus();
+    }
   };
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
@@ -46,8 +51,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         console.log(
           `Sheet prompt presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         );
-
-        // inputRef.current?.focus();
       }}
       onDetentChange={(e) =>
         console.log(
@@ -62,11 +65,13 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         sheetRef.current?.dismiss();
       }}
       footer={<Footer onPress={() => console.log('footer pressed')} />}
+      header={<Header />}
       {...props}
     >
-      <DemoContent color={DARK_BLUE} />
-      <Input ref={inputRef} />
-      {isSubmitted && <Input />}
+      <Input ref={input1Ref} placeholder="First name" />
+      <Input ref={input2Ref} placeholder="Last name" />
+      <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />
+      <Input ref={textAreaRef} placeholder="Message..." multiline />
       <Button text="Submit" onPress={handleSubmitPress} />
       <Button text="Dismiss" onPress={handleDismissPress} />
     </TrueSheet>
@@ -76,7 +81,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    paddingTop: SPACING * 2,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
