@@ -35,7 +35,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     private set
 
   fun isFocusedViewWithinSheet(sheetView: View): Boolean {
-    val focusedView = reactContext.currentActivity?.currentFocus ?: return false
+    val focusedView = targetView.rootView?.findFocus() ?: return false
     var current: View? = focusedView
     while (current != null && current !== targetView) {
       if (current === sheetView) return true
@@ -131,7 +131,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     // Ensure we don't add duplicate listeners
     if (globalLayoutListener != null) return
 
-    val rootView = reactContext.currentActivity?.window?.decorView?.rootView ?: return
+    val rootView = targetView.rootView ?: return
     activityRootView = rootView
 
     globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {

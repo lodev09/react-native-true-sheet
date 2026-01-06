@@ -489,7 +489,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * of whichever window this view is in - whether that's the activity's window or a
    * Modal's dialog window.
    */
-  private fun findRootContainerView(): ViewGroup? {
+  override fun findRootContainerView(): ViewGroup? {
     var current: android.view.ViewParent? = parent
 
     while (current != null) {
