@@ -101,6 +101,6 @@ Add entry to `Unpublished` section in `CHANGELOG.md` for user-facing changes:
 - `🐛 Bug fixes` - Bug fixes
 - `💡 Others` - Refactors, internal changes
 
-Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123))`
+Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`
 
 When creating release notes, move entries from `Unpublished` to a new version section.

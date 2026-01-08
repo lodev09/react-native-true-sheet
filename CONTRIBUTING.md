@@ -148,4 +148,4 @@ When you're sending a pull request:
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
 - For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
-- Add a changelog entry to the `Unpublished` section in [CHANGELOG.md](./CHANGELOG.md) for any user-facing changes.
+- Add a changelog entry to the `Unpublished` section in [CHANGELOG.md](./CHANGELOG.md) for any user-facing changes using the format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`

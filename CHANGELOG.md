@@ -4,22 +4,22 @@
 
 ### 🎉 New features
 
-- Added `dismissAll` static method. ([#393](https://github.com/lodev09/react-native-true-sheet/pull/393))
+- Added `dismissAll` static method. ([#393](https://github.com/lodev09/react-native-true-sheet/pull/393) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
-- **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394))
-- **Android**: Fixed keyboard and focus handling inside RN Modal. ([#387](https://github.com/lodev09/react-native-true-sheet/pull/387))
+- **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed keyboard and focus handling inside RN Modal. ([#387](https://github.com/lodev09/react-native-true-sheet/pull/387) by [@lodev09](https://github.com/lodev09))
 
 ## 3.7.0
 
 ### 🐛 Bug fixes
 
 - **Android**: Fixed keyboard dismiss when presenting at dimmed detent.
-- Improved keyboard handling for sheet presentation. ([#379](https://github.com/lodev09/react-native-true-sheet/pull/379))
+- Improved keyboard handling for sheet presentation. ([#379](https://github.com/lodev09/react-native-true-sheet/pull/379) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed `pointerEvents` not being respected in TrueSheetFooterView.
 - **Android**: Added `pointerEvents` prop support to view managers.
-- **Android**: Added RootNodeKind trait for nested sheet touch handling. ([#375](https://github.com/lodev09/react-native-true-sheet/pull/375))
+- **Android**: Added RootNodeKind trait for nested sheet touch handling. ([#375](https://github.com/lodev09/react-native-true-sheet/pull/375) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed coordinator layout remeasure on configuration change.
 - **Android**: Fixed footer repositioning when keyboard hides via IME action button.
 
@@ -27,19 +27,19 @@
 
 ### 🐛 Bug fixes
 
-- **Android**: Fixed eventDispatcher propagation via delegate chain for footer touch handling. ([#372](https://github.com/lodev09/react-native-true-sheet/pull/372))
+- **Android**: Fixed eventDispatcher propagation via delegate chain for footer touch handling. ([#372](https://github.com/lodev09/react-native-true-sheet/pull/372) by [@lodev09](https://github.com/lodev09))
 
 ## 3.6.10
 
 ### 🐛 Bug fixes
 
-- **Android**: Fixed sheet drag when ScrollView cannot scroll. ([#369](https://github.com/lodev09/react-native-true-sheet/pull/369))
+- **Android**: Fixed sheet drag when ScrollView cannot scroll. ([#369](https://github.com/lodev09/react-native-true-sheet/pull/369) by [@lodev09](https://github.com/lodev09))
 
 ## 3.6.9
 
 ### 🐛 Bug fixes
 
-- **Android**: Fixed keyboard handling to only apply for focused views within sheet. ([#365](https://github.com/lodev09/react-native-true-sheet/pull/365))
+- **Android**: Fixed keyboard handling to only apply for focused views within sheet. ([#365](https://github.com/lodev09/react-native-true-sheet/pull/365) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed sheet dismissing early when container is unmounted.
 - **iOS**: Fixed sheets dismissing properly during navigation and reload.
 
@@ -47,9 +47,9 @@
 
 ### 🐛 Bug fixes
 
-- **iOS**: Fixed keyboard offset preservation when footer resizes. ([#361](https://github.com/lodev09/react-native-true-sheet/pull/361))
+- **iOS**: Fixed keyboard offset preservation when footer resizes. ([#361](https://github.com/lodev09/react-native-true-sheet/pull/361) by [@lodev09](https://github.com/lodev09))
 - **Android**: Optimized findRootContainerView to return first content view.
-- **Android**: Fixed TrueSheet rendering above React Native Modal. ([#359](https://github.com/lodev09/react-native-true-sheet/pull/359))
+- **Android**: Fixed TrueSheet rendering above React Native Modal. ([#359](https://github.com/lodev09/react-native-true-sheet/pull/359) by [@lodev09](https://github.com/lodev09))
 
 ## 3.6.7
 
@@ -102,12 +102,12 @@
 
 ### 🎉 New features
 
-- Added `elevation` prop for Android and Web. ([#355](https://github.com/lodev09/react-native-true-sheet/pull/355))
+- Added `elevation` prop for Android and Web. ([#355](https://github.com/lodev09/react-native-true-sheet/pull/355) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
-- **Android**: Fixed keyboard dismiss issue with backdrop. ([#351](https://github.com/lodev09/react-native-true-sheet/pull/351))
-- **iOS**: Fixed native backgroundEffect for blur on iOS 26.1+. ([#350](https://github.com/lodev09/react-native-true-sheet/pull/350))
+- **Android**: Fixed keyboard dismiss issue with backdrop. ([#351](https://github.com/lodev09/react-native-true-sheet/pull/351) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed native backgroundEffect for blur on iOS 26.1+. ([#350](https://github.com/lodev09/react-native-true-sheet/pull/350) by [@lodev09](https://github.com/lodev09))
 
 ## 3.5.8
 
@@ -176,14 +176,14 @@
 
 ### 💡 Others
 
-- **Android**: Replaced DialogFragment with CoordinatorLayout. ([#344](https://github.com/lodev09/react-native-true-sheet/pull/344))
-- **Android**: Refactored to use BottomSheetDialogFragment. ([#342](https://github.com/lodev09/react-native-true-sheet/pull/342))
+- **Android**: Replaced DialogFragment with CoordinatorLayout. ([#344](https://github.com/lodev09/react-native-true-sheet/pull/344) by [@lodev09](https://github.com/lodev09))
+- **Android**: Refactored to use BottomSheetDialogFragment. ([#342](https://github.com/lodev09/react-native-true-sheet/pull/342) by [@lodev09](https://github.com/lodev09))
 
 ## 3.5.0
 
 ### 🎉 New features
 
-- **Android**: Improved transition animations and refactored detent calculations. ([#337](https://github.com/lodev09/react-native-true-sheet/pull/337))
+- **Android**: Improved transition animations and refactored detent calculations. ([#337](https://github.com/lodev09/react-native-true-sheet/pull/337) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
@@ -203,13 +203,13 @@
 
 ### 🎉 New features
 
-- **iOS**: Added default blur tint for iOS < 26. ([#334](https://github.com/lodev09/react-native-true-sheet/pull/334))
+- **iOS**: Added default blur tint for iOS < 26. ([#334](https://github.com/lodev09/react-native-true-sheet/pull/334) by [@lodev09](https://github.com/lodev09))
 
 ## 3.4.0
 
 ### 🎉 New features
 
-- **Android**: Added custom dim view with smooth interpolation. ([#327](https://github.com/lodev09/react-native-true-sheet/pull/327))
+- **Android**: Added custom dim view with smooth interpolation. ([#327](https://github.com/lodev09/react-native-true-sheet/pull/327) by [@lodev09](https://github.com/lodev09))
 - **Android**: Added parent translation updates when child sheet size changes.
 
 ### 🐛 Bug fixes
@@ -219,7 +219,7 @@
 
 ### 💡 Others
 
-- Refactored mocks to export per module. ([#329](https://github.com/lodev09/react-native-true-sheet/pull/329))
+- Refactored mocks to export per module. ([#329](https://github.com/lodev09/react-native-true-sheet/pull/329) by [@lodev09](https://github.com/lodev09))
 
 ## 3.3.5
 
@@ -231,16 +231,16 @@
 
 ### 🎉 New features
 
-- Added adaptive grabber color for light/dark mode. ([#325](https://github.com/lodev09/react-native-true-sheet/pull/325))
+- Added adaptive grabber color for light/dark mode. ([#325](https://github.com/lodev09/react-native-true-sheet/pull/325) by [@lodev09](https://github.com/lodev09))
 
 ## 3.3.3
 
 ### 🐛 Bug fixes
 
-- Fixed key window fallback for cold start and deep link handling. ([#323](https://github.com/lodev09/react-native-true-sheet/pull/323))
+- Fixed key window fallback for cold start and deep link handling. ([#323](https://github.com/lodev09/react-native-true-sheet/pull/323) by [@lodev09](https://github.com/lodev09))
 
 ## 3.3.2
 
 ### 🐛 Bug fixes
 
-- Fixed batch dismiss behavior for stacked sheets. ([#322](https://github.com/lodev09/react-native-true-sheet/pull/322))
+- Fixed batch dismiss behavior for stacked sheets. ([#322](https://github.com/lodev09/react-native-true-sheet/pull/322) by [@lodev09](https://github.com/lodev09))
