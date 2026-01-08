@@ -396,6 +396,30 @@ using namespace facebook::react;
   [self presentAtIndex:index animated:YES completion:completion];
 }
 
+- (TrueSheetViewController *)viewController {
+  return _controller;
+}
+
+- (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  if (!_controller.isPresented) {
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
+  [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
+
+  // Dismiss from the presenting view controller to dismiss this sheet and all its children
+  UIViewController *presenter = _controller.presentingViewController;
+  [presenter dismissViewControllerAnimated:animated
+                                completion:^{
+                                  if (completion) {
+                                    completion(YES, nil);
+                                  }
+                                }];
+}
+
 #pragma mark - TrueSheetContainerViewDelegate
 
 /**

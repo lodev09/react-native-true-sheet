@@ -22,12 +22,12 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Returns the topmost presented and visible sheet.
+   * Returns the topmost presented and visible sheet that is not hidden by modal.
    * Must be called within synchronized block.
    */
   private fun findTopmostSheet(): TrueSheetView? =
     presentedSheetStack.lastOrNull {
-      it.viewController.isPresented && it.viewController.isSheetVisible
+      it.viewController.isPresented && it.viewController.isSheetVisible && !it.viewController.wasHiddenByModal
     }
 
   /**
@@ -149,6 +149,29 @@ object TrueSheetStackManager {
   fun getTopmostSheet(): TrueSheetView? {
     synchronized(presentedSheetStack) {
       return findTopmostSheet()
+    }
+  }
+
+  /**
+   * Returns the root presented sheet for dismissAll.
+   * Starts from the topmost sheet and walks up to find the root of its stack.
+   * Stops at modal boundary (parent hidden by modal) or when there's no parent.
+   */
+  @JvmStatic
+  fun getRootSheet(): TrueSheetView? {
+    synchronized(presentedSheetStack) {
+      val topmost = presentedSheetStack.lastOrNull { it.viewController.isPresented } ?: return null
+
+      var current: TrueSheetView = topmost
+      while (true) {
+        val parent = current.viewController.parentSheetView ?: return current
+
+        if (parent.viewController.wasHiddenByModal) {
+          return current
+        }
+
+        current = parent
+      }
     }
   }
 }

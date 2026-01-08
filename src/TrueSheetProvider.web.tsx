@@ -9,9 +9,21 @@ interface BottomSheetContextValue extends TrueSheetContextMethods {
   removeFromStack: (name: string) => void;
   getSheetsAbove: (name: string) => string[];
   dismissDirect: (name: string) => Promise<void>;
+  dismissAll: () => Promise<void>;
 }
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
+
+// Module-level references for static methods
+let presentRef: ((name: string, index?: number) => Promise<void>) | null = null;
+let dismissRef: ((name: string) => Promise<void>) | null = null;
+let resizeRef: ((name: string, index: number) => Promise<void>) | null = null;
+let dismissAllRef: (() => Promise<void>) | null = null;
+
+export const getPresent = () => presentRef;
+export const getDismiss = () => dismissRef;
+export const getResize = () => resizeRef;
+export const getDismissAll = () => dismissAllRef;
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
@@ -98,6 +110,18 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     return sheet.current.resize(index);
   };
 
+  const dismissAll = async () => {
+    const rootSheet = presentedStackRef.current[0];
+    if (!rootSheet) return;
+    return dismissDirect(rootSheet);
+  };
+
+  // Set module-level refs for static access
+  presentRef = present;
+  dismissRef = dismiss;
+  resizeRef = resize;
+  dismissAllRef = dismissAll;
+
   return (
     <BottomSheetContext.Provider
       value={{
@@ -107,6 +131,7 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
         removeFromStack,
         getSheetsAbove,
         dismissDirect,
+        dismissAll,
         present,
         dismiss,
         resize,
@@ -132,5 +157,6 @@ export function useTrueSheet(): TrueSheetContextMethods {
     present: context.present,
     dismiss: context.dismiss,
     resize: context.resize,
+    dismissAll: context.dismissAll,
   };
 }

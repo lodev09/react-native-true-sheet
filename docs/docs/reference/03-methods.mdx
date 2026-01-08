@@ -103,3 +103,22 @@ await TrueSheet.dismiss('my-sheet', false)
 // Resize to 80%
 await TrueSheet.resize('my-sheet', 0.8)
 ```
+
+### `dismissAll`
+
+Dismisses all presented sheets in the current stack. This is useful when you need to close all sheets at once, for example when navigating away or resetting the UI state.
+
+| Parameters | Required | Default |
+| - | - | - |
+| `animated: boolean` | No | `true` |
+
+```tsx
+await TrueSheet.dismissAll()
+
+// Dismiss all without animation
+await TrueSheet.dismissAll(false)
+```
+
+:::note
+This only dismisses sheets in the current presentation context. Sheets presented behind a modal (e.g., React Navigation modal or React Native Modal) will not be affected.
+:::

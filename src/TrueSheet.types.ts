@@ -90,6 +90,10 @@ export interface TrueSheetContextMethods {
    * @param index - The detent index to resize to
    */
   resize: (name: string, index: number) => Promise<void>;
+  /**
+   * Dismiss all presented sheets.
+   */
+  dismissAll: () => Promise<void>;
 }
 
 /**

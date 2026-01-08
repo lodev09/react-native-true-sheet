@@ -27,7 +27,13 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { BottomSheetContext } from './TrueSheetProvider.web';
+import {
+  BottomSheetContext,
+  getPresent,
+  getDismiss,
+  getResize,
+  getDismissAll,
+} from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
   TrueSheetRef,
@@ -78,7 +84,7 @@ const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) =
   return createElement(slot);
 };
 
-export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
+const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
   const {
     name,
     detents = [0.5, 1],
@@ -490,6 +496,47 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     </BottomSheetModal>
   );
 });
+
+interface TrueSheetStatic {
+  present: (name: string, index?: number) => Promise<void>;
+  dismiss: (name: string) => Promise<void>;
+  resize: (name: string, index: number) => Promise<void>;
+  dismissAll: () => Promise<void>;
+}
+
+export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
+
+TrueSheet.present = async (name: string, index?: number) => {
+  const present = getPresent();
+  if (!present) {
+    throw new Error('TrueSheet.present(): TrueSheetProvider is not mounted.');
+  }
+  return present(name, index);
+};
+
+TrueSheet.dismiss = async (name: string) => {
+  const dismiss = getDismiss();
+  if (!dismiss) {
+    throw new Error('TrueSheet.dismiss(): TrueSheetProvider is not mounted.');
+  }
+  return dismiss(name);
+};
+
+TrueSheet.resize = async (name: string, index: number) => {
+  const resize = getResize();
+  if (!resize) {
+    throw new Error('TrueSheet.resize(): TrueSheetProvider is not mounted.');
+  }
+  return resize(name, index);
+};
+
+TrueSheet.dismissAll = async () => {
+  const dismissAll = getDismissAll();
+  if (!dismissAll) {
+    throw new Error('TrueSheet.dismissAll(): TrueSheetProvider is not mounted.');
+  }
+  return dismissAll();
+};
 
 const styles = StyleSheet.create({
   root: {

@@ -4,7 +4,7 @@ import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Input, Spacer } from '../components';
-import { PromptSheet, FlatListSheet, ScrollViewSheet } from '../components/sheets';
+import { PromptSheet, FlatListSheet, ScrollViewSheet, BasicSheet } from '../components/sheets';
 
 export interface ModalScreenProps {
   onNavigateToTest?: () => void;
@@ -15,7 +15,10 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   const promptSheet = useRef<TrueSheet>(null);
   const flatlistSheet = useRef<TrueSheet>(null);
 
+  const basicSheet = useRef<TrueSheet>(null);
+
   const [modalVisible, setModalVisible] = useState(false);
+  const modalBasicSheet = useRef<TrueSheet>(null);
   const modalPromptSheet = useRef<TrueSheet>(null);
   const modalFlatlistSheet = useRef<TrueSheet>(null);
   const modalScrollViewSheet = useRef<TrueSheet>(null);
@@ -37,12 +40,14 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         </View>
         <Input />
         <Button text="Dismiss Modal" onPress={onDismiss} />
+        <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
         <Spacer />
         <Button text="Navigate Test" onPress={onNavigateToTest} />
 
+        <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
 
@@ -59,6 +64,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
                   This is a React Native Modal. You can present TrueSheets from here!
                 </Text>
               </View>
+              <Button text="Basic Sheet" onPress={() => modalBasicSheet.current?.present()} />
               <Button text="Prompt Sheet" onPress={() => modalPromptSheet.current?.present()} />
               <Button
                 text="ScrollView Sheet"
@@ -68,6 +74,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
               <Spacer />
               <Button text="Close Modal" onPress={() => setModalVisible(false)} />
 
+              <BasicSheet ref={modalBasicSheet} />
               <PromptSheet ref={modalPromptSheet} />
               <FlatListSheet ref={modalFlatlistSheet} />
               <ScrollViewSheet ref={modalScrollViewSheet} />

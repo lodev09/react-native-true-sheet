@@ -22,6 +22,7 @@ export class TrueSheet
     Promise.resolve()
   );
   static resize = jest.fn((_name: string, _index: number) => Promise.resolve());
+  static dismissAll = jest.fn((_animated?: boolean) => Promise.resolve());
 
   dismiss = jest.fn((_animated?: boolean) => Promise.resolve());
   present = jest.fn((_index?: number, _animated?: boolean) => Promise.resolve());
@@ -74,6 +75,7 @@ export function useTrueSheet(): TrueSheetContextMethods {
     present: TrueSheet.present,
     dismiss: TrueSheet.dismiss,
     resize: TrueSheet.resize,
+    dismissAll: TrueSheet.dismissAll,
   };
 }
 
