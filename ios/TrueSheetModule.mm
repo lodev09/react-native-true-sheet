@@ -14,6 +14,7 @@
 #import "TrueSheetModule.h"
 #import <React/RCTUtils.h>
 #import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 
 #import <TrueSheetSpec/TrueSheetSpec.h>
 
@@ -112,6 +113,46 @@ RCT_EXPORT_MODULE(TrueSheetModule)
                           reject(@"RESIZE_FAILED", error.localizedDescription ?: @"Failed to resize sheet", error);
                         }
                       }];
+  });
+}
+
+- (void)dismissAll:(BOOL)animated
+           resolve:(RCTPromiseResolveBlock)resolve
+            reject:(RCTPromiseRejectBlock)reject {
+  RCTExecuteOnMainQueue(^{
+    @synchronized(viewRegistry) {
+      // Find the root presented sheet (first in the presentation stack)
+      TrueSheetView *rootSheet = nil;
+
+      for (TrueSheetView *view in viewRegistry.allValues) {
+        if (!view.viewController.isPresented) {
+          continue;
+        }
+
+        // Check if this sheet has no presenting parent sheet
+        UIViewController *presenter = view.viewController.presentingViewController;
+        BOOL hasParentSheet = [presenter isKindOfClass:[TrueSheetViewController class]];
+
+        if (!hasParentSheet) {
+          rootSheet = view;
+          break;
+        }
+      }
+
+      if (!rootSheet) {
+        resolve(nil);
+        return;
+      }
+
+      [rootSheet dismissAllAnimated:animated
+                         completion:^(BOOL success, NSError *_Nullable error) {
+                           if (success) {
+                             resolve(nil);
+                           } else {
+                             reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets", error);
+                           }
+                         }];
+    }
   });
 }
 

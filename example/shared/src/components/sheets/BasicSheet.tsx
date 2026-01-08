@@ -124,6 +124,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
+        <Button text="Dismiss All" onPress={() => TrueSheet.dismissAll()} />
         <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
       </TrueSheet>
     </TrueSheet>

@@ -151,4 +151,14 @@ object TrueSheetStackManager {
       return findTopmostSheet()
     }
   }
+
+  /**
+   * Returns the root presented sheet (first in the stack), or null if none.
+   */
+  @JvmStatic
+  fun getRootSheet(): TrueSheetView? {
+    synchronized(presentedSheetStack) {
+      return presentedSheetStack.firstOrNull { it.viewController.isPresented }
+    }
+  }
 }

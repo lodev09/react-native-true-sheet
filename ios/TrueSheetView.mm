@@ -396,6 +396,31 @@ using namespace facebook::react;
   [self presentAtIndex:index animated:YES completion:completion];
 }
 
+- (TrueSheetViewController *)viewController {
+  return _controller;
+}
+
+- (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  UIViewController *presenter = _controller.presentingViewController;
+  if (!presenter) {
+    if (completion) {
+      completion(NO, [NSError errorWithDomain:@"com.lodev09.TrueSheet"
+                                         code:1002
+                                     userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}]);
+    }
+    return;
+  }
+
+  [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
+
+  [presenter dismissViewControllerAnimated:animated
+                                completion:^{
+                                  if (completion) {
+                                    completion(YES, nil);
+                                  }
+                                }];
+}
+
 #pragma mark - TrueSheetContainerViewDelegate
 
 /**

@@ -35,6 +35,13 @@ interface Spec extends TurboModule {
    * @returns Promise that resolves when resize is complete
    */
   resizeByRef(viewTag: number, index: number): Promise<void>;
+
+  /**
+   * Dismiss all presented sheets
+   * @param animated - Whether to animate the dismissals
+   * @returns Promise that resolves when all sheets are dismissed
+   */
+  dismissAll(animated: boolean): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('TrueSheetModule');

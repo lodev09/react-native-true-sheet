@@ -210,6 +210,16 @@ export class TrueSheet
     return instance.resize(index);
   }
 
+  /**
+   * Dismiss all presented sheets by dismissing from the bottom of the stack.
+   * This ensures child sheets are dismissed first before their parent.
+   * @param animated - Whether to animate the dismissals (default: true)
+   * @returns Promise that resolves when all sheets are dismissed
+   */
+  public static async dismissAll(animated: boolean = true): Promise<void> {
+    return TrueSheetModule?.dismissAll(animated);
+  }
+
   private registerInstance(): void {
     if (this.props.name) {
       TrueSheet.instances[this.props.name] = this;

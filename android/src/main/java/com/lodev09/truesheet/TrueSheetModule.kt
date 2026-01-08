@@ -96,6 +96,31 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   }
 
   /**
+   * Dismiss all presented sheets by dismissing from the bottom of the stack
+   *
+   * @param animated Whether to animate the dismissals
+   * @param promise Promise that resolves when all sheets are dismissed
+   */
+  @ReactMethod
+  fun dismissAll(animated: Boolean, promise: Promise) {
+    Handler(Looper.getMainLooper()).post {
+      try {
+        val rootSheet = TrueSheetStackManager.getRootSheet()
+        if (rootSheet == null) {
+          promise.resolve(null)
+          return@post
+        }
+
+        rootSheet.dismiss(animated) {
+          promise.resolve(null)
+        }
+      } catch (e: Exception) {
+        promise.reject("OPERATION_FAILED", "Failed to dismiss all sheets: ${e.message}", e)
+      }
+    }
+  }
+
+  /**
    * Helper method to get TrueSheetView by tag and execute closure
    */
   private fun withTrueSheetView(tag: Int, promise: Promise, closure: (view: TrueSheetView) -> Unit) {
