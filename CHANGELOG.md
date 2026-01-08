@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394))
 - **Android**: Fixed keyboard and focus handling inside RN Modal. ([#387](https://github.com/lodev09/react-native-true-sheet/pull/387))
 
 ## 3.7.0
