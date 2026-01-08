@@ -33,9 +33,9 @@ jobs:
       - uses: actions/stale@v9
         with:
           only-labels: 'needs repro'
-          stale-issue-message: 'This issue is missing a reproduction and has been marked as stale. It will be closed if no reproduction is provided.'
+          stale-issue-message: 'This issue is missing a reproduction and has been marked as stale. It will be closed in 2 days if no reproduction is provided.'
           close-issue-message: 'This issue has been closed due to missing reproduction. Feel free to reopen with a minimal repro.'
-          days-before-stale: 14
-          days-before-close: 7
+          days-before-stale: 5
+          days-before-close: 2
           stale-issue-label: 'stale'
           exempt-issue-labels: 'pinned,security'
