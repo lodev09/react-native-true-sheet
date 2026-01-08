@@ -52,6 +52,18 @@ await sheet3.current?.dismiss() // Dismisses Sheet 3, Sheet 1 and Sheet 2 stay
 
 This is useful when you need to dismiss all child sheets and return focus to a parent sheet without closing it.
 
+### Dismiss All Sheets
+
+To dismiss all sheets in the current stack at once, use the static [`dismissAll()`](/reference/methods#dismissall) method:
+
+```tsx
+await TrueSheet.dismissAll()
+```
+
+:::info Presentation Context
+This only dismisses sheets in the current presentation context. Sheets presented behind a modal (e.g., React Navigation modal or React Native Modal) will not be affected.
+:::
+
 ## Stack Behavior (Web)
 
 On web, you can customize the stacking behavior using the [`stackBehavior`](https://gorhom.dev/react-native-bottom-sheet/modal/props#stackbehavior) prop:
