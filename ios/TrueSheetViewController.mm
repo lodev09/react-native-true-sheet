@@ -319,6 +319,7 @@
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
+        [self storeResolvedPositionForIndex:pendingIndex];
         CGFloat detent = [self detentValueForIndex:pendingIndex];
         [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
         [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
