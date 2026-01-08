@@ -23,3 +23,4 @@
 - [ ] I tested on Android
 - [ ] I tested on Web
 - [ ] I updated the documentation (if needed)
+- [ ] I added a changelog entry (if needed)

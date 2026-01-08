@@ -91,4 +91,16 @@ When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
 2. **Type of Change** - Select one: Bug fix, New feature, Breaking change, or Documentation update
 3. **Test Plan** - Explain how the changes were tested
 4. **Screenshots / Videos** - Include if applicable
-5. **Checklist** - Mark platforms tested (iOS, Android, Web) and documentation updates
+5. **Checklist** - Mark platforms tested (iOS, Android, Web), documentation and changelog updates
+
+#### Changelog
+
+Add entry to `Unpublished` section in `CHANGELOG.md` for user-facing changes:
+
+- `🎉 New features` - New functionality
+- `🐛 Bug fixes` - Bug fixes
+- `💡 Others` - Refactors, internal changes
+
+Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123))`
+
+When creating release notes, move entries from `Unpublished` to a new version section.
