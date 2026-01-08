@@ -121,7 +121,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
             reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     @synchronized(viewRegistry) {
-      // Find the root presented sheet (first in the presentation stack)
+      // Find the root presented sheet (one without a parent TrueSheet)
       TrueSheetView *rootSheet = nil;
 
       for (TrueSheetView *view in viewRegistry.allValues) {
@@ -129,7 +129,6 @@ RCT_EXPORT_MODULE(TrueSheetModule)
           continue;
         }
 
-        // Check if this sheet has no presenting parent sheet
         UIViewController *presenter = view.viewController.presentingViewController;
         BOOL hasParentSheet = [presenter isKindOfClass:[TrueSheetViewController class]];
 
@@ -149,7 +148,8 @@ RCT_EXPORT_MODULE(TrueSheetModule)
                            if (success) {
                              resolve(nil);
                            } else {
-                             reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets", error);
+                             reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets",
+                                    error);
                            }
                          }];
     }

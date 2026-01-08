@@ -311,6 +311,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   @UiThread
+  fun dismissAll(animated: Boolean = true, promiseCallback: () -> Unit) {
+    // Dismiss all sheets above first
+    dismiss(animated) {}
+
+    // Then dismiss itself
+    viewController.dismissPromise = promiseCallback
+    viewController.dismiss(animated)
+  }
+
+  @UiThread
   fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
     if (!viewController.isPresented) {
       RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")

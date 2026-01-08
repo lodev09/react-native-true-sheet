@@ -401,18 +401,17 @@ using namespace facebook::react;
 }
 
 - (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  UIViewController *presenter = _controller.presentingViewController;
-  if (!presenter) {
+  if (!_controller.isPresented) {
     if (completion) {
-      completion(NO, [NSError errorWithDomain:@"com.lodev09.TrueSheet"
-                                         code:1002
-                                     userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}]);
+      completion(YES, nil);
     }
     return;
   }
 
   [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
 
+  // Dismiss from the presenting view controller to dismiss this sheet and all its children
+  UIViewController *presenter = _controller.presentingViewController;
   [presenter dismissViewControllerAnimated:animated
                                 completion:^{
                                   if (completion) {

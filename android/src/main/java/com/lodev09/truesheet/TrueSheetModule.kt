@@ -111,7 +111,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
           return@post
         }
 
-        rootSheet.dismiss(animated) {
+        rootSheet.dismissAll(animated) {
           promise.resolve(null)
         }
       } catch (e: Exception) {
