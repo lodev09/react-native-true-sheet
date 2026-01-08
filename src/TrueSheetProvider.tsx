@@ -25,5 +25,6 @@ export function useTrueSheet(): TrueSheetContextMethods {
     present: TrueSheet.present,
     dismiss: TrueSheet.dismiss,
     resize: TrueSheet.resize,
+    dismissAll: TrueSheet.dismissAll,
   };
 }

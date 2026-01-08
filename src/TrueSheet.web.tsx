@@ -27,7 +27,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { BottomSheetContext } from './TrueSheetProvider.web';
+import { BottomSheetContext, getDismissAll } from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
   TrueSheetRef,
@@ -498,9 +498,13 @@ interface TrueSheetStatic {
 export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
 
 TrueSheet.dismissAll = async () => {
-  console.warn(
-    'TrueSheet.dismissAll() is not supported on web. Use the context dismissAll from TrueSheetProvider instead.'
-  );
+  console.log('[TrueSheet.dismissAll] called');
+  const dismissAll = getDismissAll();
+  console.log('[TrueSheet.dismissAll] getDismissAll:', dismissAll);
+  if (!dismissAll) {
+    throw new Error('TrueSheet.dismissAll(): TrueSheetProvider is not mounted.');
+  }
+  return dismissAll();
 };
 
 const styles = StyleSheet.create({
