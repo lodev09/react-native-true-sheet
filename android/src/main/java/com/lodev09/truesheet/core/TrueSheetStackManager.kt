@@ -22,12 +22,12 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Returns the topmost presented and visible sheet.
+   * Returns the topmost presented and visible sheet that is not hidden by modal.
    * Must be called within synchronized block.
    */
   private fun findTopmostSheet(): TrueSheetView? =
     presentedSheetStack.lastOrNull {
-      it.viewController.isPresented && it.viewController.isSheetVisible
+      it.viewController.isPresented && it.viewController.isSheetVisible && !it.viewController.wasHiddenByModal
     }
 
   /**
