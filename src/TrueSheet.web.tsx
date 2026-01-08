@@ -27,7 +27,13 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { BottomSheetContext, getDismissAll } from './TrueSheetProvider.web';
+import {
+  BottomSheetContext,
+  getPresent,
+  getDismiss,
+  getResize,
+  getDismissAll,
+} from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
   TrueSheetRef,
@@ -492,15 +498,40 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
 });
 
 interface TrueSheetStatic {
+  present: (name: string, index?: number) => Promise<void>;
+  dismiss: (name: string) => Promise<void>;
+  resize: (name: string, index: number) => Promise<void>;
   dismissAll: () => Promise<void>;
 }
 
 export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
 
+TrueSheet.present = async (name: string, index?: number) => {
+  const present = getPresent();
+  if (!present) {
+    throw new Error('TrueSheet.present(): TrueSheetProvider is not mounted.');
+  }
+  return present(name, index);
+};
+
+TrueSheet.dismiss = async (name: string) => {
+  const dismiss = getDismiss();
+  if (!dismiss) {
+    throw new Error('TrueSheet.dismiss(): TrueSheetProvider is not mounted.');
+  }
+  return dismiss(name);
+};
+
+TrueSheet.resize = async (name: string, index: number) => {
+  const resize = getResize();
+  if (!resize) {
+    throw new Error('TrueSheet.resize(): TrueSheetProvider is not mounted.');
+  }
+  return resize(name, index);
+};
+
 TrueSheet.dismissAll = async () => {
-  console.log('[TrueSheet.dismissAll] called');
   const dismissAll = getDismissAll();
-  console.log('[TrueSheet.dismissAll] getDismissAll:', dismissAll);
   if (!dismissAll) {
     throw new Error('TrueSheet.dismissAll(): TrueSheetProvider is not mounted.');
   }

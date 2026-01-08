@@ -14,9 +14,15 @@ interface BottomSheetContextValue extends TrueSheetContextMethods {
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
 
-// Module-level reference for static dismissAll
+// Module-level references for static methods
+let presentRef: ((name: string, index?: number) => Promise<void>) | null = null;
+let dismissRef: ((name: string) => Promise<void>) | null = null;
+let resizeRef: ((name: string, index: number) => Promise<void>) | null = null;
 let dismissAllRef: (() => Promise<void>) | null = null;
 
+export const getPresent = () => presentRef;
+export const getDismiss = () => dismissRef;
+export const getResize = () => resizeRef;
 export const getDismissAll = () => dismissAllRef;
 
 export interface TrueSheetProviderProps {
@@ -40,13 +46,11 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   };
 
   const pushToStack = (name: string) => {
-    console.log('[TrueSheetProvider.pushToStack] name:', name);
     const index = presentedStackRef.current.indexOf(name);
     if (index >= 0) {
       presentedStackRef.current.splice(index, 1);
     }
     presentedStackRef.current.push(name);
-    console.log('[TrueSheetProvider.pushToStack] stack after:', presentedStackRef.current);
   };
 
   const removeFromStack = (name: string) => {
@@ -107,15 +111,15 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   };
 
   const dismissAll = async () => {
-    console.log('[TrueSheetProvider.dismissAll] called');
-    console.log('[TrueSheetProvider.dismissAll] stack:', presentedStackRef.current);
     const rootSheet = presentedStackRef.current[0];
     if (!rootSheet) return;
-    console.log('[TrueSheetProvider.dismissAll] dismissing root:', rootSheet);
     return dismissDirect(rootSheet);
   };
 
-  // Set module-level ref for static access
+  // Set module-level refs for static access
+  presentRef = present;
+  dismissRef = dismiss;
+  resizeRef = resize;
   dismissAllRef = dismissAll;
 
   return (
