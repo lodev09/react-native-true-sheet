@@ -101,11 +101,6 @@ const MapScreenInner = ({
         dismissible={false}
         style={styles.content}
         backgroundColor={Platform.select({ ios: undefined, default: DARK })}
-        onPositionChange={(e) => {
-          'worklet';
-
-          console.log(e.nativeEvent.position, e.nativeEvent.detent, e.nativeEvent.index)
-        }}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`

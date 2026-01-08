@@ -153,12 +153,25 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Returns the root presented sheet (first in the stack), or null if none.
+   * Returns the root presented sheet for dismissAll.
+   * Starts from the topmost sheet and walks up to find the root of its stack.
+   * Stops at modal boundary (parent hidden by modal) or when there's no parent.
    */
   @JvmStatic
   fun getRootSheet(): TrueSheetView? {
     synchronized(presentedSheetStack) {
-      return presentedSheetStack.firstOrNull { it.viewController.isPresented }
+      val topmost = presentedSheetStack.lastOrNull { it.viewController.isPresented } ?: return null
+
+      var current: TrueSheetView = topmost
+      while (true) {
+        val parent = current.viewController.parentSheetView ?: return current
+
+        if (parent.viewController.wasHiddenByModal) {
+          return current
+        }
+
+        current = parent
+      }
     }
   }
 }
