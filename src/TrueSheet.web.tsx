@@ -78,7 +78,7 @@ const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) =
   return createElement(slot);
 };
 
-export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
+const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
   const {
     name,
     detents = [0.5, 1],
@@ -490,6 +490,18 @@ export const TrueSheet = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) =
     </BottomSheetModal>
   );
 });
+
+interface TrueSheetStatic {
+  dismissAll: () => Promise<void>;
+}
+
+export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
+
+TrueSheet.dismissAll = async () => {
+  console.warn(
+    'TrueSheet.dismissAll() is not supported on web. Use the context dismissAll from TrueSheetProvider instead.'
+  );
+};
 
 const styles = StyleSheet.create({
   root: {

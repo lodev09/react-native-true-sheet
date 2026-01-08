@@ -9,6 +9,7 @@ interface BottomSheetContextValue extends TrueSheetContextMethods {
   removeFromStack: (name: string) => void;
   getSheetsAbove: (name: string) => string[];
   dismissDirect: (name: string) => Promise<void>;
+  dismissAll: () => Promise<void>;
 }
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
@@ -98,6 +99,12 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     return sheet.current.resize(index);
   };
 
+  const dismissAll = async () => {
+    const rootSheet = presentedStackRef.current[0];
+    if (!rootSheet) return;
+    return dismissDirect(rootSheet);
+  };
+
   return (
     <BottomSheetContext.Provider
       value={{
@@ -107,6 +114,7 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
         removeFromStack,
         getSheetsAbove,
         dismissDirect,
+        dismissAll,
         present,
         dismiss,
         resize,
