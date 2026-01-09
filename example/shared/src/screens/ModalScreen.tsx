@@ -38,14 +38,14 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
             This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
           </Text>
         </View>
-        <Input />
         <Button text="Dismiss Modal" onPress={onDismiss} />
+        <Input />
         <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
-        <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
         <Spacer />
         <Button text="Navigate Test" onPress={onNavigateToTest} />
+        <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
         <BasicSheet ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
@@ -64,6 +64,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
                   This is a React Native Modal. You can present TrueSheets from here!
                 </Text>
               </View>
+              <Button text="Close Modal" onPress={() => setModalVisible(false)} />
               <Button text="Basic Sheet" onPress={() => modalBasicSheet.current?.present()} />
               <Button text="Prompt Sheet" onPress={() => modalPromptSheet.current?.present()} />
               <Button
@@ -72,10 +73,9 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
               />
               <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
               <Spacer />
-              <Button text="Close Modal" onPress={() => setModalVisible(false)} />
 
               <BasicSheet ref={modalBasicSheet} />
-              <PromptSheet ref={modalPromptSheet} />
+              <PromptSheet dimmed={false} ref={modalPromptSheet} />
               <FlatListSheet ref={modalFlatlistSheet} />
               <ScrollViewSheet ref={modalScrollViewSheet} />
             </View>

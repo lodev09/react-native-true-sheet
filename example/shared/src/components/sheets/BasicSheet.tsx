@@ -118,6 +118,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         name="basic-child"
         detents={['auto', 1]}
         backgroundColor={DARK}
+        dimmed={false}
         style={styles.content}
         footer={<Footer />}
       >
@@ -135,7 +136,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING,
-    paddingTop: SPACING * 2,
+    paddingTop: SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },

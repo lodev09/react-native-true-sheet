@@ -14,10 +14,9 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
-  const input3Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
-  const inputRefs = [input1Ref, input2Ref, input3Ref, textAreaRef];
+  const inputRefs = [input1Ref, input2Ref, textAreaRef];
 
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
@@ -68,9 +67,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       header={<Header />}
       {...props}
     >
-      <Input ref={input1Ref} placeholder="First name" />
-      <Input ref={input2Ref} placeholder="Last name" />
-      <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />
+      <Input ref={input1Ref} placeholder="Full name" />
+      <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
       <Input ref={textAreaRef} placeholder="Message..." multiline />
       <Button text="Submit" onPress={handleSubmitPress} />
       <Button text="Dismiss" onPress={handleDismissPress} />

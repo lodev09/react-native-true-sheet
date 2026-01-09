@@ -14,10 +14,11 @@ export const TestScreen = () => {
   return (
     <TrueSheetProvider>
       <View style={styles.content}>
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+        <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
+        <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
+        <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
 
-        <BasicSheet ref={basicSheet} />
+        <BasicSheet dimmed={false} ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <FlatListSheet ref={flatListSheet} />
       </View>
