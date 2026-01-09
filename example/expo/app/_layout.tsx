@@ -53,10 +53,12 @@ function RootLayoutNav() {
         <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
-          <Stack.Screen name="test" options={{ title: 'Test' }} />
           <Stack.Screen
             name="modal"
-            options={{ presentation: 'fullScreenModal', headerShown: false }}
+            options={{
+              presentation: 'fullScreenModal',
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="sheet"

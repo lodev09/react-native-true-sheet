@@ -7,7 +7,7 @@ export default function Standard() {
 
   return (
     <StandardScreen
-      onNavigateToTest={() => router.push('/test')}
+      onNavigateToTest={() => router.push('/modal/test')}
       onNavigateToModal={() => router.push('/modal')}
       onNavigateToMap={() => router.push('/')}
     />

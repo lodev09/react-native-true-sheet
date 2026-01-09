@@ -6,6 +6,9 @@ export default function Modal() {
   const router = useRouter();
 
   return (
-    <ModalScreen onNavigateToTest={() => router.push('/test')} onDismiss={() => router.back()} />
+    <ModalScreen
+      onNavigateToTest={() => router.push('/modal/test')}
+      onDismiss={() => router.back()}
+    />
   );
 }
