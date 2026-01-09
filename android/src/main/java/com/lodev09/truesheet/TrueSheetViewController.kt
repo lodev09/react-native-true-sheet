@@ -62,6 +62,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillBlur()
   fun viewControllerDidBlur()
   fun viewControllerDidBackPress()
+  fun viewControllerDidDetectPresenterDismiss()
 }
 
 // =============================================================================
@@ -534,6 +535,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           parentSheetView?.viewController?.let { parent ->
             post { parent.showAfterModal() }
           }
+        }
+      },
+      onNonModalScreenPushed = {
+        // Only handle on root sheet (no parent) to trigger dismissAll
+        if (isPresented && isSheetVisible && parentSheetView == null) {
+          delegate?.viewControllerDidDetectPresenterDismiss()
         }
       }
     )

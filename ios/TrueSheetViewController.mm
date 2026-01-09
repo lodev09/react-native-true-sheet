@@ -192,8 +192,7 @@
     return;
 
   UIView *presenterView = presenter.view;
-  BOOL isPresenterScreen = (screenView == presenterView) ||
-                           [screenView isDescendantOfView:presenterView] ||
+  BOOL isPresenterScreen = (screenView == presenterView) || [screenView isDescendantOfView:presenterView] ||
                            [presenterView isDescendantOfView:screenView];
 
   if (isPresenterScreen) {

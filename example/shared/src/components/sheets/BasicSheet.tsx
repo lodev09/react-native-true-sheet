@@ -7,7 +7,7 @@ import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { Spacer } from '../Spacer';
-import { Input } from '../Input';
+import { Header } from '../Header';
 
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
@@ -93,13 +93,13 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       onMount={() => {
         console.log('BasicSheet is ready!');
       }}
+      header={<Header />}
       footer={<Footer />}
       {...rest}
     >
       {times(contentCount, (i) => (
         <DemoContent key={i} color={DARK_BLUE} />
       ))}
-      <Input />
       <Button text={`Add Content (${contentCount})`} onPress={addContent} />
       {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
       <Spacer />
