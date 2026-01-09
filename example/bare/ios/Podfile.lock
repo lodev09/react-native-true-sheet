@@ -2646,7 +2646,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNTrueSheet (3.7.0-beta.3):
+  - RNTrueSheet (3.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -3095,7 +3095,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: e1cf8ef3f11045536eed6bd4f132b003ef5f9a5f
   RNReanimated: f1868b36f4b2b52a0ed00062cfda69506f75eaee
   RNScreens: d821082c6dd1cb397cc0c98b026eeafaa68be479
-  RNTrueSheet: 192e3d4a0e32be2f16a06d1f15e939b6e045af2d
+  RNTrueSheet: 98de027f434047a746fdf797927f2cfeaf84fc84
   RNWorklets: d9c050940f140af5d8b611d937eab1cbfce5e9a5
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 689c8e04277f3ad631e60fe2a08e41d411daf8eb
