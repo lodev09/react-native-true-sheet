@@ -176,16 +176,16 @@
 
 - (void)startObservingPresenter {
   [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleScreenWillDisappear:)
-                                               name:@"RNSScreenWillDisappear"
+                                           selector:@selector(handleScreenViewWillDisappear:)
+                                               name:@"RNSScreenViewWillDisappear"
                                              object:nil];
 }
 
 - (void)stopObservingPresenter {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:@"RNSScreenWillDisappear" object:nil];
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:@"RNSScreenViewWillDisappear" object:nil];
 }
 
-- (void)handleScreenWillDisappear:(NSNotification *)notification {
+- (void)handleScreenViewWillDisappear:(NSNotification *)notification {
   UIView *screenView = notification.object;
   
   if (!_presenterViewController || !screenView)
@@ -195,7 +195,7 @@
   BOOL isPresenterScreen = (screenView == presenterView) ||
                            [screenView isDescendantOfView:presenterView] ||
                            [presenterView isDescendantOfView:screenView];
-  
+
   if (isPresenterScreen) {
     if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectPresenterDismiss)]) {
       [self.delegate viewControllerDidDetectPresenterDismiss];

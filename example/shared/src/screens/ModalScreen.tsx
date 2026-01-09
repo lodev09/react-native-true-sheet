@@ -48,7 +48,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
         <BasicSheet ref={basicSheet} />
-        <PromptSheet ref={promptSheet} />
+        <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
 
         <Modal
