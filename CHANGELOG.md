@@ -8,7 +8,7 @@
 
 ### 🐛 Bug fixes
 
-- **iOS**: Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400) by [@lodev09](https://github.com/lodev09))
+- Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard and focus handling inside RN Modal. ([#387](https://github.com/lodev09/react-native-true-sheet/pull/387) by [@lodev09](https://github.com/lodev09))
 
