@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: BORDER_RADIUS * 3,
+    borderRadius: BORDER_RADIUS,
     overflow: 'hidden',
   },
   imageContainer: {

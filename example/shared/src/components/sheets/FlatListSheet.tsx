@@ -60,6 +60,5 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
-    paddingTop: SPACING,
   },
 });

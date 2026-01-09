@@ -18,7 +18,7 @@ object TrueSheetStackManager {
    */
   private fun getParentSheetAt(index: Int, rootContainer: ViewGroup?): TrueSheetView? {
     if (index <= 0) return null
-    return presentedSheetStack[index - 1].takeIf { it.rootContainerView == rootContainer }
+    return presentedSheetStack[index - 1].takeIf { !it.viewController.wasHiddenByModal && it.rootContainerView == rootContainer }
   }
 
   /**

@@ -38,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;
 - (void)viewControllerDidBlur;
+- (void)viewControllerDidDetectPresenterDismiss;
 
 @end
 

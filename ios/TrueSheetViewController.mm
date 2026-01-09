@@ -74,6 +74,7 @@
 }
 
 - (void)dealloc {
+  [self stopObservingPresenter];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -170,6 +171,37 @@
   [_grabberView addToView:self.view];
 }
 
+#pragma mark - Presenter Observation
+
+- (void)startObservingPresenter {
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleScreenViewWillDisappear:)
+                                               name:@"RNSScreenViewWillDisappear"
+                                             object:nil];
+}
+
+- (void)stopObservingPresenter {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:@"RNSScreenViewWillDisappear" object:nil];
+}
+
+- (void)handleScreenViewWillDisappear:(NSNotification *)notification {
+  UIView *screenView = notification.object;
+  UIViewController *presenter = self.presentingViewController;
+
+  if (!presenter || !screenView)
+    return;
+
+  UIView *presenterView = presenter.view;
+  BOOL isPresenterScreen = (screenView == presenterView) || [screenView isDescendantOfView:presenterView] ||
+                           [presenterView isDescendantOfView:screenView];
+
+  if (isPresenterScreen) {
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectPresenterDismiss)]) {
+      [self.delegate viewControllerDidDetectPresenterDismiss];
+    }
+  }
+}
+
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
@@ -208,6 +240,8 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
+    [self startObservingPresenter];
+
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
         [_parentSheetController.delegate viewControllerDidBlur];
@@ -265,6 +299,8 @@
   [super viewDidDisappear:animated];
 
   if (self.isDismissing) {
+    [self stopObservingPresenter];
+
     _isPresented = NO;
     _activeDetentIndex = -1;
 

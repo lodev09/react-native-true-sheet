@@ -116,9 +116,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   });
 }
 
-- (void)dismissAll:(BOOL)animated
-           resolve:(RCTPromiseResolveBlock)resolve
-            reject:(RCTPromiseRejectBlock)reject {
+- (void)dismissAll:(BOOL)animated resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     @synchronized(viewRegistry) {
       // Find the root presented sheet (one without a parent TrueSheet)
@@ -143,15 +141,15 @@ RCT_EXPORT_MODULE(TrueSheetModule)
         return;
       }
 
-      [rootSheet dismissAllAnimated:animated
-                         completion:^(BOOL success, NSError *_Nullable error) {
-                           if (success) {
-                             resolve(nil);
-                           } else {
-                             reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets",
-                                    error);
-                           }
-                         }];
+      [rootSheet
+        dismissAllAnimated:animated
+                completion:^(BOOL success, NSError *_Nullable error) {
+                  if (success) {
+                    resolve(nil);
+                  } else {
+                    reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets", error);
+                  }
+                }];
     }
   });
 }

@@ -18,7 +18,8 @@ class RNScreensFragmentObserver(
   private val reactContext: ReactContext,
   private val onModalPresented: () -> Unit,
   private val onModalWillDismiss: () -> Unit,
-  private val onModalDidDismiss: () -> Unit
+  private val onModalDidDismiss: () -> Unit,
+  private val onNonModalScreenPushed: () -> Unit
 ) {
   private var fragmentLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
   private var activityLifecycleObserver: DefaultLifecycleObserver? = null
@@ -61,6 +62,9 @@ class RNScreensFragmentObserver(
           if (activeModalFragments.size == 1) {
             onModalPresented()
           }
+        } else if (activeModalFragments.isEmpty() && isNonModalScreenFragment(f)) {
+          // Only trigger non-modal push when no modals are active
+          onNonModalScreenPushed()
         }
       }
 
@@ -144,6 +148,27 @@ class RNScreensFragmentObserver(
      * Check if fragment is from react-native-screens.
      */
     private fun isScreensFragment(fragment: Fragment): Boolean = fragment.javaClass.name.startsWith(RN_SCREENS_PACKAGE)
+
+    /**
+     * Check if fragment is a non-modal screen (regular push presentation).
+     */
+    private fun isNonModalScreenFragment(fragment: Fragment): Boolean {
+      if (!isScreensFragment(fragment)) return false
+      // ScreenModalFragment is always a modal
+      if (fragment.javaClass.name.contains("ScreenModalFragment")) return false
+
+      try {
+        val getScreenMethod = fragment.javaClass.getMethod("getScreen")
+        val screen = getScreenMethod.invoke(fragment) ?: return false
+
+        val getStackPresentationMethod = screen.javaClass.getMethod("getStackPresentation")
+        val stackPresentation = getStackPresentationMethod.invoke(screen) ?: return false
+
+        return stackPresentation.toString() == "PUSH"
+      } catch (e: Exception) {
+        return false
+      }
+    }
 
     /**
      * Check if fragment is a react-native-screens modal (fullScreenModal, transparentModal, or formSheet).

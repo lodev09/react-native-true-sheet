@@ -1,5 +1,19 @@
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -605,6 +605,11 @@
+ - (void)notifyWillDisappear
+ {
+   if (_hideKeyboardOnSwipe) {
+     [self endEditing:YES];
+   }
++
++  [[NSNotificationCenter defaultCenter] postNotificationName:@"RNSScreenViewWillDisappear"
++                                                      object:self
++                                                    userInfo:nil];
++
+ #ifdef RCT_NEW_ARCH_ENABLED
 diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
-index 51f021831aed26a4eed3c85014020423b7b3108b..268fa69dfee2b20d8b5a66c77c1b4cbd8c831573 100644
 --- a/ios/RNSScreenStack.mm
 +++ b/ios/RNSScreenStack.mm
 @@ -640,8 +640,10 @@ RNS_IGNORE_SUPER_CALL_END
@@ -50,7 +64,6 @@ index 51f021831aed26a4eed3c85014020423b7b3108b..268fa69dfee2b20d8b5a66c77c1b4cbd
  
    // We didn't detect any controllers for dismissal, thus we start presenting new VCs
 diff --git a/ios/integrations/RNSDismissibleModalProtocol.h b/ios/integrations/RNSDismissibleModalProtocol.h
-index 006f809d104c1d4fbdf6eccca89d6c6e190cca71..89e297f1b7a9582fee3e19237dfba8d4c87a352f 100644
 --- a/ios/integrations/RNSDismissibleModalProtocol.h
 +++ b/ios/integrations/RNSDismissibleModalProtocol.h
 @@ -1,3 +1,5 @@

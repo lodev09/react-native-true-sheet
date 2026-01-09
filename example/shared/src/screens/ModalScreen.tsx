@@ -38,17 +38,18 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
             This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
           </Text>
         </View>
-        <Button text="Dismiss Modal" onPress={onDismiss} />
         <Input />
+        <Button text="Navigate Test" onPress={onNavigateToTest} />
+        <Button text="Dismiss Modal" onPress={onDismiss} />
+        <Spacer />
         <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
         <Spacer />
-        <Button text="Navigate Test" onPress={onNavigateToTest} />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
-        <BasicSheet ref={basicSheet} />
-        <PromptSheet ref={promptSheet} />
+        <BasicSheet dimmed={false} ref={basicSheet} />
+        <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
 
         <Modal
@@ -89,7 +90,6 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
 const styles = StyleSheet.create({
   content: {
     backgroundColor: BLUE,
-    justifyContent: 'center',
     flex: 1,
     padding: SPACING,
     gap: GAP,
