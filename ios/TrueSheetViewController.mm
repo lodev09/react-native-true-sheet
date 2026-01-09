@@ -36,7 +36,6 @@
   BOOL _isTrackingPositionFromLayout;
 
   __weak TrueSheetViewController *_parentSheetController;
-  __weak UIViewController *_presenterViewController;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -187,11 +186,12 @@
 
 - (void)handleScreenViewWillDisappear:(NSNotification *)notification {
   UIView *screenView = notification.object;
-  
-  if (!_presenterViewController || !screenView)
+  UIViewController *presenter = self.presentingViewController;
+
+  if (!presenter || !screenView)
     return;
 
-  UIView *presenterView = _presenterViewController.view;
+  UIView *presenterView = presenter.view;
   BOOL isPresenterScreen = (screenView == presenterView) ||
                            [screenView isDescendantOfView:presenterView] ||
                            [presenterView isDescendantOfView:screenView];
@@ -241,7 +241,6 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
-    _presenterViewController = self.presentingViewController;
     [self startObservingPresenter];
 
     if (_parentSheetController) {
@@ -302,7 +301,6 @@
 
   if (self.isDismissing) {
     [self stopObservingPresenter];
-    _presenterViewController = nil;
 
     _isPresented = NO;
     _activeDetentIndex = -1;
