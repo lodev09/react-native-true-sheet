@@ -36,6 +36,7 @@
   BOOL _isTrackingPositionFromLayout;
 
   __weak TrueSheetViewController *_parentSheetController;
+  __weak UIViewController *_presenterViewController;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -74,6 +75,7 @@
 }
 
 - (void)dealloc {
+  [self stopObservingPresenter];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -170,6 +172,37 @@
   [_grabberView addToView:self.view];
 }
 
+#pragma mark - Presenter Observation
+
+- (void)startObservingPresenter {
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleScreenWillDisappear:)
+                                               name:@"RNSScreenWillDisappear"
+                                             object:nil];
+}
+
+- (void)stopObservingPresenter {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:@"RNSScreenWillDisappear" object:nil];
+}
+
+- (void)handleScreenWillDisappear:(NSNotification *)notification {
+  UIView *screenView = notification.object;
+  
+  if (!_presenterViewController || !screenView)
+    return;
+
+  UIView *presenterView = _presenterViewController.view;
+  BOOL isPresenterScreen = (screenView == presenterView) ||
+                           [screenView isDescendantOfView:presenterView] ||
+                           [presenterView isDescendantOfView:screenView];
+  
+  if (isPresenterScreen) {
+    if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectPresenterDismiss)]) {
+      [self.delegate viewControllerDidDetectPresenterDismiss];
+    }
+  }
+}
+
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
@@ -208,6 +241,9 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
+    _presenterViewController = self.presentingViewController;
+    [self startObservingPresenter];
+
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
         [_parentSheetController.delegate viewControllerDidBlur];
@@ -265,6 +301,9 @@
   [super viewDidDisappear:animated];
 
   if (self.isDismissing) {
+    [self stopObservingPresenter];
+    _presenterViewController = nil;
+
     _isPresented = NO;
     _activeDetentIndex = -1;
 

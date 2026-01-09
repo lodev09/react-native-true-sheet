@@ -523,6 +523,10 @@ using namespace facebook::react;
   [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
+- (void)viewControllerDidDetectPresenterDismiss {
+  [self dismissAllAnimated:YES completion:nil];
+}
+
 #pragma mark - Private Helpers
 
 - (UIViewController *)findPresentingViewController {
