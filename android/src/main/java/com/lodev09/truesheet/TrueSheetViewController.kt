@@ -230,11 +230,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = ScreenUtils.getRealScreenHeight(reactContext)
 
   // Content Measurements
+  // Cached values used during dismiss when container is unmounted
+  private var cachedContentHeight: Int = 0
+  private var cachedHeaderHeight: Int = 0
+
   override val contentHeight: Int
-    get() = containerView?.contentHeight ?: 0
+    get() = containerView?.contentHeight ?: cachedContentHeight
 
   override val headerHeight: Int
-    get() = containerView?.headerHeight ?: 0
+    get() = containerView?.headerHeight ?: cachedHeaderHeight
 
   // Insets
   // Target keyboard height used for detent calculations
@@ -337,6 +341,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresented = false
     isSheetVisible = false
     wasHiddenByModal = false
+    cachedContentHeight = 0
+    cachedHeaderHeight = 0
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
@@ -786,6 +792,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
+    containerView?.let {
+      cachedContentHeight = it.contentHeight
+      cachedHeaderHeight = it.headerHeight
+    }
+
     interactionState = InteractionState.Reconfiguring
 
     behavior.isFitToContents = false
@@ -896,6 +907,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
+    if (contentHeight == 0) return
+
     val keyboardOffset = if (isDismissing) 0 else currentKeyboardInset
     val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
 

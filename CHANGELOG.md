@@ -1,8 +1,8 @@
 # Changelog
 
-## Unpublished
+## Unreleased
 
-## 3.7.1
+## 3.7.2
 
 ### 🎉 New features
 
@@ -11,11 +11,16 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: Fixed dim interpolation during dismiss when container is unmounted. (34bd3d40 by [@lodev09](https://github.com/lodev09))
 - **Web**: Fixed `onWillDismiss` not firing when dismissing via backdrop tap. ([#405](https://github.com/lodev09/react-native-true-sheet/pull/405) by [@lodev09](https://github.com/lodev09))
 - Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400), [#402](https://github.com/lodev09/react-native-true-sheet/pull/402) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed visual glitch when navigating away with active sheet. ([#403](https://github.com/lodev09/react-native-true-sheet/pull/403) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard and focus handling inside RN Modal. ([#387](https://github.com/lodev09/react-native-true-sheet/pull/387) by [@lodev09](https://github.com/lodev09))
+
+### 🧹Chores
+
+- **Android**: Fix lint warnings. (68422b0e by [@lodev09](https://github.com/lodev09))
 
 ## 3.7.0
 
