@@ -5,6 +5,7 @@
 ### 🎉 New features
 
 - Added `dismissAll` static method. ([#393](https://github.com/lodev09/react-native-true-sheet/pull/393) by [@lodev09](https://github.com/lodev09))
+- **Android**: Added grabber tap to expand/dismiss for iOS consistency. ([#404](https://github.com/lodev09/react-native-true-sheet/pull/404) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

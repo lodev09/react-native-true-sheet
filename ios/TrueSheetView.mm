@@ -451,6 +451,9 @@ using namespace facebook::react;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
+    if (!self->_containerView)
+      return;
+
     [self->_controller setupSheetDetentsForSizeChange];
   });
 }

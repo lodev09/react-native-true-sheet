@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, SPACING } from '../utils';
-import { Button } from '../components';
+import { Button, Spacer } from '../components';
 import { BasicSheet, PromptSheet, FlatListSheet } from '../components/sheets';
 
 interface TestScreenProps {
@@ -18,7 +18,8 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
   return (
     <TrueSheetProvider>
       <View style={styles.content}>
-        <Button text="Back Sheet" onPress={onGoBack} />
+        <Button text="Go Back" onPress={onGoBack} />
+        <Spacer />
         <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
         <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
         <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />

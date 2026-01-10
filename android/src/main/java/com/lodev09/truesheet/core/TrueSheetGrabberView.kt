@@ -25,16 +25,21 @@ data class GrabberOptions(
 
 /**
  * Native grabber (drag handle) view for the bottom sheet.
- * Displays a small pill-shaped indicator at the top of the sheet.
+ * Displays a small pill-shaped indicator at the top of the sheet with a tappable hitbox.
  */
 @SuppressLint("ViewConstructor")
-class TrueSheetGrabberView(context: Context, private val options: GrabberOptions? = null) : View(context) {
+class TrueSheetGrabberView(
+  context: Context,
+  private val options: GrabberOptions? = null
+) : FrameLayout(context) {
 
   companion object {
     private const val DEFAULT_WIDTH = 32f // dp
     private const val DEFAULT_HEIGHT = 4f // dp
     private const val DEFAULT_TOP_MARGIN = 16f // dp
     private const val DEFAULT_ALPHA = 0.4f
+    private const val HITBOX_PADDING_HORIZONTAL = 16f // dp
+    private const val HITBOX_PADDING_VERTICAL = 16f // dp
     private val DEFAULT_COLOR = Color.argb((DEFAULT_ALPHA * 255).toInt(), 73, 69, 79) // #49454F @ 40%
   }
 
@@ -57,19 +62,33 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     get() = if (isAdaptive) getAdaptiveColor(options?.color) else options?.color ?: DEFAULT_COLOR
 
   init {
-    layoutParams = FrameLayout.LayoutParams(
-      grabberWidth.dpToPx().toInt(),
-      grabberHeight.dpToPx().toInt()
+    val hitboxWidth = grabberWidth + (HITBOX_PADDING_HORIZONTAL * 2)
+    val hitboxHeight = grabberHeight + (HITBOX_PADDING_VERTICAL * 2)
+
+    layoutParams = LayoutParams(
+      hitboxWidth.dpToPx().toInt(),
+      hitboxHeight.dpToPx().toInt()
     ).apply {
       gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
-      topMargin = grabberTopMargin.dpToPx().toInt()
+      topMargin = (grabberTopMargin - HITBOX_PADDING_VERTICAL).dpToPx().toInt()
     }
 
-    background = GradientDrawable().apply {
-      shape = GradientDrawable.RECTANGLE
-      cornerRadius = grabberCornerRadius.dpToPx()
-      setColor(grabberColor)
+    // The visible pill centered inside the hitbox
+    val pillView = View(context).apply {
+      layoutParams = LayoutParams(
+        grabberWidth.dpToPx().toInt(),
+        grabberHeight.dpToPx().toInt()
+      ).apply {
+        gravity = Gravity.CENTER
+      }
+      background = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = grabberCornerRadius.dpToPx()
+        setColor(grabberColor)
+      }
     }
+
+    addView(pillView)
   }
 
   private fun getAdaptiveColor(baseColor: Int? = null): Int {
