@@ -1,7 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Build
 import android.view.MotionEvent
@@ -11,10 +10,8 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
-import androidx.core.view.isVisible
 import com.facebook.react.R
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
@@ -90,8 +87,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   TrueSheetBottomSheetViewDelegate {
 
   companion object {
-    const val TAG_NAME = "TrueSheet"
-
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
@@ -266,9 +261,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val contentBottomInset: Int
     get() = if (insetAdjustment == "automatic") bottomInset else 0
 
+  @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
   private val edgeToEdgeEnabled: Boolean
     get() {
-      val defaultEnabled = android.os.Build.VERSION.SDK_INT >= 36
+      val defaultEnabled = Build.VERSION.SDK_INT >= 36
       return BuildConfig.EDGE_TO_EDGE_ENABLED || defaultEnabled
     }
 
@@ -539,7 +535,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         if (detentInfo.index != currentDetentIndex) {
           currentDetentIndex = detentInfo.index
-          setupDimmedBackground(detentInfo.index)
+          setupDimmedBackground()
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
         }
 
@@ -659,7 +655,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     if (isPresented) {
-      setupDimmedBackground(detentIndex)
+      setupDimmedBackground()
       setStateForDetentIndex(detentIndex)
     } else {
       shouldAnimatePresent = animated
@@ -672,7 +668,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       emitWillPresentEvents()
 
       setupSheetDetents()
-      setupDimmedBackground(currentDetentIndex)
+      setupDimmedBackground()
       setupKeyboardObserver()
       setupModalObserver()
       setupBackCallback()
@@ -703,6 +699,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Create layout params with behavior
     val params = sheet.createLayoutParams()
+    @Suppress("UNCHECKED_CAST")
     val behavior = params.behavior as BottomSheetBehavior<TrueSheetBottomSheetView>
 
     // Configure behavior
@@ -857,7 +854,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Dimmed Background
   // =============================================================================
 
-  fun setupDimmedBackground(detentIndex: Int) {
+  fun setupDimmedBackground() {
     val coordinator = this.coordinatorLayout ?: run {
       RNLog.e(reactContext, "TrueSheet: coordinatorLayout is null in setupDimmedBackground")
       return

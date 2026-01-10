@@ -3,7 +3,6 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewStructure
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
@@ -31,10 +30,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   LifecycleEventListener,
   TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate {
-
-  companion object {
-    const val TAG_NAME = "TrueSheet"
-  }
 
   // ==================== Properties ====================
 
@@ -200,7 +195,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.dimmed == dimmed) return
     viewController.dimmed = dimmed
     if (viewController.isPresented) {
-      viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.setupDimmedBackground()
       viewController.updateDimAmount()
     }
   }
@@ -209,7 +204,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.dimmedDetentIndex == index) return
     viewController.dimmedDetentIndex = index
     if (viewController.isPresented) {
-      viewController.setupDimmedBackground(viewController.currentDetentIndex)
+      viewController.setupDimmedBackground()
       viewController.updateDimAmount()
     }
   }
