@@ -487,6 +487,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     dismissAll(animated = true) {}
   }
 
+  override fun viewControllerDidDetectScreenDismiss() {
+    resetTranslation()
+  }
+
   // ==================== TrueSheetContainerViewDelegate ====================
 
   override fun containerViewContentDidChangeSize(width: Int, height: Int) {

@@ -64,6 +64,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidBlur()
   fun viewControllerDidBackPress()
   fun viewControllerDidDetectScreenDisappear()
+  fun viewControllerDidDetectScreenDismiss()
 }
 
 // =============================================================================
@@ -570,6 +571,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       onModalWillDismiss = {
         if (isPresented && wasHiddenByModal && isTopmostSheet) {
           showAfterModal()
+          delegate?.viewControllerDidDetectScreenDismiss()
         }
       },
       onModalDidDismiss = {
@@ -699,6 +701,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Create layout params with behavior
     val params = sheet.createLayoutParams()
+
     @Suppress("UNCHECKED_CAST")
     val behavior = params.behavior as BottomSheetBehavior<TrueSheetBottomSheetView>
 
