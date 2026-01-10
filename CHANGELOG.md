@@ -11,6 +11,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: fix(android): cache content heights for dim interpolation during dismiss. (b297adb3 by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed dim interpolation during dismiss when container is unmounted. (34bd3d40 by [@lodev09](https://github.com/lodev09))
 - **Web**: Fixed `onWillDismiss` not firing when dismissing via backdrop tap. ([#405](https://github.com/lodev09/react-native-true-sheet/pull/405) by [@lodev09](https://github.com/lodev09))
 - Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400), [#402](https://github.com/lodev09/react-native-true-sheet/pull/402) by [@lodev09](https://github.com/lodev09))
