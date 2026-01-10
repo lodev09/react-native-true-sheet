@@ -19528,14 +19528,14 @@ __metadata:
 
 "react-native-screens@patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch":
   version: 4.18.0
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch::version=4.18.0&hash=1be735"
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.18.0#~/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch::version=4.18.0&hash=e3e46b"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/7c8eb7651d6692ea10548b54a2bd272f6702ad3370314ab696586c28af8c48feafca485cbfa65e86f916e611d0172feab982456fb3dde1f17612fb7b5ed04d17
+  checksum: 10c0/3a26215f34bfa94dd015180758b0a759fc97a542d8978a27aef6ed3f8c8ab26675e1c8da59ce74777d28d1623261b29d9bc3c472aae43a4a4484a89b174be839
   languageName: node
   linkType: hard
 

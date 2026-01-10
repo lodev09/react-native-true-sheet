@@ -317,7 +317,7 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
-  
+
   UIView *superView = _containerView.superview;
   UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
   if (snapshot) {
@@ -541,7 +541,7 @@ using namespace facebook::react;
   [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
-- (void)viewControllerDidDetectPresenterDismiss {
+- (void)viewControllerDidDetectScreenDismiss {
   [self dismissAllAnimated:YES completion:nil];
 }
 

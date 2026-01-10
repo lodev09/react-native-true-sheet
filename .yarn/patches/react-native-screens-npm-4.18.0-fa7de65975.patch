@@ -1,19 +1,62 @@
 diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 65c18f1ddccc64b3169e050e577eab77fd8c183b..8ffd9d4b48f85e53c6fcf0a76963cfcf946dad97 100644
 --- a/ios/RNSScreen.mm
 +++ b/ios/RNSScreen.mm
-@@ -605,6 +605,11 @@
- - (void)notifyWillDisappear
- {
+@@ -38,6 +38,7 @@
+ #import "RNSTabBarController.h"
+ 
+ #import "RNSDefines.h"
++#import "integrations/RNSLifecycleListenerProtocol.h"
+ #import "UIView+RNSUtility.h"
+ 
+ #ifdef RCT_NEW_ARCH_ENABLED
+@@ -74,6 +75,7 @@ struct ContentWrapperBox {
+   ContentWrapperBox _contentWrapperBox;
+   bool _sheetHasInitialDetentSet;
+   BOOL _shouldUpdateScrollEdgeEffects;
++  RNSScreen *_controllerBeforeInvalidate;
+ #ifdef RCT_NEW_ARCH_ENABLED
+   RCTSurfaceTouchHandler *_touchHandler;
+   react::RNSScreenShadowNode::ConcreteState::Shared _state;
+@@ -608,6 +610,26 @@ RNS_IGNORE_SUPER_CALL_END
    if (_hideKeyboardOnSwipe) {
      [self endEditing:YES];
    }
 +
-+  [[NSNotificationCenter defaultCenter] postNotificationName:@"RNSScreenViewWillDisappear"
-+                                                      object:self
-+                                                    userInfo:nil];
++  // Notify any presented view controllers that conform to RNSLifecycleListenerProtocol
++  RNSScreen *controller = _controller ?: _controllerBeforeInvalidate;
++  if (controller) {
++    UIViewController *presented = controller.presentedViewController;
++    while (presented) {
++      UIViewController *next = presented.presentedViewController;
++      if ([presented conformsToProtocol:@protocol(RNSLifecycleListenerProtocol)]) {
++        BOOL isPresenterUnmounting = NO;
++        RNSScreen *presenter = (RNSScreen *)presented.presentingViewController;
++        if ([presenter isKindOfClass:[RNSScreen class]]) {
++          isPresenterUnmounting = presenter.screenView.isMarkedForUnmountInCurrentTransaction;
++        }
++        [(id<RNSLifecycleListenerProtocol>)presented screenWillDisappear:controller
++                                                   isPresenterUnmounting:isPresenterUnmounting];
++      }
++      presented = next;
++    }
++  }
 +
  #ifdef RCT_NEW_ARCH_ENABLED
+   // If screen is already unmounted then there will be no event emitter
+   if (_eventEmitter != nullptr) {
+@@ -927,6 +949,9 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ - (void)invalidate
+ {
++  if (_controller && !_controllerBeforeInvalidate) {
++    _controllerBeforeInvalidate = _controller;
++  }
+   _controller = nil;
+   [_sheetsScrollView removeObserver:self forKeyPath:@"bounds" context:nil];
+ }
 diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
+index 51f021831aed26a4eed3c85014020423b7b3108b..268fa69dfee2b20d8b5a66c77c1b4cbd8c831573 100644
 --- a/ios/RNSScreenStack.mm
 +++ b/ios/RNSScreenStack.mm
 @@ -640,8 +640,10 @@ RNS_IGNORE_SUPER_CALL_END
@@ -64,6 +107,7 @@ diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
  
    // We didn't detect any controllers for dismissal, thus we start presenting new VCs
 diff --git a/ios/integrations/RNSDismissibleModalProtocol.h b/ios/integrations/RNSDismissibleModalProtocol.h
+index 006f809d104c1d4fbdf6eccca89d6c6e190cca71..89e297f1b7a9582fee3e19237dfba8d4c87a352f 100644
 --- a/ios/integrations/RNSDismissibleModalProtocol.h
 +++ b/ios/integrations/RNSDismissibleModalProtocol.h
 @@ -1,3 +1,5 @@
@@ -86,3 +130,23 @@ diff --git a/ios/integrations/RNSDismissibleModalProtocol.h b/ios/integrations/R
  @end
  
  NS_ASSUME_NONNULL_END
+diff --git a/ios/integrations/RNSLifecycleListenerProtocol.h b/ios/integrations/RNSLifecycleListenerProtocol.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..025b4231c0b45f9f10034280037617b9b6d6fec4
+--- /dev/null
++++ b/ios/integrations/RNSLifecycleListenerProtocol.h
+@@ -0,0 +1,14 @@
++#import <UIKit/UIKit.h>
++
++NS_ASSUME_NONNULL_BEGIN
++
++@protocol RNSLifecycleListenerProtocol <NSObject>
++
++// Called when a screen in the presenting hierarchy is about to disappear.
++// @param screen The screen controller that is disappearing
++// @param isPresenterUnmounting YES if the presenter (modal) itself is being unmounted
++- (void)screenWillDisappear:(UIViewController *)screen isPresenterUnmounting:(BOOL)isPresenterUnmounting;
++
++@end
++
++NS_ASSUME_NONNULL_END
