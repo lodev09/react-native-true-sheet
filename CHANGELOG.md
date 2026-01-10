@@ -2,6 +2,8 @@
 
 ## Unpublished
 
+## 3.7.1
+
 ### 🎉 New features
 
 - Added `dismissAll` static method. ([#393](https://github.com/lodev09/react-native-true-sheet/pull/393) by [@lodev09](https://github.com/lodev09))
