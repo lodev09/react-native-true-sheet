@@ -447,11 +447,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun bottomSheetViewDidTapGrabber() {
-    val nextIndex = currentDetentIndex + 1
-    if (nextIndex < detents.size) {
-      setStateForDetentIndex(nextIndex)
-    } else if (dismissible) {
+    val nextIndex = (currentDetentIndex + 1) % detents.size
+    if (nextIndex == 0 && detents.size == 1 && dismissible) {
       dismiss(animated = true)
+    } else {
+      setStateForDetentIndex(nextIndex)
     }
   }
 
