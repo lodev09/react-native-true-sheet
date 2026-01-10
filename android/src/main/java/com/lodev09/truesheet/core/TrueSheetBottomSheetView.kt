@@ -3,10 +3,13 @@ package com.lodev09.truesheet.core
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Outline
+import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.TypedValue
+import android.view.GestureDetector
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
@@ -22,6 +25,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetBackgroundColor: Int?
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
+  fun bottomSheetViewDidTapGrabber()
 }
 
 /**
@@ -161,5 +165,30 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     }
 
     addView(grabberView, 0)
+  }
+
+  // =============================================================================
+  // MARK: - Grabber Tap Detection
+  // =============================================================================
+
+  private val grabberTapDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+    override fun onSingleTapUp(e: MotionEvent): Boolean {
+      delegate?.bottomSheetViewDidTapGrabber()
+      return true
+    }
+  })
+
+  override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    val grabber = findViewWithTag<View>(GRABBER_TAG)
+    if (grabber != null) {
+      val rect = Rect()
+      grabber.getHitRect(rect)
+      if (rect.contains(ev.x.toInt(), ev.y.toInt())) {
+        if (grabberTapDetector.onTouchEvent(ev)) {
+          return true
+        }
+      }
+    }
+    return super.dispatchTouchEvent(ev)
   }
 }

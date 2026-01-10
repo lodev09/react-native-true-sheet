@@ -443,6 +443,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
+  // MARK: - TrueSheetBottomSheetViewDelegate - Grabber Tap
+  // =============================================================================
+
+  override fun bottomSheetViewDidTapGrabber() {
+    val nextIndex = currentDetentIndex + 1
+    if (nextIndex < detents.size) {
+      setStateForDetentIndex(nextIndex)
+    } else if (dismissible) {
+      dismiss(animated = true)
+    }
+  }
+
+  // =============================================================================
   // MARK: - BottomSheetCallback
   // =============================================================================
 

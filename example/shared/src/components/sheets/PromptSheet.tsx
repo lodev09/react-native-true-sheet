@@ -39,7 +39,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   return (
     <TrueSheet
       ref={sheetRef}
-      grabber={false}
       name="prompt-sheet"
       detents={['auto']}
       style={styles.content}
