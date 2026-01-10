@@ -28,10 +28,7 @@ data class GrabberOptions(
  * Displays a small pill-shaped indicator at the top of the sheet with a tappable hitbox.
  */
 @SuppressLint("ViewConstructor")
-class TrueSheetGrabberView(
-  context: Context,
-  private val options: GrabberOptions? = null
-) : FrameLayout(context) {
+class TrueSheetGrabberView(context: Context, private val options: GrabberOptions? = null) : FrameLayout(context) {
 
   companion object {
     private const val DEFAULT_WIDTH = 32f // dp

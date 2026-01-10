@@ -171,12 +171,15 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // MARK: - Grabber Tap Detection
   // =============================================================================
 
-  private val grabberTapDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-    override fun onSingleTapUp(e: MotionEvent): Boolean {
-      delegate?.bottomSheetViewDidTapGrabber()
-      return true
+  private val grabberTapDetector = GestureDetector(
+    context,
+    object : GestureDetector.SimpleOnGestureListener() {
+      override fun onSingleTapUp(e: MotionEvent): Boolean {
+        delegate?.bottomSheetViewDidTapGrabber()
+        return true
+      }
     }
-  })
+  )
 
   override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
     val grabber = findViewWithTag<View>(GRABBER_TAG)
