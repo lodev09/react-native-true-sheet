@@ -476,7 +476,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
   }
 
-  override fun viewControllerDidDetectScreenDismiss() {
+  override fun viewControllerDidDetectScreenDisappear() {
     dismissAll(animated = true) {}
   }
 

@@ -808,8 +808,8 @@
   if (!_isPresented || self.isBeingDismissed || isPresenterUnmounting) {
     return;
   }
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectScreenDismiss)]) {
-    [self.delegate viewControllerDidDetectScreenDismiss];
+  if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectScreenDisappear)]) {
+    [self.delegate viewControllerDidDetectScreenDisappear];
   }
 }
 #endif

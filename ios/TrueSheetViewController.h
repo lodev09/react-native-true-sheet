@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewControllerDidBlur;
 
 #if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
-- (void)viewControllerDidDetectScreenDismiss;
+- (void)viewControllerDidDetectScreenDisappear;
 #endif
 
 @end
