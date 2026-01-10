@@ -42,6 +42,10 @@ jobs:
             let hasRepro = false;
 
             if (isComment) {
+              // Only process comments from the issue author
+              if (user !== author) {
+                return;
+              }
               // For comments, check the entire comment body
               hasRepro = reproPatterns.some(pattern => pattern.test(body));
             } else {
