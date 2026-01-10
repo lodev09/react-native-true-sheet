@@ -1,10 +1,13 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +40,7 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
+import androidx.core.graphics.createBitmap
 
 // =============================================================================
 // MARK: - Data Types & Delegate Protocol
@@ -322,6 +326,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     parentDimView?.detach()
     parentDimView = null
 
+    // Cleanup snapshot
+    removeSheetSnapshot()
+
     // Detach content from sheet
     sheetView?.removeView(this)
 
@@ -338,6 +345,34 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     detentIndexBeforeKeyboard = -1
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
+  }
+
+  private var snapshotView: View? = null
+
+  fun createSheetSnapshot() {
+    if (!isPresented) return
+    val sheet = sheetView ?: return
+    if (sheet.width <= 0 || sheet.height <= 0) return
+
+    val bitmap = createBitmap(sheet.width, sheet.height)
+    val canvas = Canvas(bitmap)
+    sheet.draw(canvas)
+
+    val snapshot = ImageView(reactContext).apply {
+      setImageBitmap(bitmap)
+      layoutParams = LayoutParams(sheet.width, sheet.height)
+    }
+
+    sheet.addView(snapshot, 0)
+    snapshotView = snapshot
+  }
+
+  fun removeSheetSnapshot() {
+    snapshotView?.let {
+      (it as? ImageView)?.setImageDrawable(null)
+      sheetView?.removeView(it)
+    }
+    snapshotView = null
   }
 
   // =============================================================================
@@ -733,6 +768,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun setupSheetDetents() {
+    if (isDismissing) return
+
     val behavior = this.behavior ?: run {
       RNLog.e(reactContext, "TrueSheet: behavior is null in setupSheetDetents")
       return
