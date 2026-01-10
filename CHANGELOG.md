@@ -9,6 +9,7 @@
 
 ### 🐛 Bug fixes
 
+- **Web**: Fixed `onWillDismiss` not firing when dismissing via backdrop tap. ([#405](https://github.com/lodev09/react-native-true-sheet/pull/405) by [@lodev09](https://github.com/lodev09))
 - Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400), [#402](https://github.com/lodev09/react-native-true-sheet/pull/402) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed visual glitch when navigating away with active sheet. ([#403](https://github.com/lodev09/react-native-true-sheet/pull/403) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position tracking for pending detent changes. ([#394](https://github.com/lodev09/react-native-true-sheet/pull/394) by [@lodev09](https://github.com/lodev09))
