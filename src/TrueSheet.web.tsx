@@ -295,10 +295,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
         // Will be handled as blur if the sheet doesn't actually dismiss
         isMinimized.current = true;
         onWillBlur?.({ nativeEvent: null } as WillBlurEvent);
-
-        if (isDismissing.current) {
-          onWillDismiss?.({ nativeEvent: null } as WillDismissEvent);
-        }
+        onWillDismiss?.({ nativeEvent: null } as WillDismissEvent);
       }
     },
     [detents, animatedPosition]
