@@ -352,6 +352,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     isSheetUpdatePending = true
     viewController.post {
       isSheetUpdatePending = false
+      if (viewController.containerView == null) return@post
+
       viewController.setupSheetDetentsForSizeChange()
       TrueSheetStackManager.onSheetSizeChanged(this)
     }

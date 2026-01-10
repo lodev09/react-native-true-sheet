@@ -7,11 +7,12 @@ import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.facebook.react.R
@@ -40,7 +41,6 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
-import androidx.core.graphics.createBitmap
 
 // =============================================================================
 // MARK: - Data Types & Delegate Protocol
@@ -219,7 +219,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = sheetView?.behavior
 
-  private val containerView: TrueSheetContainerView?
+  internal val containerView: TrueSheetContainerView?
     get() = if (this.isNotEmpty()) getChildAt(0) as? TrueSheetContainerView else null
 
   // Screen Measurements
@@ -768,8 +768,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun setupSheetDetents() {
-    if (isDismissing) return
-
     val behavior = this.behavior ?: run {
       RNLog.e(reactContext, "TrueSheet: behavior is null in setupSheetDetents")
       return
