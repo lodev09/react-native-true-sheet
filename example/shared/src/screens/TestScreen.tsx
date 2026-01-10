@@ -6,7 +6,11 @@ import { BLUE, GAP, SPACING } from '../utils';
 import { Button } from '../components';
 import { BasicSheet, PromptSheet, FlatListSheet } from '../components/sheets';
 
-export const TestScreen = () => {
+interface TestScreenProps {
+  onGoBack: () => void;
+}
+
+export const TestScreen = ({ onGoBack }: TestScreenProps) => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
@@ -14,6 +18,7 @@ export const TestScreen = () => {
   return (
     <TrueSheetProvider>
       <View style={styles.content}>
+        <Button text="Back Sheet" onPress={onGoBack} />
         <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
         <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
         <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
@@ -29,7 +34,6 @@ export const TestScreen = () => {
 const styles = StyleSheet.create({
   content: {
     backgroundColor: BLUE,
-    justifyContent: 'center',
     flex: 1,
     padding: SPACING,
     gap: GAP,

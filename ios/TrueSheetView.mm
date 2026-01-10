@@ -45,6 +45,7 @@ using namespace facebook::react;
   TrueSheetViewController *_controller;
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
+  UIView *_snapshotView;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
   BOOL _scrollable;
@@ -69,6 +70,7 @@ using namespace facebook::react;
 
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
     _containerView = nil;
+    _snapshotView = nil;
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
@@ -106,6 +108,9 @@ using namespace facebook::react;
 
   _controller.delegate = nil;
   _controller = nil;
+
+  [_snapshotView removeFromSuperview];
+  _snapshotView = nil;
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
@@ -280,6 +285,11 @@ using namespace facebook::react;
     return;
   }
 
+  if (_snapshotView) {
+    [_snapshotView removeFromSuperview];
+    _snapshotView = nil;
+  }
+
   _containerView = (TrueSheetContainerView *)childComponentView;
   _containerView.delegate = self;
 
@@ -307,6 +317,14 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
+
+  UIView *superView = _containerView.superview;
+  UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
+  if (snapshot) {
+    snapshot.frame = _containerView.frame;
+    [superView insertSubview:snapshot belowSubview:_containerView];
+    _snapshotView = snapshot;
+  }
 
   _containerView.delegate = nil;
 
@@ -523,7 +541,7 @@ using namespace facebook::react;
   [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
-- (void)viewControllerDidDetectPresenterDismiss {
+- (void)viewControllerDidDetectScreenDismiss {
   [self dismissAllAnimated:YES completion:nil];
 }
 

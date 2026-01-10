@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
+import { MapScreen, StandardScreen } from '@example/shared/screens';
 import { Map } from '@example/shared/components';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
@@ -50,7 +50,6 @@ export const RootNavigator = () => {
         name="Standard"
         component={StandardScreenWrapper}
       />
-      <Stack.Screen name="Test" component={TestScreen} />
       <Stack.Screen
         name="ModalStack"
         component={ModalStackNavigator}

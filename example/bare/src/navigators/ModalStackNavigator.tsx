@@ -18,6 +18,11 @@ const ModalScreenWrapper = () => {
   );
 };
 
+const TestScreenWrapper = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<ModalStackParamList>>();
+  return <TestScreen onGoBack={() => navigation.goBack()} />;
+};
+
 export const ModalStackNavigator = () => {
   return (
     <ModalStack.Navigator
@@ -27,7 +32,7 @@ export const ModalStackNavigator = () => {
       }}
     >
       <ModalStack.Screen name="Modal" component={ModalScreenWrapper} />
-      <ModalStack.Screen name="Test" component={TestScreen} />
+      <ModalStack.Screen name="Test" component={TestScreenWrapper} />
     </ModalStack.Navigator>
   );
 };

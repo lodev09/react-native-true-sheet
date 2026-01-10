@@ -129,9 +129,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (child is TrueSheetContainerView) {
       child.delegate = null
 
-      // Dismiss the sheet when container is removed
+      // Dismiss when container is removed
       if (viewController.isPresented) {
-        viewController.dismiss(animated = false)
+        dismissAll(false) {}
       }
     }
     viewController.removeView(child)
@@ -476,7 +476,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
   }
 
-  override fun viewControllerDidDetectPresenterDismiss() {
+  override fun viewControllerDidDetectScreenDismiss() {
     dismissAll(animated = true) {}
   }
 
