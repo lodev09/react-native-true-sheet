@@ -12,7 +12,12 @@ export type ModalStackParamList = {
 };
 
 export type SheetStackParamList = {
-  SheetHome: undefined;
+  SheetHomeStack: undefined;
   Details: undefined;
   Settings: undefined;
+};
+
+export type SheetHomeStackParamList = {
+  Home: undefined;
+  Test: undefined;
 };

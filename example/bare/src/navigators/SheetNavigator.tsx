@@ -1,22 +1,31 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
 import { Button, DemoContent, Footer } from '@example/shared/components';
-import { BLUE, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
-import type { AppStackParamList, SheetStackParamList } from '../types';
+import {
+  BLUE,
+  DARK,
+  DARK_BLUE,
+  FOOTER_HEIGHT,
+  GAP,
+  LIGHT_GRAY,
+  SPACING,
+} from '@example/shared/utils';
+import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
+import { TestScreen } from '@example/shared/screens';
+import { useAppNavigation } from '../hooks';
 
-const Sheet = createTrueSheetNavigator<SheetStackParamList>();
+const SheetStack = createTrueSheetNavigator<AppStackParamList & SheetStackParamList>();
+const SheetHomeStack = createNativeStackNavigator<AppStackParamList & SheetHomeStackParamList>();
 
 const HomeScreen = () => {
-  const navigation = useTrueSheetNavigation<SheetStackParamList>();
-  const rootNavigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
     <View style={styles.content}>
@@ -28,14 +37,34 @@ const HomeScreen = () => {
       </View>
       <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
-      <Button text="Navigate to Test" onPress={() => rootNavigation.navigate('Test')} />
+      <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
     </View>
   );
 };
 
+const TestScreenWrapper = () => {
+  const navigation = useAppNavigation();
+  return <TestScreen onGoBack={() => navigation.goBack()} />;
+};
+
+const SheetHomeNavigator = () => {
+  return (
+    <SheetHomeStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: DARK_BLUE },
+        headerTintColor: 'white',
+      }}
+      initialRouteName="Home"
+    >
+      <SheetHomeStack.Screen name="Home" component={HomeScreen} />
+      <SheetHomeStack.Screen name="Test" component={TestScreenWrapper} />
+    </SheetHomeStack.Navigator>
+  );
+};
+
 const DetailsSheet = () => {
-  const navigation = useTrueSheetNavigation<SheetStackParamList>();
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
   const sheetRef = useRef<TrueSheet>(null);
 
   useEffect(() => {
@@ -65,7 +94,7 @@ const DetailsSheet = () => {
 };
 
 const SettingsSheet = () => {
-  const navigation = useTrueSheetNavigation<SheetStackParamList>();
+  const navigation = useTrueSheetNavigation<AppStackParamList>();
 
   return (
     <View style={styles.sheetContent}>
@@ -82,7 +111,7 @@ const SettingsSheet = () => {
 
 export const SheetNavigator = () => {
   return (
-    <Sheet.Navigator
+    <SheetStack.Navigator
       screenListeners={{
         sheetWillPresent: (e) => {
           console.log(`[SheetNavigator] sheetWillPresent: index=${e.data.index}`);
@@ -128,9 +157,9 @@ export const SheetNavigator = () => {
       }}
     >
       {/* Base screen (first screen is the default base) */}
-      <Sheet.Screen name="SheetHome" component={HomeScreen} />
+      <SheetStack.Screen name="SheetHomeStack" component={SheetHomeNavigator} />
       {/* Sheet screens */}
-      <Sheet.Screen
+      <SheetStack.Screen
         name="Details"
         component={DetailsSheet}
         options={{
@@ -139,7 +168,7 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
         }}
       />
-      <Sheet.Screen
+      <SheetStack.Screen
         name="Settings"
         component={SettingsSheet}
         options={{
@@ -153,7 +182,7 @@ export const SheetNavigator = () => {
           },
         }}
       />
-    </Sheet.Navigator>
+    </SheetStack.Navigator>
   );
 };
 

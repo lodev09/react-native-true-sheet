@@ -65,8 +65,9 @@ export default function SheetStackLayout() {
             console.log('[SheetNavigator] sheetDidBlur');
           },
         }}
+        initialRouteName="(home)"
       >
-        <Sheet.Screen name="index" />
+        <Sheet.Screen name="(home)" />
         <Sheet.Screen
           name="details"
           options={{
