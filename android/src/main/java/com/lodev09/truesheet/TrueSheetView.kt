@@ -109,6 +109,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun addView(child: View?, index: Int) {
+    if (child is TrueSheetContainerView) {
+      viewController.removeSheetSnapshot()
+    }
+
     viewController.addView(child, index)
 
     if (child is TrueSheetContainerView) {
@@ -128,10 +132,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val child = getChildAt(index)
     if (child is TrueSheetContainerView) {
       child.delegate = null
+      viewController.createSheetSnapshot()
 
       // Dismiss when container is removed
       if (viewController.isPresented) {
-        dismissAll(false) {}
+        dismissAll(true) {}
       }
     }
     viewController.removeView(child)
@@ -157,13 +162,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun onDropInstance() {
     reactContext.removeLifecycleEventListener(this)
 
-    viewController.dismiss()
-    viewController.delegate = null
-
     TrueSheetModule.unregisterView(id)
     TrueSheetStackManager.removeSheet(this)
 
     didInitiallyPresent = false
+
+    if (viewController.isPresented) {
+      viewController.dismissPromise = {
+        viewController.delegate = null
+      }
+      viewController.dismiss()
+    } else {
+      viewController.delegate = null
+    }
   }
 
   /**
@@ -336,8 +347,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Uses post() to ensure all layout passes complete before reconfiguring.
    */
   fun updateSheetIfNeeded() {
-    if (!viewController.isPresented) return
-    if (isSheetUpdatePending) return
+    if (!viewController.isPresented || isSheetUpdatePending) return
 
     isSheetUpdatePending = true
     viewController.post {
