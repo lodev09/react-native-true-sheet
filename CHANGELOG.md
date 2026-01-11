@@ -5,6 +5,11 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed initial present failing during deeplink navigation. ([#406](https://github.com/lodev09/react-native-true-sheet/pull/406) by [@lodev09](https://github.com/lodev09))
+- **Android**: Ignore fragment events during cold start initialization (86fa7bb9 by [@lodev09](https://github.com/lodev09))
+
+### 🧪 Tests
+
+- Add `dismissAll` tests (4615ce64 by [@lodev09](https://github.com/lodev09))
 
 ## 3.7.2
 
