@@ -26,6 +26,7 @@ class RNScreensFragmentObserver(
   private val activeModalFragments: MutableSet<Fragment> = mutableSetOf()
   private var isActivityInForeground = true
   private var pendingDismissRunnable: Runnable? = null
+  private var isInitialized = false
 
   /**
    * Start observing fragment lifecycle events.
@@ -52,6 +53,9 @@ class RNScreensFragmentObserver(
 
         // Ignore if app is resuming from background
         if (!isActivityInForeground) return
+
+        // Ignore initial fragment attachments during app startup (cold start deep links)
+        if (!isInitialized) return
 
         if (isModalFragment(f) && !activeModalFragments.contains(f)) {
           // Cancel any pending dismiss since a modal is being presented
@@ -95,6 +99,11 @@ class RNScreensFragmentObserver(
     }
 
     fragmentManager.registerFragmentLifecycleCallbacks(fragmentLifecycleCallback!!, true)
+
+    // Mark as initialized after a frame to ignore initial fragment attachments during cold start
+    activity.window?.decorView?.post {
+      isInitialized = true
+    }
   }
 
   /**
