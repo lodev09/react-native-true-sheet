@@ -25,9 +25,11 @@ describe('TrueSheet Mocks', () => {
       expect(TrueSheet.present).toBeDefined();
       expect(TrueSheet.dismiss).toBeDefined();
       expect(TrueSheet.resize).toBeDefined();
+      expect(TrueSheet.dismissAll).toBeDefined();
       expect(typeof TrueSheet.present).toBe('function');
       expect(typeof TrueSheet.dismiss).toBe('function');
       expect(typeof TrueSheet.resize).toBe('function');
+      expect(typeof TrueSheet.dismissAll).toBe('function');
     });
 
     it('should render children', () => {
@@ -64,6 +66,11 @@ describe('TrueSheet Mocks', () => {
       expect(TrueSheet.resize).toHaveBeenCalledWith('test-sheet', 1);
     });
 
+    it('should call static dismissAll method', async () => {
+      await TrueSheet.dismissAll();
+      expect(TrueSheet.dismissAll).toHaveBeenCalled();
+    });
+
     it('should track instances by name', () => {
       const { rerender } = render(
         <TrueSheet name="tracked-sheet" initialDetentIndex={0}>
@@ -95,6 +102,7 @@ describe('TrueSheet Mocks', () => {
       expect(result.present).toBeDefined();
       expect(result.dismiss).toBeDefined();
       expect(result.resize).toBeDefined();
+      expect(result.dismissAll).toBeDefined();
     });
   });
 

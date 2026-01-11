@@ -30,6 +30,11 @@ describe('TrueSheet', () => {
     expect(typeof TrueSheet.resize).toBe('function');
   });
 
+  it('should have dismissAll static method', () => {
+    expect(TrueSheet.dismissAll).toBeDefined();
+    expect(typeof TrueSheet.dismissAll).toBe('function');
+  });
+
   it('should render TrueSheet component without crashing', () => {
     const { getByText } = render(
       <TrueSheet name="test" initialDetentIndex={0}>
