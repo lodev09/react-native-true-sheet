@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed initial present failing during deeplink navigation. ([#406](https://github.com/lodev09/react-native-true-sheet/pull/406) by [@lodev09](https://github.com/lodev09))
+
 ## 3.7.2
 
 ### 🎉 New features
