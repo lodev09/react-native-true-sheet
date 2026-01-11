@@ -135,6 +135,8 @@ When `reanimated: true` is set, `react-native-reanimated` must be installed and 
 
 ### Screen Listeners
 
+Use `screenListeners` on the navigator or `listeners` on individual screens:
+
 ```tsx
 <Sheet.Navigator
   screenListeners={{
@@ -142,6 +144,23 @@ When `reanimated: true` is set, `react-native-reanimated` must be installed and 
     sheetDidDismiss: () => console.log('Dismissed'),
   }}
 >
+```
+
+Or use `addListener` within a screen component:
+
+```tsx
+function DetailsSheet() {
+  const navigation = useTrueSheetNavigation();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('sheetDidPresent', (e) => {
+      console.log('Presented:', e.data.index);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  return <View>{/* ... */}</View>;
+}
 ```
 
 | Event | Description |
@@ -156,7 +175,11 @@ When `reanimated: true` is set, `react-native-reanimated` must be installed and 
 | `sheetDragEnd` | User stopped dragging |
 | `sheetPositionChange` | Position changed |
 
+See [Lifecycle Events](/reference/events) for more details.
+
 ### Expo Router
+
+TrueSheet works with Expo Router using `withLayoutContext`.
 
 ```
 app/
@@ -201,11 +224,9 @@ export default function SheetLayout() {
 }
 ```
 
-## Navigating from Sheets
+See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
 
-:::note
-Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415), [PR #3527](https://github.com/software-mansion/react-native-screens/pull/3527).
-:::
+## Navigating from Sheets
 
 Navigate directly from sheets - they remain visible when presenting modals on top.
 
@@ -214,43 +235,6 @@ Navigate directly from sheets - they remain visible when presenting modals on to
 navigation.navigate('SomeScreen')
 ```
 
-### Presenting on Screen Focus
-
-When using `useFocusEffect`, delay presentation to avoid iOS issues:
-
-```tsx
-useFocusEffect(
-  useCallback(() => {
-    requestAnimationFrame(() => {
-      sheet.current?.present()
-    })
-  }, [])
-)
-```
-
-### Present During Mount
-
-When using `initialDetentIndex` with animation, the sheet may behave unexpectedly during screen transitions.
-
-**Solution 1:** Disable animation
-
-```tsx
-<TrueSheet initialDetentIndex={0} initialDetentAnimated={false}>
-```
-
-**Solution 2:** Wait for transition
-
-```tsx
-const [ready, setReady] = useState(false)
-
-useEffect(() => {
-  const unsubscribe = navigation.addListener("transitionEnd", ({ data }) => {
-    if (!data.closing) setReady(true)
-  })
-  return unsubscribe
-}, [])
-
-if (!ready) return null
-
-return <TrueSheet initialDetentIndex={0}>{/* ... */}</TrueSheet>
-```
+:::note
+Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415), [PR #3527](https://github.com/software-mansion/react-native-screens/pull/3527).
+:::
