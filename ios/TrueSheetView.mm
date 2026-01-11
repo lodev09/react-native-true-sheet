@@ -98,8 +98,8 @@ using namespace facebook::react;
       _didInitiallyPresent = YES;
       [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
     } else {
+      // Animate next time when sheet finally moves to the correct window
       _initialDetentAnimated = YES;
-      RCTLogWarn(@"TrueSheet: Unable to initially present. The sheet is not mounted in the active window.");
     }
   }
 }
