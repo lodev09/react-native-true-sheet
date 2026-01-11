@@ -91,8 +91,16 @@ using namespace facebook::react;
   }
 
   if (_initialDetentIndex >= 0 && !_didInitiallyPresent) {
-    _didInitiallyPresent = YES;
-    [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+    UIViewController *vc = [self findPresentingViewController];
+
+    // Only present if the view controller is in the same window and not being dismissed
+    if (vc && vc.view.window == self.window && !vc.isBeingDismissed) {
+      _didInitiallyPresent = YES;
+      [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
+    } else {
+      _initialDetentAnimated = YES;
+      RCTLogWarn(@"TrueSheet: Unable to initially present. The sheet is not mounted in the active window.");
+    }
   }
 }
 
@@ -105,6 +113,8 @@ using namespace facebook::react;
     }
     [root dismissViewControllerAnimated:YES completion:nil];
   }
+
+  _didInitiallyPresent = NO;
 
   _controller.delegate = nil;
   _controller = nil;
