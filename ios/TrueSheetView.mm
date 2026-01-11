@@ -19,7 +19,6 @@
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
 #import "utils/LayoutUtil.h"
-#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -561,11 +560,10 @@ using namespace facebook::react;
 #pragma mark - Private Helpers
 
 - (UIViewController *)findPresentingViewController {
-  UIWindow *keyWindow = [WindowUtil keyWindow];
-  if (!keyWindow)
+  if (!self.window)
     return nil;
 
-  UIViewController *rootViewController = keyWindow.rootViewController;
+  UIViewController *rootViewController = self.window.rootViewController;
   if (!rootViewController)
     return nil;
 
