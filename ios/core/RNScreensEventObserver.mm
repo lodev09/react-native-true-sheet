@@ -21,14 +21,12 @@ using namespace facebook::react;
   std::shared_ptr<const EventListener> _eventListener;
   NSInteger _presenterScreenTag;
   __weak UIViewController *_presenterScreenController;
-  NSInteger _parentModalTag;
 }
 
 - (instancetype)init {
   if (self = [super init]) {
     _presenterScreenTag = 0;
     _presenterScreenController = nil;
-    _parentModalTag = 0;
   }
   return self;
 }
@@ -80,12 +78,11 @@ using namespace facebook::react;
 - (void)capturePresenterScreenFromView:(UIView *)view {
   _presenterScreenTag = 0;
   _presenterScreenController = nil;
-  _parentModalTag = 0;
 
   for (UIView *current = view.superview; current; current = current.superview) {
     NSString *className = NSStringFromClass([current class]);
 
-    if (!_presenterScreenTag && [className isEqualToString:@"RNSScreenView"]) {
+    if ([className isEqualToString:@"RNSScreenView"]) {
       _presenterScreenTag = current.tag;
       for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
         if ([r isKindOfClass:[UIViewController class]]) {
@@ -93,8 +90,6 @@ using namespace facebook::react;
           break;
         }
       }
-    } else if ([className isEqualToString:@"RNSModalScreen"]) {
-      _parentModalTag = current.tag;
       break;
     }
   }
@@ -105,15 +100,9 @@ using namespace facebook::react;
     return NO;
   }
 
-  // If inside a modal, skip if screen is top of nav stack (modal dismiss)
-  if (_parentModalTag != 0) {
-    UINavigationController *nav = _presenterScreenController.navigationController;
-    if (nav.topViewController == _presenterScreenController) {
-      return NO;
-    }
-  }
-
-  return YES;
+  // Skip if screen is still top of nav stack (e.g. modal dismiss - sheet dismisses naturally with modal)
+  // Dismiss if a new screen was pushed or popped
+  return _presenterScreenController.navigationController.topViewController != _presenterScreenController;
 }
 
 @end
