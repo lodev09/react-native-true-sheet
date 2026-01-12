@@ -17,7 +17,7 @@
 using namespace facebook::react;
 
 @implementation RNScreensEventObserver {
-  std::shared_ptr<const EventDispatcher> _eventDispatcher;
+  std::weak_ptr<const EventDispatcher> _eventDispatcher;
   std::shared_ptr<const EventListener> _eventListener;
   NSInteger _presenterScreenTag;
   __weak UIViewController *_presenterScreenController;
@@ -36,12 +36,12 @@ using namespace facebook::react;
 }
 
 - (void)startObservingWithState:(const TrueSheetViewState &)state {
-  if (_eventDispatcher) {
+  if (!_eventDispatcher.expired()) {
     return;
   }
 
   if (auto dispatcherPtr = state.getEventDispatcher().lock()) {
-    _eventDispatcher = dispatcherPtr;
+    _eventDispatcher = state.getEventDispatcher();
 
     __weak RNScreensEventObserver *weakSelf = self;
 
@@ -63,16 +63,18 @@ using namespace facebook::react;
       return false;
     });
 
-    _eventDispatcher->addListener(_eventListener);
+    dispatcherPtr->addListener(_eventListener);
   }
 }
 
 - (void)stopObserving {
   if (_eventListener) {
-    _eventDispatcher->removeListener(_eventListener);
+    if (auto dispatcher = _eventDispatcher.lock()) {
+      dispatcher->removeListener(_eventListener);
+    }
     _eventListener = nullptr;
-    _eventDispatcher = nullptr;
   }
+  _eventDispatcher.reset();
 }
 
 - (void)capturePresenterScreenFromView:(UIView *)view {
