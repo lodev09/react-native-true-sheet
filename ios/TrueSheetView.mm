@@ -566,10 +566,6 @@ using namespace facebook::react;
   [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
-- (void)viewControllerDidDetectScreenDisappear {
-  [self dismissAllAnimated:YES completion:nil];
-}
-
 #pragma mark - RNScreensEventObserverDelegate
 
 - (void)presenterScreenWillDisappear {

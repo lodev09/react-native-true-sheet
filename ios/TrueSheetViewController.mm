@@ -799,16 +799,6 @@
   }
 }
 
-#pragma mark - RNSLifecycleListenerProtocol
-
-#if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
-
-- (void)screenWillDisappear:(UIViewController *)screen isPresenterUnmounting:(BOOL)isPresenterUnmounting {
-  // TODO: Disabled - exploring alternative approaches per react-native-screens feedback
-  // See: https://github.com/software-mansion/react-native-screens/pull/3527#pullrequestreview-3650866794
-}
-#endif
-
 #pragma mark - RNSDismissibleModalProtocol
 
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE

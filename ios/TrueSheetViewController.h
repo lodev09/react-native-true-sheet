@@ -16,12 +16,6 @@
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 0
 #endif
 
-#if __has_include(<RNScreens/RNSLifecycleListenerProtocol.h>)
-#import <RNScreens/RNSLifecycleListenerProtocol.h>
-#define RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE 1
-#else
-#define RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE 0
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -46,10 +40,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewControllerWillBlur;
 - (void)viewControllerDidBlur;
 
-#if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
-- (void)viewControllerDidDetectScreenDisappear;
-#endif
-
 @end
 
 @interface TrueSheetViewController : UIViewController <UISheetPresentationControllerDelegate,
@@ -57,10 +47,6 @@ NS_ASSUME_NONNULL_BEGIN
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE
                                        ,
                                        RNSDismissibleModalProtocol
-#endif
-#if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
-                                       ,
-                                       RNSLifecycleListenerProtocol
 #endif
                                        >
 
