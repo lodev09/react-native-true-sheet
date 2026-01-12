@@ -45,4 +45,17 @@ void TrueSheetViewShadowNode::adjustLayoutWithState() {
   }
 }
 
+#if !defined(ANDROID)
+void TrueSheetViewShadowNode::setEventDispatcher(
+    std::weak_ptr<const EventDispatcher> dispatcher) {
+  getStateDataMutable().setEventDispatcher(dispatcher);
+}
+
+TrueSheetViewShadowNode::StateData &
+TrueSheetViewShadowNode::getStateDataMutable() {
+  ensureUnsealed();
+  return const_cast<TrueSheetViewShadowNode::StateData &>(getStateData());
+}
+#endif
+
 } // namespace facebook::react

@@ -18,6 +18,10 @@ class TrueSheetViewComponentDescriptor final
     concreteShadowNode.adjustLayoutWithState();
 
     ConcreteComponentDescriptor::adopt(shadowNode);
+
+#if !defined(ANDROID)
+    concreteShadowNode.setEventDispatcher(eventDispatcher_);
+#endif
   }
 };
 

@@ -14,6 +14,7 @@
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
 #import "TrueSheetViewController.h"
+#import "core/RNScreensEventObserver.h"
 #import "events/TrueSheetDragEvents.h"
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
@@ -36,7 +37,9 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContainerViewDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate,
+  TrueSheetContainerViewDelegate,
+  RNScreensEventObserverDelegate>
 @end
 
 @implementation TrueSheetView {
@@ -52,6 +55,7 @@ using namespace facebook::react;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  RNScreensEventObserver *_screensEventObserver;
 }
 
 #pragma mark - Initialization
@@ -75,6 +79,9 @@ using namespace facebook::react;
     _initialDetentAnimated = YES;
     _scrollable = NO;
     _isSheetUpdatePending = NO;
+
+    _screensEventObserver = [[RNScreensEventObserver alloc] init];
+    _screensEventObserver.delegate = self;
   }
   return self;
 }
@@ -104,6 +111,9 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+  [_screensEventObserver stopObserving];
+  _screensEventObserver = nil;
+
   if (_controller && _controller.presentingViewController) {
     // Find the root presenting controller to dismiss the entire stack
     UIViewController *root = _controller.presentingViewController;
@@ -227,6 +237,8 @@ using namespace facebook::react;
   if (_controller) {
     [self updateStateWithSize:_controller.view.frame.size];
   }
+
+  [_screensEventObserver startObservingWithState:_state.get()->getData()];
 }
 
 /**
@@ -380,6 +392,8 @@ using namespace facebook::react;
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
+
+  [_screensEventObserver capturePresenterScreenFromView:self];
 
   [presentingViewController presentViewController:_controller
                                          animated:animated
@@ -553,8 +567,12 @@ using namespace facebook::react;
   [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
 }
 
-- (void)viewControllerDidDetectScreenDisappear {
-  [self dismissAllAnimated:YES completion:nil];
+#pragma mark - RNScreensEventObserverDelegate
+
+- (void)presenterScreenWillDisappear {
+  if (_controller.isPresented && !_controller.isBeingDismissed) {
+    [self dismissAllAnimated:YES completion:nil];
+  }
 }
 
 #pragma mark - Private Helpers

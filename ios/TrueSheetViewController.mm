@@ -799,21 +799,6 @@
   }
 }
 
-#pragma mark - RNSLifecycleListenerProtocol
-
-#if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
-
-- (void)screenWillDisappear:(UIViewController *)screen isPresenterUnmounting:(BOOL)isPresenterUnmounting {
-  // Skip if not presented, being dismissed, or if the presenter (modal) itself is being unmounted
-  if (!_isPresented || self.isBeingDismissed || isPresenterUnmounting) {
-    return;
-  }
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectScreenDisappear)]) {
-    [self.delegate viewControllerDidDetectScreenDisappear];
-  }
-}
-#endif
-
 #pragma mark - RNSDismissibleModalProtocol
 
 #if RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE

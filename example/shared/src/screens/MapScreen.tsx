@@ -41,12 +41,14 @@ export interface MapScreenProps {
   MapComponent: ComponentType<{ style?: StyleProp<ViewStyle> }>;
   onNavigateToModal?: () => void;
   onNavigateToSheetStack?: () => void;
+  onNavigateToTest?: () => void;
 }
 
 const MapScreenInner = ({
   MapComponent,
   onNavigateToModal,
   onNavigateToSheetStack,
+  onNavigateToTest,
 }: MapScreenProps) => {
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
@@ -149,23 +151,35 @@ const MapScreenInner = ({
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button
-          text="TrueSheet ScrollView"
-          loading={scrollViewLoading}
-          disabled={scrollViewLoading}
-          onPress={presentScrollViewSheet}
-        />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <View style={styles.buttonRow}>
-          <Button style={styles.rowButton} text="Open Modal" onPress={onNavigateToModal} />
           <Button
             style={styles.rowButton}
-            text="Sheet Navigator"
-            onPress={onNavigateToSheetStack}
+            text="Prompt"
+            onPress={() => promptSheet.current?.present()}
+          />
+          <Button
+            style={styles.rowButton}
+            text="Gestures"
+            onPress={() => gestureSheet.current?.present()}
           />
         </View>
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.rowButton}
+            text="ScrollView"
+            loading={scrollViewLoading}
+            disabled={scrollViewLoading}
+            onPress={presentScrollViewSheet}
+          />
+          <Button
+            style={styles.rowButton}
+            text="FlatList"
+            onPress={() => flatListSheet.current?.present()}
+          />
+        </View>
+        <Button text="Open Modal" onPress={onNavigateToModal} />
+        <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+        <Button text="Test Screen" onPress={onNavigateToTest} />
         <Spacer />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <View style={styles.buttonRow}>
