@@ -7,12 +7,12 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed initial present failing during deeplink navigation. ([#406](https://github.com/lodev09/react-native-true-sheet/pull/406) by [@lodev09](https://github.com/lodev09))
-- **iOS**: Use host view window's rootViewController (7938c69 by [@lodev09](https://github.com/lodev09))
-- **Android**: Ignore fragment events during cold start initialization (86fa7bb9 by [@lodev09](https://github.com/lodev09))
+- **iOS**: Use host view window's rootViewController ([7938c69](https://github.com/lodev09/react-native-true-sheet/commit/7938c69) by [@lodev09](https://github.com/lodev09))
+- **Android**: Ignore fragment events during cold start initialization ([86fa7bb9](https://github.com/lodev09/react-native-true-sheet/commit/86fa7bb9) by [@lodev09](https://github.com/lodev09))
 
 ### 🧪 Tests
 
-- Add `dismissAll` tests (4615ce64 by [@lodev09](https://github.com/lodev09))
+- Add `dismissAll` tests ([4615ce64](https://github.com/lodev09/react-native-true-sheet/commit/4615ce64) by [@lodev09](https://github.com/lodev09))
 
 ## 3.7.2
 
@@ -23,8 +23,8 @@
 
 ### 🐛 Bug fixes
 
-- **Android**: fix(android): cache content heights for dim interpolation during dismiss. (b297adb3 by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed dim interpolation during dismiss when container is unmounted. (34bd3d40 by [@lodev09](https://github.com/lodev09))
+- **Android**: fix(android): cache content heights for dim interpolation during dismiss. ([b297adb3](https://github.com/lodev09/react-native-true-sheet/commit/b297adb3) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed dim interpolation during dismiss when container is unmounted. ([34bd3d40](https://github.com/lodev09/react-native-true-sheet/commit/34bd3d40) by [@lodev09](https://github.com/lodev09))
 - **Web**: Fixed `onWillDismiss` not firing when dismissing via backdrop tap. ([#405](https://github.com/lodev09/react-native-true-sheet/pull/405) by [@lodev09](https://github.com/lodev09))
 - Fixed sheet not dismissing when presenter screen is popped from navigation. ([#400](https://github.com/lodev09/react-native-true-sheet/pull/400), [#402](https://github.com/lodev09/react-native-true-sheet/pull/402) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed visual glitch when navigating away with active sheet. ([#403](https://github.com/lodev09/react-native-true-sheet/pull/403) by [@lodev09](https://github.com/lodev09))
@@ -33,7 +33,7 @@
 
 ### 🧹Chores
 
-- **Android**: Fix lint warnings. (68422b0e by [@lodev09](https://github.com/lodev09))
+- **Android**: Fix lint warnings. ([68422b0e](https://github.com/lodev09/react-native-true-sheet/commit/68422b0e) by [@lodev09](https://github.com/lodev09))
 
 ## 3.7.0
 
