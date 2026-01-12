@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "RNScreensEventObserver.h"
+#import "TrueSheetView.h"
 
 #import <react/renderer/core/EventDispatcher.h>
 #import <react/renderer/core/ShadowNodeFamily.h>
@@ -57,9 +58,7 @@ using namespace facebook::react;
           Tag screenTag = family->getTag();
 
           if ([strongSelf shouldDismissForScreenTag:screenTag]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-              [strongSelf.delegate presenterScreenWillDisappear];
-            });
+            [strongSelf.delegate presenterScreenWillDisappear];
           }
         }
       }
@@ -71,11 +70,11 @@ using namespace facebook::react;
 }
 
 - (void)stopObserving {
-  if (_eventDispatcher && _eventListener) {
+  if (_eventListener) {
     _eventDispatcher->removeListener(_eventListener);
+    _eventListener = nullptr;
+    _eventDispatcher = nullptr;
   }
-  _eventListener = nullptr;
-  _eventDispatcher = nullptr;
 }
 
 - (void)capturePresenterScreenFromView:(UIView *)view {
@@ -83,16 +82,14 @@ using namespace facebook::react;
   _presenterScreenController = nil;
   _parentModalTag = 0;
 
-  UIView *current = view.superview;
-  while (current) {
+  for (UIView *current = view.superview; current; current = current.superview) {
     NSString *className = NSStringFromClass([current class]);
 
-    if (_presenterScreenTag == 0 && [className isEqualToString:@"RNSScreenView"]) {
+    if (!_presenterScreenTag && [className isEqualToString:@"RNSScreenView"]) {
       _presenterScreenTag = current.tag;
-      // Get the screen's controller via responder chain
-      for (UIResponder *responder = current; responder; responder = responder.nextResponder) {
-        if ([responder isKindOfClass:[UIViewController class]]) {
-          _presenterScreenController = (UIViewController *)responder;
+      for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
+        if ([r isKindOfClass:[UIViewController class]]) {
+          _presenterScreenController = (UIViewController *)r;
           break;
         }
       }
@@ -100,23 +97,18 @@ using namespace facebook::react;
       _parentModalTag = current.tag;
       break;
     }
-    current = current.superview;
   }
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {
-  if (_presenterScreenTag == 0 || _presenterScreenTag != screenTag) {
+  if (_presenterScreenTag != screenTag) {
     return NO;
   }
 
-  // If inside a modal, check if this is a nav pop vs modal dismiss
+  // If inside a modal, skip if screen is top of nav stack (modal dismiss)
   if (_parentModalTag != 0) {
-    UIViewController *screenController = _presenterScreenController;
-    UINavigationController *navController = screenController.navigationController;
-
-    // If screen is still in nav stack, it's a modal dismiss - skip
-    // (the modal dismissal will handle the sheet)
-    if (navController && [navController.viewControllers containsObject:screenController]) {
+    UINavigationController *nav = _presenterScreenController.navigationController;
+    if (nav.topViewController == _presenterScreenController) {
       return NO;
     }
   }

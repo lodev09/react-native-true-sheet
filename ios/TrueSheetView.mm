@@ -569,10 +569,9 @@ using namespace facebook::react;
 #pragma mark - RNScreensEventObserverDelegate
 
 - (void)presenterScreenWillDisappear {
-  if (!_controller.isPresented || _controller.isBeingDismissed) {
-    return;
+  if (_controller.isPresented && !_controller.isBeingDismissed) {
+    [self dismissAllAnimated:YES completion:nil];
   }
-  [self dismissAllAnimated:YES completion:nil];
 }
 
 #pragma mark - Private Helpers

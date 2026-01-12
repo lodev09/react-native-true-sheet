@@ -13,6 +13,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class TrueSheetView;
+
 @protocol RNScreensEventObserverDelegate <NSObject>
 
 - (void)presenterScreenWillDisappear;
@@ -25,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface RNScreensEventObserver : NSObject
 
-@property (nonatomic, weak) id<RNScreensEventObserverDelegate> delegate;
+@property (nonatomic, weak) TrueSheetView<RNScreensEventObserverDelegate> *delegate;
 
 - (void)startObservingWithState:(const facebook::react::TrueSheetViewState &)state;
 - (void)stopObserving;
