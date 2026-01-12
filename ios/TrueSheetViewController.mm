@@ -804,13 +804,8 @@
 #if RNS_LIFECYCLE_LISTENER_PROTOCOL_AVAILABLE
 
 - (void)screenWillDisappear:(UIViewController *)screen isPresenterUnmounting:(BOOL)isPresenterUnmounting {
-  // Skip if not presented, being dismissed, or if the presenter (modal) itself is being unmounted
-  if (!_isPresented || self.isBeingDismissed || isPresenterUnmounting) {
-    return;
-  }
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDetectScreenDisappear)]) {
-    [self.delegate viewControllerDidDetectScreenDisappear];
-  }
+  // TODO: Disabled - exploring alternative approaches per react-native-screens feedback
+  // See: https://github.com/software-mansion/react-native-screens/pull/3527#pullrequestreview-3650866794
 }
 #endif
 

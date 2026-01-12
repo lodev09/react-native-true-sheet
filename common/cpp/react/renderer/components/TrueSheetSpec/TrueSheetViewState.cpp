@@ -8,4 +8,16 @@ folly::dynamic TrueSheetViewState::getDynamic() const {
 }
 #endif
 
+#if !defined(ANDROID)
+void TrueSheetViewState::setEventDispatcher(
+    std::weak_ptr<const EventDispatcher> dispatcher) {
+  eventDispatcher_ = dispatcher;
+}
+
+std::weak_ptr<const EventDispatcher> TrueSheetViewState::getEventDispatcher()
+    const noexcept {
+  return eventDispatcher_;
+}
+#endif
+
 } // namespace facebook::react

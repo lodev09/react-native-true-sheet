@@ -10,6 +10,8 @@
 
 namespace facebook::react {
 
+class EventDispatcher;
+
 /*
  * State for <TrueSheetView> component.
  * Contains the container dimensions from native.
@@ -36,6 +38,14 @@ class TrueSheetViewState final {
   MapBuffer getMapBuffer() const {
     return MapBufferBuilder::EMPTY();
   }
+#endif
+
+#if !defined(ANDROID)
+  void setEventDispatcher(std::weak_ptr<const EventDispatcher> dispatcher);
+  std::weak_ptr<const EventDispatcher> getEventDispatcher() const noexcept;
+
+ private:
+  std::weak_ptr<const EventDispatcher> eventDispatcher_;
 #endif
 };
 

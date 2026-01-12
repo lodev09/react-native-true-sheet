@@ -32,6 +32,8 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <react/renderer/core/EventDispatcher.h>
+#import <react/renderer/core/EventTarget.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -52,6 +54,11 @@ using namespace facebook::react;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  std::shared_ptr<const EventDispatcher> _eventDispatcher;
+  std::shared_ptr<const EventListener> _eventListener;
+  NSInteger _presenterScreenTag;
+  __weak UIViewController *_presenterScreenController;
+  NSInteger _parentModalTag;
 }
 
 #pragma mark - Initialization
@@ -104,6 +111,12 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+  if (_eventDispatcher && _eventListener) {
+    _eventDispatcher->removeListener(_eventListener);
+  }
+  _eventListener = nullptr;
+  _eventDispatcher = nullptr;
+
   if (_controller && _controller.presentingViewController) {
     // Find the root presenting controller to dismiss the entire stack
     UIViewController *root = _controller.presentingViewController;
@@ -226,6 +239,55 @@ using namespace facebook::react;
 
   if (_controller) {
     [self updateStateWithSize:_controller.view.frame.size];
+  }
+
+  // Setup event listener for screen lifecycle events (onWillDisappear)
+  if (!_eventDispatcher) {
+    if (auto dispatcherPtr = _state.get()->getData().getEventDispatcher().lock()) {
+      _eventDispatcher = dispatcherPtr;
+
+      __weak TrueSheetView *weakSelf = self;
+      
+      _eventListener = std::make_shared<const EventListener>([weakSelf](const RawEvent &event) {
+        TrueSheetView *strongSelf = weakSelf;
+        if (!strongSelf) {
+          return false;
+        }
+        
+        if (event.type == "topWillDisappear") {
+          NSInteger presenterScreenTag = strongSelf->_presenterScreenTag;
+          if (!strongSelf->_controller.isPresented ||
+              strongSelf->_controller.isBeingDismissed ||
+              presenterScreenTag == 0) {
+            return false;
+          }
+
+          if (auto family = event.shadowNodeFamily.lock()) {
+            Tag screenTag = family->getTag();
+
+            if (presenterScreenTag == screenTag) {
+              // If inside a modal, check if this is a nav pop vs modal dismiss
+              NSInteger parentModalTag = strongSelf->_parentModalTag;
+              if (parentModalTag != 0) {
+                UIViewController *screenController = strongSelf->_presenterScreenController;
+                UINavigationController *navController = screenController.navigationController;
+                
+                // If screen is still in nav stack, it's a modal dismiss - skip
+                // (the modal dismissal will handle the sheet)
+                if (navController && [navController.viewControllers containsObject:screenController]) {
+                  return false;
+                }
+              }
+              
+              [strongSelf dismissAllAnimated:YES completion:nil];
+            }
+          }
+        }
+        return false;
+      });
+
+      _eventDispatcher->addListener(_eventListener);
+    }
   }
 }
 
@@ -380,6 +442,29 @@ using namespace facebook::react;
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
+
+  // Capture presenter screen info for screen unmount detection
+  _presenterScreenTag = 0;
+  _presenterScreenController = nil;
+  _parentModalTag = 0;
+  UIView *view = self.superview;
+  while (view) {
+    NSString *className = NSStringFromClass([view class]);
+    if (_presenterScreenTag == 0 && [className isEqualToString:@"RNSScreenView"]) {
+      _presenterScreenTag = view.tag;
+      // Get the screen's controller via responder chain
+      for (UIResponder *responder = view; responder; responder = responder.nextResponder) {
+        if ([responder isKindOfClass:[UIViewController class]]) {
+          _presenterScreenController = (UIViewController *)responder;
+          break;
+        }
+      }
+    } else if ([className isEqualToString:@"RNSModalScreen"]) {
+      _parentModalTag = view.tag;
+      break;
+    }
+    view = view.superview;
+  }
 
   [presentingViewController presentViewController:_controller
                                          animated:animated
@@ -556,6 +641,8 @@ using namespace facebook::react;
 - (void)viewControllerDidDetectScreenDisappear {
   [self dismissAllAnimated:YES completion:nil];
 }
+
+// See docs/SCREEN_UNMOUNT_DETECTION.md for research on detecting screen unmount
 
 #pragma mark - Private Helpers
 
