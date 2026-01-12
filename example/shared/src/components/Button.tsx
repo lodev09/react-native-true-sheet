@@ -27,7 +27,7 @@ export const Button = (props: ButtonProps) => {
 const styles = StyleSheet.create({
   button: {
     height: BUTTON_HEIGHT,
-    padding: 12,
+    padding: SPACING,
     borderRadius: BUTTON_HEIGHT,
     backgroundColor: DARK_BLUE,
     alignItems: 'center',

@@ -58,7 +58,7 @@ export const StandardScreen = ({
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
-        <BasicSheet ref={basicSheet} />
+        <BasicSheet ref={basicSheet} onNavigateToTest={onNavigateToTest} />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
