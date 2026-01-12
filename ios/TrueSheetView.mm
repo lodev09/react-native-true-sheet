@@ -55,6 +55,8 @@ using namespace facebook::react;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  BOOL _dismissingForNavigation;
+  BOOL _pendingRepresent;
   RNScreensEventObserver *_screensEventObserver;
 }
 
@@ -94,6 +96,12 @@ using namespace facebook::react;
 
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
+  }
+
+  if (_pendingRepresent) {
+    _pendingRepresent = NO;
+    [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
+    return;
   }
 
   if (_initialDetentIndex >= 0 && !_didInitiallyPresent) {
@@ -525,12 +533,16 @@ using namespace facebook::react;
 
 - (void)viewControllerWillDismiss {
   [_containerView cleanupKeyboardHandler];
-  [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
+  if (!_dismissingForNavigation) {
+    [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
+  }
 }
 
 - (void)viewControllerDidDismiss {
-  _controller.activeDetentIndex = -1;
-  [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
+  if (!_dismissingForNavigation) {
+    _controller.activeDetentIndex = -1;
+    [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
+  }
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
@@ -571,8 +583,18 @@ using namespace facebook::react;
 
 - (void)presenterScreenWillDisappear {
   if (_controller.isPresented && !_controller.isBeingDismissed) {
+    _dismissingForNavigation = YES;
     [self dismissAllAnimated:YES completion:nil];
   }
+}
+
+- (void)presenterScreenWillAppear {
+  if (_controller.isPresented || _controller.isBeingPresented) {
+    return;
+  }
+
+  _dismissingForNavigation = NO;
+  _pendingRepresent = YES;
 }
 
 #pragma mark - Private Helpers

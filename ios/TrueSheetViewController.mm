@@ -266,7 +266,6 @@
 
   if (self.isDismissing) {
     _isPresented = NO;
-    _activeDetentIndex = -1;
 
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
