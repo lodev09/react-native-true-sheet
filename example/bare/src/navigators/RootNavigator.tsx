@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, StandardScreen } from '@example/shared/screens';
+import { MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
+import { DARK_BLUE } from '@example/shared/utils';
 import { Map } from '@example/shared/components';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
@@ -18,6 +19,7 @@ const MapScreenWrapper = () => {
       MapComponent={Map}
       onNavigateToModal={() => navigation.navigate('ModalStack')}
       onNavigateToSheetStack={() => navigation.navigate('SheetStack')}
+      onNavigateToTest={() => navigation.navigate('Test')}
     />
   );
 };
@@ -33,10 +35,15 @@ const StandardScreenWrapper = () => {
   );
 };
 
+const TestScreenWrapper = () => {
+  const navigation = useAppNavigation();
+  return <TestScreen onGoBack={() => navigation.goBack()} />;
+};
+
 export const RootNavigator = () => {
   return (
     <Stack.Navigator
-      screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}
+      screenOptions={{ headerTintColor: 'white', headerStyle: { backgroundColor: DARK_BLUE } }}
       initialRouteName={INITIAL_ROUTE_NAME}
     >
       <Stack.Screen
@@ -55,6 +62,7 @@ export const RootNavigator = () => {
         component={ModalStackNavigator}
         options={{ presentation: 'fullScreenModal', headerShown: false }}
       />
+      <Stack.Screen name="Test" component={TestScreenWrapper} options={{ title: 'Test' }} />
     </Stack.Navigator>
   );
 };

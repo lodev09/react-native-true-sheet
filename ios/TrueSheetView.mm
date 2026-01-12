@@ -37,8 +37,9 @@
 
 using namespace facebook::react;
 
-@interface TrueSheetView () <TrueSheetViewControllerDelegate, TrueSheetContainerViewDelegate,
-                             RNScreensEventObserverDelegate>
+@interface TrueSheetView () <TrueSheetViewControllerDelegate,
+  TrueSheetContainerViewDelegate,
+  RNScreensEventObserverDelegate>
 @end
 
 @implementation TrueSheetView {

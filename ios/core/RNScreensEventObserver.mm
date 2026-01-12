@@ -107,4 +107,4 @@ using namespace facebook::react;
 
 @end
 
-#endif // RCT_NEW_ARCH_ENABLED
+#endif  // RCT_NEW_ARCH_ENABLED

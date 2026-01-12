@@ -16,7 +16,6 @@
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 0
 #endif
 
-
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetViewControllerDelegate <NSObject>

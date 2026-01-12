@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { DARK_BLUE } from '@example/shared/utils';
 import 'react-native-reanimated';
 
 export {
@@ -50,9 +51,12 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <TrueSheetProvider>
-        <Stack screenOptions={{ headerTransparent: true, headerTintColor: 'white' }}>
+        <Stack
+          screenOptions={{ headerTintColor: 'white', headerStyle: { backgroundColor: DARK_BLUE } }}
+        >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
+          <Stack.Screen name="test" options={{ title: 'Test' }} />
           <Stack.Screen
             name="modal"
             options={{

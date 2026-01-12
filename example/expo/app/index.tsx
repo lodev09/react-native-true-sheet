@@ -11,6 +11,7 @@ export default function Index() {
       MapComponent={Map}
       onNavigateToModal={() => router.push('/modal')}
       onNavigateToSheetStack={() => router.push('/sheet')}
+      onNavigateToTest={() => router.push('/test')}
     />
   );
 }
