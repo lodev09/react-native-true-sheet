@@ -34,6 +34,7 @@
   BOOL _isDragging;
   BOOL _isTransitioning;
   BOOL _isTrackingPositionFromLayout;
+  BOOL _isWillDismissEmitted;
 
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -57,11 +58,12 @@
     _lastPosition = 0;
     _isDragging = NO;
     _isPresented = NO;
+    _isTransitioning = NO;
+    _isWillDismissEmitted =NO;
     _pendingContentSizeChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
 
-    _isTransitioning = NO;
     _transitionFakeView = [UIView new];
     _isTrackingPositionFromLayout = NO;
 
@@ -237,10 +239,9 @@
   return self.presentingViewController == nil || self.isBeingDismissed;
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-  [super viewWillDisappear:animated];
-
-  if (self.isDismissing) {
+- (void)emitWillDismissEvents {
+  if (self.isDismissing && !_isWillDismissEmitted) {
+    _isWillDismissEmitted = YES;
     dispatch_async(dispatch_get_main_queue(), ^{
       if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
         [self.delegate viewControllerWillBlur];
@@ -250,22 +251,19 @@
         [self.delegate viewControllerWillDismiss];
       }
     });
-
+    
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
         [_parentSheetController.delegate viewControllerWillFocus];
       }
     }
   }
-
-  [self setupTransitionTracker];
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
-  [super viewDidDisappear:animated];
-
+- (void)emitDidDismissEvents {
   if (self.isDismissing) {
     _isPresented = NO;
+    _isWillDismissEmitted = NO;
 
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
@@ -282,6 +280,23 @@
       [self.delegate viewControllerDidDismiss];
     }
   }
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+  [super viewWillDisappear:animated];
+
+  // Emit willDismiss only if not dragging
+  // handleTransitionTracker will emit when sheet is transitioning to dismiss
+  if (!_isDragging) {
+    [self emitWillDismissEvents];
+  }
+
+  [self setupTransitionTracker];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+  [super viewDidDisappear:animated];
+  [self emitDidDismissEvents];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -448,7 +463,10 @@
 
     if (self.currentPosition >= self.screenHeight) {
       CGFloat position = fmax(_lastPosition, layerPosition);
+      
+      [self emitWillDismissEvents];
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
+      
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
