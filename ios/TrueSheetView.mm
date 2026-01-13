@@ -55,8 +55,8 @@ using namespace facebook::react;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
-  BOOL _dismissingForNavigation;
-  BOOL _pendingRepresent;
+  BOOL _dismissedByNavigation;
+  BOOL _pendingNavigationRepresent;
   RNScreensEventObserver *_screensEventObserver;
 }
 
@@ -98,8 +98,8 @@ using namespace facebook::react;
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
 
-  if (_pendingRepresent) {
-    _pendingRepresent = NO;
+  if (_pendingNavigationRepresent && !_controller.isPresented) {
+    _pendingNavigationRepresent = NO;
     [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
     return;
   }
@@ -132,6 +132,8 @@ using namespace facebook::react;
   }
 
   _didInitiallyPresent = NO;
+  _dismissedByNavigation = NO;
+  _pendingNavigationRepresent = NO;
 
   _controller.delegate = nil;
   _controller = nil;
@@ -301,6 +303,8 @@ using namespace facebook::react;
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
+  _dismissedByNavigation = NO;
+  _pendingNavigationRepresent = NO;
 }
 
 #pragma mark - Child Component Mounting
@@ -346,13 +350,15 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
-
-  UIView *superView = _containerView.superview;
-  UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
-  if (snapshot) {
-    snapshot.frame = _containerView.frame;
-    [superView insertSubview:snapshot belowSubview:_containerView];
-    _snapshotView = snapshot;
+  
+  if (_controller.isPresented) {
+    UIView *superView = _containerView.superview;
+    UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
+    if (snapshot) {
+      snapshot.frame = _containerView.frame;
+      [superView insertSubview:snapshot belowSubview:_containerView];
+      _snapshotView = snapshot;
+    }
   }
 
   _containerView.delegate = nil;
@@ -533,13 +539,16 @@ using namespace facebook::react;
 
 - (void)viewControllerWillDismiss {
   [_containerView cleanupKeyboardHandler];
-  if (!_dismissingForNavigation) {
+  if (!_dismissedByNavigation) {
     [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
   }
 }
 
 - (void)viewControllerDidDismiss {
-  if (!_dismissingForNavigation) {
+  if (!_dismissedByNavigation) {
+    _dismissedByNavigation = NO;
+    _pendingNavigationRepresent = NO;
+    
     _controller.activeDetentIndex = -1;
     [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
   }
@@ -583,18 +592,16 @@ using namespace facebook::react;
 
 - (void)presenterScreenWillDisappear {
   if (_controller.isPresented && !_controller.isBeingDismissed) {
-    _dismissingForNavigation = YES;
+    _dismissedByNavigation = YES;
     [self dismissAllAnimated:YES completion:nil];
   }
 }
 
 - (void)presenterScreenWillAppear {
-  if (_controller.isPresented || _controller.isBeingPresented) {
-    return;
+  if (_dismissedByNavigation && !_controller.isPresented && !_controller.isBeingPresented) {
+    _dismissedByNavigation = NO;
+    _pendingNavigationRepresent = YES;
   }
-
-  _dismissingForNavigation = NO;
-  _pendingRepresent = YES;
 }
 
 #pragma mark - Private Helpers
