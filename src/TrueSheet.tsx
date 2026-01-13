@@ -72,6 +72,11 @@ export class TrueSheet
    */
   private presentationResolver: (() => void) | null = null;
 
+  /**
+   * Tracks if a present operation is in progress
+   */
+  private isPresenting: boolean = false;
+
   constructor(props: TrueSheetProps) {
     super(props);
 
@@ -249,8 +254,12 @@ export class TrueSheet
   }
 
   private onDidDismiss(event: DidDismissEvent): void {
-    // Clean up native view after dismiss for lazy loading
-    this.setState({ shouldRenderNativeView: false });
+    // Clean up native view after dismiss for lazy loading.
+    // Skip unmount if a present is in progress to avoid race condition.
+    if (!this.isPresenting) {
+      this.setState({ shouldRenderNativeView: false });
+    }
+
     this.props.onDidDismiss?.(event);
   }
 
@@ -308,6 +317,8 @@ export class TrueSheet
       );
     }
 
+    this.isPresenting = true;
+
     // Lazy load: render native view if not already rendered
     if (!this.state.shouldRenderNativeView) {
       await new Promise<void>((resolve) => {
@@ -316,7 +327,8 @@ export class TrueSheet
       });
     }
 
-    return TrueSheetModule?.presentByRef(this.handle, index, animated);
+    await TrueSheetModule?.presentByRef(this.handle, index, animated);
+    this.isPresenting = false;
   }
 
   public async resize(index: number): Promise<void> {

@@ -112,7 +112,11 @@ class RNScreensFragmentObserver(
       override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
         super.onFragmentDestroyed(fm, f)
 
-        if (activeModalFragments.isEmpty() && activePushedFragments.isEmpty() && pendingDismissRunnable == null && pendingPopRunnable == null) {
+        if (activeModalFragments.isEmpty() &&
+          activePushedFragments.isEmpty() &&
+          pendingDismissRunnable == null &&
+          pendingPopRunnable == null
+        ) {
           onScreenDidDismiss()
         }
       }

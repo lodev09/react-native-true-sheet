@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- Fixed sheet content becoming empty after rapidly presenting/dismissing. ([#419](https://github.com/lodev09/react-native-true-sheet/pull/419) by [@lodev09](https://github.com/lodev09))
 - Auto re-present sheet when returning from screen dismiss (modal or navigation pop). ([#412](https://github.com/lodev09/react-native-true-sheet/pull/412) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed `onWillDismiss` event timing during drag dismiss. ([#416](https://github.com/lodev09/react-native-true-sheet/pull/416) by [@lodev09](https://github.com/lodev09))
 

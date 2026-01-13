@@ -350,7 +350,7 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
-  
+
   if (_controller.isPresented) {
     UIView *superView = _containerView.superview;
     UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
@@ -548,7 +548,7 @@ using namespace facebook::react;
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;
-    
+
     _controller.activeDetentIndex = -1;
     [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
   }
