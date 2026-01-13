@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 Bug fixes
+
+- Auto re-present sheet when returning from screen dismiss (modal or navigation pop). ([#412](https://github.com/lodev09/react-native-true-sheet/pull/412) by [@lodev09](https://github.com/lodev09))
+
 ### 💡 Others
 
 - **iOS**: Refactored screen unmount detection to use C++ EventDispatcher instead of RNSLifecycleListenerProtocol. ([#410](https://github.com/lodev09/react-native-true-sheet/pull/410) by [@lodev09](https://github.com/lodev09))
