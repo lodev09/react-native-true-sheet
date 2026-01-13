@@ -34,8 +34,8 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
 
 const styles = StyleSheet.create({
   content: {
-    backgroundColor: BLUE,
     flex: 1,
+    backgroundColor: BLUE,
     padding: SPACING,
     gap: GAP,
   },

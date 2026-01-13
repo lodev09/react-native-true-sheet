@@ -21,6 +21,7 @@ using namespace facebook::react;
   std::shared_ptr<const EventListener> _eventListener;
   NSInteger _presenterScreenTag;
   __weak UIViewController *_presenterScreenController;
+  BOOL _dismissedByNavigation;
 }
 
 - (instancetype)init {
@@ -51,12 +52,18 @@ using namespace facebook::react;
         return false;
       }
 
-      if (event.type == "topWillDisappear") {
-        if (auto family = event.shadowNodeFamily.lock()) {
-          Tag screenTag = family->getTag();
+      if (auto family = event.shadowNodeFamily.lock()) {
+        Tag screenTag = family->getTag();
 
+        if (event.type == "topWillDisappear") {
           if ([strongSelf shouldDismissForScreenTag:screenTag]) {
+            strongSelf->_dismissedByNavigation = YES;
             [strongSelf.delegate presenterScreenWillDisappear];
+          }
+        } else if (event.type == "topWillAppear") {
+          if (screenTag == strongSelf->_presenterScreenTag && strongSelf->_dismissedByNavigation) {
+            strongSelf->_dismissedByNavigation = NO;
+            [strongSelf.delegate presenterScreenWillAppear];
           }
         }
       }

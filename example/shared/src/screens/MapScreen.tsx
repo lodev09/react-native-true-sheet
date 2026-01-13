@@ -24,7 +24,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
-import { Button, DemoContent, Header, Spacer } from '../components';
+import { Button, ButtonGroup, DemoContent, Header, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
@@ -151,62 +151,41 @@ const MapScreenInner = ({
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <View style={styles.buttonRow}>
+        <Button text="Open Modal" onPress={onNavigateToModal} />
+        <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+        <Button text="Test Screen" onPress={onNavigateToTest} />
+        <Spacer />
+        <ButtonGroup>
+          <Button text="Prompt" onPress={() => promptSheet.current?.present()} />
+          <Button text="Gestures" onPress={() => gestureSheet.current?.present()} />
+        </ButtonGroup>
+        <ButtonGroup>
           <Button
-            style={styles.rowButton}
-            text="Prompt"
-            onPress={() => promptSheet.current?.present()}
-          />
-          <Button
-            style={styles.rowButton}
-            text="Gestures"
-            onPress={() => gestureSheet.current?.present()}
-          />
-        </View>
-        <View style={styles.buttonRow}>
-          <Button
-            style={styles.rowButton}
             text="ScrollView"
             loading={scrollViewLoading}
             disabled={scrollViewLoading}
             onPress={presentScrollViewSheet}
           />
-          <Button
-            style={styles.rowButton}
-            text="FlatList"
-            onPress={() => flatListSheet.current?.present()}
-          />
-        </View>
-        <Button text="Open Modal" onPress={onNavigateToModal} />
-        <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
-        <Button text="Test Screen" onPress={onNavigateToTest} />
+          <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
+        </ButtonGroup>
         <Spacer />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        <View style={styles.buttonRow}>
+        <ButtonGroup>
           <Button
-            style={styles.rowButton}
             text={showExtraContent ? 'Remove Content' : 'Add Content'}
             onPress={() => setShowExtraContent(!showExtraContent)}
           />
-          <Button
-            style={styles.rowButton}
-            text="Expand"
-            onPress={() => sheetRef.current?.resize(2)}
-          />
-        </View>
-        <View style={styles.buttonRow}>
-          <Button
-            style={styles.rowButton}
-            text="Collapse"
-            onPress={() => sheetRef.current?.resize(0)}
-          />
-          <Button
-            style={styles.rowButton}
-            text="Dismiss"
-            onPress={() => sheetRef.current?.dismiss()}
-          />
-        </View>
-        <BasicSheet ref={basicSheet} onNavigateToModal={onNavigateToModal} />
+          <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+        </ButtonGroup>
+        <ButtonGroup>
+          <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+        </ButtonGroup>
+        <BasicSheet
+          ref={basicSheet}
+          onNavigateToModal={onNavigateToModal}
+          onNavigateToTest={onNavigateToTest}
+        />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <GestureSheet ref={gestureSheet} />
@@ -261,12 +240,5 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 24,
     color: GRAY,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: GAP,
-  },
-  rowButton: {
-    flex: 1,
   },
 });

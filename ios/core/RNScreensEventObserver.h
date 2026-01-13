@@ -18,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol RNScreensEventObserverDelegate <NSObject>
 
 - (void)presenterScreenWillDisappear;
+- (void)presenterScreenWillAppear;
 
 @end
 

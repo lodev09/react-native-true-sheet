@@ -6,15 +6,17 @@ import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
+import { ButtonGroup } from '../ButtonGroup';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
+  onNavigateToTest?: () => void;
 }
 
 export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet>) => {
-  const { onNavigateToModal, ...rest } = props;
+  const { onNavigateToModal, onNavigateToTest, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
@@ -107,9 +109,14 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text="Present 80%" onPress={() => resize(1)} />
       <Button text="Present Auto" onPress={() => resize(0)} />
       <Spacer />
-      <Button text="Present Child Sheet" onPress={presentChild} />
-      <Button text="Present PromptSheet" onPress={presentPromptSheet} />
-      {onNavigateToModal && <Button text="Navigate to Modal" onPress={onNavigateToModal} />}
+      <ButtonGroup>
+        <Button text="Child Sheet" onPress={presentChild} />
+        <Button text="PromptSheet" onPress={presentPromptSheet} />
+      </ButtonGroup>
+      <ButtonGroup>
+        {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
+        {onNavigateToTest && <Button text="Test Screen" onPress={onNavigateToTest} />}
+      </ButtonGroup>
       <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
 
