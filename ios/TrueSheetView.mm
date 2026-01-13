@@ -57,6 +57,7 @@ using namespace facebook::react;
   BOOL _didInitiallyPresent;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
+  BOOL _pendingMountEvent;
   RNScreensEventObserver *_screensEventObserver;
 }
 
@@ -270,6 +271,12 @@ using namespace facebook::react;
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
   [super finalizeUpdates:updateMask];
 
+  // Emit pending mount event now that eventEmitter is available
+  if (_pendingMountEvent && (updateMask & RNComponentViewUpdateMaskEventEmitter)) {
+    _pendingMountEvent = NO;
+    [TrueSheetLifecycleEvents emitMount:_eventEmitter];
+  }
+
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
@@ -344,7 +351,11 @@ using namespace facebook::react;
   _containerView.scrollViewPinningEnabled = _scrollable;
   [_containerView setupContentScrollViewPinning];
 
-  [TrueSheetLifecycleEvents emitMount:_eventEmitter];
+  if (_eventEmitter) {
+    [TrueSheetLifecycleEvents emitMount:_eventEmitter];
+  } else {
+    _pendingMountEvent = YES;
+  }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
