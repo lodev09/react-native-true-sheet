@@ -166,7 +166,7 @@ object TrueSheetStackManager {
       while (true) {
         val parent = current.viewController.parentSheetView ?: return current
 
-        if (parent.viewController.wasHiddenByModal) {
+        if (parent.viewController.wasHiddenByScreen) {
           return current
         }
 

@@ -63,7 +63,6 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillBlur()
   fun viewControllerDidBlur()
   fun viewControllerDidBackPress()
-  fun viewControllerDidDetectScreenDisappear()
   fun viewControllerDidDetectScreenDismiss()
 }
 
@@ -92,7 +91,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
-    private const val MODAL_FADE_DURATION = 150L
+    private const val SCREEN_FADE_DURATION = 150L
   }
 
   // =============================================================================
@@ -132,7 +131,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var interactionState: InteractionState = InteractionState.Idle
   private var isDismissing = false
-  internal var wasHiddenByModal = false
+  internal var wasHiddenByScreen = false
   private var shouldAnimatePresent = false
   private var isPresentAnimating = false
 
@@ -340,7 +339,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isDismissing = false
     isPresented = false
     isSheetVisible = false
-    wasHiddenByModal = false
+    wasHiddenByScreen = false
     cachedContentHeight = 0
     cachedHeaderHeight = 0
     isPresentAnimating = false
@@ -568,31 +567,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun setupModalObserver() {
     rnScreensObserver = RNScreensFragmentObserver(
       reactContext = reactContext,
-      onModalPresented = {
-        if (isPresented && isSheetVisible && isTopmostSheet) {
-          dismissKeyboard()
-          post { hideForModal() }
-        }
-      },
-      onModalWillDismiss = {
-        if (isPresented && wasHiddenByModal && isTopmostSheet) {
-          showAfterModal()
-          delegate?.viewControllerDidDetectScreenDismiss()
-        }
-      },
-      onModalDidDismiss = {
-        if (isPresented && wasHiddenByModal) {
-          wasHiddenByModal = false
-          // Restore parent sheet after this sheet is restored
-          parentSheetView?.viewController?.let { parent ->
-            post { parent.showAfterModal() }
+      onScreenPresented = {
+        if (isPresented && isTopmostSheet) {
+          if (isSheetVisible) {
+            dismissKeyboard()
+            post { hideForScreen() }
+          } else {
+            // Sheet is already hidden, just mark it
+            wasHiddenByScreen = true
           }
         }
       },
-      onNonModalScreenPushed = {
-        // Only handle on root sheet (no parent) to trigger dismissAll
-        if (isPresented && isSheetVisible && parentSheetView == null) {
-          delegate?.viewControllerDidDetectScreenDisappear()
+      onScreenWillDismiss = {
+        val hasPushedScreens = rnScreensObserver?.hasPushedScreens == true
+        if (isPresented && wasHiddenByScreen && isTopmostSheet && !hasPushedScreens) {
+          showAfterScreen()
+          delegate?.viewControllerDidDetectScreenDismiss()
+        }
+      },
+      onScreenDidDismiss = {
+        if (isPresented && wasHiddenByScreen) {
+          wasHiddenByScreen = false
+          // Restore parent sheet after this sheet is restored
+          parentSheetView?.viewController?.let { parent ->
+            post { parent.showAfterScreen() }
+          }
         }
       }
     )
@@ -609,29 +608,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     dimViews.forEach { it.visibility = if (visible) VISIBLE else INVISIBLE }
   }
 
-  private fun hideForModal() {
+  private fun hideForScreen() {
     val sheet = sheetView ?: run {
-      RNLog.e(reactContext, "TrueSheet: sheetView is null in hideForModal")
+      RNLog.e(reactContext, "TrueSheet: sheetView is null in hideForScreen")
       return
     }
 
     isSheetVisible = false
-    wasHiddenByModal = true
+    wasHiddenByScreen = true
 
-    dimViews.forEach { it.animate().alpha(0f).setDuration(MODAL_FADE_DURATION).start() }
+    dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
       .alpha(0f)
-      .setDuration(MODAL_FADE_DURATION)
+      .setDuration(SCREEN_FADE_DURATION)
       .withEndAction {
         setSheetVisibility(false)
       }
       .start()
 
     // This will hide parent sheets first
-    parentSheetView?.viewController?.hideForModal()
+    parentSheetView?.viewController?.hideForScreen()
   }
 
-  private fun showAfterModal() {
+  private fun showAfterScreen() {
     isSheetVisible = true
     setSheetVisibility(true)
     sheetView?.alpha = 1f
@@ -643,7 +642,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Android may restore visibility on activity resume, so we need to hide it again.
    */
   fun reapplyHiddenState() {
-    if (!wasHiddenByModal) return
+    if (!wasHiddenByScreen) return
     setSheetVisibility(false)
   }
 
@@ -954,7 +953,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   private fun shouldHandleKeyboard(checkFocus: Boolean = true): Boolean {
-    if (wasHiddenByModal) return false
+    if (wasHiddenByScreen) return false
     if (!isTopmostSheet) return false
     if (checkFocus && !isFocusedViewWithinSheet()) return false
     return true
