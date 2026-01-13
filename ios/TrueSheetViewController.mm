@@ -59,7 +59,7 @@
     _isDragging = NO;
     _isPresented = NO;
     _isTransitioning = NO;
-    _isWillDismissEmitted =NO;
+    _isWillDismissEmitted = NO;
     _pendingContentSizeChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
@@ -251,7 +251,7 @@
         [self.delegate viewControllerWillDismiss];
       }
     });
-    
+
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
         [_parentSheetController.delegate viewControllerWillFocus];
@@ -463,10 +463,10 @@
 
     if (self.currentPosition >= self.screenHeight) {
       CGFloat position = fmax(_lastPosition, layerPosition);
-      
+
       [self emitWillDismissEvents];
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
-      
+
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
