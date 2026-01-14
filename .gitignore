@@ -87,3 +87,6 @@ android/generated
 
 # Test coverage
 coverage
+
+# Agents
+.claude
