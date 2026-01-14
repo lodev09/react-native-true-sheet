@@ -167,6 +167,9 @@
   [super viewDidLoad];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
 
+  _blurView = [[TrueSheetBlurView alloc] init];
+  [_blurView addToView:self.view];
+
   _grabberView = [[TrueSheetGrabberView alloc] init];
   _grabberView.hidden = YES;
   [_grabberView addToView:self.view];
@@ -688,32 +691,6 @@
 }
 
 - (void)setupBackground {
-#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
-  BOOL useBackgroundEffect = NO;
-  if (@available(iOS 26.1, *)) {
-    useBackgroundEffect = !self.isDesignCompatibilityMode;
-  }
-
-  // iOS 26.1+: use native backgroundEffect when only backgroundBlur is set (no backgroundColor)
-  // Fall back to TrueSheetBlurView when blur intensity is set (not 100%) since
-  // sheet.backgroundEffect doesn't support intensity control
-  if (@available(iOS 26.1, *)) {
-    if (useBackgroundEffect) {
-      BOOL hasCustomIntensity = self.blurIntensity && [self.blurIntensity floatValue] < 100;
-      if (!self.backgroundColor && self.backgroundBlur && self.backgroundBlur.length > 0) {
-        if (hasCustomIntensity) {
-          // Clear native effect to allow custom blur view with intensity
-          self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
-        } else {
-          UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
-          self.sheet.backgroundEffect = [UIBlurEffect effectWithStyle:style];
-          return;
-        }
-      }
-    }
-  }
-#endif
-
   NSString *effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
@@ -721,28 +698,23 @@
     effectiveBackgroundBlur = @"system-material";
   }
 
-  BOOL blurChanged = ![_blurView.backgroundBlur isEqualToString:effectiveBackgroundBlur];
+  BOOL hasBlur = effectiveBackgroundBlur && effectiveBackgroundBlur.length > 0;
 
-  if (_blurView && blurChanged) {
-    [_blurView removeFromSuperview];
-    _blurView = nil;
-  }
-
-  if (effectiveBackgroundBlur && effectiveBackgroundBlur.length > 0) {
-    if (!_blurView) {
-      _blurView = [[TrueSheetBlurView alloc] init];
-      [_blurView addToView:self.view];
-    }
-    _blurView.backgroundBlur = effectiveBackgroundBlur;
-    _blurView.blurIntensity = self.blurIntensity;
-    _blurView.blurInteraction = self.blurInteraction;
-    [_blurView applyBlurEffect];
-  }
+  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : nil;
+  _blurView.blurIntensity = self.blurIntensity;
+  _blurView.blurInteraction = self.blurInteraction;
+  [_blurView applyBlurEffect];
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
   if (@available(iOS 26.1, *)) {
-    if (useBackgroundEffect && self.backgroundColor) {
-      self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
+    if (!self.isDesignCompatibilityMode) {
+      if (self.backgroundColor) {
+        self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
+      } else if (hasBlur) {
+        self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
+      } else {
+        self.sheet.backgroundEffect = nil;
+      }
       return;
     }
   }
