@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed `backgroundBlur` and `backgroundColor` not working together. ([#423](https://github.com/lodev09/react-native-true-sheet/pull/423) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed `present()` called from `useEffect` not working due to mount event not firing. ([#421](https://github.com/lodev09/react-native-true-sheet/pull/421) by [@lodev09](https://github.com/lodev09))
 - Fixed sheet content becoming empty after rapidly presenting/dismissing. ([#419](https://github.com/lodev09/react-native-true-sheet/pull/419) by [@lodev09](https://github.com/lodev09))
 - Auto re-present sheet when returning from screen dismiss (modal or navigation pop). ([#412](https://github.com/lodev09/react-native-true-sheet/pull/412) by [@lodev09](https://github.com/lodev09))

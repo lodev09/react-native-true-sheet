@@ -34,41 +34,45 @@
   [parentView insertSubview:self atIndex:0];
 }
 
+- (void)clearAnimator {
+  if (_blurAnimator) {
+    [_blurAnimator stopAnimation:YES];
+    _blurAnimator = nil;
+  }
+}
+
 - (void)applyBlurEffect {
   self.userInteractionEnabled = self.blurInteraction;
 
-  // Create animator only once
-  if (!_blurAnimator) {
-    UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
-    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
+  if (!self.backgroundBlur || self.backgroundBlur.length == 0) {
+    [self clearAnimator];
+    self.effect = nil;
+    return;
+  }
 
+  UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
+  UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
+
+  CGFloat intensity =
+    (self.blurIntensity && [self.blurIntensity floatValue] >= 0) ? [self.blurIntensity floatValue] / 100.0 : 1.0;
+
+  if (intensity >= 1.0) {
+    [self clearAnimator];
+    self.effect = blurEffect;
+    return;
+  }
+
+  if (!_blurAnimator) {
     __weak __typeof(self) weakSelf = self;
     _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
                                                                curve:UIViewAnimationCurveLinear
                                                           animations:^{
                                                             weakSelf.effect = blurEffect;
                                                           }];
-    _blurAnimator.pausesOnCompletion = YES;
   }
 
-  // Update intensity
-  CGFloat intensity =
-    (self.blurIntensity && [self.blurIntensity floatValue] >= 0) ? [self.blurIntensity floatValue] / 100.0 : 1.0;
+  _blurAnimator.pausesOnCompletion = YES;
   _blurAnimator.fractionComplete = intensity;
-}
-
-- (void)willMoveToSuperview:(UIView *)newSuperview {
-  [super willMoveToSuperview:newSuperview];
-
-  // Clean up when removed from superview
-  if (!newSuperview) {
-    if (_blurAnimator) {
-      [_blurAnimator stopAnimation:YES];
-      _blurAnimator = nil;
-    }
-
-    self.effect = nil;
-  }
 }
 
 @end

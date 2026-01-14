@@ -2,7 +2,7 @@ import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'rea
 import { StyleSheet } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -20,6 +20,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
+  const [detentIndex, setDetentIndex] = useState(0);
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -84,17 +85,20 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
           `Basic sheet presented at index: ${e.nativeEvent.index}, position: ${e.nativeEvent.position}`
         )
       }
-      onDetentChange={(e) =>
+      onDetentChange={(e) => {
+        setDetentIndex(e.nativeEvent.index);
         console.log(
           `Detent changed to index:`,
           e.nativeEvent.index,
           'position:',
           e.nativeEvent.position
-        )
-      }
+        );
+      }}
       onMount={() => {
         console.log('BasicSheet is ready!');
       }}
+      backgroundBlur={detentIndex > 0 ? 'system-material' : undefined}
+      backgroundColor={detentIndex > 0 ? BLUE : undefined}
       header={<Header />}
       footer={<Footer />}
       {...rest}
