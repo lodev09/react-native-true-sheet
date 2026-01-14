@@ -549,13 +549,13 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillDismiss {
-  [_containerView cleanupKeyboardHandler];
   if (!_dismissedByNavigation) {
     [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
   }
 }
 
 - (void)viewControllerDidDismiss {
+  [_containerView cleanupKeyboardHandler];
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;

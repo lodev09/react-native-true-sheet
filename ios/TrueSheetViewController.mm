@@ -245,15 +245,14 @@
 - (void)emitWillDismissEvents {
   if (self.isDismissing && !_isWillDismissEmitted) {
     _isWillDismissEmitted = YES;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
-        [self.delegate viewControllerWillBlur];
-      }
 
-      if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
-        [self.delegate viewControllerWillDismiss];
-      }
-    });
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
+      [self.delegate viewControllerWillBlur];
+    }
+
+    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
+      [self.delegate viewControllerWillDismiss];
+    }
 
     if (_parentSheetController) {
       if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
@@ -288,11 +287,13 @@
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  // Emit willDismiss only if not dragging
+  // Dispatch to allow pan gesture to set _isDragging before checking
   // handleTransitionTracker will emit when sheet is transitioning to dismiss
-  if (!_isDragging) {
-    [self emitWillDismissEvents];
-  }
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (!self->_isDragging) {
+      [self emitWillDismissEvents];
+    }
+  });
 
   [self setupTransitionTracker];
 }
