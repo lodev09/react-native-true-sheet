@@ -280,7 +280,8 @@ using namespace facebook::react;
 
   _currentKeyboardHeight = keyboardHeight;
 
-  CGFloat totalBottomInset = _bottomInset + keyboardHeight;
+  // When keyboard is visible, use keyboard height only (not combined with bottom inset)
+  CGFloat totalBottomInset = keyboardHeight > 0 ? keyboardHeight : _bottomInset;
 
   UIView *firstResponder = [sheetController.view findFirstResponder];
 
@@ -299,6 +300,7 @@ using namespace facebook::react;
                      if (firstResponder && keyboardHeight > 0) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
                                                                     toView:self->_pinnedScrollView.scrollView];
+                       responderFrame.size.height += self.keyboardScrollOffset;
                        [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:NO];
                      }
                    }

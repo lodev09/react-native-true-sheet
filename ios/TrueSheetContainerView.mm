@@ -78,6 +78,16 @@ using namespace facebook::react;
   _scrollViewPinningSet = YES;
 }
 
+- (void)setScrollableOptions:(NSDictionary *)scrollableOptions {
+  _scrollableOptions = scrollableOptions;
+  if (scrollableOptions) {
+    NSNumber *offset = scrollableOptions[@"keyboardScrollOffset"];
+    _contentView.keyboardScrollOffset = offset ? [offset floatValue] : 0;
+  } else {
+    _contentView.keyboardScrollOffset = 0;
+  }
+}
+
 - (void)setupContentScrollViewPinning {
   if (_scrollViewPinningSet && _contentView) {
     CGFloat bottomInset = 0;

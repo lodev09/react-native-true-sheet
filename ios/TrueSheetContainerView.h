@@ -49,6 +49,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSString *insetAdjustment;
 
 /**
+ * Options for scrollable behavior
+ */
+@property (nonatomic, strong, nullable) NSDictionary *scrollableOptions;
+
+/**
  * Returns the current content height
  */
 - (CGFloat)contentHeight;

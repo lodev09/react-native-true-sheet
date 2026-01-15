@@ -21,6 +21,10 @@ type BlurOptionsType = Readonly<{
   interaction?: WithDefault<boolean, true>;
 }>;
 
+type ScrollableOptionsType = Readonly<{
+  keyboardScrollOffset?: WithDefault<Double, 0>;
+}>;
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -64,6 +68,7 @@ export interface NativeProps extends ViewProps {
   dimmed?: WithDefault<boolean, true>;
   initialDetentAnimated?: WithDefault<boolean, true>;
   scrollable?: WithDefault<boolean, false>;
+  scrollableOptions?: ScrollableOptionsType;
   pageSizing?: WithDefault<boolean, true>;
 
   // Event handlers

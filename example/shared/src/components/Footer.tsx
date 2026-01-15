@@ -1,7 +1,7 @@
 import { Platform, StyleSheet, Text, View, type PressableProps, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK_BLUE, FOOTER_HEIGHT, SPACING } from '../utils';
+import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
 
 const isIPad = Platform.OS === 'ios' && Platform.isPad;
 
@@ -24,9 +24,7 @@ export const Footer = ({ children, text = 'FOOTER', ...rest }: FooterProps) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: 'transparent', // DARK_GRAY,
-    borderColor: DARK_BLUE,
-    borderWidth: 2,
+    backgroundColor: DARK_GRAY,
   },
   container: {
     height: FOOTER_HEIGHT,

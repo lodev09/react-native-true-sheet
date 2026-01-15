@@ -140,6 +140,18 @@ export interface GrabberOptions {
 }
 
 /**
+ * Options for scrollable behavior.
+ */
+export interface ScrollableOptions {
+  /**
+   * Extra offset when scrolling to the focused input when keyboard appears.
+   *
+   * @default 0
+   */
+  keyboardScrollOffset?: number;
+}
+
+/**
  * Options for customizing the blur effect.
  * Only applies when `backgroundBlur` is set.
  *
@@ -443,6 +455,11 @@ export interface TrueSheetProps extends ViewProps {
    * @default false
    */
   scrollable?: boolean;
+
+  /**
+   * Options for scrollable behavior.
+   */
+  scrollableOptions?: ScrollableOptions;
 
   /**
    * Defines the stack behavior when a modal is presented.

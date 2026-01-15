@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetContentView : RCTViewComponentView
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
+@property (nonatomic, assign) CGFloat keyboardScrollOffset;
 
 - (RCTScrollViewComponentView *_Nullable)findScrollView:(UIView *_Nullable *_Nullable)outTopSibling;
 
