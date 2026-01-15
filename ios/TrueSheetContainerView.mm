@@ -142,9 +142,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetContentViewDelegate
 
 - (void)contentViewDidChangeSize:(CGSize)newSize {
-  if ([self.delegate respondsToSelector:@selector(containerViewContentDidChangeSize:)]) {
-    [self.delegate containerViewContentDidChangeSize:newSize];
-  }
+  [self.delegate containerViewContentDidChangeSize:newSize];
 }
 
 - (void)contentViewDidChangeChildren {
@@ -158,9 +156,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetHeaderViewDelegate
 
 - (void)headerViewDidChangeSize:(CGSize)newSize {
-  if ([self.delegate respondsToSelector:@selector(containerViewHeaderDidChangeSize:)]) {
-    [self.delegate containerViewHeaderDidChangeSize:newSize];
-  }
+  [self.delegate containerViewHeaderDidChangeSize:newSize];
 }
 
 #pragma mark - Keyboard Handling

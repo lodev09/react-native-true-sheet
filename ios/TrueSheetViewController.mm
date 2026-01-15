@@ -186,23 +186,16 @@
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
-        [_parentSheetController.delegate viewControllerWillBlur];
-      }
+      [_parentSheetController.delegate viewControllerWillBlur];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-      if ([self.delegate respondsToSelector:@selector(viewControllerWillPresentAtIndex:position:detent:)]) {
-        NSInteger index = self.currentDetentIndex;
-        CGFloat position = self.currentPosition;
-        CGFloat detent = [self detentValueForIndex:index];
+      NSInteger index = self.currentDetentIndex;
+      CGFloat position = self.currentPosition;
+      CGFloat detent = [self detentValueForIndex:index];
 
-        [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
-      }
-
-      if ([self.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
-        [self.delegate viewControllerWillFocus];
-      }
+      [self.delegate viewControllerWillPresentAtIndex:index position:position detent:detent];
+      [self.delegate viewControllerWillFocus];
     });
   }
 
@@ -213,22 +206,13 @@
   [super viewDidAppear:animated];
 
   if (!_isPresented) {
-    if (_parentSheetController) {
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
-        [_parentSheetController.delegate viewControllerDidBlur];
-      }
-    }
+    [_parentSheetController.delegate viewControllerDidBlur];
 
     dispatch_async(dispatch_get_main_queue(), ^{
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidPresentAtIndex:position:detent:)]) {
-        NSInteger index = [self currentDetentIndex];
-        CGFloat detent = [self detentValueForIndex:index];
-        [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
-      }
-
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
-        [self.delegate viewControllerDidFocus];
-      }
+      NSInteger index = [self currentDetentIndex];
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
+      [self.delegate viewControllerDidFocus];
 
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
@@ -246,19 +230,9 @@
   if (self.isDismissing && !_isWillDismissEmitted) {
     _isWillDismissEmitted = YES;
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillBlur)]) {
-      [self.delegate viewControllerWillBlur];
-    }
-
-    if ([self.delegate respondsToSelector:@selector(viewControllerWillDismiss)]) {
-      [self.delegate viewControllerWillDismiss];
-    }
-
-    if (_parentSheetController) {
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerWillFocus)]) {
-        [_parentSheetController.delegate viewControllerWillFocus];
-      }
-    }
+    [self.delegate viewControllerWillBlur];
+    [self.delegate viewControllerWillDismiss];
+    [_parentSheetController.delegate viewControllerWillFocus];
   }
 }
 
@@ -267,20 +241,11 @@
     _isPresented = NO;
     _isWillDismissEmitted = NO;
 
-    if (_parentSheetController) {
-      if ([_parentSheetController.delegate respondsToSelector:@selector(viewControllerDidFocus)]) {
-        [_parentSheetController.delegate viewControllerDidFocus];
-      }
-      _parentSheetController = nil;
-    }
+    [_parentSheetController.delegate viewControllerDidFocus];
+    _parentSheetController = nil;
 
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidBlur)]) {
-      [self.delegate viewControllerDidBlur];
-    }
-
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidDismiss)]) {
-      [self.delegate viewControllerDidDismiss];
-    }
+    [self.delegate viewControllerDidBlur];
+    [self.delegate viewControllerDidDismiss];
   }
 }
 
@@ -327,21 +292,17 @@
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeSize:)]) {
-    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
-  }
+  [self.delegate viewControllerDidChangeSize:self.view.frame.size];
 
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
     _pendingDetentIndex = -1;
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
-        [self storeResolvedPositionForIndex:pendingIndex];
-        CGFloat detent = [self detentValueForIndex:pendingIndex];
-        [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
-      }
+      [self storeResolvedPositionForIndex:pendingIndex];
+      CGFloat detent = [self detentValueForIndex:pendingIndex];
+      [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
     });
   }
 
@@ -400,9 +361,7 @@
   NSInteger index = self.currentDetentIndex;
   CGFloat detent = [self detentValueForIndex:index];
 
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidDrag:index:position:detent:)]) {
-    [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
-  }
+  [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
 
   switch (gesture.state) {
     case UIGestureRecognizerStateBegan:
@@ -493,9 +452,7 @@
 
     CGFloat index = [self interpolatedIndexForPosition:position];
     CGFloat detent = [self interpolatedDetentForPosition:position];
-    if ([self.delegate respondsToSelector:@selector(viewControllerDidChangePosition:position:detent:realtime:)]) {
-      [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
-    }
+    [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
   }
 }
 
@@ -778,15 +735,13 @@
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
-  if ([self.delegate respondsToSelector:@selector(viewControllerDidChangeDetent:position:detent:)]) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      NSInteger index = self.currentDetentIndex;
-      if (index >= 0) {
-        CGFloat detent = [self detentValueForIndex:index];
-        [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
-      }
-    });
-  }
+  dispatch_async(dispatch_get_main_queue(), ^{
+    NSInteger index = self.currentDetentIndex;
+    if (index >= 0) {
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+    }
+  });
 }
 
 #pragma mark - RNSDismissibleModalProtocol
