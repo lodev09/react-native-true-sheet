@@ -13,7 +13,6 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import { BORDER_RADIUS, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { Footer } from '../Footer';
 import { Header } from '../Header';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input } from '../Input';
 
 interface ScrollViewSheetProps extends TrueSheetProps {}
@@ -42,7 +41,6 @@ const HeavyItem = ({ index }: { index: number }) => {
 };
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
-  const insets = useSafeAreaInsets();
   return (
     <TrueSheet
       ref={ref}
@@ -62,11 +60,9 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     >
       <ScrollView
         nestedScrollEnabled
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
-        ]}
+        contentContainerStyle={styles.content}
         indicatorStyle="black"
+        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
       >
         {times(20, (i) => (
           <HeavyItem key={i} index={i} />

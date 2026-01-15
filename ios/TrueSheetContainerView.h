@@ -44,6 +44,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL scrollViewPinningEnabled;
 
 /**
+ * Inset adjustment mode for pinned ScrollView
+ */
+@property (nonatomic, copy, nullable) NSString *insetAdjustment;
+
+/**
  * Returns the current content height
  */
 - (CGFloat)contentHeight;
