@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ScrollView
@@ -40,6 +41,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     set(value) {
       field = value
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
+      Log.d("TrueSheet", "scrollableOptions set: $value, keyboardScrollOffset: $keyboardScrollOffset")
     }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

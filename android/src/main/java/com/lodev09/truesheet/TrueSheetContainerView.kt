@@ -75,6 +75,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     when (child) {
       is TrueSheetContentView -> {
         child.delegate = this
+        child.scrollableOptions = scrollableOptions
         contentView = child
       }
 
