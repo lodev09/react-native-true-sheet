@@ -39,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset;
 
+- (void)setupKeyboardHandler;
+- (void)cleanupKeyboardHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

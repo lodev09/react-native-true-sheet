@@ -15,7 +15,9 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
 
@@ -27,6 +29,7 @@ using namespace facebook::react;
   UIEdgeInsets _pinnedInsets;
   CGFloat _bottomInset;
   CGFloat _originalIndicatorBottomInset;
+  CGFloat _currentKeyboardHeight;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -213,10 +216,100 @@ using namespace facebook::react;
   return topSibling;
 }
 
+#pragma mark - Keyboard Handling
+
+- (void)setupKeyboardHandler {
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(keyboardWillChangeFrame:)
+                                               name:UIKeyboardWillChangeFrameNotification
+                                             object:nil];
+}
+
+- (void)cleanupKeyboardHandler {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+  _currentKeyboardHeight = 0;
+}
+
+- (TrueSheetViewController *)findSheetViewController {
+  UIResponder *responder = self;
+  while (responder) {
+    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
+      return (TrueSheetViewController *)responder;
+    }
+    responder = responder.nextResponder;
+  }
+  return nil;
+}
+
+- (BOOL)isFirstResponderWithinSheet {
+  TrueSheetViewController *sheetController = [self findSheetViewController];
+  if (!sheetController) {
+    return NO;
+  }
+
+  UIView *firstResponder = [sheetController.view findFirstResponder];
+  return firstResponder != nil;
+}
+
+- (void)keyboardWillChangeFrame:(NSNotification *)notification {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  TrueSheetViewController *sheetController = [self findSheetViewController];
+  if (sheetController && !sheetController.isTopmostPresentedController) {
+    return;
+  }
+
+  if (![self isFirstResponderWithinSheet]) {
+    return;
+  }
+
+  NSDictionary *userInfo = notification.userInfo;
+  CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+  NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+  UIViewAnimationOptions curve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] unsignedIntegerValue] << 16;
+
+  UIWindow *window = self.window;
+  if (!window) {
+    return;
+  }
+
+  CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
+  CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+
+  _currentKeyboardHeight = keyboardHeight;
+
+  CGFloat totalBottomInset = _bottomInset + keyboardHeight;
+
+  UIView *firstResponder = [sheetController.view findFirstResponder];
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
+                     contentInset.bottom = totalBottomInset;
+                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
+
+                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+                     indicatorInsets.bottom = self->_originalIndicatorBottomInset + keyboardHeight;
+                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+
+                     if (firstResponder && keyboardHeight > 0) {
+                       CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
+                                                                    toView:self->_pinnedScrollView.scrollView];
+                       [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:NO];
+                     }
+                   }
+                   completion:nil];
+}
+
 #pragma mark - Lifecycle
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+  [self cleanupKeyboardHandler];
   [self clearPinning];
 }
 

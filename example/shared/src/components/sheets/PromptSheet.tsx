@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
@@ -14,9 +14,15 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
+  const input3Ref = useRef<TextInput>(null);
+  const input4Ref = useRef<TextInput>(null);
+  const input5Ref = useRef<TextInput>(null);
+  const input6Ref = useRef<TextInput>(null);
+  const input7Ref = useRef<TextInput>(null);
+  const input8Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
-  const inputRefs = [input1Ref, input2Ref, textAreaRef];
+  const inputRefs = [input1Ref, input2Ref, input3Ref, input4Ref, input5Ref, input6Ref, input7Ref, input8Ref, textAreaRef];
 
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
@@ -40,8 +46,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     <TrueSheet
       ref={sheetRef}
       name="prompt-sheet"
-      detents={['auto']}
-      style={styles.content}
+      detents={[1]}
+      scrollable
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
@@ -64,14 +70,24 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       footer={<Footer onPress={() => console.log('footer pressed')} />}
       header={<Header />}
-      scrollable
       {...props}
     >
-      <Input ref={input1Ref} placeholder="Full name" />
-      <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
-      <Input ref={textAreaRef} placeholder="Message..." multiline />
-      <Button text="Submit" onPress={handleSubmitPress} />
-      <Button text="Dismiss" onPress={handleDismissPress} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
+      >
+        <Input ref={input1Ref} placeholder="Full name" />
+        <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
+        <Input ref={input3Ref} placeholder="Phone" keyboardType="phone-pad" />
+        <Input ref={input4Ref} placeholder="Address" />
+        <Input ref={input5Ref} placeholder="City" />
+        <Input ref={input6Ref} placeholder="State" />
+        <Input ref={input7Ref} placeholder="Zip code" keyboardType="number-pad" />
+        <Input ref={input8Ref} placeholder="Country" />
+        <Input ref={textAreaRef} placeholder="Message..." multiline />
+        <Button text="Submit" onPress={handleSubmitPress} />
+        <Button text="Dismiss" onPress={handleDismissPress} />
+      </ScrollView>
     </TrueSheet>
   );
 });
