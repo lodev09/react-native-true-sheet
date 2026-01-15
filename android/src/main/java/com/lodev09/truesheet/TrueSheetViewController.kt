@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
+import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.createBitmap
@@ -175,10 +176,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var grabberOptions: GrabberOptions? = null
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: String = "automatic"
+    set(value) {
+      field = value
+      setupContentScrollViewPinning()
+    }
+
   var scrollable: Boolean = false
     set(value) {
       field = value
       coordinatorLayout?.scrollable = value
+      setupContentScrollViewPinning()
     }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
@@ -312,6 +319,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
       delegate = this@TrueSheetViewController
     }
+
+    setupContentScrollViewPinning()
+  }
+
+  private fun setupContentScrollViewPinning() {
+    containerView?.let {
+      it.insetAdjustment = insetAdjustment
+      it.scrollViewBottomInset = if (scrollable) contentBottomInset else 0
+      it.setupContentScrollViewPinning()
+    }
   }
 
   private fun cleanupSheet() {
@@ -332,6 +349,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Detach content from sheet
     sheetView?.removeView(this)
 
+    containerView?.clearContentScrollViewPinning()
     coordinatorLayout = null
     sheetView = null
 
@@ -416,6 +434,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     updateStateDimensions()
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
+
+  override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
 
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
