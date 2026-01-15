@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
@@ -41,7 +41,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       ref={sheetRef}
       name="prompt-sheet"
       detents={['auto']}
-      style={styles.content}
+      style={styles.sheet}
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
@@ -64,20 +64,25 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       footer={<Footer onPress={() => console.log('footer pressed')} />}
       header={<Header />}
+      scrollable
       {...props}
     >
-      <Input ref={input1Ref} placeholder="Full name" />
-      <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
-      <Input ref={textAreaRef} placeholder="Message..." multiline />
-      <Button text="Submit" onPress={handleSubmitPress} />
-      <Button text="Dismiss" onPress={handleDismissPress} />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Input ref={input1Ref} placeholder="Full name" />
+        <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
+        <Input ref={textAreaRef} placeholder="Message..." multiline />
+        <Button text="Submit" onPress={handleSubmitPress} />
+        <Button text="Dismiss" onPress={handleDismissPress} />
+      </ScrollView>
     </TrueSheet>
   );
 });
 
 const styles = StyleSheet.create({
-  content: {
+  sheet: {
     padding: SPACING,
+  },
+  content: {
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },

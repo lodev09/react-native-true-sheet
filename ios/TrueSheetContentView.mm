@@ -24,6 +24,8 @@ using namespace facebook::react;
   RCTScrollViewComponentView *_pinnedScrollView;
   UIView *_pinnedTopView;
   CGSize _lastSize;
+  UIEdgeInsets _contentInsets;
+  UIEdgeInsets _pinnedInsets;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -38,6 +40,8 @@ using namespace facebook::react;
     _pinnedScrollView = nil;
     _pinnedTopView = nil;
     _lastSize = CGSizeZero;
+    _contentInsets = UIEdgeInsetsZero;
+    _pinnedInsets = UIEdgeInsetsZero;
   }
   return self;
 }
@@ -45,6 +49,20 @@ using namespace facebook::react;
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
+  // Store content insets (padding + border) for scroll view pinning
+  UIEdgeInsets newInsets = UIEdgeInsetsMake(
+      layoutMetrics.contentInsets.top,
+      layoutMetrics.contentInsets.left,
+      layoutMetrics.contentInsets.bottom,
+      layoutMetrics.contentInsets.right);
+
+  if (!UIEdgeInsetsEqualToEdgeInsets(newInsets, _contentInsets)) {
+    _contentInsets = newInsets;
+    if ([self.delegate respondsToSelector:@selector(contentViewDidChangeInsets)]) {
+      [self.delegate contentViewDidChangeInsets];
+    }
+  }
 
   // Notify delegate when content size changes for sheet height updates
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
@@ -79,14 +97,17 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupScrollViewPinning:(BOOL)pinned withHeaderView:(UIView *)headerView {
-  // Pin to container view (parent of content view)
+- (void)setupScrollViewPinning:(BOOL)pinned {
+  // Pin left/right to content view (self) to respect margin/padding from style
+  // Pin bottom to container view for proper scrolling behavior
   UIView *containerView = self.superview;
 
   if (!pinned) {
+    [self unpinScrollViewFromParentView:self];
     [self unpinScrollViewFromParentView:containerView];
     _pinnedScrollView = nil;
     _pinnedTopView = nil;
+    _pinnedInsets = UIEdgeInsetsZero;
     return;
   }
 
@@ -95,35 +116,45 @@ using namespace facebook::react;
   UIView *topSibling = nil;
   RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
-  // Use closest top sibling if found, otherwise fall back to header view
-  UIView *topView = topSibling ?: headerView;
+  // Use closest top sibling (view above ScrollView) if found
+  UIView *topView = topSibling;
 
-  // Re-pin when scroll view or top view changes
+  // Re-pin when scroll view, top view, or insets change
   BOOL scrollViewChanged = scrollView != _pinnedScrollView;
   BOOL topViewChanged = topView != _pinnedTopView;
+  BOOL insetsChanged = !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets);
 
-  if (scrollView && containerView && (scrollViewChanged || topViewChanged)) {
+  if (scrollView && containerView && (scrollViewChanged || topViewChanged || insetsChanged)) {
     // Unpin first to remove old constraints
+    [self unpinScrollViewFromParentView:self];
     [self unpinScrollViewFromParentView:containerView];
 
+    scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+
+    // Pin left/right to content view with padding insets
+    [scrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:_contentInsets.left].active = YES;
+    [scrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-_contentInsets.right].active = YES;
+
+    // Pin top to topView (sibling above ScrollView) if available, otherwise to content view
     if (topView) {
-      // Pin ScrollView below the top view
-      [LayoutUtil pinView:scrollView
-             toParentView:containerView
-              withTopView:topView
-                    edges:UIRectEdgeLeft | UIRectEdgeRight | UIRectEdgeBottom];
+      [scrollView.topAnchor constraintEqualToAnchor:topView.bottomAnchor].active = YES;
     } else {
-      // No top view, pin to all edges of container
-      [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeAll];
+      [scrollView.topAnchor constraintEqualToAnchor:self.topAnchor constant:_contentInsets.top].active = YES;
     }
+
+    // Pin bottom to container view for proper scrolling
+    [scrollView.bottomAnchor constraintEqualToAnchor:containerView.bottomAnchor].active = YES;
 
     _pinnedScrollView = scrollView;
     _pinnedTopView = topView;
+    _pinnedInsets = _contentInsets;
   } else if (!scrollView && _pinnedScrollView) {
     // ScrollView was removed, clean up
+    [self unpinScrollViewFromParentView:self];
     [self unpinScrollViewFromParentView:containerView];
     _pinnedScrollView = nil;
     _pinnedTopView = nil;
+    _pinnedInsets = UIEdgeInsetsZero;
   }
 }
 
@@ -190,11 +221,13 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  // Remove scroll view constraints
+  // Remove scroll view constraints from both content and container views
   if (_pinnedScrollView) {
+    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self];
     [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
     _pinnedScrollView = nil;
     _pinnedTopView = nil;
+    _pinnedInsets = UIEdgeInsetsZero;
   }
 }
 

@@ -494,6 +494,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   scrollableAndroidContent: {
+    backgroundColor: 'green',
     flexGrow: 1,
     flexBasis: 0,
   },

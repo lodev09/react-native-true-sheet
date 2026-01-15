@@ -22,6 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)contentViewDidChangeSize:(CGSize)newSize;
 - (void)contentViewDidChangeChildren;
+- (void)contentViewDidChangeInsets;
 
 @end
 
@@ -34,9 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Setup ScrollView pinning
  * @param pinned Whether to pin the scroll view
- * @param headerView Optional header view to pin below (can be nil)
  */
-- (void)setupScrollViewPinning:(BOOL)pinned withHeaderView:(nullable UIView *)headerView;
+- (void)setupScrollViewPinning:(BOOL)pinned;
 
 @end
 

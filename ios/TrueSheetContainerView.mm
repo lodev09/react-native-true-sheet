@@ -79,7 +79,7 @@ using namespace facebook::react;
 
 - (void)setupContentScrollViewPinning {
   if (_scrollViewPinningSet && _contentView) {
-    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled withHeaderView:_headerView];
+    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled];
   }
 }
 
@@ -104,10 +104,6 @@ using namespace facebook::react;
     }
     _headerView = (TrueSheetHeaderView *)childComponentView;
     _headerView.delegate = self;
-
-    if (_contentView) {
-      [self setupContentScrollViewPinning];
-    }
     [self headerViewDidChangeSize:_headerView.frame.size];
   }
 
@@ -129,10 +125,6 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
     _headerView.delegate = nil;
     _headerView = nil;
-
-    if (_contentView) {
-      [self setupContentScrollViewPinning];
-    }
     [self headerViewDidChangeSize:CGSizeZero];
   }
 
@@ -156,6 +148,10 @@ using namespace facebook::react;
 }
 
 - (void)contentViewDidChangeChildren {
+  [self setupContentScrollViewPinning];
+}
+
+- (void)contentViewDidChangeInsets {
   [self setupContentScrollViewPinning];
 }
 
