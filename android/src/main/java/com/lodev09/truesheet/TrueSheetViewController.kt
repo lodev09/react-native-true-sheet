@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -188,6 +189,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupContentScrollViewPinning()
     }
 
+  var scrollableOptions: ReadableMap? = null
+    set(value) {
+      field = value
+      containerView?.scrollableOptions = value
+    }
+
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
       field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value
@@ -349,6 +356,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Detach content from sheet
     sheetView?.removeView(this)
 
+    containerView?.cleanupKeyboardHandler()
     containerView?.clearContentScrollViewPinning()
     coordinatorLayout = null
     sheetView = null
@@ -786,6 +794,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
 
+    // Setup keyboard handler for scrollable content
+    containerView?.setupKeyboardHandler()
+
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)
     parentSheetView?.viewControllerDidBlur()
@@ -1010,6 +1021,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           setupSheetDetents()
           setStateForDetentIndex(detents.size - 1)
         }
+
+        override fun keyboardDidShow(height: Int) {}
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return

@@ -85,7 +85,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       header={<Header />}
       {...props}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
         <Input ref={input1Ref} placeholder="First name" />
         <Input ref={input2Ref} placeholder="Last name" />
         <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />

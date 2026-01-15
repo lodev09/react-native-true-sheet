@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
@@ -36,6 +37,11 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: String = "automatic"
   var scrollViewBottomInset: Int = 0
+  var scrollableOptions: ReadableMap? = null
+    set(value) {
+      field = value
+      contentView?.scrollableOptions = value
+    }
 
   override val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
@@ -53,6 +59,14 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   fun clearContentScrollViewPinning() {
     contentView?.clearScrollViewPinning()
+  }
+
+  fun setupKeyboardHandler() {
+    contentView?.setupKeyboardHandler()
+  }
+
+  fun cleanupKeyboardHandler() {
+    contentView?.cleanupKeyboardHandler()
   }
 
   override fun addView(child: View?, index: Int) {

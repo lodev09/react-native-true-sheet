@@ -12,6 +12,7 @@ import com.lodev09.truesheet.utils.KeyboardUtils
 
 interface TrueSheetKeyboardObserverDelegate {
   fun keyboardWillShow(height: Int)
+  fun keyboardDidShow(height: Int)
   fun keyboardWillHide()
   fun keyboardDidHide()
   fun keyboardDidChangeHeight(height: Int)
@@ -45,7 +46,8 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     return false
   }
 
-  private var isHiding: Boolean = false
+  var isHiding: Boolean = false
+    private set
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var activityRootView: View? = null
 
@@ -121,6 +123,8 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           if (isHiding) {
             delegate?.keyboardDidHide()
             isHiding = false
+          } else if (finalHeight > 0) {
+            delegate?.keyboardDidShow(finalHeight)
           }
         }
       }
@@ -164,6 +168,8 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       if (isHiding && newHeight == 0) {
         delegate?.keyboardDidHide()
         isHiding = false
+      } else if (newHeight > 0) {
+        delegate?.keyboardDidShow(newHeight)
       }
     }
 
