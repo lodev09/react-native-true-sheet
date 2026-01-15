@@ -45,11 +45,8 @@ using namespace facebook::react;
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  UIEdgeInsets newInsets = UIEdgeInsetsMake(
-      layoutMetrics.contentInsets.top,
-      layoutMetrics.contentInsets.left,
-      layoutMetrics.contentInsets.bottom,
-      layoutMetrics.contentInsets.right);
+  UIEdgeInsets newInsets = UIEdgeInsetsMake(layoutMetrics.contentInsets.top, layoutMetrics.contentInsets.left,
+    layoutMetrics.contentInsets.bottom, layoutMetrics.contentInsets.right);
 
   if (!UIEdgeInsetsEqualToEdgeInsets(newInsets, _contentInsets)) {
     _contentInsets = newInsets;
@@ -98,23 +95,26 @@ using namespace facebook::react;
   UIView *topSibling = nil;
   RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
-  BOOL needsUpdate = scrollView != _pinnedScrollView ||
-                     topSibling != _pinnedTopView ||
+  BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
                      !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets);
 
   if (scrollView && containerView && needsUpdate) {
     [self clearPinning];
 
-    UIEdgeInsets insets = UIEdgeInsetsMake(
-        topSibling ? 0 : _contentInsets.top,
-        _contentInsets.left,
-        0,
-        _contentInsets.right);
+    UIEdgeInsets insets =
+      UIEdgeInsetsMake(topSibling ? 0 : _contentInsets.top, _contentInsets.left, 0, _contentInsets.right);
 
     if (topSibling) {
-      [LayoutUtil pinView:scrollView toParentView:self withTopView:topSibling edges:UIRectEdgeLeft | UIRectEdgeRight insets:insets];
+      [LayoutUtil pinView:scrollView
+             toParentView:self
+              withTopView:topSibling
+                    edges:UIRectEdgeLeft | UIRectEdgeRight
+                   insets:insets];
     } else {
-      [LayoutUtil pinView:scrollView toParentView:self edges:UIRectEdgeTop | UIRectEdgeLeft | UIRectEdgeRight insets:insets];
+      [LayoutUtil pinView:scrollView
+             toParentView:self
+                    edges:UIRectEdgeTop | UIRectEdgeLeft | UIRectEdgeRight
+                   insets:insets];
     }
 
     [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeBottom];
@@ -152,8 +152,7 @@ using namespace facebook::react;
 
 - (RCTScrollViewComponentView *)findScrollViewInSubviews:(NSArray<UIView *> *)subviews {
   for (UIView *subview in subviews) {
-    if ([subview isKindOfClass:RCTScrollViewComponentView.class] &&
-        ![subview isKindOfClass:TrueSheetView.class]) {
+    if ([subview isKindOfClass:RCTScrollViewComponentView.class] && ![subview isKindOfClass:TrueSheetView.class]) {
       return (RCTScrollViewComponentView *)subview;
     }
   }
