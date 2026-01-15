@@ -35,8 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Setup ScrollView pinning
  * @param pinned Whether to pin the scroll view
+ * @param bottomInset Bottom content inset for the scroll view
  */
-- (void)setupScrollViewPinning:(BOOL)pinned;
+- (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset;
 
 @end
 

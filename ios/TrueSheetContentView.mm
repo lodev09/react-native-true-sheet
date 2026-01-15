@@ -25,6 +25,8 @@ using namespace facebook::react;
   CGSize _lastSize;
   UIEdgeInsets _contentInsets;
   UIEdgeInsets _pinnedInsets;
+  CGFloat _bottomInset;
+  CGFloat _originalIndicatorBottomInset;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -78,13 +80,23 @@ using namespace facebook::react;
   if (_pinnedScrollView) {
     [LayoutUtil unpinView:_pinnedScrollView fromParentView:self];
     [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
+
+    UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
+    contentInset.bottom = 0;
+    _pinnedScrollView.scrollView.contentInset = contentInset;
+
+    UIEdgeInsets indicatorInsets = _pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+    indicatorInsets.bottom = _originalIndicatorBottomInset;
+    _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
   }
   _pinnedScrollView = nil;
   _pinnedTopView = nil;
   _pinnedInsets = UIEdgeInsetsZero;
+  _bottomInset = 0;
+  _originalIndicatorBottomInset = 0;
 }
 
-- (void)setupScrollViewPinning:(BOOL)pinned {
+- (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset {
   UIView *containerView = self.superview;
 
   if (!pinned) {
@@ -96,7 +108,8 @@ using namespace facebook::react;
   RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
   BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
-                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets);
+                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) ||
+                     _bottomInset != bottomInset;
 
   if (scrollView && containerView && needsUpdate) {
     [self clearPinning];
@@ -119,9 +132,23 @@ using namespace facebook::react;
 
     [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeBottom];
 
+    BOOL isNewScrollView = scrollView != _pinnedScrollView;
+    if (isNewScrollView) {
+      _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
+    }
+
     _pinnedScrollView = scrollView;
     _pinnedTopView = topSibling;
     _pinnedInsets = _contentInsets;
+    _bottomInset = bottomInset;
+
+    UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
+    contentInset.bottom = bottomInset;
+    scrollView.scrollView.contentInset = contentInset;
+
+    UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
+    indicatorInsets.bottom = _originalIndicatorBottomInset + bottomInset;
+    scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
   } else if (!scrollView && _pinnedScrollView) {
     [self clearPinning];
   }

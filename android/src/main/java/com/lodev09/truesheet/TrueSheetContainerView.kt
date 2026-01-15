@@ -34,6 +34,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var headerHeight: Int = 0
   var footerHeight: Int = 0
 
+  var insetAdjustment: String = "automatic"
+  var scrollViewBottomInset: Int = 0
+
   override val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
 
@@ -41,6 +44,15 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     // Allow footer to position outside container bounds
     clipChildren = false
     clipToPadding = false
+  }
+
+  fun setupContentScrollViewPinning() {
+    val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
+    contentView?.setupScrollViewPinning(bottomInset)
+  }
+
+  fun clearContentScrollViewPinning() {
+    contentView?.clearScrollViewPinning()
   }
 
   override fun addView(child: View?, index: Int) {

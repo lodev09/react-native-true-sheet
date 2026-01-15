@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PointerEvents
@@ -14,6 +13,7 @@ import com.facebook.react.uimanager.ReactPointerEventsView
 interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidLayout(changed: Boolean)
   fun coordinatorLayoutDidChangeConfiguration()
+  fun findScrollView(): ScrollView?
 }
 
 /**
@@ -75,7 +75,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
       return super.onInterceptTouchEvent(ev)
     }
 
-    val scrollView = findScrollView(this)
+    val scrollView = delegate?.findScrollView()
     val cannotScroll = scrollView != null &&
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
@@ -125,22 +125,5 @@ class TrueSheetCoordinatorLayout(context: Context) :
       return super.onTouchEvent(ev)
     }
     return super.onTouchEvent(ev)
-  }
-
-  private fun findScrollView(view: android.view.View): ScrollView? {
-    if (view is ScrollView) {
-      return view
-    }
-
-    if (view is ViewGroup) {
-      for (i in 0 until view.childCount) {
-        val scrollView = findScrollView(view.getChildAt(i))
-        if (scrollView != null) {
-          return scrollView
-        }
-      }
-    }
-
-    return null
   }
 }

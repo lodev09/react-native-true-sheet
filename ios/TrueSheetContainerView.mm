@@ -12,6 +12,7 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
+#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -79,7 +80,11 @@ using namespace facebook::react;
 
 - (void)setupContentScrollViewPinning {
   if (_scrollViewPinningSet && _contentView) {
-    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled];
+    CGFloat bottomInset = 0;
+    if ([_insetAdjustment isEqualToString:@"automatic"]) {
+      bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
+    }
+    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled bottomInset:bottomInset];
   }
 }
 

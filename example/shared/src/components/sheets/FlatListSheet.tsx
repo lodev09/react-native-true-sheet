@@ -8,12 +8,10 @@ import { DemoContent } from '../DemoContent';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 import { Footer } from '../Footer';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
-  const insets = useSafeAreaInsets();
   const testRef = useRef<TrueSheet>(null);
   return (
     <TrueSheet
@@ -36,12 +34,10 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         <FlatList
           nestedScrollEnabled
           data={times(10, (i) => i)}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
-          ]}
+          contentContainerStyle={styles.content}
           indicatorStyle="black"
           ItemSeparatorComponent={Spacer}
+          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
         />
       </View>
@@ -60,5 +56,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
 });

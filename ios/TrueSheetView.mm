@@ -50,6 +50,7 @@ using namespace facebook::react;
   UIView *_snapshotView;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
+  NSString *_insetAdjustment;
   BOOL _scrollable;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
@@ -235,10 +236,12 @@ using namespace facebook::react;
   _initialDetentAnimated = newProps.initialDetentAnimated;
   _scrollable = newProps.scrollable;
 
-  _controller.insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
+  _insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
+  _controller.insetAdjustment = _insetAdjustment;
 
   if (_containerView) {
     _containerView.scrollViewPinningEnabled = _scrollable;
+    _containerView.insetAdjustment = _insetAdjustment;
   }
 }
 
@@ -349,6 +352,7 @@ using namespace facebook::react;
   }
 
   _containerView.scrollViewPinningEnabled = _scrollable;
+  _containerView.insetAdjustment = _insetAdjustment;
   [_containerView setupContentScrollViewPinning];
 
   if (_eventEmitter) {
