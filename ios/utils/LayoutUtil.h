@@ -41,6 +41,29 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView withTopView:(UIView *)topView edges:(UIRectEdge)edges;
 
 /**
+ * Pins a view to its parent view with insets
+ * @param view The view to pin
+ * @param parentView The parent view to pin to
+ * @param edges The edges to pin (UIRectEdge flags)
+ * @param insets The insets to apply to each edge
+ */
++ (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges insets:(UIEdgeInsets)insets;
+
+/**
+ * Pins a view to its parent view with its top edge anchored below a top sibling view, with insets
+ * @param view The view to pin
+ * @param parentView The parent view to pin to
+ * @param topView The view to position below (top sibling)
+ * @param edges The edges to pin to parent (excluding top, which is pinned to topView)
+ * @param insets The insets to apply to each edge
+ */
++ (void)pinView:(UIView *)view
+   toParentView:(UIView *)parentView
+    withTopView:(UIView *)topView
+          edges:(UIRectEdge)edges
+         insets:(UIEdgeInsets)insets;
+
+/**
  * Unpins a view by removing its constraints and re-enabling autoresizing mask translation
  * @param view The view to unpin
  * @param parentView The parent view that holds the constraints (optional, will use superview if nil)

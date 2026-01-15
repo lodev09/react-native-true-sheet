@@ -44,9 +44,7 @@ using namespace facebook::react;
   // Notify delegate when header size changes
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
-    if ([self.delegate respondsToSelector:@selector(headerViewDidChangeSize:)]) {
-      [self.delegate headerViewDidChangeSize:newSize];
-    }
+    [self.delegate headerViewDidChangeSize:newSize];
   }
 }
 

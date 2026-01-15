@@ -38,7 +38,32 @@
   }
 }
 
++ (void)pinView:(UIView *)view toParentView:(UIView *)parentView edges:(UIRectEdge)edges insets:(UIEdgeInsets)insets {
+  view.translatesAutoresizingMaskIntoConstraints = NO;
+
+  if (edges & UIRectEdgeTop) {
+    [view.topAnchor constraintEqualToAnchor:parentView.topAnchor constant:insets.top].active = YES;
+  }
+  if (edges & UIRectEdgeBottom) {
+    [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor constant:-insets.bottom].active = YES;
+  }
+  if (edges & UIRectEdgeLeft) {
+    [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor constant:insets.left].active = YES;
+  }
+  if (edges & UIRectEdgeRight) {
+    [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor constant:-insets.right].active = YES;
+  }
+}
+
 + (void)pinView:(UIView *)view toParentView:(UIView *)parentView withTopView:(UIView *)topView edges:(UIRectEdge)edges {
+  [self pinView:view toParentView:parentView withTopView:topView edges:edges insets:UIEdgeInsetsZero];
+}
+
++ (void)pinView:(UIView *)view
+   toParentView:(UIView *)parentView
+    withTopView:(UIView *)topView
+          edges:(UIRectEdge)edges
+         insets:(UIEdgeInsets)insets {
   view.translatesAutoresizingMaskIntoConstraints = NO;
 
   // Pin top edge to bottom of top sibling
@@ -46,13 +71,13 @@
 
   // Pin other edges to parent based on edges parameter
   if (edges & UIRectEdgeBottom) {
-    [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor].active = YES;
+    [view.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor constant:-insets.bottom].active = YES;
   }
   if (edges & UIRectEdgeLeft) {
-    [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
+    [view.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor constant:insets.left].active = YES;
   }
   if (edges & UIRectEdgeRight) {
-    [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
+    [view.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor constant:-insets.right].active = YES;
   }
 }
 
