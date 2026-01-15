@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- Added bottom inset to ScrollView when `insetAdjustment` is `automatic`. ([#430](https://github.com/lodev09/react-native-true-sheet/pull/430) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed scroll view pinning to respect content view padding/margin. ([#429](https://github.com/lodev09/react-native-true-sheet/pull/429) by [@lodev09](https://github.com/lodev09))
