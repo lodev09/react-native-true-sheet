@@ -597,14 +597,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun screenWillAppear() {
           if (isPresented && wasHiddenByScreen) {
+            wasHiddenByScreen = false
             showAfterScreen()
+            this@TrueSheetViewController.delegate?.viewControllerDidDetectScreenDismiss()
           }
         }
       }
 
-      // For stacked sheets, inherit parent's presenter screen tag
+      // For stacked sheets on the same screen, inherit parent's presenter screen tag.
+      // If parent was hidden by screen navigation, this sheet is on a different screen.
       val parentScreenTag = parentSheetView?.viewController?.rnScreensEventObserver?.presenterScreenTag ?: 0
-      if (parentScreenTag != 0) {
+      val parentHiddenByScreen = parentSheetView?.viewController?.wasHiddenByScreen == true
+      if (parentScreenTag != 0 && !parentHiddenByScreen) {
         presenterScreenTag = parentScreenTag
       } else {
         capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
@@ -684,9 +688,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
 
-      // Capture presenter screen before view hierarchy changes
-      setupScreenEventObserver()
-
       // Setup sheet in coordinator layout
       setupSheetInCoordinator(coordinator, sheet)
 
@@ -706,9 +707,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         post { setStateForDetentIndex(currentDetentIndex) }
       } else {
         setStateForDetentIndex(currentDetentIndex)
-        emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
-        updateDimAmount()
-        finishPresent()
+        post {
+          emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
+          updateDimAmount()
+          finishPresent()
+        }
       }
 
       isPresented = true
@@ -782,6 +785,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun finishPresent() {
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
+
+    // Setup screen observer after present
+    setupScreenEventObserver()
 
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)
