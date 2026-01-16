@@ -28,6 +28,26 @@ const closeModal = async () => {
 A fix has been submitted to React Native. See [PR #55005](https://github.com/facebook/react-native/pull/55005).
 :::
 
+## Gesture Handler Not Working on Android
+
+If you're using `react-native-gesture-handler` inside the sheet and gestures are not working on Android, you need to wrap your sheet content with `GestureHandlerRootView`.
+
+```tsx
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+
+<TrueSheet>
+  <GestureHandlerRootView style={{ flexGrow: 1 }}>
+    {/* Your content with gestures */}
+  </GestureHandlerRootView>
+</TrueSheet>
+```
+
+:::warning
+Use `flexGrow: 1` instead of `flex: 1` to avoid layout issues.
+:::
+
+[Learn more](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android) about gesture handler setup on Android.
+
 ## Weird layout render
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
