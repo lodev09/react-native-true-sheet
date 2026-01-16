@@ -683,6 +683,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresented) {
       setupDimmedBackground()
       setStateForDetentIndex(detentIndex)
+      presentPromise?.invoke()
+      presentPromise = null
     } else {
       shouldAnimatePresent = animated
       currentDetentIndex = detentIndex
