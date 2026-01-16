@@ -52,6 +52,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   var delegate: TrueSheetBottomSheetViewDelegate? = null
 
   // Behavior reference (set after adding to CoordinatorLayout)
+  @Suppress("UNCHECKED_CAST")
   val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = (layoutParams as? CoordinatorLayout.LayoutParams)
       ?.behavior as? BottomSheetBehavior<TrueSheetBottomSheetView>
