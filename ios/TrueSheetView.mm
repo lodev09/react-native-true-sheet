@@ -398,9 +398,7 @@ using namespace facebook::react;
   }
 
   if (_controller.isPresented) {
-    [_controller.sheetPresentationController animateChanges:^{
-      [self->_controller resizeToDetentIndex:index];
-    }];
+    RCTLogWarn(@"TrueSheet: sheet is already presented. Use resize() to change detent.");
     if (completion) {
       completion(YES, nil);
     }
@@ -463,7 +461,13 @@ using namespace facebook::react;
     return;
   }
 
-  [self presentAtIndex:index animated:YES completion:completion];
+  [_controller.sheetPresentationController animateChanges:^{
+    [self->_controller resizeToDetentIndex:index];
+  }];
+
+  if (completion) {
+    completion(YES, nil);
+  }
 }
 
 - (TrueSheetViewController *)viewController {

@@ -147,6 +147,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Promises
   var presentPromise: (() -> Unit)? = null
+  var resizePromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
 
   // For stacked sheets
@@ -681,44 +682,58 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     if (isPresented) {
-      setupDimmedBackground()
-      setStateForDetentIndex(detentIndex)
+      RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
       presentPromise?.invoke()
       presentPromise = null
-    } else {
-      shouldAnimatePresent = animated
-      currentDetentIndex = detentIndex
-      interactionState = InteractionState.Idle
-
-      // Setup sheet in coordinator layout
-      setupSheetInCoordinator(coordinator, sheet)
-
-      emitWillPresentEvents()
-
-      setupSheetDetents()
-      setupDimmedBackground()
-      setupKeyboardObserver()
-      setupBackCallback()
-
-      sheet.setupBackground()
-      sheet.setupElevation()
-      sheet.setupGrabber()
-
-      if (shouldAnimatePresent) {
-        isPresentAnimating = true
-        post { setStateForDetentIndex(currentDetentIndex) }
-      } else {
-        setStateForDetentIndex(currentDetentIndex)
-        post {
-          emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
-          updateDimAmount()
-          finishPresent()
-        }
-      }
-
-      isPresented = true
-      isSheetVisible = true
+      return
     }
+
+    shouldAnimatePresent = animated
+    currentDetentIndex = detentIndex
+    interactionState = InteractionState.Idle
+
+    // Setup sheet in coordinator layout
+    setupSheetInCoordinator(coordinator, sheet)
+
+    emitWillPresentEvents()
+
+    setupSheetDetents()
+    setupDimmedBackground()
+    setupKeyboardObserver()
+    setupBackCallback()
+
+    sheet.setupBackground()
+    sheet.setupElevation()
+    sheet.setupGrabber()
+
+    if (shouldAnimatePresent) {
+      isPresentAnimating = true
+      post { setStateForDetentIndex(currentDetentIndex) }
+    } else {
+      setStateForDetentIndex(currentDetentIndex)
+      post {
+        emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
+        updateDimAmount()
+        finishPresent()
+      }
+    }
+
+    isPresented = true
+    isSheetVisible = true
+  }
+
+  fun resize(detentIndex: Int) {
+    if (!isPresented) {
+      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
+      resizePromise?.invoke()
+      resizePromise = null
+      return
+    }
+
+    setupDimmedBackground()
+    setStateForDetentIndex(detentIndex)
+    resizePromise?.invoke()
+    resizePromise = null
   }
 
   private fun setupSheetInCoordinator(coordinator: TrueSheetCoordinatorLayout, sheet: TrueSheetBottomSheetView) {

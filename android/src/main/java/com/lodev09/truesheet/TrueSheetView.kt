@@ -328,13 +328,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
-    if (!viewController.isPresented) {
-      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
-      promiseCallback()
-      return
-    }
-
-    present(detentIndex, true, promiseCallback)
+    viewController.resizePromise = promiseCallback
+    viewController.resize(detentIndex)
   }
 
   /**
