@@ -20,7 +20,7 @@ class RNScreensEventObserver : EventDispatcherListener {
   var delegate: RNScreensEventObserverDelegate? = null
 
   private var eventDispatcher: EventDispatcher? = null
-  private var presenterScreenTag: Int = 0
+  var presenterScreenTag: Int = 0
 
   fun startObserving(dispatcher: EventDispatcher?) {
     if (eventDispatcher != null || dispatcher == null) return

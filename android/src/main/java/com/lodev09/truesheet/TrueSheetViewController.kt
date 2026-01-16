@@ -154,7 +154,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var rnScreensEventObserver: RNScreensEventObserver? = null
+  internal var rnScreensEventObserver: RNScreensEventObserver? = null
   internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
     delegate = this@TrueSheetViewController
   }
@@ -601,7 +601,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
         }
       }
-      capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
+
+      // For stacked sheets, inherit parent's presenter screen tag
+      val parentScreenTag = parentSheetView?.viewController?.rnScreensEventObserver?.presenterScreenTag ?: 0
+      if (parentScreenTag != 0) {
+        presenterScreenTag = parentScreenTag
+      } else {
+        capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
+      }
       startObserving(eventDispatcher)
     }
   }
