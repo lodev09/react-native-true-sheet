@@ -64,7 +64,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       footer={<Footer onPress={() => console.log('footer pressed')} />}
       header={<Header />}
-      scrollable
       {...props}
     >
       <Input ref={input1Ref} placeholder="Full name" />

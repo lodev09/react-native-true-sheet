@@ -25,7 +25,8 @@ import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.RNScreensFragmentObserver
+import com.lodev09.truesheet.core.RNScreensEventObserver
+import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
@@ -153,7 +154,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var rnScreensObserver: RNScreensFragmentObserver? = null
+  internal var rnScreensEventObserver: RNScreensEventObserver? = null
   internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
     delegate = this@TrueSheetViewController
   }
@@ -333,7 +334,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
-    cleanupModalObserver()
+    cleanupScreenEventObserver()
     cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
@@ -581,46 +582,40 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Modal Observer (react-native-screens)
+  // MARK: - Screen Event Observer (react-native-screens)
   // =============================================================================
 
-  private fun setupModalObserver() {
-    rnScreensObserver = RNScreensFragmentObserver(
-      reactContext = reactContext,
-      onScreenPresented = {
-        if (isPresented && isTopmostSheet) {
-          if (isSheetVisible) {
+  private fun setupScreenEventObserver() {
+    rnScreensEventObserver = RNScreensEventObserver().apply {
+      delegate = object : RNScreensEventObserverDelegate {
+        override fun screenWillDisappear() {
+          if (isPresented && isSheetVisible) {
             dismissKeyboard()
             post { hideForScreen() }
-          } else {
-            // Sheet is already hidden, just mark it
-            wasHiddenByScreen = true
           }
         }
-      },
-      onScreenWillDismiss = {
-        val hasPushedScreens = rnScreensObserver?.hasPushedScreens == true
-        if (isPresented && wasHiddenByScreen && isTopmostSheet && !hasPushedScreens) {
-          showAfterScreen()
-          delegate?.viewControllerDidDetectScreenDismiss()
-        }
-      },
-      onScreenDidDismiss = {
-        if (isPresented && wasHiddenByScreen) {
-          wasHiddenByScreen = false
-          // Restore parent sheet after this sheet is restored
-          parentSheetView?.viewController?.let { parent ->
-            post { parent.showAfterScreen() }
+
+        override fun screenWillAppear() {
+          if (isPresented && wasHiddenByScreen) {
+            showAfterScreen()
           }
         }
       }
-    )
-    rnScreensObserver?.start()
+
+      // For stacked sheets, inherit parent's presenter screen tag
+      val parentScreenTag = parentSheetView?.viewController?.rnScreensEventObserver?.presenterScreenTag ?: 0
+      if (parentScreenTag != 0) {
+        presenterScreenTag = parentScreenTag
+      } else {
+        capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
+      }
+      startObserving(eventDispatcher)
+    }
   }
 
-  private fun cleanupModalObserver() {
-    rnScreensObserver?.stop()
-    rnScreensObserver = null
+  private fun cleanupScreenEventObserver() {
+    rnScreensEventObserver?.stopObserving()
+    rnScreensEventObserver = null
   }
 
   private fun setSheetVisibility(visible: Boolean) {
@@ -689,6 +684,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       currentDetentIndex = detentIndex
       interactionState = InteractionState.Idle
 
+      // Capture presenter screen before view hierarchy changes
+      setupScreenEventObserver()
+
       // Setup sheet in coordinator layout
       setupSheetInCoordinator(coordinator, sheet)
 
@@ -697,7 +695,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setupSheetDetents()
       setupDimmedBackground()
       setupKeyboardObserver()
-      setupModalObserver()
       setupBackCallback()
 
       sheet.setupBackground()
