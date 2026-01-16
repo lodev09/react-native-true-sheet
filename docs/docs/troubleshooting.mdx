@@ -52,23 +52,19 @@ Use `flexGrow: 1` instead of `flex: 1` to avoid layout issues.
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
 
-## Build Failures with Xcode or EAS
-
-If you encounter build failures when building your iOS app, it may be due to an incorrect Xcode version or EAS build configuration.
+## Xcode and EAS Build Issues
 
 ### Xcode Version
 
-The package works better with **Xcode 26.2**. If you're building locally, check your Xcode version:
+The package requires **Xcode 26.1 or later**. Background functionality may not work correctly with older versions. Check your Xcode version:
 
 ```sh
 xcodebuild -version
 ```
 
-If you're experiencing issues, we recommend updating to Xcode 26.2.
-
 ### EAS Build Configuration
 
-When using [EAS Build](https://docs.expo.dev/build/introduction/), you must configure your `eas.json` to use a build image that includes Xcode 26.2 to build your app. Use `"image": "latest"` or choose from the [available build images](https://docs.expo.dev/build-reference/infrastructure/#ios-server-images):
+When using [EAS Build](https://docs.expo.dev/build/introduction/), configure your `eas.json` to use a build image with Xcode 26.1+. Use `"image": "latest"` or choose from the [available build images](https://docs.expo.dev/build-reference/infrastructure/#ios-server-images):
 
 ```json
 {
@@ -86,5 +82,3 @@ When using [EAS Build](https://docs.expo.dev/build/introduction/), you must conf
   }
 }
 ```
-
-Without this configuration, EAS may use an older build image that doesn't include Xcode 26.2, causing build failures.
