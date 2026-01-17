@@ -99,6 +99,27 @@ function DetailsSheet() {
 }
 ```
 
+### Dismissing Multiple Sheets
+
+Use `popTo` to dismiss sheets until reaching a specific screen, or `popToTop` to dismiss all sheets and return to the base screen:
+
+```tsx
+function ProfileSheet() {
+  const navigation = useTrueSheetNavigation();
+
+  return (
+    <View>
+      {/* Dismiss sheets until reaching 'Details' */}
+      <Button title="Back to Details" onPress={() => navigation.popTo('Details')} />
+      {/* Dismiss all sheets */}
+      <Button title="Back to Home" onPress={() => navigation.popToTop()} />
+    </View>
+  );
+}
+```
+
+With both methods, all sheets are dismissed in a single smooth animation rather than sequentially.
+
 ### Screen Options
 
 All [TrueSheet props](/reference/configuration) are available as screen options, plus the following navigation-specific options:

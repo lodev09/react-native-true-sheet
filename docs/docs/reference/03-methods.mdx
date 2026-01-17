@@ -55,6 +55,23 @@ await sheet.current?.dismiss(false)
 When called on a sheet that has other sheets presented on top of it, `dismiss()` will dismiss all sheets above it but the sheet itself will remain presented. This matches iOS's native `UIViewController` behavior. See [Dismissing Stacked Sheets](/guides/stacking#dismissing-stacked-sheets) for more details.
 :::
 
+### `dismissWithChildren`
+
+Dismisses the sheet and all sheets presented on top of it in a single animation.
+
+| Parameters | Required | Default |
+| - | - | - |
+| `animated: boolean` | No | `true` |
+
+```tsx
+await sheet.current?.dismissWithChildren()
+
+// Dismiss without animation
+await sheet.current?.dismissWithChildren(false)
+```
+
+This is useful when you need to dismiss multiple stacked sheets at once, such as when implementing "pop to" navigation patterns.
+
 ### `resize`
 
 Resizes the sheet programmatically by `index`. The sheet must be presented before calling this method.
