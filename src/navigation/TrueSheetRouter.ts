@@ -149,7 +149,6 @@ export const TrueSheetRouter = (
         }
 
         case 'REMOVE': {
-          // Actually remove the closing route
           const routeKey = action.source;
           const routeIndex = routeKey
             ? state.routes.findIndex((r) => r.key === routeKey)
@@ -159,12 +158,99 @@ export const TrueSheetRouter = (
             return state;
           }
 
-          const routes = state.routes.filter((_, i) => i !== routeIndex);
+          const popToTargetIndex = state.popToTargetIndex;
 
+          // If we have a popToTargetIndex, remove ALL routes above the target at once
+          if (popToTargetIndex !== undefined) {
+            const routes = state.routes
+              .filter((_, i) => i <= popToTargetIndex)
+              .map((route) => ({ ...route, closing: false, cascadeRemoving: false }));
+
+            return {
+              ...state,
+              popToTargetIndex: undefined,
+              index: Math.min(state.index, routes.length - 1),
+              routes,
+            };
+          }
+
+          // Normal single route removal
+          const routes = state.routes.filter((_, i) => i !== routeIndex);
           return {
             ...state,
             index: Math.min(state.index, routes.length - 1),
             routes,
+          };
+        }
+
+        case 'POP_TO': {
+          const targetName = 'payload' in action ? action.payload?.name : undefined;
+
+          if (!targetName) {
+            return state;
+          }
+
+          // Find the target route index
+          const targetIndex = state.routes.findIndex((r) => r.name === targetName);
+
+          // Target not found - let parent navigator handle it
+          if (targetIndex === -1) {
+            return null;
+          }
+
+          // No routes to pop (target is current or above)
+          if (targetIndex >= state.index) {
+            return state;
+          }
+
+          // Only base screen remains - nothing to pop
+          if (state.routes.length <= 1) {
+            return state;
+          }
+
+          // Mark the LOWEST sheet above target as closing (it will call dismiss)
+          // Mark all sheets ABOVE it as cascadeRemoving (they won't call dismiss)
+          // Both iOS and Android will cascade-dismiss all sheets in one animation
+          const lowestSheetToClose = targetIndex + 1;
+
+          return {
+            ...state,
+            popToTargetIndex: targetIndex,
+            routes: state.routes.map((route, i) => {
+              if (i === lowestSheetToClose) {
+                return { ...route, closing: true };
+              }
+              if (i > lowestSheetToClose) {
+                return { ...route, cascadeRemoving: true };
+              }
+              return route;
+            }),
+          };
+        }
+
+        case 'POP_TO_TOP': {
+          // Only base screen remains - nothing to pop
+          if (state.routes.length <= 1) {
+            return state;
+          }
+
+          // Mark the LOWEST sheet (index 1) as closing (it will call dismiss)
+          // Mark all sheets ABOVE it as cascadeRemoving (they won't call dismiss)
+          // Both iOS and Android will cascade-dismiss all sheets in one animation
+          const lowestSheetToClose = 1;
+
+          return {
+            ...state,
+            popToTargetIndex: 0,
+            routes: state.routes.map((route, i) => {
+              if (i === lowestSheetToClose) {
+                return { ...route, closing: true };
+              }
+              if (i > lowestSheetToClose) {
+                return { ...route, cascadeRemoving: true };
+              }
+              return route;
+            }),
           };
         }
 

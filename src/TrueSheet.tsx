@@ -339,6 +339,10 @@ export class TrueSheet
     return TrueSheetModule?.dismissByRef(this.handle, animated);
   }
 
+  public async dismissWithChildren(animated: boolean = true): Promise<void> {
+    return TrueSheetModule?.dismissAllByRef(this.handle, animated);
+  }
+
   componentDidMount(): void {
     this.registerInstance();
   }

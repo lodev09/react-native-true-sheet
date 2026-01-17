@@ -403,6 +403,17 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
         dismissInternal().then(resolve);
       });
     },
+    dismissWithChildren: async () => {
+      const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
+
+      // Dismiss all sheets above sequentially since gorhom/bottom-sheet doesn't support cascade dismiss
+      for (const sheet of sheetsAbove) {
+        await bottomSheetContext?.dismissDirect(sheet);
+      }
+
+      // Then dismiss this sheet
+      await dismissInternal();
+    },
     dismissDirect: () => dismissInternal(),
     resize: async (index: number) => {
       if (isNonModal) {

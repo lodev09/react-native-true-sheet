@@ -74,6 +74,26 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   }
 
   /**
+   * Dismiss a sheet and all sheets presented on top of it (cascade dismiss)
+   *
+   * @param viewTag Native view tag of the sheet component
+   * @param promise Promise that resolves when all sheets are fully dismissed
+   * @throws VIEW_NOT_FOUND if the view with the given tag is not found
+   * @throws INVALID_VIEW_TYPE if the view is not a TrueSheetView
+   * @throws OPERATION_FAILED if the operation fails for any other reason
+   */
+  @ReactMethod
+  fun dismissAllByRef(viewTag: Double, animated: Boolean, promise: Promise) {
+    val tag = viewTag.toInt()
+
+    withTrueSheetView(tag, promise) { view ->
+      view.dismissAll(animated) {
+        promise.resolve(null)
+      }
+    }
+  }
+
+  /**
    * Resize a sheet to a different index by reference
    *
    * @param viewTag Native view tag of the sheet component
