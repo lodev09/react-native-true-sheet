@@ -3,7 +3,6 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
-
 import android.widget.ScrollView
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx

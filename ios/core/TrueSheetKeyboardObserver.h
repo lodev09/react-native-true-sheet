@@ -16,9 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetKeyboardObserverDelegate <NSObject>
 
-- (void)keyboardWillShow:(CGFloat)height
-                duration:(NSTimeInterval)duration
-                   curve:(UIViewAnimationOptions)curve;
+- (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve;
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve;
 
 @end
