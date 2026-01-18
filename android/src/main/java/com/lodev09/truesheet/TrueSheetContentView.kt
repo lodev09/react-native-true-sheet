@@ -3,7 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
+
 import android.widget.ScrollView
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -11,7 +11,6 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
-import com.lodev09.truesheet.utils.isDescendantOf
 
 /**
  * Delegate interface for content view size changes
@@ -37,7 +36,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
 
   var scrollableOptions: ReadableMap? = null
     set(value) {
@@ -144,33 +142,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
         override fun keyboardDidHide() { }
         override fun keyboardDidChangeHeight(height: Int) { }
+        override fun focusDidChange(newFocus: View) {
+          scrollToFocusedInput()
+        }
       }
       start()
     }
-
-    setupFocusChangeListener()
-  }
-
-  private fun setupFocusChangeListener() {
-    if (focusChangeListener != null) return
-
-    focusChangeListener = ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
-      val isKeyboardVisible = (keyboardObserver?.currentHeight ?: 0) > 0
-      if (isKeyboardVisible && newFocus != null && newFocus.isDescendantOf(this)) {
-        scrollToFocusedInput()
-      }
-    }
-    viewTreeObserver.addOnGlobalFocusChangeListener(focusChangeListener)
   }
 
   fun cleanupKeyboardHandler() {
     keyboardObserver?.stop()
     keyboardObserver = null
-
-    focusChangeListener?.let {
-      viewTreeObserver.removeOnGlobalFocusChangeListener(it)
-    }
-    focusChangeListener = null
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
