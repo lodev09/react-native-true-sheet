@@ -65,9 +65,9 @@ using namespace facebook::react;
   [self.delegate contentViewDidChangeChildren];
 }
 
-#pragma mark - ScrollView Pinning
+#pragma mark - Scrollable
 
-- (void)clearPinning {
+- (void)clearScrollable {
   if (_pinnedScrollView) {
     CGRect frame = _pinnedScrollView.frame;
     frame.size.height = _originalScrollViewHeight;
@@ -87,13 +87,13 @@ using namespace facebook::react;
   _originalIndicatorBottomInset = 0;
 }
 
-- (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset {
-  if (!pinned) {
-    [self clearPinning];
+- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset {
+  if (!enabled) {
+    [self clearScrollable];
     return;
   }
 
-  // Already pinned with same inset
+  // Already set up with same inset
   if (_pinnedScrollView && _bottomInset == bottomInset) {
     return;
   }
@@ -232,7 +232,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  [self clearPinning];
+  [self clearScrollable];
 }
 
 @end

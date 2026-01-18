@@ -35,11 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Setup ScrollView pinning
- * @param pinned Whether to pin the scroll view
+ * Setup scrollable content
+ * @param enabled Whether scrollable is enabled
  * @param bottomInset Bottom content inset for the scroll view
  */
-- (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset;
+- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset;
 
 /**
  * Update the pinned scroll view's height to fill the container

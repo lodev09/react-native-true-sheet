@@ -254,7 +254,7 @@ using namespace facebook::react;
   _controller.insetAdjustment = _insetAdjustment;
 
   if (_containerView) {
-    _containerView.scrollViewPinningEnabled = _scrollable;
+    _containerView.scrollableEnabled = _scrollable;
     _containerView.insetAdjustment = _insetAdjustment;
     _containerView.scrollableOptions = _scrollableOptions;
   }
@@ -299,7 +299,7 @@ using namespace facebook::react;
     return;
 
   if (_containerView) {
-    [_containerView setupContentScrollViewPinning];
+    [_containerView setupScrollable];
   }
 
   if (_controller.isPresented) {
@@ -366,10 +366,10 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  _containerView.scrollViewPinningEnabled = _scrollable;
+  _containerView.scrollableEnabled = _scrollable;
   _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
-  [_containerView setupContentScrollViewPinning];
+  [_containerView setupScrollable];
 
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
