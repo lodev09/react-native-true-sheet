@@ -23,11 +23,10 @@ using namespace facebook::react;
 
 @implementation TrueSheetContentView {
   RCTScrollViewComponentView *_pinnedScrollView;
-  UIView *_pinnedTopView;
   CGSize _lastSize;
   UIEdgeInsets _contentInsets;
-  UIEdgeInsets _pinnedInsets;
   CGFloat _bottomInset;
+  CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
   CGFloat _currentKeyboardHeight;
 }
@@ -81,8 +80,9 @@ using namespace facebook::react;
 
 - (void)clearPinning {
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self];
-    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
+    CGRect frame = _pinnedScrollView.frame;
+    frame.size.height = _originalScrollViewHeight;
+    _pinnedScrollView.frame = frame;
 
     UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
     contentInset.bottom = 0;
@@ -93,9 +93,8 @@ using namespace facebook::react;
     _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
   }
   _pinnedScrollView = nil;
-  _pinnedTopView = nil;
-  _pinnedInsets = UIEdgeInsetsZero;
   _bottomInset = 0;
+  _originalScrollViewHeight = 0;
   _originalIndicatorBottomInset = 0;
 }
 
@@ -107,42 +106,18 @@ using namespace facebook::react;
     return;
   }
 
-  UIView *topSibling = nil;
-  RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
-
-  BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
-                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) || _bottomInset != bottomInset;
+  RCTScrollViewComponentView *scrollView = [self findScrollView];
+  BOOL needsUpdate = scrollView != _pinnedScrollView || _bottomInset != bottomInset;
 
   if (scrollView && containerView && needsUpdate) {
     [self clearPinning];
 
-    UIEdgeInsets insets =
-      UIEdgeInsetsMake(topSibling ? 0 : _contentInsets.top, _contentInsets.left, 0, _contentInsets.right);
-
-    if (topSibling) {
-      [LayoutUtil pinView:scrollView
-             toParentView:self
-              withTopView:topSibling
-                    edges:UIRectEdgeLeft | UIRectEdgeRight
-                   insets:insets];
-    } else {
-      [LayoutUtil pinView:scrollView
-             toParentView:self
-                    edges:UIRectEdgeTop | UIRectEdgeLeft | UIRectEdgeRight
-                   insets:insets];
-    }
-
-    [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeBottom];
-
-    BOOL isNewScrollView = scrollView != _pinnedScrollView;
-    if (isNewScrollView) {
-      _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
-    }
-
+    _originalScrollViewHeight = scrollView.frame.size.height;
+    _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
-    _pinnedTopView = topSibling;
-    _pinnedInsets = _contentInsets;
     _bottomInset = bottomInset;
+
+    [self updateScrollViewHeight];
 
     UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
     contentInset.bottom = bottomInset;
@@ -156,7 +131,28 @@ using namespace facebook::react;
   }
 }
 
-- (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
+- (void)updateScrollViewHeight {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  UIView *containerView = self.superview;
+  if (!containerView) {
+    return;
+  }
+
+  CGRect scrollViewFrameInContainer = [_pinnedScrollView.superview convertRect:_pinnedScrollView.frame
+                                                                        toView:containerView];
+  CGFloat newHeight = containerView.bounds.size.height - scrollViewFrameInContainer.origin.y;
+
+  if (newHeight > 0) {
+    CGRect frame = _pinnedScrollView.frame;
+    frame.size.height = newHeight;
+    _pinnedScrollView.frame = frame;
+  }
+}
+
+- (RCTScrollViewComponentView *)findScrollView {
   if (self.subviews.count == 0) {
     return nil;
   }
@@ -172,10 +168,6 @@ using namespace facebook::react;
     }
   }
 
-  if (outTopSibling) {
-    *outTopSibling = [self findTopSiblingForScrollView:scrollView];
-  }
-
   return scrollView;
 }
 
@@ -186,33 +178,6 @@ using namespace facebook::react;
     }
   }
   return nil;
-}
-
-- (UIView *)findTopSiblingForScrollView:(RCTScrollViewComponentView *)scrollView {
-  if (!scrollView || scrollView.superview != self || self.subviews.count <= 1) {
-    return nil;
-  }
-
-  CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
-  UIView *topSibling = nil;
-  CGFloat closestDistance = CGFLOAT_MAX;
-
-  for (UIView *sibling in self.subviews) {
-    if (sibling == scrollView || [sibling isKindOfClass:TrueSheetView.class]) {
-      continue;
-    }
-
-    CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
-    if (siblingBottom <= scrollViewTop) {
-      CGFloat distance = scrollViewTop - siblingBottom;
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        topSibling = sibling;
-      }
-    }
-  }
-
-  return topSibling;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate

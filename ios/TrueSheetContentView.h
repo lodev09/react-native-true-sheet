@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
-- (RCTScrollViewComponentView *_Nullable)findScrollView:(UIView *_Nullable *_Nullable)outTopSibling;
+- (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
  * Setup ScrollView pinning
@@ -41,6 +41,11 @@ NS_ASSUME_NONNULL_BEGIN
  * @param bottomInset Bottom content inset for the scroll view
  */
 - (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset;
+
+/**
+ * Update the pinned scroll view's height to fill the container
+ */
+- (void)updateScrollViewHeight;
 
 @end
 

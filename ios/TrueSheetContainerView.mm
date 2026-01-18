@@ -59,6 +59,11 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [_contentView updateScrollViewHeight];
+}
+
 - (CGFloat)contentHeight {
   return _contentView ? _contentView.frame.size.height : 0;
 }
