@@ -37,6 +37,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: String = "automatic"
   var scrollViewBottomInset: Int = 0
+  var scrollViewPinningEnabled: Boolean = false
   var scrollableOptions: ReadableMap? = null
     set(value) {
       field = value
@@ -53,6 +54,11 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupContentScrollViewPinning() {
+    if (!scrollViewPinningEnabled) {
+      clearContentScrollViewPinning()
+      return
+    }
+
     val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
     contentView?.setupScrollViewPinning(bottomInset)
   }

@@ -179,23 +179,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var grabberOptions: GrabberOptions? = null
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: String = "automatic"
-    set(value) {
-      field = value
-      setupContentScrollViewPinning()
-    }
 
   var scrollable: Boolean = false
     set(value) {
       field = value
       coordinatorLayout?.scrollable = value
-      setupContentScrollViewPinning()
     }
 
   var scrollableOptions: ReadableMap? = null
-    set(value) {
-      field = value
-      setupContentScrollViewPinning()
-    }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
@@ -327,17 +318,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
       delegate = this@TrueSheetViewController
-    }
-
-    setupContentScrollViewPinning()
-  }
-
-  private fun setupContentScrollViewPinning() {
-    containerView?.let {
-      it.insetAdjustment = insetAdjustment
-      it.scrollViewBottomInset = if (scrollable) contentBottomInset else 0
-      it.scrollableOptions = scrollableOptions
-      it.setupContentScrollViewPinning()
     }
   }
 
