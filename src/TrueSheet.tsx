@@ -377,6 +377,7 @@ export class TrueSheet
       cornerRadius,
       maxHeight,
       scrollable = false,
+      scrollableOptions,
       pageSizing = true,
       children,
       style,
@@ -434,6 +435,7 @@ export class TrueSheet
         draggable={draggable}
         maxHeight={maxHeight}
         scrollable={scrollable}
+        scrollableOptions={scrollableOptions}
         pageSizing={pageSizing}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}

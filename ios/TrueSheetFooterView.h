@@ -11,16 +11,17 @@
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
+#import "core/TrueSheetKeyboardObserver.h"
 
 @class TrueSheetViewController;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TrueSheetFooterView : RCTViewComponentView
+@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
+
+@property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 - (void)setupConstraintsWithHeight:(CGFloat)height;
-- (void)setupKeyboardHandler;
-- (void)cleanupKeyboardHandler;
 
 @end
 

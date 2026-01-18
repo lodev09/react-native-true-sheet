@@ -4,6 +4,7 @@
 
 ### 🎉 New features
 
+- Added `scrollableOptions` prop with keyboard scroll handling for ScrollViews. ([#442](https://github.com/lodev09/react-native-true-sheet/pull/442) by [@lodev09](https://github.com/lodev09))
 - Added bottom inset to ScrollView when `insetAdjustment` is `automatic`. ([#430](https://github.com/lodev09/react-native-true-sheet/pull/430) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes

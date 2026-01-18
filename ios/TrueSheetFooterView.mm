@@ -15,7 +15,6 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
-#import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
 
@@ -105,8 +104,6 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  [self cleanupKeyboardHandler];
-
   // Remove footer constraints
   [LayoutUtil unpinView:self fromParentView:self.superview];
 
@@ -116,81 +113,37 @@ using namespace facebook::react;
   _currentKeyboardOffset = 0;
 }
 
-#pragma mark - Keyboard Handling
+#pragma mark - TrueSheetKeyboardObserverDelegate
 
-- (void)setupKeyboardHandler {
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(keyboardWillChangeFrame:)
-                                               name:UIKeyboardWillChangeFrameNotification
-                                             object:nil];
-}
-
-- (void)cleanupKeyboardHandler {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
-}
-
-- (TrueSheetViewController *)findSheetViewController {
-  UIResponder *responder = self;
-  while (responder) {
-    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
-      return (TrueSheetViewController *)responder;
-    }
-    responder = responder.nextResponder;
-  }
-  return nil;
-}
-
-- (BOOL)isFirstResponderWithinSheet {
-  TrueSheetViewController *sheetController = [self findSheetViewController];
-  if (!sheetController) {
-    return NO;
-  }
-
-  UIView *firstResponder = [sheetController.view findFirstResponder];
-  return firstResponder != nil;
-}
-
-- (void)keyboardWillChangeFrame:(NSNotification *)notification {
+- (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_bottomConstraint) {
     return;
   }
 
-  // Only respond to keyboard if this sheet is the topmost presented controller
-  TrueSheetViewController *sheetController = [self findSheetViewController];
-  if (sheetController && !sheetController.isTopmostPresentedController) {
-    return;
-  }
-
-  // Only respond if the focused view is within this sheet
-  if (![self isFirstResponderWithinSheet]) {
-    return;
-  }
-
-  NSDictionary *userInfo = notification.userInfo;
-  CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
-  NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-  UIViewAnimationOptions curve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] unsignedIntegerValue] << 16;
-
-  // Convert keyboard frame to window coordinates
-  UIWindow *window = self.window;
-  if (!window) {
-    return;
-  }
-
-  CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
-  CGFloat keyboardHeight = window.bounds.size.height - keyboardFrameInWindow.origin.y;
-
-  // Cap to ensure we don't go negative
-  CGFloat bottomOffset = MAX(0, keyboardHeight);
-
-  // Store the current keyboard offset so it persists through constraint recreation
-  _currentKeyboardOffset = bottomOffset;
+  _currentKeyboardOffset = height;
 
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     self->_bottomConstraint.constant = -bottomOffset;
+                     self->_bottomConstraint.constant = -height;
+                     [self.superview layoutIfNeeded];
+                   }
+                   completion:nil];
+}
+
+- (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  if (!_bottomConstraint) {
+    return;
+  }
+
+  _currentKeyboardOffset = 0;
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     self->_bottomConstraint.constant = 0;
                      [self.superview layoutIfNeeded];
                    }
                    completion:nil];

@@ -8,8 +8,8 @@ import com.facebook.react.uimanager.events.EventDispatcherListener
 private const val RN_SCREENS_VIEW_CLASS = "com.swmansion.rnscreens.Screen"
 
 interface RNScreensEventObserverDelegate {
-  fun screenWillDisappear()
-  fun screenWillAppear()
+  fun presenterScreenWillDisappear()
+  fun presenterScreenWillAppear()
 }
 
 /**
@@ -52,14 +52,12 @@ class RNScreensEventObserver : EventDispatcherListener {
     if (presenterScreenTag == 0 || event.viewTag != presenterScreenTag) return
 
     when (event.eventName) {
-      "topWillDisappear" -> delegate?.screenWillDisappear()
-      "topWillAppear" -> delegate?.screenWillAppear()
+      "topWillDisappear" -> delegate?.presenterScreenWillDisappear()
+      "topWillAppear" -> delegate?.presenterScreenWillAppear()
     }
   }
 
   companion object {
-    private fun isScreenView(view: View): Boolean {
-      return view.javaClass.name == RN_SCREENS_VIEW_CLASS
-    }
+    private fun isScreenView(view: View): Boolean = view.javaClass.name == RN_SCREENS_VIEW_CLASS
   }
 }

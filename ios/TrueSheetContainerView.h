@@ -49,6 +49,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSString *insetAdjustment;
 
 /**
+ * Options for scrollable behavior
+ */
+@property (nonatomic, strong, nullable) NSDictionary *scrollableOptions;
+
+/**
  * Returns the current content height
  */
 - (CGFloat)contentHeight;
@@ -69,14 +74,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupContentScrollViewPinning;
 
 /**
- * Setup keyboard handler for footer
+ * Setup keyboard observer for content and footer
+ * @param viewController The sheet view controller to observe keyboard events for
  */
-- (void)setupKeyboardHandler;
+- (void)setupKeyboardObserverWithViewController:(UIViewController *)viewController;
 
 /**
- * Cleanup keyboard handler for footer
+ * Cleanup keyboard observer
  */
-- (void)cleanupKeyboardHandler;
+- (void)cleanupKeyboardObserver;
 
 @end
 

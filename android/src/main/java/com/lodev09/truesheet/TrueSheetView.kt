@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.StateWrapper
@@ -15,6 +16,8 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.GrabberOptions
+import com.lodev09.truesheet.core.RNScreensEventObserver
+import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
 import com.lodev09.truesheet.utils.KeyboardUtils
@@ -29,7 +32,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   LifecycleEventListener,
   TrueSheetViewControllerDelegate,
-  TrueSheetContainerViewDelegate {
+  TrueSheetContainerViewDelegate,
+  RNScreensEventObserverDelegate {
 
   // ==================== Properties ====================
 
@@ -59,6 +63,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // Root container for the coordinator layout (activity or Modal dialog content view)
   internal var rootContainerView: ViewGroup? = null
+
+  // Screen event observer for react-native-screens integration
+  internal var screensEventObserver: RNScreensEventObserver? = null
 
   // ==================== Initialization ====================
 
@@ -113,6 +120,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (child is TrueSheetContainerView) {
       child.delegate = this
       viewController.createSheet()
+      setupContentScrollViewPinning()
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
@@ -160,6 +168,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     TrueSheetModule.unregisterView(id)
     TrueSheetStackManager.removeSheet(this)
 
+    cleanupScreenEventObserver()
     didInitiallyPresent = false
 
     if (viewController.isPresented) {
@@ -177,6 +186,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Reconfigures the sheet if it's currently presented.
    */
   fun finalizeUpdates() {
+    setupContentScrollViewPinning()
+
     if (viewController.isPresented) {
       viewController.sheetView?.setupBackground()
       viewController.sheetView?.setupGrabber()
@@ -245,10 +256,51 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setInsetAdjustment(insetAdjustment: String) {
     viewController.insetAdjustment = insetAdjustment
+    setupContentScrollViewPinning()
   }
 
   fun setScrollable(scrollable: Boolean) {
     viewController.scrollable = scrollable
+    setupContentScrollViewPinning()
+  }
+
+  fun setScrollableOptions(options: ReadableMap?) {
+    viewController.scrollableOptions = options
+    setupContentScrollViewPinning()
+  }
+
+  private fun setupContentScrollViewPinning() {
+    viewController.containerView?.let {
+      it.insetAdjustment = viewController.insetAdjustment
+      it.scrollViewPinningEnabled = viewController.scrollable
+      it.scrollViewBottomInset = viewController.contentBottomInset
+      it.scrollableOptions = viewController.scrollableOptions
+      it.setupContentScrollViewPinning()
+    }
+  }
+
+  // ==================== Screen Event Observer ====================
+
+  private fun setupScreenEventObserver() {
+    screensEventObserver = RNScreensEventObserver().apply {
+      delegate = this@TrueSheetView
+
+      // For stacked sheets on the same screen, inherit parent's presenter screen tag.
+      // If parent was hidden by screen navigation, this sheet is on a different screen.
+      val parentScreenTag = viewController.parentSheetView?.screensEventObserver?.presenterScreenTag ?: 0
+      val parentHiddenByScreen = viewController.parentSheetView?.viewController?.wasHiddenByScreen == true
+      if (parentScreenTag != 0 && !parentHiddenByScreen) {
+        presenterScreenTag = parentScreenTag
+      } else {
+        capturePresenterScreenFromView(this@TrueSheetView)
+      }
+      startObserving(eventDispatcher)
+    }
+  }
+
+  private fun cleanupScreenEventObserver() {
+    screensEventObserver?.stopObserving()
+    screensEventObserver = null
   }
 
   // ==================== State Management ====================
@@ -404,6 +456,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidPresent(index: Int, position: Float, detent: Float) {
+    setupScreenEventObserver()
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidPresentEvent(surfaceId, id, index, position, detent))
   }
@@ -417,6 +471,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Detach coordinator from the root container view
     viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
     rootContainerView = null
+
+    cleanupScreenEventObserver()
 
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
@@ -495,6 +551,23 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
     // Footer changes don't affect detents, only reposition it
     viewController.positionFooter()
+  }
+
+  // ==================== RNScreensEventObserverDelegate ====================
+
+  override fun presenterScreenWillDisappear() {
+    if (viewController.isPresented && viewController.isSheetVisible) {
+      KeyboardUtils.dismiss(this) {}
+      viewController.post { viewController.hideForScreen() }
+    }
+  }
+
+  override fun presenterScreenWillAppear() {
+    if (viewController.isPresented && viewController.wasHiddenByScreen) {
+      viewController.wasHiddenByScreen = false
+      viewController.showAfterScreen()
+      viewControllerDidDetectScreenDismiss()
+    }
   }
 
   // ==================== Private Helpers ====================

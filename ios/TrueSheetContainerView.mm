@@ -12,6 +12,8 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
+#import "TrueSheetViewController.h"
+#import "core/TrueSheetKeyboardObserver.h"
 #import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
@@ -31,6 +33,7 @@ using namespace facebook::react;
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
+  TrueSheetKeyboardObserver *_keyboardObserver;
   BOOL _scrollViewPinningSet;
 }
 
@@ -76,6 +79,16 @@ using namespace facebook::react;
 - (void)setScrollViewPinningEnabled:(BOOL)scrollViewPinningEnabled {
   _scrollViewPinningEnabled = scrollViewPinningEnabled;
   _scrollViewPinningSet = YES;
+}
+
+- (void)setScrollableOptions:(NSDictionary *)scrollableOptions {
+  _scrollableOptions = scrollableOptions;
+  if (scrollableOptions) {
+    NSNumber *offset = scrollableOptions[@"keyboardScrollOffset"];
+    _contentView.keyboardScrollOffset = offset ? [offset floatValue] : 0;
+  } else {
+    _contentView.keyboardScrollOffset = 0;
+  }
 }
 
 - (void)setupContentScrollViewPinning {
@@ -164,14 +177,35 @@ using namespace facebook::react;
   [self.delegate containerViewHeaderDidChangeSize:newSize];
 }
 
-#pragma mark - Keyboard Handling
+#pragma mark - Keyboard Observer
 
-- (void)setupKeyboardHandler {
-  [_footerView setupKeyboardHandler];
+- (void)setupKeyboardObserverWithViewController:(UIViewController *)viewController {
+  [self cleanupKeyboardObserver];
+
+  _keyboardObserver = [[TrueSheetKeyboardObserver alloc] init];
+  _keyboardObserver.viewController = (TrueSheetViewController *)viewController;
+
+  if (_contentView) {
+    _contentView.keyboardObserver = _keyboardObserver;
+    [_keyboardObserver addDelegate:_contentView];
+  }
+
+  if (_footerView) {
+    _footerView.keyboardObserver = _keyboardObserver;
+    [_keyboardObserver addDelegate:_footerView];
+  }
+
+  [_keyboardObserver start];
 }
 
-- (void)cleanupKeyboardHandler {
-  [_footerView cleanupKeyboardHandler];
+- (void)cleanupKeyboardObserver {
+  if (_keyboardObserver) {
+    [_keyboardObserver stop];
+    _keyboardObserver = nil;
+  }
+
+  _contentView.keyboardObserver = nil;
+  _footerView.keyboardObserver = nil;
 }
 
 @end

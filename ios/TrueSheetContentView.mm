@@ -15,7 +15,9 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetView.h"
+#import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
 
@@ -27,6 +29,7 @@ using namespace facebook::react;
   UIEdgeInsets _pinnedInsets;
   CGFloat _bottomInset;
   CGFloat _originalIndicatorBottomInset;
+  CGFloat _currentKeyboardHeight;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -108,8 +111,7 @@ using namespace facebook::react;
   RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
   BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
-                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) ||
-                     _bottomInset != bottomInset;
+                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) || _bottomInset != bottomInset;
 
   if (scrollView && containerView && needsUpdate) {
     [self clearPinning];
@@ -213,10 +215,67 @@ using namespace facebook::react;
   return topSibling;
 }
 
+#pragma mark - TrueSheetKeyboardObserverDelegate
+
+- (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  _currentKeyboardHeight = height;
+
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
+                     contentInset.bottom = height;
+                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
+
+                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+                     indicatorInsets.bottom = self->_originalIndicatorBottomInset + height;
+                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+
+                     if (firstResponder) {
+                       CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
+                                                                    toView:self->_pinnedScrollView.scrollView];
+                       responderFrame.size.height += self.keyboardScrollOffset;
+                       [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:NO];
+                     }
+                   }
+                   completion:nil];
+}
+
+- (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  _currentKeyboardHeight = 0;
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
+                     contentInset.bottom = self->_bottomInset;
+                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
+
+                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+                     indicatorInsets.bottom = self->_originalIndicatorBottomInset;
+                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+                   }
+                   completion:nil];
+}
+
 #pragma mark - Lifecycle
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+  _currentKeyboardHeight = 0;
   [self clearPinning];
 }
 

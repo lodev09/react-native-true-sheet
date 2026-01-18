@@ -9,12 +9,15 @@ import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.uimanager.ThemedReactContext
 import com.lodev09.truesheet.utils.KeyboardUtils
+import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetKeyboardObserverDelegate {
-  fun keyboardWillShow(height: Int)
-  fun keyboardWillHide()
-  fun keyboardDidHide()
-  fun keyboardDidChangeHeight(height: Int)
+  fun keyboardWillShow(height: Int) {}
+  fun keyboardDidShow(height: Int) {}
+  fun keyboardWillHide() {}
+  fun keyboardDidHide() {}
+  fun keyboardDidChangeHeight(height: Int) {}
+  fun focusDidChange(newFocus: View) {}
 }
 
 /**
@@ -45,8 +48,10 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     return false
   }
 
-  private var isHiding: Boolean = false
+  var isHiding: Boolean = false
+    private set
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+  private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
   private var activityRootView: View? = null
 
   fun start() {
@@ -55,14 +60,19 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     } else {
       setupLegacyListener()
     }
+    setupFocusChangeListener()
   }
 
   fun stop() {
     globalLayoutListener?.let { listener ->
       activityRootView?.viewTreeObserver?.removeOnGlobalLayoutListener(listener)
       globalLayoutListener = null
-      activityRootView = null
     }
+    focusChangeListener?.let { listener ->
+      activityRootView?.viewTreeObserver?.removeOnGlobalFocusChangeListener(listener)
+      focusChangeListener = null
+    }
+    activityRootView = null
     ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
   }
 
@@ -121,6 +131,8 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
           if (isHiding) {
             delegate?.keyboardDidHide()
             isHiding = false
+          } else if (finalHeight > 0) {
+            delegate?.keyboardDidShow(finalHeight)
           }
         }
       }
@@ -164,9 +176,25 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
       if (isHiding && newHeight == 0) {
         delegate?.keyboardDidHide()
         isHiding = false
+      } else if (newHeight > 0) {
+        delegate?.keyboardDidShow(newHeight)
       }
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
+  }
+
+  private fun setupFocusChangeListener() {
+    if (focusChangeListener != null) return
+
+    val rootView = targetView.rootView ?: return
+    activityRootView = rootView
+
+    focusChangeListener = ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+      if (currentHeight > 0 && newFocus != null && newFocus.isDescendantOf(targetView)) {
+        delegate?.focusDidChange(newFocus)
+      }
+    }
+    rootView.viewTreeObserver.addOnGlobalFocusChangeListener(focusChangeListener)
   }
 }

@@ -1,12 +1,13 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
-import { Footer } from '../Footer';
 import { Header } from '../Header';
+import { Spacer } from '../Spacer';
+import { Footer } from '../Footer';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
@@ -14,9 +15,29 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
+  const input3Ref = useRef<TextInput>(null);
+  const input4Ref = useRef<TextInput>(null);
+  const input5Ref = useRef<TextInput>(null);
+  const input6Ref = useRef<TextInput>(null);
+  const input7Ref = useRef<TextInput>(null);
+  const input8Ref = useRef<TextInput>(null);
+  const input9Ref = useRef<TextInput>(null);
+  const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
-  const inputRefs = [input1Ref, input2Ref, textAreaRef];
+  const inputRefs = [
+    input1Ref,
+    input2Ref,
+    input3Ref,
+    input4Ref,
+    input5Ref,
+    input6Ref,
+    input7Ref,
+    input8Ref,
+    input9Ref,
+    input10Ref,
+    textAreaRef,
+  ];
 
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
@@ -40,8 +61,9 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     <TrueSheet
       ref={sheetRef}
       name="prompt-sheet"
-      detents={['auto']}
-      style={styles.content}
+      detents={[1]}
+      scrollable
+      scrollableOptions={{ keyboardScrollOffset: FOOTER_HEIGHT + SPACING }}
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
@@ -62,15 +84,30 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         console.log('Back button pressed!');
         sheetRef.current?.dismiss();
       }}
-      footer={<Footer onPress={() => console.log('footer pressed')} />}
       header={<Header />}
+      footer={<Footer onPress={handleSubmitPress} />}
       {...props}
     >
-      <Input ref={input1Ref} placeholder="Full name" />
-      <Input ref={input2Ref} placeholder="Email" keyboardType="email-address" />
-      <Input ref={textAreaRef} placeholder="Message..." multiline />
-      <Button text="Submit" onPress={handleSubmitPress} />
-      <Button text="Dismiss" onPress={handleDismissPress} />
+      <ScrollView
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
+        <Input ref={input1Ref} placeholder="First name" />
+        <Input ref={input2Ref} placeholder="Last name" />
+        <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />
+        <Input ref={input4Ref} placeholder="Phone" keyboardType="phone-pad" />
+        <Input ref={input5Ref} placeholder="Address" />
+        <Input ref={input6Ref} placeholder="City" />
+        <Input ref={input7Ref} placeholder="State" />
+        <Input ref={input8Ref} placeholder="Zip code" keyboardType="number-pad" />
+        <Input ref={input9Ref} placeholder="Country" />
+        <Input ref={input10Ref} placeholder="Contact" />
+        <Input ref={textAreaRef} placeholder="Message..." multiline />
+        <Spacer />
+        <Button text="Submit" onPress={handleSubmitPress} />
+        <Button text="Dismiss" onPress={handleDismissPress} />
+      </ScrollView>
     </TrueSheet>
   );
 });

@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
@@ -36,6 +37,12 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: String = "automatic"
   var scrollViewBottomInset: Int = 0
+  var scrollViewPinningEnabled: Boolean = false
+  var scrollableOptions: ReadableMap? = null
+    set(value) {
+      field = value
+      contentView?.scrollableOptions = value
+    }
 
   override val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
@@ -48,11 +55,15 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   fun setupContentScrollViewPinning() {
     val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
-    contentView?.setupScrollViewPinning(bottomInset)
+    contentView?.setupScrollViewPinning(scrollViewPinningEnabled, bottomInset)
   }
 
-  fun clearContentScrollViewPinning() {
-    contentView?.clearScrollViewPinning()
+  fun setupKeyboardHandler() {
+    contentView?.setupKeyboardHandler()
+  }
+
+  fun cleanupKeyboardHandler() {
+    contentView?.cleanupKeyboardHandler()
   }
 
   override fun addView(child: View?, index: Int) {
@@ -61,6 +72,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     when (child) {
       is TrueSheetContentView -> {
         child.delegate = this
+        child.scrollableOptions = scrollableOptions
         contentView = child
       }
 

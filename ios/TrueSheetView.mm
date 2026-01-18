@@ -52,6 +52,7 @@ using namespace facebook::react;
   NSInteger _initialDetentIndex;
   NSString *_insetAdjustment;
   BOOL _scrollable;
+  NSDictionary *_scrollableOptions;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
@@ -236,12 +237,26 @@ using namespace facebook::react;
   _initialDetentAnimated = newProps.initialDetentAnimated;
   _scrollable = newProps.scrollable;
 
+  const auto &scrollableOpts = newProps.scrollableOptions;
+  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0;
+
+  if (hasScrollableOptions) {
+    NSMutableDictionary *options = [NSMutableDictionary dictionary];
+    if (scrollableOpts.keyboardScrollOffset > 0) {
+      options[@"keyboardScrollOffset"] = @(scrollableOpts.keyboardScrollOffset);
+    }
+    _scrollableOptions = options;
+  } else {
+    _scrollableOptions = nil;
+  }
+
   _insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
   _controller.insetAdjustment = _insetAdjustment;
 
   if (_containerView) {
     _containerView.scrollViewPinningEnabled = _scrollable;
     _containerView.insetAdjustment = _insetAdjustment;
+    _containerView.scrollableOptions = _scrollableOptions;
   }
 }
 
@@ -353,6 +368,7 @@ using namespace facebook::react;
 
   _containerView.scrollViewPinningEnabled = _scrollable;
   _containerView.insetAdjustment = _insetAdjustment;
+  _containerView.scrollableOptions = _scrollableOptions;
   [_containerView setupContentScrollViewPinning];
 
   if (_eventEmitter) {
@@ -532,7 +548,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
-  [_containerView setupKeyboardHandler];
+  [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 }
 
@@ -563,7 +579,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidDismiss {
-  [_containerView cleanupKeyboardHandler];
+  [_containerView cleanupKeyboardObserver];
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;
