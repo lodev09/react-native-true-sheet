@@ -172,10 +172,6 @@ using namespace facebook::react;
   [self setupContentScrollViewPinning];
 }
 
-- (void)contentViewDidChangeInsets {
-  [self setupContentScrollViewPinning];
-}
-
 #pragma mark - TrueSheetHeaderViewDelegate
 
 - (void)headerViewDidChangeSize:(CGSize)newSize {

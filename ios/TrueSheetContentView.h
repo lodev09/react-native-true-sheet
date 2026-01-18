@@ -23,7 +23,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)contentViewDidChangeSize:(CGSize)newSize;
 - (void)contentViewDidChangeChildren;
-- (void)contentViewDidChangeInsets;
 
 @end
 

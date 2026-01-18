@@ -16,7 +16,6 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
-#import "utils/LayoutUtil.h"
 #import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
@@ -24,11 +23,9 @@ using namespace facebook::react;
 @implementation TrueSheetContentView {
   RCTScrollViewComponentView *_pinnedScrollView;
   CGSize _lastSize;
-  UIEdgeInsets _contentInsets;
   CGFloat _bottomInset;
   CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
-  CGFloat _currentKeyboardHeight;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -48,14 +45,6 @@ using namespace facebook::react;
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-
-  UIEdgeInsets newInsets = UIEdgeInsetsMake(layoutMetrics.contentInsets.top, layoutMetrics.contentInsets.left,
-    layoutMetrics.contentInsets.bottom, layoutMetrics.contentInsets.right);
-
-  if (!UIEdgeInsetsEqualToEdgeInsets(newInsets, _contentInsets)) {
-    _contentInsets = newInsets;
-    [self.delegate contentViewDidChangeInsets];
-  }
 
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
@@ -99,36 +88,39 @@ using namespace facebook::react;
 }
 
 - (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset {
-  UIView *containerView = self.superview;
-
   if (!pinned) {
     [self clearPinning];
     return;
   }
 
+  // Already pinned with same inset
+  if (_pinnedScrollView && _bottomInset == bottomInset) {
+    return;
+  }
+
   RCTScrollViewComponentView *scrollView = [self findScrollView];
-  BOOL needsUpdate = scrollView != _pinnedScrollView || _bottomInset != bottomInset;
+  if (!scrollView) {
+    return;
+  }
 
-  if (scrollView && containerView && needsUpdate) {
-    [self clearPinning];
-
+  // Only capture originals on first pin
+  if (!_pinnedScrollView) {
     _originalScrollViewHeight = scrollView.frame.size.height;
     _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
-    _bottomInset = bottomInset;
-
-    [self updateScrollViewHeight];
-
-    UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
-    contentInset.bottom = bottomInset;
-    scrollView.scrollView.contentInset = contentInset;
-
-    UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
-    indicatorInsets.bottom = _originalIndicatorBottomInset + bottomInset;
-    scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
-  } else if (!scrollView && _pinnedScrollView) {
-    [self clearPinning];
   }
+
+  _bottomInset = bottomInset;
+
+  [self updateScrollViewHeight];
+
+  UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
+  contentInset.bottom = bottomInset;
+  scrollView.scrollView.contentInset = contentInset;
+
+  UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
+  indicatorInsets.bottom = _originalIndicatorBottomInset + bottomInset;
+  scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
 }
 
 - (void)updateScrollViewHeight {
@@ -191,8 +183,6 @@ using namespace facebook::react;
     return;
   }
 
-  _currentKeyboardHeight = height;
-
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
@@ -223,8 +213,6 @@ using namespace facebook::react;
     return;
   }
 
-  _currentKeyboardHeight = 0;
-
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
@@ -244,7 +232,6 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  _currentKeyboardHeight = 0;
   [self clearPinning];
 }
 
