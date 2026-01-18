@@ -29,9 +29,16 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 ### Prerequisites
 
-- React Native >= 0.76 (Expo SDK 52+)
+- React Native 0.80+
 - New Architecture enabled (default in RN 0.76+)
-- Xcode 26.2 (strongly recommended for better library functionality)
+- Xcode 26.1+ (liquid glass support)
+
+### Compatibility
+
+| TrueSheet | React Native | Expo SDK |
+|-----------|--------------|----------|
+| 3.7+      | 0.80+        | 54+      |
+| 3.6       | 0.79         | 52-53    |
 
 ### Expo
 
@@ -44,27 +51,6 @@ npx expo install @lodev09/react-native-true-sheet
 ```sh
 yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
-```
-
-### EAS Build (iOS)
-
-When using [EAS Build](https://docs.expo.dev/build/introduction/) to build your iOS app, you must configure your `eas.json` to use a build image that includes Xcode 26.2. Use `"image": "latest"` or choose from the [available build images](https://docs.expo.dev/build-reference/infrastructure/#ios-server-images):
-
-```json
-{
-  "build": {
-    "production": {
-      "ios": {
-        "image": "latest"
-      }
-    },
-    "development": {
-      "ios": {
-        "image": "latest"
-      }
-    }
-  }
-}
 ```
 
 ## Documentation
@@ -110,31 +96,6 @@ export const App = () => {
   )
 }
 ```
-
-## Testing
-
-TrueSheet exports mocks for easy testing:
-
-```tsx
-// Main component
-jest.mock('@lodev09/react-native-true-sheet', () =>
-  require('@lodev09/react-native-true-sheet/mock')
-);
-
-// Navigation (if using)
-jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
-  require('@lodev09/react-native-true-sheet/navigation/mock')
-);
-
-// Reanimated (if using)
-jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
-  require('@lodev09/react-native-true-sheet/reanimated/mock')
-);
-```
-
-All methods (`present`, `dismiss`, `resize`) are mocked as Jest functions, allowing you to test your components without native dependencies.
-
-**[Full Testing Guide](https://sheet.lodev09.com/guides/jest)**
 
 ## Contributing
 

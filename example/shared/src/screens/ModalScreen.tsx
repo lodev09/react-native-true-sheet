@@ -48,7 +48,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Spacer />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
-        <BasicSheet detents={['auto', 1]} dimmedDetentIndex={1} ref={basicSheet} />
+        <BasicSheet initialDetentIndex={0} dimmedDetentIndex={1} ref={basicSheet} />
         <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
 

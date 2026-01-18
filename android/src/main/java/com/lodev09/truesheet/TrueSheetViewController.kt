@@ -26,7 +26,8 @@ import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.RNScreensFragmentObserver
+import com.lodev09.truesheet.core.RNScreensEventObserver
+import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
@@ -147,6 +148,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Promises
   var presentPromise: (() -> Unit)? = null
+  var resizePromise: (() -> Unit)? = null
   var dismissPromise: (() -> Unit)? = null
 
   // For stacked sheets
@@ -154,7 +156,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  private var rnScreensObserver: RNScreensFragmentObserver? = null
+  internal var rnScreensEventObserver: RNScreensEventObserver? = null
   internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
     delegate = this@TrueSheetViewController
   }
@@ -341,7 +343,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
-    cleanupModalObserver()
+    cleanupScreenEventObserver()
     cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
@@ -590,46 +592,44 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Modal Observer (react-native-screens)
+  // MARK: - Screen Event Observer (react-native-screens)
   // =============================================================================
 
-  private fun setupModalObserver() {
-    rnScreensObserver = RNScreensFragmentObserver(
-      reactContext = reactContext,
-      onScreenPresented = {
-        if (isPresented && isTopmostSheet) {
-          if (isSheetVisible) {
+  private fun setupScreenEventObserver() {
+    rnScreensEventObserver = RNScreensEventObserver().apply {
+      delegate = object : RNScreensEventObserverDelegate {
+        override fun screenWillDisappear() {
+          if (isPresented && isSheetVisible) {
             dismissKeyboard()
             post { hideForScreen() }
-          } else {
-            // Sheet is already hidden, just mark it
-            wasHiddenByScreen = true
           }
         }
-      },
-      onScreenWillDismiss = {
-        val hasPushedScreens = rnScreensObserver?.hasPushedScreens == true
-        if (isPresented && wasHiddenByScreen && isTopmostSheet && !hasPushedScreens) {
-          showAfterScreen()
-          delegate?.viewControllerDidDetectScreenDismiss()
-        }
-      },
-      onScreenDidDismiss = {
-        if (isPresented && wasHiddenByScreen) {
-          wasHiddenByScreen = false
-          // Restore parent sheet after this sheet is restored
-          parentSheetView?.viewController?.let { parent ->
-            post { parent.showAfterScreen() }
+
+        override fun screenWillAppear() {
+          if (isPresented && wasHiddenByScreen) {
+            wasHiddenByScreen = false
+            showAfterScreen()
+            this@TrueSheetViewController.delegate?.viewControllerDidDetectScreenDismiss()
           }
         }
       }
-    )
-    rnScreensObserver?.start()
+
+      // For stacked sheets on the same screen, inherit parent's presenter screen tag.
+      // If parent was hidden by screen navigation, this sheet is on a different screen.
+      val parentScreenTag = parentSheetView?.viewController?.rnScreensEventObserver?.presenterScreenTag ?: 0
+      val parentHiddenByScreen = parentSheetView?.viewController?.wasHiddenByScreen == true
+      if (parentScreenTag != 0 && !parentHiddenByScreen) {
+        presenterScreenTag = parentScreenTag
+      } else {
+        capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
+      }
+      startObserving(eventDispatcher)
+    }
   }
 
-  private fun cleanupModalObserver() {
-    rnScreensObserver?.stop()
-    rnScreensObserver = null
+  private fun cleanupScreenEventObserver() {
+    rnScreensEventObserver?.stopObserving()
+    rnScreensEventObserver = null
   }
 
   private fun setSheetVisibility(visible: Boolean) {
@@ -691,41 +691,58 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     if (isPresented) {
-      setupDimmedBackground()
-      setStateForDetentIndex(detentIndex)
+      RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
+      presentPromise?.invoke()
+      presentPromise = null
+      return
+    }
+
+    shouldAnimatePresent = animated
+    currentDetentIndex = detentIndex
+    interactionState = InteractionState.Idle
+
+    // Setup sheet in coordinator layout
+    setupSheetInCoordinator(coordinator, sheet)
+
+    emitWillPresentEvents()
+
+    setupSheetDetents()
+    setupDimmedBackground()
+    setupKeyboardObserver()
+    setupBackCallback()
+
+    sheet.setupBackground()
+    sheet.setupElevation()
+    sheet.setupGrabber()
+
+    if (shouldAnimatePresent) {
+      isPresentAnimating = true
+      post { setStateForDetentIndex(currentDetentIndex) }
     } else {
-      shouldAnimatePresent = animated
-      currentDetentIndex = detentIndex
-      interactionState = InteractionState.Idle
-
-      // Setup sheet in coordinator layout
-      setupSheetInCoordinator(coordinator, sheet)
-
-      emitWillPresentEvents()
-
-      setupSheetDetents()
-      setupDimmedBackground()
-      setupKeyboardObserver()
-      setupModalObserver()
-      setupBackCallback()
-
-      sheet.setupBackground()
-      sheet.setupElevation()
-      sheet.setupGrabber()
-
-      if (shouldAnimatePresent) {
-        isPresentAnimating = true
-        post { setStateForDetentIndex(currentDetentIndex) }
-      } else {
-        setStateForDetentIndex(currentDetentIndex)
+      setStateForDetentIndex(currentDetentIndex)
+      post {
         emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
         updateDimAmount()
         finishPresent()
       }
-
-      isPresented = true
-      isSheetVisible = true
     }
+
+    isPresented = true
+    isSheetVisible = true
+  }
+
+  fun resize(detentIndex: Int) {
+    if (!isPresented) {
+      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
+      resizePromise?.invoke()
+      resizePromise = null
+      return
+    }
+
+    setupDimmedBackground()
+    setStateForDetentIndex(detentIndex)
+    resizePromise?.invoke()
+    resizePromise = null
   }
 
   private fun setupSheetInCoordinator(coordinator: TrueSheetCoordinatorLayout, sheet: TrueSheetBottomSheetView) {
@@ -795,8 +812,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
 
-    // Setup keyboard handler for scrollable content
     containerView?.setupKeyboardHandler()
+    setupScreenEventObserver()
 
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)

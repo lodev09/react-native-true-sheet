@@ -332,7 +332,7 @@ export class TrueSheet
   }
 
   public async resize(index: number): Promise<void> {
-    await this.present(index);
+    await TrueSheetModule?.resizeByRef(this.handle, index);
   }
 
   public async dismiss(animated: boolean = true): Promise<void> {
