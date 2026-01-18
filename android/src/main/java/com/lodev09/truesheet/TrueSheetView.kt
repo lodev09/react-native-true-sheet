@@ -120,7 +120,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (child is TrueSheetContainerView) {
       child.delegate = this
       viewController.createSheet()
-      setupContentScrollViewPinning()
+      setupScrollable()
 
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
@@ -186,7 +186,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Reconfigures the sheet if it's currently presented.
    */
   fun finalizeUpdates() {
-    setupContentScrollViewPinning()
+    setupScrollable()
 
     if (viewController.isPresented) {
       viewController.sheetView?.setupBackground()
@@ -256,26 +256,26 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setInsetAdjustment(insetAdjustment: String) {
     viewController.insetAdjustment = insetAdjustment
-    setupContentScrollViewPinning()
+    setupScrollable()
   }
 
   fun setScrollable(scrollable: Boolean) {
     viewController.scrollable = scrollable
-    setupContentScrollViewPinning()
+    setupScrollable()
   }
 
   fun setScrollableOptions(options: ReadableMap?) {
     viewController.scrollableOptions = options
-    setupContentScrollViewPinning()
+    setupScrollable()
   }
 
-  private fun setupContentScrollViewPinning() {
+  private fun setupScrollable() {
     viewController.containerView?.let {
       it.insetAdjustment = viewController.insetAdjustment
-      it.scrollViewPinningEnabled = viewController.scrollable
+      it.scrollableEnabled = viewController.scrollable
       it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
-      it.setupContentScrollViewPinning()
+      it.setupScrollable()
     }
   }
 

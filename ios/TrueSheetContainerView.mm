@@ -34,7 +34,7 @@ using namespace facebook::react;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
   TrueSheetKeyboardObserver *_keyboardObserver;
-  BOOL _scrollViewPinningSet;
+  BOOL _scrollableSet;
 }
 
 #pragma mark - Initialization
@@ -52,12 +52,17 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
-    _scrollViewPinningSet = NO;
+    _scrollableSet = NO;
   }
   return self;
 }
 
 #pragma mark - Layout
+
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [_contentView updateScrollViewHeight];
+}
 
 - (CGFloat)contentHeight {
   return _contentView ? _contentView.frame.size.height : 0;
@@ -76,9 +81,9 @@ using namespace facebook::react;
   }
 }
 
-- (void)setScrollViewPinningEnabled:(BOOL)scrollViewPinningEnabled {
-  _scrollViewPinningEnabled = scrollViewPinningEnabled;
-  _scrollViewPinningSet = YES;
+- (void)setScrollableEnabled:(BOOL)scrollableEnabled {
+  _scrollableEnabled = scrollableEnabled;
+  _scrollableSet = YES;
 }
 
 - (void)setScrollableOptions:(NSDictionary *)scrollableOptions {
@@ -91,13 +96,13 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupContentScrollViewPinning {
-  if (_scrollViewPinningSet && _contentView) {
+- (void)setupScrollable {
+  if (_scrollableSet && _contentView) {
     CGFloat bottomInset = 0;
     if ([_insetAdjustment isEqualToString:@"automatic"]) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
-    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled bottomInset:bottomInset];
+    [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
   }
 }
 
@@ -164,11 +169,7 @@ using namespace facebook::react;
 }
 
 - (void)contentViewDidChangeChildren {
-  [self setupContentScrollViewPinning];
-}
-
-- (void)contentViewDidChangeInsets {
-  [self setupContentScrollViewPinning];
+  [self setupScrollable];
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate

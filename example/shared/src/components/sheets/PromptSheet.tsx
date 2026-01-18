@@ -92,6 +92,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.content}
+        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
       >
         <Input ref={input1Ref} placeholder="First name" />
         <Input ref={input2Ref} placeholder="Last name" />

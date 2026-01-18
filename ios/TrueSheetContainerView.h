@@ -39,12 +39,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
- * Enable ScrollView pinning
+ * Enable scrollable content
  */
-@property (nonatomic, assign) BOOL scrollViewPinningEnabled;
+@property (nonatomic, assign) BOOL scrollableEnabled;
 
 /**
- * Inset adjustment mode for pinned ScrollView
+ * Inset adjustment mode for scrollable content
  */
 @property (nonatomic, copy, nullable) NSString *insetAdjustment;
 
@@ -69,9 +69,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)layoutFooter;
 
 /**
- * Setup ScrollView pinning
+ * Setup scrollable content
  */
-- (void)setupContentScrollViewPinning;
+- (void)setupScrollable;
 
 /**
  * Setup keyboard observer for content and footer

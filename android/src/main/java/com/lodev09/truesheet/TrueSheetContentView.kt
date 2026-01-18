@@ -52,9 +52,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
-  fun setupScrollViewPinning(enabled: Boolean, bottomInset: Int) {
+  fun setupScrollable(enabled: Boolean, bottomInset: Int) {
     if (!enabled) {
-      clearScrollViewPinning()
+      clearScrollable()
       return
     }
 
@@ -89,7 +89,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
-  fun clearScrollViewPinning() {
+  fun clearScrollable() {
     pinnedScrollView?.setPadding(
       pinnedScrollView!!.paddingLeft,
       pinnedScrollView!!.paddingTop,
