@@ -26,8 +26,6 @@ import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
-import com.lodev09.truesheet.core.RNScreensEventObserver
-import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
@@ -134,7 +132,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private var interactionState: InteractionState = InteractionState.Idle
   private var isDismissing = false
-  internal var wasHiddenByScreen = false
+  var wasHiddenByScreen = false
   private var shouldAnimatePresent = false
   private var isPresentAnimating = false
 
@@ -156,7 +154,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Helper Objects
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
-  internal var rnScreensEventObserver: RNScreensEventObserver? = null
   internal val detentCalculator = TrueSheetDetentCalculator(reactContext).apply {
     delegate = this@TrueSheetViewController
   }
@@ -323,7 +320,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
-    cleanupScreenEventObserver()
     cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
@@ -572,52 +568,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Screen Event Observer (react-native-screens)
+  // MARK: - Screen Visibility
   // =============================================================================
-
-  private fun setupScreenEventObserver() {
-    rnScreensEventObserver = RNScreensEventObserver().apply {
-      delegate = object : RNScreensEventObserverDelegate {
-        override fun screenWillDisappear() {
-          if (isPresented && isSheetVisible) {
-            dismissKeyboard()
-            post { hideForScreen() }
-          }
-        }
-
-        override fun screenWillAppear() {
-          if (isPresented && wasHiddenByScreen) {
-            wasHiddenByScreen = false
-            showAfterScreen()
-            this@TrueSheetViewController.delegate?.viewControllerDidDetectScreenDismiss()
-          }
-        }
-      }
-
-      // For stacked sheets on the same screen, inherit parent's presenter screen tag.
-      // If parent was hidden by screen navigation, this sheet is on a different screen.
-      val parentScreenTag = parentSheetView?.viewController?.rnScreensEventObserver?.presenterScreenTag ?: 0
-      val parentHiddenByScreen = parentSheetView?.viewController?.wasHiddenByScreen == true
-      if (parentScreenTag != 0 && !parentHiddenByScreen) {
-        presenterScreenTag = parentScreenTag
-      } else {
-        capturePresenterScreenFromView(this@TrueSheetViewController.delegate as? View)
-      }
-      startObserving(eventDispatcher)
-    }
-  }
-
-  private fun cleanupScreenEventObserver() {
-    rnScreensEventObserver?.stopObserving()
-    rnScreensEventObserver = null
-  }
 
   private fun setSheetVisibility(visible: Boolean) {
     coordinatorLayout?.visibility = if (visible) VISIBLE else GONE
     dimViews.forEach { it.visibility = if (visible) VISIBLE else INVISIBLE }
   }
 
-  private fun hideForScreen() {
+  internal fun hideForScreen() {
     val sheet = sheetView ?: run {
       RNLog.e(reactContext, "TrueSheet: sheetView is null in hideForScreen")
       return
@@ -639,7 +598,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     parentSheetView?.viewController?.hideForScreen()
   }
 
-  private fun showAfterScreen() {
+  internal fun showAfterScreen() {
     isSheetVisible = true
     setSheetVisibility(true)
     sheetView?.alpha = 1f
@@ -793,7 +752,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior?.isHideable = dismissible
 
     containerView?.setupKeyboardHandler()
-    setupScreenEventObserver()
 
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     delegate?.viewControllerDidPresent(index, position, detent)
