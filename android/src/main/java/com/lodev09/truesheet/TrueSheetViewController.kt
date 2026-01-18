@@ -336,7 +336,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.removeView(this)
 
     containerView?.cleanupKeyboardHandler()
-    containerView?.clearContentScrollViewPinning()
     coordinatorLayout = null
     sheetView = null
 
