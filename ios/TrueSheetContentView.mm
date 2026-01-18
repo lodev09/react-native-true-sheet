@@ -153,6 +153,10 @@ using namespace facebook::react;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
+  if (_pinnedScrollView) {
+    return _pinnedScrollView;
+  }
+
   if (self.subviews.count == 0) {
     return nil;
   }
