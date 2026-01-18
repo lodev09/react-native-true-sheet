@@ -140,8 +140,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
           updateScrollViewInsetForKeyboard(0)
         }
 
-        override fun keyboardDidHide() { }
-        override fun keyboardDidChangeHeight(height: Int) { }
         override fun focusDidChange(newFocus: View) {
           scrollToFocusedInput()
         }

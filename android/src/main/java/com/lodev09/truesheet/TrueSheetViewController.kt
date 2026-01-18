@@ -977,8 +977,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           setStateForDetentIndex(detents.size - 1)
         }
 
-        override fun keyboardDidShow(height: Int) {}
-
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
 

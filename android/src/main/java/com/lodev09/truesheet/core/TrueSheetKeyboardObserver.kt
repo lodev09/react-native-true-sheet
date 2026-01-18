@@ -12,12 +12,12 @@ import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetKeyboardObserverDelegate {
-  fun keyboardWillShow(height: Int)
-  fun keyboardDidShow(height: Int)
-  fun keyboardWillHide()
-  fun keyboardDidHide()
-  fun keyboardDidChangeHeight(height: Int)
-  fun focusDidChange(newFocus: View)
+  fun keyboardWillShow(height: Int) {}
+  fun keyboardDidShow(height: Int) {}
+  fun keyboardWillHide() {}
+  fun keyboardDidHide() {}
+  fun keyboardDidChangeHeight(height: Int) {}
+  fun focusDidChange(newFocus: View) {}
 }
 
 /**
