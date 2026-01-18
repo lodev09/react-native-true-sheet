@@ -998,6 +998,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (!shouldHandleKeyboard(checkFocus = !isHandlingKeyboard)) return
           positionFooter()
         }
+
+        override fun focusDidChange(newFocus: View) {
+          // Handle case where keyboard is already visible and focus moves into the sheet
+          if (!shouldHandleKeyboard()) return
+          if (detentIndexBeforeKeyboard < 0 && (keyboardObserver?.currentHeight ?: 0) > 0) {
+            detentIndexBeforeKeyboard = currentDetentIndex
+            currentDetentIndex = detents.size - 1
+            setupSheetDetents()
+          }
+        }
       }
       start()
     }
