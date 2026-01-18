@@ -1,9 +1,9 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.ScrollView
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -11,6 +11,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
+import com.lodev09.truesheet.utils.isDescendantOf
 
 /**
  * Delegate interface for content view size changes
@@ -36,12 +37,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
+  private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
 
   var scrollableOptions: ReadableMap? = null
     set(value) {
       field = value
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
-      Log.d("TrueSheet", "scrollableOptions set: $value, keyboardScrollOffset: $keyboardScrollOffset")
     }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -141,11 +142,30 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       }
       start()
     }
+
+    setupFocusChangeListener()
+  }
+
+  private fun setupFocusChangeListener() {
+    if (focusChangeListener != null) return
+
+    focusChangeListener = ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+      val isKeyboardVisible = (keyboardObserver?.currentHeight ?: 0) > 0
+      if (isKeyboardVisible && newFocus != null && newFocus.isDescendantOf(this)) {
+        scrollToFocusedInput()
+      }
+    }
+    viewTreeObserver.addOnGlobalFocusChangeListener(focusChangeListener)
   }
 
   fun cleanupKeyboardHandler() {
     keyboardObserver?.stop()
     keyboardObserver = null
+
+    focusChangeListener?.let {
+      viewTreeObserver.removeOnGlobalFocusChangeListener(it)
+    }
+    focusChangeListener = null
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
@@ -170,24 +190,22 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun scrollToFocusedInput() {
-    val scrollView = pinnedScrollView ?: return
-    val focusedView = rootView?.findFocus() ?: return
+    val scrollView = pinnedScrollView ?: findScrollView() ?: return
+    val focusedView = findFocus() ?: return
 
-    // Get focused view position relative to scrollview
     val focusedLocation = IntArray(2)
     val scrollViewLocation = IntArray(2)
-    focusedView.getLocationInWindow(focusedLocation)
-    scrollView.getLocationInWindow(scrollViewLocation)
+    focusedView.getLocationOnScreen(focusedLocation)
+    scrollView.getLocationOnScreen(scrollViewLocation)
 
     val relativeTop = focusedLocation[1] - scrollViewLocation[1] + scrollView.scrollY
     val relativeBottom = relativeTop + focusedView.height + keyboardScrollOffset.toInt()
 
-    // Calculate target scroll position to make the view visible
-    val scrollViewHeight = scrollView.height - scrollView.paddingBottom
-    val targetScroll = relativeBottom - scrollViewHeight
+    val visibleHeight = scrollView.height - scrollView.paddingBottom
+    val visibleBottom = scrollView.scrollY + visibleHeight
 
-    if (targetScroll > scrollView.scrollY) {
-      scrollView.smoothScrollTo(0, targetScroll)
+    if (relativeBottom > visibleBottom) {
+      scrollView.smoothScrollTo(0, relativeBottom - visibleHeight)
     }
   }
 
