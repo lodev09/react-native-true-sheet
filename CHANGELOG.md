@@ -19,6 +19,7 @@
 
 ### 💡 Others
 
+- Separated `present()` and `resize()` methods; calling `present()` on an already-presented sheet now logs a warning instead of resizing. ([#441](https://github.com/lodev09/react-native-true-sheet/pull/441) by [@lodev09](https://github.com/lodev09))
 - **Android**: Refactored screen event detection to use EventDispatcherListener instead of FragmentLifecycleCallbacks. ([#438](https://github.com/lodev09/react-native-true-sheet/pull/438) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Refactored screen unmount detection to use C++ EventDispatcher instead of RNSLifecycleListenerProtocol. ([#410](https://github.com/lodev09/react-native-true-sheet/pull/410) by [@lodev09](https://github.com/lodev09))
 
