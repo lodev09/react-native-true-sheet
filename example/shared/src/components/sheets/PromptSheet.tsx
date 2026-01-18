@@ -2,16 +2,16 @@ import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
 import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, GAP, SPACING } from '../../utils';
+import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
 import { Spacer } from '../Spacer';
+import { Footer } from '../Footer';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
-
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
@@ -22,6 +22,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const input7Ref = useRef<TextInput>(null);
   const input8Ref = useRef<TextInput>(null);
   const input9Ref = useRef<TextInput>(null);
+  const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
   const inputRefs = [
@@ -34,6 +35,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     input7Ref,
     input8Ref,
     input9Ref,
+    input10Ref,
     textAreaRef,
   ];
 
@@ -61,7 +63,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       name="prompt-sheet"
       detents={[1]}
       scrollable
-      scrollableOptions={{ keyboardScrollOffset: SPACING }}
+      scrollableOptions={{ keyboardScrollOffset: FOOTER_HEIGHT + SPACING }}
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
@@ -83,9 +85,14 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         sheetRef.current?.dismiss();
       }}
       header={<Header />}
+      footer={<Footer onPress={handleSubmitPress} />}
       {...props}
     >
-      <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
+      <ScrollView
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
         <Input ref={input1Ref} placeholder="First name" />
         <Input ref={input2Ref} placeholder="Last name" />
         <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />
@@ -95,8 +102,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input ref={input7Ref} placeholder="State" />
         <Input ref={input8Ref} placeholder="Zip code" keyboardType="number-pad" />
         <Input ref={input9Ref} placeholder="Country" />
+        <Input ref={input10Ref} placeholder="Contact" />
         <Input ref={textAreaRef} placeholder="Message..." multiline />
-        <Input ref={input9Ref} placeholder="Contact" />
         <Spacer />
         <Button text="Submit" onPress={handleSubmitPress} />
         <Button text="Dismiss" onPress={handleDismissPress} />
@@ -108,6 +115,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
 });

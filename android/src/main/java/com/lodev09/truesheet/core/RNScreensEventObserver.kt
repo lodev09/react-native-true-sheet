@@ -58,8 +58,6 @@ class RNScreensEventObserver : EventDispatcherListener {
   }
 
   companion object {
-    private fun isScreenView(view: View): Boolean {
-      return view.javaClass.name == RN_SCREENS_VIEW_CLASS
-    }
+    private fun isScreenView(view: View): Boolean = view.javaClass.name == RN_SCREENS_VIEW_CLASS
   }
 }

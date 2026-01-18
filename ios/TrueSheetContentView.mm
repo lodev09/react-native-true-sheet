@@ -111,8 +111,7 @@ using namespace facebook::react;
   RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
 
   BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
-                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) ||
-                     _bottomInset != bottomInset;
+                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) || _bottomInset != bottomInset;
 
   if (scrollView && containerView && needsUpdate) {
     [self clearPinning];
