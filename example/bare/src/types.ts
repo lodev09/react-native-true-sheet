@@ -15,6 +15,7 @@ export type SheetStackParamList = {
   SheetHomeStack: undefined;
   Details: undefined;
   Settings: undefined;
+  Profile: undefined;
 };
 
 export type SheetHomeStackParamList = {

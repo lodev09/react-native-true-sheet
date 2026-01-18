@@ -5,18 +5,20 @@ import { Button, DemoContent } from '@example/shared/components';
 import { GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import { useRouter } from 'expo-router';
 
-export default function DetailsSheet() {
+export default function ProfileSheet() {
   const navigation = useTrueSheetNavigation();
   const router = useRouter();
 
   return (
     <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Details Sheet</Text>
-      <Text style={styles.sheetSubtitle}>This is a sheet screen using expo-router.</Text>
+      <Text style={styles.sheetTitle}>Profile Sheet</Text>
+      <Text style={styles.sheetSubtitle}>
+        Third sheet in the stack. Test popTo and popToTop here!
+      </Text>
       <DemoContent />
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
-        <Button text="Open Settings" onPress={() => router.push('/sheet/settings')} />
+        <Button text="Pop to Details" onPress={() => navigation.popTo('details')} />
         <Button text="Pop to Top (Home)" onPress={() => navigation.popToTop()} />
         <Button text="Go Back" onPress={() => router.back()} />
       </View>

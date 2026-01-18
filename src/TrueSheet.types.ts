@@ -62,6 +62,12 @@ export interface TrueSheetRef {
    */
   dismiss: (animated?: boolean) => Promise<void>;
   /**
+   * Dismiss this sheet and all sheets presented on top of it in a single animation.
+   * Uses the native cascade dismiss behavior.
+   * @param animated - Whether to animate the dismissal (default: true)
+   */
+  dismissWithChildren: (animated?: boolean) => Promise<void>;
+  /**
    * Resize the sheet to a given detent index.
    * @param index - The detent index to resize to
    */

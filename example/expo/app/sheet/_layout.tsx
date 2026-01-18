@@ -83,6 +83,14 @@ export default function SheetStackLayout() {
             cornerRadius: 16,
           }}
         />
+        <Sheet.Screen
+          name="profile"
+          options={{
+            detents: ['auto', 1],
+            backgroundColor: DARK,
+            cornerRadius: 16,
+          }}
+        />
       </Sheet>
     </TrueSheetProvider>
   );
