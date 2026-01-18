@@ -54,17 +54,8 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupContentScrollViewPinning() {
-    if (!scrollViewPinningEnabled) {
-      clearContentScrollViewPinning()
-      return
-    }
-
     val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
-    contentView?.setupScrollViewPinning(bottomInset)
-  }
-
-  fun clearContentScrollViewPinning() {
-    contentView?.clearScrollViewPinning()
+    contentView?.setupScrollViewPinning(scrollViewPinningEnabled, bottomInset)
   }
 
   fun setupKeyboardHandler() {

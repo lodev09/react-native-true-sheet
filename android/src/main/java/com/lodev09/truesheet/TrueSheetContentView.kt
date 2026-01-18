@@ -55,7 +55,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
-  fun setupScrollViewPinning(bottomInset: Int) {
+  fun setupScrollViewPinning(enabled: Boolean, bottomInset: Int) {
+    if (!enabled) {
+      clearScrollViewPinning()
+      return
+    }
+
     this.bottomInset = bottomInset
     applyScrollViewBottomInset()
   }
