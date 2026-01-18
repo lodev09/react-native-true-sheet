@@ -215,88 +215,31 @@ using namespace facebook::react;
   return topSibling;
 }
 
-#pragma mark - Keyboard Handling
+#pragma mark - TrueSheetKeyboardObserverDelegate
 
-- (void)setupKeyboardHandler {
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(keyboardWillChangeFrame:)
-                                               name:UIKeyboardWillChangeFrameNotification
-                                             object:nil];
-}
-
-- (void)cleanupKeyboardHandler {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
-  _currentKeyboardHeight = 0;
-}
-
-- (TrueSheetViewController *)findSheetViewController {
-  UIResponder *responder = self;
-  while (responder) {
-    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
-      return (TrueSheetViewController *)responder;
-    }
-    responder = responder.nextResponder;
-  }
-  return nil;
-}
-
-- (BOOL)isFirstResponderWithinSheet {
-  TrueSheetViewController *sheetController = [self findSheetViewController];
-  if (!sheetController) {
-    return NO;
-  }
-
-  UIView *firstResponder = [sheetController.view findFirstResponder];
-  return firstResponder != nil;
-}
-
-- (void)keyboardWillChangeFrame:(NSNotification *)notification {
+- (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_pinnedScrollView) {
     return;
   }
 
-  TrueSheetViewController *sheetController = [self findSheetViewController];
-  if (sheetController && !sheetController.isTopmostPresentedController) {
-    return;
-  }
+  _currentKeyboardHeight = height;
 
-  if (![self isFirstResponderWithinSheet]) {
-    return;
-  }
-
-  NSDictionary *userInfo = notification.userInfo;
-  CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
-  NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-  UIViewAnimationOptions curve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] unsignedIntegerValue] << 16;
-
-  UIWindow *window = self.window;
-  if (!window) {
-    return;
-  }
-
-  CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
-  CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
-
-  _currentKeyboardHeight = keyboardHeight;
-
-  // When keyboard is visible, use keyboard height only (not combined with bottom inset)
-  CGFloat totalBottomInset = keyboardHeight > 0 ? keyboardHeight : _bottomInset;
-
-  UIView *firstResponder = [sheetController.view findFirstResponder];
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
                      UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
-                     contentInset.bottom = totalBottomInset;
+                     contentInset.bottom = height;
                      self->_pinnedScrollView.scrollView.contentInset = contentInset;
 
                      UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-                     indicatorInsets.bottom = self->_originalIndicatorBottomInset + keyboardHeight;
+                     indicatorInsets.bottom = self->_originalIndicatorBottomInset + height;
                      self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
 
-                     if (firstResponder && keyboardHeight > 0) {
+                     if (firstResponder) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
                                                                     toView:self->_pinnedScrollView.scrollView];
                        responderFrame.size.height += self.keyboardScrollOffset;
@@ -306,11 +249,33 @@ using namespace facebook::react;
                    completion:nil];
 }
 
+- (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  _currentKeyboardHeight = 0;
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
+                     contentInset.bottom = self->_bottomInset;
+                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
+
+                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+                     indicatorInsets.bottom = self->_originalIndicatorBottomInset;
+                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+                   }
+                   completion:nil];
+}
+
 #pragma mark - Lifecycle
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  [self cleanupKeyboardHandler];
+  _currentKeyboardHeight = 0;
   [self clearPinning];
 }
 

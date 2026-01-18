@@ -548,7 +548,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
-  [_containerView setupKeyboardHandler];
+  [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 }
 
@@ -579,7 +579,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidDismiss {
-  [_containerView cleanupKeyboardHandler];
+  [_containerView cleanupKeyboardObserver];
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;

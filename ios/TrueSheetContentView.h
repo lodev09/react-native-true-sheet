@@ -12,6 +12,7 @@
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 #import <react/renderer/core/LayoutMetrics.h>
+#import "core/TrueSheetKeyboardObserver.h"
 
 @class TrueSheetViewController;
 @class RCTScrollViewComponentView;
@@ -26,10 +27,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface TrueSheetContentView : RCTViewComponentView
+@interface TrueSheetContentView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
+@property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 - (RCTScrollViewComponentView *_Nullable)findScrollView:(UIView *_Nullable *_Nullable)outTopSibling;
 
@@ -39,9 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
  * @param bottomInset Bottom content inset for the scroll view
  */
 - (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset;
-
-- (void)setupKeyboardHandler;
-- (void)cleanupKeyboardHandler;
 
 @end
 
