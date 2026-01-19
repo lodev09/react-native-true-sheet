@@ -201,7 +201,11 @@ using namespace facebook::react;
                      if (firstResponder) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
                                                                     toView:self->_pinnedScrollView.scrollView];
-                       responderFrame.size.height += self.keyboardScrollOffset;
+                       // If JS provided an offset, use it (backwards compatible). Otherwise use footer height.
+                       CGFloat scrollOffset = self.keyboardScrollOffset > 0
+                         ? self.keyboardScrollOffset
+                         : self.footerHeight;
+                       responderFrame.size.height += scrollOffset;
                        [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:NO];
                      }
                    }

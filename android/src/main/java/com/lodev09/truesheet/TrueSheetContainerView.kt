@@ -73,6 +73,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       is TrueSheetContentView -> {
         child.delegate = this
         child.scrollableOptions = scrollableOptions
+        child.footerHeight = footerHeight
         contentView = child
       }
 
@@ -126,6 +127,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   override fun footerViewDidChangeSize(width: Int, height: Int) {
     footerHeight = height
+    contentView?.footerHeight = height
     delegate?.containerViewFooterDidChangeSize(width, height)
   }
 

@@ -62,6 +62,14 @@ using namespace facebook::react;
 - (void)layoutSubviews {
   [super layoutSubviews];
   [_contentView updateScrollViewHeight];
+  [self updateContentViewFooterHeight];
+}
+
+- (void)updateContentViewFooterHeight {
+  CGFloat footerHeight = _footerView ? _footerView.frame.size.height : 0;
+  if (_contentView.footerHeight != footerHeight) {
+    _contentView.footerHeight = footerHeight;
+  }
 }
 
 - (CGFloat)contentHeight {
@@ -136,6 +144,7 @@ using namespace facebook::react;
       return;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
+    [self updateContentViewFooterHeight];
   }
 }
 
@@ -153,6 +162,7 @@ using namespace facebook::react;
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     _footerView = nil;
+    [self updateContentViewFooterHeight];
   }
 
   [super unmountChildComponentView:childComponentView index:index];

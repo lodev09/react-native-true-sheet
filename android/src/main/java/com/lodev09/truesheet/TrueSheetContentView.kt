@@ -35,6 +35,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
+  var footerHeight: Int = 0
 
   var scrollableOptions: ReadableMap? = null
     set(value) {
@@ -183,7 +184,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     scrollView.getLocationOnScreen(scrollViewLocation)
 
     val relativeTop = focusedLocation[1] - scrollViewLocation[1] + scrollView.scrollY
-    val relativeBottom = relativeTop + focusedView.height + keyboardScrollOffset.toInt()
+    // If JS provided an offset, use it (backwards compatible). Otherwise use footer height.
+    val scrollOffset = if (keyboardScrollOffset > 0) {
+      keyboardScrollOffset.toInt()
+    } else {
+      footerHeight
+    }
+    val relativeBottom = relativeTop + focusedView.height + scrollOffset
 
     val visibleHeight = scrollView.height - scrollView.paddingBottom
     val visibleBottom = scrollView.scrollY + visibleHeight
