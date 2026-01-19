@@ -9,6 +9,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS, Android**: Fixed keyboard scroll offset to use measured footer height when `keyboardScrollOffset` is not provided. ([#451](https://github.com/lodev09/react-native-true-sheet/pull/451) by [@Layrton](https://github.com/Layrton))
 - **Android**: Fixed present promise not resolving on resize. ([c3495500](https://github.com/lodev09/react-native-true-sheet/commit/c3495500) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed scroll view pinning to respect content view padding/margin. ([#429](https://github.com/lodev09/react-native-true-sheet/pull/429), [#446](https://github.com/lodev09/react-native-true-sheet/pull/446) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed footer not translating back when keyboard hides via ScrollView. ([#424](https://github.com/lodev09/react-native-true-sheet/pull/424) by [@lodev09](https://github.com/lodev09))
