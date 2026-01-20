@@ -10,6 +10,7 @@ Now it performs a cascade dismiss of the entire stack. Use the `dismissChildren(
 
 ### 🎉 New features
 
+- **Navigation**: Added `popTo()` and `popToTop()` methods to dismiss multiple sheets in a single animation. ([#444](https://github.com/lodev09/react-native-true-sheet/pull/444) by [@obi-owner](https://github.com/444))
 - Added `dismissChildren()` method to dismiss only sheets presented on top of the current sheet, keeping the current sheet presented. ([#452](https://github.com/lodev09/react-native-true-sheet/pull/452) by [@obi-owner](https://github.com/obi-owner))
 - Added `scrollableOptions` prop with keyboard scroll handling for ScrollViews. ([#442](https://github.com/lodev09/react-native-true-sheet/pull/442) by [@lodev09](https://github.com/lodev09))
 - Added bottom inset to ScrollView when `insetAdjustment` is `automatic`. ([#430](https://github.com/lodev09/react-native-true-sheet/pull/430) by [@lodev09](https://github.com/lodev09))
