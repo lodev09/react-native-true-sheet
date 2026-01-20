@@ -352,18 +352,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
-    // iOS-like behavior: calling dismiss on a presenting controller dismisses
-    // its presented controller (and everything above it), but NOT itself.
-    // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
-    val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
-    if (sheetsAbove.isNotEmpty()) {
-      for (sheet in sheetsAbove) {
-        sheet.viewController.dismiss(animated)
-      }
-      promiseCallback()
-      return
-    }
-
     viewController.dismissPromise = promiseCallback
     viewController.dismiss(animated)
   }
@@ -371,11 +359,22 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun dismissAll(animated: Boolean = true, promiseCallback: () -> Unit) {
     // Dismiss all sheets above first
-    dismiss(animated) {}
+    dismissChildren(animated) {}
 
     // Then dismiss itself
     viewController.dismissPromise = promiseCallback
     viewController.dismiss(animated)
+  }
+
+  @UiThread
+  fun dismissChildren(animated: Boolean = true, promiseCallback: () -> Unit) {
+    val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
+    if (sheetsAbove.isNotEmpty()) {
+      for (sheet in sheetsAbove) {
+        sheet.viewController.dismiss(animated)
+      }
+    }
+    promiseCallback()
   }
 
   @UiThread

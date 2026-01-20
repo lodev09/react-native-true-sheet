@@ -36,6 +36,8 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 - (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
 
+- (void)dismissChildrenAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
+
 @end
 
 NS_ASSUME_NONNULL_END

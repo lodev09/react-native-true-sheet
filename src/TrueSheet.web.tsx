@@ -388,10 +388,20 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
         }
       });
     },
-    dismiss: () => {
+    dismiss: async () => {
+      const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
+
+      // Dismiss all sheets above sequentially since gorhom/bottom-sheet doesn't support cascade dismiss
+      for (const sheet of sheetsAbove) {
+        await bottomSheetContext?.dismissDirect(sheet);
+      }
+
+      // Then dismiss this sheet
+      await dismissInternal();
+    },
+    dismissChildren: () => {
       return new Promise<void>((resolve) => {
-        // iOS-like behavior: dismiss sheets above, but not itself.
-        // See: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621505-dismiss
+        // Dismiss only sheets above, keeping this sheet presented
         const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
         const immediateChild = sheetsAbove[sheetsAbove.length - 1];
         if (immediateChild) {
@@ -400,7 +410,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
           return;
         }
 
-        dismissInternal().then(resolve);
+        resolve();
       });
     },
     dismissDirect: () => dismissInternal(),
