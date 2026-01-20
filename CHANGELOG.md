@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- **`dismiss()` now dismisses the sheet and all sheets presented on top of it.** Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open.
+
+Now it performs a cascade dismiss of the entire stack. Use the `dismissChildren()` method if you need the old behavior of dismissing only child sheets. ([#obi-owner](https://github.com/lodev09/react-native-true-sheet/pull/XXX) by [@obi-owner](https://github.com/XXX))
+
 ### 🎉 New features
 
+- Added `dismissChildren()` method to dismiss only sheets presented on top of the current sheet, keeping the current sheet presented. ([#XXX](https://github.com/lodev09/react-native-true-sheet/pull/XXX) by [@XXX](https://github.com/XXX))
 - Added `scrollableOptions` prop with keyboard scroll handling for ScrollViews. ([#442](https://github.com/lodev09/react-native-true-sheet/pull/442) by [@lodev09](https://github.com/lodev09))
 - Added bottom inset to ScrollView when `insetAdjustment` is `automatic`. ([#430](https://github.com/lodev09/react-native-true-sheet/pull/430) by [@lodev09](https://github.com/lodev09))
 
