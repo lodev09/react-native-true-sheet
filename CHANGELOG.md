@@ -18,6 +18,10 @@
 - Auto re-present sheet when returning from screen dismiss (modal or navigation pop). ([#412](https://github.com/lodev09/react-native-true-sheet/pull/412) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed `onWillDismiss` event timing during drag dismiss. ([#416](https://github.com/lodev09/react-native-true-sheet/pull/416) by [@lodev09](https://github.com/lodev09))
 
+### 📖 Documentation
+
+- Added `transformIgnorePatterns` to Jest setup guide. ([#458](https://github.com/lodev09/react-native-true-sheet/pull/458) by [@lodev09](https://github.com/lodev09))
+
 ### 💡 Others
 
 - Separated `present()` and `resize()` methods; calling `present()` on an already-presented sheet now logs a warning instead of resizing. ([#441](https://github.com/lodev09/react-native-true-sheet/pull/441) by [@lodev09](https://github.com/lodev09))
