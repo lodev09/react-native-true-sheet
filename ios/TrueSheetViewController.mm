@@ -340,7 +340,7 @@
 
   TrueSheetContentView *contentView = [self findContentView:presentedView];
   if (contentView) {
-    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView:nil];
+    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView];
     if (scrollViewComponent && scrollViewComponent.scrollView) {
       [GestureUtil attachPanGestureHandler:scrollViewComponent.scrollView
                                     target:self
