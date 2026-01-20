@@ -404,7 +404,7 @@ export class TrueSheet
       <TrueSheetViewNativeComponent
         {...rest}
         ref={this.nativeRef}
-        style={styles.sheetView}
+        style={[StyleSheet.absoluteFill, styles.sheetView]}
         detents={resolvedDetents}
         backgroundBlur={backgroundBlur}
         blurOptions={blurOptions}
@@ -443,7 +443,7 @@ export class TrueSheet
         onBackPress={this.onBackPress}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent style={scrollable && styles.scrollableContainer}>
+          <TrueSheetContainerViewNativeComponent style={scrollable && StyleSheet.absoluteFill}>
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
@@ -470,20 +470,6 @@ const styles = StyleSheet.create({
   sheetView: {
     zIndex: -9999,
     pointerEvents: 'box-none',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-
-    // Android needs a fixed bottom to avoid jumping content
-    bottom: Platform.select({ android: 0 }),
-  },
-  scrollableContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   scrollableContent: {
     flexGrow: 1,
