@@ -119,7 +119,7 @@ using namespace facebook::react;
   scrollView.scrollView.contentInset = contentInset;
 
   UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
-  indicatorInsets.bottom = _originalIndicatorBottomInset + bottomInset;
+  indicatorInsets.bottom = _originalIndicatorBottomInset;
   scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
 }
 

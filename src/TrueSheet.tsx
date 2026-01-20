@@ -400,18 +400,6 @@ export class TrueSheet
       return Math.min(1, detent);
     });
 
-    const containerStyle =
-      this.props.scrollable &&
-      Platform.select({
-        android: styles.scrollableAndroidContainer,
-      });
-
-    const contentStyle =
-      this.props.scrollable &&
-      Platform.select({
-        android: styles.scrollableAndroidContent,
-      });
-
     return (
       <TrueSheetViewNativeComponent
         {...rest}
@@ -455,13 +443,18 @@ export class TrueSheet
         onBackPress={this.onBackPress}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent style={containerStyle}>
+          <TrueSheetContainerViewNativeComponent
+            style={scrollable && styles.scrollableContainer}
+            onLayout={(e) => console.log('[TrueSheet] container layout:', e.nativeEvent.layout)}
+          >
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
-            <TrueSheetContentViewNativeComponent style={[style, contentStyle]}>
+            <TrueSheetContentViewNativeComponent
+              style={[style, scrollable && styles.scrollableContent]}
+            >
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
@@ -488,14 +481,14 @@ const styles = StyleSheet.create({
     // Android needs a fixed bottom to avoid jumping content
     bottom: Platform.select({ android: 0 }),
   },
-  scrollableAndroidContainer: {
+  scrollableContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
-  scrollableAndroidContent: {
+  scrollableContent: {
     flexGrow: 1,
     flexBasis: 0,
   },

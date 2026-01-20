@@ -188,9 +188,9 @@ const MapScreenInner = ({
         />
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
+        <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
       </ReanimatedTrueSheet>
-      <FlatListSheet ref={flatListSheet} />
     </View>
   );
 };
