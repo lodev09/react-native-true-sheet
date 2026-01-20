@@ -63,3 +63,24 @@ The `auto` detent does not work well with `scrollable` on Android. Use fixed fra
 
 As a workaround, you can disable `nestedScrollEnabled` to make `RefreshControl` work, but the sheet will no longer be draggable from within the scroll view. In this case, ensure you have a draggable area outside the scroll view (e.g., a header with a grabber) to allow users to drag the sheet.
 :::
+
+## Using `scrollToEnd`
+
+When using `scrollable`, the native scroll view frame is modified to fit within the sheet container. This can cause `scrollToEnd()` on `FlatList` or `ScrollView` to not work as expected because React Native's JS-side scroll metrics may not reflect the actual native dimensions.
+
+**Workaround:** Use `scrollToOffset` with a large value instead:
+
+```tsx
+const scrollRef = useRef<FlatList>(null);
+
+const scrollToEnd = () => {
+  // Large offset will be clamped to max scrollable position
+  scrollRef.current?.scrollToOffset({ offset: 99999, animated: true });
+};
+
+return (
+  <TrueSheet scrollable onDidPresent={scrollToEnd}>
+    <FlatList ref={scrollRef} nestedScrollEnabled data={data} renderItem={renderItem} />
+  </TrueSheet>
+);
+```
