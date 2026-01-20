@@ -13,7 +13,9 @@
     "./utils": "./src/utils/index.ts"
   },
   "peerDependencies": {
+    "@legendapp/list": "*",
     "@lodev09/react-native-true-sheet": "*",
+    "@shopify/flash-list": "*",
     "react": "*",
     "react-native": "*",
     "react-native-gesture-handler": "*",
@@ -22,6 +24,8 @@
     "react-native-safe-area-context": "*"
   },
   "devDependencies": {
+    "@legendapp/list": "^2.0.19",
+    "@shopify/flash-list": "^2.2.0",
     "@types/react": "19.1.1",
     "react-native-gesture-handler": "^2.29.1",
     "react-native-maps": "^1.26.20",

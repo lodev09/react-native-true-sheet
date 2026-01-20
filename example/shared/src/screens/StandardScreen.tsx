@@ -6,7 +6,9 @@ import {
   BasicSheet,
   BlankSheet,
   FlatListSheet,
+  FlashListSheet,
   GestureSheet,
+  LegendListSheet,
   NavigationSheet,
   PromptSheet,
   ScrollViewSheet,
@@ -29,6 +31,8 @@ export const StandardScreen = ({
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
+  const flashListSheet = useRef<TrueSheet>(null);
+  const legendListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
   const navigationSheet = useRef<TrueSheet>(null);
@@ -55,6 +59,8 @@ export const StandardScreen = ({
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+        <Button text="TrueSheet FlashList" onPress={() => flashListSheet.current?.present()} />
+        <Button text="TrueSheet LegendList" onPress={() => legendListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
 
@@ -62,6 +68,8 @@ export const StandardScreen = ({
         <PromptSheet ref={promptSheet} />
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
+        <FlashListSheet ref={flashListSheet} />
+        <LegendListSheet ref={legendListSheet} />
         <GestureSheet ref={gestureSheet} />
         <BlankSheet ref={blankSheet} />
         <NavigationSheet ref={navigationSheet} />

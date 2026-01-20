@@ -1,5 +1,6 @@
-import { forwardRef, useRef } from 'react';
-import { StyleSheet, FlatList, View } from 'react-native';
+import { forwardRef } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { LegendList } from '@legendapp/list';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_GRAY, FOOTER_HEIGHT, SPACING, times } from '../../utils';
@@ -9,10 +10,9 @@ import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 import { Footer } from '../Footer';
 
-interface FlatListSheetProps extends TrueSheetProps {}
+interface LegendListSheetProps extends TrueSheetProps {}
 
-export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
-  const testRef = useRef<TrueSheet>(null);
+export const LegendListSheet = forwardRef<TrueSheet, LegendListSheetProps>((props, ref) => {
   return (
     <TrueSheet
       ref={ref}
@@ -25,30 +25,27 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           <Input />
         </Header>
       }
-      onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
-      onDidPresent={() => console.log(`Sheet FlatList presented!`)}
-      footer={<Footer onPress={() => testRef.current?.present()} />}
+      onDidDismiss={() => console.log('Sheet LegendList dismissed!')}
+      onDidPresent={() => console.log(`Sheet LegendList presented!`)}
+      footer={<Footer />}
       {...props}
     >
       <View style={styles.wrapper}>
-        <FlatList
-          nestedScrollEnabled
+        <LegendList
           data={times(500, (i) => i)}
+          estimatedItemSize={60}
           contentContainerStyle={styles.content}
-          indicatorStyle="black"
-          ItemSeparatorComponent={Spacer}
-          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
-          renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
+          ItemSeparatorComponent={Spacer as React.ComponentType<{ leadingItem: number }>}
+          renderItem={({ item }: { item: number }) => (
+            <DemoContent color={DARK_GRAY} text={`Item #${item}`} />
+          )}
         />
       </View>
-      <TrueSheet detents={[0.3]} ref={testRef}>
-        <DemoContent />
-      </TrueSheet>
     </TrueSheet>
   );
 });
 
-FlatListSheet.displayName = 'FlatListSheet';
+LegendListSheet.displayName = 'LegendListSheet';
 
 const styles = StyleSheet.create({
   wrapper: {

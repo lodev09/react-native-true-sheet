@@ -30,7 +30,9 @@ import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 import {
   BasicSheet,
   FlatListSheet,
+  FlashListSheet,
   GestureSheet,
+  LegendListSheet,
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
@@ -60,6 +62,8 @@ const MapScreenInner = ({
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
+  const flashListSheet = useRef<TrueSheet>(null);
+  const legendListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
 
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -168,6 +172,10 @@ const MapScreenInner = ({
           />
           <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
         </ButtonGroup>
+        <ButtonGroup>
+          <Button text="FlashList" onPress={() => flashListSheet.current?.present()} />
+          <Button text="LegendList" onPress={() => legendListSheet.current?.present()} />
+        </ButtonGroup>
         <Spacer />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <ButtonGroup>
@@ -191,6 +199,8 @@ const MapScreenInner = ({
         <GestureSheet ref={gestureSheet} />
       </ReanimatedTrueSheet>
       <FlatListSheet ref={flatListSheet} />
+      <FlashListSheet ref={flashListSheet} />
+      <LegendListSheet ref={legendListSheet} />
     </View>
   );
 };
