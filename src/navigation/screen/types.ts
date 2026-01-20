@@ -12,6 +12,7 @@ export interface TrueSheetScreenProps {
   emit: TrueSheetNavigationHelpers['emit'];
   routeKey: string;
   closing?: boolean;
+  cascadeRemoving?: boolean;
   detents: TrueSheetProps['detents'];
   children: React.ReactNode;
   positionChangeHandler?: PositionChangeHandler;

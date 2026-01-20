@@ -81,6 +81,7 @@ const DetailsSheet = () => {
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
         <Button text="Open Settings" onPress={() => navigation.navigate('Settings')} />
+        <Button text="Pop to Top (Home)" onPress={() => navigation.popToTop()} />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
       <TrueSheet ref={sheetRef} cornerRadius={12} detents={['auto']} backgroundColor={DARK}>
@@ -94,7 +95,7 @@ const DetailsSheet = () => {
 };
 
 const SettingsSheet = () => {
-  const navigation = useTrueSheetNavigation<AppStackParamList>();
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
     <View style={styles.sheetContent}>
@@ -103,6 +104,28 @@ const SettingsSheet = () => {
       <DemoContent />
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
+        <Button text="Open Profile" onPress={() => navigation.navigate('Profile')} />
+        <Button text="Pop to Top (Home)" onPress={() => navigation.popToTop()} />
+        <Button text="Go Back" onPress={() => navigation.goBack()} />
+      </View>
+    </View>
+  );
+};
+
+const ProfileSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return (
+    <View style={styles.sheetContent}>
+      <Text style={styles.sheetTitle}>Profile Sheet</Text>
+      <Text style={styles.sheetSubtitle}>
+        Third sheet in the stack. Test popTo and popToTop here!
+      </Text>
+      <DemoContent />
+      <View style={styles.buttons}>
+        <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
+        <Button text="Pop to Details" onPress={() => navigation.popTo('Details')} />
+        <Button text="Pop to Top (Home)" onPress={() => navigation.popToTop()} />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
     </View>
@@ -180,6 +203,15 @@ export const SheetNavigator = () => {
             'worklet';
             console.log(payload.position);
           },
+        }}
+      />
+      <SheetStack.Screen
+        name="Profile"
+        component={ProfileSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
         }}
       />
     </SheetStack.Navigator>

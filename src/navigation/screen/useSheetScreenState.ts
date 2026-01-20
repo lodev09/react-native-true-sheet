@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { TrueSheet } from '../../TrueSheet';
+import type { TrueSheet } from '../../TrueSheet';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -31,18 +31,28 @@ interface UseSheetScreenStateProps {
   detentIndex: number;
   resizeKey?: number;
   closing?: boolean;
+  cascadeRemoving?: boolean;
   navigation: TrueSheetNavigationProp<ParamListBase>;
   routeKey: string;
   emit: EmitFn;
 }
 
 export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
-  const { detentIndex, resizeKey, closing, navigation, routeKey, emit } = props;
+  const { detentIndex, resizeKey, closing, cascadeRemoving, navigation, routeKey, emit } = props;
 
   const ref = useRef<TrueSheet>(null);
   const isDismissedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
+
+  // Handle sheets marked for cascade removal
+  // They will be dismissed automatically when the bottom sheet calls dismiss
+  // We mark them as dismissed so onDidDismiss doesn't trigger goBack
+  useEffect(() => {
+    if (cascadeRemoving && !isDismissedRef.current) {
+      isDismissedRef.current = true;
+    }
+  }, [cascadeRemoving]);
 
   useEffect(() => {
     if (closing && !isDismissedRef.current) {

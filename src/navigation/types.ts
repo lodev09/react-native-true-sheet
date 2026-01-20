@@ -76,10 +76,12 @@ export type TrueSheetNavigationState<ParamList extends ParamListBase> = Omit<
   'routes'
 > & {
   type: 'true-sheet';
+  popToTargetIndex?: number;
   routes: (NavigationState<ParamList>['routes'][number] & {
     resizeIndex?: number;
     resizeKey?: number;
     closing?: boolean;
+    cascadeRemoving?: boolean;
   })[];
 };
 

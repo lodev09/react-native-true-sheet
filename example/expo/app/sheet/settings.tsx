@@ -16,6 +16,8 @@ export default function SettingsSheet() {
       <DemoContent />
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
+        <Button text="Open Profile" onPress={() => router.push('/sheet/profile')} />
+        <Button text="Pop to Top (Home)" onPress={() => navigation.popToTop()} />
         <Button text="Go Back" onPress={() => router.back()} />
       </View>
     </View>
