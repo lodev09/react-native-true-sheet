@@ -20,7 +20,7 @@
 
 ### 📖 Documentation
 
-- Added `transformIgnorePatterns` to Jest setup guide. ([#448](https://github.com/lodev09/react-native-true-sheet/issues/448) by [@lodev09](https://github.com/lodev09))
+- Added `transformIgnorePatterns` to Jest setup guide. ([#458](https://github.com/lodev09/react-native-true-sheet/pull/458) by [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 
