@@ -443,10 +443,7 @@ export class TrueSheet
         onBackPress={this.onBackPress}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            style={scrollable && styles.scrollableContainer}
-            onLayout={(e) => console.log('[TrueSheet] container layout:', e.nativeEvent.layout)}
-          >
+          <TrueSheetContainerViewNativeComponent style={scrollable && styles.scrollableContainer}>
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
