@@ -16,20 +16,16 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
-#import "utils/LayoutUtil.h"
 #import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
 
 @implementation TrueSheetContentView {
   RCTScrollViewComponentView *_pinnedScrollView;
-  UIView *_pinnedTopView;
   CGSize _lastSize;
-  UIEdgeInsets _contentInsets;
-  UIEdgeInsets _pinnedInsets;
   CGFloat _bottomInset;
+  CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
-  CGFloat _currentKeyboardHeight;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -50,14 +46,6 @@ using namespace facebook::react;
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  UIEdgeInsets newInsets = UIEdgeInsetsMake(layoutMetrics.contentInsets.top, layoutMetrics.contentInsets.left,
-    layoutMetrics.contentInsets.bottom, layoutMetrics.contentInsets.right);
-
-  if (!UIEdgeInsetsEqualToEdgeInsets(newInsets, _contentInsets)) {
-    _contentInsets = newInsets;
-    [self.delegate contentViewDidChangeInsets];
-  }
-
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
@@ -77,12 +65,13 @@ using namespace facebook::react;
   [self.delegate contentViewDidChangeChildren];
 }
 
-#pragma mark - ScrollView Pinning
+#pragma mark - Scrollable
 
-- (void)clearPinning {
+- (void)clearScrollable {
   if (_pinnedScrollView) {
-    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self];
-    [LayoutUtil unpinView:_pinnedScrollView fromParentView:self.superview];
+    CGRect frame = _pinnedScrollView.frame;
+    frame.size.height = _originalScrollViewHeight;
+    _pinnedScrollView.frame = frame;
 
     UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
     contentInset.bottom = 0;
@@ -93,70 +82,73 @@ using namespace facebook::react;
     _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
   }
   _pinnedScrollView = nil;
-  _pinnedTopView = nil;
-  _pinnedInsets = UIEdgeInsetsZero;
   _bottomInset = 0;
+  _originalScrollViewHeight = 0;
   _originalIndicatorBottomInset = 0;
 }
 
-- (void)setupScrollViewPinning:(BOOL)pinned bottomInset:(CGFloat)bottomInset {
-  UIView *containerView = self.superview;
-
-  if (!pinned) {
-    [self clearPinning];
+- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset {
+  if (!enabled) {
+    [self clearScrollable];
     return;
   }
 
-  UIView *topSibling = nil;
-  RCTScrollViewComponentView *scrollView = [self findScrollView:&topSibling];
+  // Already set up with same inset
+  if (_pinnedScrollView && _bottomInset == bottomInset) {
+    return;
+  }
 
-  BOOL needsUpdate = scrollView != _pinnedScrollView || topSibling != _pinnedTopView ||
-                     !UIEdgeInsetsEqualToEdgeInsets(_contentInsets, _pinnedInsets) || _bottomInset != bottomInset;
+  RCTScrollViewComponentView *scrollView = [self findScrollView];
+  if (!scrollView) {
+    return;
+  }
 
-  if (scrollView && containerView && needsUpdate) {
-    [self clearPinning];
-
-    UIEdgeInsets insets =
-      UIEdgeInsetsMake(topSibling ? 0 : _contentInsets.top, _contentInsets.left, 0, _contentInsets.right);
-
-    if (topSibling) {
-      [LayoutUtil pinView:scrollView
-             toParentView:self
-              withTopView:topSibling
-                    edges:UIRectEdgeLeft | UIRectEdgeRight
-                   insets:insets];
-    } else {
-      [LayoutUtil pinView:scrollView
-             toParentView:self
-                    edges:UIRectEdgeTop | UIRectEdgeLeft | UIRectEdgeRight
-                   insets:insets];
-    }
-
-    [LayoutUtil pinView:scrollView toParentView:containerView edges:UIRectEdgeBottom];
-
-    BOOL isNewScrollView = scrollView != _pinnedScrollView;
-    if (isNewScrollView) {
-      _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
-    }
-
+  // Only capture originals on first pin
+  if (!_pinnedScrollView) {
+    _originalScrollViewHeight = scrollView.frame.size.height;
+    _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
-    _pinnedTopView = topSibling;
-    _pinnedInsets = _contentInsets;
-    _bottomInset = bottomInset;
+  }
 
-    UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
-    contentInset.bottom = bottomInset;
-    scrollView.scrollView.contentInset = contentInset;
+  _bottomInset = bottomInset;
 
-    UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
-    indicatorInsets.bottom = _originalIndicatorBottomInset + bottomInset;
-    scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
-  } else if (!scrollView && _pinnedScrollView) {
-    [self clearPinning];
+  [self updateScrollViewHeight];
+
+  UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
+  contentInset.bottom = bottomInset;
+  scrollView.scrollView.contentInset = contentInset;
+
+  UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
+  indicatorInsets.bottom = _originalIndicatorBottomInset;
+  scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+}
+
+- (void)updateScrollViewHeight {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  UIView *containerView = self.superview;
+  if (!containerView) {
+    return;
+  }
+
+  CGRect scrollViewFrameInContainer = [_pinnedScrollView.superview convertRect:_pinnedScrollView.frame
+                                                                        toView:containerView];
+  CGFloat newHeight = containerView.bounds.size.height - scrollViewFrameInContainer.origin.y;
+
+  if (newHeight > 0) {
+    CGRect frame = _pinnedScrollView.frame;
+    frame.size.height = newHeight;
+    _pinnedScrollView.frame = frame;
   }
 }
 
-- (RCTScrollViewComponentView *)findScrollView:(UIView **)outTopSibling {
+- (RCTScrollViewComponentView *)findScrollView {
+  if (_pinnedScrollView) {
+    return _pinnedScrollView;
+  }
+
   if (self.subviews.count == 0) {
     return nil;
   }
@@ -172,10 +164,6 @@ using namespace facebook::react;
     }
   }
 
-  if (outTopSibling) {
-    *outTopSibling = [self findTopSiblingForScrollView:scrollView];
-  }
-
   return scrollView;
 }
 
@@ -188,41 +176,12 @@ using namespace facebook::react;
   return nil;
 }
 
-- (UIView *)findTopSiblingForScrollView:(RCTScrollViewComponentView *)scrollView {
-  if (!scrollView || scrollView.superview != self || self.subviews.count <= 1) {
-    return nil;
-  }
-
-  CGFloat scrollViewTop = CGRectGetMinY(scrollView.frame);
-  UIView *topSibling = nil;
-  CGFloat closestDistance = CGFLOAT_MAX;
-
-  for (UIView *sibling in self.subviews) {
-    if (sibling == scrollView || [sibling isKindOfClass:TrueSheetView.class]) {
-      continue;
-    }
-
-    CGFloat siblingBottom = CGRectGetMaxY(sibling.frame);
-    if (siblingBottom <= scrollViewTop) {
-      CGFloat distance = scrollViewTop - siblingBottom;
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        topSibling = sibling;
-      }
-    }
-  }
-
-  return topSibling;
-}
-
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_pinnedScrollView) {
     return;
   }
-
-  _currentKeyboardHeight = height;
 
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
@@ -254,8 +213,6 @@ using namespace facebook::react;
     return;
   }
 
-  _currentKeyboardHeight = 0;
-
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
@@ -275,8 +232,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  _currentKeyboardHeight = 0;
-  [self clearPinning];
+  [self clearScrollable];
 }
 
 @end

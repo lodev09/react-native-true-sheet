@@ -29,15 +29,22 @@ jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
 );
 ```
 
-Configure Jest to use the setup file in your `package.json`:
+Configure Jest to use the setup file and transform the package:
 
 ```json
 {
   "jest": {
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-native|@react-native|@lodev09/react-native-true-sheet)/)"
+    ]
   }
 }
 ```
+
+:::note
+The `transformIgnorePatterns` config is required because the mock files use ESM syntax. This tells Jest to transform the package instead of skipping it.
+:::
 
 ## Available Mocks
 

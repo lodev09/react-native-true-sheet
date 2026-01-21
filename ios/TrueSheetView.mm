@@ -254,7 +254,7 @@ using namespace facebook::react;
   _controller.insetAdjustment = _insetAdjustment;
 
   if (_containerView) {
-    _containerView.scrollViewPinningEnabled = _scrollable;
+    _containerView.scrollableEnabled = _scrollable;
     _containerView.insetAdjustment = _insetAdjustment;
     _containerView.scrollableOptions = _scrollableOptions;
   }
@@ -262,19 +262,17 @@ using namespace facebook::react;
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
-
-  if (_controller) {
-    [self updateStateWithSize:_controller.view.frame.size];
-  }
-
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 }
 
 /**
- * Updates Fabric state with container width for Yoga layout.
+ * Updates Fabric state with container dimensions for Yoga layout.
  */
 - (void)updateStateWithSize:(CGSize)size {
-  if (!_state || size.width <= 0 || size.width == _lastStateSize.width)
+  if (!_state)
+    return;
+
+  if (CGSizeEqualToSize(size, _lastStateSize))
     return;
 
   _lastStateSize = size;
@@ -282,6 +280,7 @@ using namespace facebook::react;
                         -> TrueSheetViewShadowNode::ConcreteState::SharedData {
     auto newData = oldData;
     newData.containerWidth = static_cast<float>(size.width);
+    newData.containerHeight = static_cast<float>(size.height);
     return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
   });
 }
@@ -299,7 +298,7 @@ using namespace facebook::react;
     return;
 
   if (_containerView) {
-    [_containerView setupContentScrollViewPinning];
+    [_containerView setupScrollable];
   }
 
   if (_controller.isPresented) {
@@ -366,10 +365,10 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  _containerView.scrollViewPinningEnabled = _scrollable;
+  _containerView.scrollableEnabled = _scrollable;
   _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
-  [_containerView setupContentScrollViewPinning];
+  [_containerView setupScrollable];
 
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];

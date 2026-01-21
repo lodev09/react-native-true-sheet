@@ -23,6 +23,7 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
+#import <react/renderer/core/LayoutMetrics.h>
 
 using namespace facebook::react;
 
@@ -34,7 +35,7 @@ using namespace facebook::react;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
   TrueSheetKeyboardObserver *_keyboardObserver;
-  BOOL _scrollViewPinningSet;
+  BOOL _scrollableSet;
 }
 
 #pragma mark - Initialization
@@ -52,12 +53,17 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
-    _scrollViewPinningSet = NO;
+    _scrollableSet = NO;
   }
   return self;
 }
 
 #pragma mark - Layout
+
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [_contentView updateScrollViewHeight];
+}
 
 - (CGFloat)contentHeight {
   return _contentView ? _contentView.frame.size.height : 0;
@@ -76,9 +82,9 @@ using namespace facebook::react;
   }
 }
 
-- (void)setScrollViewPinningEnabled:(BOOL)scrollViewPinningEnabled {
-  _scrollViewPinningEnabled = scrollViewPinningEnabled;
-  _scrollViewPinningSet = YES;
+- (void)setScrollableEnabled:(BOOL)scrollableEnabled {
+  _scrollableEnabled = scrollableEnabled;
+  _scrollableSet = YES;
 }
 
 - (void)setScrollableOptions:(NSDictionary *)scrollableOptions {
@@ -91,13 +97,13 @@ using namespace facebook::react;
   }
 }
 
-- (void)setupContentScrollViewPinning {
-  if (_scrollViewPinningSet && _contentView) {
+- (void)setupScrollable {
+  if (_scrollableSet && _contentView) {
     CGFloat bottomInset = 0;
     if ([_insetAdjustment isEqualToString:@"automatic"]) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
-    [_contentView setupScrollViewPinning:_scrollViewPinningEnabled bottomInset:bottomInset];
+    [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
   }
 }
 
@@ -157,6 +163,12 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
+#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
+- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
+  // Intentionally skip super - AutoLayout handles container's frame, not Yoga
+}
+
 #pragma mark - TrueSheetContentViewDelegate
 
 - (void)contentViewDidChangeSize:(CGSize)newSize {
@@ -164,11 +176,7 @@ using namespace facebook::react;
 }
 
 - (void)contentViewDidChangeChildren {
-  [self setupContentScrollViewPinning];
-}
-
-- (void)contentViewDidChangeInsets {
-  [self setupContentScrollViewPinning];
+  [self setupScrollable];
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate

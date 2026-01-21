@@ -37,7 +37,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: String = "automatic"
   var scrollViewBottomInset: Int = 0
-  var scrollViewPinningEnabled: Boolean = false
+  var scrollableEnabled: Boolean = false
   var scrollableOptions: ReadableMap? = null
     set(value) {
       field = value
@@ -53,9 +53,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     clipToPadding = false
   }
 
-  fun setupContentScrollViewPinning() {
+  fun setupScrollable() {
     val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
-    contentView?.setupScrollViewPinning(scrollViewPinningEnabled, bottomInset)
+    contentView?.setupScrollable(scrollableEnabled, bottomInset)
   }
 
   fun setupKeyboardHandler() {
