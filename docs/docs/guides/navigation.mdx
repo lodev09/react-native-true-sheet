@@ -177,6 +177,12 @@ function DetailsSheet() {
 
 See [Lifecycle Events](/reference/events) for more details.
 
+### Deep Linking
+
+:::warning[iOS Limitation]
+`initialDetentIndex` may not work when deep linking to a modal screen from a cold start. See [troubleshooting](/troubleshooting#initial-present-and-deep-linking) for workaround.
+:::
+
 ### Expo Router
 
 TrueSheet works with Expo Router using `withLayoutContext`.
