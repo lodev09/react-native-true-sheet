@@ -112,11 +112,13 @@ using namespace facebook::react;
 
     // Only present if the view controller is in the same window and not being dismissed
     if (vc && vc.view.window == self.window && !vc.isBeingDismissed) {
-      _didInitiallyPresent = YES;
       [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
     } else {
-      // Animate next time when sheet finally moves to the correct window
-      _initialDetentAnimated = YES;
+      RCTLogWarn(@"TrueSheet: Failed to initially present the sheet, it is in the wrong window.");
+      
+      // Flag as initially presented to prevent re-presenting when moved to the correct window.
+      // This is for consistency with modal controllers that doesn't trigger this callback.
+      _didInitiallyPresent = YES;
     }
   }
 }
