@@ -407,12 +407,8 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
-  if (_controller.isBeingPresented) {
-    RCTLogWarn(@"TrueSheet: sheet is being presented. Wait for it to transition before presenting again.");
-    return;
-  }
 
-  if (_controller.isPresented) {
+  if (_controller.isBeingPresented || _controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already presented. Use resize() to change detent.");
     if (completion) {
       completion(YES, nil);
@@ -446,27 +442,6 @@ using namespace facebook::react;
                                        }];
 }
 
-- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  if (_controller.isBeingDismissed) {
-    RCTLogWarn(@"TrueSheet: sheet is being dismissed. No need to dismiss it again.");
-    return;
-  }
-
-  if (!_controller.isPresented) {
-    if (completion) {
-      completion(YES, nil);
-    }
-    return;
-  }
-
-  [_controller dismissViewControllerAnimated:animated
-                                  completion:^{
-                                    if (completion) {
-                                      completion(YES, nil);
-                                    }
-                                  }];
-}
-
 - (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion {
   if (!_controller.isPresented) {
     RCTLogWarn(@"TrueSheet: Cannot resize. Sheet is not presented.");
@@ -490,6 +465,11 @@ using namespace facebook::react;
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  if (_controller.isBeingDismissed) {
+    RCTLogWarn(@"TrueSheet: sheet is being dismissed. No need to dismiss it again.");
+    return;
+  }
+
   if (!_controller.isPresented) {
     if (completion) {
       completion(YES, nil);
