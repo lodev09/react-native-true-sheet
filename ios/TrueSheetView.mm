@@ -466,7 +466,7 @@ using namespace facebook::react;
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
   if (_controller.isBeingDismissed || !_controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already dismissed. No need to dismiss it again.");
-    
+
     if (completion) {
       completion(YES, nil);
     }

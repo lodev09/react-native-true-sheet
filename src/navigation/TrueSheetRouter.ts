@@ -116,7 +116,6 @@ export const TrueSheetRouter = (
         }
 
         case 'GO_BACK':
-        case 'POP':
         case 'DISMISS': {
           // Only base screen remains - let parent navigator handle it
           if (state.routes.length <= 1) {
@@ -145,6 +144,92 @@ export const TrueSheetRouter = (
                   }
                 : route
             ),
+          };
+        }
+
+        case 'POP': {
+          // Only base screen remains - let parent navigator handle it
+          if (state.routes.length <= 1) {
+            return null;
+          }
+
+          const count =
+            'payload' in action && typeof action.payload?.count === 'number'
+              ? action.payload.count
+              : 1;
+
+          // Calculate how many routes we can actually pop (don't pop base screen)
+          const maxPopCount = state.routes.length - 1;
+          const actualCount = Math.min(count, maxPopCount);
+
+          if (actualCount <= 0) {
+            return null;
+          }
+
+          // Target index is the bottommost route to be removed
+          const targetIndex = state.routes.length - actualCount;
+
+          // Mark only the target route as closing - iOS will cascade dismiss children
+          // Remove routes above it immediately since they'll be dismissed by iOS
+          return {
+            ...state,
+            index: targetIndex,
+            routes: state.routes
+              .filter((_, i) => i <= targetIndex)
+              .map((route, i) => (i === targetIndex ? { ...route, closing: true } : route)),
+          };
+        }
+
+        case 'POP_TO_TOP': {
+          // Only base screen remains - nothing to pop
+          if (state.routes.length <= 1) {
+            return null;
+          }
+
+          // Mark the first sheet (index 1) as closing - iOS will cascade dismiss all sheets above
+          // Remove all routes above the target immediately
+          return {
+            ...state,
+            index: 1,
+            routes: state.routes
+              .filter((_, i) => i <= 1)
+              .map((route, i) => (i === 1 ? { ...route, closing: true } : route)),
+          };
+        }
+
+        case 'POP_TO': {
+          const targetName =
+            'payload' in action && typeof action.payload?.name === 'string'
+              ? action.payload.name
+              : null;
+
+          if (!targetName) {
+            return null;
+          }
+
+          const targetIndex = state.routes.findIndex((r) => r.name === targetName);
+
+          // Target not found or is the current route
+          if (targetIndex === -1 || targetIndex >= state.index) {
+            return null;
+          }
+
+          // Calculate how many routes to pop (everything above target)
+          const popCount = state.routes.length - 1 - targetIndex;
+
+          if (popCount <= 0) {
+            return null;
+          }
+
+          // Mark the route after target as closing - iOS will cascade dismiss sheets above
+          // Remove routes above the closing route immediately
+          const closingIndex = targetIndex + 1;
+          return {
+            ...state,
+            index: closingIndex,
+            routes: state.routes
+              .filter((_, i) => i <= closingIndex)
+              .map((route, i) => (i === closingIndex ? { ...route, closing: true } : route)),
           };
         }
 

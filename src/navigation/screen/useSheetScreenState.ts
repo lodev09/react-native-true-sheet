@@ -47,14 +47,9 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   useEffect(() => {
     if (closing && !isDismissedRef.current) {
       isDismissedRef.current = true;
-      (async () => {
-        await ref.current?.dismiss();
-        navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
-      })();
-    } else if (closing && isDismissedRef.current) {
-      navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+      ref.current?.dismiss();
     }
-  }, [closing, navigation, routeKey]);
+  }, [closing]);
 
   useEffect(() => {
     if (isFirstRenderRef.current) {
@@ -77,8 +72,11 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
 
   const onDidDismiss = () => {
     emitEvent('sheetDidDismiss', undefined);
-    if (!isDismissedRef.current) {
-      isDismissedRef.current = true;
+    if (closing) {
+      // Programmatic dismiss (pop, popTo, etc.) - remove this route
+      navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+    } else {
+      // User-initiated dismiss (swipe) - go back
       navigation.goBack();
     }
   };
