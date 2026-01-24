@@ -135,11 +135,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val child = getChildAt(index)
     if (child is TrueSheetContainerView) {
       child.delegate = null
-      viewController.createSheetSnapshot()
 
-      // Dismiss when container is removed
-      if (viewController.isPresented) {
-        dismiss(true) {}
+      // Skip if already dismissing - snapshot preserves visuals during dismiss
+      if (!viewController.isDismissing) {
+        viewController.createSheetSnapshot()
+        if (viewController.isPresented) {
+          dismiss(true) {}
+        }
       }
     }
     viewController.removeView(child)
@@ -171,13 +173,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     cleanupScreenEventObserver()
     didInitiallyPresent = false
 
-    if (viewController.isPresented) {
-      viewController.dismissPromise = {
-        viewController.delegate = null
-      }
-      viewController.dismiss()
-    } else {
-      viewController.delegate = null
+    viewController.dismissPromise = { viewController.delegate = null }
+
+    if (viewController.isPresented && !viewController.isDismissing) {
+      viewController.dismiss(animated = false)
     }
   }
 
@@ -364,6 +363,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismissStack(animated: Boolean = true, promiseCallback: () -> Unit) {
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
     if (sheetsAbove.isNotEmpty()) {
+      // Create snapshot only for topmost sheet (first in reversed list)
+      sheetsAbove.firstOrNull()?.viewController?.createSheetSnapshot()
+
       for (sheet in sheetsAbove) {
         sheet.viewController.dismiss(animated)
       }

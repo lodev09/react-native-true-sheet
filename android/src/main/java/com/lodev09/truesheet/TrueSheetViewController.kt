@@ -131,7 +131,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private set
 
   private var interactionState: InteractionState = InteractionState.Idle
-  private var isDismissing = false
+  internal var isDismissing = false
+    private set
   var wasHiddenByScreen = false
   private var shouldAnimatePresent = false
   private var isPresentAnimating = false
