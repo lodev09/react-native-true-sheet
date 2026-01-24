@@ -200,6 +200,22 @@ export class TrueSheet
   }
 
   /**
+   * Dismiss only the sheets presented on top of a sheet by given `name`
+   * @param name - Sheet name
+   * @param animated - Whether to animate the dismissal (default: true)
+   * @returns Promise that resolves when all child sheets are dismissed
+   * @throws Error if sheet not found
+   */
+  public static async dismissStack(name: string, animated: boolean = true): Promise<void> {
+    const instance = TrueSheet.getInstance(name);
+    if (!instance) {
+      throw new Error(`Sheet with name "${name}" not found`);
+    }
+
+    return instance.dismissStack(animated);
+  }
+
+  /**
    * Resize the sheet by given `name` (Promise-based)
    * @param name - Sheet name
    * @param index - New detent index

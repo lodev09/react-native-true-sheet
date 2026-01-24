@@ -8,8 +8,6 @@ interface BottomSheetContextValue extends TrueSheetContextMethods {
   pushToStack: (name: string) => void;
   removeFromStack: (name: string) => void;
   getSheetsAbove: (name: string) => string[];
-  dismissDirect: (name: string) => Promise<void>;
-  dismissAll: () => Promise<void>;
 }
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
@@ -17,11 +15,13 @@ export const BottomSheetContext = createContext<BottomSheetContextValue | null>(
 // Module-level references for static methods
 let presentRef: ((name: string, index?: number) => Promise<void>) | null = null;
 let dismissRef: ((name: string) => Promise<void>) | null = null;
+let dismissStackRef: ((name: string) => Promise<void>) | null = null;
 let resizeRef: ((name: string, index: number) => Promise<void>) | null = null;
 let dismissAllRef: (() => Promise<void>) | null = null;
 
 export const getPresent = () => presentRef;
 export const getDismiss = () => dismissRef;
+export const getDismissStack = () => dismissStackRef;
 export const getResize = () => resizeRef;
 export const getDismissAll = () => dismissAllRef;
 
@@ -88,17 +88,13 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     return sheet.current.dismiss();
   };
 
-  /**
-   * Dismisses a sheet directly without checking for sheets above.
-   * Used internally when batch-dismissing stacked sheets.
-   */
-  const dismissDirect = async (name: string) => {
+  const dismissStack = async (name: string) => {
     const sheet = sheetsRef.current.get(name);
     if (!sheet?.current) {
       console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
       return;
     }
-    return (sheet.current as any).dismissDirect?.();
+    return sheet.current.dismissStack();
   };
 
   const resize = async (name: string, index: number) => {
@@ -113,12 +109,13 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   const dismissAll = async () => {
     const rootSheet = presentedStackRef.current[0];
     if (!rootSheet) return;
-    return dismissDirect(rootSheet);
+    return dismiss(rootSheet);
   };
 
   // Set module-level refs for static access
   presentRef = present;
   dismissRef = dismiss;
+  dismissStackRef = dismissStack;
   resizeRef = resize;
   dismissAllRef = dismissAll;
 
@@ -130,11 +127,11 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
         pushToStack,
         removeFromStack,
         getSheetsAbove,
-        dismissDirect,
-        dismissAll,
         present,
         dismiss,
+        dismissStack,
         resize,
+        dismissAll,
       }}
     >
       <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
@@ -156,6 +153,7 @@ export function useTrueSheet(): TrueSheetContextMethods {
   return {
     present: context.present,
     dismiss: context.dismiss,
+    dismissStack: context.dismissStack,
     resize: context.resize,
     dismissAll: context.dismissAll,
   };
