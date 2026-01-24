@@ -157,18 +157,8 @@ export const TrueSheetRouter = (
         }
 
         case 'POP_TO_TOP': {
-          // Only base screen remains - nothing to pop
-          if (state.routes.length <= 1) {
-            return null;
-          }
-
-          // Mark the first sheet (index 1) as closing
-          // The sheet's dismiss() will handle dismissing sheets above it first
-          return {
-            ...state,
-            index: 1,
-            routes: state.routes.map((route, i) => (i === 1 ? { ...route, closing: true } : route)),
-          };
+          const popCount = state.routes.length - 1;
+          return this.getStateForAction(state, StackActions.pop(popCount), options);
         }
 
         case 'POP_TO': {
@@ -188,24 +178,8 @@ export const TrueSheetRouter = (
             return null;
           }
 
-          // Calculate how many routes to pop (everything above target)
           const popCount = state.routes.length - 1 - targetIndex;
-
-          if (popCount <= 0) {
-            return null;
-          }
-
-          const closingIndex = targetIndex + 1;
-
-          // Mark the closing route as closing
-          // The sheet's dismiss() will handle dismissing sheets above it first
-          return {
-            ...state,
-            index: closingIndex,
-            routes: state.routes.map((route, i) =>
-              i === closingIndex ? { ...route, closing: true } : route
-            ),
-          };
+          return this.getStateForAction(state, StackActions.pop(popCount), options);
         }
 
         case 'REMOVE': {

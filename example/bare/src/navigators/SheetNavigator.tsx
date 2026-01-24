@@ -204,9 +204,9 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
           cornerRadius: 16,
           reanimated: true,
-          positionChangeHandler: (payload) => {
+          positionChangeHandler: (_payload) => {
             'worklet';
-            console.log(payload.position);
+            // console.log(_payload.position);
           },
         }}
       />
