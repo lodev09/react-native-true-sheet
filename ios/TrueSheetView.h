@@ -34,8 +34,6 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 - (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion;
 
-- (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
-
 - (void)dismissStackAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion;
 
 @end
