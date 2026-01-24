@@ -59,8 +59,9 @@ object TrueSheetStackManager {
   fun onSheetDidDismiss(sheetView: TrueSheetView, hadParent: Boolean) {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
-      if (hadParent) {
-        presentedSheetStack.lastOrNull()?.resetTranslation()
+      val newTopmost = presentedSheetStack.lastOrNull()
+      if (hadParent && newTopmost?.viewController?.isBeingDismissed == false) {
+        newTopmost.resetTranslation()
       }
     }
   }
