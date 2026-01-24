@@ -35,13 +35,14 @@ export class ReanimatedTrueSheet
   static instances: Record<string, ReanimatedTrueSheet> = {};
 
   static dismiss = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());
+  static dismissStack = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());
   static present = jest.fn((_name: string, _index?: number, _animated?: boolean) =>
     Promise.resolve()
   );
   static resize = jest.fn((_name: string, _index: number) => Promise.resolve());
 
   dismiss = jest.fn((_animated?: boolean) => Promise.resolve());
-  dismissChildren = jest.fn((_animated?: boolean) => Promise.resolve());
+  dismissStack = jest.fn((_animated?: boolean) => Promise.resolve());
   present = jest.fn((_index?: number, _animated?: boolean) => Promise.resolve());
   resize = jest.fn((_index: number) => Promise.resolve());
 

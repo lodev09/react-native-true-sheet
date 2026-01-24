@@ -66,7 +66,7 @@ export interface TrueSheetRef {
    * If no sheets are presented on top, this method does nothing.
    * @param animated - Whether to animate the dismissal (default: true)
    */
-  dismissChildren: (animated?: boolean) => Promise<void>;
+  dismissStack: (animated?: boolean) => Promise<void>;
   /**
    * Resize the sheet to a given detent index.
    * @param index - The detent index to resize to
@@ -90,6 +90,11 @@ export interface TrueSheetContextMethods {
    * @param name - The name of the sheet to dismiss
    */
   dismiss: (name: string) => Promise<void>;
+  /**
+   * Dismiss only the sheets presented on top of a sheet by name.
+   * @param name - The name of the sheet
+   */
+  dismissStack: (name: string) => Promise<void>;
   /**
    * Resize a sheet by name.
    * @param name - The name of the sheet to resize

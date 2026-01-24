@@ -18,6 +18,7 @@ export class TrueSheet
   static instances: Record<string, TrueSheet> = {};
 
   static dismiss = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());
+  static dismissStack = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());
   static present = jest.fn((_name: string, _index?: number, _animated?: boolean) =>
     Promise.resolve()
   );
@@ -25,7 +26,7 @@ export class TrueSheet
   static dismissAll = jest.fn((_animated?: boolean) => Promise.resolve());
 
   dismiss = jest.fn((_animated?: boolean) => Promise.resolve());
-  dismissChildren = jest.fn((_animated?: boolean) => Promise.resolve());
+  dismissStack = jest.fn((_animated?: boolean) => Promise.resolve());
   present = jest.fn((_index?: number, _animated?: boolean) => Promise.resolve());
   resize = jest.fn((_index: number) => Promise.resolve());
 
@@ -75,6 +76,7 @@ export function useTrueSheet(): TrueSheetContextMethods {
   return {
     present: TrueSheet.present,
     dismiss: TrueSheet.dismiss,
+    dismissStack: TrueSheet.dismissStack,
     resize: TrueSheet.resize,
     dismissAll: TrueSheet.dismissAll,
   };

@@ -67,7 +67,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
     val tag = viewTag.toInt()
 
     withTrueSheetView(tag, promise) { view ->
-      view.dismissAll(animated) {
+      view.dismiss(animated) {
         promise.resolve(null)
       }
     }
@@ -83,11 +83,11 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
    * @throws OPERATION_FAILED if the operation fails for any other reason
    */
   @ReactMethod
-  fun dismissChildrenByRef(viewTag: Double, animated: Boolean, promise: Promise) {
+  fun dismissStackByRef(viewTag: Double, animated: Boolean, promise: Promise) {
     val tag = viewTag.toInt()
 
     withTrueSheetView(tag, promise) { view ->
-      view.dismissChildren(animated) {
+      view.dismissStack(animated) {
         promise.resolve(null)
       }
     }
@@ -131,7 +131,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
           return@post
         }
 
-        rootSheet.dismissAll(animated) {
+        rootSheet.dismiss(animated) {
           promise.resolve(null)
         }
       } catch (e: Exception) {
