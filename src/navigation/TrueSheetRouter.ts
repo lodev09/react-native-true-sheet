@@ -117,34 +117,7 @@ export const TrueSheetRouter = (
 
         case 'GO_BACK':
         case 'DISMISS': {
-          // Only base screen remains - let parent navigator handle it
-          if (state.routes.length <= 1) {
-            return null;
-          }
-
-          // Find the route to dismiss
-          const routeIndex =
-            action.target === state.key && 'source' in action && action.source
-              ? state.routes.findIndex((r) => r.key === action.source)
-              : state.index;
-
-          // Base screen - let parent navigator handle it
-          if (routeIndex === 0) {
-            return null;
-          }
-
-          // Mark the route as closing instead of removing it
-          return {
-            ...state,
-            routes: state.routes.map((route, i) =>
-              i === routeIndex
-                ? {
-                    ...route,
-                    closing: true,
-                  }
-                : route
-            ),
-          };
+          return this.getStateForAction(state, StackActions.pop(1), options);
         }
 
         case 'POP': {
@@ -162,6 +135,7 @@ export const TrueSheetRouter = (
           const maxPopCount = state.routes.length - 1;
           const actualCount = Math.min(count, maxPopCount);
 
+          // Base screen - let parent navigator handle it
           if (actualCount <= 0) {
             return null;
           }
