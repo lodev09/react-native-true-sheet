@@ -16,6 +16,7 @@ Now it performs a cascade dismiss of the entire stack. Use the `dismissChildren(
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed scroll position jumping when nested sheet is dismissed with inverted FlatList. ([#468](https://github.com/lodev09/react-native-true-sheet/pull/468) by [@lucasklaassen](https://github.com/lucasklaassen))
 - **Android**: Fixed present promise not resolving on resize. ([c3495500](https://github.com/lodev09/react-native-true-sheet/commit/c3495500) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed scroll view pinning to respect content view padding/margin. ([#429](https://github.com/lodev09/react-native-true-sheet/pull/429), [#446](https://github.com/lodev09/react-native-true-sheet/pull/446) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed footer not translating back when keyboard hides via ScrollView. ([#424](https://github.com/lodev09/react-native-true-sheet/pull/424) by [@lodev09](https://github.com/lodev09))

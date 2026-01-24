@@ -138,9 +138,15 @@ using namespace facebook::react;
   CGFloat newHeight = containerView.bounds.size.height - scrollViewFrameInContainer.origin.y;
 
   if (newHeight > 0) {
+    // Preserve contentOffset before changing frame to prevent scroll jump
+    CGPoint savedContentOffset = _pinnedScrollView.scrollView.contentOffset;
+
     CGRect frame = _pinnedScrollView.frame;
     frame.size.height = newHeight;
     _pinnedScrollView.frame = frame;
+
+    // Restore contentOffset after frame change
+    _pinnedScrollView.scrollView.contentOffset = savedContentOffset;
   }
 }
 
