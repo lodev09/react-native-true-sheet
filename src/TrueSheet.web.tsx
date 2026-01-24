@@ -391,10 +391,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
     dismiss: async () => {
       const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
 
-      // Dismiss all sheets above sequentially since gorhom/bottom-sheet doesn't support cascade dismiss
-      for (const sheet of sheetsAbove) {
-        await bottomSheetContext?.dismissDirect(sheet);
-      }
+      // Dismiss all sheets above in parallel
+      await Promise.all(sheetsAbove.map((sheet) => bottomSheetContext?.dismissDirect(sheet)));
 
       // Then dismiss this sheet
       await dismissInternal();
