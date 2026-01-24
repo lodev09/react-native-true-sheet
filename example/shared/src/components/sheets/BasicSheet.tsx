@@ -121,7 +121,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
         {onNavigateToTest && <Button text="Test Screen" onPress={onNavigateToTest} />}
       </ButtonGroup>
-      <Button text="Dismiss Stack" onPress={() => sheetRef.current?.dismissStack()} />
+      <Button
+        text="Dismiss Stack (does nothing)"
+        onPress={() => sheetRef.current?.dismissStack()}
+      />
       <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
 
