@@ -27,7 +27,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { BottomSheetContext, type TrueSheetRef } from './TrueSheetProvider.web';
+import { BottomSheetContext, type TrueSheetRefMethods } from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
   DetentChangeEvent,
@@ -77,7 +77,7 @@ const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) =
   return createElement(slot);
 };
 
-const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref) => {
+const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
   const {
     name,
     detents = [0.5, 1],
@@ -355,7 +355,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
   // For scrollable, we render the child directly
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
 
-  const sheetMethodsRef = useRef<TrueSheetRef>({
+  const sheetMethodsRef = useRef<TrueSheetRefMethods>({
     present: (index = 0) => {
       return new Promise<void>((resolve) => {
         presentResolver.current = resolve;

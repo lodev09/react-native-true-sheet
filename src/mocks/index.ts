@@ -1,7 +1,8 @@
 import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 
-import type { TrueSheetProps, TrueSheetContextMethods } from '../TrueSheet.types';
+import type { TrueSheetProps } from '../TrueSheet.types';
+import type { TrueSheetStaticMethods } from '../TrueSheetProvider';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -69,7 +70,7 @@ export function TrueSheetProvider({ children }: { children: React.ReactNode }) {
 /**
  * Mock useTrueSheet hook for testing.
  */
-export function useTrueSheet(): TrueSheetContextMethods {
+export function useTrueSheet(): TrueSheetStaticMethods {
   return {
     present: TrueSheet.present,
     dismiss: TrueSheet.dismiss,

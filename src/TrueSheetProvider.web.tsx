@@ -1,12 +1,16 @@
 import { createContext, useContext, useRef, type ReactNode, type RefObject } from 'react';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import type { TrueSheetContextMethods } from './TrueSheet.types';
+
+import type { TrueSheetStaticMethods } from './TrueSheetProvider';
 import type { TrueSheet } from './TrueSheet';
 
-export type TrueSheetRef = Pick<TrueSheet, 'present' | 'dismiss' | 'resize' | 'dismissStack'>;
+export type TrueSheetRefMethods = Pick<
+  TrueSheet,
+  'present' | 'dismiss' | 'resize' | 'dismissStack'
+>;
 
-interface BottomSheetContextValue extends TrueSheetContextMethods {
-  register: (name: string, methods: RefObject<TrueSheetRef>) => void;
+interface BottomSheetContextValue extends TrueSheetStaticMethods {
+  register: (name: string, methods: RefObject<TrueSheetRefMethods>) => void;
   unregister: (name: string) => void;
   pushToStack: (name: string) => void;
   removeFromStack: (name: string) => void;
@@ -24,10 +28,10 @@ export interface TrueSheetProviderProps {
  * Required to wrap your app for sheet management via useTrueSheet hook.
  */
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
-  const sheetsRef = useRef<Map<string, RefObject<TrueSheetRef>>>(new Map());
+  const sheetsRef = useRef<Map<string, RefObject<TrueSheetRefMethods>>>(new Map());
   const presentedStackRef = useRef<string[]>([]);
 
-  const register = (name: string, methods: RefObject<TrueSheetRef>) => {
+  const register = (name: string, methods: RefObject<TrueSheetRefMethods>) => {
     sheetsRef.current.set(name, methods);
   };
 
@@ -122,11 +126,7 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   );
 }
 
-/**
- * Hook to control TrueSheet instances by name.
- * On web, this uses the TrueSheetContext from TrueSheetProvider.
- */
-export function useTrueSheet(): TrueSheetContextMethods {
+export function useTrueSheet(): TrueSheetStaticMethods {
   const context = useContext(BottomSheetContext);
 
   if (!context) {
