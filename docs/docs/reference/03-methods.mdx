@@ -51,7 +51,7 @@ await sheet.current?.dismiss()
 await sheet.current?.dismiss(false)
 ```
 
-### `dismissChildren`
+### `dismissStack`
 
 Dismisses only the sheets presented on top of this sheet, keeping this sheet presented. If no sheets are presented on top, this method does nothing.
 
@@ -60,10 +60,10 @@ Dismisses only the sheets presented on top of this sheet, keeping this sheet pre
 | `animated: boolean` | No | `true` |
 
 ```tsx
-await sheet.current?.dismissChildren()
+await sheet.current?.dismissStack()
 
-// Dismiss children without animation
-await sheet.current?.dismissChildren(false)
+// Dismiss stack without animation
+await sheet.current?.dismissStack(false)
 ```
 
 This is useful when you want to close child sheets while keeping the current sheet open.

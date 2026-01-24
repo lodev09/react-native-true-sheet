@@ -93,10 +93,10 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   });
 }
 
-- (void)dismissChildrenByRef:(double)viewTag
-                    animated:(BOOL)animated
-                     resolve:(RCTPromiseResolveBlock)resolve
-                      reject:(RCTPromiseRejectBlock)reject {
+- (void)dismissStackByRef:(double)viewTag
+                 animated:(BOOL)animated
+                  resolve:(RCTPromiseResolveBlock)resolve
+                   reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
 
@@ -105,14 +105,14 @@ RCT_EXPORT_MODULE(TrueSheetModule)
       return;
     }
 
-    [trueSheetView dismissChildrenAnimated:animated
-                                completion:^(BOOL success, NSError *_Nullable error) {
-                                  if (success) {
-                                    resolve(nil);
-                                  } else {
-                                    reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss children", error);
-                                  }
-                                }];
+    [trueSheetView dismissStackAnimated:animated
+                             completion:^(BOOL success, NSError *_Nullable error) {
+                               if (success) {
+                                 resolve(nil);
+                               } else {
+                                 reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss stack", error);
+                               }
+                             }];
   });
 }
 

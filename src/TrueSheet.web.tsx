@@ -399,7 +399,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
       // Then dismiss this sheet
       await dismissInternal();
     },
-    dismissChildren: () => {
+    dismissStack: () => {
       return new Promise<void>((resolve) => {
         // Dismiss only sheets above, keeping this sheet presented
         const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
