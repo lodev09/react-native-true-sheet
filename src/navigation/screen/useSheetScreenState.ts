@@ -72,13 +72,9 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
 
   const onDidDismiss = () => {
     emitEvent('sheetDidDismiss', undefined);
-    if (closing) {
-      // Programmatic dismiss (pop, popTo, etc.) - remove this route
-      navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
-    } else {
-      // User-initiated dismiss (swipe) - go back
-      navigation.goBack();
-    }
+    isDismissedRef.current = true;
+    // Remove route from state (works for both programmatic and user-initiated dismiss)
+    navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
   };
 
   return {
