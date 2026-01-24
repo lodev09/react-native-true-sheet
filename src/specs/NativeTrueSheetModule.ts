@@ -20,13 +20,22 @@ interface Spec extends TurboModule {
   presentByRef(viewTag: number, index: number, animated: boolean): Promise<void>;
 
   /**
-   * Dismiss a sheet by reference
+   * Dismiss a sheet and all sheets presented on top of it
    * @param viewTag - Native view tag of the sheet component
    * @param animated - Whether to animate the dismissal
    * @returns Promise that resolves when sheet is fully dismissed
    * @throws DISMISS_FAILED if dismissal fails
    */
   dismissByRef(viewTag: number, animated: boolean): Promise<void>;
+
+  /**
+   * Dismiss only the sheets presented on top of this sheet, keeping this sheet presented
+   * @param viewTag - Native view tag of the sheet component
+   * @param animated - Whether to animate the dismissal
+   * @returns Promise that resolves when all child sheets are fully dismissed
+   * @throws DISMISS_FAILED if dismissal fails
+   */
+  dismissChildrenByRef(viewTag: number, animated: boolean): Promise<void>;
 
   /**
    * Resize a sheet to a different index by reference

@@ -25,6 +25,7 @@ export class TrueSheet
   static dismissAll = jest.fn((_animated?: boolean) => Promise.resolve());
 
   dismiss = jest.fn((_animated?: boolean) => Promise.resolve());
+  dismissChildren = jest.fn((_animated?: boolean) => Promise.resolve());
   present = jest.fn((_index?: number, _animated?: boolean) => Promise.resolve());
   resize = jest.fn((_index: number) => Promise.resolve());
 

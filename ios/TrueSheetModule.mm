@@ -82,14 +82,37 @@ RCT_EXPORT_MODULE(TrueSheetModule)
       return;
     }
 
-    [trueSheetView dismissAnimated:animated
-                        completion:^(BOOL success, NSError *_Nullable error) {
-                          if (success) {
-                            resolve(nil);
-                          } else {
-                            reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheet", error);
-                          }
-                        }];
+    [trueSheetView dismissAllAnimated:animated
+                           completion:^(BOOL success, NSError *_Nullable error) {
+                             if (success) {
+                               resolve(nil);
+                             } else {
+                               reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheet", error);
+                             }
+                           }];
+  });
+}
+
+- (void)dismissChildrenByRef:(double)viewTag
+                    animated:(BOOL)animated
+                     resolve:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject {
+  RCTExecuteOnMainQueue(^{
+    TrueSheetView *trueSheetView = [TrueSheetModule getTrueSheetViewByTag:@((NSInteger)viewTag)];
+
+    if (!trueSheetView) {
+      reject(@"SHEET_NOT_FOUND", [NSString stringWithFormat:@"No sheet found with tag %d", (int)viewTag], nil);
+      return;
+    }
+
+    [trueSheetView dismissChildrenAnimated:animated
+                                completion:^(BOOL success, NSError *_Nullable error) {
+                                  if (success) {
+                                    resolve(nil);
+                                  } else {
+                                    reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss children", error);
+                                  }
+                                }];
   });
 }
 
