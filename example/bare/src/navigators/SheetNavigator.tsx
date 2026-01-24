@@ -18,7 +18,12 @@ import {
   SPACING,
 } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
-import { TestScreen } from '@example/shared/screens';
+import {
+  NotificationsSheetContent,
+  ProfileSheetContent,
+  SettingsSheetContent,
+  TestScreen,
+} from '@example/shared/screens';
 import { useAppNavigation } from '../hooks';
 
 const SheetStack = createTrueSheetNavigator<AppStackParamList & SheetStackParamList>();
@@ -97,16 +102,11 @@ const SettingsSheet = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
-    <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Settings Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Another sheet in the navigation stack.</Text>
-      <DemoContent />
-      <View style={styles.buttons}>
-        <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
-        <Button text="Open Profile" onPress={() => navigation.navigate('Profile')} />
-        <Button text="pop()" onPress={() => navigation.pop()} />
-      </View>
-    </View>
+    <SettingsSheetContent
+      onResize={() => navigation.resize(1)}
+      onOpenProfile={() => navigation.navigate('Profile')}
+      onPop={() => navigation.pop()}
+    />
   );
 };
 
@@ -114,17 +114,12 @@ const ProfileSheet = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
-    <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Profile Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Third sheet in the stack.</Text>
-      <DemoContent />
-      <View style={styles.buttons}>
-        <Button text="Open Notifications" onPress={() => navigation.navigate('Notifications')} />
-        <Button text="pop()" onPress={() => navigation.pop()} />
-        <Button text="pop(2)" onPress={() => navigation.pop(2)} />
-        <Button text="popToTop()" onPress={() => navigation.popToTop()} />
-      </View>
-    </View>
+    <ProfileSheetContent
+      onOpenNotifications={() => navigation.navigate('Notifications')}
+      onPop={() => navigation.pop()}
+      onPop2={() => navigation.pop(2)}
+      onPopToTop={() => navigation.popToTop()}
+    />
   );
 };
 
@@ -132,18 +127,13 @@ const NotificationsSheet = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
-    <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Notifications Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Fourth sheet - deepest in the stack.</Text>
-      <DemoContent />
-      <View style={styles.buttons}>
-        <Button text="pop()" onPress={() => navigation.pop()} />
-        <Button text="pop(2)" onPress={() => navigation.pop(2)} />
-        <Button text="popTo('Settings')" onPress={() => navigation.popTo('Settings')} />
-        <Button text="popTo('Details')" onPress={() => navigation.popTo('Details')} />
-        <Button text="popToTop()" onPress={() => navigation.popToTop()} />
-      </View>
-    </View>
+    <NotificationsSheetContent
+      onPop={() => navigation.pop()}
+      onPop2={() => navigation.pop(2)}
+      onPopToSettings={() => navigation.popTo('Settings')}
+      onPopToDetails={() => navigation.popTo('Details')}
+      onPopToTop={() => navigation.popToTop()}
+    />
   );
 };
 
