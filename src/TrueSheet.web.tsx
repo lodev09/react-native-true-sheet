@@ -31,6 +31,7 @@ import {
   BottomSheetContext,
   getPresent,
   getDismiss,
+  getDismissStack,
   getResize,
   getDismissAll,
 } from './TrueSheetProvider.web';
@@ -362,19 +363,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
   // For scrollable, we render the child directly
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
 
-  const dismissInternal = useCallback(() => {
-    return new Promise<void>((resolve) => {
-      dismissResolver.current = resolve;
-      isDismissing.current = true;
-      if (isNonModal) {
-        bottomSheetRef.current?.close();
-      } else {
-        bottomSheetModalRef.current?.dismiss();
-      }
-    });
-  }, [isNonModal]);
-
-  const sheetMethodsRef = useRef<TrueSheetRef & { dismissDirect?: () => Promise<void> }>({
+  const sheetMethodsRef = useRef<TrueSheetRef>({
     present: (index = 0) => {
       return new Promise<void>((resolve) => {
         presentResolver.current = resolve;
@@ -388,14 +377,16 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
         }
       });
     },
-    dismiss: async () => {
-      const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
-
-      // Dismiss all sheets above in parallel
-      await Promise.all(sheetsAbove.map((sheet) => bottomSheetContext?.dismissDirect(sheet)));
-
-      // Then dismiss this sheet
-      await dismissInternal();
+    dismiss: () => {
+      return new Promise<void>((resolve) => {
+        dismissResolver.current = resolve;
+        isDismissing.current = true;
+        if (isNonModal) {
+          bottomSheetRef.current?.close();
+        } else {
+          bottomSheetModalRef.current?.dismiss();
+        }
+      });
     },
     dismissStack: () => {
       return new Promise<void>((resolve) => {
@@ -404,14 +395,13 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
         const immediateChild = sheetsAbove[sheetsAbove.length - 1];
         if (immediateChild) {
           // Dismiss the immediate child - gorhom will dismiss all sheets above it
-          bottomSheetContext?.dismissDirect(immediateChild).then(resolve);
+          bottomSheetContext?.dismiss(immediateChild).then(resolve);
           return;
         }
 
         resolve();
       });
     },
-    dismissDirect: () => dismissInternal(),
     resize: async (index: number) => {
       if (isNonModal) {
         bottomSheetRef.current?.snapToIndex(index);
@@ -505,6 +495,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
 interface TrueSheetStatic {
   present: (name: string, index?: number) => Promise<void>;
   dismiss: (name: string) => Promise<void>;
+  dismissStack: (name: string) => Promise<void>;
   resize: (name: string, index: number) => Promise<void>;
   dismissAll: () => Promise<void>;
 }
@@ -525,6 +516,14 @@ TrueSheet.dismiss = async (name: string) => {
     throw new Error('TrueSheet.dismiss(): TrueSheetProvider is not mounted.');
   }
   return dismiss(name);
+};
+
+TrueSheet.dismissStack = async (name: string) => {
+  const dismissStack = getDismissStack();
+  if (!dismissStack) {
+    throw new Error('TrueSheet.dismissStack(): TrueSheetProvider is not mounted.');
+  }
+  return dismissStack(name);
 };
 
 TrueSheet.resize = async (name: string, index: number) => {

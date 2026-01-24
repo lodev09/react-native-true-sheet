@@ -91,6 +91,11 @@ export interface TrueSheetContextMethods {
    */
   dismiss: (name: string) => Promise<void>;
   /**
+   * Dismiss only the sheets presented on top of a sheet by name.
+   * @param name - The name of the sheet
+   */
+  dismissStack: (name: string) => Promise<void>;
+  /**
    * Resize a sheet by name.
    * @param name - The name of the sheet to resize
    * @param index - The detent index to resize to
