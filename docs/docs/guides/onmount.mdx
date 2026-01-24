@@ -32,6 +32,8 @@ const App = () => {
 
 You may want to disable the present animation. To do this, simply set [`initialDetentAnimated`](/reference/configuration#initialdetentanimated) to `false`.
 
-### Using with React Navigation
+### Deep Linking on iOS
 
-Using this with [`react-navigation`](https://reactnavigation.org) can cause render issue. Check out the [reat-navigation guide](/guides/navigation#present-during-mount) for the fix.
+:::warning[iOS Limitation]
+`initialDetentIndex` may not work when deep linking to a modal screen from a cold start. See [troubleshooting](/troubleshooting#initial-present-and-deep-linking) for workaround.
+:::
