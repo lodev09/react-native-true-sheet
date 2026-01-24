@@ -66,7 +66,7 @@ export interface TrueSheetRef {
    * If no sheets are presented on top, this method does nothing.
    * @param animated - Whether to animate the dismissal (default: true)
    */
-  dismissChildren: (animated?: boolean) => Promise<void>;
+  dismissStack: (animated?: boolean) => Promise<void>;
   /**
    * Resize the sheet to a given detent index.
    * @param index - The detent index to resize to

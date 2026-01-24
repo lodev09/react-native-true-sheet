@@ -35,7 +35,7 @@ interface Spec extends TurboModule {
    * @returns Promise that resolves when all child sheets are fully dismissed
    * @throws DISMISS_FAILED if dismissal fails
    */
-  dismissChildrenByRef(viewTag: number, animated: boolean): Promise<void>;
+  dismissStackByRef(viewTag: number, animated: boolean): Promise<void>;
 
   /**
    * Resize a sheet to a different index by reference

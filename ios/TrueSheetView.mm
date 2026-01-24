@@ -509,7 +509,7 @@ using namespace facebook::react;
                                 }];
 }
 
-- (void)dismissChildrenAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+- (void)dismissStackAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
   // Only dismiss presented children, not this sheet itself
   UIViewController *presentedVC = _controller.presentedViewController;
   if (!presentedVC) {

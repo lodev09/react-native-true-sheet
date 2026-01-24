@@ -359,7 +359,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun dismissAll(animated: Boolean = true, promiseCallback: () -> Unit) {
     // Dismiss all sheets above first
-    dismissChildren(animated) {}
+    dismissStack(animated) {}
 
     // Then dismiss itself
     viewController.dismissPromise = promiseCallback
@@ -367,7 +367,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   @UiThread
-  fun dismissChildren(animated: Boolean = true, promiseCallback: () -> Unit) {
+  fun dismissStack(animated: Boolean = true, promiseCallback: () -> Unit) {
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
     if (sheetsAbove.isNotEmpty()) {
       for (sheet in sheetsAbove) {
