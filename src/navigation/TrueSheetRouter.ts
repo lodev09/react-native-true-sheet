@@ -166,17 +166,19 @@ export const TrueSheetRouter = (
             return null;
           }
 
-          // Target index is the bottommost route to be removed
-          const targetIndex = state.routes.length - actualCount;
+          // Target index is the route we want to stay on (land on after pop)
+          // closingIndex is the first route to be dismissed (the one after target)
+          const targetIndex = state.routes.length - 1 - actualCount;
+          const closingIndex = targetIndex + 1;
 
-          // Mark only the target route as closing - iOS will cascade dismiss children
-          // Remove routes above it immediately since they'll be dismissed by iOS
+          // Mark only the bottom-most route to pop as closing
+          // The sheet's dismiss() will handle dismissing sheets above it first
           return {
             ...state,
-            index: targetIndex,
-            routes: state.routes
-              .filter((_, i) => i <= targetIndex)
-              .map((route, i) => (i === targetIndex ? { ...route, closing: true } : route)),
+            index: closingIndex,
+            routes: state.routes.map((route, i) =>
+              i === closingIndex ? { ...route, closing: true } : route
+            ),
           };
         }
 
@@ -186,14 +188,12 @@ export const TrueSheetRouter = (
             return null;
           }
 
-          // Mark the first sheet (index 1) as closing - iOS will cascade dismiss all sheets above
-          // Remove all routes above the target immediately
+          // Mark the first sheet (index 1) as closing
+          // The sheet's dismiss() will handle dismissing sheets above it first
           return {
             ...state,
             index: 1,
-            routes: state.routes
-              .filter((_, i) => i <= 1)
-              .map((route, i) => (i === 1 ? { ...route, closing: true } : route)),
+            routes: state.routes.map((route, i) => (i === 1 ? { ...route, closing: true } : route)),
           };
         }
 
@@ -221,20 +221,21 @@ export const TrueSheetRouter = (
             return null;
           }
 
-          // Mark the route after target as closing - iOS will cascade dismiss sheets above
-          // Remove routes above the closing route immediately
           const closingIndex = targetIndex + 1;
+
+          // Mark the closing route as closing
+          // The sheet's dismiss() will handle dismissing sheets above it first
           return {
             ...state,
             index: closingIndex,
-            routes: state.routes
-              .filter((_, i) => i <= closingIndex)
-              .map((route, i) => (i === closingIndex ? { ...route, closing: true } : route)),
+            routes: state.routes.map((route, i) =>
+              i === closingIndex ? { ...route, closing: true } : route
+            ),
           };
         }
 
         case 'REMOVE': {
-          // Actually remove the closing route
+          // Actually remove the closing route and all routes above it
           const routeKey = action.source;
           const routeIndex = routeKey
             ? state.routes.findIndex((r) => r.key === routeKey)
@@ -244,7 +245,8 @@ export const TrueSheetRouter = (
             return state;
           }
 
-          const routes = state.routes.filter((_, i) => i !== routeIndex);
+          // Remove the route and all routes above it (they were dismissed together)
+          const routes = state.routes.filter((_, i) => i < routeIndex);
 
           return {
             ...state,
