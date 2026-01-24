@@ -67,7 +67,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
     val tag = viewTag.toInt()
 
     withTrueSheetView(tag, promise) { view ->
-      view.dismissAll(animated) {
+      view.dismiss(animated) {
         promise.resolve(null)
       }
     }
@@ -131,7 +131,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
           return@post
         }
 
-        rootSheet.dismissAll(animated) {
+        rootSheet.dismiss(animated) {
           promise.resolve(null)
         }
       } catch (e: Exception) {

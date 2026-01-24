@@ -489,7 +489,7 @@ using namespace facebook::react;
   return _controller;
 }
 
-- (void)dismissAllAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+- (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
   if (!_controller.isPresented) {
     if (completion) {
       completion(YES, nil);
@@ -645,7 +645,7 @@ using namespace facebook::react;
 - (void)presenterScreenWillDisappear {
   if (_controller.isPresented && !_controller.isBeingDismissed) {
     _dismissedByNavigation = YES;
-    [self dismissAllAnimated:YES completion:nil];
+    [self dismissAnimated:YES completion:nil];
   }
 }
 
