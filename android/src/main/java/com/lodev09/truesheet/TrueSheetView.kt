@@ -137,7 +137,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       child.delegate = null
 
       // Skip if already dismissing - snapshot preserves visuals during dismiss
-      if (!viewController.isDismissing) {
+      if (!viewController.isBeingDismissed) {
         viewController.createSheetSnapshot()
         if (viewController.isPresented) {
           dismiss(true) {}
@@ -175,7 +175,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     viewController.dismissPromise = { viewController.delegate = null }
 
-    if (viewController.isPresented && !viewController.isDismissing) {
+    if (viewController.isPresented && !viewController.isBeingDismissed) {
       viewController.dismiss(animated = false)
     }
   }

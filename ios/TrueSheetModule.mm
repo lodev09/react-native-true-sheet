@@ -165,6 +165,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
         return;
       }
 
+      [rootSheet emitDismissedPosition];
       [rootSheet dismissAnimated:animated
                       completion:^(BOOL success, NSError *_Nullable error) {
                         if (success) {

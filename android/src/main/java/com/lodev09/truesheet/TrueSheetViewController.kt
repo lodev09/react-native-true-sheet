@@ -131,7 +131,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private set
 
   private var interactionState: InteractionState = InteractionState.Idle
-  internal var isDismissing = false
+  internal var isBeingDismissed = false
     private set
   var wasHiddenByScreen = false
   private var shouldAnimatePresent = false
@@ -341,7 +341,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView = null
 
     interactionState = InteractionState.Idle
-    isDismissing = false
+    isBeingDismissed = false
     isPresented = false
     isSheetVisible = false
     wasHiddenByScreen = false
@@ -480,8 +480,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleStateChanged(sheetView: View, newState: Int) {
     if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-      if (isDismissing) return
-      isDismissing = true
+      if (isBeingDismissed) return
+      isBeingDismissed = true
       dismissKeyboard()
       emitWillDismissEvents()
       finishDismiss()
@@ -503,7 +503,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleSlide(sheetView: View, slideOffset: Float) {
     // Skip during dismiss animation
-    if (isDismissing) return
+    if (isBeingDismissed) return
 
     val behavior = behavior ?: return
 
@@ -706,9 +706,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun dismiss(animated: Boolean = true) {
-    if (isDismissing) return
+    if (isBeingDismissed) return
 
-    isDismissing = true
+    isBeingDismissed = true
     dismissKeyboard()
     emitWillDismissEvents()
 
@@ -895,7 +895,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!dimmed) return
     if (contentHeight == 0) return
 
-    val keyboardOffset = if (isDismissing) 0 else currentKeyboardInset
+    val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
     val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
 
     if (animated) {
@@ -982,7 +982,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (!shouldHandleKeyboard(checkFocus = false)) return
 
           setupSheetDetents()
-          if (!isDismissing && detentIndexBeforeKeyboard >= 0) {
+          if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
           }
         }
