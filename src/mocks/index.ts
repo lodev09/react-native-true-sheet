@@ -1,7 +1,7 @@
 import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 
-import type { TrueSheetProps, TrueSheetRef, TrueSheetContextMethods } from '../TrueSheet.types';
+import type { TrueSheetProps, TrueSheetContextMethods } from '../TrueSheet.types';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -11,10 +11,7 @@ interface TrueSheetState {
  * Mock TrueSheet component for testing.
  * Import from '@lodev09/react-native-true-sheet/mock' in your test setup.
  */
-export class TrueSheet
-  extends React.Component<TrueSheetProps, TrueSheetState>
-  implements TrueSheetRef
-{
+export class TrueSheet extends React.Component<TrueSheetProps, TrueSheetState> {
   static instances: Record<string, TrueSheet> = {};
 
   static dismiss = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());

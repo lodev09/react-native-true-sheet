@@ -1,6 +1,9 @@
 import { createContext, useContext, useRef, type ReactNode, type RefObject } from 'react';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import type { TrueSheetContextMethods, TrueSheetRef } from './TrueSheet.types';
+import type { TrueSheetContextMethods } from './TrueSheet.types';
+import type { TrueSheet } from './TrueSheet';
+
+export type TrueSheetRef = Pick<TrueSheet, 'present' | 'dismiss' | 'resize' | 'dismissStack'>;
 
 interface BottomSheetContextValue extends TrueSheetContextMethods {
   register: (name: string, methods: RefObject<TrueSheetRef>) => void;

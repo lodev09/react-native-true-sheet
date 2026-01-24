@@ -1,8 +1,8 @@
 import { forwardRef, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 
-import { TrueSheet } from '../TrueSheet.web';
-import type { TrueSheetProps, TrueSheetRef, PositionChangeEvent } from '../TrueSheet.types';
+import { TrueSheet } from '../TrueSheet';
+import type { TrueSheetProps, PositionChangeEvent } from '../TrueSheet.types';
 import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
 
 interface ReanimatedTrueSheetProps extends TrueSheetProps {
@@ -25,7 +25,7 @@ interface ReanimatedTrueSheetProps extends TrueSheetProps {
  * import { ReanimatedTrueSheet, ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated'
  *
  * function MyScreen() {
- *   const sheetRef = useRef<TrueSheetRef>(null)
+ *   const sheetRef = useRef<TrueSheet>(null)
  *
  *   return (
  *     <ReanimatedTrueSheetProvider>
@@ -43,36 +43,34 @@ interface ReanimatedTrueSheetProps extends TrueSheetProps {
  * }
  * ```
  */
-export const ReanimatedTrueSheet = forwardRef<TrueSheetRef, ReanimatedTrueSheetProps>(
-  (props, ref) => {
-    const { onPositionChange, detents = [0.5, 1], ...rest } = props;
-    const { height: windowHeight } = useWindowDimensions();
+export const ReanimatedTrueSheet = forwardRef<TrueSheet, ReanimatedTrueSheetProps>((props, ref) => {
+  const { onPositionChange, detents = [0.5, 1], ...rest } = props;
+  const { height: windowHeight } = useWindowDimensions();
 
-    const { animatedPosition, animatedIndex, animatedDetent } = useReanimatedTrueSheet();
+  const { animatedPosition, animatedIndex, animatedDetent } = useReanimatedTrueSheet();
 
-    // Reset animated values when component unmounts
-    useEffect(() => {
-      return () => {
-        animatedPosition.value = windowHeight;
-        animatedIndex.value = -1;
-        animatedDetent.value = 0;
-      };
-    }, [windowHeight]);
-
-    const handlePositionChange = (event: PositionChangeEvent) => {
-      const { position, index, detent } = event.nativeEvent;
-
-      // Sync with provider's shared values
-      animatedPosition.value = position;
-      animatedIndex.value = index;
-      animatedDetent.value = detent;
-
-      // Call user's callback
-      onPositionChange?.(event);
+  // Reset animated values when component unmounts
+  useEffect(() => {
+    return () => {
+      animatedPosition.value = windowHeight;
+      animatedIndex.value = -1;
+      animatedDetent.value = 0;
     };
+  }, [windowHeight]);
 
-    return (
-      <TrueSheet ref={ref} detents={detents} onPositionChange={handlePositionChange} {...rest} />
-    );
-  }
-);
+  const handlePositionChange = (event: PositionChangeEvent) => {
+    const { position, index, detent } = event.nativeEvent;
+
+    // Sync with provider's shared values
+    animatedPosition.value = position;
+    animatedIndex.value = index;
+    animatedDetent.value = detent;
+
+    // Call user's callback
+    onPositionChange?.(event);
+  };
+
+  return (
+    <TrueSheet ref={ref} detents={detents} onPositionChange={handlePositionChange} {...rest} />
+  );
+});

@@ -27,10 +27,9 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import { BottomSheetContext } from './TrueSheetProvider.web';
+import { BottomSheetContext, type TrueSheetRef } from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
-  TrueSheetRef,
   DetentChangeEvent,
   DidBlurEvent,
   DidDismissEvent,

@@ -47,34 +47,6 @@ export type WillBlurEvent = NativeSyntheticEvent<null>;
 export type BackPressEvent = NativeSyntheticEvent<null>;
 
 /**
- * Ref methods exposed by a TrueSheet instance.
- */
-export interface TrueSheetRef {
-  /**
-   * Present the sheet at a given detent index.
-   * @param index - The detent index to present at (default: 0)
-   * @param animated - Whether to animate the presentation (default: true)
-   */
-  present: (index?: number, animated?: boolean) => Promise<void>;
-  /**
-   * Dismiss this sheet and all sheets presented on top of it in a single animation.
-   * @param animated - Whether to animate the dismissal (default: true)
-   */
-  dismiss: (animated?: boolean) => Promise<void>;
-  /**
-   * Dismiss only the sheets presented on top of this sheet, keeping this sheet presented.
-   * If no sheets are presented on top, this method does nothing.
-   * @param animated - Whether to animate the dismissal (default: true)
-   */
-  dismissStack: (animated?: boolean) => Promise<void>;
-  /**
-   * Resize the sheet to a given detent index.
-   * @param index - The detent index to resize to
-   */
-  resize: (index: number) => Promise<void>;
-}
-
-/**
  * Methods for controlling TrueSheet instances by name.
  * Returned by the `useTrueSheet` hook.
  */
