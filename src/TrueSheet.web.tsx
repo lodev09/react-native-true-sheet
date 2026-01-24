@@ -27,14 +27,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-import {
-  BottomSheetContext,
-  getPresent,
-  getDismiss,
-  getDismissStack,
-  getResize,
-  getDismissAll,
-} from './TrueSheetProvider.web';
+import { BottomSheetContext } from './TrueSheetProvider.web';
 import type {
   TrueSheetProps,
   TrueSheetRef,
@@ -492,6 +485,9 @@ const TrueSheetComponent = forwardRef<TrueSheetRef, TrueSheetProps>((props, ref)
   );
 });
 
+const STATIC_METHOD_ERROR =
+  'Static methods are not supported on web. Use the useTrueSheet() hook instead.';
+
 interface TrueSheetStatic {
   present: (name: string, index?: number) => Promise<void>;
   dismiss: (name: string) => Promise<void>;
@@ -502,44 +498,24 @@ interface TrueSheetStatic {
 
 export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
 
-TrueSheet.present = async (name: string, index?: number) => {
-  const present = getPresent();
-  if (!present) {
-    throw new Error('TrueSheet.present(): TrueSheetProvider is not mounted.');
-  }
-  return present(name, index);
+TrueSheet.present = async () => {
+  throw new Error(STATIC_METHOD_ERROR);
 };
 
-TrueSheet.dismiss = async (name: string) => {
-  const dismiss = getDismiss();
-  if (!dismiss) {
-    throw new Error('TrueSheet.dismiss(): TrueSheetProvider is not mounted.');
-  }
-  return dismiss(name);
+TrueSheet.dismiss = async () => {
+  throw new Error(STATIC_METHOD_ERROR);
 };
 
-TrueSheet.dismissStack = async (name: string) => {
-  const dismissStack = getDismissStack();
-  if (!dismissStack) {
-    throw new Error('TrueSheet.dismissStack(): TrueSheetProvider is not mounted.');
-  }
-  return dismissStack(name);
+TrueSheet.dismissStack = async () => {
+  throw new Error(STATIC_METHOD_ERROR);
 };
 
-TrueSheet.resize = async (name: string, index: number) => {
-  const resize = getResize();
-  if (!resize) {
-    throw new Error('TrueSheet.resize(): TrueSheetProvider is not mounted.');
-  }
-  return resize(name, index);
+TrueSheet.resize = async () => {
+  throw new Error(STATIC_METHOD_ERROR);
 };
 
 TrueSheet.dismissAll = async () => {
-  const dismissAll = getDismissAll();
-  if (!dismissAll) {
-    throw new Error('TrueSheet.dismissAll(): TrueSheetProvider is not mounted.');
-  }
-  return dismissAll();
+  throw new Error(STATIC_METHOD_ERROR);
 };
 
 const styles = StyleSheet.create({

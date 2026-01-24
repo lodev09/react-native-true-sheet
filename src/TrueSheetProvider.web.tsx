@@ -12,19 +12,6 @@ interface BottomSheetContextValue extends TrueSheetContextMethods {
 
 export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
 
-// Module-level references for static methods
-let presentRef: ((name: string, index?: number) => Promise<void>) | null = null;
-let dismissRef: ((name: string) => Promise<void>) | null = null;
-let dismissStackRef: ((name: string) => Promise<void>) | null = null;
-let resizeRef: ((name: string, index: number) => Promise<void>) | null = null;
-let dismissAllRef: (() => Promise<void>) | null = null;
-
-export const getPresent = () => presentRef;
-export const getDismiss = () => dismissRef;
-export const getDismissStack = () => dismissStackRef;
-export const getResize = () => resizeRef;
-export const getDismissAll = () => dismissAllRef;
-
 export interface TrueSheetProviderProps {
   children: ReactNode;
 }
@@ -111,13 +98,6 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     if (!rootSheet) return;
     return dismiss(rootSheet);
   };
-
-  // Set module-level refs for static access
-  presentRef = present;
-  dismissRef = dismiss;
-  dismissStackRef = dismissStack;
-  resizeRef = resize;
-  dismissAllRef = dismissAll;
 
   return (
     <BottomSheetContext.Provider

@@ -146,3 +146,17 @@ await TrueSheet.dismissAll(false)
 :::note
 This only dismisses sheets in the current presentation context. Sheets presented behind a modal (e.g., React Navigation modal or React Native Modal) will not be affected.
 :::
+
+### Web
+
+Static methods are not supported on web. Use the `useTrueSheet()` hook instead.
+
+```tsx
+import { useTrueSheet } from '@lodev09/react-native-true-sheet'
+
+const { present, dismiss, dismissStack, resize, dismissAll } = useTrueSheet()
+
+await present('my-sheet')
+await dismiss('my-sheet')
+await dismissAll()
+```

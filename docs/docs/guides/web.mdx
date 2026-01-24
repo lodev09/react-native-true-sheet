@@ -34,7 +34,11 @@ const App = () => {
 On native platforms, `TrueSheetProvider` is a simple pass-through component, so you can safely wrap your entire app without any performance impact.
 :::
 
-## Using the Hook
+## Controlling Sheets
+
+On web, use the `useTrueSheet` hook or refs to control sheets. Static methods like `TrueSheet.present()` are not supported on web.
+
+### Using the Hook
 
 Use the `useTrueSheet` hook to control sheets by name:
 
@@ -42,7 +46,7 @@ Use the `useTrueSheet` hook to control sheets by name:
 import { TrueSheet, useTrueSheet } from '@lodev09/react-native-true-sheet'
 
 const MyComponent = () => {
-  const { present, dismiss } = useTrueSheet()
+  const { present, dismiss, dismissAll } = useTrueSheet()
 
   return (
     <>
@@ -59,9 +63,9 @@ const MyComponent = () => {
 }
 ```
 
-## Using Refs
+### Using Refs
 
-You can also use refs to control sheets directly as you would do normally.
+You can also use refs to control sheets directly as you would on native.
 
 ## Scrollable Content
 
