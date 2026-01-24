@@ -113,6 +113,17 @@ await TrueSheet.dismiss('my-sheet')
 await TrueSheet.dismiss('my-sheet', false)
 ```
 ```tsx
+await TrueSheet.dismissStack('my-sheet')
+
+// Dismiss stack without animation
+await TrueSheet.dismissStack('my-sheet', false)
+```
+
+:::note
+If no sheets are presented on top, `dismissStack()` does nothing.
+:::
+
+```tsx
 // Resize to 80%
 await TrueSheet.resize('my-sheet', 0.8)
 ```
