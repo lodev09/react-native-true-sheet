@@ -4,15 +4,10 @@
 
 ### ⚠️ Breaking changes
 
-#### Dismiss Behavior
-
-`dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open. Now it performs a cascade dismiss of the entire stack.
-
+- **Dismiss Behavior**: `dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open. Now it performs a cascade dismiss of the entire stack.
 Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets.
 
-#### Static Methods on Web
-
-Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead.
+- **Remove Static Methods on Web**: Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead.
 
 ### 🎉 New features
 
