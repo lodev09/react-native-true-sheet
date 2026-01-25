@@ -56,7 +56,7 @@
     "clean": "scripts/clean.sh",
     "prepare": "bob build",
     "release": "release-it",
-    "release:beta": "yarn release --preRelease=beta"
+    "release:beta": "yarn release --preRelease=beta --no-github.release"
   },
   "keywords": [
     "react-native",
@@ -178,7 +178,8 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
+      "tagName": "v${version}",
+      "tagExclude": "*-beta*"
     },
     "npm": {
       "publish": false
