@@ -36,11 +36,15 @@ If you're using `react-native-gesture-handler` inside the sheet and gestures are
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 <TrueSheet>
-  <GestureHandlerRootView style={{ flex: 1 }}>
+  <GestureHandlerRootView style={{ flexGrow: 1 }}>
     {/* Your content with gestures */}
   </GestureHandlerRootView>
 </TrueSheet>
 ```
+
+:::warning
+Use `flexGrow: 1` instead of `flex: 1` to avoid layout issues.
+:::
 
 [Learn more](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android) about gesture handler setup on Android.
 

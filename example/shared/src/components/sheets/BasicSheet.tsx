@@ -142,6 +142,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
+        {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
         <Button text="Dismiss All" onPress={() => dismissAll()} />
         <Button text="Dismiss Stack" onPress={() => dismissStack('main')} />
         <Button text="Close" onPress={() => childSheet.current?.dismiss()} />

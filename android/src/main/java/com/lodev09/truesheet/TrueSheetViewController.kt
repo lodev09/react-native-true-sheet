@@ -64,7 +64,6 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillBlur()
   fun viewControllerDidBlur()
   fun viewControllerDidBackPress()
-  fun viewControllerDidDetectScreenDismiss()
 }
 
 // =============================================================================

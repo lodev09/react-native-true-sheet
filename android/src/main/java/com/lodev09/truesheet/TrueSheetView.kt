@@ -532,9 +532,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
   }
 
-  override fun viewControllerDidDetectScreenDismiss() {
-    resetTranslation()
-  }
 
   // ==================== TrueSheetContainerViewDelegate ====================
 
@@ -564,7 +561,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented && viewController.wasHiddenByScreen) {
       viewController.wasHiddenByScreen = false
       viewController.showAfterScreen()
-      viewControllerDidDetectScreenDismiss()
     }
   }
 
