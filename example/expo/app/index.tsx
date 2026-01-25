@@ -12,6 +12,7 @@ export default function Index() {
       onNavigateToModal={() => router.push('/modal')}
       onNavigateToSheetStack={() => router.push('/sheet')}
       onNavigateToTest={() => router.push('/test')}
+      onNavigateToTestStack={() => router.push('/test-stack')}
     />
   );
 }

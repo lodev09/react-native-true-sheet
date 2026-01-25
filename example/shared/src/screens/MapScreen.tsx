@@ -42,6 +42,7 @@ export interface MapScreenProps {
   onNavigateToModal?: () => void;
   onNavigateToSheetStack?: () => void;
   onNavigateToTest?: () => void;
+  onNavigateToTestStack?: () => void;
 }
 
 const MapScreenInner = ({
@@ -49,6 +50,7 @@ const MapScreenInner = ({
   onNavigateToModal,
   onNavigateToSheetStack,
   onNavigateToTest,
+  onNavigateToTestStack,
 }: MapScreenProps) => {
   const { height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
@@ -153,7 +155,10 @@ const MapScreenInner = ({
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="Open Modal" onPress={onNavigateToModal} />
         <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
-        <Button text="Test Screen" onPress={onNavigateToTest} />
+        <ButtonGroup>
+          <Button text="Test Screen" onPress={onNavigateToTest} />
+          <Button text="Test Stack" onPress={onNavigateToTestStack} />
+        </ButtonGroup>
         <Spacer />
         <ButtonGroup>
           <Button text="Prompt" onPress={() => promptSheet.current?.present()} />
