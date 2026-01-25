@@ -4,7 +4,13 @@ import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Input, Spacer } from '../components';
-import { PromptSheet, FlatListSheet, ScrollViewSheet, BasicSheet, BlankSheet } from '../components/sheets';
+import {
+  PromptSheet,
+  FlatListSheet,
+  ScrollViewSheet,
+  BasicSheet,
+  BlankSheet,
+} from '../components/sheets';
 
 export interface ModalScreenProps {
   onNavigateToTest?: () => void;
