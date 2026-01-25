@@ -204,10 +204,10 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
           cornerRadius: 16,
           reanimated: true,
-          positionChangeHandler: (_payload) => {
-            'worklet';
-            // console.log(_payload.position);
-          },
+          // positionChangeHandler: (payload) => {
+          //   'worklet';
+          //   console.log(payload.position);
+          // },
         }}
       />
       <SheetStack.Screen

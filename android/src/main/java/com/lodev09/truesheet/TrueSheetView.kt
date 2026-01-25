@@ -343,7 +343,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
 
       // Register with observer to track sheet stack hierarchy
-      viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
+      viewController.parentSheetView = TrueSheetStackManager.registerSheet(this)
     }
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
@@ -392,7 +392,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (viewController.containerView == null) return@post
 
       viewController.setupSheetDetentsForSizeChange()
-      TrueSheetStackManager.onSheetSizeChanged(this)
+      TrueSheetStackManager.updateParentTranslation(this)
     }
   }
 
@@ -446,6 +446,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetViewControllerDelegate ====================
 
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
+    // Update parent sheet translation now that content is measured
+    TrueSheetStackManager.updateParentTranslation(this)
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
   }

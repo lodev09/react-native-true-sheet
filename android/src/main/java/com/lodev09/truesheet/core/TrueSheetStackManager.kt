@@ -31,17 +31,13 @@ object TrueSheetStackManager {
     }
 
   /**
-   * Called when a sheet is about to be presented.
-   * Returns the visible parent sheet to stack on, or null if none.
+   * Registers a sheet in the stack and returns its parent sheet if any.
    * Only returns a parent if it's in the same container (e.g., same Screen).
    */
   @JvmStatic
-  fun onSheetWillPresent(sheetView: TrueSheetView, detentIndex: Int): TrueSheetView? {
+  fun registerSheet(sheetView: TrueSheetView): TrueSheetView? {
     synchronized(presentedSheetStack) {
       val parentSheet = findTopmostSheet()?.takeIf { it.rootContainerView == sheetView.rootContainerView }
-
-      val childSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(detentIndex)
-      parentSheet?.updateTranslationForChild(childSheetTop)
 
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
@@ -67,12 +63,11 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Called when a presented sheet's size changes (e.g., after setupSheetDetents).
-   * Updates parent sheet translations to match the new sheet position.
+   * Updates parent sheet translation based on the child sheet's position.
    * Only affects parent sheets in the same container.
    */
   @JvmStatic
-  fun onSheetSizeChanged(sheetView: TrueSheetView) {
+  fun updateParentTranslation(sheetView: TrueSheetView) {
     synchronized(presentedSheetStack) {
       val index = presentedSheetStack.indexOf(sheetView)
       val parentSheet = getParentSheetAt(index, sheetView.rootContainerView) ?: return
