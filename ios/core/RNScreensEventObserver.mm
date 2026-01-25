@@ -19,15 +19,21 @@ using namespace facebook::react;
 @implementation RNScreensEventObserver {
   std::weak_ptr<const EventDispatcher> _eventDispatcher;
   std::shared_ptr<const EventListener> _eventListener;
+  NSInteger _presenterScreenTag;
   NSMutableSet<NSNumber *> *_screenTags;
   __weak UIViewController *_presenterScreenController;
+  __weak UIViewController *_parentScreenController;
+  __weak UIWindow *_window;
   BOOL _dismissedByNavigation;
 }
 
 - (instancetype)init {
   if (self = [super init]) {
+    _presenterScreenTag = 0;
     _screenTags = [NSMutableSet new];
     _presenterScreenController = nil;
+    _parentScreenController = nil;
+    _window = nil;
   }
   return self;
 }
@@ -56,9 +62,11 @@ using namespace facebook::react;
         Tag screenTag = family->getTag();
 
         if (event.type == "topWillDisappear") {
-          if ([strongSelf shouldDismissForScreenTag:screenTag]) {
-            strongSelf->_dismissedByNavigation = YES;
-            [strongSelf.delegate presenterScreenWillDisappear];
+          if ([strongSelf->_screenTags containsObject:@(screenTag)]) {
+            if ([strongSelf shouldDismissForScreenTag:screenTag]) {
+              strongSelf->_dismissedByNavigation = YES;
+              [strongSelf.delegate presenterScreenWillDisappear];
+            }
           }
         } else if (event.type == "topWillAppear") {
           if ([strongSelf->_screenTags containsObject:@(screenTag)] && strongSelf->_dismissedByNavigation) {
@@ -85,40 +93,68 @@ using namespace facebook::react;
 }
 
 - (void)capturePresenterScreenFromView:(UIView *)view {
+  _presenterScreenTag = 0;
   [_screenTags removeAllObjects];
   _presenterScreenController = nil;
+  _parentScreenController = nil;
+  _window = view.window;
 
   for (UIView *current = view.superview; current; current = current.superview) {
     if ([NSStringFromClass([current class]) isEqualToString:@"RNSScreenView"]) {
       [_screenTags addObject:@(current.tag)];
 
-      // Capture the view controller from the first (immediate presenter) screen
-      if (!_presenterScreenController) {
-        for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
-          if ([r isKindOfClass:[UIViewController class]]) {
-            _presenterScreenController = (UIViewController *)r;
-            break;
-          }
+      UIViewController *screenVC = nil;
+      for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
+        if ([r isKindOfClass:[UIViewController class]]) {
+          screenVC = (UIViewController *)r;
+          break;
         }
+      }
+
+      if (!_presenterScreenController) {
+        _presenterScreenTag = current.tag;
+        _presenterScreenController = screenVC;
+      } else if (!_parentScreenController && screenVC) {
+        _parentScreenController = screenVC;
       }
     }
   }
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {
-  if (![_screenTags containsObject:@(screenTag)]) {
+  // For parent screens (not immediate presenter), check if the presenter screen is being removed
+  // This handles nested stack removal case
+  if (screenTag != _presenterScreenTag) {
+    UINavigationController *parentNav = _parentScreenController.navigationController;
+
+    // Modal case: parent's nav is presented -> let sheet dismiss naturally
+    // Nested stack case: parent's nav is not presented (embedded) -> need to dismiss
+    if (parentNav.presentingViewController != nil) {
+      return NO;
+    }
+
+    if (!_parentScreenController) {
+      return NO;
+    }
+
+    // If presenter view is no longer in window, the nested stack is being removed
+    UIView *presenterView = [_window viewWithTag:_presenterScreenTag];
+    if (presenterView == nil || presenterView.window == nil) {
+      return YES;
+    }
+
     return NO;
   }
 
+  // For immediate presenter screen
   UINavigationController *navController = _presenterScreenController.navigationController;
 
-  // If nav controller is nil or being dismissed, dismiss the sheet
   if (!navController || navController.isBeingDismissed) {
     return YES;
   }
 
-  // Skip if screen is still top of nav stack (e.g. modal dismiss - sheet dismisses naturally with modal)
-  // Dismiss if a new screen was pushed or popped
+  // Dismiss if presenter is no longer top of nav stack (pushed/popped)
+  // Skip if still top (e.g. modal dismiss - sheet dismisses naturally)
   return navController.topViewController != _presenterScreenController;
 }
 
