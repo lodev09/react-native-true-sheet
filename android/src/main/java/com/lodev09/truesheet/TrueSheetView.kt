@@ -475,7 +475,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    TrueSheetStackManager.onSheetDidDismiss(this, hadParent)
+    TrueSheetStackManager.unregisterSheet(this, hadParent)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {

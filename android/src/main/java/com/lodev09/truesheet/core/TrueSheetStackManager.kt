@@ -48,16 +48,14 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Called when a sheet has been dismissed.
-   * Resets parent sheet translation if this sheet was stacked on it.
+   * Unregisters a sheet from the stack and resets parent translation if needed.
    */
   @JvmStatic
-  fun onSheetDidDismiss(sheetView: TrueSheetView, hadParent: Boolean) {
+  fun unregisterSheet(sheetView: TrueSheetView, hadParent: Boolean) {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
-      val newTopmost = presentedSheetStack.lastOrNull()
-      if (hadParent && newTopmost?.viewController?.isBeingDismissed == false) {
-        newTopmost.resetTranslation()
+      if (hadParent) {
+        presentedSheetStack.lastOrNull()?.resetTranslation()
       }
     }
   }
