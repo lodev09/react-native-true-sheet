@@ -4,9 +4,15 @@
 
 ### ⚠️ Breaking changes
 
-- **`dismiss()` now dismisses the sheet and all sheets presented on top of it.** Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open.
+#### Dismiss Behavior
 
-Now it performs a cascade dismiss of the entire stack. Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets. ([#452](https://github.com/lodev09/react-native-true-sheet/pull/452), [#470](https://github.com/lodev09/react-native-true-sheet/pull/470) by [@obi-owner](https://github.com/obi-owner), [@lodev09](https://github.com/lodev09))
+`dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open. Now it performs a cascade dismiss of the entire stack.
+
+Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets.
+
+#### Static Methods on Web
+
+Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead.
 
 ### 🎉 New features
 
@@ -16,6 +22,7 @@ Now it performs a cascade dismiss of the entire stack. Use the `dismissStack()` 
 
 ### 🐛 Bug fixes
 
+- Fixed `pop`, `popTo`, `popToTop` navigation actions not dismissing sheets properly. ([#471](https://github.com/lodev09/react-native-true-sheet/pull/471) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed scroll position jumping when nested sheet is dismissed with inverted FlatList. ([#468](https://github.com/lodev09/react-native-true-sheet/pull/468) by [@lucasklaassen](https://github.com/lucasklaassen))
 - **Android**: Fixed present promise not resolving on resize. ([c3495500](https://github.com/lodev09/react-native-true-sheet/commit/c3495500) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed scroll view pinning to respect content view padding/margin. ([#429](https://github.com/lodev09/react-native-true-sheet/pull/429), [#446](https://github.com/lodev09/react-native-true-sheet/pull/446) by [@lodev09](https://github.com/lodev09))
@@ -29,6 +36,7 @@ Now it performs a cascade dismiss of the entire stack. Use the `dismissStack()` 
 ### 📖 Documentation
 
 - Added `transformIgnorePatterns` to Jest setup guide. ([#458](https://github.com/lodev09/react-native-true-sheet/pull/458) by [@lodev09](https://github.com/lodev09))
+- Added troubleshooting docs for deep-linking modals. ([#2d111c4f](https://github.com/lodev09/react-native-true-sheet/commit/2d111c4f777a3a50e75d0894dbaa5852914f5962) by [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 

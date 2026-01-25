@@ -2,7 +2,7 @@ import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
-import type { TrueSheetProps, TrueSheetRef, PositionChangeEventPayload } from '../TrueSheet.types';
+import type { TrueSheetProps, PositionChangeEventPayload } from '../TrueSheet.types';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -28,10 +28,7 @@ const createMockSharedValue = <T>(initialValue: T): SharedValue<T> =>
  * Mock ReanimatedTrueSheet component for testing.
  * Import from '@lodev09/react-native-true-sheet/reanimated/mock' in your test setup.
  */
-export class ReanimatedTrueSheet
-  extends React.Component<TrueSheetProps, TrueSheetState>
-  implements TrueSheetRef
-{
+export class ReanimatedTrueSheet extends React.Component<TrueSheetProps, TrueSheetState> {
   static instances: Record<string, ReanimatedTrueSheet> = {};
 
   static dismiss = jest.fn((_name: string, _animated?: boolean) => Promise.resolve());

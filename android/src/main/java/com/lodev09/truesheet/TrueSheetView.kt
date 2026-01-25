@@ -135,11 +135,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val child = getChildAt(index)
     if (child is TrueSheetContainerView) {
       child.delegate = null
-      viewController.createSheetSnapshot()
 
-      // Dismiss when container is removed
-      if (viewController.isPresented) {
-        dismiss(true) {}
+      // Skip if already dismissing - snapshot preserves visuals during dismiss
+      if (!viewController.isBeingDismissed) {
+        viewController.createSheetSnapshot()
+        if (viewController.isPresented) {
+          dismiss(true) {}
+        }
       }
     }
     viewController.removeView(child)
@@ -171,13 +173,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     cleanupScreenEventObserver()
     didInitiallyPresent = false
 
-    if (viewController.isPresented) {
-      viewController.dismissPromise = {
-        viewController.delegate = null
-      }
-      viewController.dismiss()
-    } else {
-      viewController.delegate = null
+    viewController.dismissPromise = { viewController.delegate = null }
+
+    if (viewController.isPresented && !viewController.isBeingDismissed) {
+      viewController.dismiss(animated = false)
     }
   }
 
@@ -344,7 +343,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
 
       // Register with observer to track sheet stack hierarchy
-      viewController.parentSheetView = TrueSheetStackManager.onSheetWillPresent(this, detentIndex)
+      viewController.parentSheetView = TrueSheetStackManager.registerSheet(this)
     }
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
@@ -364,6 +363,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismissStack(animated: Boolean = true, promiseCallback: () -> Unit) {
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
     if (sheetsAbove.isNotEmpty()) {
+      // Create snapshot only for topmost sheet (first in reversed list)
+      sheetsAbove.firstOrNull()?.viewController?.createSheetSnapshot()
+
       for (sheet in sheetsAbove) {
         sheet.viewController.dismiss(animated)
       }
@@ -390,7 +392,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (viewController.containerView == null) return@post
 
       viewController.setupSheetDetentsForSizeChange()
-      TrueSheetStackManager.onSheetSizeChanged(this)
+      TrueSheetStackManager.updateParentTranslation(this)
     }
   }
 
@@ -444,6 +446,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetViewControllerDelegate ====================
 
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
+    // Update parent sheet translation now that content is measured
+    TrueSheetStackManager.updateParentTranslation(this)
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillPresentEvent(surfaceId, id, index, position, detent))
   }
@@ -470,7 +475,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    TrueSheetStackManager.onSheetDidDismiss(this, hadParent)
+    TrueSheetStackManager.unregisterSheet(this, hadParent)
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {

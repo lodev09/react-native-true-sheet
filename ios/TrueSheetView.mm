@@ -111,7 +111,7 @@ using namespace facebook::react;
     UIViewController *vc = [self findPresentingViewController];
 
     // Only present if the view controller is in the same window and not being dismissed
-    if (vc && vc.view.window == self.window && !vc.isBeingDismissed) {
+    if (vc && vc.view.window == self.window && !_controller.isBeingDismissed) {
       _didInitiallyPresent = YES;
       [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
     } else {
@@ -463,17 +463,19 @@ using namespace facebook::react;
   return _controller;
 }
 
+- (void)emitDismissedPosition {
+  [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
+}
+
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
   if (_controller.isBeingDismissed || !_controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already dismissed. No need to dismiss it again.");
-    
+
     if (completion) {
       completion(YES, nil);
     }
     return;
   }
-
-  [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
 
   // Dismiss from the presenting view controller to dismiss this sheet and all its children
   UIViewController *presenter = _controller.presentingViewController;

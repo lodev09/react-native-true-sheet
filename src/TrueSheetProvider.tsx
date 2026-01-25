@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 
 import { TrueSheet } from './TrueSheet';
-import type { TrueSheetContextMethods } from './TrueSheet.types';
+
+export type TrueSheetStaticMethods = Pick<
+  typeof TrueSheet,
+  'present' | 'dismiss' | 'dismissStack' | 'resize' | 'dismissAll'
+>;
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
@@ -20,7 +24,7 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
  * Hook to control TrueSheet instances by name.
  * On native, this maps directly to TrueSheet static methods.
  */
-export function useTrueSheet(): TrueSheetContextMethods {
+export function useTrueSheet(): TrueSheetStaticMethods {
   return {
     present: TrueSheet.present,
     dismiss: TrueSheet.dismiss,

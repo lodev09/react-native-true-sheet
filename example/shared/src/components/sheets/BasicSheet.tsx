@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'react';
 import { StyleSheet } from 'react-native';
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { TrueSheet, useTrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
@@ -21,6 +21,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const childSheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
   const [detentIndex, setDetentIndex] = useState(0);
+
+  const { dismissAll, dismissStack } = useTrueSheet();
 
   const resize = async (index: number) => {
     await sheetRef.current?.resize(index);
@@ -140,8 +142,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
-        <Button text="Dismiss All" onPress={() => TrueSheet.dismissAll()} />
-        <Button text="Dismiss Stack" onPress={() => TrueSheet.dismissStack('main')} />
+        <Button text="Dismiss All" onPress={() => dismissAll()} />
+        <Button text="Dismiss Stack" onPress={() => dismissStack('main')} />
         <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
       </TrueSheet>
     </TrueSheet>

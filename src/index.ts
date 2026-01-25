@@ -1,3 +1,3 @@
 export * from './TrueSheet';
 export * from './TrueSheet.types';
-export * from './TrueSheetProvider';
+export { TrueSheetProvider, useTrueSheet } from './TrueSheetProvider';

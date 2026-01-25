@@ -18,7 +18,12 @@ import {
   SPACING,
 } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
-import { TestScreen } from '@example/shared/screens';
+import {
+  NotificationsSheetContent,
+  ProfileSheetContent,
+  SettingsSheetContent,
+  TestScreen,
+} from '@example/shared/screens';
 import { useAppNavigation } from '../hooks';
 
 const SheetStack = createTrueSheetNavigator<AppStackParamList & SheetStackParamList>();
@@ -94,18 +99,41 @@ const DetailsSheet = () => {
 };
 
 const SettingsSheet = () => {
-  const navigation = useTrueSheetNavigation<AppStackParamList>();
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
 
   return (
-    <View style={styles.sheetContent}>
-      <Text style={styles.sheetTitle}>Settings Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Another sheet in the navigation stack.</Text>
-      <DemoContent />
-      <View style={styles.buttons}>
-        <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
-        <Button text="Go Back" onPress={() => navigation.goBack()} />
-      </View>
-    </View>
+    <SettingsSheetContent
+      onResize={() => navigation.resize(1)}
+      onOpenProfile={() => navigation.navigate('Profile')}
+      onPop={() => navigation.pop()}
+    />
+  );
+};
+
+const ProfileSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return (
+    <ProfileSheetContent
+      onOpenNotifications={() => navigation.navigate('Notifications')}
+      onPop={() => navigation.pop()}
+      onPop2={() => navigation.pop(2)}
+      onPopToTop={() => navigation.popToTop()}
+    />
+  );
+};
+
+const NotificationsSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return (
+    <NotificationsSheetContent
+      onPop={() => navigation.pop()}
+      onPop2={() => navigation.pop(2)}
+      onPopToSettings={() => navigation.popTo('Settings')}
+      onPopToDetails={() => navigation.popTo('Details')}
+      onPopToTop={() => navigation.popToTop()}
+    />
   );
 };
 
@@ -176,10 +204,28 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
           cornerRadius: 16,
           reanimated: true,
-          positionChangeHandler: (payload) => {
-            'worklet';
-            console.log(payload.position);
-          },
+          // positionChangeHandler: (payload) => {
+          //   'worklet';
+          //   console.log(payload.position);
+          // },
+        }}
+      />
+      <SheetStack.Screen
+        name="Profile"
+        component={ProfileSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+        }}
+      />
+      <SheetStack.Screen
+        name="Notifications"
+        component={NotificationsSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
         }}
       />
     </SheetStack.Navigator>

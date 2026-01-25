@@ -10,7 +10,6 @@ import {
 
 import type {
   TrueSheetProps,
-  TrueSheetRef,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
@@ -54,10 +53,7 @@ interface TrueSheetState {
   shouldRenderNativeView: boolean;
 }
 
-export class TrueSheet
-  extends PureComponent<TrueSheetProps, TrueSheetState>
-  implements TrueSheetRef
-{
+export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   displayName = 'TrueSheet';
 
   private readonly nativeRef: RefObject<NativeRef | null>;
@@ -325,6 +321,11 @@ export class TrueSheet
     this.props.onBackPress?.(event);
   }
 
+  /**
+   * Present the sheet at a given detent index.
+   * @param index - The detent index to present at (default: 0)
+   * @param animated - Whether to animate the presentation (default: true)
+   */
   public async present(index: number = 0, animated: boolean = true): Promise<void> {
     const detentsLength = Math.min(this.props.detents?.length ?? 2, 3); // Max 3 detents
     if (index < 0 || index >= detentsLength) {
@@ -347,14 +348,27 @@ export class TrueSheet
     this.isPresenting = false;
   }
 
+  /**
+   * Resize the sheet to a given detent index.
+   * @param index - The detent index to resize to
+   */
   public async resize(index: number): Promise<void> {
     await TrueSheetModule?.resizeByRef(this.handle, index);
   }
 
+  /**
+   * Dismiss this sheet and all sheets presented on top of it in a single animation.
+   * @param animated - Whether to animate the dismissal (default: true)
+   */
   public async dismiss(animated: boolean = true): Promise<void> {
     return TrueSheetModule?.dismissByRef(this.handle, animated);
   }
 
+  /**
+   * Dismiss only the sheets presented on top of this sheet, keeping this sheet presented.
+   * If no sheets are presented on top, this method does nothing.
+   * @param animated - Whether to animate the dismissal (default: true)
+   */
   public async dismissStack(animated: boolean = true): Promise<void> {
     return TrueSheetModule?.dismissStackByRef(this.handle, animated);
   }

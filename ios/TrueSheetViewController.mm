@@ -222,12 +222,8 @@
   }
 }
 
-- (BOOL)isDismissing {
-  return self.presentingViewController == nil || self.isBeingDismissed;
-}
-
 - (void)emitWillDismissEvents {
-  if (self.isDismissing && !_isWillDismissEmitted) {
+  if (self.isBeingDismissed && !_isWillDismissEmitted) {
     _isWillDismissEmitted = YES;
 
     [self.delegate viewControllerWillBlur];
@@ -237,7 +233,7 @@
 }
 
 - (void)emitDidDismissEvents {
-  if (self.isDismissing) {
+  if (self.isBeingDismissed) {
     _isPresented = NO;
     _isWillDismissEmitted = NO;
 
@@ -398,12 +394,12 @@
   CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
-  _transitionFakeView.frame = self.isDismissing ? presentedFrame : dismissedFrame;
+  _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
   [self storeResolvedPositionForIndex:self.currentDetentIndex];
 
   auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
     [[context containerView] addSubview:self->_transitionFakeView];
-    self->_transitionFakeView.frame = self.isDismissing ? dismissedFrame : presentedFrame;
+    self->_transitionFakeView.frame = self.isBeingDismissed ? dismissedFrame : presentedFrame;
 
     self->_transitioningTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionTracker)];
     [self->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
