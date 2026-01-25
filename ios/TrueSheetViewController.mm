@@ -25,6 +25,7 @@
 
 @implementation TrueSheetViewController {
   CGFloat _lastPosition;
+  CGFloat _lastWidth;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -211,6 +212,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
       CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
@@ -288,7 +290,12 @@
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  // Update state on rotation (width change)
+  CGFloat width = self.view.frame.size.width;
+  if (_lastWidth != width) {
+    _lastWidth = width;
+    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  }
 
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
@@ -297,6 +304,7 @@
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       [self storeResolvedPositionForIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
+      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
     });
@@ -735,6 +743,7 @@
     NSInteger index = self.currentDetentIndex;
     if (index >= 0) {
       CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
     }
   });
