@@ -415,6 +415,9 @@ using namespace facebook::react;
     return;
   }
 
+  // Reset navigation dismiss flag when presenting (handles view recycling edge cases)
+  _dismissedByNavigation = NO;
+
   UIViewController *presentingViewController = [self findPresentingViewController];
   if (!presentingViewController) {
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
