@@ -262,6 +262,12 @@ using namespace facebook::react;
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
+
+  // Initialize with _controller size to set initial width
+  if (_controller) {
+    [self updateStateWithSize:_controller.view.frame.size];
+  }
+
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 }
 
