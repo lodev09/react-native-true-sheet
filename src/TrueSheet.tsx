@@ -506,8 +506,7 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   scrollableContent: {
-    flexGrow: 1,
-    flexBasis: 0,
+    flex: 1,
   },
   header: {
     pointerEvents: 'box-none',
