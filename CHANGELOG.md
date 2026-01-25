@@ -4,11 +4,15 @@
 
 ### ⚠️ Breaking changes
 
-- **Dismissing**: `dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open.
+#### Dismiss Behavior
 
-  Now it performs a cascade dismiss of the entire stack. Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets. ([#452](https://github.com/lodev09/react-native-true-sheet/pull/452), [#470](https://github.com/lodev09/react-native-true-sheet/pull/470) by [@obi-owner](https://github.com/obi-owner), [@lodev09](https://github.com/lodev09))
+`dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open. Now it performs a cascade dismiss of the entire stack.
 
-- **Web**: Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead. ([#472](https://github.com/lodev09/react-native-true-sheet/pull/472) by [@lodev09](https://github.com/lodev09))
+Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets.
+
+#### Static Methods on Web
+
+Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead.
 
 ### 🎉 New features
 
