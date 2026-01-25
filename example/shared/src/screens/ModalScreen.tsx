@@ -4,7 +4,7 @@ import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Input, Spacer } from '../components';
-import { PromptSheet, FlatListSheet, ScrollViewSheet, BasicSheet } from '../components/sheets';
+import { PromptSheet, FlatListSheet, ScrollViewSheet, BasicSheet, BlankSheet } from '../components/sheets';
 
 export interface ModalScreenProps {
   onNavigateToTest?: () => void;
@@ -16,6 +16,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   const flatlistSheet = useRef<TrueSheet>(null);
 
   const basicSheet = useRef<TrueSheet>(null);
+  const blankSheet = useRef<TrueSheet>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const modalBasicSheet = useRef<TrueSheet>(null);
@@ -43,12 +44,14 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Button text="Dismiss Modal" onPress={onDismiss} />
         <Spacer />
         <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
+        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
         <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
         <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
         <Spacer />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
-        <BasicSheet initialDetentIndex={0} dimmedDetentIndex={1} ref={basicSheet} />
+        <BasicSheet dimmedDetentIndex={1} ref={basicSheet} />
+        <BlankSheet dimmed={false} ref={blankSheet} />
         <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
 

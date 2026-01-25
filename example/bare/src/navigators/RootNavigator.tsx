@@ -5,6 +5,7 @@ import { DARK_BLUE } from '@example/shared/utils';
 import { Map } from '@example/shared/components';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
+import { TestStackNavigator } from './TestStackNavigator';
 import type { AppStackParamList } from '../types';
 import { useAppNavigation } from '../hooks';
 
@@ -20,6 +21,7 @@ const MapScreenWrapper = () => {
       onNavigateToModal={() => navigation.navigate('ModalStack')}
       onNavigateToSheetStack={() => navigation.navigate('SheetStack')}
       onNavigateToTest={() => navigation.navigate('Test')}
+      onNavigateToTestStack={() => navigation.navigate('TestStack')}
     />
   );
 };
@@ -63,6 +65,11 @@ export const RootNavigator = () => {
         options={{ presentation: 'fullScreenModal', headerShown: false }}
       />
       <Stack.Screen name="Test" component={TestScreenWrapper} options={{ title: 'Test' }} />
+      <Stack.Screen
+        name="TestStack"
+        component={TestStackNavigator}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };

@@ -19,14 +19,14 @@ using namespace facebook::react;
 @implementation RNScreensEventObserver {
   std::weak_ptr<const EventDispatcher> _eventDispatcher;
   std::shared_ptr<const EventListener> _eventListener;
-  NSInteger _presenterScreenTag;
+  NSMutableSet<NSNumber *> *_screenTags;
   __weak UIViewController *_presenterScreenController;
   BOOL _dismissedByNavigation;
 }
 
 - (instancetype)init {
   if (self = [super init]) {
-    _presenterScreenTag = 0;
+    _screenTags = [NSMutableSet new];
     _presenterScreenController = nil;
   }
   return self;
@@ -61,7 +61,7 @@ using namespace facebook::react;
             [strongSelf.delegate presenterScreenWillDisappear];
           }
         } else if (event.type == "topWillAppear") {
-          if (screenTag == strongSelf->_presenterScreenTag && strongSelf->_dismissedByNavigation) {
+          if ([strongSelf->_screenTags containsObject:@(screenTag)] && strongSelf->_dismissedByNavigation) {
             strongSelf->_dismissedByNavigation = NO;
             [strongSelf.delegate presenterScreenWillAppear];
           }
@@ -85,33 +85,41 @@ using namespace facebook::react;
 }
 
 - (void)capturePresenterScreenFromView:(UIView *)view {
-  _presenterScreenTag = 0;
+  [_screenTags removeAllObjects];
   _presenterScreenController = nil;
 
   for (UIView *current = view.superview; current; current = current.superview) {
-    NSString *className = NSStringFromClass([current class]);
+    if ([NSStringFromClass([current class]) isEqualToString:@"RNSScreenView"]) {
+      [_screenTags addObject:@(current.tag)];
 
-    if ([className isEqualToString:@"RNSScreenView"]) {
-      _presenterScreenTag = current.tag;
-      for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
-        if ([r isKindOfClass:[UIViewController class]]) {
-          _presenterScreenController = (UIViewController *)r;
-          break;
+      // Capture the view controller from the first (immediate presenter) screen
+      if (!_presenterScreenController) {
+        for (UIResponder *r = current.nextResponder; r; r = r.nextResponder) {
+          if ([r isKindOfClass:[UIViewController class]]) {
+            _presenterScreenController = (UIViewController *)r;
+            break;
+          }
         }
       }
-      break;
     }
   }
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {
-  if (_presenterScreenTag != screenTag) {
+  if (![_screenTags containsObject:@(screenTag)]) {
     return NO;
+  }
+
+  UINavigationController *navController = _presenterScreenController.navigationController;
+
+  // If nav controller is nil or being dismissed, dismiss the sheet
+  if (!navController || navController.isBeingDismissed) {
+    return YES;
   }
 
   // Skip if screen is still top of nav stack (e.g. modal dismiss - sheet dismisses naturally with modal)
   // Dismiss if a new screen was pushed or popped
-  return _presenterScreenController.navigationController.topViewController != _presenterScreenController;
+  return navController.topViewController != _presenterScreenController;
 }
 
 @end
