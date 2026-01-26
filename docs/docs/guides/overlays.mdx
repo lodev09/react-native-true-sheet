@@ -1,0 +1,59 @@
+---
+title: Overlays on Sheets
+description: Display modals, dialogs, and other overlays on top of bottom sheets.
+keywords: [bottom sheet overlay, bottom sheet modal, bottom sheet dialog, portal, z-index]
+---
+
+When displaying overlays like dialogs or modals on top of a sheet, you may encounter z-index issues where the sheet appears above the overlay, particularly on Android.
+
+This guide explains how to properly display overlays on top of TrueSheet.
+
+Portal-based UI libraries (like `react-native-reusables`, `tamagui`, etc.) render content outside the normal component hierarchy. On Android, the sheet may appear on top of these portals due to how native views are layered.
+
+## How?
+
+Wrap your overlay content with React Native's `Modal` on Android and `FullWindowOverlay` from `react-native-screens` on iOS.
+
+```tsx
+import { Platform, Modal } from 'react-native'
+import { FullWindowOverlay } from 'react-native-screens'
+
+const Overlay = Platform.select({
+  ios: FullWindowOverlay,
+  default: Modal,
+})
+
+export const App = () => {
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <>
+      <TrueSheet>
+        <Button title="Show Dialog" onPress={() => setVisible(true)} />
+      </TrueSheet>
+
+      <Overlay visible={visible} transparent>
+        <YourDialogContent onClose={() => setVisible(false)} />
+      </Overlay>
+    </>
+  )
+}
+```
+
+## Platform Differences
+
+| Platform | Recommended Approach |
+|----------|---------------------|
+| iOS | `FullWindowOverlay` from `react-native-screens` |
+| Android | React Native `Modal` with `transparent` prop |
+
+:::note
+`FullWindowOverlay` requires `react-native-screens` to be installed.
+:::
+
+## Why This Works
+
+- **iOS**: `FullWindowOverlay` renders content in a separate window above all other views
+- **Android**: `Modal` creates a new native dialog that appears above the sheet's `CoordinatorLayout`
+
+Both approaches ensure the overlay is rendered in a separate native container that sits above the sheet in the view hierarchy.
