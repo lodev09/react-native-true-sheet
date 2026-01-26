@@ -31,6 +31,7 @@ Use the `dismissStack()` method if you need the old behavior of dismissing only 
 
 ### 📖 Documentation
 
+- Added overlays guide for displaying modals/dialogs on top of sheets. ([#474](https://github.com/lodev09/react-native-true-sheet/pull/474) by [@lodev09](https://github.com/lodev09))
 - Added `transformIgnorePatterns` to Jest setup guide. ([#458](https://github.com/lodev09/react-native-true-sheet/pull/458) by [@lodev09](https://github.com/lodev09))
 - Added troubleshooting docs for deep-linking modals. ([#2d111c4f](https://github.com/lodev09/react-native-true-sheet/commit/2d111c4f777a3a50e75d0894dbaa5852914f5962) by [@lodev09](https://github.com/lodev09))
 

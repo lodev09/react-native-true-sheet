@@ -81,7 +81,7 @@ When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
 4. **Screenshots / Videos** - Include if applicable
 5. **Checklist** - Mark platforms tested (iOS, Android, Web), documentation and changelog updates
 
-**After creating a PR, always update `CHANGELOG.md`.**
+**After creating a PR, always update `CHANGELOG.md`.** Do this immediately after creating the PR, before moving on to other tasks.
 
 ### Changelog
 
