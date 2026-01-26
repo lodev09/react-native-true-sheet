@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import {
   BasicSheet,
@@ -39,34 +39,32 @@ export const StandardScreen = ({
   };
 
   return (
-    <TrueSheetProvider>
-      <View style={styles.content}>
-        <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
-
-        <Button text="Navigate to Test" onPress={onNavigateToTest} />
-        <Button text="Open Modal" onPress={onNavigateToModal} />
-        <Button text="Open Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
-        <Button text="Navigate to Map" onPress={onNavigateToMap} />
-        <Spacer />
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
-        <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
-        <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
-
-        <BasicSheet ref={basicSheet} onNavigateToTest={onNavigateToTest} />
-        <PromptSheet ref={promptSheet} />
-        <ScrollViewSheet ref={scrollViewSheet} />
-        <FlatListSheet ref={flatListSheet} />
-        <GestureSheet ref={gestureSheet} />
-        <BlankSheet ref={blankSheet} />
-        <NavigationSheet ref={navigationSheet} />
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>True Sheet</Text>
+        <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
       </View>
-    </TrueSheetProvider>
+
+      <Button text="Navigate to Test" onPress={onNavigateToTest} />
+      <Button text="Open Modal" onPress={onNavigateToModal} />
+      <Button text="Open Navigation Sheet" onPress={() => navigationSheet.current?.present()} />
+      <Button text="Navigate to Map" onPress={onNavigateToMap} />
+      <Spacer />
+      <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+      <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+      <Button text="TrueSheet ScrollView" onPress={() => scrollViewSheet.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
+      <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
+      <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+
+      <BasicSheet ref={basicSheet} onNavigateToTest={onNavigateToTest} />
+      <PromptSheet ref={promptSheet} />
+      <ScrollViewSheet ref={scrollViewSheet} />
+      <FlatListSheet ref={flatListSheet} />
+      <GestureSheet ref={gestureSheet} />
+      <BlankSheet ref={blankSheet} />
+      <NavigationSheet ref={navigationSheet} />
+    </View>
   );
 };
 

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sheet';
+import { type TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, GAP, SPACING } from '../utils';
 import { Button, Spacer } from '../components';
@@ -16,19 +16,17 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
   const flatListSheet = useRef<TrueSheet>(null);
 
   return (
-    <TrueSheetProvider>
-      <View style={styles.content}>
-        <Button text="Go Back" onPress={onGoBack} />
-        <Spacer />
-        <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
-        <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
-        <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
+    <View style={styles.content}>
+      <Button text="Go Back" onPress={onGoBack} />
+      <Spacer />
+      <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
+      <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
+      <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
 
-        <BasicSheet dimmed={false} ref={basicSheet} />
-        <PromptSheet ref={promptSheet} />
-        <FlatListSheet ref={flatListSheet} />
-      </View>
-    </TrueSheetProvider>
+      <BasicSheet dimmed={false} ref={basicSheet} />
+      <PromptSheet ref={promptSheet} />
+      <FlatListSheet ref={flatListSheet} />
+    </View>
   );
 };
 

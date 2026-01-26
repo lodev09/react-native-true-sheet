@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TestScreen } from '@example/shared/screens';
 import { DARK_BLUE } from '@example/shared/utils';
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 type NestedStackParamList = {
   Test: undefined;
@@ -22,13 +23,19 @@ const TestScreenWrapper = () => {
  */
 export const TestStackNavigator = () => {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: DARK_BLUE },
-        headerTintColor: 'white',
-      }}
-    >
-      <Stack.Screen name="Test" component={TestScreenWrapper} options={{ title: 'Nested Stack' }} />
-    </Stack.Navigator>
+    <TrueSheetProvider>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: DARK_BLUE },
+          headerTintColor: 'white',
+        }}
+      >
+        <Stack.Screen
+          name="Test"
+          component={TestScreenWrapper}
+          options={{ title: 'Nested Stack' }}
+        />
+      </Stack.Navigator>
+    </TrueSheetProvider>
   );
 };

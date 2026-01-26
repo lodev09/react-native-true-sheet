@@ -532,7 +532,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
   }
 
-
   // ==================== TrueSheetContainerViewDelegate ====================
 
   override fun containerViewContentDidChangeSize(width: Int, height: Int) {

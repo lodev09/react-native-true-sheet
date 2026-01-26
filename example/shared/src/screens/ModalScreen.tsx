@@ -37,62 +37,60 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
   }, [modalVisible]);
 
   return (
-    <TrueSheetProvider>
-      <View style={styles.content}>
-        <View style={styles.heading}>
-          <Text style={styles.title}>Modal Screen</Text>
-          <Text style={styles.subtitle}>
-            This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
-          </Text>
-        </View>
-        <Input />
-        <Button text="Navigate Test" onPress={onNavigateToTest} />
-        <Button text="Dismiss Modal" onPress={onDismiss} />
-        <Spacer />
-        <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
-        <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
-        <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
-        <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
-        <Spacer />
-        <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
-
-        <BasicSheet dimmedDetentIndex={1} ref={basicSheet} />
-        <BlankSheet dimmed={false} ref={blankSheet} />
-        <PromptSheet dimmed={false} ref={promptSheet} />
-        <FlatListSheet ref={flatlistSheet} />
-
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <TrueSheetProvider>
-            <View style={styles.modalContent}>
-              <View style={styles.heading}>
-                <Text style={styles.title}>React Native Modal</Text>
-                <Text style={styles.subtitle}>
-                  This is a React Native Modal. You can present TrueSheets from here!
-                </Text>
-              </View>
-              <Button text="Close Modal" onPress={() => setModalVisible(false)} />
-              <Button text="Basic Sheet" onPress={() => modalBasicSheet.current?.present()} />
-              <Button text="Prompt Sheet" onPress={() => modalPromptSheet.current?.present()} />
-              <Button
-                text="ScrollView Sheet"
-                onPress={() => modalScrollViewSheet.current?.present()}
-              />
-              <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
-              <Spacer />
-
-              <BasicSheet ref={modalBasicSheet} />
-              <PromptSheet dimmed={false} ref={modalPromptSheet} />
-              <FlatListSheet ref={modalFlatlistSheet} />
-              <ScrollViewSheet ref={modalScrollViewSheet} />
-            </View>
-          </TrueSheetProvider>
-        </Modal>
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>Modal Screen</Text>
+        <Text style={styles.subtitle}>
+          This is a fullScreenModal opened from a TrueSheet. You can present sheets from here too!
+        </Text>
       </View>
-    </TrueSheetProvider>
+      <Input />
+      <Button text="Navigate Test" onPress={onNavigateToTest} />
+      <Button text="Dismiss Modal" onPress={onDismiss} />
+      <Spacer />
+      <Button text="TrueSheet Basic" onPress={() => basicSheet.current?.present()} />
+      <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+      <Button text="TrueSheet Prompt" onPress={() => promptSheet.current?.present()} />
+      <Button text="TrueSheet FlatList" onPress={() => flatlistSheet.current?.present()} />
+      <Spacer />
+      <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
+
+      <BasicSheet dimmedDetentIndex={1} ref={basicSheet} />
+      <BlankSheet ref={blankSheet} />
+      <PromptSheet dimmed={false} ref={promptSheet} />
+      <FlatListSheet ref={flatlistSheet} />
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TrueSheetProvider>
+          <View style={styles.modalContent}>
+            <View style={styles.heading}>
+              <Text style={styles.title}>React Native Modal</Text>
+              <Text style={styles.subtitle}>
+                This is a React Native Modal. You can present TrueSheets from here!
+              </Text>
+            </View>
+            <Button text="Close Modal" onPress={() => setModalVisible(false)} />
+            <Button text="Basic Sheet" onPress={() => modalBasicSheet.current?.present()} />
+            <Button text="Prompt Sheet" onPress={() => modalPromptSheet.current?.present()} />
+            <Button
+              text="ScrollView Sheet"
+              onPress={() => modalScrollViewSheet.current?.present()}
+            />
+            <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
+            <Spacer />
+
+            <BasicSheet ref={modalBasicSheet} />
+            <PromptSheet dimmed={false} ref={modalPromptSheet} />
+            <FlatListSheet ref={modalFlatlistSheet} />
+            <ScrollViewSheet ref={modalScrollViewSheet} />
+          </View>
+        </TrueSheetProvider>
+      </Modal>
+    </View>
   );
 };
 
