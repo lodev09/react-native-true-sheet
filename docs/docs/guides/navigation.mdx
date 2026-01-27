@@ -238,3 +238,28 @@ navigation.navigate('SomeScreen')
 :::note
 Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415).
 :::
+
+### Web Limitation
+
+On native platforms, TrueSheet automatically detects `react-native-screens` and handles sheet visibility when navigating. However, this detection is not supported on web.
+
+As a workaround, use `useFocusEffect` to manually present/dismiss the sheet when the screen gains or loses focus:
+
+```tsx
+import { useFocusEffect } from '@react-navigation/native';
+
+function DetailsSheet() {
+  const sheet = useRef<TrueSheet>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      sheet.current?.present();
+
+      return () => {
+        sheet.current?.dismiss();
+      };
+    }, [])
+  );
+
+  return <TrueSheet ref={sheet}>{/* ... */}</TrueSheet>;
+}

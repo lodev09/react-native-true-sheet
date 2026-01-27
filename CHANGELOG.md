@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 📖 Documentation
+
+- Added web limitation note for `react-native-screens` detection with `useFocusEffect` workaround. ([#480](https://github.com/lodev09/react-native-true-sheet/pull/480) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **Web**: Fixed event firing order and conditions to match native. ([#478](https://github.com/lodev09/react-native-true-sheet/pull/478) by [@lodev09](https://github.com/lodev09))
