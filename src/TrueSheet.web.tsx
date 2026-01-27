@@ -267,6 +267,12 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       }
 
       if (isPresenting.current) {
+        // Fire onMount on first present (before willPresent, matching native)
+        if (!isMounted) {
+          setIsMounted(true);
+          onMount?.({ nativeEvent: null } as MountEvent);
+        }
+
         onWillPresent?.({
           nativeEvent: {
             index: toIndex,
@@ -285,13 +291,17 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       }
 
       if (toIndex === -1 && !isPresenting.current) {
-        // Will be handled as blur if the sheet doesn't actually dismiss
         isMinimized.current = true;
         onWillBlur?.({ nativeEvent: null } as WillBlurEvent);
-        onWillDismiss?.({ nativeEvent: null } as WillDismissEvent);
+
+        // Only fire willDismiss if this is an actual dismiss (not being backgrounded by another sheet)
+        const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
+        if (sheetsAbove.length === 0) {
+          onWillDismiss?.({ nativeEvent: null } as WillDismissEvent);
+        }
       }
     },
-    [detents, animatedPosition]
+    [detents, animatedPosition, sheetName, bottomSheetContext, isMounted, onMount]
   );
 
   const backdropComponent = useCallback(
@@ -419,14 +429,6 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       sheetMethodsRef.current.present(initialDetentIndexRef.current);
     }
   }, []);
-
-  // Handle mount event after first render
-  useEffect(() => {
-    if (!isMounted) {
-      setIsMounted(true);
-      onMount?.({ nativeEvent: null } as MountEvent);
-    }
-  }, [isMounted, onMount]);
 
   const sheetContent = (
     <ContainerComponent>
