@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Web**: Fixed event firing order and conditions to match native. ([#478](https://github.com/lodev09/react-native-true-sheet/pull/478) by [@lodev09](https://github.com/lodev09))
+
 ## 3.8.0
 
 ### ⚠️ Breaking changes
