@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **Web**: Collapse to lowest detent when not dismissible, matching native behavior. ([#479](https://github.com/lodev09/react-native-true-sheet/pull/479) by [@lodev09](https://github.com/lodev09))
 - **Web**: Fixed event firing order and conditions to match native. ([#478](https://github.com/lodev09/react-native-true-sheet/pull/478) by [@lodev09](https://github.com/lodev09))
 
 ## 3.8.0

@@ -309,13 +309,21 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       if (!dimmed) {
         return null;
       }
+
+      // When not dismissible, collapse to below dimmed index instead of dismissing
+      const pressBehavior = dismissible
+        ? 'close'
+        : dimmedDetentIndex > 0
+          ? dimmedDetentIndex - 1
+          : 'none';
+
       return (
         <BottomSheetBackdrop
           {...backdropProps}
           opacity={0.5}
           appearsOnIndex={dimmedDetentIndex}
           disappearsOnIndex={dimmedDetentIndex - 1}
-          pressBehavior={dismissible ? 'close' : 'none'}
+          pressBehavior={pressBehavior}
         />
       );
     },
