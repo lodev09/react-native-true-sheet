@@ -5,7 +5,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ModalScreen, TestScreen } from '@example/shared/screens';
 import type { ModalStackParamList } from '../types';
 import { DARK_BLUE } from '@example/shared';
-import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 const ModalStack = createNativeStackNavigator<ModalStackParamList>();
 
@@ -26,16 +25,14 @@ const TestScreenWrapper = () => {
 
 export const ModalStackNavigator = () => {
   return (
-    <TrueSheetProvider>
-      <ModalStack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: DARK_BLUE },
-          headerTintColor: 'white',
-        }}
-      >
-        <ModalStack.Screen name="Modal" component={ModalScreenWrapper} />
-        <ModalStack.Screen name="Test" component={TestScreenWrapper} />
-      </ModalStack.Navigator>
-    </TrueSheetProvider>
+    <ModalStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: DARK_BLUE },
+        headerTintColor: 'white',
+      }}
+    >
+      <ModalStack.Screen name="Modal" component={ModalScreenWrapper} />
+      <ModalStack.Screen name="Test" component={TestScreenWrapper} />
+    </ModalStack.Navigator>
   );
 };

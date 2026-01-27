@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import {
@@ -55,18 +55,16 @@ const TestScreenWrapper = () => {
 
 const SheetHomeNavigator = () => {
   return (
-    <TrueSheetProvider>
-      <SheetHomeStack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: DARK_BLUE },
-          headerTintColor: 'white',
-        }}
-        initialRouteName="Home"
-      >
-        <SheetHomeStack.Screen name="Home" component={HomeScreen} />
-        <SheetHomeStack.Screen name="Test" component={TestScreenWrapper} />
-      </SheetHomeStack.Navigator>
-    </TrueSheetProvider>
+    <SheetHomeStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: DARK_BLUE },
+        headerTintColor: 'white',
+      }}
+      initialRouteName="Home"
+    >
+      <SheetHomeStack.Screen name="Home" component={HomeScreen} />
+      <SheetHomeStack.Screen name="Test" component={TestScreenWrapper} />
+    </SheetHomeStack.Navigator>
   );
 };
 
@@ -141,98 +139,96 @@ const NotificationsSheet = () => {
 
 export const SheetNavigator = () => {
   return (
-    <TrueSheetProvider>
-      <SheetStack.Navigator
-        screenListeners={{
-          sheetWillPresent: (e) => {
-            console.log(`[SheetNavigator] sheetWillPresent: index=${e.data.index}`);
-          },
-          sheetDidPresent: (e) => {
-            console.log(`[SheetNavigator] sheetDidPresent: index=${e.data.index}`);
-          },
-          sheetWillDismiss: () => {
-            console.log('[SheetNavigator] sheetWillDismiss');
-          },
-          sheetDidDismiss: () => {
-            console.log('[SheetNavigator] sheetDidDismiss');
-          },
-          sheetDetentChange: (e) => {
-            console.log(`[SheetNavigator] sheetDetentChange: index=${e.data.index}`);
-          },
-          sheetDragBegin: (e) => {
-            console.log(`[SheetNavigator] sheetDragBegin: index=${e.data.index}`);
-          },
-          sheetDragChange: (e) => {
-            console.log(`[SheetNavigator] sheetDragChange: position=${e.data.position.toFixed(0)}`);
-          },
-          sheetDragEnd: (e) => {
-            console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
-          },
-          // sheetPositionChange: (e) => {
-          //   console.log(
-          //     `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
-          //   );
-          // },
-          sheetWillFocus: () => {
-            console.log('[SheetNavigator] sheetWillFocus');
-          },
-          sheetDidFocus: () => {
-            console.log('[SheetNavigator] sheetDidFocus');
-          },
-          sheetWillBlur: () => {
-            console.log('[SheetNavigator] sheetWillBlur');
-          },
-          sheetDidBlur: () => {
-            console.log('[SheetNavigator] sheetDidBlur');
-          },
+    <SheetStack.Navigator
+      screenListeners={{
+        sheetWillPresent: (e) => {
+          console.log(`[SheetNavigator] sheetWillPresent: index=${e.data.index}`);
+        },
+        sheetDidPresent: (e) => {
+          console.log(`[SheetNavigator] sheetDidPresent: index=${e.data.index}`);
+        },
+        sheetWillDismiss: () => {
+          console.log('[SheetNavigator] sheetWillDismiss');
+        },
+        sheetDidDismiss: () => {
+          console.log('[SheetNavigator] sheetDidDismiss');
+        },
+        sheetDetentChange: (e) => {
+          console.log(`[SheetNavigator] sheetDetentChange: index=${e.data.index}`);
+        },
+        sheetDragBegin: (e) => {
+          console.log(`[SheetNavigator] sheetDragBegin: index=${e.data.index}`);
+        },
+        sheetDragChange: (e) => {
+          console.log(`[SheetNavigator] sheetDragChange: position=${e.data.position.toFixed(0)}`);
+        },
+        sheetDragEnd: (e) => {
+          console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
+        },
+        // sheetPositionChange: (e) => {
+        //   console.log(
+        //     `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
+        //   );
+        // },
+        sheetWillFocus: () => {
+          console.log('[SheetNavigator] sheetWillFocus');
+        },
+        sheetDidFocus: () => {
+          console.log('[SheetNavigator] sheetDidFocus');
+        },
+        sheetWillBlur: () => {
+          console.log('[SheetNavigator] sheetWillBlur');
+        },
+        sheetDidBlur: () => {
+          console.log('[SheetNavigator] sheetDidBlur');
+        },
+      }}
+    >
+      {/* Base screen (first screen is the default base) */}
+      <SheetStack.Screen name="SheetHomeStack" component={SheetHomeNavigator} />
+      {/* Sheet screens */}
+      <SheetStack.Screen
+        name="Details"
+        component={DetailsSheet}
+        options={{
+          detents: ['auto', 1],
+          cornerRadius: 16,
+          backgroundColor: DARK,
         }}
-      >
-        {/* Base screen (first screen is the default base) */}
-        <SheetStack.Screen name="SheetHomeStack" component={SheetHomeNavigator} />
-        {/* Sheet screens */}
-        <SheetStack.Screen
-          name="Details"
-          component={DetailsSheet}
-          options={{
-            detents: ['auto', 1],
-            cornerRadius: 16,
-            backgroundColor: DARK,
-          }}
-        />
-        <SheetStack.Screen
-          name="Settings"
-          component={SettingsSheet}
-          options={{
-            detents: ['auto', 1],
-            backgroundColor: DARK,
-            cornerRadius: 16,
-            reanimated: true,
-            // positionChangeHandler: (payload) => {
-            //   'worklet';
-            //   console.log(payload.position);
-            // },
-          }}
-        />
-        <SheetStack.Screen
-          name="Profile"
-          component={ProfileSheet}
-          options={{
-            detents: ['auto', 1],
-            backgroundColor: DARK,
-            cornerRadius: 16,
-          }}
-        />
-        <SheetStack.Screen
-          name="Notifications"
-          component={NotificationsSheet}
-          options={{
-            detents: ['auto', 1],
-            backgroundColor: DARK,
-            cornerRadius: 16,
-          }}
-        />
-      </SheetStack.Navigator>
-    </TrueSheetProvider>
+      />
+      <SheetStack.Screen
+        name="Settings"
+        component={SettingsSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+          reanimated: true,
+          // positionChangeHandler: (payload) => {
+          //   'worklet';
+          //   console.log(payload.position);
+          // },
+        }}
+      />
+      <SheetStack.Screen
+        name="Profile"
+        component={ProfileSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+        }}
+      />
+      <SheetStack.Screen
+        name="Notifications"
+        component={NotificationsSheet}
+        options={{
+          detents: ['auto', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+        }}
+      />
+    </SheetStack.Navigator>
   );
 };
 

@@ -21,6 +21,7 @@ import {
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
 import { Button, ButtonGroup, DemoContent, Header, Spacer } from '../components';
@@ -201,9 +202,11 @@ const MapScreenInner = ({
 
 export const MapScreen = (props: MapScreenProps) => {
   return (
-    <ReanimatedTrueSheetProvider>
-      <MapScreenInner {...props} />
-    </ReanimatedTrueSheetProvider>
+    <TrueSheetProvider>
+      <ReanimatedTrueSheetProvider>
+        <MapScreenInner {...props} />
+      </ReanimatedTrueSheetProvider>
+    </TrueSheetProvider>
   );
 };
 
