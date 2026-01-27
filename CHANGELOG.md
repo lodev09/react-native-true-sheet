@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 📖 Documentation
+
+- Added web limitation note for `react-native-screens` detection with `useFocusEffect` workaround. ([#480](https://github.com/lodev09/react-native-true-sheet/pull/480) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **Web**: Collapse to lowest detent when not dismissible, matching native behavior. ([#479](https://github.com/lodev09/react-native-true-sheet/pull/479) by [@lodev09](https://github.com/lodev09))
