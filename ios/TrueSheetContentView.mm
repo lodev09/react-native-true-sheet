@@ -93,7 +93,13 @@ using namespace facebook::react;
     return;
   }
 
-  // Already set up with same inset
+  // Check if pinned scroll view is still valid (still in view hierarchy)
+  // This handles the case where content changes and the old scroll view is unmounted
+  if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
+    [self clearScrollable];
+  }
+
+  // Already set up with same inset and valid scroll view
   if (_pinnedScrollView && _bottomInset == bottomInset) {
     return;
   }
