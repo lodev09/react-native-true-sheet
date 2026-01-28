@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed content clipping when sheet content changes dynamically by clearing stale ScrollView reference. ([#482](https://github.com/lodev09/react-native-true-sheet/pull/482) by [@sbs44](https://github.com/sbs44))
+
 ## 3.8.1
 
 ### 📖 Documentation
