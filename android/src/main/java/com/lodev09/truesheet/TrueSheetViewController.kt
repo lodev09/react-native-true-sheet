@@ -203,7 +203,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       behavior?.isHideable = value
     }
 
-  var draggable: Boolean = true
+  override var draggable: Boolean = true
     set(value) {
       field = value
       behavior?.isDraggable = value

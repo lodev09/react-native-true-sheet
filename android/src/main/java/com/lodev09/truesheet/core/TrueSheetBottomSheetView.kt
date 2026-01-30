@@ -25,6 +25,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetBackgroundColor: Int?
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
+  val draggable: Boolean
   fun bottomSheetViewDidTapGrabber()
 }
 
@@ -158,14 +159,14 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     findViewWithTag<View>(GRABBER_TAG)?.let { removeView(it) }
 
     val isEnabled = delegate?.grabber ?: true
-    val isDraggable = behavior?.isDraggable ?: true
+    val isDraggable = delegate?.draggable ?: true
     if (!isEnabled || !isDraggable) return
 
     val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
       tag = GRABBER_TAG
     }
 
-    addView(grabberView, 0)
+    addView(grabberView)
   }
 
   // =============================================================================
