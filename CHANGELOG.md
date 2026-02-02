@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.8.2
+
 ### 🐛 Bug fixes
 
 - **Android**: Fixed grabber disappearing when background color changes on stacked sheets. ([#488](https://github.com/lodev09/react-native-true-sheet/pull/488) by [@lodev09](https://github.com/lodev09))
