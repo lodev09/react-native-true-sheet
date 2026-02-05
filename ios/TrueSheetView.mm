@@ -453,6 +453,19 @@ using namespace facebook::react;
 
   [_screensEventObserver capturePresenterScreenFromView:self];
 
+  // // Experiment: anchor sheet to leading edge in landscape
+  // UIView *anchorView = [[UIView alloc] init];
+  // anchorView.userInteractionEnabled = NO;
+  // anchorView.translatesAutoresizingMaskIntoConstraints = NO;
+  // [presentingViewController.view addSubview:anchorView];
+  //
+  // [NSLayoutConstraint activateConstraints:@[
+  //   [anchorView.leadingAnchor constraintEqualToAnchor:presentingViewController.view.leadingAnchor],
+  //   [anchorView.bottomAnchor constraintEqualToAnchor:presentingViewController.view.bottomAnchor],
+  // ]];
+  //
+  // _controller.sheetPresentationController.sourceView = anchorView;
+
   [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{

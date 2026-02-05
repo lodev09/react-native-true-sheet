@@ -102,6 +102,7 @@ const MapScreenInner = ({
         ref={sheetRef}
         initialDetentIndex={1}
         dimmedDetentIndex={1}
+        dimmed={false}
         dismissible={false}
         style={styles.content}
         backgroundColor={Platform.select({ ios: undefined, default: DARK })}
@@ -147,6 +148,7 @@ const MapScreenInner = ({
           console.log('sheet has been dismissed');
         }}
         header={<Header />}
+        pageSizing={false}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet</Text>
