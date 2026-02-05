@@ -98,6 +98,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       CoordinatorLayout.LayoutParams.MATCH_PARENT
     ).apply {
       this.behavior = behavior
+      // this.gravity = Gravity.START or Gravity.BOTTOM
       this.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
     }
   }
