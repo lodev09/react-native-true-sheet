@@ -339,13 +339,25 @@ using namespace facebook::react;
 
 #pragma mark - Child Component Mounting
 
+- (void)cleanupContainerView {
+  if (_containerView == nil)
+    return;
+
+  _containerView.delegate = nil;
+  [_touchHandler detachFromView:_containerView];
+  [LayoutUtil unpinView:_containerView fromParentView:nil];
+  [_containerView removeFromSuperview];
+
+  _containerView = nil;
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
 
-  if (_containerView != nil) {
+  if (_containerView != nil && _containerView != childComponentView) {
     RCTLogWarn(@"TrueSheet: Sheet can only have one container component.");
-    return;
+    [self cleanupContainerView];
   }
 
   if (_snapshotView) {
@@ -387,6 +399,9 @@ using namespace facebook::react;
   if (![childComponentView isKindOfClass:[TrueSheetContainerView class]])
     return;
 
+  if (_containerView == nil || _containerView != childComponentView)
+    return;
+
   if (_controller.isPresented) {
     UIView *superView = _containerView.superview;
     UIView *snapshot = [_containerView snapshotViewAfterScreenUpdates:NO];
@@ -397,15 +412,7 @@ using namespace facebook::react;
     }
   }
 
-  _containerView.delegate = nil;
-
-  if (_touchHandler) {
-    [_touchHandler detachFromView:_containerView];
-  }
-
-  [LayoutUtil unpinView:_containerView fromParentView:nil];
-  [_containerView removeFromSuperview];
-  _containerView = nil;
+  [self cleanupContainerView];
 }
 
 #pragma mark - TurboModule Methods
