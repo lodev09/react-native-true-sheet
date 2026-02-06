@@ -190,20 +190,32 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented) {
       viewController.sheetView?.setupBackground()
       viewController.sheetView?.setupGrabber()
+      viewController.sheetView?.updateGravity()
+      viewController.updateBehaviorMaxWidth()
       updateSheetIfNeeded()
     }
   }
 
   // ==================== Property Setters ====================
 
-  fun setMaxContentHeight(height: Int) {
+  fun setMaxContentHeight(height: Int?) {
     if (viewController.maxContentHeight == height) return
     viewController.maxContentHeight = height
   }
 
-  fun setMaxContentWidth(width: Int) {
+  fun setMaxContentWidth(width: Int?) {
     if (viewController.maxContentWidth == width) return
     viewController.maxContentWidth = width
+  }
+
+  fun setAnchor(anchor: String?) {
+    if (viewController.anchor == anchor) return
+    viewController.anchor = anchor
+  }
+
+  fun setAnchorOffset(offset: Int) {
+    if (viewController.anchorOffset == offset) return
+    viewController.anchorOffset = offset
   }
 
   fun setDimmed(dimmed: Boolean) {

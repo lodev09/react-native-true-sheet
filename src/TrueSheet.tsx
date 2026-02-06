@@ -404,13 +404,14 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
-
       dimmedDetentIndex,
       backgroundBlur,
       blurOptions,
       cornerRadius,
       maxContentHeight,
       maxContentWidth,
+      anchor = 'center',
+      anchorOffset,
       scrollable = false,
       scrollableOptions,
       pageSizing = true,
@@ -458,6 +459,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         draggable={draggable}
         maxContentHeight={maxContentHeight}
         maxContentWidth={maxContentWidth}
+        anchor={anchor}
+        anchorOffset={anchorOffset}
         scrollable={scrollable}
         scrollableOptions={scrollableOptions}
         pageSizing={pageSizing}

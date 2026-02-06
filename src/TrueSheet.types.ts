@@ -361,6 +361,26 @@ export interface TrueSheetProps extends ViewProps {
   maxContentWidth?: number;
 
   /**
+   * Anchors the sheet to the specified horizontal edge.
+   *
+   * - `'center'`: Centers the sheet horizontally (default).
+   * - `'left'`: Anchors the sheet to the left edge.
+   * - `'right'`: Anchors the sheet to the right edge.
+   *
+   * @default 'center'
+   */
+  anchor?: 'left' | 'center' | 'right';
+
+  /**
+   * The offset from the screen edge when anchored left or right.
+   *
+   * @platform android
+   * @platform web
+   * @default 16
+   */
+  anchorOffset?: number;
+
+  /**
    * Controls how the sheet adjusts its height for system insets (safe area).
    *
    * - `'automatic'`: Adds the bottom safe area inset to the sheet height,

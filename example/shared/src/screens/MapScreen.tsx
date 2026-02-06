@@ -101,7 +101,6 @@ const MapScreenInner = ({
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={1}
-        dimmedDetentIndex={1}
         dimmed={false}
         dismissible={false}
         style={styles.content}
@@ -148,7 +147,6 @@ const MapScreenInner = ({
           console.log('sheet has been dismissed');
         }}
         header={<Header />}
-        pageSizing={false}
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet</Text>

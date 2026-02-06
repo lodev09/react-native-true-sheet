@@ -66,6 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
 @property (nonatomic, assign) BOOL pageSizing;
+@property (nonatomic, copy, nullable) NSString *anchor;
 @property (nonatomic, copy, nullable) NSString *insetAdjustment;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
@@ -76,11 +77,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)resizeToDetentIndex:(NSInteger)index;
+- (void)setupSheetSizing;
 - (void)setupSheetProps;
 - (void)setupSheetDetents;
 - (void)setupSheetDetentsForSizeChange;
 - (void)setupSheetDetentsForDetentsChange;
 - (void)setupDraggable;
+- (void)setupAnchorViewInView:(UIView *)parentView;
 
 @end
 
