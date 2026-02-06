@@ -97,6 +97,10 @@ export const App = () => {
 }
 ```
 
+## That map is awesome!
+
+Also checkout [`@lugg/maps`](https://github.com/lugg/maps), a universal maps library for React Native that I developed at [Lugg](https://lugg.com). It powers the example apps!
+
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.

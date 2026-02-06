@@ -1,25 +1,20 @@
 import { StyleSheet } from 'react-native';
-import MapView, { type MapViewProps } from 'react-native-maps';
+import { MapView, type MapViewProps } from '@lugg/maps';
 
 import { BLUE } from '../utils';
 
-export const Map = (props: MapViewProps) => {
+export const Map = (props: Omit<MapViewProps, 'style'> & { style?: MapViewProps['style'] }) => {
   const { style, ...rest } = props;
 
   return (
     <MapView
       style={[styles.map, style]}
-      initialCamera={{
-        altitude: 18000,
-        zoom: 14,
-        center: {
-          latitude: 9.306743705457553,
-          longitude: 123.30474002203727,
-        },
-        pitch: 0,
-        heading: 0,
+      initialCoordinate={{
+        latitude: 9.306743705457553,
+        longitude: 123.30474002203727,
       }}
-      userInterfaceStyle="dark"
+      initialZoom={14}
+      provider="google"
       {...rest}
     />
   );
