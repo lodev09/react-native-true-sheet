@@ -451,7 +451,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun coordinatorLayoutDidChangeConfiguration() {
     if (!isPresented) return
 
-    updateBehaviorMaxWidth()
+    sheetView?.updateGravity(animated = false)
+    updateBehaviorMaxWidth(animated = false)
     updateStateDimensions()
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
@@ -1129,14 +1130,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Helpers
   // =============================================================================
 
-  fun updateBehaviorMaxWidth() {
+  fun updateBehaviorMaxWidth(animated: Boolean = true) {
     val behavior = this.behavior ?: return
     val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
     val newMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
     if (behavior.maxWidth == newMaxWidth) return
 
-    sheetView?.let { view ->
-      (view.parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+    if (animated) {
+      sheetView?.let { view ->
+        (view.parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+      }
     }
     behavior.maxWidth = newMaxWidth
   }
