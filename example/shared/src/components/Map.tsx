@@ -172,10 +172,10 @@ export const Map = (props: Omit<MapViewProps, 'style'> & { style?: MapViewProps[
       provider="google"
       {...rest}
     >
-      <Polyline coordinates={TRUE_T} strokeWidth={4} strokeColors={['#0a4da0']} />
-      <Polyline coordinates={TRUE_R} strokeWidth={4} strokeColors={['#0a4da0']} />
-      <Polyline coordinates={TRUE_U} strokeWidth={4} strokeColors={['#0a4da0']} />
-      <Polyline coordinates={TRUE_E} strokeWidth={4} strokeColors={['#0a4da0']} />
+      <Polyline coordinates={TRUE_T} strokeWidth={4} strokeColors={['#4da6ff']} />
+      <Polyline coordinates={TRUE_R} strokeWidth={4} strokeColors={['#4da6ff']} />
+      <Polyline coordinates={TRUE_U} strokeWidth={4} strokeColors={['#4da6ff']} />
+      <Polyline coordinates={TRUE_E} strokeWidth={4} strokeColors={['#4da6ff']} />
       <Polyline
         coordinates={SHEET_COORDS}
         strokeWidth={5}
