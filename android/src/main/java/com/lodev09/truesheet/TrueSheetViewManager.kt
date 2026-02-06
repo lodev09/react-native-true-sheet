@@ -173,6 +173,13 @@ class TrueSheetViewManager :
     }
   }
 
+  @ReactProp(name = "maxWidth", defaultDouble = 0.0)
+  override fun setMaxWidth(view: TrueSheetView, width: Double) {
+    if (width > 0) {
+      view.setMaxWidth(width.dpToPx().toInt())
+    }
+  }
+
   @ReactProp(name = "backgroundBlur")
   override fun setBackgroundBlur(view: TrueSheetView, tint: String?) {
     // iOS-specific prop - no-op on Android

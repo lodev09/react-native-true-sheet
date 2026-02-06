@@ -719,11 +719,19 @@
   sheet.delegate = self;
 
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = self.pageSizing;
+    sheet.prefersPageSizing = self.maxWidth ? NO : self.pageSizing;
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
+  sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = self.maxWidth != nil;
   sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
+
+  if (self.maxWidth) {
+    CGFloat height = self.maxHeight ? [self.maxHeight floatValue] : self.view.bounds.size.height;
+    self.preferredContentSize = CGSizeMake([self.maxWidth floatValue], height);
+  } else {
+    self.preferredContentSize = CGSizeZero;
+  }
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];

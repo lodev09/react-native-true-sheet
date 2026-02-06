@@ -355,6 +355,12 @@ export interface TrueSheetProps extends ViewProps {
   maxHeight?: number;
 
   /**
+   * The maximum width of the sheet content.
+   * On Android, defaults to `640dp`. On iOS, the sheet uses system default width.
+   */
+  maxWidth?: number;
+
+  /**
    * Controls how the sheet adjusts its height for system insets (safe area).
    *
    * - `'automatic'`: Adds the bottom safe area inset to the sheet height,

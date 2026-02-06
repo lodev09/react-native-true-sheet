@@ -167,6 +167,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Detent Configuration
   override var maxSheetHeight: Int? = null
+  var maxSheetWidth: Int? = null
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   // Appearance Configuration
@@ -1098,7 +1099,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
     val topOffset = if (offset == 0) topInset else 0
     val newHeight = realScreenHeight - offset - topOffset
-    val newWidth = minOf(screenWidth, DEFAULT_MAX_WIDTH.dpToPx().toInt())
+    val effectiveMaxWidth = maxSheetWidth ?: DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    val newWidth = minOf(screenWidth, effectiveMaxWidth)
 
     if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
       lastStateWidth = newWidth

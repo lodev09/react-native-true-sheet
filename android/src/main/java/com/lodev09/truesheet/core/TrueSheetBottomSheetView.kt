@@ -23,6 +23,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetCornerRadius: Float
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
+  val maxSheetWidth: Int?
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
   val draggable: Boolean
@@ -84,9 +85,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
    * Creates layout params with BottomSheetBehavior attached.
    */
   fun createLayoutParams(): CoordinatorLayout.LayoutParams {
+    val effectiveMaxWidth = delegate?.maxSheetWidth ?: DEFAULT_MAX_WIDTH.dpToPx().toInt()
     val behavior = BottomSheetBehavior<TrueSheetBottomSheetView>().apply {
       isHideable = true
-      maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
+      maxWidth = effectiveMaxWidth
     }
 
     return CoordinatorLayout.LayoutParams(

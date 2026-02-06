@@ -44,6 +44,7 @@ export interface NativeProps extends ViewProps {
 
   // Number properties - use 0 as default to avoid nil insertion
   maxHeight?: WithDefault<Double, 0>;
+  maxWidth?: WithDefault<Double, 0>;
   cornerRadius?: WithDefault<Double, -1>;
   elevation?: WithDefault<Double, -1>;
 

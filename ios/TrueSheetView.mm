@@ -191,6 +191,11 @@ using namespace facebook::react;
     _controller.maxHeight = @(newProps.maxHeight);
   }
 
+  // Max width
+  if (newProps.maxWidth != 0.0) {
+    _controller.maxWidth = @(newProps.maxWidth);
+  }
+
   _controller.grabber = newProps.grabber;
 
   // Grabber options - check if any non-default values are set
@@ -278,15 +283,21 @@ using namespace facebook::react;
   if (!_state)
     return;
 
-  if (CGSizeEqualToSize(size, _lastStateSize))
+  CGFloat width = size.width;
+  if (_controller.maxWidth) {
+    width = fmin(width, [_controller.maxWidth floatValue]);
+  }
+
+  CGSize adjustedSize = CGSizeMake(width, size.height);
+  if (CGSizeEqualToSize(adjustedSize, _lastStateSize))
     return;
 
-  _lastStateSize = size;
+  _lastStateSize = adjustedSize;
   _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
                         -> TrueSheetViewShadowNode::ConcreteState::SharedData {
     auto newData = oldData;
-    newData.containerWidth = static_cast<float>(size.width);
-    newData.containerHeight = static_cast<float>(size.height);
+    newData.containerWidth = static_cast<float>(adjustedSize.width);
+    newData.containerHeight = static_cast<float>(adjustedSize.height);
     return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
   });
 }
