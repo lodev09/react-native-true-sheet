@@ -121,13 +121,16 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     }
   }
 
-  fun updateGravity() {
+  fun updateGravity(animated: Boolean = true) {
     val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
     val (gravity, margin) = resolveAnchor()
 
     if (params.gravity == gravity && params.marginStart == margin) return
 
-    (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+    if (animated) {
+      (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+    }
+
     params.gravity = gravity
     params.marginStart = margin
     params.marginEnd = margin
