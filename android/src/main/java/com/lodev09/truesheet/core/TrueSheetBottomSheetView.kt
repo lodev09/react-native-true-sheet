@@ -1,12 +1,12 @@
 package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
@@ -50,6 +50,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     private const val DEFAULT_CORNER_RADIUS = 16f // dp
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_ELEVATION = 4f // dp
+
+    // M3 baseline surfaceContainerLow
+    private val COLOR_SURFACE_CONTAINER_LOW_LIGHT = Color.parseColor("#F7F2FA")
+    private val COLOR_SURFACE_CONTAINER_LOW_DARK = Color.parseColor("#1D1B20")
   }
 
   // =============================================================================
@@ -171,17 +175,9 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   private fun getDefaultBackgroundColor(): Int {
-    val typedValue = TypedValue()
-    return if (reactContext.theme.resolveAttribute(
-        com.google.android.material.R.attr.colorSurfaceContainerLow,
-        typedValue,
-        true
-      )
-    ) {
-      typedValue.data
-    } else {
-      Color.WHITE
-    }
+    val isNight = (reactContext.resources.configuration.uiMode and
+      Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    return if (isNight) COLOR_SURFACE_CONTAINER_LOW_DARK else COLOR_SURFACE_CONTAINER_LOW_LIGHT
   }
 
   fun setupElevation() {
