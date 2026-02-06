@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.utils
 
+import android.content.res.Configuration
 import android.graphics.Point
 import android.os.Build
 import android.view.View
@@ -113,5 +114,15 @@ object ScreenUtils {
     val location = IntArray(2)
     view.getLocationOnScreen(location)
     return location
+  }
+
+  /**
+   * Returns true if the device is a phone in portrait orientation.
+   */
+  fun isPortraitPhone(reactContext: ReactContext): Boolean {
+    val config = reactContext.resources.configuration
+    val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
+    val isPhone = config.smallestScreenWidthDp < 600
+    return isPortrait && isPhone
   }
 }
