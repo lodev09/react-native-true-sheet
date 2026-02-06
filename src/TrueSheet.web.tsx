@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, useColorScheme, useWindowDimensions } from 'react-native';
 
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -50,6 +50,10 @@ const DEFAULT_CORNER_RADIUS = 16;
 const DEFAULT_ELEVATION = 4;
 
 const DEFAULT_MAX_WIDTH = 640;
+// M3 baseline surfaceContainerLow
+const COLOR_SURFACE_CONTAINER_LOW_LIGHT = '#F7F2FA';
+const COLOR_SURFACE_CONTAINER_LOW_DARK = '#1D1B20';
+
 const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
 const DEFAULT_GRABBER_WIDTH = 32;
 const DEFAULT_GRABBER_HEIGHT = 4;
@@ -89,7 +93,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     children,
     scrollable = false,
     initialDetentIndex = -1,
-    backgroundColor = '#ffffff',
+    backgroundColor: backgroundColorProp,
     cornerRadius = DEFAULT_CORNER_RADIUS,
     elevation = DEFAULT_ELEVATION,
     grabber = true,
@@ -119,6 +123,11 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     stackBehavior = 'switch',
     style,
   } = props;
+
+  const colorScheme = useColorScheme();
+  const backgroundColor =
+    backgroundColorProp ??
+    (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;

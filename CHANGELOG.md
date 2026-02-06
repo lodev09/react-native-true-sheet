@@ -15,6 +15,7 @@
 
 - **iOS**: Fixed crash and blank sheet when using Reanimated exiting animations. ([#493](https://github.com/lodev09/react-native-true-sheet/pull/493) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed default background color not respecting dark mode on AppCompat-based apps. ([#501](https://github.com/lodev09/react-native-true-sheet/pull/501) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fixed default background color not respecting dark mode. ([#502](https://github.com/lodev09/react-native-true-sheet/pull/502) by [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 

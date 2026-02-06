@@ -118,7 +118,6 @@ const MapScreenInner = ({
         dimmed={false}
         dismissible={false}
         style={styles.content}
-        backgroundColor={Platform.select({ ios: undefined, default: DARK })}
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
