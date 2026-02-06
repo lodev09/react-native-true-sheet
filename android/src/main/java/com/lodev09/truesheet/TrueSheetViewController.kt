@@ -167,7 +167,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Detent Configuration
   override var maxContentHeight: Int? = null
-  var maxContentWidth: Int? = null
+  override var maxContentWidth: Int? = null
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   // Appearance Configuration

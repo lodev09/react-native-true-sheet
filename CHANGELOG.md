@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- `maxHeight` prop has been renamed to `maxContentHeight`.
+
+### 🎉 New features
+
+- Added `maxContentWidth` prop to control the maximum width of the sheet content.
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed crash and blank sheet when using Reanimated exiting animations. ([#493](https://github.com/lodev09/react-native-true-sheet/pull/493) by [@lodev09](https://github.com/lodev09))
