@@ -10,42 +10,58 @@
 
 #import "BlurUtil.h"
 
+#import <react/renderer/components/TrueSheetSpec/Props.h>
+
+using namespace facebook::react;
+
 @implementation BlurUtil
 
-+ (UIBlurEffectStyle)blurEffectStyleFromString:(NSString *)tintString {
-  static NSDictionary<NSString *, NSNumber *> *styleMap = nil;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    styleMap = @{
-      @"dark" : @(UIBlurEffectStyleDark),
-      @"light" : @(UIBlurEffectStyleLight),
-      @"extra-light" : @(UIBlurEffectStyleExtraLight),
-      @"regular" : @(UIBlurEffectStyleRegular),
-      @"prominent" : @(UIBlurEffectStyleProminent),
-      @"system-ultra-thin-material" : @(UIBlurEffectStyleSystemUltraThinMaterial),
-      @"system-thin-material" : @(UIBlurEffectStyleSystemThinMaterial),
-      @"system-material" : @(UIBlurEffectStyleSystemMaterial),
-      @"system-thick-material" : @(UIBlurEffectStyleSystemThickMaterial),
-      @"system-chrome-material" : @(UIBlurEffectStyleSystemChromeMaterial),
-      @"system-ultra-thin-material-light" : @(UIBlurEffectStyleSystemUltraThinMaterialLight),
-      @"system-thin-material-light" : @(UIBlurEffectStyleSystemThinMaterialLight),
-      @"system-material-light" : @(UIBlurEffectStyleSystemMaterialLight),
-      @"system-thick-material-light" : @(UIBlurEffectStyleSystemThickMaterialLight),
-      @"system-chrome-material-light" : @(UIBlurEffectStyleSystemChromeMaterialLight),
-      @"system-ultra-thin-material-dark" : @(UIBlurEffectStyleSystemUltraThinMaterialDark),
-      @"system-thin-material-dark" : @(UIBlurEffectStyleSystemThinMaterialDark),
-      @"system-material-dark" : @(UIBlurEffectStyleSystemMaterialDark),
-      @"system-thick-material-dark" : @(UIBlurEffectStyleSystemThickMaterialDark),
-      @"system-chrome-material-dark" : @(UIBlurEffectStyleSystemChromeMaterialDark),
-    };
-  });
-
-  NSNumber *style = styleMap[tintString];
-  if (style) {
-    return (UIBlurEffectStyle)[style integerValue];
++ (UIBlurEffectStyle)blurEffectStyleFromEnum:(NSInteger)blur {
+  switch ((TrueSheetViewBackgroundBlur)blur) {
+    case TrueSheetViewBackgroundBlur::Dark:
+      return UIBlurEffectStyleDark;
+    case TrueSheetViewBackgroundBlur::ExtraLight:
+      return UIBlurEffectStyleExtraLight;
+    case TrueSheetViewBackgroundBlur::Regular:
+      return UIBlurEffectStyleRegular;
+    case TrueSheetViewBackgroundBlur::Prominent:
+      return UIBlurEffectStyleProminent;
+    case TrueSheetViewBackgroundBlur::SystemUltraThinMaterial:
+      return UIBlurEffectStyleSystemUltraThinMaterial;
+    case TrueSheetViewBackgroundBlur::SystemThinMaterial:
+      return UIBlurEffectStyleSystemThinMaterial;
+    case TrueSheetViewBackgroundBlur::SystemMaterial:
+      return UIBlurEffectStyleSystemMaterial;
+    case TrueSheetViewBackgroundBlur::SystemThickMaterial:
+      return UIBlurEffectStyleSystemThickMaterial;
+    case TrueSheetViewBackgroundBlur::SystemChromeMaterial:
+      return UIBlurEffectStyleSystemChromeMaterial;
+    case TrueSheetViewBackgroundBlur::SystemUltraThinMaterialLight:
+      return UIBlurEffectStyleSystemUltraThinMaterialLight;
+    case TrueSheetViewBackgroundBlur::SystemThinMaterialLight:
+      return UIBlurEffectStyleSystemThinMaterialLight;
+    case TrueSheetViewBackgroundBlur::SystemMaterialLight:
+      return UIBlurEffectStyleSystemMaterialLight;
+    case TrueSheetViewBackgroundBlur::SystemThickMaterialLight:
+      return UIBlurEffectStyleSystemThickMaterialLight;
+    case TrueSheetViewBackgroundBlur::SystemChromeMaterialLight:
+      return UIBlurEffectStyleSystemChromeMaterialLight;
+    case TrueSheetViewBackgroundBlur::SystemUltraThinMaterialDark:
+      return UIBlurEffectStyleSystemUltraThinMaterialDark;
+    case TrueSheetViewBackgroundBlur::SystemThinMaterialDark:
+      return UIBlurEffectStyleSystemThinMaterialDark;
+    case TrueSheetViewBackgroundBlur::SystemMaterialDark:
+      return UIBlurEffectStyleSystemMaterialDark;
+    case TrueSheetViewBackgroundBlur::SystemThickMaterialDark:
+      return UIBlurEffectStyleSystemThickMaterialDark;
+    case TrueSheetViewBackgroundBlur::SystemChromeMaterialDark:
+      return UIBlurEffectStyleSystemChromeMaterialDark;
+    case TrueSheetViewBackgroundBlur::Default:
+    case TrueSheetViewBackgroundBlur::Light:
+    case TrueSheetViewBackgroundBlur::None:
+    default:
+      return UIBlurEffectStyleLight;
   }
-
-  return UIBlurEffectStyleLight;
 }
 
 @end

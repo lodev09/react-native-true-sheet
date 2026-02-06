@@ -35,7 +35,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var headerHeight: Int = 0
   var footerHeight: Int = 0
 
-  var insetAdjustment: String = "automatic"
+  var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
   var scrollViewBottomInset: Int = 0
   var scrollableEnabled: Boolean = false
   var scrollableOptions: ReadableMap? = null
@@ -54,7 +54,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupScrollable() {
-    val bottomInset = if (insetAdjustment == "automatic") scrollViewBottomInset else 0
+    val bottomInset = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) scrollViewBottomInset else 0
     contentView?.setupScrollable(scrollableEnabled, bottomInset)
   }
 

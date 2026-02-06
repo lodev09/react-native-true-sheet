@@ -18,6 +18,7 @@ import androidx.transition.TransitionManager
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.TrueSheetAnchor
 import com.lodev09.truesheet.utils.ScreenUtils
 
 interface TrueSheetBottomSheetViewDelegate {
@@ -26,7 +27,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
   val maxContentWidth: Int?
-  val anchor: String?
+  val anchor: TrueSheetAnchor
   val anchorOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
@@ -97,16 +98,13 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     }
 
     val horizontalGravity = when (delegate?.anchor) {
-      "left" -> Gravity.START
-      "right" -> Gravity.END
+      TrueSheetAnchor.LEFT -> Gravity.START
+      TrueSheetAnchor.RIGHT -> Gravity.END
       else -> Gravity.CENTER_HORIZONTAL
     }
 
-    val anchorMargin = if (delegate?.anchor == "left" || delegate?.anchor == "right") {
-      delegate?.anchorOffset ?: 0
-    } else {
-      0
-    }
+    val isAnchored = delegate?.anchor == TrueSheetAnchor.LEFT || delegate?.anchor == TrueSheetAnchor.RIGHT
+    val anchorMargin = if (isAnchored) delegate?.anchorOffset ?: 0 else 0
 
     return CoordinatorLayout.LayoutParams(
       CoordinatorLayout.LayoutParams.MATCH_PARENT,
@@ -121,10 +119,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
   fun updateGravity() {
     val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
-    val isAnchored = delegate?.anchor == "left" || delegate?.anchor == "right"
+    val isAnchored = delegate?.anchor == TrueSheetAnchor.LEFT || delegate?.anchor == TrueSheetAnchor.RIGHT
     val horizontalGravity = when (delegate?.anchor) {
-      "left" -> Gravity.START
-      "right" -> Gravity.END
+      TrueSheetAnchor.LEFT -> Gravity.START
+      TrueSheetAnchor.RIGHT -> Gravity.END
       else -> Gravity.CENTER_HORIZONTAL
     }
     val newGravity = horizontalGravity or Gravity.BOTTOM

@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Inset adjustment mode for scrollable content
  */
-@property (nonatomic, copy, nullable) NSString *insetAdjustment;
+@property (nonatomic, assign) NSInteger insetAdjustment;
 
 /**
  * Options for scrollable behavior

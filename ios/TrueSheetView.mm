@@ -50,7 +50,7 @@ using namespace facebook::react;
   UIView *_snapshotView;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
-  NSString *_insetAdjustment;
+  NSInteger _insetAdjustment;
   BOOL _scrollable;
   NSDictionary *_scrollableOptions;
   BOOL _initialDetentAnimated;
@@ -176,7 +176,7 @@ using namespace facebook::react;
   _controller.backgroundColor = RCTUIColorFromSharedColor(newProps.backgroundColor);
 
   // Blur tint
-  _controller.backgroundBlur = !newProps.backgroundBlur.empty() ? RCTNSStringFromString(newProps.backgroundBlur) : nil;
+  _controller.backgroundBlur = (NSInteger)newProps.backgroundBlur;
 
   // Blur options
   const auto &blurOpts = newProps.blurOptions;
@@ -193,7 +193,7 @@ using namespace facebook::react;
   _controller.maxContentWidth = newProps.maxContentWidth != 0.0 ? @(newProps.maxContentWidth) : nil;
 
   // Anchor
-  _controller.anchor = RCTNSStringFromString(newProps.anchor);
+  _controller.anchor = (NSInteger)newProps.anchor;
 
   _controller.grabber = newProps.grabber;
 
@@ -254,7 +254,7 @@ using namespace facebook::react;
     _scrollableOptions = nil;
   }
 
-  _insetAdjustment = RCTNSStringFromString(toString(newProps.insetAdjustment));
+  _insetAdjustment = (NSInteger)newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;
 
   if (_containerView) {
