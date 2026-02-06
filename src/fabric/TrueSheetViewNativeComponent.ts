@@ -56,6 +56,8 @@ export interface NativeProps extends ViewProps {
   // String properties - use empty string as default to avoid nil insertion
   backgroundBlur?: WithDefault<string, ''>;
 
+  anchor?: WithDefault<string, 'center'>;
+  anchorOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 
   // Blur options

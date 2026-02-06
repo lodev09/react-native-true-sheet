@@ -39,6 +39,8 @@
 
   __weak TrueSheetViewController *_parentSheetController;
 
+  UIView *_anchorView;
+
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
@@ -238,6 +240,9 @@
   if (self.isBeingDismissed) {
     _isPresented = NO;
     _isWillDismissEmitted = NO;
+
+    [_anchorView removeFromSuperview];
+    _anchorView = nil;
 
     [_parentSheetController.delegate viewControllerDidFocus];
     _parentSheetController = nil;
@@ -709,15 +714,41 @@
   }
 }
 
-- (void)setupSheetProps {
-  UISheetPresentationController *sheet = self.sheet;
-  if (!sheet) {
-    RCTLogWarn(
-      @"TrueSheet: No sheet presentation controller available. Ensure the view controller is presented modally.");
+- (BOOL)isAnchored {
+  return [self.anchor isEqualToString:@"left"] || [self.anchor isEqualToString:@"right"];
+}
+
+- (void)setupAnchorViewInView:(UIView *)parentView {
+  if (!parentView) return;
+  
+  [_anchorView removeFromSuperview];
+  _anchorView = nil;
+
+  if (!self.isAnchored) {
+    self.sheetPresentationController.sourceView = nil;
     return;
   }
 
-  sheet.delegate = self;
+  _anchorView = [[UIView alloc] init];
+  _anchorView.userInteractionEnabled = NO;
+  _anchorView.translatesAutoresizingMaskIntoConstraints = NO;
+  [parentView addSubview:_anchorView];
+
+  NSLayoutAnchor *horizontalAnchor = [self.anchor isEqualToString:@"right"]
+    ? parentView.trailingAnchor
+    : parentView.leadingAnchor;
+
+  [NSLayoutConstraint activateConstraints:@[
+    [_anchorView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor],
+    [horizontalAnchor constraintEqualToAnchor:_anchorView.leadingAnchor],
+  ]];
+
+  self.sheetPresentationController.sourceView = _anchorView;
+}
+
+- (void)setupSheetSizing {
+  UISheetPresentationController *sheet = self.sheet;
+  if (!sheet) return;
 
   BOOL hasMaxWidth = self.maxContentWidth != nil;
 
@@ -725,16 +756,23 @@
     sheet.prefersPageSizing = hasMaxWidth ? NO : self.pageSizing;
   }
 
-  sheet.prefersEdgeAttachedInCompactHeight = YES;
   sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = hasMaxWidth;
-  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
 
   if (hasMaxWidth) {
-    CGFloat height = self.maxContentHeight ? [self.maxContentHeight floatValue] : self.view.bounds.size.height;
+    CGFloat height = self.maxContentHeight ? [self.maxContentHeight floatValue] : self.screenHeight;
     self.preferredContentSize = CGSizeMake([self.maxContentWidth floatValue], height);
   } else {
     self.preferredContentSize = CGSizeZero;
   }
+}
+
+- (void)setupSheetProps {
+  UISheetPresentationController *sheet = self.sheet;
+  if (!sheet) return;
+
+  sheet.delegate = self;
+  sheet.prefersEdgeAttachedInCompactHeight = YES;
+  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];

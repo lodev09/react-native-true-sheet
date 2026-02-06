@@ -11,6 +11,8 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.transition.TransitionManager
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
@@ -89,6 +91,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   companion object {
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
+    private const val DEFAULT_ANCHOR_OFFSET = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
     private const val SCREEN_FADE_DURATION = 150L
@@ -168,6 +171,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Detent Configuration
   override var maxContentHeight: Int? = null
   override var maxContentWidth: Int? = null
+  override var anchor: String? = null
+  override var anchorOffset: Int = DEFAULT_ANCHOR_OFFSET.dpToPx().toInt()
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   // Appearance Configuration
@@ -1096,10 +1101,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Helpers
   // =============================================================================
 
-  private fun updateBehaviorMaxWidth() {
+  fun updateBehaviorMaxWidth() {
     val behavior = this.behavior ?: return
     val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
-    behavior.maxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    val newMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    if (behavior.maxWidth == newMaxWidth) return
+
+    sheetView?.let { view ->
+      (view.parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+    }
+    behavior.maxWidth = newMaxWidth
   }
 
   private fun updateStateDimensions(expandedOffset: Int? = null) {

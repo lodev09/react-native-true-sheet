@@ -168,16 +168,22 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "maxContentHeight", defaultDouble = 0.0)
   override fun setMaxContentHeight(view: TrueSheetView, height: Double) {
-    if (height > 0) {
-      view.setMaxContentHeight(height.dpToPx().toInt())
-    }
+    view.setMaxContentHeight(if (height > 0) height.dpToPx().toInt() else null)
   }
 
   @ReactProp(name = "maxContentWidth", defaultDouble = 0.0)
   override fun setMaxContentWidth(view: TrueSheetView, width: Double) {
-    if (width > 0) {
-      view.setMaxContentWidth(width.dpToPx().toInt())
-    }
+    view.setMaxContentWidth(if (width > 0) width.dpToPx().toInt() else null)
+  }
+
+  @ReactProp(name = "anchor")
+  override fun setAnchor(view: TrueSheetView, anchor: String?) {
+    view.setAnchor(anchor)
+  }
+
+  @ReactProp(name = "anchorOffset", defaultDouble = 0.0)
+  override fun setAnchorOffset(view: TrueSheetView, offset: Double) {
+    view.setAnchorOffset(if (offset > 0) offset.dpToPx().toInt() else 0)
   }
 
   @ReactProp(name = "backgroundBlur")

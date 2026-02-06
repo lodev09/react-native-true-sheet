@@ -187,14 +187,13 @@ using namespace facebook::react;
   _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
 
   // Content height
-  if (newProps.maxContentHeight != 0.0) {
-    _controller.maxContentHeight = @(newProps.maxContentHeight);
-  }
+  _controller.maxContentHeight = newProps.maxContentHeight != 0.0 ? @(newProps.maxContentHeight) : nil;
 
   // Content width
-  if (newProps.maxContentWidth != 0.0) {
-    _controller.maxContentWidth = @(newProps.maxContentWidth);
-  }
+  _controller.maxContentWidth = newProps.maxContentWidth != 0.0 ? @(newProps.maxContentWidth) : nil;
+
+  // Anchor
+  _controller.anchor = RCTNSStringFromString(newProps.anchor);
 
   _controller.grabber = newProps.grabber;
 
@@ -315,6 +314,11 @@ using namespace facebook::react;
   if (_controller.isPresented) {
     BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
     _pendingLayoutUpdate = NO;
+
+    UIView *presenterView = _controller.presentingViewController.view;
+    [_controller setupAnchorViewInView:presenterView];
+    
+    [_controller setupSheetSizing];
 
     [_controller.sheetPresentationController animateChanges:^{
       [self->_controller setupSheetProps];
@@ -447,6 +451,8 @@ using namespace facebook::react;
     return;
   }
 
+  [_controller setupAnchorViewInView:presentingViewController.view];
+  [_controller setupSheetSizing];
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];

@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
+import androidx.transition.TransitionManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
@@ -25,6 +26,8 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
   val maxContentWidth: Int?
+  val anchor: String?
+  val anchorOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
   val draggable: Boolean
@@ -93,13 +96,45 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       maxWidth = effectiveMaxWidth
     }
 
+    val horizontalGravity = when (delegate?.anchor) {
+      "left" -> Gravity.START
+      "right" -> Gravity.END
+      else -> Gravity.CENTER_HORIZONTAL
+    }
+
+    val anchorMargin = if (delegate?.anchor == "left" || delegate?.anchor == "right") {
+      delegate?.anchorOffset ?: 0
+    } else 0
+
     return CoordinatorLayout.LayoutParams(
       CoordinatorLayout.LayoutParams.MATCH_PARENT,
       CoordinatorLayout.LayoutParams.MATCH_PARENT
     ).apply {
       this.behavior = behavior
-      this.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+      this.gravity = horizontalGravity or Gravity.BOTTOM
+      this.marginStart = anchorMargin
+      this.marginEnd = anchorMargin
     }
+  }
+
+  fun updateGravity() {
+    val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
+    val isAnchored = delegate?.anchor == "left" || delegate?.anchor == "right"
+    val horizontalGravity = when (delegate?.anchor) {
+      "left" -> Gravity.START
+      "right" -> Gravity.END
+      else -> Gravity.CENTER_HORIZONTAL
+    }
+    val newGravity = horizontalGravity or Gravity.BOTTOM
+    val anchorMargin = if (isAnchored) delegate?.anchorOffset ?: 0 else 0
+
+    if (params.gravity == newGravity && params.marginStart == anchorMargin) return
+
+    (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
+    params.gravity = newGravity
+    params.marginStart = anchorMargin
+    params.marginEnd = anchorMargin
+    layoutParams = params
   }
 
   // =============================================================================
