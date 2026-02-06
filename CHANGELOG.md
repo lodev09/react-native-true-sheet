@@ -9,6 +9,7 @@
 ### 🎉 New features
 
 - Added `maxContentWidth` prop to control the maximum width of the sheet content. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
+- Added `anchor` and `anchorOffset` props for side sheet positioning. ([#496](https://github.com/lodev09/react-native-true-sheet/pull/496) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
