@@ -12,9 +12,9 @@ import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.transition.TransitionManager
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
+import androidx.transition.TransitionManager
 import com.facebook.react.R
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.JSPointerDispatcher

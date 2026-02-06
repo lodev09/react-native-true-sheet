@@ -317,7 +317,7 @@ using namespace facebook::react;
 
     UIView *presenterView = _controller.presentingViewController.view;
     [_controller setupAnchorViewInView:presenterView];
-    
+
     [_controller setupSheetSizing];
 
     [_controller.sheetPresentationController animateChanges:^{

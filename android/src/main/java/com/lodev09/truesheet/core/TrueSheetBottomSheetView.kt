@@ -13,8 +13,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
-import androidx.transition.TransitionManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.transition.TransitionManager
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -104,7 +104,9 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
     val anchorMargin = if (delegate?.anchor == "left" || delegate?.anchor == "right") {
       delegate?.anchorOffset ?: 0
-    } else 0
+    } else {
+      0
+    }
 
     return CoordinatorLayout.LayoutParams(
       CoordinatorLayout.LayoutParams.MATCH_PARENT,

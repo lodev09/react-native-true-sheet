@@ -719,8 +719,9 @@
 }
 
 - (void)setupAnchorViewInView:(UIView *)parentView {
-  if (!parentView) return;
-  
+  if (!parentView)
+    return;
+
   [_anchorView removeFromSuperview];
   _anchorView = nil;
 
@@ -734,9 +735,8 @@
   _anchorView.translatesAutoresizingMaskIntoConstraints = NO;
   [parentView addSubview:_anchorView];
 
-  NSLayoutAnchor *horizontalAnchor = [self.anchor isEqualToString:@"right"]
-    ? parentView.trailingAnchor
-    : parentView.leadingAnchor;
+  NSLayoutAnchor *horizontalAnchor =
+    [self.anchor isEqualToString:@"right"] ? parentView.trailingAnchor : parentView.leadingAnchor;
 
   [NSLayoutConstraint activateConstraints:@[
     [_anchorView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor],
@@ -748,7 +748,8 @@
 
 - (void)setupSheetSizing {
   UISheetPresentationController *sheet = self.sheet;
-  if (!sheet) return;
+  if (!sheet)
+    return;
 
   BOOL hasMaxWidth = self.maxContentWidth != nil;
 
@@ -768,7 +769,8 @@
 
 - (void)setupSheetProps {
   UISheetPresentationController *sheet = self.sheet;
-  if (!sheet) return;
+  if (!sheet)
+    return;
 
   sheet.delegate = self;
   sheet.prefersEdgeAttachedInCompactHeight = YES;
