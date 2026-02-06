@@ -6,6 +6,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { MapProvider } from '@lugg/maps';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 import { DARK_BLUE } from '@example/shared/utils';
 import 'react-native-reanimated';
 
@@ -49,28 +51,33 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <TrueSheetProvider>
-        <Stack
-          screenOptions={{ headerTintColor: 'white', headerStyle: { backgroundColor: DARK_BLUE } }}
-        >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
-          <Stack.Screen name="test" options={{ title: 'Test' }} />
-          <Stack.Screen
-            name="modal"
-            options={{
-              presentation: 'fullScreenModal',
-              headerShown: false,
+    <MapProvider apiKey={GOOGLE_MAPS_API_KEY}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <TrueSheetProvider>
+          <Stack
+            screenOptions={{
+              headerTintColor: 'white',
+              headerStyle: { backgroundColor: DARK_BLUE },
             }}
-          />
-          <Stack.Screen
-            name="sheet"
-            options={{ presentation: 'fullScreenModal', headerShown: false }}
-          />
-          <Stack.Screen name="test-stack" options={{ headerShown: false }} />
-        </Stack>
-      </TrueSheetProvider>
-    </ThemeProvider>
+          >
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
+            <Stack.Screen name="test" options={{ title: 'Test' }} />
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'fullScreenModal',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="sheet"
+              options={{ presentation: 'fullScreenModal', headerShown: false }}
+            />
+            <Stack.Screen name="test-stack" options={{ headerShown: false }} />
+          </Stack>
+        </TrueSheetProvider>
+      </ThemeProvider>
+    </MapProvider>
   );
 }

@@ -4,22 +4,22 @@ description: Anchor the bottom sheet to the left or right edge of the screen.
 keywords: [bottom sheet anchor, side sheet, bottom sheet positioning, bottom sheet left, bottom sheet right]
 ---
 
-import sideSheet from './assets/anchor.gif'
+import previewIpad from '/img/preview-ipad.gif'
 
 By default, the sheet is centered horizontally. You can anchor it to the left or right edge of the screen using the [`anchor`](/reference/configuration#anchor) prop.
 
-<img alt="side-sheet" src={sideSheet} width="600"/>
+<img alt="side-sheet" src={previewIpad} width="744"/>
 
 ## How?
 
 Set [`anchor`](/reference/configuration#anchor) to `"left"` or `"right"` to position the sheet along that edge.
 
-```tsx {4}
+```tsx {5,6}
 export const App = () => {
   return (
     <TrueSheet
-      anchor="left"
       detents={['auto', 1]}
+      anchor="left"
       maxContentWidth={400}
     >
       <View />
