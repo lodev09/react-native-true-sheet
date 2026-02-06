@@ -4,11 +4,11 @@
 
 ### ⚠️ Breaking changes
 
-- `maxHeight` prop has been renamed to `maxContentHeight`.
+- `maxHeight` prop has been renamed to `maxContentHeight`. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
 
 ### 🎉 New features
 
-- Added `maxContentWidth` prop to control the maximum width of the sheet content.
+- Added `maxContentWidth` prop to control the maximum width of the sheet content. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
