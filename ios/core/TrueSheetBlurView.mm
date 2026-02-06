@@ -9,6 +9,10 @@
 #import "TrueSheetBlurView.h"
 #import "BlurUtil.h"
 
+#import <react/renderer/components/TrueSheetSpec/Props.h>
+
+using namespace facebook::react;
+
 @implementation TrueSheetBlurView {
   UIViewPropertyAnimator *_blurAnimator;
 }
@@ -44,13 +48,13 @@
 - (void)applyBlurEffect {
   self.userInteractionEnabled = self.blurInteraction;
 
-  if (!self.backgroundBlur || self.backgroundBlur.length == 0) {
+  if (self.backgroundBlur == (NSInteger)TrueSheetViewBackgroundBlur::None) {
     [self clearAnimator];
     self.effect = nil;
     return;
   }
 
-  UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromString:self.backgroundBlur];
+  UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromEnum:self.backgroundBlur];
   UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
 
   CGFloat intensity =

@@ -209,8 +209,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   fun setAnchor(anchor: String?) {
-    if (viewController.anchor == anchor) return
-    viewController.anchor = anchor
+    val value = TrueSheetAnchor.fromString(anchor)
+    if (viewController.anchor == value) return
+    viewController.anchor = value
   }
 
   fun setAnchorOffset(offset: Int) {
@@ -271,7 +272,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   fun setInsetAdjustment(insetAdjustment: String) {
-    viewController.insetAdjustment = insetAdjustment
+    viewController.insetAdjustment = TrueSheetInsetAdjustment.fromString(insetAdjustment)
     setupScrollable()
   }
 

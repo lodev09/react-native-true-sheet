@@ -100,7 +100,7 @@ using namespace facebook::react;
 - (void)setupScrollable {
   if (_scrollableSet && _contentView) {
     CGFloat bottomInset = 0;
-    if ([_insetAdjustment isEqualToString:@"automatic"]) {
+    if (_insetAdjustment == (NSInteger)TrueSheetViewInsetAdjustment::Automatic) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];

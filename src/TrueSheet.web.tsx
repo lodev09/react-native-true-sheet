@@ -96,7 +96,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     grabberOptions,
     maxContentHeight,
     maxContentWidth,
-    anchor,
+    anchor = 'center',
     anchorOffset = 16,
     header,
     headerStyle,
