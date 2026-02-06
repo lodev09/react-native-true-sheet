@@ -1,4 +1,4 @@
-import { useRef, useState, type ComponentType } from 'react';
+import { useRef, useMemo, useState, type ComponentType } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -20,7 +20,7 @@ import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
@@ -52,8 +52,13 @@ const MapScreenInner = ({
   onNavigateToTest,
   onNavigateToTestStack,
 }: MapScreenProps) => {
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
+
+  const isTablet = useMemo(() => {
+    if (Platform.OS === 'ios') return Platform.isPad;
+    return Math.min(width, height) >= 600;
+  }, [width, height]);
 
   const sheetRef = useRef<TrueSheet>(null);
   const minHeight = HEADER_HEIGHT + Platform.select({ ios: 0, default: SPACING });
@@ -64,6 +69,7 @@ const MapScreenInner = ({
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
 
+  const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
   const [showExtraContent, setShowExtraContent] = useState(false);
 
@@ -80,13 +86,19 @@ const MapScreenInner = ({
     });
   };
 
-  const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value)),
-      },
-    ],
-  }));
+  const maxContentWidth = 500;
+  const sheetOffset = isTablet ? -(width - maxContentWidth) / 2 + SPACING : 0;
+
+  const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => {
+    const translateY = Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value));
+    const translateX = withSpring(anchorLeft ? sheetOffset * 2 : sheetOffset, {
+      damping: 500,
+      stiffness: 1000,
+      mass: 3,
+      overshootClamping: true,
+    });
+    return { transform: [{ translateX }, { translateY }] };
+  });
 
   return (
     <View style={styles.container}>
@@ -101,6 +113,8 @@ const MapScreenInner = ({
         detents={[minHeight / height, 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={1}
+        anchor={anchorLeft ? 'left' : 'center'}
+        maxContentWidth={maxContentWidth}
         dimmed={false}
         dismissible={false}
         style={styles.content}
@@ -155,6 +169,12 @@ const MapScreenInner = ({
         <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
         <Button text="Open Modal" onPress={onNavigateToModal} />
         <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+        {isTablet && (
+          <ButtonGroup>
+            <Button text="Anchor Left" onPress={() => setAnchorLeft(true)} />
+            <Button text="Center" onPress={() => setAnchorLeft(false)} />
+          </ButtonGroup>
+        )}
         <ButtonGroup>
           <Button text="Test Screen" onPress={onNavigateToTest} />
           <Button text="Test Stack" onPress={onNavigateToTestStack} />

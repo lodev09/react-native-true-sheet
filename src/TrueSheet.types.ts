@@ -356,7 +356,9 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The maximum width of the sheet content.
-   * On Android, defaults to `640dp`. On iOS, the sheet uses system default width.
+   * On Android and Web, defaults to `640dp`. On iOS, the sheet uses system default width.
+   *
+   * Ignored on phones in portrait orientation.
    */
   maxContentWidth?: number;
 
@@ -367,12 +369,15 @@ export interface TrueSheetProps extends ViewProps {
    * - `'left'`: Anchors the sheet to the left edge.
    * - `'right'`: Anchors the sheet to the right edge.
    *
+   * Ignored on phones in portrait orientation.
+   *
    * @default 'center'
    */
   anchor?: 'left' | 'center' | 'right';
 
   /**
-   * The offset from the screen edge when anchored left or right.
+   * The offset from the screen edge.
+   * Only applies when `anchor` is `'left'` or `'right'`.
    *
    * @platform android
    * @platform web

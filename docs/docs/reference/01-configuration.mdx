@@ -128,8 +128,36 @@ The maximum width of the sheet content.
 | `number` | | ✅ | ✅ | ✅ |
 
 :::info
-On Android, the sheet defaults to a maximum width of `640dp`. Setting this prop overrides that default. On iOS, the sheet uses the system default width.
+On Android and Web, the sheet defaults to a maximum width of `640dp`. Setting this prop overrides that default. On iOS, the sheet uses the system default width.
 :::
+
+:::note
+This prop is ignored on phones in portrait orientation — the sheet always spans the full width.
+:::
+
+## `anchor`
+
+Anchors the sheet to the specified horizontal edge.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `'left' \| 'center' \| 'right'` | `'center'` | ✅ | ✅ | ✅ |
+
+:::info
+On iOS, the sheet uses `sourceView` to control horizontal positioning. System-defined margins prevent fully flush edge attachment.
+:::
+
+:::note
+This prop is ignored on phones in portrait orientation.
+:::
+
+## `anchorOffset`
+
+The offset from the screen edge. Only applies when [`anchor`](#anchor) is `'left'` or `'right'`.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | `16` | | ✅ | ✅ |
 
 ## `dismissible`
 
