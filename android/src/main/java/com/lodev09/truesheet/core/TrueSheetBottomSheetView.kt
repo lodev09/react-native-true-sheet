@@ -86,6 +86,17 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // MARK: - Layout
   // =============================================================================
 
+  private fun resolveAnchor(): Pair<Int, Int> {
+    val anchor = if (ScreenUtils.isPortraitPhone(reactContext)) null else delegate?.anchor
+    val gravity = when (anchor) {
+      TrueSheetAnchor.LEFT -> Gravity.START
+      TrueSheetAnchor.RIGHT -> Gravity.END
+      else -> Gravity.CENTER_HORIZONTAL
+    } or Gravity.BOTTOM
+    val margin = if (anchor == TrueSheetAnchor.LEFT || anchor == TrueSheetAnchor.RIGHT) delegate?.anchorOffset ?: 0 else 0
+    return Pair(gravity, margin)
+  }
+
   /**
    * Creates layout params with BottomSheetBehavior attached.
    */
@@ -97,43 +108,29 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       maxWidth = effectiveMaxWidth
     }
 
-    val horizontalGravity = when (delegate?.anchor) {
-      TrueSheetAnchor.LEFT -> Gravity.START
-      TrueSheetAnchor.RIGHT -> Gravity.END
-      else -> Gravity.CENTER_HORIZONTAL
-    }
-
-    val isAnchored = delegate?.anchor == TrueSheetAnchor.LEFT || delegate?.anchor == TrueSheetAnchor.RIGHT
-    val anchorMargin = if (isAnchored) delegate?.anchorOffset ?: 0 else 0
+    val (gravity, margin) = resolveAnchor()
 
     return CoordinatorLayout.LayoutParams(
       CoordinatorLayout.LayoutParams.MATCH_PARENT,
       CoordinatorLayout.LayoutParams.MATCH_PARENT
     ).apply {
       this.behavior = behavior
-      this.gravity = horizontalGravity or Gravity.BOTTOM
-      this.marginStart = anchorMargin
-      this.marginEnd = anchorMargin
+      this.gravity = gravity
+      this.marginStart = margin
+      this.marginEnd = margin
     }
   }
 
   fun updateGravity() {
     val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
-    val isAnchored = delegate?.anchor == TrueSheetAnchor.LEFT || delegate?.anchor == TrueSheetAnchor.RIGHT
-    val horizontalGravity = when (delegate?.anchor) {
-      TrueSheetAnchor.LEFT -> Gravity.START
-      TrueSheetAnchor.RIGHT -> Gravity.END
-      else -> Gravity.CENTER_HORIZONTAL
-    }
-    val newGravity = horizontalGravity or Gravity.BOTTOM
-    val anchorMargin = if (isAnchored) delegate?.anchorOffset ?: 0 else 0
+    val (gravity, margin) = resolveAnchor()
 
-    if (params.gravity == newGravity && params.marginStart == anchorMargin) return
+    if (params.gravity == gravity && params.marginStart == margin) return
 
     (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
-    params.gravity = newGravity
-    params.marginStart = anchorMargin
-    params.marginEnd = anchorMargin
+    params.gravity = gravity
+    params.marginStart = margin
+    params.marginEnd = margin
     layoutParams = params
   }
 
