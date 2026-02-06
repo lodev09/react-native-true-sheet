@@ -175,8 +175,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   private fun getDefaultBackgroundColor(): Int {
-    val isNight = (reactContext.resources.configuration.uiMode and
-      Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    val isNight = (
+      reactContext.resources.configuration.uiMode and
+        Configuration.UI_MODE_NIGHT_MASK
+      ) == Configuration.UI_MODE_NIGHT_YES
     return if (isNight) COLOR_SURFACE_CONTAINER_LOW_DARK else COLOR_SURFACE_CONTAINER_LOW_LIGHT
   }
 
