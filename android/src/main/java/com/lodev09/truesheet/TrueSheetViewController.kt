@@ -166,7 +166,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = delegate?.eventDispatcher
 
   // Detent Configuration
-  override var maxSheetHeight: Int? = null
+  override var maxContentHeight: Int? = null
+  override var maxContentWidth: Int? = null
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   // Appearance Configuration
@@ -417,6 +418,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun coordinatorLayoutDidChangeConfiguration() {
     if (!isPresented) return
 
+    updateBehaviorMaxWidth()
     updateStateDimensions()
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
@@ -1094,11 +1096,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Helpers
   // =============================================================================
 
+  private fun updateBehaviorMaxWidth() {
+    val behavior = this.behavior ?: return
+    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
+    behavior.maxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+  }
+
   private fun updateStateDimensions(expandedOffset: Int? = null) {
     val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
     val topOffset = if (offset == 0) topInset else 0
     val newHeight = realScreenHeight - offset - topOffset
-    val newWidth = minOf(screenWidth, DEFAULT_MAX_WIDTH.dpToPx().toInt())
+    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
+    val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    val newWidth = minOf(screenWidth, effectiveMaxWidth)
 
     if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
       lastStateWidth = newWidth

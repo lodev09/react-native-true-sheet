@@ -581,8 +581,9 @@
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
-                        CGFloat maxValue =
-                          self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                        CGFloat maxValue = self.maxContentHeight
+                                             ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
+                                             : maxDetentValue;
                         CGFloat adjustedHeight = height - bottomAdjustment;
                         return fmin(adjustedHeight, maxValue);
                       }];
@@ -718,12 +719,22 @@
 
   sheet.delegate = self;
 
+  BOOL hasMaxWidth = self.maxContentWidth != nil;
+
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = self.pageSizing;
+    sheet.prefersPageSizing = hasMaxWidth ? NO : self.pageSizing;
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
+  sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = hasMaxWidth;
   sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
+
+  if (hasMaxWidth) {
+    CGFloat height = self.maxContentHeight ? [self.maxContentHeight floatValue] : self.view.bounds.size.height;
+    self.preferredContentSize = CGSizeMake([self.maxContentWidth floatValue], height);
+  } else {
+    self.preferredContentSize = CGSizeZero;
+  }
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];

@@ -186,9 +186,14 @@ using namespace facebook::react;
   // Corner radius
   _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
 
-  // Max height
-  if (newProps.maxHeight != 0.0) {
-    _controller.maxHeight = @(newProps.maxHeight);
+  // Content height
+  if (newProps.maxContentHeight != 0.0) {
+    _controller.maxContentHeight = @(newProps.maxContentHeight);
+  }
+
+  // Content width
+  if (newProps.maxContentWidth != 0.0) {
+    _controller.maxContentWidth = @(newProps.maxContentWidth);
   }
 
   _controller.grabber = newProps.grabber;

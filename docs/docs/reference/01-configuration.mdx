@@ -111,13 +111,25 @@ The elevation (shadow depth) of the sheet.
 | - | - | - | - | - |
 | `number` | `4` | | ✅ | ✅ |
 
-## `maxHeight`
+## `maxContentHeight`
 
 Overrides `"large"` or `"100%"` height.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `number` | | ✅ | ✅ | ✅ |
+
+## `maxContentWidth`
+
+The maximum width of the sheet content.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | | ✅ | ✅ | ✅ |
+
+:::info
+On Android, the sheet defaults to a maximum width of `640dp`. Setting this prop overrides that default. On iOS, the sheet uses the system default width.
+:::
 
 ## `dismissible`
 

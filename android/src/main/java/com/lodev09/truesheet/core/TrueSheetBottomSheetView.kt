@@ -17,12 +17,14 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.utils.ScreenUtils
 
 interface TrueSheetBottomSheetViewDelegate {
   val isTopmostSheet: Boolean
   val sheetCornerRadius: Float
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
+  val maxContentWidth: Int?
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
   val draggable: Boolean
@@ -84,9 +86,11 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
    * Creates layout params with BottomSheetBehavior attached.
    */
   fun createLayoutParams(): CoordinatorLayout.LayoutParams {
+    val applyMaxWidth = delegate?.maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
+    val effectiveMaxWidth = if (applyMaxWidth) delegate!!.maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
     val behavior = BottomSheetBehavior<TrueSheetBottomSheetView>().apply {
       isHideable = true
-      maxWidth = DEFAULT_MAX_WIDTH.dpToPx().toInt()
+      maxWidth = effectiveMaxWidth
     }
 
     return CoordinatorLayout.LayoutParams(

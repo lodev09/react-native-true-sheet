@@ -166,10 +166,17 @@ class TrueSheetViewManager :
     view.initialDetentAnimated = animate
   }
 
-  @ReactProp(name = "maxHeight", defaultDouble = 0.0)
-  override fun setMaxHeight(view: TrueSheetView, height: Double) {
+  @ReactProp(name = "maxContentHeight", defaultDouble = 0.0)
+  override fun setMaxContentHeight(view: TrueSheetView, height: Double) {
     if (height > 0) {
-      view.setMaxHeight(height.dpToPx().toInt())
+      view.setMaxContentHeight(height.dpToPx().toInt())
+    }
+  }
+
+  @ReactProp(name = "maxContentWidth", defaultDouble = 0.0)
+  override fun setMaxContentWidth(view: TrueSheetView, width: Double) {
+    if (width > 0) {
+      view.setMaxContentWidth(width.dpToPx().toInt())
     }
   }
 
