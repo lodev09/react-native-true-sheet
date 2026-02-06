@@ -196,7 +196,7 @@ export type BackgroundBlur =
 export type SheetDetent =
   /**
    * Auto resize based on content height, clamped to container height.
-   * Use the `maxHeight` prop to set a custom limit.
+   * Use the `maxContentHeight` prop to set a custom limit.
    *
    * @platform android
    * @platform ios 16+
@@ -352,13 +352,13 @@ export interface TrueSheetProps extends ViewProps {
    * Overrides `large` or `100%` height.
    * Also sets the maximum height for 'auto' detents.
    */
-  maxHeight?: number;
+  maxContentHeight?: number;
 
   /**
    * The maximum width of the sheet content.
    * On Android, defaults to `640dp`. On iOS, the sheet uses system default width.
    */
-  maxWidth?: number;
+  maxContentWidth?: number;
 
   /**
    * Controls how the sheet adjusts its height for system insets (safe area).

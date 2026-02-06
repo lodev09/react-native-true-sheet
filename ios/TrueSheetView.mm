@@ -186,14 +186,14 @@ using namespace facebook::react;
   // Corner radius
   _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
 
-  // Max height
-  if (newProps.maxHeight != 0.0) {
-    _controller.maxHeight = @(newProps.maxHeight);
+  // Content height
+  if (newProps.maxContentHeight != 0.0) {
+    _controller.maxContentHeight = @(newProps.maxContentHeight);
   }
 
-  // Max width
-  if (newProps.maxWidth != 0.0) {
-    _controller.maxWidth = @(newProps.maxWidth);
+  // Content width
+  if (newProps.maxContentWidth != 0.0) {
+    _controller.maxContentWidth = @(newProps.maxContentWidth);
   }
 
   _controller.grabber = newProps.grabber;
@@ -283,21 +283,15 @@ using namespace facebook::react;
   if (!_state)
     return;
 
-  CGFloat width = size.width;
-  if (_controller.maxWidth) {
-    width = fmin(width, [_controller.maxWidth floatValue]);
-  }
-
-  CGSize adjustedSize = CGSizeMake(width, size.height);
-  if (CGSizeEqualToSize(adjustedSize, _lastStateSize))
+  if (CGSizeEqualToSize(size, _lastStateSize))
     return;
 
-  _lastStateSize = adjustedSize;
+  _lastStateSize = size;
   _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
                         -> TrueSheetViewShadowNode::ConcreteState::SharedData {
     auto newData = oldData;
-    newData.containerWidth = static_cast<float>(adjustedSize.width);
-    newData.containerHeight = static_cast<float>(adjustedSize.height);
+    newData.containerWidth = static_cast<float>(size.width);
+    newData.containerHeight = static_cast<float>(size.height);
     return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
   });
 }

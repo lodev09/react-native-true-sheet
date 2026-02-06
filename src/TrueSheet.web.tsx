@@ -93,8 +93,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     elevation = DEFAULT_ELEVATION,
     grabber = true,
     grabberOptions,
-    maxHeight,
-    maxWidth,
+    maxContentHeight,
+    maxContentWidth,
     header,
     headerStyle,
     footer,
@@ -154,7 +154,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
 
   const hasAutoDetent = detents.includes('auto');
 
-  const containerHeight = maxHeight ?? windowHeight;
+  const containerHeight = maxContentHeight ?? windowHeight;
   const snapPoints = useMemo(
     () =>
       detents
@@ -454,7 +454,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
         borderTopLeftRadius: cornerRadius,
         borderTopRightRadius: cornerRadius,
         boxShadow: getElevationShadow(elevation),
-        maxWidth,
+        maxWidth: maxContentWidth,
       },
     ],
     index: snapIndex,
@@ -467,7 +467,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     onChange: handleChange,
     onAnimate: handleAnimate,
     enableDynamicSizing: hasAutoDetent,
-    maxDynamicContentSize: maxHeight,
+    maxDynamicContentSize: maxContentHeight,
     snapPoints: snapPoints.length > 0 ? snapPoints : undefined,
     backdropComponent,
     backgroundComponent: null,

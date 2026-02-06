@@ -582,7 +582,7 @@
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         CGFloat maxValue =
-                          self.maxHeight ? fmin(maxDetentValue, [self.maxHeight floatValue]) : maxDetentValue;
+                          self.maxContentHeight ? fmin(maxDetentValue, [self.maxContentHeight floatValue]) : maxDetentValue;
                         CGFloat adjustedHeight = height - bottomAdjustment;
                         return fmin(adjustedHeight, maxValue);
                       }];
@@ -718,17 +718,19 @@
 
   sheet.delegate = self;
 
+  BOOL hasMaxWidth = self.maxContentWidth != nil;
+
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = self.maxWidth ? NO : self.pageSizing;
+    sheet.prefersPageSizing = hasMaxWidth ? NO : self.pageSizing;
   }
 
   sheet.prefersEdgeAttachedInCompactHeight = YES;
-  sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = self.maxWidth != nil;
+  sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = hasMaxWidth;
   sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
 
-  if (self.maxWidth) {
-    CGFloat height = self.maxHeight ? [self.maxHeight floatValue] : self.view.bounds.size.height;
-    self.preferredContentSize = CGSizeMake([self.maxWidth floatValue], height);
+  if (hasMaxWidth) {
+    CGFloat height = self.maxContentHeight ? [self.maxContentHeight floatValue] : self.view.bounds.size.height;
+    self.preferredContentSize = CGSizeMake([self.maxContentWidth floatValue], height);
   } else {
     self.preferredContentSize = CGSizeZero;
   }

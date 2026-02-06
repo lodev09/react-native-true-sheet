@@ -196,14 +196,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // ==================== Property Setters ====================
 
-  fun setMaxHeight(height: Int) {
-    if (viewController.maxSheetHeight == height) return
-    viewController.maxSheetHeight = height
+  fun setMaxContentHeight(height: Int) {
+    if (viewController.maxContentHeight == height) return
+    viewController.maxContentHeight = height
   }
 
-  fun setMaxWidth(width: Int) {
-    if (viewController.maxSheetWidth == width) return
-    viewController.maxSheetWidth = width
+  fun setMaxContentWidth(width: Int) {
+    if (viewController.maxContentWidth == width) return
+    viewController.maxContentWidth = width
   }
 
   fun setDimmed(dimmed: Boolean) {

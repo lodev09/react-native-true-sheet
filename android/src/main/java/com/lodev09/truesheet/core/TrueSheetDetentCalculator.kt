@@ -15,7 +15,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val contentHeight: Int
   val headerHeight: Int
   val contentBottomInset: Int
-  val maxSheetHeight: Int?
+  val maxContentHeight: Int?
   val keyboardInset: Int
 }
 
@@ -32,7 +32,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
-  private val maxSheetHeight: Int? get() = delegate?.maxSheetHeight
+  private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
@@ -51,7 +51,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
 
     val height = baseHeight + keyboardInset
     val maxAllowedHeight = screenHeight + contentBottomInset
-    return maxSheetHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
+    return maxContentHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
 
   /**
