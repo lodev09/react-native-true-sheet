@@ -49,6 +49,7 @@ import type {
 const DEFAULT_CORNER_RADIUS = 16;
 const DEFAULT_ELEVATION = 4;
 
+const DEFAULT_MAX_WIDTH = 640;
 const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
 const DEFAULT_GRABBER_WIDTH = 32;
 const DEFAULT_GRABBER_HEIGHT = 4;
@@ -117,7 +118,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     style,
   } = props;
 
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
   const defaultName = useId();
   const sheetName = name ?? defaultName;
   const bottomSheetContext = useContext(BottomSheetContext);
@@ -454,7 +456,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
         borderTopLeftRadius: cornerRadius,
         borderTopRightRadius: cornerRadius,
         boxShadow: getElevationShadow(elevation),
-        maxWidth: maxContentWidth,
+        maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
+        marginHorizontal: isLandscapeOrTablet ? 'auto' : undefined,
       },
     ],
     index: snapIndex,

@@ -581,8 +581,9 @@
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
-                        CGFloat maxValue =
-                          self.maxContentHeight ? fmin(maxDetentValue, [self.maxContentHeight floatValue]) : maxDetentValue;
+                        CGFloat maxValue = self.maxContentHeight
+                                             ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
+                                             : maxDetentValue;
                         CGFloat adjustedHeight = height - bottomAdjustment;
                         return fmin(adjustedHeight, maxValue);
                       }];
