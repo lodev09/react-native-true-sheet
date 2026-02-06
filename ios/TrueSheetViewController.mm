@@ -18,6 +18,9 @@
 
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
+#import <react/renderer/components/TrueSheetSpec/Props.h>
+
+using namespace facebook::react;
 
 @interface TrueSheetViewController ()
 
@@ -71,7 +74,7 @@
     _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
-    _insetAdjustment = @"automatic";
+    _insetAdjustment = (NSInteger)TrueSheetViewInsetAdjustment::Automatic;
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
   }
@@ -109,7 +112,7 @@
 }
 
 - (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
-  if ([_insetAdjustment isEqualToString:@"automatic"]) {
+  if (_insetAdjustment == (NSInteger)TrueSheetViewInsetAdjustment::Automatic) {
     return 0;
   }
 
@@ -659,16 +662,16 @@
 }
 
 - (void)setupBackground {
-  NSString *effectiveBackgroundBlur = self.backgroundBlur;
+  NSInteger effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
-  } else if ((!effectiveBackgroundBlur || effectiveBackgroundBlur.length == 0) && !self.backgroundColor) {
-    effectiveBackgroundBlur = @"system-material";
+  } else if (effectiveBackgroundBlur == (NSInteger)TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
+    effectiveBackgroundBlur = (NSInteger)TrueSheetViewBackgroundBlur::SystemMaterial;
   }
 
-  BOOL hasBlur = effectiveBackgroundBlur && effectiveBackgroundBlur.length > 0;
+  BOOL hasBlur = effectiveBackgroundBlur != (NSInteger)TrueSheetViewBackgroundBlur::None;
 
-  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : nil;
+  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : (NSInteger)TrueSheetViewBackgroundBlur::None;
   _blurView.blurIntensity = self.blurIntensity;
   _blurView.blurInteraction = self.blurInteraction;
   [_blurView applyBlurEffect];
@@ -715,7 +718,7 @@
 }
 
 - (BOOL)isAnchored {
-  return [self.anchor isEqualToString:@"left"] || [self.anchor isEqualToString:@"right"];
+  return self.anchor == (NSInteger)TrueSheetViewAnchor::Left || self.anchor == (NSInteger)TrueSheetViewAnchor::Right;
 }
 
 - (void)setupAnchorViewInView:(UIView *)parentView {
@@ -736,7 +739,7 @@
   [parentView addSubview:_anchorView];
 
   NSLayoutAnchor *horizontalAnchor =
-    [self.anchor isEqualToString:@"right"] ? parentView.trailingAnchor : parentView.leadingAnchor;
+    self.anchor == (NSInteger)TrueSheetViewAnchor::Right ? parentView.trailingAnchor : parentView.leadingAnchor;
 
   [NSLayoutConstraint activateConstraints:@[
     [_anchorView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor],

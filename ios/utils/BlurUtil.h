@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface BlurUtil : NSObject
 
-+ (UIBlurEffectStyle)blurEffectStyleFromString:(NSString *)tintString;
++ (UIBlurEffectStyle)blurEffectStyleFromEnum:(NSInteger)blur;
 
 @end
 

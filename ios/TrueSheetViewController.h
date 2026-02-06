@@ -62,12 +62,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL draggable;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
-@property (nonatomic, copy, nullable) NSString *backgroundBlur;
+@property (nonatomic, assign) NSInteger backgroundBlur;
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
 @property (nonatomic, assign) BOOL pageSizing;
-@property (nonatomic, copy, nullable) NSString *anchor;
-@property (nonatomic, copy, nullable) NSString *insetAdjustment;
+@property (nonatomic, assign) NSInteger anchor;
+@property (nonatomic, assign) NSInteger insetAdjustment;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;

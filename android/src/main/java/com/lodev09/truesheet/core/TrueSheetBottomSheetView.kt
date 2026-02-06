@@ -1,12 +1,12 @@
 package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
@@ -18,6 +18,7 @@ import androidx.transition.TransitionManager
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.TrueSheetAnchor
 import com.lodev09.truesheet.utils.ScreenUtils
 
 interface TrueSheetBottomSheetViewDelegate {
@@ -26,7 +27,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
   val maxContentWidth: Int?
-  val anchor: String?
+  val anchor: TrueSheetAnchor
   val anchorOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
@@ -49,6 +50,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     private const val DEFAULT_CORNER_RADIUS = 16f // dp
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_ELEVATION = 4f // dp
+
+    // M3 baseline surfaceContainerLow
+    private val COLOR_SURFACE_CONTAINER_LOW_LIGHT = Color.parseColor("#F7F2FA")
+    private val COLOR_SURFACE_CONTAINER_LOW_DARK = Color.parseColor("#1D1B20")
   }
 
   // =============================================================================
@@ -85,6 +90,17 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // MARK: - Layout
   // =============================================================================
 
+  private fun resolveAnchor(): Pair<Int, Int> {
+    val anchor = if (ScreenUtils.isPortraitPhone(reactContext)) null else delegate?.anchor
+    val gravity = when (anchor) {
+      TrueSheetAnchor.LEFT -> Gravity.START
+      TrueSheetAnchor.RIGHT -> Gravity.END
+      else -> Gravity.CENTER_HORIZONTAL
+    } or Gravity.BOTTOM
+    val margin = if (anchor == TrueSheetAnchor.LEFT || anchor == TrueSheetAnchor.RIGHT) delegate?.anchorOffset ?: 0 else 0
+    return Pair(gravity, margin)
+  }
+
   /**
    * Creates layout params with BottomSheetBehavior attached.
    */
@@ -96,46 +112,32 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       maxWidth = effectiveMaxWidth
     }
 
-    val horizontalGravity = when (delegate?.anchor) {
-      "left" -> Gravity.START
-      "right" -> Gravity.END
-      else -> Gravity.CENTER_HORIZONTAL
-    }
-
-    val anchorMargin = if (delegate?.anchor == "left" || delegate?.anchor == "right") {
-      delegate?.anchorOffset ?: 0
-    } else {
-      0
-    }
+    val (gravity, margin) = resolveAnchor()
 
     return CoordinatorLayout.LayoutParams(
       CoordinatorLayout.LayoutParams.MATCH_PARENT,
       CoordinatorLayout.LayoutParams.MATCH_PARENT
     ).apply {
       this.behavior = behavior
-      this.gravity = horizontalGravity or Gravity.BOTTOM
-      this.marginStart = anchorMargin
-      this.marginEnd = anchorMargin
+      this.gravity = gravity
+      this.marginStart = margin
+      this.marginEnd = margin
     }
   }
 
-  fun updateGravity() {
+  fun updateGravity(animated: Boolean = true) {
     val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
-    val isAnchored = delegate?.anchor == "left" || delegate?.anchor == "right"
-    val horizontalGravity = when (delegate?.anchor) {
-      "left" -> Gravity.START
-      "right" -> Gravity.END
-      else -> Gravity.CENTER_HORIZONTAL
+    val (gravity, margin) = resolveAnchor()
+
+    if (params.gravity == gravity && params.marginStart == margin) return
+
+    if (animated) {
+      (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
     }
-    val newGravity = horizontalGravity or Gravity.BOTTOM
-    val anchorMargin = if (isAnchored) delegate?.anchorOffset ?: 0 else 0
 
-    if (params.gravity == newGravity && params.marginStart == anchorMargin) return
-
-    (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
-    params.gravity = newGravity
-    params.marginStart = anchorMargin
-    params.marginEnd = anchorMargin
+    params.gravity = gravity
+    params.marginStart = margin
+    params.marginEnd = margin
     layoutParams = params
   }
 
@@ -173,17 +175,11 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   private fun getDefaultBackgroundColor(): Int {
-    val typedValue = TypedValue()
-    return if (reactContext.theme.resolveAttribute(
-        com.google.android.material.R.attr.colorSurfaceContainerLow,
-        typedValue,
-        true
-      )
-    ) {
-      typedValue.data
-    } else {
-      Color.WHITE
-    }
+    val isNight = (
+      reactContext.resources.configuration.uiMode and
+        Configuration.UI_MODE_NIGHT_MASK
+      ) == Configuration.UI_MODE_NIGHT_YES
+    return if (isNight) COLOR_SURFACE_CONTAINER_LOW_DARK else COLOR_SURFACE_CONTAINER_LOW_LIGHT
   }
 
   fun setupElevation() {

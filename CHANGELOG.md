@@ -9,11 +9,17 @@
 ### 🎉 New features
 
 - Added `maxContentWidth` prop to control the maximum width of the sheet content. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
-- Added `anchor` and `anchorOffset` props for side sheet positioning. ([#496](https://github.com/lodev09/react-native-true-sheet/pull/496) by [@lodev09](https://github.com/lodev09))
+- Added `anchor` and `anchorOffset` props for side sheet positioning. ([#496](https://github.com/lodev09/react-native-true-sheet/pull/496), [#500](https://github.com/lodev09/react-native-true-sheet/pull/500) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed crash and blank sheet when using Reanimated exiting animations. ([#493](https://github.com/lodev09/react-native-true-sheet/pull/493) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed default background color not respecting dark mode on AppCompat-based apps. ([#501](https://github.com/lodev09/react-native-true-sheet/pull/501) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fixed default background color not respecting dark mode. ([#502](https://github.com/lodev09/react-native-true-sheet/pull/502) by [@lodev09](https://github.com/lodev09))
+
+### 💡 Others
+
+- Use codegen enums for `backgroundBlur`, `anchor`, and `insetAdjustment` props. ([#499](https://github.com/lodev09/react-native-true-sheet/pull/499) by [@lodev09](https://github.com/lodev09))
 
 ## 3.8.2
 
