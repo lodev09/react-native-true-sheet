@@ -73,13 +73,7 @@ Both platforms: `TrueSheetView` (hidden host) → Controller → `ContainerView`
 
 ### Creating a Pull Request
 
-When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
-
-1. **Summary** - Describe what the PR does and why
-2. **Type of Change** - Select one: Bug fix, New feature, Breaking change, or Documentation update
-3. **Test Plan** - Explain how the changes were tested
-4. **Screenshots / Videos** - Include if applicable
-5. **Checklist** - Mark platforms tested (iOS, Android, Web), documentation and changelog updates
+When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`.
 
 **After creating a PR, always update `CHANGELOG.md`.** Do this immediately after creating the PR, before moving on to other tasks.
 
