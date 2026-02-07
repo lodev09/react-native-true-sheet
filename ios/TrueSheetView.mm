@@ -33,6 +33,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <cxxreact/ReactNativeVersion.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -286,13 +287,21 @@ using namespace facebook::react;
     return;
 
   _lastStateSize = size;
-  _state->updateState([=](TrueSheetViewShadowNode::ConcreteState::Data const &oldData)
-                        -> TrueSheetViewShadowNode::ConcreteState::SharedData {
-    auto newData = oldData;
-    newData.containerWidth = static_cast<float>(size.width);
-    newData.containerHeight = static_cast<float>(size.height);
-    return std::make_shared<TrueSheetViewShadowNode::ConcreteState::Data const>(newData);
-  });
+
+  auto stateData = _state->getData();
+  stateData.containerWidth = static_cast<float>(size.width);
+  stateData.containerHeight = static_cast<float>(size.height);
+
+  // RN 0.82+ processes state updates in the same layout pass (synchronous).
+  // TODO: Once stable, we can drop native layout constraints in favor of synchronous Yoga layout.
+  auto updateMode =
+#if REACT_NATIVE_VERSION_MINOR >= 82
+    facebook::react::EventQueue::UpdateMode::unstable_Immediate;
+#else
+    facebook::react::EventQueue::UpdateMode::Asynchronous;
+#endif
+
+  _state->updateState(std::move(stateData), updateMode);
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {

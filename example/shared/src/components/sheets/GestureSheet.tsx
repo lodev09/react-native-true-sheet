@@ -85,7 +85,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
 const styles = StyleSheet.create({
   gestureRoot: {
-    flex: 1,
+    flexGrow: 1,
   },
   box: {
     alignItems: 'center',
