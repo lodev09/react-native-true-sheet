@@ -272,8 +272,6 @@ using namespace facebook::react;
   if (_controller) {
     [self updateStateWithSize:_controller.view.frame.size];
   }
-
-  [_screensEventObserver startObservingWithState:_state.get()->getData()];
 }
 
 /**
@@ -467,6 +465,7 @@ using namespace facebook::react;
   [_controller setupActiveDetentWithIndex:index];
 
   [_screensEventObserver capturePresenterScreenFromView:self];
+  [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
   [presentingViewController presentViewController:_controller
                                          animated:animated
