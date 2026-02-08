@@ -16,9 +16,6 @@ jobs:
   android:
     runs-on: ubuntu-latest
 
-    env:
-      TURBO_CACHE_DIR: .turbo/android
-
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -26,36 +23,17 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Cache turborepo for Android
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turborepo-android-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-turborepo-android-
-
-      - name: Check turborepo cache for Android
-        run: |
-          TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}" --dry=json)).tasks.find(t => t.task === 'build:android').cache.status")
-
-          if [[ $TURBO_CACHE_STATUS == "HIT" ]]; then
-            echo "turbo_cache_hit=1" >> $GITHUB_ENV
-          fi
-
       - name: Install JDK
-        if: env.turbo_cache_hit != 1
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'zulu'
           java-version: '17'
 
       - name: Finalize Android SDK
-        if: env.turbo_cache_hit != 1
         run: |
           /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
 
       - name: Cache Gradle
-        if: env.turbo_cache_hit != 1
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
@@ -69,33 +47,31 @@ jobs:
         env:
           JAVA_OPTS: "-XX:MaxHeapSize=6g"
         run: |
-          yarn turbo run build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          cd example/bare
+          npx react-native build-android --mode release --extra-params "--no-daemon --console=plain -PreactNativeArchitectures=x86_64"
 
       - name: Install Maestro
-        if: env.turbo_cache_hit != 1
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: Enable KVM
-        if: env.turbo_cache_hit != 1
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Run Maestro tests
-        if: env.turbo_cache_hit != 1
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
           arch: x86_64
           script: |
-            adb install example/bare/android/app/build/intermediates/apk/debug/app-debug.apk
+            adb install example/bare/android/app/build/outputs/apk/release/app-release.apk
             maestro test .maestro/ --format junit --output report.xml
 
       - name: Upload test report
-        if: always() && env.turbo_cache_hit != 1
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: e2e-android-report
@@ -106,7 +82,6 @@ jobs:
 
     env:
       XCODE_VERSION: latest-stable
-      TURBO_CACHE_DIR: .turbo/ios
       RCT_USE_RN_DEP: 1
       RCT_USE_PREBUILT_RNCORE: 1
 
@@ -117,30 +92,12 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Cache turborepo for iOS
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turborepo-ios-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-turborepo-ios-
-
-      - name: Check turborepo cache for iOS
-        run: |
-          TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}" --dry=json)).tasks.find(t => t.task === 'build:ios').cache.status")
-
-          if [[ $TURBO_CACHE_STATUS == "HIT" ]]; then
-            echo "turbo_cache_hit=1" >> $GITHUB_ENV
-          fi
-
       - name: Use appropriate Xcode version
-        if: env.turbo_cache_hit != 1
         uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Cache iOS build
-        if: env.turbo_cache_hit != 1
         id: ios-cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
@@ -154,11 +111,10 @@ jobs:
             ${{ runner.os }}-ios-
 
       - name: Install ccache
-        if: env.turbo_cache_hit != 1
         run: brew install ccache
 
       - name: Install cocoapods
-        if: env.turbo_cache_hit != 1 && steps.ios-cache.outputs.cache-hit != 'true'
+        if: steps.ios-cache.outputs.cache-hit != 'true'
         run: |
           cd example/bare
           bundle install
@@ -166,32 +122,29 @@ jobs:
 
       - name: Build example for iOS
         run: |
-          yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          cd example/bare
+          npx react-native build-ios --mode Release
 
       - name: Install Maestro
-        if: env.turbo_cache_hit != 1
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: Boot iOS Simulator
-        if: env.turbo_cache_hit != 1
         run: |
           DEVICE=$(xcrun simctl list devices available -j | jq -r '[.devices[] | .[] | select(.name | contains("iPhone"))][0].udid')
           xcrun simctl boot "$DEVICE"
 
       - name: Install app on Simulator
-        if: env.turbo_cache_hit != 1
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "TrueSheetExample.app" -path "*/Debug-iphonesimulator/*" | head -1)
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "TrueSheetExample.app" -path "*/Release-iphonesimulator/*" | head -1)
           xcrun simctl install booted "$APP_PATH"
 
       - name: Run Maestro tests
-        if: env.turbo_cache_hit != 1
         run: maestro test .maestro/ --format junit --output report.xml
 
       - name: Upload test report
-        if: always() && env.turbo_cache_hit != 1
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: e2e-ios-report
