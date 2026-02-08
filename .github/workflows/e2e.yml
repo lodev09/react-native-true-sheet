@@ -170,7 +170,9 @@ jobs:
 
       - name: Install Maestro
         if: env.turbo_cache_hit != 1
-        uses: dniHze/maestro-test-action@v1
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: Boot iOS Simulator
         if: env.turbo_cache_hit != 1
@@ -186,9 +188,7 @@ jobs:
 
       - name: Run Maestro tests
         if: env.turbo_cache_hit != 1
-        run: |
-          export PATH="$PATH":"$HOME/.maestro/bin"
-          maestro test .maestro/ --format junit --output report.xml
+        run: maestro test .maestro/ --format junit --output report.xml
 
       - name: Upload test report
         if: always() && env.turbo_cache_hit != 1
