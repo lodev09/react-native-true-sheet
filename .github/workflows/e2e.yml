@@ -12,6 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -33,22 +36,13 @@ jobs:
         run: |
           /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
 
-      - name: Cache Gradle
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('example/bare/android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Build example for Android
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           JAVA_OPTS: "-XX:MaxHeapSize=6g"
         run: |
-          cd example/bare
-          npx react-native build-android --mode release --extra-params "--no-daemon --console=plain -PreactNativeArchitectures=x86_64"
+          cd example/expo
+          npx expo run:android --no-install --no-bundler --variant release
 
       - name: Install Maestro
         run: |
@@ -67,7 +61,7 @@ jobs:
           api-level: 31
           arch: x86_64
           script: |
-            adb install example/bare/android/app/build/outputs/apk/release/app-release.apk
+            adb install example/expo/android/app/build/outputs/apk/release/app-release.apk
             maestro test .maestro/ --format junit --output report.xml
 
       - name: Upload test report
@@ -80,11 +74,6 @@ jobs:
   ios:
     runs-on: macos-latest
 
-    env:
-      XCODE_VERSION: latest-stable
-      RCT_USE_RN_DEP: 1
-      RCT_USE_PREBUILT_RNCORE: 1
-
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -95,35 +84,14 @@ jobs:
       - name: Use appropriate Xcode version
         uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
         with:
-          xcode-version: ${{ env.XCODE_VERSION }}
-
-      - name: Cache iOS build
-        id: ios-cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: |
-            ~/Library/Caches/ccache
-            ~/Library/Developer/Xcode/DerivedData
-            example/bare/ios/Pods
-          key: ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-
-            ${{ runner.os }}-ios-
-
-      - name: Install ccache
-        run: brew install ccache
-
-      - name: Install cocoapods
-        if: steps.ios-cache.outputs.cache-hit != 'true'
-        run: |
-          cd example/bare
-          bundle install
-          bundle exec pod install --project-directory=ios
+          xcode-version: latest-stable
 
       - name: Build example for iOS
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          cd example/bare
-          npx react-native build-ios --mode Release
+          cd example/expo
+          npx expo run:ios --no-install --no-bundler --configuration Release
 
       - name: Install Maestro
         run: |
@@ -137,7 +105,7 @@ jobs:
 
       - name: Install app on Simulator
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "TrueSheetExample.app" -path "*/Release-iphonesimulator/*" | head -1)
+          APP_PATH=$(find example/expo/ios/build -name "*.app" -path "*/Release-iphonesimulator/*" | head -1)
           xcrun simctl install booted "$APP_PATH"
 
       - name: Run Maestro tests

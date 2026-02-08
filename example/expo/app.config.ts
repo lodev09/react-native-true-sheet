@@ -47,4 +47,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
   },
+  buildCacheProvider: {
+    plugin: '@eggl-js/expo-github-cache',
+    options: {
+      owner: 'lodev09',
+      repo: 'react-native-true-sheet',
+    },
+  },
 });
