@@ -291,6 +291,8 @@ using namespace facebook::react;
   stateData.containerHeight = static_cast<float>(size.height);
 
 #if REACT_NATIVE_VERSION_MINOR >= 82
+  // TODO: RN 0.82+ processes state updates in the same layout pass (synchronous).
+  // Once stable, we can drop native layout constraints in favor of synchronous Yoga layout.
   _state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
 #else
   _state->updateState(std::move(stateData));
