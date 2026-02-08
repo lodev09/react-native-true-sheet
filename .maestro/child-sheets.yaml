@@ -1,0 +1,71 @@
+appId: com.lodev09.truesheet.expo
+---
+
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Expand main sheet
+- swipe:
+    start: "50%, 90%"
+    end: "50%, 30%"
+    duration: 500
+- waitForAnimationToEnd
+
+# --- BasicSheet: header, footer, detent resize, dismiss ---
+
+- tapOn: "TrueSheet View"
+- waitForAnimationToEnd
+
+- assertVisible: "Enter some text..."
+- assertVisible: "FOOTER"
+- assertVisible: "Add Content"
+
+# Resize detents
+- tapOn: "Large"
+- waitForAnimationToEnd
+- tapOn: "Auto"
+- waitForAnimationToEnd
+
+- tapOn: "Dismiss"
+- waitForAnimationToEnd
+- assertVisible: "True Sheet"
+
+# --- PromptSheet: scrollable, form inputs ---
+
+- scrollUntilVisible:
+    element: "Prompt"
+    direction: DOWN
+- tapOn: "Prompt"
+- waitForAnimationToEnd
+
+- assertVisible: "First name"
+- assertVisible: "Last name"
+- tapOn: "First name"
+- inputText: "John"
+- tapOn: "Last name"
+- inputText: "Doe"
+
+- scrollUntilVisible:
+    element: "Dismiss"
+    direction: DOWN
+- tapOn: "Dismiss"
+- waitForAnimationToEnd
+- assertVisible: "True Sheet"
+
+# --- FlatListSheet: scrollable content ---
+
+- tapOn: "FlatList"
+- waitForAnimationToEnd
+
+- assertVisible: "Enter some text..."
+- assertVisible: "Item #0"
+
+- scrollUntilVisible:
+    element: "Item #9"
+    direction: DOWN
+- assertVisible: "Item #9"
+
+
