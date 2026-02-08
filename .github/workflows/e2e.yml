@@ -56,9 +56,7 @@ jobs:
           api-level: 31
           arch: x86_64
           script: |
-            cd example/expo
-            npx expo run:android --no-install --no-bundler --variant release
-            cd ../..
+            cd example/expo && npx expo prebuild --platform android --clean && npx expo run:android --no-install --no-bundler --variant release && cd ../..
             adb install example/expo/android/app/build/outputs/apk/release/app-release.apk
             maestro test .maestro/ --format junit --output report.xml
 
@@ -89,6 +87,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           cd example/expo
+          npx expo prebuild --platform ios --clean
           npx expo run:ios --no-install --no-bundler --configuration Release
 
       - name: Install Maestro
