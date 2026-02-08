@@ -1,0 +1,44 @@
+appId: truesheet.example
+---
+
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# --- initialDetentIndex + dismissible=false ---
+
+# Main sheet auto-presents collapsed (header only)
+- assertVisible: "True Sheet"
+- assertVisible: "Enter some text..."
+
+# Try to swipe down — main sheet is not dismissible
+- swipe:
+    start: "50%, 90%"
+    end: "50%, 99%"
+    duration: 300
+- waitForAnimationToEnd
+- assertVisible: "True Sheet"
+
+# --- Expand and verify content ---
+
+- swipe:
+    start: "50%, 90%"
+    end: "50%, 30%"
+    duration: 500
+- waitForAnimationToEnd
+
+- assertVisible: "TrueSheet View"
+- assertVisible: "Prompt"
+- assertVisible: "ScrollView"
+- assertVisible: "FlatList"
+
+# --- Expand to full, then dismiss ---
+
+- tapOn: "Expand"
+- waitForAnimationToEnd
+- tapOn: "Dismiss"
+- waitForAnimationToEnd
+
+- assertNotVisible: "True Sheet"
