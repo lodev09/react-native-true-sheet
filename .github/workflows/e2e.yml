@@ -36,14 +36,6 @@ jobs:
         run: |
           /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
 
-      - name: Build example for Android
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          JAVA_OPTS: "-XX:MaxHeapSize=6g"
-        run: |
-          cd example/expo
-          npx expo run:android --no-install --no-bundler --variant release
-
       - name: Install Maestro
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -55,12 +47,18 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Maestro tests
+      - name: Build and run Maestro tests
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          JAVA_OPTS: "-XX:MaxHeapSize=6g"
         with:
           api-level: 31
           arch: x86_64
           script: |
+            cd example/expo
+            npx expo run:android --no-install --no-bundler --variant release
+            cd ../..
             adb install example/expo/android/app/build/outputs/apk/release/app-release.apk
             maestro test .maestro/ --format junit --output report.xml
 
