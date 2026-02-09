@@ -123,7 +123,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
     private const val SCREEN_FADE_DURATION = 150L
-    private const val DETENT_SNAP_TOLERANCE = 20 // px
   }
 
   // =============================================================================
@@ -528,6 +527,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     when (newState) {
       BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
+
+      BottomSheetBehavior.STATE_SETTLING -> handleSettling(sheetView)
 
       BottomSheetBehavior.STATE_EXPANDED,
       BottomSheetBehavior.STATE_COLLAPSED,
@@ -1075,29 +1076,41 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     interactionState = InteractionState.Dragging(startTop = sheetView.top)
   }
 
-  private fun handleDragChange(sheetView: View) {
+  private fun handleSettling(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
+    if (keyboardInset <= 0) return
 
-    // When keyboard is active, check if the sheet is at a non-keyboard detent position.
-    // If so, dismiss keyboard and commit to that detent.
-    if (keyboardInset > 0) {
-      val maxAvailableHeight = realScreenHeight - topInset
-      for (i in detents.indices) {
-        val nonKeyboardHeight = minOf(detentCalculator.getDetentHeight(detents[i], includeKeyboard = false), maxAvailableHeight)
-        val nonKeyboardTop = realScreenHeight - nonKeyboardHeight
-        if (Math.abs(sheetView.top - nonKeyboardTop) < DETENT_SNAP_TOLERANCE) {
-          detentIndexBeforeKeyboard = -1
-          currentDetentIndex = i
-          dismissKeyboard()
-          setupDimmedBackground()
+    // After drag release, check if the sheet was dragged past the midpoint between the
+    // keyboard-expanded position and a non-keyboard detent position. If so, dismiss
+    // keyboard and commit to that detent.
+    val maxAvailableHeight = realScreenHeight - topInset
+    val keyboardHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
+    val keyboardTop = realScreenHeight - keyboardHeight
 
-          val position = getPositionDpForView(sheetView)
-          val detent = detentCalculator.getDetentValueForIndex(i)
-          delegate?.viewControllerDidChangeDetent(i, position, detent)
-          break
-        }
+    for (i in detents.indices) {
+      val nonKeyboardHeight = minOf(detentCalculator.getDetentHeight(detents[i], includeKeyboard = false), maxAvailableHeight)
+      val nonKeyboardTop = realScreenHeight - nonKeyboardHeight
+      val midpoint = keyboardTop + (nonKeyboardTop - keyboardTop) / 2
+
+      if (sheetView.top >= midpoint) {
+        // Target position matches the keyboard-expanded position — keep keyboard open
+        if (nonKeyboardTop == keyboardTop) break
+
+        detentIndexBeforeKeyboard = -1
+        currentDetentIndex = i
+        dismissKeyboard()
+        setupDimmedBackground()
+
+        val position = getPositionDpForView(sheetView)
+        val detent = detentCalculator.getDetentValueForIndex(i)
+        delegate?.viewControllerDidChangeDetent(i, position, detent)
+        break
       }
     }
+  }
+
+  private fun handleDragChange(sheetView: View) {
+    if (interactionState !is InteractionState.Dragging) return
 
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
