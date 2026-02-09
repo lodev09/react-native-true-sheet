@@ -25,6 +25,8 @@ using namespace facebook::react;
   __weak UIViewController *_parentScreenController;
   __weak UIWindow *_window;
   BOOL _dismissedByNavigation;
+  BOOL _pendingInteractiveDismiss;
+  BOOL _pendingInteractiveAppear;
 }
 
 - (instancetype)init {
@@ -60,19 +62,44 @@ using namespace facebook::react;
 
       if (auto family = event.shadowNodeFamily.lock()) {
         Tag screenTag = family->getTag();
+        if (![strongSelf->_screenTags containsObject:@(screenTag)]) {
+          return false;
+        }
+
+        BOOL interactive = [strongSelf isInteractiveTransition];
 
         if (event.type == "topWillDisappear") {
-          if ([strongSelf->_screenTags containsObject:@(screenTag)]) {
-            if ([strongSelf shouldDismissForScreenTag:screenTag]) {
-              strongSelf->_dismissedByNavigation = YES;
-              [strongSelf.delegate presenterScreenWillDisappear];
-            }
+          if (interactive) {
+            strongSelf->_pendingInteractiveDismiss = YES;
+          } else if ([strongSelf shouldDismissForScreenTag:screenTag]) {
+            strongSelf->_dismissedByNavigation = YES;
+            [strongSelf.delegate presenterScreenWillDisappear];
+          }
+        } else if (event.type == "topDisappear") {
+          if (strongSelf->_pendingInteractiveDismiss) {
+            strongSelf->_pendingInteractiveDismiss = NO;
+            strongSelf->_dismissedByNavigation = YES;
+            [strongSelf.delegate presenterScreenWillDisappear];
           }
         } else if (event.type == "topWillAppear") {
-          if ([strongSelf->_screenTags containsObject:@(screenTag)] && strongSelf->_dismissedByNavigation) {
+          if (strongSelf->_dismissedByNavigation) {
+            if (interactive) {
+              strongSelf->_pendingInteractiveAppear = YES;
+            } else {
+              strongSelf->_dismissedByNavigation = NO;
+              [strongSelf.delegate presenterScreenWillAppear];
+            }
+          }
+          strongSelf->_pendingInteractiveDismiss = NO;
+        } else if (event.type == "topAppear") {
+          if (strongSelf->_pendingInteractiveAppear) {
+            strongSelf->_pendingInteractiveAppear = NO;
             strongSelf->_dismissedByNavigation = NO;
             [strongSelf.delegate presenterScreenWillAppear];
           }
+        } else if (event.type == "topGestureCancel") {
+          strongSelf->_pendingInteractiveDismiss = NO;
+          strongSelf->_pendingInteractiveAppear = NO;
         }
       }
       return false;
@@ -119,6 +146,11 @@ using namespace facebook::react;
       }
     }
   }
+}
+
+- (BOOL)isInteractiveTransition {
+  UINavigationController *navController = _presenterScreenController.navigationController;
+  return navController.transitionCoordinator.isInteractive;
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {
