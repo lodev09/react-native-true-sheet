@@ -581,7 +581,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
 
-        if (detentInfo.index != currentDetentIndex) {
+        // Skip detent change if keyboard inset is still active — detent mapping is unreliable.
+        // keyboardWillHide will recalculate detents and settle at the correct index.
+        if (detentInfo.index != currentDetentIndex && keyboardInset == 0) {
           currentDetentIndex = detentInfo.index
           setupDimmedBackground()
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
@@ -1015,7 +1017,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-
           setupSheetDetents()
           if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
@@ -1062,6 +1063,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
 
   private fun handleDragBegin(sheetView: View) {
+    // Commit the temporary keyboard detent index before starting the drag
+    if (detentIndexBeforeKeyboard >= 0) {
+      detentIndexBeforeKeyboard = -1
+    }
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
