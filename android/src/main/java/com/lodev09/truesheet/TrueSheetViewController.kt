@@ -123,6 +123,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
     private const val SCREEN_FADE_DURATION = 150L
+    private const val DETENT_SNAP_TOLERANCE = 20 // px
   }
 
   // =============================================================================
@@ -1076,6 +1077,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
+
+    // When keyboard is active, check if the sheet is at a non-keyboard detent position.
+    // If so, dismiss keyboard and commit to that detent.
+    if (keyboardInset > 0) {
+      val maxAvailableHeight = realScreenHeight - topInset
+      for (i in detents.indices) {
+        val nonKeyboardHeight = minOf(detentCalculator.getDetentHeight(detents[i], includeKeyboard = false), maxAvailableHeight)
+        val nonKeyboardTop = realScreenHeight - nonKeyboardHeight
+        if (Math.abs(sheetView.top - nonKeyboardTop) < DETENT_SNAP_TOLERANCE) {
+          detentIndexBeforeKeyboard = -1
+          currentDetentIndex = i
+          dismissKeyboard()
+          setupDimmedBackground()
+
+          val position = getPositionDpForView(sheetView)
+          val detent = detentCalculator.getDetentValueForIndex(i)
+          delegate?.viewControllerDidChangeDetent(i, position, detent)
+          break
+        }
+      }
+    }
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)

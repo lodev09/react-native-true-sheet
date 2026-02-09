@@ -39,7 +39,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    * Calculate the height in pixels for a given detent value.
    * @param detent The detent value: -1.0 for content-fit, or 0.0-1.0 for screen fraction
    */
-  fun getDetentHeight(detent: Double): Int {
+  fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
       contentHeight + headerHeight + contentBottomInset
     } else {
@@ -49,7 +49,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       (detent * screenHeight).toInt() + contentBottomInset
     }
 
-    val height = baseHeight + keyboardInset
+    val height = if (includeKeyboard) baseHeight + keyboardInset else baseHeight
     val maxAllowedHeight = screenHeight + contentBottomInset
     return maxContentHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
