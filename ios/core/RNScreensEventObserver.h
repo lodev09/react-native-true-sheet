@@ -34,7 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)stopObserving;
 
 - (void)capturePresenterScreenFromView:(UIView *)view;
-- (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag;
 
 @end
 

@@ -671,7 +671,12 @@ using namespace facebook::react;
 - (void)presenterScreenWillAppear {
   if (_dismissedByNavigation && !_controller.isPresented && !_controller.isBeingPresented) {
     _dismissedByNavigation = NO;
-    _pendingNavigationRepresent = YES;
+
+    if (self.window) {
+      [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
+    } else {
+      _pendingNavigationRepresent = YES;
+    }
   }
 }
 
