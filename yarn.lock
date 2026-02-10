@@ -3460,7 +3460,7 @@ __metadata:
     "@babel/runtime": "npm:^7.25.0"
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:0.2.0-alpha.22"
+    "@lugg/maps": "npm:0.2.0-alpha.23"
     "@react-native-community/cli": "npm:20.0.0"
     "@react-native-community/cli-platform-android": "npm:20.0.0"
     "@react-native-community/cli-platform-ios": "npm:20.0.0"
@@ -3491,7 +3491,7 @@ __metadata:
     "@expo/vector-icons": "npm:^15.0.3"
     "@gorhom/bottom-sheet": "npm:^5.2.8"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:0.2.0-alpha.22"
+    "@lugg/maps": "npm:0.2.0-alpha.23"
     "@react-navigation/native": "npm:^7.1.26"
     "@types/react": "npm:~19.1.10"
     expo: "npm:~54.0.30"
@@ -3522,7 +3522,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@example/shared@workspace:example/shared"
   dependencies:
-    "@lugg/maps": "npm:0.2.0-alpha.22"
+    "@lugg/maps": "npm:0.2.0-alpha.23"
     "@types/react": "npm:19.1.1"
     react-native-gesture-handler: "npm:^2.29.1"
     react-native-reanimated: "npm:^4.2.0"
@@ -4855,9 +4855,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lugg/maps@npm:0.2.0-alpha.22":
-  version: 0.2.0-alpha.22
-  resolution: "@lugg/maps@npm:0.2.0-alpha.22"
+"@lugg/maps@npm:0.2.0-alpha.23":
+  version: 0.2.0-alpha.23
+  resolution: "@lugg/maps@npm:0.2.0-alpha.23"
   dependencies:
     "@expo/config-plugins": "npm:^9.0.0"
   peerDependencies:
@@ -4867,7 +4867,7 @@ __metadata:
   peerDependenciesMeta:
     "@vis.gl/react-google-maps":
       optional: true
-  checksum: 10c0/55ef6783660a49c65e9ea6bf99c5ae3a2c93a761ea8a1aa46c6f969549ffca205dd045cfa73fdbc3893a3f0bd0619696461b0a3759254dbe1d42f6dd43735c58
+  checksum: 10c0/f423770aecfebe682d1c5c937a36a84bd7a33b85ef903416b635ddc98c1d4e881189cdca4aae2b01cd43ce5f0d3a070a8831b3f2d0ec582f7a6981179a2158c0
   languageName: node
   linkType: hard
 

@@ -16,7 +16,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@lodev09/react-native-true-sheet": "workspace:*",
-    "@lugg/maps": "0.2.0-alpha.22",
+    "@lugg/maps": "0.2.0-alpha.23",
     "@react-navigation/native": "^7.1.26",
     "expo": "~54.0.30",
     "expo-constants": "~18.0.12",

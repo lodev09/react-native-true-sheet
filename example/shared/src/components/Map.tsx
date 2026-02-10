@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { MapView, Polyline, type MapViewProps, type Coordinate } from '@lugg/maps';
 
 import { BLUE } from '../utils';
@@ -180,7 +180,7 @@ export const Map = (props: Omit<MapViewProps, 'style'> & { style?: MapViewProps[
         coordinates={SHEET_COORDS}
         strokeWidth={5}
         strokeColors={['#0a4da0', '#4da6ff']}
-        animated={Platform.OS === 'ios'}
+        animated
         animatedOptions={{ easing: 'easeInOut', delay: 1200, duration: 1500 }}
       />
       {children}
