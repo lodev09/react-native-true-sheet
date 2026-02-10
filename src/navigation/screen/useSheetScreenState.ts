@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { TrueSheet } from '../../TrueSheet';
 import type {
@@ -59,29 +59,28 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
     ref.current?.resize(detentIndex);
   }, [detentIndex, resizeKey]);
 
-  const emitEvent = (
-    type: keyof TrueSheetNavigationEventMap,
-    data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
-  ) => {
-    emit({
-      type,
-      target: routeKey,
-      data,
-    } as Parameters<EmitFn>[0]);
-  };
+  const emitEvent = useCallback(
+    (
+      type: keyof TrueSheetNavigationEventMap,
+      data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
+    ) => {
+      emit({
+        type,
+        target: routeKey,
+        data,
+      } as Parameters<EmitFn>[0]);
+    },
+    [emit, routeKey]
+  );
 
-  const onDidDismiss = () => {
+  const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
     isDismissedRef.current = true;
-    // Remove route from state (works for both programmatic and user-initiated dismiss)
     navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
-  };
+  }, [emitEvent, navigation, routeKey]);
 
-  return {
-    ref,
-    initialDetentIndex: initialDetentIndexRef.current,
-    emitEvent,
-    eventHandlers: {
+  const eventHandlers = useMemo(
+    () => ({
       onWillPresent: (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
       onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
       onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
@@ -95,6 +94,14 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
       onDidFocus: (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
       onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
       onDidBlur: (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
-    },
+    }),
+    [emitEvent, onDidDismiss]
+  );
+
+  return {
+    ref,
+    initialDetentIndex: initialDetentIndexRef.current,
+    emitEvent,
+    eventHandlers,
   };
 };

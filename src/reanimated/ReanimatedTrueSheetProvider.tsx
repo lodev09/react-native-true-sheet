@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -48,11 +48,10 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
   const animatedIndex = useSharedValue(-1);
   const animatedDetent = useSharedValue(0);
 
-  const value: ReanimatedTrueSheetContextValue = {
-    animatedPosition,
-    animatedIndex,
-    animatedDetent,
-  };
+  const value = useMemo<ReanimatedTrueSheetContextValue>(
+    () => ({ animatedPosition, animatedIndex, animatedDetent }),
+    [animatedPosition, animatedIndex, animatedDetent]
+  );
 
   return (
     <ReanimatedTrueSheetContext.Provider value={value}>

@@ -64,16 +64,23 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   }
 
   fun stop() {
-    globalLayoutListener?.let { listener ->
-      activityRootView?.viewTreeObserver?.removeOnGlobalLayoutListener(listener)
-      globalLayoutListener = null
+    try {
+      globalLayoutListener?.let { listener ->
+        activityRootView?.viewTreeObserver?.let { observer ->
+          if (observer.isAlive) observer.removeOnGlobalLayoutListener(listener)
+        }
+        globalLayoutListener = null
+      }
+      focusChangeListener?.let { listener ->
+        activityRootView?.viewTreeObserver?.let { observer ->
+          if (observer.isAlive) observer.removeOnGlobalFocusChangeListener(listener)
+        }
+        focusChangeListener = null
+      }
+    } finally {
+      activityRootView = null
+      ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
     }
-    focusChangeListener?.let { listener ->
-      activityRootView?.viewTreeObserver?.removeOnGlobalFocusChangeListener(listener)
-      focusChangeListener = null
-    }
-    activityRootView = null
-    ViewCompat.setWindowInsetsAnimationCallback(targetView, null)
   }
 
   private fun updateHeight(from: Int, to: Int, fraction: Float) {
