@@ -528,6 +528,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     when (newState) {
       BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
 
+      BottomSheetBehavior.STATE_SETTLING -> handleSettling(sheetView)
+
       BottomSheetBehavior.STATE_EXPANDED,
       BottomSheetBehavior.STATE_COLLAPSED,
       BottomSheetBehavior.STATE_HALF_EXPANDED -> handleStateSettled(sheetView, newState)
@@ -581,7 +583,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
         delegate?.viewControllerDidDragEnd(detentInfo.index, detentInfo.position, detent)
 
-        if (detentInfo.index != currentDetentIndex) {
+        // Skip detent change if keyboard inset is still active — detent mapping is unreliable.
+        // keyboardWillHide will recalculate detents and settle at the correct index.
+        if (detentInfo.index != currentDetentIndex && keyboardInset == 0) {
           currentDetentIndex = detentInfo.index
           setupDimmedBackground()
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
@@ -711,6 +715,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       resizePromise?.invoke()
       resizePromise = null
       return
+    }
+
+    // Commit the new index so keyboardWillHide restores to it instead of the stale one
+    if (detentIndexBeforeKeyboard >= 0) {
+      detentIndexBeforeKeyboard = detentIndex
     }
 
     setupDimmedBackground()
@@ -1015,7 +1024,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-
           setupSheetDetents()
           if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
             setStateForDetentIndex(detentIndexBeforeKeyboard)
@@ -1062,14 +1070,50 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
 
   private fun handleDragBegin(sheetView: View) {
+    detentIndexBeforeKeyboard = -1
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragBegin(currentDetentIndex, position, detent)
     interactionState = InteractionState.Dragging(startTop = sheetView.top)
   }
 
+  private fun handleSettling(sheetView: View) {
+    if (interactionState !is InteractionState.Dragging) return
+    if (keyboardInset <= 0) return
+
+    // After drag release, check if the sheet was dragged past the midpoint between the
+    // keyboard-expanded position and a non-keyboard detent position. If so, dismiss
+    // keyboard and commit to that detent.
+    val maxAvailableHeight = realScreenHeight - topInset
+    val keyboardHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
+    val keyboardTop = realScreenHeight - keyboardHeight
+
+    for (i in detents.indices) {
+      val nonKeyboardHeight = minOf(detentCalculator.getDetentHeight(detents[i], includeKeyboard = false), maxAvailableHeight)
+      val nonKeyboardTop = realScreenHeight - nonKeyboardHeight
+      val midpoint = keyboardTop + (nonKeyboardTop - keyboardTop) / 2
+
+      if (sheetView.top >= midpoint) {
+        // Target position matches the keyboard-expanded position — keep keyboard open
+        if (nonKeyboardTop == keyboardTop) break
+
+        detentIndexBeforeKeyboard = -1
+        currentDetentIndex = i
+        dismissKeyboard()
+        setupDimmedBackground()
+
+        val position = getPositionDpForView(sheetView)
+        val detent = detentCalculator.getDetentValueForIndex(i)
+        delegate?.viewControllerDidChangeDetent(i, position, detent)
+        break
+      }
+    }
+  }
+
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)

@@ -25,20 +25,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
-  const inputRefs = [
-    input1Ref,
-    input2Ref,
-    input3Ref,
-    input4Ref,
-    input5Ref,
-    input6Ref,
-    input7Ref,
-    input8Ref,
-    input9Ref,
-    input10Ref,
-    textAreaRef,
-  ];
-
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
   };
@@ -48,11 +34,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     console.log('Sheet prompt dismiss asynced');
   };
 
-  const handleSubmitPress = () => {
-    const currentIndex = inputRefs.findIndex((r) => r.current?.isFocused());
-    if (currentIndex >= 0 && currentIndex < inputRefs.length - 1) {
-      inputRefs[currentIndex + 1]?.current?.focus();
-    }
+  const handleSubmitPress = async () => {
+    await sheetRef.current?.dismiss();
   };
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
@@ -85,7 +68,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         sheetRef.current?.dismiss();
       }}
       header={<Header />}
-      footer={<Footer onPress={handleSubmitPress} />}
+      footer={<Footer />}
       {...props}
     >
       <ScrollView
@@ -94,16 +77,79 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         contentContainerStyle={styles.content}
         scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
       >
-        <Input ref={input1Ref} placeholder="First name" />
-        <Input ref={input2Ref} placeholder="Last name" />
-        <Input ref={input3Ref} placeholder="Email" keyboardType="email-address" />
-        <Input ref={input4Ref} placeholder="Phone" keyboardType="phone-pad" />
-        <Input ref={input5Ref} placeholder="Address" />
-        <Input ref={input6Ref} placeholder="City" />
-        <Input ref={input7Ref} placeholder="State" />
-        <Input ref={input8Ref} placeholder="Zip code" keyboardType="number-pad" />
-        <Input ref={input9Ref} placeholder="Country" />
-        <Input ref={input10Ref} placeholder="Contact" />
+        <Input
+          ref={input1Ref}
+          placeholder="First name"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input2Ref.current?.focus()}
+        />
+        <Input
+          ref={input2Ref}
+          placeholder="Last name"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input3Ref.current?.focus()}
+        />
+        <Input
+          ref={input3Ref}
+          placeholder="Email"
+          keyboardType="email-address"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input4Ref.current?.focus()}
+        />
+        <Input
+          ref={input4Ref}
+          placeholder="Phone"
+          keyboardType="phone-pad"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input5Ref.current?.focus()}
+        />
+        <Input
+          ref={input5Ref}
+          placeholder="Address"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input6Ref.current?.focus()}
+        />
+        <Input
+          ref={input6Ref}
+          placeholder="City"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input7Ref.current?.focus()}
+        />
+        <Input
+          ref={input7Ref}
+          placeholder="State"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input8Ref.current?.focus()}
+        />
+        <Input
+          ref={input8Ref}
+          placeholder="Zip code"
+          keyboardType="number-pad"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input9Ref.current?.focus()}
+        />
+        <Input
+          ref={input9Ref}
+          placeholder="Country"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => input10Ref.current?.focus()}
+        />
+        <Input
+          ref={input10Ref}
+          placeholder="Contact"
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => textAreaRef.current?.focus()}
+        />
         <Input ref={textAreaRef} placeholder="Message..." multiline />
         <Spacer />
         <Button text="Submit" onPress={handleSubmitPress} />
