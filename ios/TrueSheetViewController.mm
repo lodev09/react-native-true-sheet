@@ -420,17 +420,20 @@ using namespace facebook::react;
   [self.transitionCoordinator
     animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
       __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf) return;
+      if (!strongSelf)
+        return;
 
       [[context containerView] addSubview:strongSelf->_transitionFakeView];
       strongSelf->_transitionFakeView.frame = strongSelf.isBeingDismissed ? dismissedFrame : presentedFrame;
 
-      strongSelf->_transitioningTimer = [CADisplayLink displayLinkWithTarget:strongSelf selector:@selector(handleTransitionTracker)];
+      strongSelf->_transitioningTimer = [CADisplayLink displayLinkWithTarget:strongSelf
+                                                                    selector:@selector(handleTransitionTracker)];
       [strongSelf->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     }
     completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
       __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf) return;
+      if (!strongSelf)
+        return;
 
       [strongSelf->_transitioningTimer setPaused:YES];
       [strongSelf->_transitioningTimer invalidate];

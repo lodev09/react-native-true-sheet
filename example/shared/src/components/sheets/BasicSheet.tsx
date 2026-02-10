@@ -59,6 +59,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       detents={['auto', 0.8, 1]}
       name="basic"
       ref={sheetRef}
+      grabberOptions={{
+        width: 60,
+      }}
       style={styles.content}
       onDragChange={(e) =>
         console.log(
