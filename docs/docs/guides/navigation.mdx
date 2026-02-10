@@ -133,6 +133,41 @@ Enable worklet-based position events for smooth UI thread animations:
 When `reanimated: true` is set, `react-native-reanimated` must be installed and `positionChangeHandler` must be a worklet function. The integration is lazy-loaded, so screens without `reanimated: true` don't require reanimated.
 :::
 
+### Dynamic Header & Footer
+
+Use [`navigation.setOptions()`](https://reactnavigation.org/docs/navigation-object/#setoptions) to set or update `header` and `footer` from within a sheet screen. This is useful when you need access to navigation state or sheet events.
+
+```tsx
+function DetailsSheet() {
+  const navigation = useTrueSheetNavigation();
+  const [detentIndex, setDetentIndex] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('sheetDetentChange', (e) => {
+      setDetentIndex(e.data.index);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      footer: (
+        <View style={{ padding: 16 }}>
+          {detentIndex > 0 && <Button title="Collapse" onPress={() => navigation.resize(0)} />}
+          <Button title="Close" onPress={() => navigation.goBack()} />
+        </View>
+      ),
+    });
+  }, [navigation, detentIndex]);
+
+  return <View>{/* ... */}</View>;
+}
+```
+
+:::tip
+All [TrueSheet props](/reference/configuration) like `header`, `footer`, `grabber`, `dismissible`, etc. can be dynamically updated via `setOptions`.
+:::
+
 ### Screen Listeners
 
 Use `screenListeners` on the navigator or `listeners` on individual screens:
