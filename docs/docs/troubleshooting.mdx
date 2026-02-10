@@ -90,6 +90,8 @@ function HomeScreen() {
 
 The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
 
+Try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
+
 ## Xcode and EAS Build Issues
 
 ### Xcode Version
