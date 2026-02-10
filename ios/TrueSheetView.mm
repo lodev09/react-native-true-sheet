@@ -281,7 +281,7 @@ using namespace facebook::react;
   if (!_state)
     return;
 
-  if (CGSizeEqualToSize(size, _lastStateSize))
+  if (fabs(size.width - _lastStateSize.width) < 0.5 && fabs(size.height - _lastStateSize.height) < 0.5)
     return;
 
   _lastStateSize = size;

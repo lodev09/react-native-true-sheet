@@ -126,8 +126,11 @@ using namespace facebook::react;
   _parentScreenController = nil;
   _window = view.window;
 
+  Class screenViewClass = NSClassFromString(@"RNSScreenView");
+  if (!screenViewClass) return;
+
   for (UIView *current = view.superview; current; current = current.superview) {
-    if ([NSStringFromClass([current class]) isEqualToString:@"RNSScreenView"]) {
+    if ([current isKindOfClass:screenViewClass]) {
       [_screenTags addObject:@(current.tag)];
 
       UIViewController *screenVC = nil;

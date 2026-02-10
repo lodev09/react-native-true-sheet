@@ -518,12 +518,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const styles = StyleSheet.create({
   sheetView: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: -9999,
     pointerEvents: 'box-none',
   },
   scrollableContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   scrollableContent: {
     flex: 1,
