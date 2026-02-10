@@ -96,10 +96,11 @@ repositories {
 }
 
 def kotlin_version = getExtOrDefault("kotlinVersion")
+def material_version = getExtOrDefault("materialVersion") ?: "1.12.0"
 
 dependencies {
   implementation "com.facebook.react:react-android"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.google.android.material:material:1.12.0"
+  implementation "com.google.android.material:material:$material_version"
 }
 

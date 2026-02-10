@@ -27,6 +27,7 @@
 
 ### 💡 Others
 
+- Performance improvements across JS, iOS, and Android. ([#521](https://github.com/lodev09/react-native-true-sheet/pull/521) by [@lodev09](https://github.com/lodev09))
 - Use codegen enums for `backgroundBlur`, `anchor`, and `insetAdjustment` props. ([#499](https://github.com/lodev09/react-native-true-sheet/pull/499) by [@lodev09](https://github.com/lodev09))
 - Replace `react-native-maps` with `@lugg/maps` in examples. ([#503](https://github.com/lodev09/react-native-true-sheet/pull/503) by [@lodev09](https://github.com/lodev09))
 

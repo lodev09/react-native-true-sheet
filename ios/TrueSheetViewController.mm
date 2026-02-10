@@ -82,6 +82,8 @@ using namespace facebook::react;
 }
 
 - (void)dealloc {
+  [_transitioningTimer invalidate];
+  _transitioningTimer = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -413,22 +415,32 @@ using namespace facebook::react;
   _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
   [self storeResolvedPositionForIndex:self.currentDetentIndex];
 
-  auto animation = ^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-    [[context containerView] addSubview:self->_transitionFakeView];
-    self->_transitionFakeView.frame = self.isBeingDismissed ? dismissedFrame : presentedFrame;
-
-    self->_transitioningTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleTransitionTracker)];
-    [self->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-  };
+  __weak __typeof(self) weakSelf = self;
 
   [self.transitionCoordinator
-    animateAlongsideTransition:animation
-                    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-                      [self->_transitioningTimer setPaused:YES];
-                      [self->_transitioningTimer invalidate];
-                      [self->_transitionFakeView removeFromSuperview];
-                      self->_isTransitioning = NO;
-                    }];
+    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf)
+        return;
+
+      [[context containerView] addSubview:strongSelf->_transitionFakeView];
+      strongSelf->_transitionFakeView.frame = strongSelf.isBeingDismissed ? dismissedFrame : presentedFrame;
+
+      strongSelf->_transitioningTimer = [CADisplayLink displayLinkWithTarget:strongSelf
+                                                                    selector:@selector(handleTransitionTracker)];
+      [strongSelf->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    }
+    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf)
+        return;
+
+      [strongSelf->_transitioningTimer setPaused:YES];
+      [strongSelf->_transitioningTimer invalidate];
+      strongSelf->_transitioningTimer = nil;
+      [strongSelf->_transitionFakeView removeFromSuperview];
+      strongSelf->_isTransitioning = NO;
+    }];
 }
 
 - (void)handleTransitionTracker {

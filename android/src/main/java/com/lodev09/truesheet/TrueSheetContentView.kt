@@ -10,6 +10,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
+import com.lodev09.truesheet.utils.isDescendantOf
 
 /**
  * Delegate interface for content view size changes
@@ -30,6 +31,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastHeight = 0
 
   private var pinnedScrollView: ScrollView? = null
+  private var cachedScrollView: ScrollView? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
 
@@ -97,11 +99,19 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       originalScrollViewPaddingBottom
     )
     pinnedScrollView = null
+    cachedScrollView = null
     originalScrollViewPaddingBottom = 0
     bottomInset = 0
   }
 
-  fun findScrollView(): ScrollView? = findScrollView(this)
+  fun findScrollView(): ScrollView? {
+    // Return cached if still valid (attached and descendant of this view)
+    cachedScrollView?.let {
+      if (it.isAttachedToWindow && it.isDescendantOf(this)) return it
+      cachedScrollView = null
+    }
+    return findScrollView(this as View).also { cachedScrollView = it }
+  }
 
   private fun findScrollView(view: View): ScrollView? {
     if (view is ScrollView) {

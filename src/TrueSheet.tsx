@@ -58,6 +58,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private readonly nativeRef: RefObject<NativeRef | null>;
 
+  private cachedGrabberOptions: TrueSheetProps['grabberOptions'] | undefined;
+  private resolvedGrabberOptions: Record<string, unknown> | undefined;
+
   /**
    * Map of sheet names against their instances.
    */
@@ -436,21 +439,27 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       return Math.min(1, detent);
     });
 
+    // Cache grabberOptions to avoid creating a new object every render
+    if (grabberOptions !== this.cachedGrabberOptions) {
+      this.cachedGrabberOptions = grabberOptions;
+      this.resolvedGrabberOptions = {
+        ...grabberOptions,
+        color: processColor(grabberOptions?.color),
+      };
+    }
+
     return (
       <TrueSheetViewNativeComponent
         {...rest}
         ref={this.nativeRef}
-        style={[StyleSheet.absoluteFill, styles.sheetView]}
+        style={styles.sheetView}
         detents={resolvedDetents}
         backgroundBlur={backgroundBlur}
         blurOptions={blurOptions}
         backgroundColor={backgroundColor}
         cornerRadius={cornerRadius}
         grabber={grabber}
-        grabberOptions={{
-          ...grabberOptions,
-          color: processColor(grabberOptions?.color),
-        }}
+        grabberOptions={this.resolvedGrabberOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={initialDetentIndex}
@@ -482,14 +491,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onBackPress={this.onBackPress}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent style={scrollable && StyleSheet.absoluteFill}>
+          <TrueSheetContainerViewNativeComponent
+            style={scrollable ? styles.scrollableContainer : undefined}
+          >
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
             <TrueSheetContentViewNativeComponent
-              style={[style, scrollable && styles.scrollableContent]}
+              style={scrollable ? [style, styles.scrollableContent] : style}
             >
               {children}
             </TrueSheetContentViewNativeComponent>
@@ -507,8 +518,12 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
 const styles = StyleSheet.create({
   sheetView: {
+    ...StyleSheet.absoluteFill,
     zIndex: -9999,
     pointerEvents: 'box-none',
+  },
+  scrollableContainer: {
+    ...StyleSheet.absoluteFill,
   },
   scrollableContent: {
     flex: 1,
