@@ -752,6 +752,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun dismiss(animated: Boolean = true) {
     if (isBeingDismissed) return
 
+    if (!isPresented) {
+      dismissPromise?.invoke()
+      dismissPromise = null
+      return
+    }
+
     isBeingDismissed = true
     dismissKeyboard()
     emitWillDismissEvents()
