@@ -383,6 +383,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
+    didDismissKeyboard = false
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
   }
@@ -769,7 +770,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  private var didDismissKeyboard = false
+
   private fun dismissKeyboard() {
+    didDismissKeyboard = true
     KeyboardUtils.dismiss(reactContext)
   }
 
@@ -821,7 +825,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Sheet Configuration
   // =============================================================================
 
-  fun setupSheetDetents() {
+  fun setupSheetDetents(applyState: Boolean = true) {
     val behavior = this.behavior ?: run {
       RNLog.e(reactContext, "TrueSheet: behavior is null in setupSheetDetents")
       return
@@ -866,7 +870,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     updateStateDimensions(expandedOffset)
 
-    if (isPresented) {
+    if (isPresented && applyState) {
       setStateForDetentIndex(currentDetentIndex)
     }
 
@@ -1036,7 +1040,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-          setupSheetDetents()
+          // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
+          // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
+          if (didDismissKeyboard || detentIndexBeforeKeyboard >= 0) {
+            setupSheetDetents()
+          }
           if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
             currentDetentIndex = detentIndexBeforeKeyboard
             setStateForDetentIndex(currentDetentIndex)
@@ -1050,6 +1058,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun keyboardDidHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
           detentIndexBeforeKeyboard = -1
+          didDismissKeyboard = false
+          setupSheetDetents(applyState = false)
           positionFooter()
           updateDimAmount(
             sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
