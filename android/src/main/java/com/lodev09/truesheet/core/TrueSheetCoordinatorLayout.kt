@@ -64,6 +64,30 @@ class TrueSheetCoordinatorLayout(context: Context) :
     get() = PointerEvents.BOX_NONE
 
   /**
+   * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior.
+   *
+   * `BottomSheetBehavior.onLayoutChild` calls `findScrollingChild()` which traverses the
+   * entire sheet subtree. When a child sheet with a ScrollView is dismissed, the ScrollView
+   * returns to this sheet's view hierarchy. `onLayoutChild` may then capture a ref to that
+   * ScrollView even though it doesn't belong to this sheet, blocking drag interactions.
+   */
+  private fun clearStaleNestedScrollingChildRef() {
+    val sheet = getChildAt(0) ?: return
+    val params = sheet.layoutParams as? LayoutParams ?: return
+    val behavior = params.behavior ?: return
+    try {
+      val field = behavior.javaClass.getDeclaredField("nestedScrollingChildRef")
+      field.isAccessible = true
+      @Suppress("UNCHECKED_CAST")
+      val ref = field.get(behavior) as? java.lang.ref.WeakReference<android.view.View> ?: return
+      val view = ref.get() ?: return
+      if (!view.isAttachedToWindow) {
+        ref.clear()
+      }
+    } catch (_: Exception) {}
+  }
+
+  /**
    * Intercepts touch events for ScrollViews that can't scroll (content < viewport),
    * allowing the sheet to be dragged in these cases.
    *
@@ -72,6 +96,9 @@ class TrueSheetCoordinatorLayout(context: Context) :
    */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
     if (!scrollable) {
+      if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+        clearStaleNestedScrollingChildRef()
+      }
       return super.onInterceptTouchEvent(ev)
     }
 
