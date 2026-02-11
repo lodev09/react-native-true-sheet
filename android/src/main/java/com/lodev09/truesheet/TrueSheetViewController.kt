@@ -1058,9 +1058,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
-          // Skip focus check if already handling keyboard (focus may be lost during hide)
-          val isHandlingKeyboard = detentIndexBeforeKeyboard >= 0
-          if (!shouldHandleKeyboard(checkFocus = !isHandlingKeyboard)) return
+          // Skip focus check during active keyboard transitions (focus may be lost during hide)
+          val skipFocusCheck = detentIndexBeforeKeyboard >= 0 || isKeyboardTransitioning
+          if (!shouldHandleKeyboard(checkFocus = !skipFocusCheck)) return
           positionFooter()
         }
 
