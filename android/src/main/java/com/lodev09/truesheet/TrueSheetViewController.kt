@@ -598,6 +598,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (detentInfo.index != currentDetentIndex) {
           currentDetentIndex = detentInfo.index
           if (!isKeyboardTransitioning) {
+            updateDimAmount(animated = true)
             val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
