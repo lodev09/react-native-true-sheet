@@ -8,8 +8,8 @@ import android.view.ViewConfiguration
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PointerEvents
-import com.lodev09.truesheet.utils.isDescendantOf
 import com.facebook.react.uimanager.ReactPointerEventsView
+import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetCoordinatorLayoutDelegate {
   val isScrollable: Boolean

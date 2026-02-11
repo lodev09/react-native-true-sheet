@@ -3,6 +3,7 @@ package com.lodev09.truesheet.utils
 import android.view.View
 
 fun View.isDescendantOf(ancestor: View): Boolean {
+  if (!isAttachedToWindow) return false
   var current: View? = this
   while (current != null) {
     if (current === ancestor) return true
