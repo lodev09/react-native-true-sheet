@@ -369,6 +369,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
+    if (viewController.isBeingDismissed || !viewController.isPresented) {
+      RNLog.w(viewController.reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
+      promiseCallback()
+      return
+    }
+
     // Dismiss all sheets above first
     dismissStack(animated) {}
 
@@ -379,8 +385,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismissStack(animated: Boolean = true, promiseCallback: () -> Unit) {
+    if (viewController.isBeingDismissed || !viewController.isPresented) {
+      RNLog.w(viewController.reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
+      promiseCallback()
+      return
+    }
+
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
-    if (sheetsAbove.isNotEmpty()) {
       // Create snapshot only for topmost sheet (first in reversed list)
       sheetsAbove.firstOrNull()?.viewController?.createSheetSnapshot()
 

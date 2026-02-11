@@ -21,6 +21,7 @@
 - **Android**: Fixed stale nested scrolling ref blocking drag after dismissing a child sheet with a ScrollView. ([#523](https://github.com/lodev09/react-native-true-sheet/pull/523) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed thread blocking on gesture dismissal when sheet is presented in a stack. ([#511](https://github.com/lodev09/react-native-true-sheet/pull/511) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard not dismissing when sheet is dragged to a non-keyboard detent position. ([#513](https://github.com/lodev09/react-native-true-sheet/pull/513) by [@lodev09](https://github.com/lodev09))
+- **Android**: Added guard and warning to prevent dismiss events for a sheet that is not presented. ([#516](https://github.com/lodev09/react-native-true-sheet/pull/516) by [@codydorsettlynn](https://github.com/codydorsettlynn))
 
 ### 📖 Documentation
 
