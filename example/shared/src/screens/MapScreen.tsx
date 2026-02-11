@@ -115,7 +115,7 @@ const MapScreenInner = ({
         initialDetentIndex={0}
         anchor={anchorLeft ? 'left' : 'center'}
         maxContentWidth={maxContentWidth}
-        dimmed={false}
+        dimmedDetentIndex={1}
         dismissible={false}
         style={styles.content}
         onLayout={(e: LayoutChangeEvent) => {

@@ -591,6 +591,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
         }
 
+        updateDimAmount(animated = true)
         interactionState = InteractionState.Idle
       }
 
@@ -598,10 +599,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (detentInfo.index != currentDetentIndex) {
           currentDetentIndex = detentInfo.index
           if (!isKeyboardTransitioning) {
-            updateDimAmount(animated = true)
             val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
+        }
+
+        if (!isKeyboardTransitioning) {
+          updateDimAmount(animated = true)
         }
       }
     }
@@ -940,8 +944,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!dimmed) return
     if (contentHeight == 0) return
 
-    val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
-    val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
+    // While keyboard is active or transitioning, use the target detent position for dim
+    val top = if (keyboardInset > 0 || isKeyboardTransitioning) {
+      detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
+    } else {
+      val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
+      (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
+    }
 
     if (animated) {
       val targetAlpha = dimView?.calculateAlpha(
@@ -1020,21 +1029,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (!shouldHandleKeyboard()) return
           detentIndexBeforeKeyboard = currentDetentIndex
           setupSheetDetents()
-          setStateForDetentIndex(detents.size - 1)
+          currentDetentIndex = detents.size - 1
+          setStateForDetentIndex(currentDetentIndex)
+          updateDimAmount(animated = true)
         }
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
           setupSheetDetents()
           if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
-            setStateForDetentIndex(detentIndexBeforeKeyboard)
+            currentDetentIndex = detentIndexBeforeKeyboard
+            setStateForDetentIndex(currentDetentIndex)
           }
+          updateDimAmount(
+            sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
+            animated = true
+          )
         }
 
         override fun keyboardDidHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
           detentIndexBeforeKeyboard = -1
           positionFooter()
+          updateDimAmount(
+            sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
+            animated = true
+          )
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
