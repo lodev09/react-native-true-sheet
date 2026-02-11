@@ -1069,6 +1069,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun getPositionDpForView(sheetView: View): Float =
     detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
 
+  fun commitKeyboardDetent() {
+    detentIndexBeforeKeyboard = -1
+  }
+
   private fun handleDragBegin(sheetView: View) {
     detentIndexBeforeKeyboard = -1
 

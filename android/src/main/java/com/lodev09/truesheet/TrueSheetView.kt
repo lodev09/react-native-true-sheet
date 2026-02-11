@@ -556,6 +556,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     updateSheetIfNeeded()
   }
 
+  override fun containerViewContentDidScroll() {
+    viewController.commitKeyboardDetent()
+  }
+
   override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
     updateSheetIfNeeded()
   }
