@@ -8,12 +8,15 @@ import android.view.ViewConfiguration
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.PointerEvents
+import com.lodev09.truesheet.utils.isDescendantOf
 import com.facebook.react.uimanager.ReactPointerEventsView
 
 interface TrueSheetCoordinatorLayoutDelegate {
+  val isScrollable: Boolean
   fun coordinatorLayoutDidLayout(changed: Boolean)
   fun coordinatorLayoutDidChangeConfiguration()
   fun findScrollView(): ScrollView?
+  fun findSheetView(): TrueSheetBottomSheetView?
 }
 
 /**
@@ -27,7 +30,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
   ReactPointerEventsView {
 
   var delegate: TrueSheetCoordinatorLayoutDelegate? = null
-  var scrollable: Boolean = false
 
   private val touchSlop: Int = ViewConfiguration.get(context).scaledTouchSlop
   private var dragging = false
@@ -72,16 +74,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
    * ScrollView even though it doesn't belong to this sheet, blocking drag interactions.
    */
   private fun clearStaleNestedScrollingChildRef() {
-    val sheet = getChildAt(0) ?: return
-    val params = sheet.layoutParams as? LayoutParams ?: return
-    val behavior = params.behavior ?: return
+    val sheet = delegate?.findSheetView() ?: return
+    val behavior = sheet.behavior ?: return
     try {
       val field = behavior.javaClass.getDeclaredField("nestedScrollingChildRef")
       field.isAccessible = true
       @Suppress("UNCHECKED_CAST")
       val ref = field.get(behavior) as? java.lang.ref.WeakReference<android.view.View> ?: return
       val view = ref.get() ?: return
-      if (!view.isAttachedToWindow) {
+      if (!view.isDescendantOf(sheet)) {
         ref.clear()
       }
     } catch (_: Exception) {}
@@ -95,7 +96,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
    * See: https://github.com/facebook/react-native/pull/44099
    */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-    if (!scrollable) {
+    if (delegate?.isScrollable != true) {
       if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
         clearStaleNestedScrollingChildRef()
       }

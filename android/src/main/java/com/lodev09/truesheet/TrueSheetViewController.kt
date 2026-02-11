@@ -173,6 +173,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
+  private var isKeyboardDismissProgrammatic = false
   private var focusedViewBeforeBlur: View? = null
 
   // Promises
@@ -212,10 +213,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
   var scrollable: Boolean = false
-    set(value) {
-      field = value
-      coordinatorLayout?.scrollable = value
-    }
 
   var scrollableOptions: ReadableMap? = null
 
@@ -344,7 +341,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Create coordinator layout
     coordinatorLayout = TrueSheetCoordinatorLayout(reactContext).apply {
       delegate = this@TrueSheetViewController
-      scrollable = this@TrueSheetViewController.scrollable
     }
 
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
@@ -383,6 +379,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
+    isKeyboardDismissProgrammatic = false
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
   }
@@ -457,7 +454,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
 
+  override val isScrollable: Boolean get() = scrollable
   override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
+  override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
@@ -604,6 +603,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
       }
     }
+
+    if (!isKeyboardTransitioning) {
+      updateDimAmount(animated = true)
+    }
   }
 
   // =============================================================================
@@ -658,22 +661,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun present(detentIndex: Int, animated: Boolean = true) {
-    val coordinator = this.coordinatorLayout ?: run {
-      RNLog.w(reactContext, "TrueSheet: No coordinator layout available. Ensure the sheet is mounted before presenting.")
-      return
-    }
-
-    val sheet = this.sheetView ?: run {
-      RNLog.w(reactContext, "TrueSheet: No sheet view available.")
-      return
-    }
-
-    if (isPresented) {
-      RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
-      presentPromise?.invoke()
-      presentPromise = null
-      return
-    }
+    val coordinator = this.coordinatorLayout ?: return
+    val sheet = this.sheetView ?: return
+    if (isPresented) return
 
     shouldAnimatePresent = animated
     currentDetentIndex = detentIndex
@@ -710,12 +700,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun resize(detentIndex: Int) {
-    if (!isPresented) {
-      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
-      resizePromise?.invoke()
-      resizePromise = null
-      return
-    }
+    if (!isPresented) return
 
     // Commit the new index so keyboardWillHide restores to it instead of the stale one
     if (detentIndexBeforeKeyboard >= 0) {
@@ -765,6 +750,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun dismissKeyboard() {
+    isKeyboardDismissProgrammatic = true
     KeyboardUtils.dismiss(reactContext)
   }
 
@@ -816,7 +802,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Sheet Configuration
   // =============================================================================
 
-  fun setupSheetDetents() {
+  fun setupSheetDetents(applyState: Boolean = true) {
     val behavior = this.behavior ?: run {
       RNLog.e(reactContext, "TrueSheet: behavior is null in setupSheetDetents")
       return
@@ -861,7 +847,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     updateStateDimensions(expandedOffset)
 
-    if (isPresented) {
+    if (isPresented && applyState) {
       setStateForDetentIndex(currentDetentIndex)
     }
 
@@ -939,8 +925,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!dimmed) return
     if (contentHeight == 0) return
 
-    val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
-    val top = (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
+    // While keyboard is active or transitioning, use the target detent position for dim
+    val top = if (keyboardInset > 0 || isKeyboardTransitioning) {
+      detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
+    } else {
+      val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
+      (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
+    }
 
     if (animated) {
       val targetAlpha = dimView?.calculateAlpha(
@@ -1019,27 +1010,47 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           if (!shouldHandleKeyboard()) return
           detentIndexBeforeKeyboard = currentDetentIndex
           setupSheetDetents()
-          setStateForDetentIndex(detents.size - 1)
+          currentDetentIndex = detents.size - 1
+          setStateForDetentIndex(currentDetentIndex)
+          updateDimAmount(animated = true)
         }
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-          setupSheetDetents()
-          if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
-            setStateForDetentIndex(detentIndexBeforeKeyboard)
+          val restoring = !isBeingDismissed && detentIndexBeforeKeyboard >= 0
+
+          // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
+          // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
+          if (restoring || isKeyboardDismissProgrammatic) {
+            setupSheetDetents()
+            if (restoring) {
+              currentDetentIndex = detentIndexBeforeKeyboard
+              setStateForDetentIndex(currentDetentIndex)
+            }
           }
+
+          updateDimAmount(
+            sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
+            animated = true
+          )
         }
 
         override fun keyboardDidHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
           detentIndexBeforeKeyboard = -1
+          isKeyboardDismissProgrammatic = false
+          setupSheetDetents(applyState = false)
           positionFooter()
+          updateDimAmount(
+            sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
+            animated = true
+          )
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
-          // Skip focus check if already handling keyboard (focus may be lost during hide)
-          val isHandlingKeyboard = detentIndexBeforeKeyboard >= 0
-          if (!shouldHandleKeyboard(checkFocus = !isHandlingKeyboard)) return
+          // Skip focus check during active keyboard transitions (focus may be lost during hide)
+          val skipFocusCheck = detentIndexBeforeKeyboard >= 0 || isKeyboardTransitioning
+          if (!shouldHandleKeyboard(checkFocus = !skipFocusCheck)) return
           positionFooter()
         }
 
@@ -1068,6 +1079,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun getPositionDpForView(sheetView: View): Float =
     detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetView.top))
+
+  fun commitKeyboardDetent() {
+    detentIndexBeforeKeyboard = -1
+  }
 
   private fun handleDragBegin(sheetView: View) {
     detentIndexBeforeKeyboard = -1

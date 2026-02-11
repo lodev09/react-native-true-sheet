@@ -63,6 +63,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
         contentContainerStyle={styles.content}
         indicatorStyle="black"
         scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
+        keyboardDismissMode="on-drag"
       >
         {times(20, (i) => (
           <HeavyItem key={i} index={i} />

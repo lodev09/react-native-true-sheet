@@ -10,6 +10,7 @@ import com.facebook.react.views.view.ReactViewGroup
 interface TrueSheetContainerViewDelegate {
   val eventDispatcher: EventDispatcher?
   fun containerViewContentDidChangeSize(width: Int, height: Int)
+  fun containerViewContentDidScroll()
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
 }
@@ -117,6 +118,10 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override fun contentViewDidChangeSize(width: Int, height: Int) {
     contentHeight = height
     delegate?.containerViewContentDidChangeSize(width, height)
+  }
+
+  override fun contentViewDidScroll() {
+    delegate?.containerViewContentDidScroll()
   }
 
   override fun headerViewDidChangeSize(width: Int, height: Int) {

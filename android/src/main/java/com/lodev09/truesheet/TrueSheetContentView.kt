@@ -17,6 +17,7 @@ import com.lodev09.truesheet.utils.isDescendantOf
  */
 interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
+  fun contentViewDidScroll()
 }
 
 /**
@@ -68,7 +69,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val scrollView = findScrollView(this)
 
     if (scrollView != pinnedScrollView) {
-      // Restore previous scroll view's padding
+      // Clean up previous scroll view
+      pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
       pinnedScrollView?.setPadding(
         pinnedScrollView!!.paddingLeft,
         pinnedScrollView!!.paddingTop,
@@ -78,6 +80,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
       pinnedScrollView = scrollView
       originalScrollViewPaddingBottom = scrollView?.paddingBottom ?: 0
+
+      scrollView?.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+        if (scrollY != oldScrollY) {
+          delegate?.contentViewDidScroll()
+        }
+      }
     }
 
     scrollView?.let {
@@ -92,6 +100,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   fun clearScrollable() {
+    pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
     pinnedScrollView?.setPadding(
       pinnedScrollView!!.paddingLeft,
       pinnedScrollView!!.paddingTop,
