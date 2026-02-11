@@ -173,6 +173,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
+  private var isKeyboardDismissProgrammatic = false
   private var focusedViewBeforeBlur: View? = null
 
   // Promises
@@ -383,7 +384,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
-    didDismissKeyboard = false
+    isKeyboardDismissProgrammatic = false
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
   }
@@ -592,7 +593,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
         }
 
-        updateDimAmount(animated = true)
         interactionState = InteractionState.Idle
       }
 
@@ -604,11 +604,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
         }
-
-        if (!isKeyboardTransitioning) {
-          updateDimAmount(animated = true)
-        }
       }
+    }
+
+    if (!isKeyboardTransitioning) {
+      updateDimAmount(animated = true)
     }
   }
 
@@ -770,10 +770,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  private var didDismissKeyboard = false
-
   private fun dismissKeyboard() {
-    didDismissKeyboard = true
+    isKeyboardDismissProgrammatic = true
     KeyboardUtils.dismiss(reactContext)
   }
 
@@ -1040,15 +1038,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
+          val restoring = !isBeingDismissed && detentIndexBeforeKeyboard >= 0
+
           // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
           // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
-          if (didDismissKeyboard || detentIndexBeforeKeyboard >= 0) {
+          if (restoring || isKeyboardDismissProgrammatic) {
             setupSheetDetents()
+            if (restoring) {
+              currentDetentIndex = detentIndexBeforeKeyboard
+              setStateForDetentIndex(currentDetentIndex)
+            }
           }
-          if (!isBeingDismissed && detentIndexBeforeKeyboard >= 0) {
-            currentDetentIndex = detentIndexBeforeKeyboard
-            setStateForDetentIndex(currentDetentIndex)
-          }
+
           updateDimAmount(
             sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
             animated = true
@@ -1058,7 +1059,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         override fun keyboardDidHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
           detentIndexBeforeKeyboard = -1
-          didDismissKeyboard = false
+          isKeyboardDismissProgrammatic = false
           setupSheetDetents(applyState = false)
           positionFooter()
           updateDimAmount(
