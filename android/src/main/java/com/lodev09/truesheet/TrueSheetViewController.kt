@@ -213,10 +213,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
   var scrollable: Boolean = false
-    set(value) {
-      field = value
-      coordinatorLayout?.scrollable = value
-    }
 
   var scrollableOptions: ReadableMap? = null
 
@@ -345,7 +341,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Create coordinator layout
     coordinatorLayout = TrueSheetCoordinatorLayout(reactContext).apply {
       delegate = this@TrueSheetViewController
-      scrollable = this@TrueSheetViewController.scrollable
     }
 
     sheetView = TrueSheetBottomSheetView(reactContext).apply {
@@ -459,7 +454,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
 
+  override val isScrollable: Boolean get() = scrollable
   override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
+  override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
