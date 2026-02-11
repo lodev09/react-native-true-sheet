@@ -661,22 +661,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   fun present(detentIndex: Int, animated: Boolean = true) {
-    val coordinator = this.coordinatorLayout ?: run {
-      RNLog.w(reactContext, "TrueSheet: No coordinator layout available. Ensure the sheet is mounted before presenting.")
-      return
-    }
-
-    val sheet = this.sheetView ?: run {
-      RNLog.w(reactContext, "TrueSheet: No sheet view available.")
-      return
-    }
-
-    if (isPresented) {
-      RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
-      presentPromise?.invoke()
-      presentPromise = null
-      return
-    }
+    val coordinator = this.coordinatorLayout ?: return
+    val sheet = this.sheetView ?: return
+    if (isPresented) return
 
     shouldAnimatePresent = animated
     currentDetentIndex = detentIndex
@@ -713,12 +700,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun resize(detentIndex: Int) {
-    if (!isPresented) {
-      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
-      resizePromise?.invoke()
-      resizePromise = null
-      return
-    }
+    if (!isPresented) return
 
     // Commit the new index so keyboardWillHide restores to it instead of the stale one
     if (detentIndexBeforeKeyboard >= 0) {

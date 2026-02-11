@@ -343,26 +343,37 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    if (!viewController.isPresented) {
-      // Dismiss keyboard if focused view is within a sheet or if target detent will be dimmed
-      val parentSheet = TrueSheetStackManager.getTopmostSheet()
-      val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
-      val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
-      if (KeyboardUtils.isKeyboardVisible(reactContext) && shouldDismissKeyboard) {
-        viewController.saveFocusedView()
-        KeyboardUtils.dismiss(this) {
-          post { present(detentIndex, animated, promiseCallback) }
-        }
-        return
-      }
-
-      // Attach coordinator to the root container
-      rootContainerView = findRootContainerView()
-      viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
-
-      // Register with observer to track sheet stack hierarchy
-      viewController.parentSheetView = TrueSheetStackManager.registerSheet(this)
+    if (viewController.isPresented) {
+      RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
+      promiseCallback()
+      return
     }
+
+    if (viewController.coordinatorLayout == null || viewController.sheetView == null) {
+      RNLog.w(reactContext, "TrueSheet: sheet is not ready. Ensure it is mounted before presenting.")
+      promiseCallback()
+      return
+    }
+
+    // Dismiss keyboard if focused view is within a sheet or if target detent will be dimmed
+    val parentSheet = TrueSheetStackManager.getTopmostSheet()
+    val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
+    val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
+    if (KeyboardUtils.isKeyboardVisible(reactContext) && shouldDismissKeyboard) {
+      viewController.saveFocusedView()
+      KeyboardUtils.dismiss(this) {
+        post { present(detentIndex, animated, promiseCallback) }
+      }
+      return
+    }
+
+    // Attach coordinator to the root container
+    rootContainerView = findRootContainerView()
+    viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
+
+    // Register with observer to track sheet stack hierarchy
+    viewController.parentSheetView = TrueSheetStackManager.registerSheet(this)
+
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
   }
@@ -370,7 +381,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
     if (viewController.isBeingDismissed || !viewController.isPresented) {
-      RNLog.w(viewController.reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
+      RNLog.w(reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
       promiseCallback()
       return
     }
@@ -386,24 +397,30 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   @UiThread
   fun dismissStack(animated: Boolean = true, promiseCallback: () -> Unit) {
     if (viewController.isBeingDismissed || !viewController.isPresented) {
-      RNLog.w(viewController.reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
+      RNLog.w(reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
       promiseCallback()
       return
     }
 
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
-      // Create snapshot only for topmost sheet (first in reversed list)
-      sheetsAbove.firstOrNull()?.viewController?.createSheetSnapshot()
+    // Create snapshot only for topmost sheet (first in reversed list)
+    sheetsAbove.firstOrNull()?.viewController?.createSheetSnapshot()
 
-      for (sheet in sheetsAbove) {
-        sheet.viewController.dismiss(animated)
-      }
+    for (sheet in sheetsAbove) {
+      sheet.viewController.dismiss(animated)
     }
+
     promiseCallback()
   }
 
   @UiThread
   fun resize(detentIndex: Int, promiseCallback: () -> Unit) {
+    if (!viewController.isPresented) {
+      RNLog.w(reactContext, "TrueSheet: Cannot resize. Sheet is not presented.")
+      promiseCallback()
+      return
+    }
+
     viewController.resizePromise = promiseCallback
     viewController.resize(detentIndex)
   }
