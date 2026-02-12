@@ -45,18 +45,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentAnimated: Boolean = true
   private var didInitiallyPresent: Boolean = false
 
-  var stateWrapper: StateWrapper? = null
-    set(value) {
-      // On first state wrapper assignment, immediately update state with screen dimensions.
-      // This ensures Yoga has initial width/height for content layout before presenting.
-      if (field == null && value != null) {
-        updateState(viewController.screenWidth, viewController.screenHeight)
-      }
-      field = value
-    }
-
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
+
+  var stateWrapper: StateWrapper? = null
+    set(value) {
+      field = value
+
+      // On first state wrapper assignment, immediately update state with screen dimensions.
+      // This ensures Yoga has initial width/height for content layout before presenting.
+      if (value != null && lastContainerWidth == 0 && lastContainerHeight == 0) {
+        updateState(viewController.screenWidth, viewController.screenHeight)
+      }
+    }
 
   // Debounce flag to coalesce rapid layout changes into a single sheet update
   private var isSheetUpdatePending: Boolean = false
