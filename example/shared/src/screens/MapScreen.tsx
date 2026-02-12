@@ -118,6 +118,7 @@ const MapScreenInner = ({
         dimmedDetentIndex={1}
         dismissible={false}
         style={styles.content}
+        detached
         onLayout={(e: LayoutChangeEvent) => {
           console.log(
             `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
