@@ -45,8 +45,8 @@ export const TrueSheetScreen = ({
       initialDetentIndex={initialDetentIndex}
       detents={detents}
       onPositionChange={handlePositionChange}
-      {...eventHandlers}
       {...sheetProps}
+      {...eventHandlers}
     >
       {children}
     </TrueSheet>

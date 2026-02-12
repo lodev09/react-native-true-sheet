@@ -52,8 +52,8 @@ export const ReanimatedTrueSheetScreen = ({
       initialDetentIndex={initialDetentIndex}
       detents={detents}
       onPositionChange={reanimatedPositionChangeHandler}
-      {...eventHandlers}
       {...sheetProps}
+      {...eventHandlers}
     >
       {children}
     </AnimatedTrueSheet>
