@@ -38,7 +38,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 | TrueSheet | React Native | Expo SDK |
 |-----------|--------------|----------|
 | 3.7+      | 0.81+        | 54+      |
-| 3.6       | 0.79         | 52-53    |
+| 3.6       | 0.80         | 52-53    |
 
 ### Expo
 
