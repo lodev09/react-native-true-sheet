@@ -19,8 +19,6 @@ import BottomSheet, {
   type BottomSheetBackdropProps,
   BottomSheetFooter,
   type BottomSheetFooterProps,
-  BottomSheetHandle,
-  type BottomSheetHandleProps,
   BottomSheetModal,
   type BottomSheetProps,
   BottomSheetView,
@@ -57,7 +55,8 @@ const COLOR_SURFACE_CONTAINER_LOW_DARK = '#1D1B20';
 
 const DEFAULT_ANCHOR_OFFSET = 16;
 const DEFAULT_DETACHED_OFFSET = 16;
-const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
+const DEFAULT_GRABBER_COLOR_LIGHT = 'rgba(0, 0, 0, 0.3)';
+const DEFAULT_GRABBER_COLOR_DARK = 'rgba(255, 255, 255, 0.3)';
 const DEFAULT_GRABBER_WIDTH = 32;
 const DEFAULT_GRABBER_HEIGHT = 4;
 
@@ -349,29 +348,27 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     [dimmed, dimmedDetentIndex, dismissible]
   );
 
-  const handleComponent = useCallback(
-    (handleProps: BottomSheetHandleProps) => {
-      if (!grabber) {
-        return null;
-      }
+  const indicatorHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
 
-      const height = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
-      const borderRadius = grabberOptions?.cornerRadius ?? height / 2;
+  const handleStyle = useMemo(
+    () =>
+      grabber
+        ? [styles.handle, { paddingTop: grabberOptions?.topMargin }]
+        : { display: 'none' as const },
+    [grabber, grabberOptions?.topMargin]
+  );
 
-      return (
-        <BottomSheetHandle
-          {...handleProps}
-          style={[styles.handle, { paddingTop: grabberOptions?.topMargin }]}
-          indicatorStyle={{
-            height,
-            borderRadius,
-            width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
-            backgroundColor: grabberOptions?.color ?? DEFAULT_GRABBER_COLOR,
-          }}
-        />
-      );
-    },
-    [grabber, grabberOptions]
+  const defaultGrabberColor =
+    colorScheme === 'dark' ? DEFAULT_GRABBER_COLOR_DARK : DEFAULT_GRABBER_COLOR_LIGHT;
+
+  const handleIndicatorStyle = useMemo(
+    () => ({
+      height: indicatorHeight,
+      borderRadius: grabberOptions?.cornerRadius ?? indicatorHeight / 2,
+      width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
+      backgroundColor: grabberOptions?.color ?? defaultGrabberColor,
+    }),
+    [grabberOptions, indicatorHeight, defaultGrabberColor]
   );
 
   const footerComponent = useMemo(
@@ -488,7 +485,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     enableHandlePanningGesture: draggable,
     animatedPosition,
     animatedIndex,
-    handleComponent,
+    handleStyle,
+    handleIndicatorStyle,
     onChange: handleChange,
     onAnimate: handleAnimate,
     enableDynamicSizing: hasAutoDetent,
