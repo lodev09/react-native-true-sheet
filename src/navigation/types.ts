@@ -147,6 +147,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'anchorOffset'
   | 'elevation'
   | 'detached'
+  | 'detachedOffset'
   | 'stackBehavior'
 >;
 

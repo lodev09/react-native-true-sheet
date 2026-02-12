@@ -106,10 +106,10 @@ Use `stackBehavior="none"` when you need a non-modal sheet that doesn't particip
 
 ## Detached Mode
 
-Use the `detached` prop to render the sheet as a floating card, not attached to the bottom edge:
+Use the `detached` prop to render the sheet as a floating card, not attached to the bottom edge. Use `detachedOffset` to control the spacing from the bottom:
 
 ```tsx
-<TrueSheet detached detents={[0.5]}>
+<TrueSheet detached detachedOffset={24} detents={[0.5]}>
   {/* Content */}
 </TrueSheet>
 ```

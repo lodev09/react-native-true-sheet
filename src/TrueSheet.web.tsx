@@ -22,6 +22,7 @@ import BottomSheet, {
   BottomSheetHandle,
   type BottomSheetHandleProps,
   BottomSheetModal,
+  type BottomSheetProps,
   BottomSheetView,
   type SNAP_POINT_TYPE,
 } from '@gorhom/bottom-sheet';
@@ -54,6 +55,8 @@ const DEFAULT_MAX_WIDTH = 640;
 const COLOR_SURFACE_CONTAINER_LOW_LIGHT = '#F7F2FA';
 const COLOR_SURFACE_CONTAINER_LOW_DARK = '#1D1B20';
 
+const DEFAULT_ANCHOR_OFFSET = 16;
+const DEFAULT_DETACHED_OFFSET = 16;
 const DEFAULT_GRABBER_COLOR = 'rgba(0, 0, 0, 0.3)';
 const DEFAULT_GRABBER_WIDTH = 32;
 const DEFAULT_GRABBER_HEIGHT = 4;
@@ -101,7 +104,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     maxContentHeight,
     maxContentWidth,
     anchor = 'center',
-    anchorOffset = 16,
+    anchorOffset = DEFAULT_ANCHOR_OFFSET,
     header,
     headerStyle,
     footer,
@@ -121,6 +124,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     onWillBlur,
     onDidBlur,
     detached,
+    detachedOffset = DEFAULT_DETACHED_OFFSET,
     stackBehavior = 'switch',
     style,
   } = props;
@@ -460,19 +464,24 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     </ContainerComponent>
   );
 
-  const sharedProps = {
+  const sharedProps: Omit<BottomSheetProps, 'children'> = {
     style: [
       styles.root,
       {
-        backgroundColor,
-        borderTopLeftRadius: cornerRadius,
-        borderTopRightRadius: cornerRadius,
         boxShadow: getElevationShadow(elevation),
         maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
         marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
         marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
+        marginHorizontal: detached ? anchorOffset : undefined,
       },
     ],
+    backgroundStyle: {
+      backgroundColor,
+      borderTopLeftRadius: cornerRadius,
+      borderTopRightRadius: cornerRadius,
+      borderBottomLeftRadius: detached ? cornerRadius : 0,
+      borderBottomRightRadius: detached ? cornerRadius : 0,
+    },
     index: snapIndex,
     enablePanDownToClose: dismissible,
     enableContentPanningGesture: draggable,
@@ -486,8 +495,8 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     maxDynamicContentSize: maxContentHeight,
     snapPoints: snapPoints.length > 0 ? snapPoints : undefined,
     detached,
+    bottomInset: detached ? detachedOffset : undefined,
     backdropComponent,
-    backgroundComponent: null,
     footerComponent,
   };
 
