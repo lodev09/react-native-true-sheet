@@ -28,7 +28,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 ### Prerequisites
 
-- React Native 0.80+
+- React Native 0.81+
 - New Architecture enabled
 - Xcode 26.1+
 
@@ -36,7 +36,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 | TrueSheet | React Native | Expo SDK |
 |-----------|--------------|----------|
-| 3.7+      | 0.80+        | 54+      |
+| 3.7+      | 0.81+        | 54+      |
 | 3.6       | 0.79         | 52-53    |
 
 ### Expo
