@@ -11,6 +11,7 @@
 - **iOS**: Enable synchronous state update for RN 0.82+. ([#505](https://github.com/lodev09/react-native-true-sheet/pull/505), [#507](https://github.com/lodev09/react-native-true-sheet/pull/507) by [@lodev09](https://github.com/lodev09))
 - Added `maxContentWidth` prop to control the maximum width of the sheet content. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
 - Added `anchor` and `anchorOffset` props for side sheet positioning. ([#496](https://github.com/lodev09/react-native-true-sheet/pull/496), [#500](https://github.com/lodev09/react-native-true-sheet/pull/500) by [@lodev09](https://github.com/lodev09))
+- **Navigation**: Added missing sheet props and fixed event handler spread order. ([#526](https://github.com/lodev09/react-native-true-sheet/pull/526) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

@@ -14,7 +14,8 @@ import type {
   PositionChangeEventPayload,
   TrueSheetProps,
 } from '../TrueSheet.types';
-import type { PositionChangeHandler } from './screen/types';
+
+export type PositionChangeHandler = (payload: PositionChangeEventPayload) => void;
 
 export type TrueSheetNavigationEventMap = {
   /**
@@ -119,10 +120,7 @@ export type TrueSheetNavigationHelpers = NavigationHelpers<
   TrueSheetNavigationEventMap
 >;
 
-/**
- * Screen options for TrueSheet navigator screens.
- */
-export type TrueSheetNavigationOptions = Pick<
+export type TrueSheetNavigationSheetProps = Pick<
   TrueSheetProps,
   | 'detents'
   | 'backgroundColor'
@@ -140,10 +138,21 @@ export type TrueSheetNavigationOptions = Pick<
   | 'scrollable'
   | 'pageSizing'
   | 'header'
+  | 'headerStyle'
   | 'footer'
+  | 'footerStyle'
+  | 'scrollableOptions'
   | 'insetAdjustment'
+  | 'anchor'
+  | 'anchorOffset'
+  | 'elevation'
   | 'stackBehavior'
-> & {
+>;
+
+/**
+ * Screen options for TrueSheet navigator screens.
+ */
+export type TrueSheetNavigationOptions = TrueSheetNavigationSheetProps & {
   /**
    * The detent index to present at.
    * @default 0

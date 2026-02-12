@@ -1,11 +1,14 @@
 import type { ParamListBase } from '@react-navigation/native';
 
-import type { PositionChangeEventPayload, TrueSheetProps } from '../../TrueSheet.types';
-import type { TrueSheetNavigationHelpers, TrueSheetNavigationProp } from '../types';
+import type { TrueSheetProps } from '../../TrueSheet.types';
+import type {
+  PositionChangeHandler,
+  TrueSheetNavigationHelpers,
+  TrueSheetNavigationProp,
+  TrueSheetNavigationSheetProps,
+} from '../types';
 
-export type PositionChangeHandler = (payload: PositionChangeEventPayload) => void;
-
-export interface TrueSheetScreenProps {
+export interface TrueSheetScreenProps extends TrueSheetNavigationSheetProps {
   detentIndex: number;
   resizeKey?: number;
   navigation: TrueSheetNavigationProp<ParamListBase>;
@@ -15,5 +18,4 @@ export interface TrueSheetScreenProps {
   detents: TrueSheetProps['detents'];
   children: React.ReactNode;
   positionChangeHandler?: PositionChangeHandler;
-  [key: string]: unknown;
 }
