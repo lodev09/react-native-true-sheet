@@ -103,3 +103,13 @@ Control how sheets stack when presenting multiple sheets using the `stackBehavio
 ```
 
 Use `stackBehavior="none"` when you need a non-modal sheet that doesn't participate in the modal stack.
+
+## Detached Mode
+
+Use the `detached` prop to render the sheet as a floating card, not attached to the bottom edge:
+
+```tsx
+<TrueSheet detached detents={[0.5]}>
+  {/* Content */}
+</TrueSheet>
+```

@@ -120,6 +120,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     onDidFocus,
     onWillBlur,
     onDidBlur,
+    detached,
     stackBehavior = 'switch',
     style,
   } = props;
@@ -484,6 +485,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     enableDynamicSizing: hasAutoDetent,
     maxDynamicContentSize: maxContentHeight,
     snapPoints: snapPoints.length > 0 ? snapPoints : undefined,
+    detached,
     backdropComponent,
     backgroundComponent: null,
     footerComponent,

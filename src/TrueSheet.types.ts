@@ -443,6 +443,14 @@ export interface TrueSheetProps extends ViewProps {
   scrollableOptions?: ScrollableOptions;
 
   /**
+   * Renders the sheet as a detached floating card, not attached to the bottom edge.
+   *
+   * @platform web
+   * @default false
+   */
+  detached?: boolean;
+
+  /**
    * Defines the stack behavior when a modal is presented.
    * - `push`: Mount the modal on top of the current one.
    * - `switch`: Minimize the current modal then mount the new one.
