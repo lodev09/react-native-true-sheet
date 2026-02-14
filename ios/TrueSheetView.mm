@@ -640,7 +640,12 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  [self updateStateWithSize:size];
+  // When scrollable, pass actual height so Yoga container matches the real sheet size
+  // (content uses flex:1, needs correct bounds for padding/layout).
+  // When not scrollable, keep height at screen size to avoid feedback loop with "auto" detent.
+  CGFloat effectiveHeight = _scrollable ? size.height : _lastStateSize.height;
+  CGSize adjustedSize = CGSizeMake(size.width, effectiveHeight);
+  [self updateStateWithSize:adjustedSize];
 }
 
 - (void)viewControllerWillFocus {

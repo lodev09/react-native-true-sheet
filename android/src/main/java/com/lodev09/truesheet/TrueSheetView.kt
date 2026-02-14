@@ -551,7 +551,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
-    updateState(width, height)
+    // When scrollable, pass actual height so Yoga container matches the real sheet size
+    // (content uses flex:1, needs correct bounds for padding/layout).
+    // When not scrollable, keep height at screen size to avoid feedback loop with "auto" detent.
+    val effectiveHeight = if (viewController.scrollable) height else lastContainerHeight
+    updateState(width, effectiveHeight)
   }
 
   override fun viewControllerWillFocus() {
