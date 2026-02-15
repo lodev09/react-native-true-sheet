@@ -13,10 +13,12 @@ interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
+  const scrollRef = useRef<FlatList>(null);
+
   return (
     <TrueSheet
       ref={ref}
-      detents={[0.5, 1]}
+      detents={[1]}
       backgroundBlur="dark"
       backgroundColor={DARK}
       scrollable
@@ -26,12 +28,16 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         </Header>
       }
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
-      onDidPresent={() => console.log(`Sheet FlatList presented!`)}
+      onDidPresent={() => {
+        console.log(`Sheet FlatList presented!`)
+        scrollRef.current?.scrollToOffset({ offset: 99999, animated: true })
+      }}
       footer={<Footer onPress={() => testRef.current?.present()} />}
       {...props}
     >
       <View style={styles.wrapper}>
         <FlatList
+          ref={scrollRef}
           nestedScrollEnabled
           data={times(10, (i) => i)}
           contentContainerStyle={styles.content}
