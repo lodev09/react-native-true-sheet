@@ -642,7 +642,7 @@ using namespace facebook::react;
 - (void)viewControllerDidChangeSize:(CGSize)size {
   // TODO: Explicit screen height for now until synchronous layout is supported.
   CGSize effectiveSize = CGSizeMake(size.width, _controller.screenHeight);
-  
+
   [self updateStateWithSize:effectiveSize];
 }
 
