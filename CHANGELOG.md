@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.0
+
 ### ⚠️ Breaking changes
 
 - `maxHeight` prop has been renamed to `maxContentHeight`. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
