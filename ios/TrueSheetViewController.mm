@@ -219,7 +219,6 @@ using namespace facebook::react;
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
       CGFloat detent = [self detentValueForIndex:index];
-      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
@@ -314,7 +313,6 @@ using namespace facebook::react;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       [self storeResolvedPositionForIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
-      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
     });
@@ -809,7 +807,6 @@ using namespace facebook::react;
     NSInteger index = self.currentDetentIndex;
     if (index >= 0) {
       CGFloat detent = [self detentValueForIndex:index];
-      [self.delegate viewControllerDidChangeSize:self.view.frame.size];
       [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
     }
   });
