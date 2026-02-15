@@ -11,26 +11,26 @@
 ### 🎉 New features
 
 - **iOS**: Enable synchronous state update for RN 0.82+. ([#505](https://github.com/lodev09/react-native-true-sheet/pull/505), [#507](https://github.com/lodev09/react-native-true-sheet/pull/507) by [@lodev09](https://github.com/lodev09))
+- **Web**: Added `detached` and `detachedOffset` props for floating card mode. ([#527](https://github.com/lodev09/react-native-true-sheet/pull/527) by [@lodev09](https://github.com/lodev09))
+- **Navigation**: Added missing sheet props and fixed event handler spread order. ([#526](https://github.com/lodev09/react-native-true-sheet/pull/526) by [@lodev09](https://github.com/lodev09))
 - Added `maxContentWidth` prop to control the maximum width of the sheet content. ([#495](https://github.com/lodev09/react-native-true-sheet/pull/495) by [@lodev09](https://github.com/lodev09))
 - Added `anchor` and `anchorOffset` props for side sheet positioning. ([#496](https://github.com/lodev09/react-native-true-sheet/pull/496), [#500](https://github.com/lodev09/react-native-true-sheet/pull/500) by [@lodev09](https://github.com/lodev09))
-- **Navigation**: Added missing sheet props and fixed event handler spread order. ([#526](https://github.com/lodev09/react-native-true-sheet/pull/526) by [@lodev09](https://github.com/lodev09))
-- **Web**: Added `detached` and `detachedOffset` props for floating card mode. ([#527](https://github.com/lodev09/react-native-true-sheet/pull/527) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed crash and blank sheet when using Reanimated exiting animations. ([#493](https://github.com/lodev09/react-native-true-sheet/pull/493) by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed default background color not respecting dark mode on AppCompat-based apps. ([#501](https://github.com/lodev09/react-native-true-sheet/pull/501) by [@lodev09](https://github.com/lodev09))
-- **Web**: Fixed default background color not respecting dark mode. ([#502](https://github.com/lodev09/react-native-true-sheet/pull/502) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed main thread deadlock when keyboard events fire while sheet is mounted. ([#506](https://github.com/lodev09/react-native-true-sheet/pull/506) by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed stale nested scrolling ref blocking drag after dismissing a child sheet with a ScrollView. ([#523](https://github.com/lodev09/react-native-true-sheet/pull/523) by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed children not taking full width and height due to state wrapper assignment order. ([#531](https://github.com/lodev09/react-native-true-sheet/pull/531) by [@lodev09](https://github.com/lodev09))
-- **iOS, Android**: Fixed `auto` detent height staggering on content change due to Yoga layout feedback loop. ([#537](https://github.com/lodev09/react-native-true-sheet/pull/537) by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed scroll drag workaround not applying for non-scrollable sheets containing a ScrollView. ([#538](https://github.com/lodev09/react-native-true-sheet/pull/538) by [@lodev09](https://github.com/lodev09))
-- **iOS**: Fixed FlashList content not rendering while dragging sheet. ([#539](https://github.com/lodev09/react-native-true-sheet/pull/539) by [@lodev09](https://github.com/lodev09))
-- **Android**: Fixed keyboard detent not committing on scroll, causing sheet to snap back when keyboard hides. ([#525](https://github.com/lodev09/react-native-true-sheet/pull/525) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed thread blocking on gesture dismissal when sheet is presented in a stack. ([#511](https://github.com/lodev09/react-native-true-sheet/pull/511) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed FlashList content not rendering while dragging sheet. ([#539](https://github.com/lodev09/react-native-true-sheet/pull/539) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed default background color not respecting dark mode on AppCompat-based apps. ([#501](https://github.com/lodev09/react-native-true-sheet/pull/501) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard not dismissing when sheet is dragged to a non-keyboard detent position. ([#513](https://github.com/lodev09/react-native-true-sheet/pull/513) by [@lodev09](https://github.com/lodev09))
 - **Android**: Added guard and warning to prevent dismiss events for a sheet that is not presented. ([#516](https://github.com/lodev09/react-native-true-sheet/pull/516) by [@codydorsettlynn](https://github.com/codydorsettlynn))
+- **Android**: Fixed stale nested scrolling ref blocking drag after dismissing a child sheet with a ScrollView. ([#523](https://github.com/lodev09/react-native-true-sheet/pull/523) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed keyboard detent not committing on scroll, causing sheet to snap back when keyboard hides. ([#525](https://github.com/lodev09/react-native-true-sheet/pull/525) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed children not taking full width and height due to state wrapper assignment order. ([#531](https://github.com/lodev09/react-native-true-sheet/pull/531) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed scroll drag workaround not applying for non-scrollable sheets containing a ScrollView. ([#538](https://github.com/lodev09/react-native-true-sheet/pull/538) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fixed default background color not respecting dark mode. ([#502](https://github.com/lodev09/react-native-true-sheet/pull/502) by [@lodev09](https://github.com/lodev09))
+- **iOS, Android**: Fixed `auto` detent height staggering on content change due to Yoga layout feedback loop. ([#537](https://github.com/lodev09/react-native-true-sheet/pull/537) by [@lodev09](https://github.com/lodev09))
 
 ### 📖 Documentation
 
