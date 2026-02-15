@@ -24,6 +24,7 @@
 - **Android**: Fixed children not taking full width and height due to state wrapper assignment order. ([#531](https://github.com/lodev09/react-native-true-sheet/pull/531) by [@lodev09](https://github.com/lodev09))
 - **iOS, Android**: Fixed `auto` detent height staggering on content change due to Yoga layout feedback loop. ([#537](https://github.com/lodev09/react-native-true-sheet/pull/537) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed scroll drag workaround not applying for non-scrollable sheets containing a ScrollView. ([#538](https://github.com/lodev09/react-native-true-sheet/pull/538) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed FlashList content not rendering while dragging sheet. ([#539](https://github.com/lodev09/react-native-true-sheet/pull/539) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard detent not committing on scroll, causing sheet to snap back when keyboard hides. ([#525](https://github.com/lodev09/react-native-true-sheet/pull/525) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed thread blocking on gesture dismissal when sheet is presented in a stack. ([#511](https://github.com/lodev09/react-native-true-sheet/pull/511) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed keyboard not dismissing when sheet is dragged to a non-keyboard detent position. ([#513](https://github.com/lodev09/react-native-true-sheet/pull/513) by [@lodev09](https://github.com/lodev09))
