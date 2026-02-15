@@ -1,0 +1,78 @@
+---
+date: 2026-02-06
+slug: release-3-9
+title: True Sheet 3.9
+authors: [lodev09]
+tags: [release, tablet, ipad, side-sheet, performance]
+---
+
+import previewIpad from '/img/preview-ipad.gif'
+
+## Can your Sheet do this?! 💩
+
+True Sheet 3.9 is here with first-class **tablet and iPad support**, new web features, and a ton of bug fixes across all platforms.
+
+<img alt="Side Sheet" src={previewIpad} width="744" />
+
+{/* truncate */}
+
+## Side Sheet
+
+The new [`anchor`](/reference/configuration#anchor) prop lets you dock the sheet to the left or right edge — perfect for iPad and tablet layouts.
+
+```tsx
+<TrueSheet
+  anchor="left"
+  maxContentWidth={600}
+  detents={['auto', 1]}
+>
+  <View />
+</TrueSheet>
+```
+
+On Android and Web, fine-tune the edge margin with [`anchorOffset`](/reference/configuration#anchoroffset).
+
+Learn more in the [Side Sheet guide](/guides/side-sheets).
+
+## Max Content Width
+
+Control your sheet's width on larger screens with [`maxContentWidth`](/reference/configuration#maxcontentwidth). On Android and Web, sheets default to `640dp`. On iOS, the system default is used.
+
+```tsx
+<TrueSheet maxContentWidth={500} detents={['auto', 1]}>
+  <View />
+</TrueSheet>
+```
+
+## Web: Detached Mode
+
+The new [`detached`](/reference/configuration#detached) and `detachedOffset` props enable a floating card style on Web.
+
+## Navigation Improvements
+
+The `SheetScreen` component now supports all sheet props and fixes event handler spread order, making it easier to use True Sheet with React Navigation.
+
+## Bug Fixes
+
+This release includes numerous fixes across all platforms — addressing keyboard handling, layout stability, drag interactions, dark mode, and navigation edge cases on iOS, Android, and Web. See the full [changelog](https://github.com/lodev09/react-native-true-sheet/blob/main/CHANGELOG.md) for details.
+
+## Performance
+
+A cross-platform performance audit addressed unnecessary re-renders, optimized native callbacks, and reduced bridge overhead on both iOS and Android.
+
+## ⚠️ Breaking Change
+
+`maxHeight` has been renamed to [`maxContentHeight`](/reference/configuration#maxcontentheight) for consistency with `maxContentWidth`:
+
+```diff
+- <TrueSheet maxHeight={600}>
++ <TrueSheet maxContentHeight={600}>
+```
+
+## Get It
+
+```sh
+yarn add @lodev09/react-native-true-sheet@^3.9.0
+```
+
+Have feedback? [Open an issue](https://github.com/lodev09/react-native-true-sheet/issues)!
