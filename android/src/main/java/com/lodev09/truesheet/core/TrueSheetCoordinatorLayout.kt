@@ -12,7 +12,6 @@ import com.facebook.react.uimanager.ReactPointerEventsView
 import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetCoordinatorLayoutDelegate {
-  val isScrollable: Boolean
   fun coordinatorLayoutDidLayout(changed: Boolean)
   fun coordinatorLayoutDidChangeConfiguration()
   fun findScrollView(): ScrollView?
@@ -96,11 +95,8 @@ class TrueSheetCoordinatorLayout(context: Context) :
    * See: https://github.com/facebook/react-native/pull/44099
    */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-    if (delegate?.isScrollable != true) {
-      if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
-        clearStaleNestedScrollingChildRef()
-      }
-      return super.onInterceptTouchEvent(ev)
+    if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+      clearStaleNestedScrollingChildRef()
     }
 
     val scrollView = delegate?.findScrollView()

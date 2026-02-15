@@ -454,7 +454,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
 
-  override val isScrollable: Boolean get() = scrollable
   override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
