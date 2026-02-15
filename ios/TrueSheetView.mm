@@ -268,9 +268,9 @@ using namespace facebook::react;
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
 
-  // Initialize with _controller size to set initial width
   if (_controller) {
-    [self updateStateWithSize:_controller.view.frame.size];
+    // Initialize with _controller size to set initial width
+    [self viewControllerDidChangeSize:_controller.view.frame.size];
   }
 }
 
@@ -640,12 +640,10 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  // When scrollable, pass actual height so Yoga container matches the real sheet size
-  // (content uses flex:1, needs correct bounds for padding/layout).
-  // When not scrollable, keep height at screen size to avoid feedback loop with "auto" detent.
-  CGFloat effectiveHeight = _scrollable ? size.height : _lastStateSize.height;
-  CGSize adjustedSize = CGSizeMake(size.width, effectiveHeight);
-  [self updateStateWithSize:adjustedSize];
+  // TODO: Explicit screen height for now until synchronous layout is supported.
+  CGSize effectiveSize = CGSizeMake(size.width, _controller.screenHeight);
+  
+  [self updateStateWithSize:effectiveSize];
 }
 
 - (void)viewControllerWillFocus {
