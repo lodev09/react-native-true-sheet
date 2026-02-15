@@ -155,8 +155,8 @@ const config: Config = {
       additionalLanguages: ['swift', 'java', 'kotlin'],
     },
     announcementBar: {
-      id: '3.0.0-release',
-      content: `🎉 <b>True Sheet 3.0</b> is here! Completely rebuilt for Fabric ⚡ <a href="/blog/release-3-0">Read the announcement →</a>`,
+      id: '3.9.0-release',
+      content: `🎉 <b>True Sheet 3.9</b> is here! Side sheets, tablet support, and more ⚡ <a href="/blog/release-3-9">Read the announcement →</a>`,
       backgroundColor: '#1f64ae',
       textColor: '#ffffff',
     },

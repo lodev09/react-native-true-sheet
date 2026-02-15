@@ -86,3 +86,5 @@ Add entry to `Unpublished` section in `CHANGELOG.md` for user-facing changes:
 - `💡 Others` - Refactors, internal changes
 
 Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`
+
+Sort entries by platform: **iOS** first, then **Android**, then **Web**, then cross-platform or unscoped entries last.
