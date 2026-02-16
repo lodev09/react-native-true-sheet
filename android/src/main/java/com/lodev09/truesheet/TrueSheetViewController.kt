@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
-import androidx.transition.TransitionManager
 import com.facebook.react.R
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.JSPointerDispatcher
@@ -448,8 +447,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun coordinatorLayoutDidChangeConfiguration() {
     if (!isPresented) return
 
-    sheetView?.updateGravity(animated = false)
-    updateBehaviorMaxWidth(animated = false)
+    sheetView?.updateGravity()
+    updateBehaviorMaxWidth()
     updateStateDimensions()
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
@@ -1188,17 +1187,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Detent Helpers
   // =============================================================================
 
-  fun updateBehaviorMaxWidth(animated: Boolean = true) {
+  fun updateBehaviorMaxWidth() {
     val behavior = this.behavior ?: return
     val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
     val newMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
     if (behavior.maxWidth == newMaxWidth) return
 
-    if (animated) {
-      sheetView?.let { view ->
-        (view.parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
-      }
-    }
     behavior.maxWidth = newMaxWidth
   }
 
