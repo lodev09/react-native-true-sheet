@@ -71,6 +71,7 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
     return;
   }
 
+  self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
   [parentView addSubview:self];
   [self applyConfiguration];
 }
