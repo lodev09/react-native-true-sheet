@@ -1,4 +1,4 @@
-name: Changelog
+name: Check Changelog
 on:
   pull_request:
     branches:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  check-changelog:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no changelog') }}
     runs-on: ubuntu-latest
 

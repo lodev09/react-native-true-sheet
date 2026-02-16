@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed custom grabber not centering on device rotation. ([#545](https://github.com/lodev09/react-native-true-sheet/pull/545) by [@lodev09](https://github.com/lodev09))
 - **Android**: Removed unreliable `TransitionManager` animation from gravity and maxWidth updates. ([#544](https://github.com/lodev09/react-native-true-sheet/pull/544) by [@lodev09](https://github.com/lodev09))
 
 ## 3.9.0
