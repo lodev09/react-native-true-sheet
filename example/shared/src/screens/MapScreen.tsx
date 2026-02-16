@@ -86,7 +86,7 @@ const MapScreenInner = ({
     });
   };
 
-  const maxContentWidth = 500;
+  const maxContentWidth = anchorLeft ? width * 0.4 : 500;
   const sheetOffset = isTablet ? -(width - maxContentWidth) / 2 + SPACING : 0;
 
   const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => {
