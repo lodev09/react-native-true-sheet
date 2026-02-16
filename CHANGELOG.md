@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Removed unreliable `TransitionManager` animation from gravity and maxWidth updates. ([#544](https://github.com/lodev09/react-native-true-sheet/pull/544) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.0
 
 ### ⚠️ Breaking changes

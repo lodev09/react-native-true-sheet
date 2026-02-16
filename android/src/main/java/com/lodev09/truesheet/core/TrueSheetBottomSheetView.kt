@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.transition.TransitionManager
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -125,15 +124,11 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     }
   }
 
-  fun updateGravity(animated: Boolean = true) {
+  fun updateGravity() {
     val params = layoutParams as? CoordinatorLayout.LayoutParams ?: return
     val (gravity, margin) = resolveAnchor()
 
     if (params.gravity == gravity && params.marginStart == margin) return
-
-    if (animated) {
-      (parent as? CoordinatorLayout)?.let { TransitionManager.beginDelayedTransition(it) }
-    }
 
     params.gravity = gravity
     params.marginStart = margin
