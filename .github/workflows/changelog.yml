@@ -1,0 +1,35 @@
+name: Changelog
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no changelog') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Check changelog entry
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q '^CHANGELOG.md$'; then
+            echo "Changelog entry found."
+          else
+            echo "::error::Missing changelog entry. Please update CHANGELOG.md or add the 'no changelog' label."
+            exit 1
+          fi
