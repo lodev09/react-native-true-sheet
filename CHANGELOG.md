@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Web**: Fixed content overflow not clipping to rounded corners. ([#546](https://github.com/lodev09/react-native-true-sheet/pull/546) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.1
 
 ### 🐛 Bug fixes
