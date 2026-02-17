@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.1
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed custom grabber not centering on device rotation. ([#545](https://github.com/lodev09/react-native-true-sheet/pull/545) by [@lodev09](https://github.com/lodev09))
