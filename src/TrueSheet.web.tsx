@@ -465,6 +465,11 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     style: [
       styles.root,
       {
+        backgroundColor,
+        borderTopLeftRadius: cornerRadius,
+        borderTopRightRadius: cornerRadius,
+        borderBottomLeftRadius: detached ? cornerRadius : 0,
+        borderBottomRightRadius: detached ? cornerRadius : 0,
         boxShadow: getElevationShadow(elevation),
         maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
         marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
@@ -472,13 +477,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
         marginHorizontal: detached ? anchorOffset : undefined,
       },
     ],
-    backgroundStyle: {
-      backgroundColor,
-      borderTopLeftRadius: cornerRadius,
-      borderTopRightRadius: cornerRadius,
-      borderBottomLeftRadius: detached ? cornerRadius : 0,
-      borderBottomRightRadius: detached ? cornerRadius : 0,
-    },
+    backgroundComponent: null,
     index: snapIndex,
     enablePanDownToClose: dismissible,
     enableContentPanningGesture: draggable,
