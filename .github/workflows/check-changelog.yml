@@ -68,6 +68,12 @@ jobs:
               'See [CONTRIBUTING.md](https://github.com/lodev09/react-native-true-sheet/blob/main/CONTRIBUTING.md#sending-a-pull-request) for more details.',
             ].join('\n');
 
+            // Skip commenting on first open — changelog is typically added after PR creation
+            if (context.payload.action === 'opened') {
+              console.log('Skipping comment on initial PR open.');
+              return;
+            }
+
             if (!existing) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
