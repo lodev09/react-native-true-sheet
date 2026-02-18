@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.3
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed incorrect detent calculations on iPad when using Stage Manager or Split View. ([#550](https://github.com/lodev09/react-native-true-sheet/pull/550) by [@lodev09](https://github.com/lodev09))
