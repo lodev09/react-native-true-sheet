@@ -14,6 +14,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  pull-requests: write
+
 jobs:
   check-changelog:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no changelog') }}
@@ -26,10 +29,35 @@ jobs:
           fetch-depth: 0
 
       - name: Check changelog entry
-        run: |
-          if git diff --name-only origin/main...HEAD | grep -q '^CHANGELOG.md$'; then
-            echo "Changelog entry found."
-          else
-            echo "::error::Missing changelog entry. Please update CHANGELOG.md or add the 'no changelog' label."
-            exit 1
-          fi
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const files = execSync('git diff --name-only origin/main...HEAD').toString();
+            const hasChangelog = files.split('\n').some(f => f.trim() === 'CHANGELOG.md');
+
+            if (hasChangelog) {
+              console.log('Changelog entry found.');
+              return;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const marker = '<!-- check-changelog -->';
+            const existing = comments.find(c => c.body.includes(marker));
+            const body = `${marker}\n⚠️ Missing changelog entry. Please update \`CHANGELOG.md\` or add the \`no changelog\` label.`;
+
+            if (!existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+            core.setFailed('Missing changelog entry. Please update CHANGELOG.md or add the \'no changelog\' label.');
