@@ -801,6 +801,10 @@ using namespace facebook::react;
 
 #pragma mark - UISheetPresentationControllerDelegate
 
+- (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
+  return self.dismissible;
+}
+
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
   dispatch_async(dispatch_get_main_queue(), ^{

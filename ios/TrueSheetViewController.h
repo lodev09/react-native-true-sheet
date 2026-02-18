@@ -68,6 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL pageSizing;
 @property (nonatomic, assign) NSInteger anchor;
 @property (nonatomic, assign) NSInteger insetAdjustment;
+@property (nonatomic, assign) BOOL dismissible;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;

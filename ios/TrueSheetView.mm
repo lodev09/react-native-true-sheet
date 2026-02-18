@@ -230,7 +230,7 @@ using namespace facebook::react;
   }
 
   _controller.pageSizing = newProps.pageSizing;
-  _controller.modalInPresentation = !newProps.dismissible;
+  _controller.dismissible = newProps.dismissible;
   _controller.draggable = newProps.draggable;
   _controller.dimmed = newProps.dimmed;
 
