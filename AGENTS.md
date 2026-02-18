@@ -79,7 +79,7 @@ When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`.
 
 ### Changelog
 
-Add entry to `Unpublished` section in `CHANGELOG.md` for user-facing changes:
+Add entry to `Unreleased` section in `CHANGELOG.md` for user-facing changes:
 
 - `🎉 New features` - New functionality
 - `🐛 Bug fixes` - Bug fixes

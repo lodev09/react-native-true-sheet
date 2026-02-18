@@ -50,7 +50,23 @@ jobs:
 
             const marker = '<!-- check-changelog -->';
             const existing = comments.find(c => c.body.includes(marker));
-            const body = `${marker}\n⚠️ Missing changelog entry. Please update \`CHANGELOG.md\` or add the \`no changelog\` label.`;
+            const author = context.payload.pull_request.user.login;
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const prUrl = pr.html_url;
+            const authorUrl = `https://github.com/${author}`;
+
+            const body = [
+              marker,
+              `Hey @${author}, this PR is missing a changelog entry.`,
+              '',
+              `Add the following under the **Unreleased** section in \`CHANGELOG.md\`:`,
+              '```',
+              `- **platform**: Description. ([#${prNumber}](${prUrl}) by [@${author}](${authorUrl}))`,
+              '```',
+              '',
+              'See [CONTRIBUTING.md](https://github.com/lodev09/react-native-true-sheet/blob/main/CONTRIBUTING.md#sending-a-pull-request) for more details.',
+            ].join('\n');
 
             if (!existing) {
               await github.rest.issues.createComment({
