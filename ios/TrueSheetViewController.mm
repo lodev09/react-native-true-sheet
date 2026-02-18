@@ -110,7 +110,8 @@ using namespace facebook::react;
 }
 
 - (CGFloat)screenHeight {
-  return UIScreen.mainScreen.bounds.size.height;
+  UIWindow *window = self.view.window;
+  return window ? window.bounds.size.height : UIScreen.mainScreen.bounds.size.height;
 }
 
 - (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
