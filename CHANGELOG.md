@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.4
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed content size changes being dropped during presentation animation when using `initialDetentIndex`. ([#551](https://github.com/lodev09/react-native-true-sheet/pull/551) by [@lodev09](https://github.com/lodev09))
