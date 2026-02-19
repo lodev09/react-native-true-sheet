@@ -61,6 +61,7 @@ using namespace facebook::react;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
+  BOOL _pendingSizeChange;
   RNScreensEventObserver *_screensEventObserver;
 }
 
@@ -552,8 +553,13 @@ using namespace facebook::react;
  * Debounced sheet update to handle rapid content/header size changes.
  */
 - (void)setupSheetDetentsForSizeChange {
-  if (!_controller.isPresented || _isSheetUpdatePending)
+  if (_isSheetUpdatePending)
     return;
+
+  if (!_controller.isPresented) {
+    _pendingSizeChange = YES;
+    return;
+  }
 
   _isSheetUpdatePending = YES;
 
@@ -586,6 +592,11 @@ using namespace facebook::react;
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
+
+  if (_pendingSizeChange) {
+    _pendingSizeChange = NO;
+    [self setupSheetDetentsForSizeChange];
+  }
 }
 
 - (void)viewControllerDidDrag:(UIGestureRecognizerState)state
