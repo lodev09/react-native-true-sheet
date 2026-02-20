@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- Documented `auto` detent limitation when `scrollable` is enabled. ([#554](https://github.com/lodev09/react-native-true-sheet/pull/554) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.4
 
 ### 🐛 Bug fixes
