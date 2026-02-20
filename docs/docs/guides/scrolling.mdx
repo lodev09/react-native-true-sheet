@@ -35,6 +35,10 @@ const App = () => {
 By default, `scrollable` is `false`. Set it to `true` to enable automatic ScrollView fitting.
 :::
 
+:::warning
+The [`auto`](/reference/types#sheetdetent) detent does not work well with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead when using `scrollable`. This may be supported in the future once synchronous UI updates are officially supported by React Native.
+:::
+
 ### iOS
 
 On iOS, `scrollable` automatically pins scroll views (including `ScrollView` and `FlatList`) to fit within the sheet's available space. The ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container.
@@ -53,10 +57,6 @@ The scroll view detection supports up to 2 levels deep in the view hierarchy, so
 ### Android
 
 On Android, `scrollable` ensures the scroll view fills the available sheet space. You must also enable `nestedScrollEnabled` on your `ScrollView` or `FlatList` for scrolling to work properly.
-
-:::warning
-The `auto` detent does not work well with `scrollable` on Android. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead when using `scrollable`.
-:::
 
 :::warning
 `RefreshControl` does not work with `nestedScrollEnabled` on Android due to how `SwipeRefreshLayout` interferes with the `BottomSheetBehavior`'s nested scrolling coordination. This is a known limitation of the Android platform.
