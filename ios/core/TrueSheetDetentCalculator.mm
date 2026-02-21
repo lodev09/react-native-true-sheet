@@ -9,15 +9,7 @@
 #import "TrueSheetDetentCalculator.h"
 
 @implementation TrueSheetDetentCalculator {
-  NSMutableArray<NSNumber *> *_resolvedDetentPositions;
   NSMutableArray<NSNumber *> *_resolvedDetentOffsets;
-}
-
-- (instancetype)init {
-  if (self = [super init]) {
-    _resolvedDetentPositions = [NSMutableArray array];
-  }
-  return self;
 }
 
 #pragma mark - Public Methods
@@ -35,55 +27,20 @@
   return 0;
 }
 
-- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
-  if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count) {
-    return 0;
-  }
-
-  CGFloat storedPos = [_resolvedDetentPositions[index] doubleValue];
-  if (storedPos > 0) {
-    return storedPos;
-  }
-
-  CGFloat screenHeight = self.delegate.screenHeight;
-  CGFloat detentValue = [self detentValueForIndex:index];
-
-  // Use maxDetentHeight if available for accurate estimation
-  if (_maxDetentHeight > 0) {
-    return screenHeight - (detentValue * _maxDetentHeight);
-  }
-
-  // Derive effective max height from a known resolved position
-  for (NSInteger i = 0; i < (NSInteger)_resolvedDetentPositions.count; i++) {
-    CGFloat pos = [_resolvedDetentPositions[i] doubleValue];
-    if (pos > 0) {
-      CGFloat knownDetent = [self detentValueForIndex:i];
-      if (knownDetent > 0) {
-        CGFloat maxHeight = (screenHeight - pos) / knownDetent;
-        return screenHeight - (detentValue * maxHeight);
-      }
-    }
-  }
-
-  return screenHeight - (detentValue * screenHeight);
-}
-
-- (void)storeResolvedPositionForIndex:(NSInteger)index {
-  if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count) {
+- (void)learnOffsetForDetentIndex:(NSInteger)index {
+  if (index < 0 || !_resolvedDetentHeights || index >= (NSInteger)_resolvedDetentHeights.count) {
     return;
   }
 
-  CGFloat position = self.delegate.currentPosition;
-  CGFloat actualHeight = self.delegate.screenHeight - position;
-  _resolvedDetentPositions[index] = @(position);
-
   // Learn per-detent offset once from difference between actual and resolver height.
-  if (_resolvedDetentHeights && index < (NSInteger)_resolvedDetentHeights.count
-      && [_resolvedDetentOffsets[index] doubleValue] == 0) {
-    CGFloat resolverHeight = [_resolvedDetentHeights[index] doubleValue];
-    if (resolverHeight > 0 && actualHeight > 0) {
-      _resolvedDetentOffsets[index] = @(actualHeight - resolverHeight);
-    }
+  if ([_resolvedDetentOffsets[index] doubleValue] != 0) {
+    return;
+  }
+
+  CGFloat actualHeight = self.delegate.screenHeight - self.delegate.currentPosition;
+  CGFloat resolverHeight = [_resolvedDetentHeights[index] doubleValue];
+  if (resolverHeight > 0 && actualHeight > 0) {
+    _resolvedDetentOffsets[index] = @(actualHeight - resolverHeight);
   }
 }
 
@@ -207,18 +164,15 @@
   return detent + progress * (nextDetent - detent);
 }
 
-- (void)clearResolvedPositions {
-  [_resolvedDetentPositions removeAllObjects];
+- (void)clearResolvedHeights {
   [_resolvedDetentHeights removeAllObjects];
   [_resolvedDetentOffsets removeAllObjects];
 }
 
 - (void)setDetentCount:(NSInteger)count {
-  [_resolvedDetentPositions removeAllObjects];
   _resolvedDetentHeights = [NSMutableArray arrayWithCapacity:count];
   _resolvedDetentOffsets = [NSMutableArray arrayWithCapacity:count];
   for (NSInteger i = 0; i < count; i++) {
-    [_resolvedDetentPositions addObject:@(0)];
     [_resolvedDetentHeights addObject:@(0)];
     [_resolvedDetentOffsets addObject:@(0)];
   }

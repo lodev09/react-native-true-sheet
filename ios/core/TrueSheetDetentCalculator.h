@@ -40,16 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)detentValueForIndex:(NSInteger)index;
 
 /**
- Returns the estimated screen position (Y coordinate) for a detent index.
- Uses stored resolved positions if available, otherwise calculates from detent value.
- */
-- (CGFloat)estimatedPositionForIndex:(NSInteger)index;
-
-/**
- Stores the current resolved position for a detent index.
+ Learns the offset between resolver height and actual presented height for a detent.
  Called when the sheet settles at a detent.
  */
-- (void)storeResolvedPositionForIndex:(NSInteger)index;
+- (void)learnOffsetForDetentIndex:(NSInteger)index;
 
 /**
  Finds the segment between detents for a given position.
@@ -73,10 +67,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)interpolatedDetentForPosition:(CGFloat)position;
 
 /**
- Clears all stored resolved positions.
+ Clears all resolved heights and learned offsets.
  Called when detents configuration changes.
  */
-- (void)clearResolvedPositions;
+- (void)clearResolvedHeights;
 
 /**
  Sets the count of detents (initializes storage for resolved positions).

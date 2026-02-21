@@ -216,7 +216,7 @@ using namespace facebook::react;
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
-      [self storeResolvedPositionForIndex:index];
+      [self learnOffsetForDetentIndex:index];
 
       CGFloat detent = [self detentValueForIndex:index];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
@@ -289,7 +289,7 @@ using namespace facebook::react;
       _pendingContentSizeChange = NO;
       _pendingDetentsChange = NO;
       realtime = NO;
-      [self storeResolvedPositionForIndex:self.currentDetentIndex];
+      [self learnOffsetForDetentIndex:self.currentDetentIndex];
     }
 
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
@@ -311,7 +311,7 @@ using namespace facebook::react;
     _pendingDetentIndex = -1;
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      [self storeResolvedPositionForIndex:pendingIndex];
+      [self learnOffsetForDetentIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
@@ -388,7 +388,7 @@ using namespace facebook::react;
     case UIGestureRecognizerStateCancelled: {
       if (!_isTransitioning) {
         dispatch_async(dispatch_get_main_queue(), ^{
-          [self storeResolvedPositionForIndex:self.currentDetentIndex];
+          [self learnOffsetForDetentIndex:self.currentDetentIndex];
           [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
@@ -413,7 +413,7 @@ using namespace facebook::react;
   _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
 
   if (_isPresented) {
-    [self storeResolvedPositionForIndex:self.currentDetentIndex];
+    [self learnOffsetForDetentIndex:self.currentDetentIndex];
   }
 
   __weak __typeof(self) weakSelf = self;
@@ -484,12 +484,8 @@ using namespace facebook::react;
   }
 }
 
-- (void)storeResolvedPositionForIndex:(NSInteger)index {
-  [_detentCalculator storeResolvedPositionForIndex:index];
-}
-
-- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
-  return [_detentCalculator estimatedPositionForIndex:index];
+- (void)learnOffsetForDetentIndex:(NSInteger)index {
+  [_detentCalculator learnOffsetForDetentIndex:index];
 }
 
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
@@ -530,7 +526,7 @@ using namespace facebook::react;
   }
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
-  [_detentCalculator clearResolvedPositions];
+  [_detentCalculator clearResolvedHeights];
 
   CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
