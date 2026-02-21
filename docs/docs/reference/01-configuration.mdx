@@ -298,6 +298,10 @@ On Android, it adds additional style to the content for scrollable to work.
 | - | - | - | - | - |
 | `boolean` | `false` | ✅ | ✅ | |
 
+:::warning
+The [`auto`](/reference/types#sheetdetent) detent does not work well with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead. This may be supported in the future once synchronous UI updates are officially supported by React Native.
+:::
+
 ## `pageSizing`
 
 Controls the sheet presentation style on iPad. When enabled (true), uses a large page sheet for better readability. When disabled (false), uses a centered form sheet.

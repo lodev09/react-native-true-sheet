@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- Documented `auto` detent limitation when `scrollable` is enabled. ([#554](https://github.com/lodev09/react-native-true-sheet/pull/554) by [@lodev09](https://github.com/lodev09))
+
+## 3.9.4
+
+### 🐛 Bug fixes
+
+- **iOS**: Fixed content size changes being dropped during presentation animation when using `initialDetentIndex`. ([#551](https://github.com/lodev09/react-native-true-sheet/pull/551) by [@lodev09](https://github.com/lodev09))
+
+## 3.9.3
+
+### 🐛 Bug fixes
+
+- **iOS**: Fixed incorrect detent calculations on iPad when using Stage Manager or Split View. ([#550](https://github.com/lodev09/react-native-true-sheet/pull/550) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.2
 
 ### 🐛 Bug fixes
