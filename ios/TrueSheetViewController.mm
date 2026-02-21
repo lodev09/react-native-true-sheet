@@ -58,6 +58,7 @@ using namespace facebook::react;
     _headerHeight = @(0);
     _grabber = YES;
     _draggable = YES;
+    _dismissible = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
@@ -801,6 +802,10 @@ using namespace facebook::react;
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
+
+- (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
+  return self.dismissible;
+}
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {

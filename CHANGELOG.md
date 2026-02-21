@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed touch passthrough on undimmed sheets when `dismissible` is `false`. ([#548](https://github.com/lodev09/react-native-true-sheet/pull/548) by [@isaacrowntree](https://github.com/isaacrowntree))
+
 ### 💡 Others
 
 - Documented `auto` detent limitation when `scrollable` is enabled. ([#554](https://github.com/lodev09/react-native-true-sheet/pull/554) by [@lodev09](https://github.com/lodev09))
