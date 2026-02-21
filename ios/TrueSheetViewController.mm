@@ -189,10 +189,6 @@ using namespace facebook::react;
   [super viewWillAppear:animated];
 
   if (!_isPresented) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self storeResolvedPositionForIndex:self.currentDetentIndex];
-    });
-
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
@@ -220,6 +216,8 @@ using namespace facebook::react;
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
+      [self storeResolvedPositionForIndex:index];
+
       CGFloat detent = [self detentValueForIndex:index];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
@@ -413,7 +411,10 @@ using namespace facebook::react;
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
   _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
-  [self storeResolvedPositionForIndex:self.currentDetentIndex];
+
+  if (_isPresented) {
+    [self storeResolvedPositionForIndex:self.currentDetentIndex];
+  }
 
   __weak __typeof(self) weakSelf = self;
 
@@ -476,6 +477,9 @@ using namespace facebook::react;
 
     CGFloat index = [self interpolatedIndexForPosition:position];
     CGFloat detent = [self interpolatedDetentForPosition:position];
+
+    NSLog(@"realtime: %i source: %@, position: %f, index: %f, detent: %f", realtime, debug, position, index, detent);
+
     [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
   }
 }
@@ -572,7 +576,7 @@ using namespace facebook::react;
 
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight];
+      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight atIndex:index];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -586,7 +590,7 @@ using namespace facebook::react;
   if (@available(iOS 16.0, *)) {
     NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
     CGFloat sheetHeight = value * self.screenHeight;
-    return [self customDetentWithIdentifier:detentId height:sheetHeight];
+    return [self customDetentWithIdentifier:detentId height:sheetHeight atIndex:index];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];
   } else {
@@ -595,17 +599,27 @@ using namespace facebook::react;
 }
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
-                                                             height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
+                                                             height:(CGFloat)height
+                                                            atIndex:(NSInteger)index API_AVAILABLE(ios(16.0)) {
   CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
+                        self->_detentCalculator.maxDetentHeight = maxDetentValue;
+
                         CGFloat maxValue = self.maxContentHeight
                                              ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
                                              : maxDetentValue;
                         CGFloat adjustedHeight = height - bottomAdjustment;
-                        return fmin(adjustedHeight, maxValue);
+                        CGFloat resolved = fmin(adjustedHeight, maxValue);
+
+                        NSMutableArray *heights = self->_detentCalculator.resolvedDetentHeights;
+                        if (heights && index >= 0 && index < (NSInteger)heights.count) {
+                          heights[index] = @(resolved);
+                        }
+
+                        return resolved;
                       }];
 }
 

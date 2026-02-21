@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetDetentCalculator : NSObject
 
 @property (nonatomic, weak, nullable) id<TrueSheetDetentCalculatorDelegate> delegate;
+@property (nonatomic, assign) CGFloat maxDetentHeight;
+@property (nonatomic, strong, nullable) NSMutableArray<NSNumber *> *resolvedDetentHeights;
 
 /**
  Returns the detent value (0-1 fraction) for a given index.
