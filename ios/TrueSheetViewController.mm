@@ -37,6 +37,7 @@ using namespace facebook::react;
   UIView *_transitionFakeView;
   BOOL _isDragging;
   BOOL _isTransitioning;
+  BOOL _isTransitionSnapping;
   BOOL _isTrackingPositionFromLayout;
   BOOL _isWillDismissEmitted;
 
@@ -189,10 +190,6 @@ using namespace facebook::react;
   [super viewWillAppear:animated];
 
   if (!_isPresented) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self storeResolvedPositionForIndex:self.currentDetentIndex];
-    });
-
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
@@ -220,6 +217,8 @@ using namespace facebook::react;
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
+      [self learnOffsetForDetentIndex:index];
+
       CGFloat detent = [self detentValueForIndex:index];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
@@ -291,7 +290,7 @@ using namespace facebook::react;
       _pendingContentSizeChange = NO;
       _pendingDetentsChange = NO;
       realtime = NO;
-      [self storeResolvedPositionForIndex:self.currentDetentIndex];
+      [self learnOffsetForDetentIndex:self.currentDetentIndex];
     }
 
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
@@ -313,7 +312,7 @@ using namespace facebook::react;
     _pendingDetentIndex = -1;
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      [self storeResolvedPositionForIndex:pendingIndex];
+      [self learnOffsetForDetentIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
@@ -390,7 +389,7 @@ using namespace facebook::react;
     case UIGestureRecognizerStateCancelled: {
       if (!_isTransitioning) {
         dispatch_async(dispatch_get_main_queue(), ^{
-          [self storeResolvedPositionForIndex:self.currentDetentIndex];
+          [self learnOffsetForDetentIndex:self.currentDetentIndex];
           [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
@@ -413,7 +412,6 @@ using namespace facebook::react;
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
   _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
-  [self storeResolvedPositionForIndex:self.currentDetentIndex];
 
   __weak __typeof(self) weakSelf = self;
 
@@ -440,6 +438,17 @@ using namespace facebook::react;
       strongSelf->_transitioningTimer = nil;
       [strongSelf->_transitionFakeView removeFromSuperview];
       strongSelf->_isTransitioning = NO;
+      strongSelf->_isTransitionSnapping = NO;
+
+      // Emit settled position after detent snap.
+      // Uses dispatch_after because presentedView frame isn't final until UIKit
+      // completes its layout pass after the transition animation.
+      if (strongSelf->_isPresented) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+          CGFloat position = strongSelf.currentPosition;
+          [strongSelf emitChangePositionDelegateWithPosition:position realtime:NO debug:@"transition end"];
+        });
+      }
     }];
 }
 
@@ -456,7 +465,12 @@ using namespace facebook::react;
 
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
-      [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
+      // Detect drag → snap transition jump; stay non-realtime for the rest of the animation
+      if (!_isTransitionSnapping && _isPresented && _lastPosition > 0 && fabs(_lastPosition - position) > 20) {
+        _isTransitionSnapping = YES;
+      }
+      BOOL realtime = !_isTransitionSnapping;
+      [self emitChangePositionDelegateWithPosition:position realtime:realtime debug:@"transition in"];
     }
   }
 }
@@ -476,16 +490,13 @@ using namespace facebook::react;
 
     CGFloat index = [self interpolatedIndexForPosition:position];
     CGFloat detent = [self interpolatedDetentForPosition:position];
+
     [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
   }
 }
 
-- (void)storeResolvedPositionForIndex:(NSInteger)index {
-  [_detentCalculator storeResolvedPositionForIndex:index];
-}
-
-- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
-  return [_detentCalculator estimatedPositionForIndex:index];
+- (void)learnOffsetForDetentIndex:(NSInteger)index {
+  [_detentCalculator learnOffsetForDetentIndex:index];
 }
 
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
@@ -526,7 +537,7 @@ using namespace facebook::react;
   }
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
-  [_detentCalculator clearResolvedPositions];
+  [_detentCalculator clearResolvedHeights];
 
   CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
@@ -572,7 +583,7 @@ using namespace facebook::react;
 
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight];
+      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight atIndex:index];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -586,7 +597,7 @@ using namespace facebook::react;
   if (@available(iOS 16.0, *)) {
     NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
     CGFloat sheetHeight = value * self.screenHeight;
-    return [self customDetentWithIdentifier:detentId height:sheetHeight];
+    return [self customDetentWithIdentifier:detentId height:sheetHeight atIndex:index];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];
   } else {
@@ -595,17 +606,27 @@ using namespace facebook::react;
 }
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
-                                                             height:(CGFloat)height API_AVAILABLE(ios(16.0)) {
+                                                             height:(CGFloat)height
+                                                            atIndex:(NSInteger)index API_AVAILABLE(ios(16.0)) {
   CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
+                        self->_detentCalculator.maxDetentHeight = maxDetentValue;
+
                         CGFloat maxValue = self.maxContentHeight
                                              ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
                                              : maxDetentValue;
                         CGFloat adjustedHeight = height - bottomAdjustment;
-                        return fmin(adjustedHeight, maxValue);
+                        CGFloat resolved = fmin(adjustedHeight, maxValue);
+
+                        NSMutableArray *heights = self->_detentCalculator.resolvedDetentHeights;
+                        if (heights && index >= 0 && index < (NSInteger)heights.count) {
+                          heights[index] = @(resolved);
+                        }
+
+                        return resolved;
                       }];
 }
 

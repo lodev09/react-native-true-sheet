@@ -9,14 +9,7 @@
 #import "TrueSheetDetentCalculator.h"
 
 @implementation TrueSheetDetentCalculator {
-  NSMutableArray<NSNumber *> *_resolvedDetentPositions;
-}
-
-- (instancetype)init {
-  if (self = [super init]) {
-    _resolvedDetentPositions = [NSMutableArray array];
-  }
-  return self;
+  NSMutableArray<NSNumber *> *_resolvedDetentOffsets;
 }
 
 #pragma mark - Public Methods
@@ -34,42 +27,57 @@
   return 0;
 }
 
-- (CGFloat)estimatedPositionForIndex:(NSInteger)index {
-  if (index < 0 || index >= (NSInteger)_resolvedDetentPositions.count) {
-    return 0;
+- (void)learnOffsetForDetentIndex:(NSInteger)index {
+  if (index < 0 || !_resolvedDetentHeights || index >= (NSInteger)_resolvedDetentHeights.count) {
+    return;
   }
 
-  CGFloat storedPos = [_resolvedDetentPositions[index] doubleValue];
-  if (storedPos > 0) {
-    return storedPos;
+  CGFloat actualHeight = self.delegate.screenHeight - self.delegate.currentPosition;
+  CGFloat resolverHeight = [_resolvedDetentHeights[index] doubleValue];
+  // Always update — system offset can change between detent transitions
+  if (resolverHeight > 0 && actualHeight > 0) {
+    _resolvedDetentOffsets[index] = @(actualHeight - resolverHeight);
   }
+}
 
-  CGFloat screenHeight = self.delegate.screenHeight;
-  CGFloat detentValue = [self detentValueForIndex:index];
-  CGFloat basePosition = screenHeight - (detentValue * screenHeight);
-
-  // Try to find offset from a known resolved position
-  for (NSInteger i = 0; i < (NSInteger)_resolvedDetentPositions.count; i++) {
-    CGFloat pos = [_resolvedDetentPositions[i] doubleValue];
-    if (pos > 0) {
-      CGFloat knownDetent = [self detentValueForIndex:i];
-      CGFloat expectedPos = screenHeight - (knownDetent * screenHeight);
-      CGFloat offset = pos - expectedPos;
-      return basePosition + offset;
+- (CGFloat)resolvedHeightForIndex:(NSInteger)index {
+  if (_resolvedDetentHeights && index >= 0 && index < (NSInteger)_resolvedDetentHeights.count) {
+    CGFloat h = [_resolvedDetentHeights[index] doubleValue];
+    if (h > 0) {
+      // Use per-detent offset if learned, otherwise find any known offset
+      CGFloat offset = [self offsetForIndex:index];
+      return h + offset;
     }
   }
 
-  return basePosition;
+  CGFloat detentValue = [self detentValueForIndex:index];
+  if (_maxDetentHeight > 0) {
+    return detentValue * _maxDetentHeight;
+  }
+  return detentValue * self.delegate.screenHeight;
 }
 
-- (void)storeResolvedPositionForIndex:(NSInteger)index {
-  if (index >= 0 && index < (NSInteger)_resolvedDetentPositions.count) {
-    _resolvedDetentPositions[index] = @(self.delegate.currentPosition);
+- (CGFloat)offsetForIndex:(NSInteger)index {
+  // Use this detent's own offset if available
+  if (index >= 0 && index < (NSInteger)_resolvedDetentOffsets.count) {
+    CGFloat offset = [_resolvedDetentOffsets[index] doubleValue];
+    if (offset != 0)
+      return offset;
   }
+
+  // Fall back to any known offset
+  for (NSInteger i = 0; i < (NSInteger)_resolvedDetentOffsets.count; i++) {
+    CGFloat offset = [_resolvedDetentOffsets[i] doubleValue];
+    if (offset != 0)
+      return offset;
+  }
+
+  return 0;
 }
 
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
-  NSInteger count = _resolvedDetentPositions.count;
+  NSArray<NSNumber *> *detents = self.delegate.detents;
+  NSInteger count = detents.count;
   if (count == 0) {
     *outIndex = -1;
     *outProgress = 0;
@@ -77,27 +85,27 @@
   }
 
   CGFloat screenHeight = self.delegate.screenHeight;
-  CGFloat firstPos = [self estimatedPositionForIndex:0];
+  CGFloat sheetHeight = screenHeight - position;
+  CGFloat firstHeight = [self resolvedHeightForIndex:0];
 
-  // Above first detent - interpolating toward closed
-  if (position > firstPos) {
-    CGFloat range = screenHeight - firstPos;
+  // Below first detent - interpolating toward closed
+  if (sheetHeight < firstHeight) {
     *outIndex = -1;
-    *outProgress = range > 0 ? (position - firstPos) / range : 0;
+    *outProgress = firstHeight > 0 ? (firstHeight - sheetHeight) / firstHeight : 0;
     return NO;
   }
 
-  // Single detent - at or above the detent
+  // Single detent
   if (count == 1) {
     *outIndex = 0;
     *outProgress = 0;
     return NO;
   }
 
-  CGFloat lastPos = [self estimatedPositionForIndex:count - 1];
+  CGFloat lastHeight = [self resolvedHeightForIndex:count - 1];
 
-  // Below last detent
-  if (position < lastPos) {
+  // Above last detent
+  if (sheetHeight > lastHeight) {
     *outIndex = count - 1;
     *outProgress = 0;
     return NO;
@@ -105,13 +113,13 @@
 
   // Between detents
   for (NSInteger i = 0; i < count - 1; i++) {
-    CGFloat pos = [self estimatedPositionForIndex:i];
-    CGFloat nextPos = [self estimatedPositionForIndex:i + 1];
+    CGFloat h = [self resolvedHeightForIndex:i];
+    CGFloat nextH = [self resolvedHeightForIndex:i + 1];
 
-    if (position <= pos && position >= nextPos) {
-      CGFloat range = pos - nextPos;
+    if (sheetHeight >= h && sheetHeight <= nextH) {
+      CGFloat range = nextH - h;
       *outIndex = i;
-      *outProgress = range > 0 ? (pos - position) / range : 0;
+      *outProgress = range > 0 ? (sheetHeight - h) / range : 0;
       return YES;
     }
   }
@@ -154,14 +162,17 @@
   return detent + progress * (nextDetent - detent);
 }
 
-- (void)clearResolvedPositions {
-  [_resolvedDetentPositions removeAllObjects];
+- (void)clearResolvedHeights {
+  [_resolvedDetentHeights removeAllObjects];
+  [_resolvedDetentOffsets removeAllObjects];
 }
 
 - (void)setDetentCount:(NSInteger)count {
-  [_resolvedDetentPositions removeAllObjects];
+  _resolvedDetentHeights = [NSMutableArray arrayWithCapacity:count];
+  _resolvedDetentOffsets = [NSMutableArray arrayWithCapacity:count];
   for (NSInteger i = 0; i < count; i++) {
-    [_resolvedDetentPositions addObject:@(0)];
+    [_resolvedDetentHeights addObject:@(0)];
+    [_resolvedDetentOffsets addObject:@(0)];
   }
 }
 
