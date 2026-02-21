@@ -32,13 +32,9 @@
     return;
   }
 
-  // Learn per-detent offset once from difference between actual and resolver height.
-  if ([_resolvedDetentOffsets[index] doubleValue] != 0) {
-    return;
-  }
-
   CGFloat actualHeight = self.delegate.screenHeight - self.delegate.currentPosition;
   CGFloat resolverHeight = [_resolvedDetentHeights[index] doubleValue];
+  // Always update — system offset can change between detent transitions
   if (resolverHeight > 0 && actualHeight > 0) {
     _resolvedDetentOffsets[index] = @(actualHeight - resolverHeight);
   }

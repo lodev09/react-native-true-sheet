@@ -37,6 +37,7 @@ using namespace facebook::react;
   UIView *_transitionFakeView;
   BOOL _isDragging;
   BOOL _isTransitioning;
+  BOOL _isTransitionSnapping;
   BOOL _isTrackingPositionFromLayout;
   BOOL _isWillDismissEmitted;
 
@@ -441,6 +442,19 @@ using namespace facebook::react;
       strongSelf->_transitioningTimer = nil;
       [strongSelf->_transitionFakeView removeFromSuperview];
       strongSelf->_isTransitioning = NO;
+      strongSelf->_isTransitionSnapping = NO;
+
+      // Emit settled position after detent snap.
+      // Uses dispatch_after because presentedView frame isn't final until UIKit
+      // completes its layout pass after the transition animation.
+      if (strongSelf->_isPresented) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+          NSInteger index = strongSelf.currentDetentIndex;
+          CGFloat position = strongSelf.currentPosition;
+          [strongSelf learnOffsetForDetentIndex:index];
+          [strongSelf emitChangePositionDelegateWithPosition:position realtime:NO debug:@"transition end"];
+        });
+      }
     }];
 }
 
@@ -457,7 +471,12 @@ using namespace facebook::react;
 
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
-      [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition in"];
+      // Detect drag → snap transition jump; stay non-realtime for the rest of the animation
+      if (!_isTransitionSnapping && _isPresented && _lastPosition > 0 && fabs(_lastPosition - position) > 20) {
+        _isTransitionSnapping = YES;
+      }
+      BOOL realtime = !_isTransitionSnapping;
+      [self emitChangePositionDelegateWithPosition:position realtime:realtime debug:@"transition in"];
     }
   }
 }
