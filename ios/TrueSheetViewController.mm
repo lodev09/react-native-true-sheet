@@ -491,8 +491,6 @@ using namespace facebook::react;
     CGFloat index = [self interpolatedIndexForPosition:position];
     CGFloat detent = [self interpolatedDetentForPosition:position];
 
-    NSLog(@"realtime: %i source: %@, position: %f, index: %f, detent: %f", realtime, debug, position, index, detent);
-
     [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
   }
 }

@@ -61,13 +61,15 @@
   // Use this detent's own offset if available
   if (index >= 0 && index < (NSInteger)_resolvedDetentOffsets.count) {
     CGFloat offset = [_resolvedDetentOffsets[index] doubleValue];
-    if (offset != 0) return offset;
+    if (offset != 0)
+      return offset;
   }
 
   // Fall back to any known offset
   for (NSInteger i = 0; i < (NSInteger)_resolvedDetentOffsets.count; i++) {
     CGFloat offset = [_resolvedDetentOffsets[i] doubleValue];
-    if (offset != 0) return offset;
+    if (offset != 0)
+      return offset;
   }
 
   return 0;
