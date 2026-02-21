@@ -548,7 +548,7 @@ using namespace facebook::react;
   if (_isSheetUpdatePending)
     return;
 
-  if (!_controller.isPresented) {
+  if (_controller.isBeingPresented) {
     _pendingSizeChange = YES;
     return;
   }
