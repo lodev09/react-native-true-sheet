@@ -62,6 +62,8 @@ using namespace facebook::react;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
   BOOL _pendingSizeChange;
+  BOOL _pendingPropsUpdate;
+  NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
 }
 
@@ -172,7 +174,12 @@ using namespace facebook::react;
       _pendingLayoutUpdate = YES;
     }
   }
-  _controller.detents = detents;
+
+  if (_controller.isBeingPresented) {
+    _pendingDetents = detents;
+  } else {
+    _controller.detents = detents;
+  }
 
   // Background color
   _controller.backgroundColor = RCTUIColorFromSharedColor(newProps.backgroundColor);
@@ -317,24 +324,9 @@ using namespace facebook::react;
   }
 
   if (_controller.isPresented) {
-    BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
-    _pendingLayoutUpdate = NO;
-
-    UIView *presenterView = _controller.presentingViewController.view;
-    [_controller setupAnchorViewInView:presenterView];
-
-    [_controller setupSheetSizing];
-
-    [_controller.sheetPresentationController animateChanges:^{
-      [self->_controller setupSheetProps];
-      if (pendingLayoutUpdate) {
-        [self->_controller setupSheetDetentsForDetentsChange];
-      } else {
-        [self->_controller setupSheetDetents];
-      }
-      [self->_controller applyActiveDetent];
-    }];
-    [_controller setupDraggable];
+    [self applySheetPropsUpdate];
+  } else if (_controller.isBeingPresented) {
+    _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
   }
@@ -556,7 +548,7 @@ using namespace facebook::react;
   if (_isSheetUpdatePending)
     return;
 
-  if (!_controller.isPresented) {
+  if (_controller.isBeingPresented) {
     _pendingSizeChange = YES;
     return;
   }
@@ -592,6 +584,11 @@ using namespace facebook::react;
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
+
+  if (_pendingPropsUpdate) {
+    _pendingPropsUpdate = NO;
+    [self applySheetPropsUpdate];
+  }
 
   if (_pendingSizeChange) {
     _pendingSizeChange = NO;
@@ -695,6 +692,32 @@ using namespace facebook::react;
 }
 
 #pragma mark - Private Helpers
+
+- (void)applySheetPropsUpdate {
+  BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
+  _pendingLayoutUpdate = NO;
+
+  if (_pendingDetents) {
+    _controller.detents = _pendingDetents;
+    _pendingDetents = nil;
+  }
+
+  UIView *presenterView = _controller.presentingViewController.view;
+  [_controller setupAnchorViewInView:presenterView];
+
+  [_controller setupSheetSizing];
+
+  [_controller.sheetPresentationController animateChanges:^{
+    [self->_controller setupSheetProps];
+    if (pendingLayoutUpdate) {
+      [self->_controller setupSheetDetentsForDetentsChange];
+    } else {
+      [self->_controller setupSheetDetents];
+    }
+    [self->_controller applyActiveDetent];
+  }];
+  [_controller setupDraggable];
+}
 
 - (UIViewController *)findPresentingViewController {
   if (!self.window)
