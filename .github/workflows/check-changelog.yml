@@ -69,12 +69,7 @@ jobs:
             ].join('\n');
 
             // Skip commenting on first open — changelog is typically added after PR creation
-            if (context.payload.action === 'opened') {
-              console.log('Skipping comment on initial PR open.');
-              return;
-            }
-
-            if (!existing) {
+            if (context.payload.action !== 'opened' && !existing) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
