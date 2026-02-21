@@ -5,6 +5,7 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed touch passthrough on undimmed sheets when `dismissible` is `false`. ([#548](https://github.com/lodev09/react-native-true-sheet/pull/548) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **iOS**: Fixed `animatedIndex`/`animatedDetent` reporting wrong values during drag and transitions. ([#558](https://github.com/lodev09/react-native-true-sheet/pull/558) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed detent updates being ignored when changed during presentation animation. ([#557](https://github.com/lodev09/react-native-true-sheet/pull/557) by [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
