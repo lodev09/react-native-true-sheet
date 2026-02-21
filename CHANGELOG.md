@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.5
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed touch passthrough on undimmed sheets when `dismissible` is `false`. ([#548](https://github.com/lodev09/react-native-true-sheet/pull/548) by [@isaacrowntree](https://github.com/isaacrowntree))
