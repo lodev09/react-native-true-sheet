@@ -65,6 +65,15 @@ jobs:
               return;
             }
 
+            // When a maintainer manually adds "needs repro", respect it — don't re-check the body
+            const isManualNeedsRepro =
+              context.payload.action === 'labeled' &&
+              context.payload.label?.name === 'needs repro';
+
+            if (isManualNeedsRepro) {
+              return;
+            }
+
             if (hasRepro) {
               // Valid repro found - add repro-provided label, remove needs-repro
               if (!hasReproProvidedLabel) {
