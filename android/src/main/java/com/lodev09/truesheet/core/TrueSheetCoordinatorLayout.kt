@@ -65,15 +65,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
     get() = PointerEvents.BOX_NONE
 
   /**
-   * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior and forces re-discovery.
+   * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior.
    *
-   * `BottomSheetBehavior.onLayoutChild` calls `findScrollingChild()` which traverses the
-   * entire sheet subtree. The cached `nestedScrollingChildRef` can become stale when:
-   * 1. A child sheet with a ScrollView is dismissed and its ScrollView returns to this hierarchy
-   * 2. A ScrollView is conditionally removed and re-added (e.g. React conditional rendering)
-   *
-   * When stale (GC'd target or view no longer in sheet), we clear the ref and request layout
-   * so `onLayoutChild` re-runs `findScrollingChild()` to discover the current ScrollView.
+   * The cached `nestedScrollingChildRef` can become stale when a child sheet
+   * with a ScrollView is dismissed and its ScrollView returns to this hierarchy.
    */
   private fun clearStaleNestedScrollingChildRef() {
     val sheet = delegate?.findSheetView() ?: return
@@ -86,7 +81,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
       val view = ref.get()
       if (view == null || !view.isDescendantOf(sheet)) {
         ref.clear()
-        sheet.requestLayout()
       }
     } catch (_: Exception) {}
   }

@@ -11,6 +11,7 @@ interface TrueSheetContainerViewDelegate {
   val eventDispatcher: EventDispatcher?
   fun containerViewContentDidChangeSize(width: Int, height: Int)
   fun containerViewContentDidScroll()
+  fun containerViewScrollViewDidChange()
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
 }
@@ -122,6 +123,10 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()
+  }
+
+  override fun contentViewScrollViewDidChange() {
+    delegate?.containerViewScrollViewDidChange()
   }
 
   override fun headerViewDidChangeSize(width: Int, height: Int) {

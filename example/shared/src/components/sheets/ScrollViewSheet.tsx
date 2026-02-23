@@ -13,7 +13,6 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import { BORDER_RADIUS, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { Footer } from '../Footer';
 import { Header } from '../Header';
-import { Input } from '../Input';
 
 interface ScrollViewSheetProps extends TrueSheetProps {}
 
@@ -41,6 +40,8 @@ const HeavyItem = ({ index }: { index: number }) => {
 };
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
+  const [showList, setShowList] = useState(true);
+
   return (
     <TrueSheet
       ref={ref}
@@ -49,26 +50,28 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       scrollable
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
-      footer={
-        <Footer>
-          <Input />
-        </Footer>
-      }
+      footer={<Footer text="TOGGLE LISTVIEW" onPress={() => setShowList(!showList)} />}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       {...props}
     >
-      <ScrollView
-        nestedScrollEnabled
-        contentContainerStyle={styles.content}
-        indicatorStyle="black"
-        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
-        keyboardDismissMode="on-drag"
-      >
-        {times(20, (i) => (
-          <HeavyItem key={i} index={i} />
-        ))}
-      </ScrollView>
+      {showList ? (
+        <ScrollView
+          nestedScrollEnabled
+          contentContainerStyle={styles.content}
+          indicatorStyle="black"
+          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
+          keyboardDismissMode="on-drag"
+        >
+          {times(20, (i) => (
+            <HeavyItem key={i} index={i} />
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.placeholder}>
+          <Text style={styles.placeholderText}>List is hidden</Text>
+        </View>
+      )}
     </TrueSheet>
   );
 });
@@ -115,5 +118,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: LIGHT_GRAY,
     lineHeight: 20,
+  },
+  placeholder: {
+    padding: SPACING,
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: 'rgba(255, 255, 255, 0.3)',
+    fontSize: 14,
   },
 });

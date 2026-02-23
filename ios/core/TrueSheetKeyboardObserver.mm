@@ -14,6 +14,11 @@
 
 @implementation TrueSheetKeyboardObserver {
   NSHashTable<id<TrueSheetKeyboardObserverDelegate>> *_delegates;
+  CGFloat _currentHeight;
+}
+
+- (CGFloat)currentHeight {
+  return _currentHeight;
 }
 
 - (instancetype)init {
@@ -75,6 +80,8 @@
 
   CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
   CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+
+  _currentHeight = keyboardHeight;
 
   for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates) {
     if (keyboardHeight > 0) {

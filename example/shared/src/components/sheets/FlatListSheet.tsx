@@ -32,7 +32,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         console.log(`Sheet FlatList presented!`);
         scrollRef.current?.scrollToOffset({ offset: 99999, animated: true });
       }}
-      footer={<Footer onPress={() => testRef.current?.present()} />}
+      footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
       {...props}
     >
       <View style={styles.wrapper}>

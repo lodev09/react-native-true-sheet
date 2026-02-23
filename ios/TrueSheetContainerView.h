@@ -15,18 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TrueSheetContainerViewDelegate <NSObject>
 
-/**
- * Called when the container's content size changes
- * @param newSize The new size of the content
- */
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
+- (void)containerViewScrollViewDidChange;
 
 @optional
 
-/**
- * Called when the header size changes
- * @param newSize The new size of the header
- */
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
 
 @end

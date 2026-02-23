@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetKeyboardObserver : NSObject
 
 @property (nonatomic, weak, nullable) TrueSheetViewController *viewController;
+@property (nonatomic, readonly) CGFloat currentHeight;
 
 - (void)addDelegate:(id<TrueSheetKeyboardObserverDelegate>)delegate;
 - (void)removeDelegate:(id<TrueSheetKeyboardObserverDelegate>)delegate;

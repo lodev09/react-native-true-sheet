@@ -574,6 +574,11 @@ using namespace facebook::react;
   [self setupSheetDetentsForSizeChange];
 }
 
+// When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.
+- (void)containerViewScrollViewDidChange {
+  [_containerView setupScrollable];
+}
+
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {

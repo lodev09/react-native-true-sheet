@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Fixed first interaction with remounted nested ScrollView dragging sheet instead of scrolling. ([#564](https://github.com/lodev09/react-native-true-sheet/pull/564) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.6
 
 ### 🐛 Bug fixes

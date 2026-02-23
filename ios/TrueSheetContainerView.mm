@@ -175,8 +175,8 @@ using namespace facebook::react;
   [self.delegate containerViewContentDidChangeSize:newSize];
 }
 
-- (void)contentViewDidChangeChildren {
-  [self setupScrollable];
+- (void)contentViewScrollViewDidChange {
+  [self.delegate containerViewScrollViewDidChange];
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate

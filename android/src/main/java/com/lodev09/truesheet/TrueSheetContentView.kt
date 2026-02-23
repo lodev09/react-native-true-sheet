@@ -18,6 +18,7 @@ import com.lodev09.truesheet.utils.isDescendantOf
 interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
   fun contentViewDidScroll()
+  fun contentViewScrollViewDidChange()
 }
 
 /**
@@ -32,7 +33,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastHeight = 0
 
   private var pinnedScrollView: ScrollView? = null
-  private var cachedScrollView: ScrollView? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
 
@@ -44,6 +44,22 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       field = value
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
     }
+
+  override fun addView(child: View?, index: Int) {
+    super.addView(child, index)
+    checkScrollViewChanged()
+  }
+
+  override fun removeViewAt(index: Int) {
+    super.removeViewAt(index)
+    checkScrollViewChanged()
+  }
+
+  private fun checkScrollViewChanged() {
+    if (pinnedScrollView == null || pinnedScrollView?.isDescendantOf(this) == false) {
+      delegate?.contentViewScrollViewDidChange()
+    }
+  }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
@@ -61,65 +77,63 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       return
     }
 
-    this.bottomInset = bottomInset
-    applyScrollViewBottomInset()
-  }
+    // Check if pinned scroll view is still valid (still in view hierarchy)
+    if (pinnedScrollView != null && pinnedScrollView?.isDescendantOf(this) == false) {
+      clearScrollable()
+    }
 
-  private fun applyScrollViewBottomInset() {
-    val scrollView = findScrollView(this)
+    // Already set up with same inset and valid scroll view
+    if (pinnedScrollView != null && this.bottomInset == bottomInset) {
+      return
+    }
 
-    if (scrollView != pinnedScrollView) {
-      // Clean up previous scroll view
-      pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
-      pinnedScrollView?.setPadding(
-        pinnedScrollView!!.paddingLeft,
-        pinnedScrollView!!.paddingTop,
-        pinnedScrollView!!.paddingRight,
-        originalScrollViewPaddingBottom
-      )
+    val scrollView = findScrollView(this) ?: return
 
+    // Only capture originals on first pin
+    if (pinnedScrollView == null) {
+      originalScrollViewPaddingBottom = scrollView.paddingBottom
       pinnedScrollView = scrollView
-      originalScrollViewPaddingBottom = scrollView?.paddingBottom ?: 0
 
-      scrollView?.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+      scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
         if (scrollY != oldScrollY) {
           delegate?.contentViewDidScroll()
         }
       }
     }
 
-    scrollView?.let {
-      it.clipToPadding = false
-      it.setPadding(
-        it.paddingLeft,
-        it.paddingTop,
-        it.paddingRight,
-        originalScrollViewPaddingBottom + bottomInset
-      )
+    this.bottomInset = bottomInset
+
+    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + bottomInset)
+
+    // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
+    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
+    if (keyboardHeight > 0) {
+      setScrollViewPaddingBottom(originalScrollViewPaddingBottom + keyboardHeight)
     }
+  }
+
+  private fun setScrollViewPaddingBottom(paddingBottom: Int) {
+    val scrollView = pinnedScrollView ?: return
+    scrollView.clipToPadding = false
+    scrollView.setPadding(
+      scrollView.paddingLeft,
+      scrollView.paddingTop,
+      scrollView.paddingRight,
+      paddingBottom
+    )
   }
 
   fun clearScrollable() {
     pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
-    pinnedScrollView?.setPadding(
-      pinnedScrollView!!.paddingLeft,
-      pinnedScrollView!!.paddingTop,
-      pinnedScrollView!!.paddingRight,
-      originalScrollViewPaddingBottom
-    )
+    setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     pinnedScrollView = null
-    cachedScrollView = null
     originalScrollViewPaddingBottom = 0
     bottomInset = 0
   }
 
   fun findScrollView(): ScrollView? {
-    // Return cached if still valid (attached and descendant of this view)
-    cachedScrollView?.let {
-      if (it.isAttachedToWindow && it.isDescendantOf(this)) return it
-      cachedScrollView = null
-    }
-    return findScrollView(this as View).also { cachedScrollView = it }
+    if (pinnedScrollView != null) return pinnedScrollView
+    return findScrollView(this as View)
   }
 
   private fun findScrollView(view: View): ScrollView? {
@@ -175,15 +189,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val scrollView = pinnedScrollView ?: return
 
     val totalBottomInset = if (keyboardHeight > 0) keyboardHeight else bottomInset
-    val newPaddingBottom = originalScrollViewPaddingBottom + totalBottomInset
-
-    scrollView.clipToPadding = false
-    scrollView.setPadding(
-      scrollView.paddingLeft,
-      scrollView.paddingTop,
-      scrollView.paddingRight,
-      newPaddingBottom
-    )
+    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
 
     // Trigger a scroll to force update
     scrollView.post {
