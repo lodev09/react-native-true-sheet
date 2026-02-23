@@ -57,15 +57,33 @@ using namespace facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
-  [self.delegate contentViewDidChangeChildren];
+  [self checkScrollViewChanged];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
   [super unmountChildComponentView:childComponentView index:index];
-  [self.delegate contentViewDidChangeChildren];
+  [self checkScrollViewChanged];
+}
+
+- (void)checkScrollViewChanged {
+  if (!_pinnedScrollView || ![_pinnedScrollView isDescendantOfView:self]) {
+    [self.delegate contentViewScrollViewDidChange];
+  }
 }
 
 #pragma mark - Scrollable
+
+- (void)applyScrollViewBottomInset:(CGFloat)contentBottom indicatorBottom:(CGFloat)indicatorBottom {
+  if (!_pinnedScrollView) return;
+
+  UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
+  contentInset.bottom = contentBottom;
+  _pinnedScrollView.scrollView.contentInset = contentInset;
+
+  UIEdgeInsets indicatorInsets = _pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
+  indicatorInsets.bottom = indicatorBottom;
+  _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+}
 
 - (void)clearScrollable {
   if (_pinnedScrollView) {
@@ -73,13 +91,7 @@ using namespace facebook::react;
     frame.size.height = _originalScrollViewHeight;
     _pinnedScrollView.frame = frame;
 
-    UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
-    contentInset.bottom = 0;
-    _pinnedScrollView.scrollView.contentInset = contentInset;
-
-    UIEdgeInsets indicatorInsets = _pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-    indicatorInsets.bottom = _originalIndicatorBottomInset;
-    _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+    [self applyScrollViewBottomInset:0 indicatorBottom:_originalIndicatorBottomInset];
   }
   _pinnedScrollView = nil;
   _bottomInset = 0;
@@ -94,7 +106,6 @@ using namespace facebook::react;
   }
 
   // Check if pinned scroll view is still valid (still in view hierarchy)
-  // This handles the case where content changes and the old scroll view is unmounted
   if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
     [self clearScrollable];
   }
@@ -120,13 +131,10 @@ using namespace facebook::react;
 
   [self updateScrollViewHeight];
 
-  UIEdgeInsets contentInset = scrollView.scrollView.contentInset;
-  contentInset.bottom = bottomInset;
-  scrollView.scrollView.contentInset = contentInset;
-
-  UIEdgeInsets indicatorInsets = scrollView.scrollView.verticalScrollIndicatorInsets;
-  indicatorInsets.bottom = _originalIndicatorBottomInset;
-  scrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+  // Apply footer inset, or keyboard inset if keyboard is showing
+  CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
+  CGFloat effectiveInset = keyboardHeight > 0 ? keyboardHeight : bottomInset;
+  [self applyScrollViewBottomInset:effectiveInset indicatorBottom:_originalIndicatorBottomInset + (keyboardHeight > 0 ? keyboardHeight : 0)];
 }
 
 - (void)updateScrollViewHeight {
@@ -202,13 +210,8 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
-                     contentInset.bottom = height;
-                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
-
-                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-                     indicatorInsets.bottom = self->_originalIndicatorBottomInset + height;
-                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+                     [self applyScrollViewBottomInset:height
+                                     indicatorBottom:self->_originalIndicatorBottomInset + height];
 
                      if (firstResponder) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
@@ -229,13 +232,8 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     UIEdgeInsets contentInset = self->_pinnedScrollView.scrollView.contentInset;
-                     contentInset.bottom = self->_bottomInset;
-                     self->_pinnedScrollView.scrollView.contentInset = contentInset;
-
-                     UIEdgeInsets indicatorInsets = self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-                     indicatorInsets.bottom = self->_originalIndicatorBottomInset;
-                     self->_pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+                     [self applyScrollViewBottomInset:self->_bottomInset
+                                     indicatorBottom:self->_originalIndicatorBottomInset];
                    }
                    completion:nil];
 }
