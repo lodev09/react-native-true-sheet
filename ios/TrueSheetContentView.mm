@@ -73,7 +73,7 @@ using namespace facebook::react;
 
 #pragma mark - Scrollable
 
-- (void)applyScrollViewBottomInset:(CGFloat)contentBottom indicatorBottom:(CGFloat)indicatorBottom {
+- (void)setScrollViewContentInset:(CGFloat)contentBottom indicatorInset:(CGFloat)indicatorBottom {
   if (!_pinnedScrollView) return;
 
   UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
@@ -91,7 +91,7 @@ using namespace facebook::react;
     frame.size.height = _originalScrollViewHeight;
     _pinnedScrollView.frame = frame;
 
-    [self applyScrollViewBottomInset:0 indicatorBottom:_originalIndicatorBottomInset];
+    [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
   }
   _pinnedScrollView = nil;
   _bottomInset = 0;
@@ -131,10 +131,13 @@ using namespace facebook::react;
 
   [self updateScrollViewHeight];
 
-  // Apply footer inset, or keyboard inset if keyboard is showing
+  [self setScrollViewContentInset:_bottomInset indicatorInset:_originalIndicatorBottomInset];
+
+  // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
-  CGFloat effectiveInset = keyboardHeight > 0 ? keyboardHeight : bottomInset;
-  [self applyScrollViewBottomInset:effectiveInset indicatorBottom:_originalIndicatorBottomInset + (keyboardHeight > 0 ? keyboardHeight : 0)];
+  if (keyboardHeight > 0) {
+    [self setScrollViewContentInset:keyboardHeight indicatorInset:_originalIndicatorBottomInset + keyboardHeight];
+  }
 }
 
 - (void)updateScrollViewHeight {
@@ -210,8 +213,8 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self applyScrollViewBottomInset:height
-                                     indicatorBottom:self->_originalIndicatorBottomInset + height];
+                     [self setScrollViewContentInset:height
+                                        indicatorInset:self->_originalIndicatorBottomInset + height];
 
                      if (firstResponder) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
@@ -232,8 +235,8 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self applyScrollViewBottomInset:self->_bottomInset
-                                     indicatorBottom:self->_originalIndicatorBottomInset];
+                     [self setScrollViewContentInset:self->_bottomInset
+                                        indicatorInset:self->_originalIndicatorBottomInset];
                    }
                    completion:nil];
 }
