@@ -116,6 +116,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
         originalScrollViewPaddingBottom + bottomInset
       )
     }
+
+    // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
+    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
+    if (keyboardHeight > 0) {
+      updateScrollViewInsetForKeyboard(keyboardHeight)
+    }
   }
 
   fun clearScrollable() {
