@@ -9,13 +9,17 @@ interface FooterProps extends PressableProps {
   text?: string;
 }
 
-export const Footer = ({ children, text = 'FOOTER', ...rest }: FooterProps) => {
+export const Footer = ({ children, text = 'FOOTER', onPress, ...rest }: FooterProps) => {
   const insets = useSafeAreaInsets();
   const bottomInset = isIPad ? 0 : insets.bottom;
 
   return (
     <View style={[styles.wrapper, { paddingBottom: bottomInset }]}>
-      <Pressable style={styles.container} {...rest}>
+      <Pressable
+        style={({ pressed }) => [styles.container, onPress && pressed && styles.pressed]}
+        onPress={onPress}
+        {...rest}
+      >
         {children || <Text style={styles.text}>{text}</Text>}
       </Pressable>
     </View>
@@ -29,6 +33,9 @@ const styles = StyleSheet.create({
   container: {
     height: FOOTER_HEIGHT,
     padding: SPACING,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   text: {
     textAlign: 'center',
