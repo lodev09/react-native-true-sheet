@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Fixed nested scroll breaking when ScrollView is conditionally removed and re-added. ([#562](https://github.com/lodev09/react-native-true-sheet/pull/562) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.5
 
 ### 🐛 Bug fixes
