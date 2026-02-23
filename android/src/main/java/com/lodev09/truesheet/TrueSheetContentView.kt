@@ -45,17 +45,14 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
     }
 
-  init {
-    // Detect when children are added/removed (e.g. conditional ScrollView remount).
-    setOnHierarchyChangeListener(object : OnHierarchyChangeListener {
-      override fun onChildViewAdded(parent: View?, child: View?) {
-        checkScrollViewChanged()
-      }
+  override fun addView(child: View?, index: Int) {
+    super.addView(child, index)
+    checkScrollViewChanged()
+  }
 
-      override fun onChildViewRemoved(parent: View?, child: View?) {
-        checkScrollViewChanged()
-      }
-    })
+  override fun removeViewAt(index: Int) {
+    super.removeViewAt(index)
+    checkScrollViewChanged()
   }
 
   private fun checkScrollViewChanged() {
