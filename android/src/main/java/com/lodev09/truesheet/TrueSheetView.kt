@@ -592,6 +592,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.commitKeyboardDetent()
   }
 
+  // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView
+  // and request layout so BottomSheetBehavior re-discovers the nested scrolling child.
+  override fun containerViewScrollViewDidChange() {
+    setupScrollable()
+    viewController.sheetView?.requestLayout()
+  }
+
   override fun containerViewHeaderDidChangeSize(width: Int, height: Int) {
     updateSheetIfNeeded()
   }

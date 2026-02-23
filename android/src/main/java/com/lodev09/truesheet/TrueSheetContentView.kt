@@ -18,6 +18,7 @@ import com.lodev09.truesheet.utils.isDescendantOf
 interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
   fun contentViewDidScroll()
+  fun contentViewScrollViewDidChange()
 }
 
 /**
@@ -32,7 +33,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastHeight = 0
 
   private var pinnedScrollView: ScrollView? = null
-  private var cachedScrollView: ScrollView? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
 
@@ -44,6 +44,25 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       field = value
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
     }
+
+  init {
+    // Detect when children are added/removed (e.g. conditional ScrollView remount).
+    setOnHierarchyChangeListener(object : OnHierarchyChangeListener {
+      override fun onChildViewAdded(parent: View?, child: View?) {
+        checkScrollViewChanged()
+      }
+
+      override fun onChildViewRemoved(parent: View?, child: View?) {
+        checkScrollViewChanged()
+      }
+    })
+  }
+
+  private fun checkScrollViewChanged() {
+    if (pinnedScrollView == null || pinnedScrollView?.isDescendantOf(this) == false) {
+      delegate?.contentViewScrollViewDidChange()
+    }
+  }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
@@ -108,18 +127,16 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       originalScrollViewPaddingBottom
     )
     pinnedScrollView = null
-    cachedScrollView = null
     originalScrollViewPaddingBottom = 0
     bottomInset = 0
   }
 
   fun findScrollView(): ScrollView? {
-    // Return cached if still valid (attached and descendant of this view)
-    cachedScrollView?.let {
+    // Return pinned if still valid (attached and descendant of this view)
+    pinnedScrollView?.let {
       if (it.isAttachedToWindow && it.isDescendantOf(this)) return it
-      cachedScrollView = null
     }
-    return findScrollView(this as View).also { cachedScrollView = it }
+    return findScrollView(this as View)
   }
 
   private fun findScrollView(view: View): ScrollView? {
