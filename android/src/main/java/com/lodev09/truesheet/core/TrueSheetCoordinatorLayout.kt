@@ -65,12 +65,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
     get() = PointerEvents.BOX_NONE
 
   /**
-   * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior.
+   * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior and forces re-discovery.
    *
    * `BottomSheetBehavior.onLayoutChild` calls `findScrollingChild()` which traverses the
-   * entire sheet subtree. When a child sheet with a ScrollView is dismissed, the ScrollView
-   * returns to this sheet's view hierarchy. `onLayoutChild` may then capture a ref to that
-   * ScrollView even though it doesn't belong to this sheet, blocking drag interactions.
+   * entire sheet subtree. The cached `nestedScrollingChildRef` can become stale when:
+   * 1. A child sheet with a ScrollView is dismissed and its ScrollView returns to this hierarchy
+   * 2. A ScrollView is conditionally removed and re-added (e.g. React conditional rendering)
+   *
+   * When stale (GC'd target or view no longer in sheet), we clear the ref and request layout
+   * so `onLayoutChild` re-runs `findScrollingChild()` to discover the current ScrollView.
    */
   private fun clearStaleNestedScrollingChildRef() {
     val sheet = delegate?.findSheetView() ?: return
@@ -80,9 +83,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
       field.isAccessible = true
       @Suppress("UNCHECKED_CAST")
       val ref = field.get(behavior) as? java.lang.ref.WeakReference<android.view.View> ?: return
-      val view = ref.get() ?: return
-      if (!view.isDescendantOf(sheet)) {
+      val view = ref.get()
+      if (view == null || !view.isDescendantOf(sheet)) {
         ref.clear()
+        sheet.requestLayout()
       }
     } catch (_: Exception) {}
   }
