@@ -74,7 +74,8 @@ using namespace facebook::react;
 #pragma mark - Scrollable
 
 - (void)setScrollViewContentInset:(CGFloat)contentBottom indicatorInset:(CGFloat)indicatorBottom {
-  if (!_pinnedScrollView) return;
+  if (!_pinnedScrollView)
+    return;
 
   UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
   contentInset.bottom = contentBottom;
@@ -214,7 +215,7 @@ using namespace facebook::react;
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
                      [self setScrollViewContentInset:height
-                                        indicatorInset:self->_originalIndicatorBottomInset + height];
+                                      indicatorInset:self->_originalIndicatorBottomInset + height];
 
                      if (firstResponder) {
                        CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
@@ -236,7 +237,7 @@ using namespace facebook::react;
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
                      [self setScrollViewContentInset:self->_bottomInset
-                                        indicatorInset:self->_originalIndicatorBottomInset];
+                                      indicatorInset:self->_originalIndicatorBottomInset];
                    }
                    completion:nil];
 }
