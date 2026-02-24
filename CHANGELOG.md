@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Fixed pull to refresh not working for short ScrollViews. ([#570](https://github.com/lodev09/react-native-true-sheet/pull/570) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.7
 
 ### 🐛 Bug fixes
