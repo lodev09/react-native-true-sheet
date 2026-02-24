@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- **iOS**: Added tap-to-cycle-detent behavior for custom grabber, matching Android. ([#571](https://github.com/lodev09/react-native-true-sheet/pull/571) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **Android**: Fixed pull to refresh not working for short ScrollViews. ([#570](https://github.com/lodev09/react-native-true-sheet/pull/570) by [@lodev09](https://github.com/lodev09))
