@@ -34,6 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the grabber color adapts to the background (default: YES)
 @property (nonatomic, strong, nullable) NSNumber *adaptive;
 
+/// Called when the grabber is tapped
+@property (nonatomic, copy, nullable) void (^onTap)(void);
+
 /// Adds the grabber view to a parent view with proper constraints
 - (void)addToView:(UIView *)parentView;
 

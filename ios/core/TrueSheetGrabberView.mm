@@ -51,8 +51,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 #pragma mark - Setup
 
 - (void)setupView {
-  self.userInteractionEnabled = NO;
   self.clipsToBounds = YES;
+
+  UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
+  [self addGestureRecognizer:tap];
 
   _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:nil];
   _vibrancyView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -62,6 +64,14 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   _fillView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
   [_vibrancyView.contentView addSubview:_fillView];
+}
+
+#pragma mark - Actions
+
+- (void)handleTap {
+  if (_onTap) {
+    _onTap();
+  }
 }
 
 #pragma mark - Public
