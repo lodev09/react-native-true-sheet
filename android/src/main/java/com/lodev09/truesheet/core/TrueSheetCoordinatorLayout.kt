@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.lodev09.truesheet.utils.isDescendantOf
@@ -98,7 +99,9 @@ class TrueSheetCoordinatorLayout(context: Context) :
     }
 
     val scrollView = delegate?.findScrollView()
+    val hasRefreshControl = scrollView?.parent is SwipeRefreshLayout
     val cannotScroll = scrollView != null &&
+      !hasRefreshControl &&
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
 
