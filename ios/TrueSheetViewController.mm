@@ -758,10 +758,12 @@ using namespace facebook::react;
 
 - (void)handleGrabberTap {
   NSInteger detentCount = _detents.count;
-  if (detentCount == 0) return;
+  if (detentCount == 0)
+    return;
 
   NSInteger currentIndex = self.currentDetentIndex;
-  if (currentIndex < 0) return;
+  if (currentIndex < 0)
+    return;
 
   NSInteger nextIndex = (currentIndex + 1) % detentCount;
   if (nextIndex == 0 && detentCount == 1 && self.dismissible) {

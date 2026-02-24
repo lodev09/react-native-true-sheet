@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.8
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed custom grabber missing tap-to-cycle-detent behavior. ([#571](https://github.com/lodev09/react-native-true-sheet/pull/571) by [@lodev09](https://github.com/lodev09))
