@@ -743,10 +743,33 @@ using namespace facebook::react;
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
 
+    __weak __typeof(self) weakSelf = self;
+    _grabberView.onTap = ^{
+      [weakSelf handleGrabberTap];
+    };
+
     [self.view bringSubviewToFront:_grabberView];
   } else {
     self.sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
+    _grabberView.onTap = nil;
+  }
+}
+
+- (void)handleGrabberTap {
+  NSInteger detentCount = _detents.count;
+  if (detentCount == 0) return;
+
+  NSInteger currentIndex = self.currentDetentIndex;
+  if (currentIndex < 0) return;
+
+  NSInteger nextIndex = (currentIndex + 1) % detentCount;
+  if (nextIndex == 0 && detentCount == 1 && self.dismissible) {
+    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  } else {
+    [self.sheet animateChanges:^{
+      [self resizeToDetentIndex:nextIndex];
+    }];
   }
 }
 
