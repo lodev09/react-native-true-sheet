@@ -185,11 +185,8 @@
       "publish": false
     },
     "hooks": {
-      "before:init": [
-        "yarn tidy",
-        "yarn test"
-      ],
-      "after:bump": "sed -i '' 's/## Unreleased/## Unreleased\\n\\n## ${version}/' CHANGELOG.md && git add CHANGELOG.md"
+      "before:init": "yarn test",
+      "after:bump": "yarn tidy && sed -i '' 's/## Unreleased/## Unreleased\\n\\n## ${version}/' CHANGELOG.md"
     },
     "github": {
       "release": true,
