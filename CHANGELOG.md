@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Fixed back handler blocking navigation when sheet is hidden for screen. ([#577](https://github.com/lodev09/react-native-true-sheet/pull/577) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.8
 
 ### 🐛 Bug fixes
