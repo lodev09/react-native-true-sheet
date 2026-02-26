@@ -624,6 +624,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isSheetVisible = false
     wasHiddenByScreen = true
+    backCallback?.isEnabled = false
 
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
@@ -643,6 +644,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setSheetVisibility(true)
     sheetView?.alpha = 1f
     updateDimAmount(animated = true)
+    backCallback?.isEnabled = true
   }
 
   /**
