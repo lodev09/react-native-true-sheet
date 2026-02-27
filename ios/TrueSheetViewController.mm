@@ -763,12 +763,37 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _grabberView.onTap = ^{
       [weakSelf handleGrabberTap];
     };
+    _grabberView.onIncrement = ^{
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) return;
+      NSInteger current = strongSelf.currentDetentIndex;
+      NSInteger count = strongSelf->_detents.count;
+      if (current >= 0 && current < count - 1) {
+        [strongSelf.sheet animateChanges:^{
+          [strongSelf resizeToDetentIndex:current + 1];
+        }];
+      }
+    };
+    _grabberView.onDecrement = ^{
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) return;
+      NSInteger current = strongSelf.currentDetentIndex;
+      if (current > 0) {
+        [strongSelf.sheet animateChanges:^{
+          [strongSelf resizeToDetentIndex:current - 1];
+        }];
+      } else if (strongSelf.dismissible) {
+        [strongSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+      }
+    };
 
     [self.view bringSubviewToFront:_grabberView];
   } else {
     self.sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
     _grabberView.onTap = nil;
+    _grabberView.onIncrement = nil;
+    _grabberView.onDecrement = nil;
   }
 }
 

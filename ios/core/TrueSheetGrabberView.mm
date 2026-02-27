@@ -63,6 +63,10 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 
 - (void)setupView {
   self.clipsToBounds = YES;
+  self.isAccessibilityElement = YES;
+  self.accessibilityLabel = @"Sheet handle";
+  self.accessibilityTraits = UIAccessibilityTraitAdjustable;
+  self.accessibilityHint = @"Swipe up or down to resize the sheet";
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
   [self addGestureRecognizer:tap];
@@ -82,6 +86,18 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 - (void)handleTap {
   if (_onTap) {
     _onTap();
+  }
+}
+
+- (void)accessibilityIncrement {
+  if (_onIncrement) {
+    _onIncrement();
+  }
+}
+
+- (void)accessibilityDecrement {
+  if (_onDecrement) {
+    _onDecrement();
   }
 }
 

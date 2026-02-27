@@ -476,6 +476,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  override fun bottomSheetViewDidAccessibilityIncrement() {
+    if (currentDetentIndex < detents.size - 1) {
+      setStateForDetentIndex(currentDetentIndex + 1)
+    }
+  }
+
+  override fun bottomSheetViewDidAccessibilityDecrement() {
+    if (currentDetentIndex > 0) {
+      setStateForDetentIndex(currentDetentIndex - 1)
+    } else if (dismissible) {
+      dismiss(animated = true)
+    }
+  }
+
   // =============================================================================
   // MARK: - BottomSheetCallback
   // =============================================================================

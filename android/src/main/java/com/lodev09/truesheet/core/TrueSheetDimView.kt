@@ -29,7 +29,7 @@ interface TrueSheetDimViewDelegate {
  * This implements the "dimmedDetentIndex" equivalent functionality:
  * the view only becomes interactive when the sheet is at or above the dimmed detent.
  */
-@SuppressLint("ViewConstructor", "ClickableViewAccessibility")
+@SuppressLint("ViewConstructor")
 class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   View(reactContext),
   ReactPointerEventsView {
@@ -59,6 +59,18 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
     // Handle taps on the dim view
     setOnClickListener {
       delegate?.dimViewDidTap()
+    }
+
+    contentDescription = "Close sheet"
+    importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+  }
+
+  override fun setAlpha(alpha: Float) {
+    super.setAlpha(alpha)
+    importantForAccessibility = if (alpha > 0f) {
+      IMPORTANT_FOR_ACCESSIBILITY_YES
+    } else {
+      IMPORTANT_FOR_ACCESSIBILITY_NO
     }
   }
 
