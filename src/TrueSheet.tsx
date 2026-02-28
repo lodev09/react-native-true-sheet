@@ -352,7 +352,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   private handleBackPress(): boolean {
     if (!this.isPresented || !this.isSheetVisible) return false;
 
-    TrueSheetModule?.backPress(this.handle);
+    TrueSheetModule?.handleBackPress(this.handle);
     return this.props.onBackPress?.() ?? true;
   }
 

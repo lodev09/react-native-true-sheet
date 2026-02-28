@@ -141,7 +141,7 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun backPress(viewTag: Double, promise: Promise) {
+  fun handleBackPress(viewTag: Double, promise: Promise) {
     val tag = viewTag.toInt()
 
     withTrueSheetView(tag, promise) { view ->

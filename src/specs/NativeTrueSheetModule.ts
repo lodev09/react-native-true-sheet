@@ -57,7 +57,7 @@ interface Spec extends TurboModule {
    * Dismisses or collapses to the lowest detent natively
    * @param viewTag - Native view tag of the sheet component
    */
-  backPress(viewTag: number): Promise<void>;
+  handleBackPress(viewTag: number): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('TrueSheetModule');
