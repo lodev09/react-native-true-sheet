@@ -94,16 +94,20 @@ class DidDismissEvent(surfaceId: Int, viewId: Int) : Event<DidDismissEvent>(surf
 }
 
 /**
- * Fired when the hardware back button is pressed (Android only)
+ * Fired when the sheet visibility changes due to screen transitions
  */
-class BackPressEvent(surfaceId: Int, viewId: Int) : Event<BackPressEvent>(surfaceId, viewId) {
+class VisibilityChangeEvent(surfaceId: Int, viewId: Int, private val visible: Boolean) :
+  Event<VisibilityChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 
-  override fun getEventData(): WritableMap = Arguments.createMap()
+  override fun getEventData(): WritableMap =
+    Arguments.createMap().apply {
+      putBoolean("visible", visible)
+    }
 
   companion object {
-    const val EVENT_NAME = "topBackPress"
-    const val REGISTRATION_NAME = "onBackPress"
+    const val EVENT_NAME = "topVisibilityChange"
+    const val REGISTRATION_NAME = "onVisibilityChange"
   }
 }

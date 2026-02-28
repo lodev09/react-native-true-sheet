@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Use RN `BackHandler` for back press detection for reliability across Android versions. ([#580](https://github.com/lodev09/react-native-true-sheet/pull/580) by [@lodev09](https://github.com/lodev09))
+
 ## 3.9.9
 
 ### 🐛 Bug fixes

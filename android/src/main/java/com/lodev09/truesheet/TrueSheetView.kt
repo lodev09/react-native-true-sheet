@@ -380,6 +380,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   @UiThread
+  fun handleBackPress() {
+    viewController.handleBackPress()
+  }
+
+  @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
     if (viewController.isBeingDismissed || !viewController.isPresented) {
       RNLog.w(reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
@@ -577,9 +582,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(BlurEvent(surfaceId, id))
   }
 
-  override fun viewControllerDidBackPress() {
+  override fun viewControllerDidChangeVisibility(visible: Boolean) {
     val surfaceId = UIManagerHelper.getSurfaceId(this)
-    eventDispatcher?.dispatchEvent(BackPressEvent(surfaceId, id))
+    eventDispatcher?.dispatchEvent(VisibilityChangeEvent(surfaceId, id, visible))
   }
 
   // ==================== TrueSheetContainerViewDelegate ====================

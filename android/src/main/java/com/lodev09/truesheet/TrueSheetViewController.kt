@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import android.widget.ScrollView
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
@@ -64,7 +62,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidFocus()
   fun viewControllerWillBlur()
   fun viewControllerDidBlur()
-  fun viewControllerDidBackPress()
+  fun viewControllerDidChangeVisibility(visible: Boolean)
 }
 
 // =============================================================================
@@ -145,9 +143,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   internal var coordinatorLayout: TrueSheetCoordinatorLayout? = null
   private var dimView: TrueSheetDimView? = null
   private var parentDimView: TrueSheetDimView? = null
-
-  // Back button handling
-  private var backCallback: OnBackPressedCallback? = null
 
   // Presentation State
   var isPresented = false
@@ -349,7 +344,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
-    cleanupBackCallback()
     sheetView?.animate()?.cancel()
 
     // Cleanup dim views
@@ -412,28 +406,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Back Button Handling
-  // =============================================================================
-
-  private fun setupBackCallback() {
-    val activity = reactContext.currentActivity as? AppCompatActivity ?: return
-
-    backCallback = object : OnBackPressedCallback(true) {
-      override fun handleOnBackPressed() {
-        delegate?.viewControllerDidBackPress()
-        dismissOrCollapseToLowest()
-      }
-    }
-
-    activity.onBackPressedDispatcher.addCallback(backCallback!!)
-  }
-
-  private fun cleanupBackCallback() {
-    backCallback?.remove()
-    backCallback = null
-  }
-
-  // =============================================================================
   // MARK: - TrueSheetCoordinatorLayout.Delegate
   // =============================================================================
 
@@ -480,7 +452,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       children.forEach { it.viewController.dismiss(animated = true) }
     }
 
-    dismissOrCollapseToLowest()
+    if (dismissible) {
+      dismiss(animated = true)
+    } else if (parentSheetView == null && isDimmedAtCurrentDetent && dimmedDetentIndex > 0) {
+      setStateForDetentIndex(dimmedDetentIndex - 1)
+    }
   }
 
   // =============================================================================
@@ -624,8 +600,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isSheetVisible = false
     wasHiddenByScreen = true
-    backCallback?.isEnabled = false
-
+    delegate?.viewControllerDidChangeVisibility(false)
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
       .alpha(0f)
@@ -641,10 +616,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   internal fun showAfterScreen() {
     isSheetVisible = true
+    delegate?.viewControllerDidChangeVisibility(true)
     setSheetVisibility(true)
     sheetView?.alpha = 1f
     updateDimAmount(animated = true)
-    backCallback?.isEnabled = true
   }
 
   /**
@@ -677,7 +652,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setupSheetDetents()
     setupDimmedBackground()
     setupKeyboardObserver()
-    setupBackCallback()
 
     sheet.setupBackground()
     sheet.setupElevation()
@@ -754,11 +728,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     KeyboardUtils.dismiss(reactContext)
   }
 
-  private fun dismissOrCollapseToLowest() {
+  fun handleBackPress() {
     if (dismissible) {
       dismiss(animated = true)
-    } else if (parentSheetView == null && isDimmedAtCurrentDetent && dimmedDetentIndex > 0) {
-      setStateForDetentIndex(dimmedDetentIndex - 1)
+    } else if (currentDetentIndex > 0) {
+      setStateForDetentIndex(0)
     }
   }
 

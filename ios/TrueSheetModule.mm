@@ -140,6 +140,11 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   });
 }
 
+- (void)handleBackPress:(double)viewTag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  // No-op on iOS — no hardware back button
+  resolve(nil);
+}
+
 - (void)dismissAll:(BOOL)animated resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     @synchronized(viewRegistry) {

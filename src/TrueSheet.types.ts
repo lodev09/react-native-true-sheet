@@ -44,7 +44,6 @@ export type DidFocusEvent = NativeSyntheticEvent<null>;
 export type DidBlurEvent = NativeSyntheticEvent<null>;
 export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
-export type BackPressEvent = NativeSyntheticEvent<null>;
 
 /**
  * Options for customizing the grabber (drag handle) appearance.
@@ -550,9 +549,9 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the hardware back button is pressed on Android.
-   * Use this to handle custom back press behavior.
+   * Optionally return `false` to let the back event propagate to other handlers (e.g. navigation).
    *
    * @platform android
    */
-  onBackPress?: (event: BackPressEvent) => void;
+  onBackPress?: () => boolean | void;
 }

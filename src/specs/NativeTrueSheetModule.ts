@@ -51,6 +51,13 @@ interface Spec extends TurboModule {
    * @returns Promise that resolves when all sheets are dismissed
    */
   dismissAll(animated: boolean): Promise<void>;
+
+  /**
+   * Handle back press for a sheet (Android only)
+   * Dismisses or collapses to the lowest detent natively
+   * @param viewTag - Native view tag of the sheet component
+   */
+  handleBackPress(viewTag: number): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('TrueSheetModule');
