@@ -24,7 +24,6 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
-  BackPressEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
@@ -34,7 +33,14 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 
-import { Platform, StyleSheet, findNodeHandle, processColor } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  BackHandler,
+  findNodeHandle,
+  processColor,
+  type NativeEventSubscription,
+} from 'react-native';
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -60,6 +66,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   private cachedGrabberOptions: TrueSheetProps['grabberOptions'] | undefined;
   private resolvedGrabberOptions: Record<string, unknown> | undefined;
+  private backHandlerSubscription: NativeEventSubscription | null = null;
+  private isPresented: boolean = false;
+  private isSheetVisible: boolean = true;
 
   /**
    * Map of sheet names against their instances.
@@ -105,7 +114,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.onDidFocus = this.onDidFocus.bind(this);
     this.onWillBlur = this.onWillBlur.bind(this);
     this.onDidBlur = this.onDidBlur.bind(this);
-    this.onBackPress = this.onBackPress.bind(this);
+    this.handleBackPress = this.handleBackPress.bind(this);
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
   }
 
   private validateDetents(): void {
@@ -261,6 +271,16 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onDidPresent(event: DidPresentEvent): void {
+    this.isPresented = true;
+
+    if (Platform.OS === 'android') {
+      this.backHandlerSubscription?.remove();
+      this.backHandlerSubscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        this.handleBackPress
+      );
+    }
+
     this.props.onDidPresent?.(event);
   }
 
@@ -269,6 +289,11 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
   }
 
   private onDidDismiss(event: DidDismissEvent): void {
+    this.isPresented = false;
+    this.isSheetVisible = true;
+    this.backHandlerSubscription?.remove();
+    this.backHandlerSubscription = null;
+
     // Clean up native view after dismiss for lazy loading.
     // Skip unmount if a present is in progress to avoid race condition.
     if (!this.isPresenting) {
@@ -320,8 +345,15 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     this.props.onDidBlur?.(event);
   }
 
-  private onBackPress(event: BackPressEvent): void {
-    this.props.onBackPress?.(event);
+  private onVisibilityChange(event: { nativeEvent: { visible: boolean } }): void {
+    this.isSheetVisible = event.nativeEvent.visible;
+  }
+
+  private handleBackPress(): boolean {
+    if (!this.isPresented || !this.isSheetVisible) return false;
+
+    TrueSheetModule?.backPress(this.handle);
+    return this.props.onBackPress?.() ?? true;
   }
 
   /**
@@ -391,8 +423,8 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
 
   componentWillUnmount(): void {
     this.unregisterInstance();
-
-    // Clean up presentation resolver
+    this.backHandlerSubscription?.remove();
+    this.backHandlerSubscription = null;
     this.presentationResolver = null;
   }
 
@@ -488,7 +520,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         onDidFocus={this.onDidFocus}
         onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
-        onBackPress={this.onBackPress}
+        onVisibilityChange={this.onVisibilityChange}
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent

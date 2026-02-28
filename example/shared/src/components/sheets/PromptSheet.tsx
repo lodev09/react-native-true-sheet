@@ -65,7 +65,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }
       onBackPress={() => {
         console.log('Back button pressed!');
-        sheetRef.current?.dismiss();
       }}
       header={<Header />}
       footer={<Footer />}

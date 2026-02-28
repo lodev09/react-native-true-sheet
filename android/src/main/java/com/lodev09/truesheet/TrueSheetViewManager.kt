@@ -74,7 +74,7 @@ class TrueSheetViewManager :
       FocusEvent.EVENT_NAME to hashMapOf("registrationName" to FocusEvent.REGISTRATION_NAME),
       WillBlurEvent.EVENT_NAME to hashMapOf("registrationName" to WillBlurEvent.REGISTRATION_NAME),
       BlurEvent.EVENT_NAME to hashMapOf("registrationName" to BlurEvent.REGISTRATION_NAME),
-      BackPressEvent.EVENT_NAME to hashMapOf("registrationName" to BackPressEvent.REGISTRATION_NAME)
+      VisibilityChangeEvent.EVENT_NAME to hashMapOf("registrationName" to VisibilityChangeEvent.REGISTRATION_NAME)
     )
 
   // ==================== Props ====================
