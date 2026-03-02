@@ -21,7 +21,7 @@ const App = () => {
         </View>
       }
     >
-      <ScrollView nestedScrollEnabled>
+      <ScrollView>
         <View>{/* Your scrollable content */}</View>
       </ScrollView>
     </TrueSheet>
@@ -53,7 +53,6 @@ const App = () => {
       }
     >
       <FlatList
-        nestedScrollEnabled
         data={items}
         renderItem={({ item }) => <ItemRow item={item} />}
       />
