@@ -62,16 +62,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
     }
 
     contentDescription = "Close sheet"
-    importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-  }
-
-  override fun setAlpha(alpha: Float) {
-    super.setAlpha(alpha)
-    importantForAccessibility = if (alpha > 0f) {
-      IMPORTANT_FOR_ACCESSIBILITY_YES
-    } else {
-      IMPORTANT_FOR_ACCESSIBILITY_NO
-    }
   }
 
   // =============================================================================
