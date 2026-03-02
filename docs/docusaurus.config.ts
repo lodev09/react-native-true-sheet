@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // import pkg from '../package.json'
 
 const config: Config = {
-  title: 'True Native Bottom Sheet',
+  title: 'React Native True Sheet',
   tagline: 'The true native bottom sheet experience for your React Native Apps.',
   favicon: '/favicon.ico',
   url: 'https://sheet.lodev09.com',
@@ -129,24 +129,25 @@ const config: Config = {
       },
       items: [
         {
+          type: 'docsVersionDropdown',
+          position: 'left',
+        },
+        {
           type: 'docSidebar',
           sidebarId: 'trueSheetSidebar',
           label: 'Docs',
-          position: 'left',
+          position: 'right',
         },
         {
           to: '/blog',
           label: 'Blog',
-          position: 'left',
+          position: 'right',
         },
         {
           href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
           label: 'Example',
-          position: 'left',
-        },
-        {
-          type: 'docsVersionDropdown',
           position: 'right',
+          className: 'navbar__link--plain',
         },
         {
           'href': 'https://github.com/lodev09/react-native-true-sheet',
