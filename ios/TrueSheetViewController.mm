@@ -22,12 +22,24 @@
 
 using namespace facebook::react;
 
+typedef struct {
+  CGFloat position;
+  CGFloat detent;
+  CGFloat index;
+} TrueSheetPositionState;
+
+static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPositionState b) {
+  return fabs(a.position - b.position) <= 0.01 &&
+         fabs(a.detent - b.detent) <= 0.01 &&
+         fabs(a.index - b.index) <= 0.01;
+}
+
 @interface TrueSheetViewController ()
 
 @end
 
 @implementation TrueSheetViewController {
-  CGFloat _lastPosition;
+  TrueSheetPositionState _lastEmittedPositionState;
   CGFloat _lastWidth;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
@@ -63,7 +75,7 @@ using namespace facebook::react;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
-    _lastPosition = 0;
+    _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
     _isDragging = NO;
     _isPresented = NO;
     _isTransitioning = NO;
@@ -458,7 +470,7 @@ using namespace facebook::react;
     CGFloat layerPosition = layer.presentationLayer.frame.origin.y;
 
     if (self.currentPosition >= self.screenHeight) {
-      CGFloat position = fmax(_lastPosition, layerPosition);
+      CGFloat position = fmax(_lastEmittedPositionState.position, layerPosition);
 
       [self emitWillDismissEvents];
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
@@ -466,7 +478,7 @@ using namespace facebook::react;
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
       // Detect drag → snap transition jump; stay non-realtime for the rest of the animation
-      if (!_isTransitionSnapping && _isPresented && _lastPosition > 0 && fabs(_lastPosition - position) > 20) {
+      if (!_isTransitionSnapping && _isPresented && _lastEmittedPositionState.position > 0 && fabs(_lastEmittedPositionState.position - position) > 20) {
         _isTransitionSnapping = YES;
       }
       BOOL realtime = !_isTransitionSnapping;
@@ -485,13 +497,16 @@ using namespace facebook::react;
     }
   }
 
-  if (fabs(_lastPosition - position) > 0.01) {
-    _lastPosition = position;
+  TrueSheetPositionState state = {
+    .position = position,
+    .detent = [self interpolatedDetentForPosition:position],
+    .index = [self interpolatedIndexForPosition:position],
+  };
 
-    CGFloat index = [self interpolatedIndexForPosition:position];
-    CGFloat detent = [self interpolatedDetentForPosition:position];
-
-    [self.delegate viewControllerDidChangePosition:index position:position detent:detent realtime:realtime];
+  if (!TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
+    _lastEmittedPositionState = state;
+    
+    [self.delegate viewControllerDidChangePosition:state.index position:state.position detent:state.detent realtime:realtime];
   }
 }
 
