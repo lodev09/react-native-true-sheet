@@ -23,6 +23,7 @@ type BlurOptionsType = Readonly<{
 
 type ScrollableOptionsType = Readonly<{
   keyboardScrollOffset?: WithDefault<Double, 0>;
+  scrollingExpandsSheet?: WithDefault<boolean, true>;
 }>;
 
 export interface DetentInfoEventPayload {

@@ -251,17 +251,21 @@ using namespace facebook::react;
   _scrollable = newProps.scrollable;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
-  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0;
+  BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
+  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || !scrollingExpandsSheet;
 
   if (hasScrollableOptions) {
     NSMutableDictionary *options = [NSMutableDictionary dictionary];
     if (scrollableOpts.keyboardScrollOffset > 0) {
       options[@"keyboardScrollOffset"] = @(scrollableOpts.keyboardScrollOffset);
     }
+    options[@"scrollingExpandsSheet"] = @(scrollingExpandsSheet);
     _scrollableOptions = options;
   } else {
     _scrollableOptions = nil;
   }
+
+  _controller.scrollingExpandsSheet = scrollingExpandsSheet;
 
   _insetAdjustment = (NSInteger)newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;

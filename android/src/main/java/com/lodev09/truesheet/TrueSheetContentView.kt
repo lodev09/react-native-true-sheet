@@ -39,10 +39,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
+  private var scrollingExpandsSheet: Boolean = true
+
   var scrollableOptions: ReadableMap? = null
     set(value) {
       field = value
       keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
+      scrollingExpandsSheet = if (value?.hasKey("scrollingExpandsSheet") == true) value.getBoolean("scrollingExpandsSheet") else true
     }
 
   override fun addView(child: View?, index: Int) {
@@ -101,6 +104,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       }
     }
 
+    scrollView.isNestedScrollingEnabled = scrollingExpandsSheet
+
     this.bottomInset = bottomInset
 
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + bottomInset)
@@ -124,6 +129,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   fun clearScrollable() {
+    pinnedScrollView?.isNestedScrollingEnabled = true
     pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     pinnedScrollView = null

@@ -98,6 +98,14 @@ export interface ScrollableOptions {
    * @default 0
    */
   keyboardScrollOffset?: number;
+
+  /**
+   * Whether scrolling the content expands the sheet to the next detent.
+   * When `false`, only the grabber can expand the sheet.
+   *
+   * @default true
+   */
+  scrollingExpandsSheet?: boolean;
 }
 
 /**
