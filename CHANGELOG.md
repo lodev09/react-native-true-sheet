@@ -2,10 +2,18 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- Add `scrollingExpandsSheet` option to `scrollableOptions`. ([#585](https://github.com/lodev09/react-native-true-sheet/pull/585) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed position change not emitting when detent or index changed. ([#584](https://github.com/lodev09/react-native-true-sheet/pull/584) by [@lodev09](https://github.com/lodev09))
 - **Android**: Use RN `BackHandler` for back press detection for reliability across Android versions. ([#580](https://github.com/lodev09/react-native-true-sheet/pull/580) by [@lodev09](https://github.com/lodev09))
+
+### ⚠️ Breaking
+
+- **Android**: `nestedScrollingEnabled` is now automatically managed when `scrollable` is enabled. ([#585](https://github.com/lodev09/react-native-true-sheet/pull/585))
 
 ## 3.9.9
 
