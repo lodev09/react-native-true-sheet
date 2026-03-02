@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // import pkg from '../package.json'
 
 const config: Config = {
-  title: 'True Native Bottom Sheet',
+  title: 'React Native True Sheet',
   tagline: 'The true native bottom sheet experience for your React Native Apps.',
   favicon: '/favicon.ico',
   url: 'https://sheet.lodev09.com',
@@ -35,6 +35,11 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/lodev09/react-native-true-sheet/blob/main/docs/',
+          versions: {
+            current: {
+              label: 'Unreleased',
+            },
+          },
         },
         blog: {
           showReadingTime: true,
@@ -123,20 +128,31 @@ const config: Config = {
       },
       items: [
         {
+          type: 'docsVersionDropdown',
+          position: 'left',
+        },
+        {
           type: 'docSidebar',
           sidebarId: 'trueSheetSidebar',
           label: 'Docs',
-          position: 'left',
+          position: 'right',
         },
         {
           to: '/blog',
           label: 'Blog',
-          position: 'left',
+          position: 'right',
         },
         {
           href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
           label: 'Example',
-          position: 'left',
+          position: 'right',
+          className: 'navbar__link--plain',
+        },
+        {
+          href: 'https://github.com/lodev09/react-native-true-sheet/blob/main/CHANGELOG.md',
+          label: 'Changelog',
+          position: 'right',
+          className: 'navbar__link--plain',
         },
         {
           'href': 'https://github.com/lodev09/react-native-true-sheet',

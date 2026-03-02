@@ -1,0 +1,115 @@
+---
+title: Web Support
+description: Use TrueSheet on the web with @gorhom/bottom-sheet.
+keywords: [bottom sheet web, react native web, bottom sheet browser, expo web]
+---
+
+import web from '/img/preview-web.gif'
+
+Yes, `TrueSheet` supports web! Using [@gorhom/bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet) under the hood. This allows you to use the same API across iOS, Android, and Web.
+
+<img alt="web" src={web} width="300"/>
+
+## Installation
+
+In addition to `@lodev09/react-native-true-sheet`, install the required web dependencies. Follow the [@gorhom/bottom-sheet installation guide](https://gorhom.dev/react-native-bottom-sheet#installation).
+
+## Setup
+
+Wrap your app with `TrueSheetProvider`:
+
+```tsx {1,5-7}
+import { TrueSheetProvider } from '@lodev09/react-native-true-sheet'
+
+const App = () => {
+  return (
+    <TrueSheetProvider>
+      <YourApp />
+    </TrueSheetProvider>
+  )
+}
+```
+
+:::tip
+On native platforms, `TrueSheetProvider` is a simple pass-through component, so you can safely wrap your entire app without any performance impact.
+:::
+
+## Controlling Sheets
+
+On web, use the `useTrueSheet` hook or refs to control sheets. Static methods like `TrueSheet.present()` are not supported on web.
+
+### Using the Hook
+
+Use the `useTrueSheet` hook to control sheets by name:
+
+```tsx {1,4,7-8}
+import { TrueSheet, useTrueSheet } from '@lodev09/react-native-true-sheet'
+
+const MyComponent = () => {
+  const { present, dismiss, dismissAll } = useTrueSheet()
+
+  return (
+    <>
+      <Button onPress={() => present('my-sheet')} title="Open" />
+      <Button onPress={() => dismiss('my-sheet')} title="Close" />
+
+      <TrueSheet name="my-sheet" detents={[0.5, 1]}>
+        <View>
+          <Text>Hello from the sheet!</Text>
+        </View>
+      </TrueSheet>
+    </>
+  )
+}
+```
+
+### Using Refs
+
+You can also use refs to control sheets directly as you would on native.
+
+## Scrollable Content
+
+For scrollable content on web, use the [scrollable components](https://gorhom.dev/react-native-bottom-sheet/scrollables) from `@gorhom/bottom-sheet`:
+
+```tsx
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
+
+<TrueSheet scrollable detents={[0.5, 1]}>
+  <BottomSheetScrollView>
+    {/* Your scrollable content */}
+  </BottomSheetScrollView>
+</TrueSheet>
+```
+
+:::note
+On native platforms, standard React Native scrollables work without any changes.
+:::
+
+## Stack Behavior
+
+Control how sheets stack when presenting multiple sheets using the `stackBehavior` prop:
+
+| Value | Description |
+|-------|-------------|
+| `push` | Mount the modal on top of the current one |
+| `switch` | Minimize the current modal then mount the new one (default) |
+| `replace` | Dismiss the current modal then mount the new one |
+| `none` | Use a regular BottomSheet instead of BottomSheetModal |
+
+```tsx
+<TrueSheet stackBehavior="none" detents={[0.5, 1]}>
+  {/* Content */}
+</TrueSheet>
+```
+
+Use `stackBehavior="none"` when you need a non-modal sheet that doesn't participate in the modal stack.
+
+## Detached Mode
+
+Use the `detached` prop to render the sheet as a floating card, not attached to the bottom edge. Use `detachedOffset` to control the spacing from the bottom:
+
+```tsx
+<TrueSheet detached detachedOffset={24} detents={[0.5]}>
+  {/* Content */}
+</TrueSheet>
+```

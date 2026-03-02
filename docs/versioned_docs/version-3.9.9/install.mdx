@@ -1,0 +1,44 @@
+---
+sidebar_position: 2
+description: Installation of the React Native True Bottom Sheet component.
+keywords: [bottom sheet installation, bottom sheet yarn, bottom sheet npm, ios bottom sheet, android bottom sheet, expo bottom sheet]
+---
+
+# Installation
+
+## Prerequisites
+
+- React Native >= 0.80
+- New Architecture enabled (default in RN 0.76+)
+- Xcode 26.1+ (liquid glass support)
+
+### Compatibility
+
+| TrueSheet | React Native | Expo SDK |
+|-----------|--------------|----------|
+| 3.7+      | 0.81+        | 54+      |
+| 3.6       | 0.80         | 52-53    |
+
+:::info
+This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). Use this with [Expo CNG](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+:::
+
+## Expo
+
+```sh
+npx expo install @lodev09/react-native-true-sheet
+```
+
+See [EAS Build troubleshooting](/troubleshooting#eas-build-configuration) for build configuration.
+
+## Bare React Native
+
+```sh
+yarn add @lodev09/react-native-true-sheet
+```
+
+Then install the native dependencies:
+
+```sh
+cd ios && pod install
+```

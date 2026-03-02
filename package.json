@@ -186,7 +186,7 @@
     },
     "hooks": {
       "before:init": "yarn test",
-      "after:bump": "yarn tidy && sed -i '' 's/## Unreleased/## Unreleased\\n\\n## ${version}/' CHANGELOG.md"
+      "after:bump": "scripts/release.sh ${version}"
     },
     "github": {
       "release": true,

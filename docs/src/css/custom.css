@@ -57,6 +57,10 @@ img {
   border-radius: var(--ifm-pre-border-radius);
 }
 
+.navbar__link--plain svg {
+  display: none;
+}
+
 .header-github-link {
   display: flex;
   align-items: center;
