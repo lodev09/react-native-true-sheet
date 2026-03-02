@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.core.widget.NestedScrollView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
@@ -15,6 +14,11 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollBy
 import com.lodev09.truesheet.utils.smoothScrollTo
+
+data class ScrollableOptions(
+  val keyboardScrollOffset: Float = 0f,
+  val scrollingExpandsSheet: Boolean = true
+)
 
 /**
  * Delegate interface for content view size changes
@@ -44,10 +48,10 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
-  var scrollableOptions: ReadableMap? = null
+  var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
-      keyboardScrollOffset = if (value?.hasKey("keyboardScrollOffset") == true) value.getDouble("keyboardScrollOffset").toFloat().dpToPx() else 0f
+      keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
     }
 
   override fun addView(child: View?, index: Int) {

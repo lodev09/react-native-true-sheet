@@ -749,13 +749,13 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   if (self.grabberOptions) {
     self.sheet.prefersGrabberVisible = NO;
 
-    NSDictionary *options = self.grabberOptions;
-    _grabberView.grabberWidth = options[@"width"];
-    _grabberView.grabberHeight = options[@"height"];
-    _grabberView.topMargin = options[@"topMargin"];
-    _grabberView.cornerRadius = options[@"cornerRadius"];
-    _grabberView.color = options[@"color"];
-    _grabberView.adaptive = options[@"adaptive"];
+    GrabberOptions *options = self.grabberOptions;
+    _grabberView.grabberWidth = options.width;
+    _grabberView.grabberHeight = options.height;
+    _grabberView.topMargin = options.topMargin;
+    _grabberView.cornerRadius = options.cornerRadius;
+    _grabberView.color = options.color;
+    _grabberView.adaptive = @(options.adaptive);
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
 

@@ -218,7 +218,16 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "scrollableOptions")
   override fun setScrollableOptions(view: TrueSheetView, options: ReadableMap?) {
-    view.setScrollableOptions(options)
+    if (options == null) {
+      view.setScrollableOptions(null)
+      return
+    }
+
+    val scrollableOptions = ScrollableOptions(
+      keyboardScrollOffset = if (options.hasKey("keyboardScrollOffset")) options.getDouble("keyboardScrollOffset").toFloat() else 0f,
+      scrollingExpandsSheet = if (options.hasKey("scrollingExpandsSheet")) options.getBoolean("scrollingExpandsSheet") else true
+    )
+    view.setScrollableOptions(scrollableOptions)
   }
 
   companion object {

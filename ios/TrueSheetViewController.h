@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "core/TrueSheetDetentCalculator.h"
+#import "core/TrueSheetGrabberView.h"
 
 #if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
 #import <RNScreens/RNSDismissibleModalProtocol.h>
@@ -58,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
-@property (nonatomic, strong, nullable) NSDictionary *grabberOptions;
+@property (nonatomic, strong, nullable) GrabberOptions *grabberOptions;
 @property (nonatomic, assign) BOOL draggable;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;

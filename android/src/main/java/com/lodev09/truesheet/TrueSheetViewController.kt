@@ -12,7 +12,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -208,12 +207,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var scrollable: Boolean = false
 
-  var scrollableOptions: ReadableMap? = null
+  var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
-      behavior?.scrollingExpandsSheet = value?.let {
-        if (it.hasKey("scrollingExpandsSheet")) it.getBoolean("scrollingExpandsSheet") else true
-      } ?: true
+      behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
       if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
     }
 
@@ -718,9 +715,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Configure behavior
     behavior.isHideable = true
     behavior.isDraggable = draggable
-    behavior.scrollingExpandsSheet = scrollableOptions?.let {
-      if (it.hasKey("scrollingExpandsSheet")) it.getBoolean("scrollingExpandsSheet") else true
-    } ?: true
+    behavior.scrollingExpandsSheet = scrollableOptions?.scrollingExpandsSheet ?: true
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 

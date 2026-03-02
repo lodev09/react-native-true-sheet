@@ -53,7 +53,7 @@ using namespace facebook::react;
   NSInteger _initialDetentIndex;
   NSInteger _insetAdjustment;
   BOOL _scrollable;
-  NSDictionary *_scrollableOptions;
+  ScrollableOptions *_scrollableOptions;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
@@ -213,25 +213,13 @@ using namespace facebook::react;
                            grabberOpts.cornerRadius >= 0 || grabberColor != nil || !grabberOpts.adaptive;
 
   if (hasGrabberOptions) {
-    NSMutableDictionary *options = [NSMutableDictionary dictionary];
-
-    if (grabberOpts.width > 0) {
-      options[@"width"] = @(grabberOpts.width);
-    }
-    if (grabberOpts.height > 0) {
-      options[@"height"] = @(grabberOpts.height);
-    }
-    if (grabberOpts.topMargin > 0) {
-      options[@"topMargin"] = @(grabberOpts.topMargin);
-    }
-    if (grabberOpts.cornerRadius >= 0) {
-      options[@"cornerRadius"] = @(grabberOpts.cornerRadius);
-    }
-    if (grabberColor) {
-      options[@"color"] = grabberColor;
-    }
-    options[@"adaptive"] = @(grabberOpts.adaptive);
-
+    GrabberOptions *options = [[GrabberOptions alloc] init];
+    if (grabberOpts.width > 0) options.width = @(grabberOpts.width);
+    if (grabberOpts.height > 0) options.height = @(grabberOpts.height);
+    if (grabberOpts.topMargin > 0) options.topMargin = @(grabberOpts.topMargin);
+    if (grabberOpts.cornerRadius >= 0) options.cornerRadius = @(grabberOpts.cornerRadius);
+    if (grabberColor) options.color = grabberColor;
+    options.adaptive = grabberOpts.adaptive;
     _controller.grabberOptions = options;
   } else {
     _controller.grabberOptions = nil;
@@ -255,11 +243,9 @@ using namespace facebook::react;
   BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || !scrollingExpandsSheet;
 
   if (hasScrollableOptions) {
-    NSMutableDictionary *options = [NSMutableDictionary dictionary];
-    if (scrollableOpts.keyboardScrollOffset > 0) {
-      options[@"keyboardScrollOffset"] = @(scrollableOpts.keyboardScrollOffset);
-    }
-    options[@"scrollingExpandsSheet"] = @(scrollingExpandsSheet);
+    ScrollableOptions *options = [[ScrollableOptions alloc] init];
+    options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
+    options.scrollingExpandsSheet = scrollingExpandsSheet;
     _scrollableOptions = options;
   } else {
     _scrollableOptions = nil;

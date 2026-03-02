@@ -13,6 +13,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface ScrollableOptions : NSObject
+
+@property (nonatomic, assign) CGFloat keyboardScrollOffset;
+@property (nonatomic, assign) BOOL scrollingExpandsSheet;
+
+@end
+
 @protocol TrueSheetContainerViewDelegate <NSObject>
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
@@ -44,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Options for scrollable behavior
  */
-@property (nonatomic, strong, nullable) NSDictionary *scrollableOptions;
+@property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;
 
 /**
  * Returns the current content height
