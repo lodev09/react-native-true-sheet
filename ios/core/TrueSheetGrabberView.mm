@@ -8,6 +8,17 @@
 
 #import "TrueSheetGrabberView.h"
 
+@implementation GrabberOptions
+
+- (instancetype)init {
+  if (self = [super init]) {
+    _adaptive = YES;
+  }
+  return self;
+}
+
+@end
+
 static const CGFloat kDefaultGrabberWidth = 36.0;
 static const CGFloat kDefaultGrabberHeight = 5.0;
 static const CGFloat kDefaultGrabberTopMargin = 5.0;

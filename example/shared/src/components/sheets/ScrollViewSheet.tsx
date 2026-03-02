@@ -1,7 +1,8 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useCallback, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
+  RefreshControl,
   View,
   Text,
   Image,
@@ -41,6 +42,12 @@ const HeavyItem = ({ index }: { index: number }) => {
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
   const [showList, setShowList] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 2000);
+  }, []);
 
   return (
     <TrueSheet
@@ -48,6 +55,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       detents={[0.8, 1]}
       name="scrollview"
       scrollable
+      scrollableOptions={{ scrollingExpandsSheet: false }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
       footer={<Footer text="TOGGLE LISTVIEW" onPress={() => setShowList(!showList)} />}
@@ -57,11 +65,11 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     >
       {showList ? (
         <ScrollView
-          nestedScrollEnabled
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           keyboardDismissMode="on-drag"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {times(20, (i) => (
             <HeavyItem key={i} index={i} />

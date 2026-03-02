@@ -71,6 +71,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _headerHeight = @(0);
     _grabber = YES;
     _draggable = YES;
+    _scrollingExpandsSheet = YES;
     _dismissible = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
@@ -748,13 +749,13 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   if (self.grabberOptions) {
     self.sheet.prefersGrabberVisible = NO;
 
-    NSDictionary *options = self.grabberOptions;
-    _grabberView.grabberWidth = options[@"width"];
-    _grabberView.grabberHeight = options[@"height"];
-    _grabberView.topMargin = options[@"topMargin"];
-    _grabberView.cornerRadius = options[@"cornerRadius"];
-    _grabberView.color = options[@"color"];
-    _grabberView.adaptive = options[@"adaptive"];
+    GrabberOptions *options = self.grabberOptions;
+    _grabberView.grabberWidth = options.width;
+    _grabberView.grabberHeight = options.height;
+    _grabberView.topMargin = options.topMargin;
+    _grabberView.cornerRadius = options.cornerRadius;
+    _grabberView.color = options.color;
+    _grabberView.adaptive = @(options.adaptive);
     [_grabberView applyConfiguration];
     _grabberView.hidden = !showGrabber;
 
@@ -850,7 +851,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
   sheet.delegate = self;
   sheet.prefersEdgeAttachedInCompactHeight = YES;
-  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable;
+  sheet.prefersScrollingExpandsWhenScrolledToEdge = self.draggable && self.scrollingExpandsSheet;
 
   if (self.cornerRadius) {
     sheet.preferredCornerRadius = [self.cornerRadius floatValue];

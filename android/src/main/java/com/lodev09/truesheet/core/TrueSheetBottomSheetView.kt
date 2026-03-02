@@ -63,9 +63,9 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
   // Behavior reference (set after adding to CoordinatorLayout)
   @Suppress("UNCHECKED_CAST")
-  val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
+  val behavior: TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = (layoutParams as? CoordinatorLayout.LayoutParams)
-      ?.behavior as? BottomSheetBehavior<TrueSheetBottomSheetView>
+      ?.behavior as? TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>
 
   // =============================================================================
   // MARK: - Initialization
@@ -106,7 +106,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   fun createLayoutParams(): CoordinatorLayout.LayoutParams {
     val applyMaxWidth = delegate?.maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
     val effectiveMaxWidth = if (applyMaxWidth) delegate!!.maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
-    val behavior = BottomSheetBehavior<TrueSheetBottomSheetView>().apply {
+    val behavior = TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>().apply {
       isHideable = true
       maxWidth = effectiveMaxWidth
     }

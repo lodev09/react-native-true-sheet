@@ -10,6 +10,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface GrabberOptions : NSObject
+
+@property (nonatomic, strong, nullable) NSNumber *width;
+@property (nonatomic, strong, nullable) NSNumber *height;
+@property (nonatomic, strong, nullable) NSNumber *topMargin;
+@property (nonatomic, strong, nullable) NSNumber *cornerRadius;
+@property (nonatomic, strong, nullable) UIColor *color;
+@property (nonatomic, assign) BOOL adaptive;
+
+@end
+
 /**
  * Native grabber (drag handle) view for the bottom sheet.
  * Uses UIVibrancyEffect to adapt color based on the background.

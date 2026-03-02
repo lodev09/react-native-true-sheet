@@ -27,6 +27,18 @@
 
 using namespace facebook::react;
 
+@implementation ScrollableOptions
+
+- (instancetype)init {
+  if (self = [super init]) {
+    _keyboardScrollOffset = 0;
+    _scrollingExpandsSheet = YES;
+  }
+  return self;
+}
+
+@end
+
 @interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate>
 @end
 
@@ -87,14 +99,9 @@ using namespace facebook::react;
   _scrollableSet = YES;
 }
 
-- (void)setScrollableOptions:(NSDictionary *)scrollableOptions {
+- (void)setScrollableOptions:(ScrollableOptions *)scrollableOptions {
   _scrollableOptions = scrollableOptions;
-  if (scrollableOptions) {
-    NSNumber *offset = scrollableOptions[@"keyboardScrollOffset"];
-    _contentView.keyboardScrollOffset = offset ? [offset floatValue] : 0;
-  } else {
-    _contentView.keyboardScrollOffset = 0;
-  }
+  _contentView.keyboardScrollOffset = scrollableOptions ? scrollableOptions.keyboardScrollOffset : 0;
 }
 
 - (void)setupScrollable {

@@ -8,12 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
-import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -24,6 +22,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.TrueSheetBottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
@@ -208,7 +207,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var scrollable: Boolean = false
 
-  var scrollableOptions: ReadableMap? = null
+  var scrollableOptions: ScrollableOptions? = null
+    set(value) {
+      field = value
+      behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
+      if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
+    }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
@@ -240,7 +244,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   // Behavior
-  private val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
+  private val behavior: TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = sheetView?.behavior
 
   internal val containerView: TrueSheetContainerView?
@@ -425,7 +429,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
 
-  override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
+  override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
   // =============================================================================
@@ -524,6 +528,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
+    updateScrollExpansionPadding(sheetView.top)
     emitChangePositionDelegate(sheetView.top)
 
     // On older APIs, use onSlide for footer positioning during keyboard transitions
@@ -535,6 +540,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
+  }
+
+  private fun updateScrollExpansionPadding(sheetTop: Int) {
+    if (!scrollable) {
+      containerView?.contentView?.updateScrollExpansionPadding(0)
+      return
+    }
+    val expandedOffset = behavior?.expandedOffset ?: return
+    containerView?.contentView?.updateScrollExpansionPadding(maxOf(0, sheetTop - expandedOffset))
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
@@ -696,11 +710,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val params = sheet.createLayoutParams()
 
     @Suppress("UNCHECKED_CAST")
-    val behavior = params.behavior as BottomSheetBehavior<TrueSheetBottomSheetView>
+    val behavior = params.behavior as TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>
 
     // Configure behavior
     behavior.isHideable = true
     behavior.isDraggable = draggable
+    behavior.scrollingExpandsSheet = scrollableOptions?.scrollingExpandsSheet ?: true
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 

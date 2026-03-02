@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.StateWrapper
@@ -282,7 +281,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
   }
 
-  fun setScrollableOptions(options: ReadableMap?) {
+  fun setScrollableOptions(options: ScrollableOptions?) {
     viewController.scrollableOptions = options
     setupScrollable()
   }

@@ -4,13 +4,21 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ScrollView
-import com.facebook.react.bridge.ReadableMap
+import androidx.core.widget.NestedScrollView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.isDescendantOf
+import com.lodev09.truesheet.utils.smoothScrollBy
+import com.lodev09.truesheet.utils.smoothScrollTo
+
+data class ScrollableOptions(
+  val keyboardScrollOffset: Float = 0f,
+  val scrollingExpandsSheet: Boolean = true
+)
 
 /**
  * Delegate interface for content view size changes
@@ -32,17 +40,18 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastWidth = 0
   private var lastHeight = 0
 
-  private var pinnedScrollView: ScrollView? = null
+  private var pinnedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
+  private var scrollExpansionPadding: Int = 0
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
-  var scrollableOptions: ReadableMap? = null
+  var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
-      keyboardScrollOffset = value?.getDouble("keyboardScrollOffset")?.toFloat()?.dpToPx() ?: 0f
+      keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
     }
 
   override fun addView(child: View?, index: Int) {
@@ -94,6 +103,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       originalScrollViewPaddingBottom = scrollView.paddingBottom
       pinnedScrollView = scrollView
 
+      scrollView.isNestedScrollingEnabled = true
+      (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
+
       scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
         if (scrollY != oldScrollY) {
           delegate?.contentViewDidScroll()
@@ -112,6 +124,19 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
+  // TODO: Replace this workaround with synchronous state layout updates on every sheet resize.
+  // The container is currently sized to the largest detent, so at smaller detents the ScrollView
+  // viewport extends beyond the visible area, reducing the effective scroll range. This padding
+  // compensates for that difference until we can resize the container per-detent synchronously.
+  fun updateScrollExpansionPadding(padding: Int) {
+    if (scrollExpansionPadding == padding) return
+    scrollExpansionPadding = padding
+    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
+    val basePadding = if (keyboardHeight > 0) keyboardHeight else bottomInset
+    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + basePadding)
+    nudgeScrollView()
+  }
+
   private fun setScrollViewPaddingBottom(paddingBottom: Int) {
     val scrollView = pinnedScrollView ?: return
     scrollView.clipToPadding = false
@@ -119,26 +144,29 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       scrollView.paddingLeft,
       scrollView.paddingTop,
       scrollView.paddingRight,
-      paddingBottom
+      paddingBottom + scrollExpansionPadding
     )
   }
 
   fun clearScrollable() {
     pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
+    pinnedScrollView?.isNestedScrollingEnabled = false
+    (pinnedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
+    scrollExpansionPadding = 0
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     pinnedScrollView = null
     originalScrollViewPaddingBottom = 0
     bottomInset = 0
   }
 
-  fun findScrollView(): ScrollView? {
+  fun findScrollView(): ViewGroup? {
     if (pinnedScrollView != null) return pinnedScrollView
     return findScrollView(this as View)
   }
 
-  private fun findScrollView(view: View): ScrollView? {
-    if (view is ScrollView) {
-      return view
+  private fun findScrollView(view: View): ViewGroup? {
+    if (view is ScrollView || view is NestedScrollView) {
+      return view as ViewGroup
     }
 
     if (view is ViewGroup) {
@@ -191,11 +219,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val totalBottomInset = if (keyboardHeight > 0) keyboardHeight else bottomInset
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
 
-    // Trigger a scroll to force update
-    scrollView.post {
-      scrollView.smoothScrollBy(0, 1)
-      scrollView.smoothScrollBy(0, -1)
-    }
+    scrollView.post { nudgeScrollView() }
+  }
+
+  private fun nudgeScrollView() {
+    val scrollView = pinnedScrollView ?: return
+    scrollView.smoothScrollBy(0, 1)
+    scrollView.smoothScrollBy(0, -1)
   }
 
   private fun scrollToFocusedInput() {
