@@ -489,7 +489,7 @@ using namespace facebook::react;
 }
 
 - (void)emitDismissedPosition {
-  [self viewControllerDidChangePosition:-1 position:_controller.screenHeight detent:0 realtime:NO];
+  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:-1 position:_controller.screenHeight detent:0 realtime:NO];
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
