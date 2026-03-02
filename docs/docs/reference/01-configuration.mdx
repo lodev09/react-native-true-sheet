@@ -292,23 +292,15 @@ Style for the footer container.
 
 On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](/guides/scrolling) for example.
 
-On Android, it ensures the scroll view fills the available sheet space and automatically manages nested scrolling. Any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored when `scrollable` is enabled.
+On Android, it adds additional style to the content for scrollable to work.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `boolean` | `false` | ✅ | ✅ | |
 
 :::warning
-The [`auto`](/reference/types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
+The [`auto`](/reference/types#sheetdetent) detent does not work well with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead. This may be supported in the future once synchronous UI updates are officially supported by React Native.
 :::
-
-## `scrollableOptions`
-
-Options for customizing scrollable behavior. Only applies when [`scrollable`](#scrollable) is `true`. See [this guide](/guides/scrolling) for details.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`ScrollableOptions`](/reference/types#scrollableoptions) | | ✅ | ✅ | |
 
 ## `pageSizing`
 

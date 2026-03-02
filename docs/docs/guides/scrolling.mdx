@@ -14,7 +14,7 @@ Follow the guide below so you can scroll your content using `TrueSheet`.
 
 ## How?
 
-Enable the `scrollable` prop on your `TrueSheet` to properly handle scrolling within the sheet.
+Enable the `scrollable` prop and set `nestedScrollEnabled` on your `ScrollView` or `FlatList` to properly handle scrolling within the sheet.
 
 ```tsx {5-7}
 const App = () => {
@@ -23,7 +23,7 @@ const App = () => {
   return (
     <TrueSheet ref={sheet} scrollable>
       <View>{/* Header content */}</View>
-      <ScrollView>
+      <ScrollView nestedScrollEnabled>
         <View />
       </ScrollView>
     </TrueSheet>
@@ -36,7 +36,7 @@ By default, `scrollable` is `false`. Set it to `true` to enable automatic Scroll
 :::
 
 :::warning
-The [`auto`](/reference/types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
+The [`auto`](/reference/types#sheetdetent) detent does not work well with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead when using `scrollable`. This may be supported in the future once synchronous UI updates are officially supported by React Native.
 :::
 
 ### iOS
@@ -49,36 +49,20 @@ The scroll view detection supports up to 2 levels deep in the view hierarchy, so
 <TrueSheet scrollable>
   <View style={{ flex: 1 }}>
     <View>{/* Header content */}</View>
-    <FlatList data={data} renderItem={renderItem} />
+    <FlatList nestedScrollEnabled data={data} renderItem={renderItem} />
   </View>
 </TrueSheet>
 ```
 
 ### Android
 
-On Android, `scrollable` ensures the scroll view fills the available sheet space. Nested scrolling is automatically enabled on the detected scroll view, so you don't need to set `nestedScrollEnabled` manually.
+On Android, `scrollable` ensures the scroll view fills the available sheet space. You must also enable `nestedScrollEnabled` on your `ScrollView` or `FlatList` for scrolling to work properly.
 
-:::info
-When `scrollable` is enabled, any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored — TrueSheet manages nested scrolling internally. `RefreshControl` is also fully supported.
+:::warning
+`RefreshControl` does not work with `nestedScrollEnabled` on Android due to how `SwipeRefreshLayout` interferes with the `BottomSheetBehavior`'s nested scrolling coordination. This is a known limitation of the Android platform.
+
+As a workaround, you can disable `nestedScrollEnabled` to make `RefreshControl` work, but the sheet will no longer be draggable from within the scroll view. In this case, ensure you have a draggable area outside the scroll view (e.g., a header with a grabber) to allow users to drag the sheet.
 :::
-
-## Preventing Scroll-to-Expand
-
-By default, scrolling content to the top edge expands the sheet to the next detent. To disable this (e.g., for YouTube-style comments sheets where only the grabber should expand the sheet), set `scrollingExpandsSheet` to `false`:
-
-```tsx
-<TrueSheet
-  scrollable
-  scrollableOptions={{ scrollingExpandsSheet: false }}
-  detents={[0.5, 1]}
->
-  <ScrollView>
-    <View />
-  </ScrollView>
-</TrueSheet>
-```
-
-On iOS, this uses [`prefersScrollingExpandsWhenScrolledToEdge`](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller/3858107-prefersscrollingexpandswhenscrol). On Android, a custom `BottomSheetBehavior` selectively blocks scroll-driven expansion while preserving normal scrolling, fling deceleration, and grabber-based dragging.
 
 ## Using `scrollToEnd`
 
@@ -96,7 +80,7 @@ const scrollToEnd = () => {
 
 return (
   <TrueSheet scrollable onDidPresent={scrollToEnd}>
-    <FlatList ref={scrollRef} data={data} renderItem={renderItem} />
+    <FlatList ref={scrollRef} nestedScrollEnabled data={data} renderItem={renderItem} />
   </TrueSheet>
 );
 ```
