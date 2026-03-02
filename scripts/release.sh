@@ -22,10 +22,6 @@ sed -i '' "s/## Unreleased/## Unreleased\\n\\n## ${VERSION}/" CHANGELOG.md
 echo "Creating docs version $VERSION..."
 
 rm -rf docs/versioned_docs docs/versioned_sidebars docs/versions.json
-
-# Temporarily comment out lastVersion (validated against existing versions)
-sed -i '' "s/lastVersion: '.*'/\/\/ lastVersion: '$VERSION'/" docs/docusaurus.config.ts
 cd docs && ./node_modules/.bin/docusaurus docs:version "$VERSION" && cd ..
-sed -i '' "s/\/\/ lastVersion: '$VERSION'/lastVersion: '$VERSION'/" docs/docusaurus.config.ts
 
 echo "Docs version $VERSION created."
