@@ -37,7 +37,7 @@ const config: Config = {
           editUrl: 'https://github.com/lodev09/react-native-true-sheet/blob/main/docs/',
           versions: {
             current: {
-              label: 'Next',
+              label: 'Unreleased',
             },
           },
         },
@@ -145,6 +145,12 @@ const config: Config = {
         {
           href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
           label: 'Example',
+          position: 'right',
+          className: 'navbar__link--plain',
+        },
+        {
+          href: 'https://github.com/lodev09/react-native-true-sheet/blob/main/CHANGELOG.md',
+          label: 'Changelog',
           position: 'right',
           className: 'navbar__link--plain',
         },
