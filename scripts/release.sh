@@ -18,15 +18,14 @@ yarn tidy
 # Update CHANGELOG
 sed -i '' "s/## Unreleased/## Unreleased\\n\\n## ${VERSION}/" CHANGELOG.md
 
-# Version docs (only on minor bumps, e.g. 3.10.0, not 3.10.1)
-PATCH=$(echo "$VERSION" | sed 's/[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/')
+# Version docs (replaces previous snapshot with latest)
+echo "Creating docs version $VERSION..."
 
-if [ "$PATCH" != "0" ]; then
-  echo "Patch release, skipping docs versioning."
-else
-  DOCS_VERSION=$(echo "$VERSION" | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
-  echo "Creating docs version $DOCS_VERSION..."
-  cd docs && ./node_modules/.bin/docusaurus docs:version "$DOCS_VERSION" && cd ..
-  sed -i '' "s/lastVersion: '.*'/lastVersion: '$DOCS_VERSION'/" docs/docusaurus.config.ts
-  echo "Docs version $DOCS_VERSION created."
-fi
+rm -rf docs/versioned_docs docs/versioned_sidebars docs/versions.json
+
+# Temporarily comment out lastVersion (validated against existing versions)
+sed -i '' "s/lastVersion: '.*'/\/\/ lastVersion: '$VERSION'/" docs/docusaurus.config.ts
+cd docs && ./node_modules/.bin/docusaurus docs:version "$VERSION" && cd ..
+sed -i '' "s/\/\/ lastVersion: '$VERSION'/lastVersion: '$VERSION'/" docs/docusaurus.config.ts
+
+echo "Docs version $VERSION created."
