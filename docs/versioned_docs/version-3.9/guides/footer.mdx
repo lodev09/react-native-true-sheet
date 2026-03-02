@@ -1,0 +1,91 @@
+---
+title: Adding Footer
+description: Add a floating footer component to the bottom sheet.
+keywords: [bottom sheet footer, bottom sheet floating footer, bottom sheet sticky footer]
+---
+
+Do you need a FAB (Floating Action Button) on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
+
+`TrueSheet` provides first-class support for a `Footer` component. This component will float at the bottom of the sheet.
+
+## How?
+
+Define your footer component.
+
+```tsx
+const SomeFooter = () => {
+  return (
+    <View>
+      <Text>My Foot-er is Awesome.</Text>
+    </View>
+  )
+}
+```
+
+Stick it in the [`footer`](/reference/configuration#footer).
+
+```tsx {3}
+const App = () => {
+  return (
+    <TrueSheet footer={SomeFooter}>
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+For best performance, use `ReactElement` instead!
+
+```tsx {5-9}
+const App = () => {
+  return (
+    <TrueSheet
+      ref={sheet}
+      footer={
+        <View>
+          <Text>My Foot-er is more awesome.</Text>
+        </View>
+      }
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+:::
+
+## Safe Area Handling
+
+The footer is pinned to the bottom edge of the sheet. The sheet height automatically includes the bottom safe area on both iOS and Android. To ensure your footer extends properly into the safe area, add bottom padding:
+
+```tsx
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const isIPad = Platform.OS === 'ios' && Platform.isPad;
+
+const MyFooter = () => {
+  const insets = useSafeAreaInsets();
+  const bottomInset = isIPad ? 0 : insets.bottom;
+
+  return (
+    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
+      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: '#fff' }}>Footer Content</Text>
+      </View>
+    </View>
+  );
+};
+
+// Usage
+<TrueSheet detents={['auto']} footer={<MyFooter />}>
+  {/* content */}
+</TrueSheet>
+```
+
+This ensures the footer background extends into the safe area while keeping the content above the home indicator.
+
+:::note
+On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
+:::

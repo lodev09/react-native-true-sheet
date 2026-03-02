@@ -1,0 +1,49 @@
+---
+sidebar_position: 3
+description: How to use the React Native True Bottom Sheet component.
+keywords: [bottom sheet usage, bottom sheet getting started, bottom sheet setup, import bottom sheet]
+---
+
+# Usage
+
+1. Import `TrueSheet`.
+
+```tsx
+import { TrueSheet } from "@lodev09/react-native-true-sheet"
+```
+
+2. Define `TrueSheet` inside any component and attach a `ref` to it.
+3. Control the sheet by invoking the available `ref` [methods](/reference/methods).
+
+```tsx {2-2,5-8,11-14,18-25}
+export const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  // Present the sheet ✅
+  const present = async () => {
+    await sheet.current?.present()
+    console.log('horray! sheet has been presented 💩')
+  }
+
+  // Dismiss the sheet ✅
+  const dismiss = async () => {
+    await sheet.current?.dismiss()
+    console.log('Bye bye 👋')
+  }
+
+  return (
+    <View>
+      <Button onPress={present} title="Present" />
+      <TrueSheet
+        ref={sheet}
+        detents={['auto', 1]}
+        cornerRadius={24}
+      >
+        <Button onPress={dismiss} title="Dismiss" />
+      </TrueSheet>
+    </View>
+  )
+}
+```
+
+Simple, right? Head over to [Configuration](/reference/configuration) to learn more about configuring your sheet.

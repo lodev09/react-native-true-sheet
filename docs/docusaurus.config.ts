@@ -35,6 +35,12 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/lodev09/react-native-true-sheet/blob/main/docs/',
+          lastVersion: '3.9',
+          versions: {
+            current: {
+              label: 'Next',
+            },
+          },
         },
         blog: {
           showReadingTime: true,
@@ -137,6 +143,10 @@ const config: Config = {
           href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
           label: 'Example',
           position: 'left',
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
         },
         {
           'href': 'https://github.com/lodev09/react-native-true-sheet',
