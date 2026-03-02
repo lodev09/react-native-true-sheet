@@ -214,6 +214,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       behavior?.scrollingExpandsSheet = value?.let {
         if (it.hasKey("scrollingExpandsSheet")) it.getBoolean("scrollingExpandsSheet") else true
       } ?: true
+      if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
     }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
@@ -530,6 +531,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
+    updateScrollExpansionPadding(sheetView.top)
     emitChangePositionDelegate(sheetView.top)
 
     // On older APIs, use onSlide for footer positioning during keyboard transitions
@@ -541,6 +543,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
+  }
+
+  private fun updateScrollExpansionPadding(sheetTop: Int) {
+    if (!scrollable) {
+      containerView?.contentView?.updateScrollExpansionPadding(0)
+      return
+    }
+    val expandedOffset = behavior?.expandedOffset ?: return
+    containerView?.contentView?.updateScrollExpansionPadding(maxOf(0, sheetTop - expandedOffset))
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
