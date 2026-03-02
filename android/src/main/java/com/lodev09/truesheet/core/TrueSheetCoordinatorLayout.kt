@@ -75,7 +75,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
     val sheet = delegate?.findSheetView() ?: return
     val behavior = sheet.behavior ?: return
     try {
-      val field = behavior.javaClass.getDeclaredField("nestedScrollingChildRef")
+      val field = behavior.javaClass.superclass.getDeclaredField("nestedScrollingChildRef")
       field.isAccessible = true
       @Suppress("UNCHECKED_CAST")
       val ref = field.get(behavior) as? java.lang.ref.WeakReference<android.view.View> ?: return

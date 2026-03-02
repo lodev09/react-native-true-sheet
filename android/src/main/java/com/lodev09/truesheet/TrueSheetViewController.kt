@@ -24,6 +24,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.TrueSheetBottomSheetBehavior
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
@@ -209,6 +210,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var scrollable: Boolean = false
 
   var scrollableOptions: ReadableMap? = null
+    set(value) {
+      field = value
+      behavior?.scrollingExpandsSheet = value?.let {
+        if (it.hasKey("scrollingExpandsSheet")) it.getBoolean("scrollingExpandsSheet") else true
+      } ?: true
+    }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
@@ -240,7 +247,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   // Behavior
-  private val behavior: BottomSheetBehavior<TrueSheetBottomSheetView>?
+  private val behavior: TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>?
     get() = sheetView?.behavior
 
   internal val containerView: TrueSheetContainerView?
@@ -696,11 +703,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val params = sheet.createLayoutParams()
 
     @Suppress("UNCHECKED_CAST")
-    val behavior = params.behavior as BottomSheetBehavior<TrueSheetBottomSheetView>
+    val behavior = params.behavior as TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>
 
     // Configure behavior
     behavior.isHideable = true
     behavior.isDraggable = draggable
+    behavior.scrollingExpandsSheet = scrollableOptions?.let {
+      if (it.hasKey("scrollingExpandsSheet")) it.getBoolean("scrollingExpandsSheet") else true
+    } ?: true
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 
