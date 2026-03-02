@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ScrollView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
@@ -94,6 +95,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       originalScrollViewPaddingBottom = scrollView.paddingBottom
       pinnedScrollView = scrollView
 
+      scrollView.isNestedScrollingEnabled = true
+      (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
+
       scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
         if (scrollY != oldScrollY) {
           delegate?.contentViewDidScroll()
@@ -125,6 +129,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   fun clearScrollable() {
     pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
+    pinnedScrollView?.isNestedScrollingEnabled = false
+    (pinnedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     pinnedScrollView = null
     originalScrollViewPaddingBottom = 0

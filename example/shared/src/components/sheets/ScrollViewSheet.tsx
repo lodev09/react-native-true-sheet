@@ -65,7 +65,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     >
       {showList ? (
         <ScrollView
-          nestedScrollEnabled
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}

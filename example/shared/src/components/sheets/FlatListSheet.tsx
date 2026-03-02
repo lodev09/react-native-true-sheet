@@ -38,7 +38,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       <View style={styles.wrapper}>
         <FlatList
           ref={scrollRef}
-          nestedScrollEnabled
           data={times(10, (i) => i)}
           contentContainerStyle={styles.content}
           indicatorStyle="black"
