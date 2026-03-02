@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ScrollView
+import androidx.core.widget.NestedScrollView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -12,6 +13,8 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.isDescendantOf
+import com.lodev09.truesheet.utils.smoothScrollBy
+import com.lodev09.truesheet.utils.smoothScrollTo
 
 /**
  * Delegate interface for content view size changes
@@ -33,7 +36,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastWidth = 0
   private var lastHeight = 0
 
-  private var pinnedScrollView: ScrollView? = null
+  private var pinnedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
 
@@ -137,14 +140,14 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     bottomInset = 0
   }
 
-  fun findScrollView(): ScrollView? {
+  fun findScrollView(): ViewGroup? {
     if (pinnedScrollView != null) return pinnedScrollView
     return findScrollView(this as View)
   }
 
-  private fun findScrollView(view: View): ScrollView? {
-    if (view is ScrollView) {
-      return view
+  private fun findScrollView(view: View): ViewGroup? {
+    if (view is ScrollView || view is NestedScrollView) {
+      return view as ViewGroup
     }
 
     if (view is ViewGroup) {

@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
-import android.widget.ScrollView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
@@ -432,7 +431,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
   }
 
-  override fun findScrollView(): ScrollView? = containerView?.contentView?.findScrollView()
+  override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
   // =============================================================================

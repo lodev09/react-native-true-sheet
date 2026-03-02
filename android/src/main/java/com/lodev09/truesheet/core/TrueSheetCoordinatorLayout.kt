@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import android.widget.ScrollView
+import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
@@ -15,7 +15,7 @@ import com.lodev09.truesheet.utils.isDescendantOf
 interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidLayout(changed: Boolean)
   fun coordinatorLayoutDidChangeConfiguration()
-  fun findScrollView(): ScrollView?
+  fun findScrollView(): ViewGroup?
   fun findSheetView(): TrueSheetBottomSheetView?
 }
 
@@ -104,6 +104,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
       !hasRefreshControl &&
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
+
 
     if (cannotScroll) {
       when (ev.action and MotionEvent.ACTION_MASK) {
