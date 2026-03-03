@@ -72,24 +72,10 @@ const config: Config = {
       },
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org/',
-        '@type': 'Person',
-        'name': 'Jovanni Lo',
-        'url': 'https://github.com/lodev09',
-        'image': 'https://github.com/lodev09.png',
-        'jobTitle': 'Lead React Native Developer',
-        'sameAs': ['https://www.linkedin.com/in/lodev09/'],
-      }),
-    },
-    {
-      tagName: 'script',
-      attributes: {
-        type: 'application/ld+json',
-      },
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org/',
         '@type': 'WebSite',
-        'name': 'Installation',
-        'url': 'https://sheet.lodev09.com/install',
+        'name': 'React Native True Sheet',
+        'url': 'https://sheet.lodev09.com',
+        'description': 'The true native bottom sheet experience for your React Native Apps.',
         'potentialAction': {
           '@type': 'SearchAction',
           'target': 'https://sheet.lodev09.com/search?q={search_term_string}',
@@ -104,9 +90,20 @@ const config: Config = {
       },
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org/',
-        '@type': 'WebSite',
-        'name': 'Configuration',
-        'url': 'https://sheet.lodev09.com/reference/configuration',
+        '@type': 'SoftwareSourceCode',
+        'name': 'react-native-true-sheet',
+        'description': 'The true native bottom sheet experience for your React Native Apps.',
+        'url': 'https://github.com/lodev09/react-native-true-sheet',
+        'codeRepository': 'https://github.com/lodev09/react-native-true-sheet',
+        'programmingLanguage': ['TypeScript', 'Kotlin', 'Objective-C++', 'C++'],
+        'runtimePlatform': 'React Native',
+        'author': {
+          '@type': 'Person',
+          'name': 'Jovanni Lo',
+          'url': 'https://github.com/lodev09',
+          'image': 'https://github.com/lodev09.png',
+          'sameAs': ['https://www.linkedin.com/in/lodev09/'],
+        },
       }),
     },
   ],
@@ -185,23 +182,15 @@ const config: Config = {
       {
         name: 'keywords',
         content:
-          'bottom sheet, pure native bottom sheet, react native bottom sheet, bottom sheet documentation, fabric bottom sheet',
+          'react native bottom sheet, native bottom sheet, ios bottom sheet, android bottom sheet, react native sheet component, fabric bottom sheet, new architecture bottom sheet, UISheetPresentationController, true sheet',
       },
       {
-        name: 'og:title',
-        content: 'True Sheet Documentation',
+        name: 'twitter:card',
+        content: 'summary',
       },
       {
-        name: 'og:type',
-        content: 'application',
-      },
-      {
-        name: 'og:description',
-        content: 'The true native bottom sheet experience for your React Native Apps.',
-      },
-      {
-        name: 'og:image',
-        content: '/img/logo.png',
+        name: 'twitter:creator',
+        content: '@lodev09',
       },
     ],
   } satisfies Preset.ThemeConfig,
