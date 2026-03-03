@@ -98,8 +98,18 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     accessibilityDelegate = object : View.AccessibilityDelegate() {
       override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(host, info)
-        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)
-        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)
+        info.addAction(
+          AccessibilityNodeInfo.AccessibilityAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_FORWARD,
+            "Expand"
+          )
+        )
+        info.addAction(
+          AccessibilityNodeInfo.AccessibilityAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,
+            "Collapse"
+          )
+        )
         info.className = "android.widget.SeekBar"
       }
 

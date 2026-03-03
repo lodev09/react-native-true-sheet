@@ -590,7 +590,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           currentDetentIndex = detentInfo.index
           setupDimmedBackground()
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
-          sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
+          this@TrueSheetViewController.sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
         }
 
         interactionState = InteractionState.Idle
@@ -603,7 +603,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
-          sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
+          this@TrueSheetViewController.sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
         }
       }
     }
