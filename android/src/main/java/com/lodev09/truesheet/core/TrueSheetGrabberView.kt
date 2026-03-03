@@ -93,7 +93,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     addView(pillView)
 
     isFocusable = true
-    contentDescription = "Sheet handle"
+    contentDescription = "Sheet Grabber"
 
     accessibilityDelegate = object : View.AccessibilityDelegate() {
       override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
@@ -116,6 +116,15 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
           else -> super.performAccessibilityAction(host, action, args)
         }
       }
+    }
+  }
+
+  fun updateAccessibilityValue(index: Int, detentCount: Int) {
+    stateDescription = when {
+      index < 0 || detentCount <= 0 -> null
+      index >= detentCount - 1 -> "Expanded"
+      index == 0 -> "Collapsed"
+      else -> "Detent ${index + 1} of $detentCount"
     }
   }
 

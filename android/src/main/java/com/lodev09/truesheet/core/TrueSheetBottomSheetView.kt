@@ -208,6 +208,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     addView(grabberView)
   }
 
+  fun updateGrabberAccessibilityValue(index: Int, detentCount: Int) {
+    findViewWithTag<TrueSheetGrabberView>(GRABBER_TAG)?.updateAccessibilityValue(index, detentCount)
+  }
+
   // =============================================================================
   // MARK: - Grabber Tap Detection
   // =============================================================================

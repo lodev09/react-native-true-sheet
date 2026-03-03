@@ -60,6 +60,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Applies the current configuration to the grabber view
 - (void)applyConfiguration;
 
+/// Updates the accessibility value based on the current detent position
+- (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -66,9 +66,9 @@ static const CGFloat kHitPaddingVertical = 10.0;
 - (void)setupView {
   self.clipsToBounds = NO;
   self.isAccessibilityElement = YES;
-  self.accessibilityLabel = @"Sheet handle";
-  self.accessibilityTraits = UIAccessibilityTraitAdjustable;
-  self.accessibilityHint = @"Swipe up or down to resize the sheet";
+  self.accessibilityLabel = @"Sheet Grabber";
+  self.accessibilityTraits = UIAccessibilityTraitAdjustable | UIAccessibilityTraitButton;
+  self.accessibilityHint = @"Double-tap to expand. Swipe up or down to resize the sheet";
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
   [self addGestureRecognizer:tap];
@@ -102,6 +102,21 @@ static const CGFloat kHitPaddingVertical = 10.0;
 }
 
 #pragma mark - Public
+
+- (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count {
+  if (index < 0 || count <= 0) {
+    self.accessibilityValue = nil;
+    return;
+  }
+
+  if (index >= count - 1) {
+    self.accessibilityValue = @"Expanded";
+  } else if (index == 0) {
+    self.accessibilityValue = @"Collapsed";
+  } else {
+    self.accessibilityValue = [NSString stringWithFormat:@"Detent %ld of %ld", (long)(index + 1), (long)count];
+  }
+}
 
 - (void)addToView:(UIView *)parentView {
   if (self.superview == parentView) {
