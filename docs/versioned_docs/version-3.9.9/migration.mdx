@@ -110,7 +110,7 @@ const scrollViewRef = useRef<ScrollView>(null)
 ```
 
 :::tip
-See the [Scrolling guide](/guides/scrolling) for more information about `scrollable`.
+See the [Scrolling guide](guides/scrolling) for more information about `scrollable`.
 :::
 
 #### `contentContainerStyle`
@@ -179,7 +179,7 @@ On iPad, the sheet is displayed as a floating modal, so bottom padding is not ne
 :::
 
 :::tip
-See the [Footer guide](/guides/footer) for more details.
+See the [Footer guide](guides/footer) for more details.
 :::
 
 ### 6. Background and Blur Behavior Changes
@@ -226,7 +226,7 @@ TrueSheet now automatically detects and adapts to Android's edge-to-edge display
 This feature is **Android-only** and requires React Native 0.81+ with `edgeToEdgeEnabled=true` in your `android/gradle.properties`.
 :::
 
-See the [Edge-to-Edge guide](/guides/edge-to-edge) for details.
+See the [Edge-to-Edge guide](guides/edge-to-edge) for details.
 
 ### 2. Enhanced Event System
 
@@ -249,7 +249,7 @@ Version 3 introduces new lifecycle and interaction events for better control:
 
 These events provide more granular control over the sheet's lifecycle and user interactions.
 
-See the [Lifecycle Events documentation](/reference/events) for detailed usage and examples.
+See the [Lifecycle Events documentation](reference/events) for detailed usage and examples.
 
 ### 3. iPad Support with Page Sizing
 
@@ -327,7 +327,7 @@ const MyAnimatedComponent = () => {
 The `onPositionChange` event now runs on the UI thread (worklet) when using `ReanimatedTrueSheet`. Make sure to add the `'worklet'` directive to your handler if you override it.
 :::
 
-See the [Reanimated Integration guide](/guides/reanimated) for complete examples.
+See the [Reanimated Integration guide](guides/reanimated) for complete examples.
 
 ### 6. Native Header Support
 
@@ -341,11 +341,11 @@ Version 3 introduces a new `header` prop for adding fixed headers above your scr
 
 This ensures proper scrolling behavior on both iOS and Android when using `ScrollView` or `FlatList` with a header.
 
-See the [Header guide](/guides/header) for more details.
+See the [Header guide](guides/header) for more details.
 
 ### 7. Draggable Control
 
-Version 3 introduces the `draggable` prop to disable user dragging entirely. When set to `false`, the sheet becomes static and can only be resized programmatically using the [`resize`](/reference/methods#resize) method.
+Version 3 introduces the `draggable` prop to disable user dragging entirely. When set to `false`, the sheet becomes static and can only be resized programmatically using the [`resize`](reference/methods#resize) method.
 
 ```tsx
 <TrueSheet draggable={false} detents={[0.5, 1]}>
@@ -357,7 +357,7 @@ Version 3 introduces the `draggable` prop to disable user dragging entirely. Whe
 When `draggable` is `false`, the grabber is automatically hidden.
 :::
 
-See the [Configuration reference](/reference/configuration#draggable) for more details.
+See the [Configuration reference](reference/configuration#draggable) for more details.
 
 ### 8. Blur Intensity and Interaction Control
 
@@ -376,7 +376,7 @@ Version 3 introduces new props for fine-grained control over the blur effect on 
 />
 ```
 
-See the [Configuration reference](/reference/configuration#bluroptions) for more details.
+See the [Configuration reference](reference/configuration#bluroptions) for more details.
 
 ### 9. React Native Screens Integration
 
@@ -401,7 +401,7 @@ return (
 )
 ```
 
-See the [React Navigation guide](/guides/navigation) for more details.
+See the [React Navigation guide](guides/navigation) for more details.
 
 ## Step-by-Step Migration
 
@@ -454,6 +454,6 @@ See the [React Navigation guide](/guides/navigation) for more details.
 
 If you encounter any issues during migration:
 
-- Check the [Troubleshooting](/troubleshooting) guide
+- Check the [Troubleshooting](troubleshooting) guide
 - Open an issue on [GitHub](https://github.com/lodev09/react-native-true-sheet/issues)
 - Review the [example app](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for reference implementations

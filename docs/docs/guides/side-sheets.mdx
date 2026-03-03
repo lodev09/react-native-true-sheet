@@ -6,13 +6,13 @@ keywords: [bottom sheet anchor, side sheet, bottom sheet positioning, bottom she
 
 import previewIpad from '/img/preview-ipad.gif'
 
-Ever wanted your sheet to slide in from the side? Now it can! The [`anchor`](/reference/configuration#anchor) prop lets you dock the sheet to the left or right edge — perfect for iPad and tablet layouts.
+Ever wanted your sheet to slide in from the side? Now it can! The [`anchor`](../reference/configuration#anchor) prop lets you dock the sheet to the left or right edge — perfect for iPad and tablet layouts.
 
 <img alt="side-sheet" src={previewIpad} width="744"/>
 
 ## How?
 
-Set [`anchor`](/reference/configuration#anchor) to `"left"` or `"right"` to position the sheet along that edge.
+Set [`anchor`](../reference/configuration#anchor) to `"left"` or `"right"` to position the sheet along that edge.
 
 ```tsx {5,6}
 export const App = () => {
@@ -29,12 +29,12 @@ export const App = () => {
 ```
 
 :::tip
-Combine with [`maxContentWidth`](/reference/configuration#maxcontentwidth) to control the sheet width when anchored.
+Combine with [`maxContentWidth`](../reference/configuration#maxcontentwidth) to control the sheet width when anchored.
 :::
 
 ### Adjusting the Edge Offset
 
-On Android and Web, you can control the margin from the screen edge using [`anchorOffset`](/reference/configuration#anchoroffset). The default is `16`.
+On Android and Web, you can control the margin from the screen edge using [`anchorOffset`](../reference/configuration#anchoroffset). The default is `16`.
 
 ```tsx {5}
 export const App = () => {

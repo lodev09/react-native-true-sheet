@@ -19,15 +19,15 @@ Configuration props available for `TrueSheet`. Extends `ViewProps`.
 
 ## `ref`
 
-We use `ref` to reference our sheet and call the [imperative methods](/reference/methods). Learn more about refs [here](https://react.dev/learn/referencing-values-with-refs).
+We use `ref` to reference our sheet and call the [imperative methods](methods). Learn more about refs [here](https://react.dev/learn/referencing-values-with-refs).
 
 ## `detents`
 
-Array of detents you want the sheet to support. See [this guide](/guides/resizing) for example.
+Array of detents you want the sheet to support. See [this guide](../guides/resizing) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`SheetDetent[]`](/reference/types#sheetdetent) | `[0.5, 1]` | ✅ | ✅ | ✅ |
+| [`SheetDetent[]`](types#sheetdetent) | `[0.5, 1]` | ✅ | ✅ | ✅ |
 
 :::info
 A sheet can only support up to **3** detents only! AKA **_collapsed_**, **_half-expanded_**, and **_expanded_**.
@@ -39,7 +39,7 @@ It's recommended to sort detents from **smallest to largest**.
 
 ## `name`
 
-The name to reference this sheet. It has to be **_unique_**. You can then present this sheet globally using its name. See [this guide](/guides/global-methods) for example.
+The name to reference this sheet. It has to be **_unique_**. You can then present this sheet globally using its name. See [this guide](../guides/global-methods) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -54,9 +54,9 @@ The sheet's background color. Uses the system default when not provided.
 | `ColorValue` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
-When not provided, iOS 26+ uses the default [Liquid Glass](/guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+When not provided, iOS 26+ uses the default [Liquid Glass](../guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
 
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](/guides/liquid-glass) effect.
+On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
 :::
 
 ## `backgroundBlur`
@@ -65,10 +65,10 @@ The blur effect style on iOS. When set, applies a blur effect over the [`backgro
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`BackgroundBlur`](/reference/types#backgroundblur) | | ✅ | | |
+| [`BackgroundBlur`](types#backgroundblur) | | ✅ | | |
 
 :::info
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](/guides/liquid-glass) effect.
+On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
 :::
 
 ## `blurOptions`
@@ -77,7 +77,7 @@ Options for customizing the blur effect. Only applies when [`backgroundBlur`](#b
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`BlurOptions`](/reference/types#bluroptions) | | ✅ | | |
+| [`BlurOptions`](types#bluroptions) | | ✅ | | |
 
 ```tsx
 <TrueSheet
@@ -169,7 +169,7 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 
 ## `draggable`
 
-If set to `false`, the sheet will disable dragging to resize. The sheet can only be resized programmatically using the [`resize`](/reference/methods#resize) method.
+If set to `false`, the sheet will disable dragging to resize. The sheet can only be resized programmatically using the [`resize`](methods#resize) method.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -236,7 +236,7 @@ Options for customizing the grabber appearance. Only applies when [`grabber`](#g
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`GrabberOptions`](/reference/types#grabberoptions) | | ✅ | ✅ | |
+| [`GrabberOptions`](types#grabberoptions) | | ✅ | ✅ | |
 
 ```tsx
 <TrueSheet
@@ -258,7 +258,7 @@ On iOS, when `grabberOptions` is not provided, the native system grabber is used
 
 ## `header`
 
-A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](/guides/header) for example.
+A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/header) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -290,7 +290,7 @@ Style for the footer container.
 
 ## `scrollable`
 
-On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](/guides/scrolling) for example.
+On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](../guides/scrolling) for example.
 
 On Android, it ensures the scroll view fills the available sheet space and automatically manages nested scrolling. Any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored when `scrollable` is enabled.
 
@@ -299,16 +299,16 @@ On Android, it ensures the scroll view fills the available sheet space and autom
 | `boolean` | `false` | ✅ | ✅ | |
 
 :::warning
-The [`auto`](/reference/types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
+The [`auto`](types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
 :::
 
 ## `scrollableOptions`
 
-Options for customizing scrollable behavior. Only applies when [`scrollable`](#scrollable) is `true`. See [this guide](/guides/scrolling) for details.
+Options for customizing scrollable behavior. Only applies when `scrollable` is `true`.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`ScrollableOptions`](/reference/types#scrollableoptions) | | ✅ | ✅ | |
+| [`ScrollableOptions`](types#scrollableoptions) | | ✅ | ✅ | |
 
 ## `pageSizing`
 
@@ -324,7 +324,7 @@ Controls how the bottom safe area inset affects detent heights.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`InsetAdjustment`](/reference/types#insetadjustment) | `"automatic"` | ✅ | ✅ | |
+| [`InsetAdjustment`](types#insetadjustment) | `"automatic"` | ✅ | ✅ | |
 
 ## `detached`
 
@@ -344,11 +344,11 @@ The offset from the bottom edge when [`detached`](#detached) is enabled.
 
 ## `stackBehavior`
 
-Defines the stack behavior when a modal is presented while another is visible. See [this guide](/guides/stacking) for example.
+Defines the stack behavior when a modal is presented while another is visible. See [this guide](../guides/stacking) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`StackBehavior`](/reference/types#stackbehavior) | `"switch"` | | | ✅ |
+| [`StackBehavior`](types#stackbehavior) | `"switch"` | | | ✅ |
 
 ## `style`
 

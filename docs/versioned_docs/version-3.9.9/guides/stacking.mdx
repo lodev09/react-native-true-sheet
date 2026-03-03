@@ -52,7 +52,7 @@ await sheet3.current?.dismiss() // Dismisses Sheet 3, Sheet 1 and Sheet 2 stay
 
 ### Dismiss Only Child Sheets
 
-If you want to dismiss only the sheets on top while keeping the current sheet presented, use the [`dismissStack()`](/reference/methods#dismissstack) method:
+If you want to dismiss only the sheets on top while keeping the current sheet presented, use the [`dismissStack()`](../reference/methods#dismissstack) method:
 
 ```tsx
 // If Sheet 1 → Sheet 2 → Sheet 3
@@ -69,7 +69,7 @@ If no sheets are presented on top, `dismissStack()` does nothing.
 
 ### Dismiss All Sheets
 
-To dismiss all sheets in the current stack at once, use the static [`dismissAll()`](/reference/methods#dismissall) method:
+To dismiss all sheets in the current stack at once, use the static [`dismissAll()`](../reference/methods#dismissall) method:
 
 ```tsx
 await TrueSheet.dismissAll()
