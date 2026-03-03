@@ -4,6 +4,7 @@
 
 ### 🎉 New features
 
+- Add accessibility support to grabber view with VoiceOver/TalkBack actions and state descriptions. ([#587](https://github.com/lodev09/react-native-true-sheet/pull/587) by [@lodev09](https://github.com/lodev09))
 - Add `scrollingExpandsSheet` option to `scrollableOptions`. ([#585](https://github.com/lodev09/react-native-true-sheet/pull/585) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
