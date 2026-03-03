@@ -48,11 +48,20 @@ NS_ASSUME_NONNULL_BEGIN
 /// Called when the grabber is tapped
 @property (nonatomic, copy, nullable) void (^onTap)(void);
 
+/// Called when VoiceOver user swipes up (expand)
+@property (nonatomic, copy, nullable) void (^onIncrement)(void);
+
+/// Called when VoiceOver user swipes down (collapse)
+@property (nonatomic, copy, nullable) void (^onDecrement)(void);
+
 /// Adds the grabber view to a parent view with proper constraints
 - (void)addToView:(UIView *)parentView;
 
 /// Applies the current configuration to the grabber view
 - (void)applyConfiguration;
+
+/// Updates the accessibility value based on the current detent position
+- (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count;
 
 @end
 

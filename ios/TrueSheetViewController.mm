@@ -236,6 +236,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
+      [_grabberView updateAccessibilityValueWithIndex:index detentCount:_detents.count];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
 
@@ -328,6 +329,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
       [self learnOffsetForDetentIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+      [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
     });
   }
@@ -402,7 +404,9 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     case UIGestureRecognizerStateCancelled: {
       if (!_isTransitioning) {
         dispatch_async(dispatch_get_main_queue(), ^{
-          [self learnOffsetForDetentIndex:self.currentDetentIndex];
+          NSInteger index = self.currentDetentIndex;
+          [self learnOffsetForDetentIndex:index];
+          [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
           [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
         });
       }
@@ -763,12 +767,37 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _grabberView.onTap = ^{
       [weakSelf handleGrabberTap];
     };
+    _grabberView.onIncrement = ^{
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) return;
+      NSInteger current = strongSelf.currentDetentIndex;
+      NSInteger count = strongSelf->_detents.count;
+      if (current >= 0 && current < count - 1) {
+        [strongSelf.sheet animateChanges:^{
+          [strongSelf resizeToDetentIndex:current + 1];
+        }];
+      }
+    };
+    _grabberView.onDecrement = ^{
+      __strong __typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) return;
+      NSInteger current = strongSelf.currentDetentIndex;
+      if (current > 0) {
+        [strongSelf.sheet animateChanges:^{
+          [strongSelf resizeToDetentIndex:current - 1];
+        }];
+      } else if (strongSelf.dismissible) {
+        [strongSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+      }
+    };
 
     [self.view bringSubviewToFront:_grabberView];
   } else {
     self.sheet.prefersGrabberVisible = showGrabber;
     _grabberView.hidden = YES;
     _grabberView.onTap = nil;
+    _grabberView.onIncrement = nil;
+    _grabberView.onDecrement = nil;
   }
 }
 

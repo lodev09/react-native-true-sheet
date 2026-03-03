@@ -22,6 +22,8 @@
 static const CGFloat kDefaultGrabberWidth = 36.0;
 static const CGFloat kDefaultGrabberHeight = 5.0;
 static const CGFloat kDefaultGrabberTopMargin = 5.0;
+static const CGFloat kHitPaddingHorizontal = 20.0;
+static const CGFloat kHitPaddingVertical = 10.0;
 
 @implementation TrueSheetGrabberView {
   UIVisualEffectView *_vibrancyView;
@@ -62,17 +64,19 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 #pragma mark - Setup
 
 - (void)setupView {
-  self.clipsToBounds = YES;
+  self.clipsToBounds = NO;
+  self.isAccessibilityElement = YES;
+  self.accessibilityLabel = @"Sheet Grabber";
+  self.accessibilityTraits = UIAccessibilityTraitAdjustable | UIAccessibilityTraitButton;
+  self.accessibilityHint = @"Double-tap to expand. Swipe up or down to resize the sheet";
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
   [self addGestureRecognizer:tap];
 
   _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:nil];
-  _vibrancyView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [self addSubview:_vibrancyView];
 
   _fillView = [[UIView alloc] init];
-  _fillView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _fillView.backgroundColor = [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
   [_vibrancyView.contentView addSubview:_fillView];
 }
@@ -85,7 +89,34 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
   }
 }
 
+- (void)accessibilityIncrement {
+  if (_onIncrement) {
+    _onIncrement();
+  }
+}
+
+- (void)accessibilityDecrement {
+  if (_onDecrement) {
+    _onDecrement();
+  }
+}
+
 #pragma mark - Public
+
+- (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count {
+  if (index < 0 || count <= 0) {
+    self.accessibilityValue = nil;
+    return;
+  }
+
+  if (index >= count - 1) {
+    self.accessibilityValue = @"Expanded";
+  } else if (index == 0) {
+    self.accessibilityValue = @"Collapsed";
+  } else {
+    self.accessibilityValue = [NSString stringWithFormat:@"Detent %ld of %ld", (long)(index + 1), (long)count];
+  }
+}
 
 - (void)addToView:(UIView *)parentView {
   if (self.superview == parentView) {
@@ -98,17 +129,22 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
 }
 
 - (void)applyConfiguration {
-  CGFloat width = [self effectiveWidth];
-  CGFloat height = [self effectiveHeight];
+  CGFloat pillWidth = [self effectiveWidth];
+  CGFloat pillHeight = [self effectiveHeight];
   CGFloat topMargin = [self effectiveTopMargin];
   CGFloat parentWidth = self.superview ? self.superview.bounds.size.width : UIScreen.mainScreen.bounds.size.width;
 
-  // Position the grabber: centered horizontally, with top margin
-  self.frame = CGRectMake((parentWidth - width) / 2.0, topMargin, width, height);
-  self.layer.cornerRadius = [self effectiveCornerRadius];
+  CGFloat frameWidth = pillWidth + kHitPaddingHorizontal * 2;
+  CGFloat frameHeight = pillHeight + kHitPaddingVertical * 2;
+  CGFloat frameY = topMargin - kHitPaddingVertical;
 
-  // Update vibrancy and fill view frames
-  _vibrancyView.frame = self.bounds;
+  self.frame = CGRectMake((parentWidth - frameWidth) / 2.0, frameY, frameWidth, frameHeight);
+  self.backgroundColor = UIColor.clearColor;
+
+  CGRect pillRect = CGRectMake(kHitPaddingHorizontal, kHitPaddingVertical, pillWidth, pillHeight);
+  _vibrancyView.frame = pillRect;
+  _vibrancyView.layer.cornerRadius = [self effectiveCornerRadius];
+  _vibrancyView.clipsToBounds = YES;
   _fillView.frame = _vibrancyView.contentView.bounds;
 
   if (self.isAdaptive) {
@@ -119,9 +155,8 @@ static const CGFloat kDefaultGrabberTopMargin = 5.0;
     _fillView.hidden = NO;
   } else {
     _vibrancyView.effect = nil;
-    _vibrancyView.backgroundColor = nil;
     _fillView.hidden = YES;
-    self.backgroundColor = _color ?: [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
+    _vibrancyView.backgroundColor = _color ?: [UIColor.darkGrayColor colorWithAlphaComponent:0.7];
   }
 }
 

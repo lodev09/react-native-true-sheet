@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.graphics.ColorUtils
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -58,6 +60,9 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
   private val grabberColor: Int
     get() = if (isAdaptive) getAdaptiveColor(options?.color) else options?.color ?: DEFAULT_COLOR
 
+  var onAccessibilityIncrement: (() -> Unit)? = null
+  var onAccessibilityDecrement: (() -> Unit)? = null
+
   init {
     val hitboxWidth = grabberWidth + (HITBOX_PADDING_HORIZONTAL * 2)
     val hitboxHeight = grabberHeight + (HITBOX_PADDING_VERTICAL * 2)
@@ -86,6 +91,51 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     }
 
     addView(pillView)
+
+    isFocusable = true
+    contentDescription = "Sheet Grabber"
+
+    accessibilityDelegate = object : View.AccessibilityDelegate() {
+      override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+        super.onInitializeAccessibilityNodeInfo(host, info)
+        info.addAction(
+          AccessibilityNodeInfo.AccessibilityAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_FORWARD,
+            "Expand"
+          )
+        )
+        info.addAction(
+          AccessibilityNodeInfo.AccessibilityAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,
+            "Collapse"
+          )
+        )
+        info.className = "android.widget.SeekBar"
+      }
+
+      override fun performAccessibilityAction(host: View, action: Int, args: Bundle?): Boolean {
+        return when (action) {
+          AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> {
+            onAccessibilityIncrement?.invoke()
+            true
+          }
+          AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> {
+            onAccessibilityDecrement?.invoke()
+            true
+          }
+          else -> super.performAccessibilityAction(host, action, args)
+        }
+      }
+    }
+  }
+
+  fun updateAccessibilityValue(index: Int, detentCount: Int) {
+    stateDescription = when {
+      index < 0 || detentCount <= 0 -> null
+      index >= detentCount - 1 -> "Expanded"
+      index == 0 -> "Collapsed"
+      else -> "Detent ${index + 1} of $detentCount"
+    }
   }
 
   private fun getAdaptiveColor(baseColor: Int? = null): Int {

@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -32,6 +33,8 @@ interface TrueSheetBottomSheetViewDelegate {
   val grabberOptions: GrabberOptions?
   val draggable: Boolean
   fun bottomSheetViewDidTapGrabber()
+  fun bottomSheetViewDidAccessibilityIncrement()
+  fun bottomSheetViewDidAccessibilityDecrement()
 }
 
 /**
@@ -75,6 +78,8 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     // Allow content to extend beyond bounds (for footer positioning)
     clipChildren = false
     clipToPadding = false
+
+    ViewCompat.setAccessibilityPaneTitle(this, "Bottom sheet")
   }
 
   override fun setTranslationY(translationY: Float) {
@@ -196,9 +201,15 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
     val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
       tag = GRABBER_TAG
+      onAccessibilityIncrement = { delegate?.bottomSheetViewDidAccessibilityIncrement() }
+      onAccessibilityDecrement = { delegate?.bottomSheetViewDidAccessibilityDecrement() }
     }
 
     addView(grabberView)
+  }
+
+  fun updateGrabberAccessibilityValue(index: Int, detentCount: Int) {
+    findViewWithTag<TrueSheetGrabberView>(GRABBER_TAG)?.updateAccessibilityValue(index, detentCount)
   }
 
   // =============================================================================

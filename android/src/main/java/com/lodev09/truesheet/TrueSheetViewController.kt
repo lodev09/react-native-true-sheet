@@ -476,6 +476,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  override fun bottomSheetViewDidAccessibilityIncrement() {
+    if (currentDetentIndex < detents.size - 1) {
+      setStateForDetentIndex(currentDetentIndex + 1)
+    }
+  }
+
+  override fun bottomSheetViewDidAccessibilityDecrement() {
+    if (currentDetentIndex > 0) {
+      setStateForDetentIndex(currentDetentIndex - 1)
+    } else if (dismissible) {
+      dismiss(animated = true)
+    }
+  }
+
   // =============================================================================
   // MARK: - BottomSheetCallback
   // =============================================================================
@@ -576,6 +590,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           currentDetentIndex = detentInfo.index
           setupDimmedBackground()
           delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
+          this@TrueSheetViewController.sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
         }
 
         interactionState = InteractionState.Idle
@@ -588,6 +603,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
+          this@TrueSheetViewController.sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
         }
       }
     }
@@ -776,6 +792,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidPresent(index, position, detent)
     parentSheetView?.viewControllerDidBlur()
     delegate?.viewControllerDidFocus()
+    sheetView?.updateGrabberAccessibilityValue(index, detents.size)
 
     presentPromise?.invoke()
     presentPromise = null
