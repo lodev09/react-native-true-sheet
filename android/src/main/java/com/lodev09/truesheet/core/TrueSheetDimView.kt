@@ -61,7 +61,7 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
       delegate?.dimViewDidTap()
     }
 
-    contentDescription = "Close sheet"
+    importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
   }
 
   // =============================================================================
