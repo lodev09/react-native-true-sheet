@@ -113,19 +113,20 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
         info.className = "android.widget.SeekBar"
       }
 
-      override fun performAccessibilityAction(host: View, action: Int, args: Bundle?): Boolean {
-        return when (action) {
+      override fun performAccessibilityAction(host: View, action: Int, args: Bundle?): Boolean =
+        when (action) {
           AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> {
             onAccessibilityIncrement?.invoke()
             true
           }
+
           AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> {
             onAccessibilityDecrement?.invoke()
             true
           }
+
           else -> super.performAccessibilityAction(host, action, args)
         }
-      }
     }
   }
 

@@ -29,9 +29,7 @@ typedef struct {
 } TrueSheetPositionState;
 
 static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPositionState b) {
-  return fabs(a.position - b.position) <= 0.01 &&
-         fabs(a.detent - b.detent) <= 0.01 &&
-         fabs(a.index - b.index) <= 0.01;
+  return fabs(a.position - b.position) <= 0.01 && fabs(a.detent - b.detent) <= 0.01 && fabs(a.index - b.index) <= 0.01;
 }
 
 @interface TrueSheetViewController ()
@@ -483,7 +481,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     } else {
       CGFloat position = fmax(self.currentPosition, layerPosition);
       // Detect drag → snap transition jump; stay non-realtime for the rest of the animation
-      if (!_isTransitionSnapping && _isPresented && _lastEmittedPositionState.position > 0 && fabs(_lastEmittedPositionState.position - position) > 20) {
+      if (!_isTransitionSnapping && _isPresented && _lastEmittedPositionState.position > 0 &&
+          fabs(_lastEmittedPositionState.position - position) > 20) {
         _isTransitionSnapping = YES;
       }
       BOOL realtime = !_isTransitionSnapping;
@@ -510,8 +509,11 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
   if (!TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
     _lastEmittedPositionState = state;
-    
-    [self.delegate viewControllerDidChangePosition:state.index position:state.position detent:state.detent realtime:realtime];
+
+    [self.delegate viewControllerDidChangePosition:state.index
+                                          position:state.position
+                                            detent:state.detent
+                                          realtime:realtime];
   }
 }
 
@@ -769,7 +771,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     };
     _grabberView.onIncrement = ^{
       __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf) return;
+      if (!strongSelf)
+        return;
       NSInteger current = strongSelf.currentDetentIndex;
       NSInteger count = strongSelf->_detents.count;
       if (current >= 0 && current < count - 1) {
@@ -780,7 +783,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     };
     _grabberView.onDecrement = ^{
       __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf) return;
+      if (!strongSelf)
+        return;
       NSInteger current = strongSelf.currentDetentIndex;
       if (current > 0) {
         [strongSelf.sheet animateChanges:^{

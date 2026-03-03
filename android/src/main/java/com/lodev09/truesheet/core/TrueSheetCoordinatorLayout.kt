@@ -105,7 +105,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
 
-
     if (cannotScroll) {
       when (ev.action and MotionEvent.ACTION_MASK) {
         MotionEvent.ACTION_DOWN -> {

@@ -96,8 +96,7 @@ class DidDismissEvent(surfaceId: Int, viewId: Int) : Event<DidDismissEvent>(surf
 /**
  * Fired when the sheet visibility changes due to screen transitions
  */
-class VisibilityChangeEvent(surfaceId: Int, viewId: Int, private val visible: Boolean) :
-  Event<VisibilityChangeEvent>(surfaceId, viewId) {
+class VisibilityChangeEvent(surfaceId: Int, viewId: Int, private val visible: Boolean) : Event<VisibilityChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
 

@@ -214,11 +214,16 @@ using namespace facebook::react;
 
   if (hasGrabberOptions) {
     GrabberOptions *options = [[GrabberOptions alloc] init];
-    if (grabberOpts.width > 0) options.width = @(grabberOpts.width);
-    if (grabberOpts.height > 0) options.height = @(grabberOpts.height);
-    if (grabberOpts.topMargin > 0) options.topMargin = @(grabberOpts.topMargin);
-    if (grabberOpts.cornerRadius >= 0) options.cornerRadius = @(grabberOpts.cornerRadius);
-    if (grabberColor) options.color = grabberColor;
+    if (grabberOpts.width > 0)
+      options.width = @(grabberOpts.width);
+    if (grabberOpts.height > 0)
+      options.height = @(grabberOpts.height);
+    if (grabberOpts.topMargin > 0)
+      options.topMargin = @(grabberOpts.topMargin);
+    if (grabberOpts.cornerRadius >= 0)
+      options.cornerRadius = @(grabberOpts.cornerRadius);
+    if (grabberColor)
+      options.color = grabberColor;
     options.adaptive = grabberOpts.adaptive;
     _controller.grabberOptions = options;
   } else {
@@ -479,7 +484,11 @@ using namespace facebook::react;
 }
 
 - (void)emitDismissedPosition {
-  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:-1 position:_controller.screenHeight detent:0 realtime:NO];
+  [TrueSheetStateEvents emitPositionChange:_eventEmitter
+                                     index:-1
+                                  position:_controller.screenHeight
+                                    detent:0
+                                  realtime:NO];
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {

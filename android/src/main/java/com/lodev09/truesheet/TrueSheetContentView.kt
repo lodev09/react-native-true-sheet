@@ -15,10 +15,7 @@ import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollBy
 import com.lodev09.truesheet.utils.smoothScrollTo
 
-data class ScrollableOptions(
-  val keyboardScrollOffset: Float = 0f,
-  val scrollingExpandsSheet: Boolean = true
-)
+data class ScrollableOptions(val keyboardScrollOffset: Float = 0f, val scrollingExpandsSheet: Boolean = true)
 
 /**
  * Delegate interface for content view size changes
