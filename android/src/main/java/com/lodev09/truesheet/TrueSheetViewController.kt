@@ -964,7 +964,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
+    // Subtract bottomInset so footer content doesn't render behind the navigation/gesture bar.
+    // When the keyboard is visible, currentKeyboardInset already accounts for the bottom inset.
+    val safeAreaOffset = if (currentKeyboardInset > 0) 0 else bottomInset
+    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset - safeAreaOffset).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative
     if (slideOffset != null && slideOffset < 0) {
@@ -1267,6 +1270,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - RootView Touch Handling
   // =============================================================================
 
+  /**
+   * Check if a touch event is within the footer's screen bounds.
+   */
+  private fun isTouchInFooter(event: MotionEvent): Boolean {
+    val footer = containerView?.footerView ?: return false
+    if (!footer.isShown) return false
+    val loc = ScreenUtils.getScreenLocation(footer)
+    val x = event.rawX.toInt()
+    val y = event.rawY.toInt()
+    return x >= loc[0] && x <= loc[0] + footer.width &&
+      y >= loc[1] && y <= loc[1] + footer.height
+  }
+
   override fun dispatchTouchEvent(event: MotionEvent): Boolean {
     val footer = containerView?.footerView
     if (footer != null && footer.isShown) {
@@ -1293,17 +1309,24 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let {
-      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher.handleMotionEvent(event, it, true)
+    // Skip JS dispatch for footer touches — the footer's own RootView handles them.
+    // This prevents the same touch event being dispatched to JS twice.
+    if (!isTouchInFooter(event)) {
+      eventDispatcher?.let {
+        jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+        jsPointerDispatcher.handleMotionEvent(event, it, true)
+      }
     }
     return super.onInterceptTouchEvent(event)
   }
 
   override fun onTouchEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let {
-      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher.handleMotionEvent(event, it, false)
+    // Skip JS dispatch for footer touches — handled by footer's own RootView.
+    if (!isTouchInFooter(event)) {
+      eventDispatcher?.let {
+        jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+        jsPointerDispatcher.handleMotionEvent(event, it, false)
+      }
     }
     super.onTouchEvent(event)
     return true

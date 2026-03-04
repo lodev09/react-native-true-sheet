@@ -11,6 +11,10 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed keyboard scroll positioning when sheet auto-expands from a smaller detent. ([#592](https://github.com/lodev09/react-native-true-sheet/pull/592) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed footer swallowing touch events by giving it a dedicated `RCTSurfaceTouchHandler`, bypassing stale Yoga frame hit-testing. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **Android**: Fixed double JS touch dispatch for footer touches — footer's own `RootView` now exclusively handles events in its bounds. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **iOS**: Fixed footer ignoring safe area insets by pinning to `safeAreaLayoutGuide.bottomAnchor` instead of `bottomAnchor`. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **Android**: Fixed footer rendering behind navigation/gesture bar by accounting for bottom inset in `positionFooter`. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
 - **Android**: Fixed dead state after rapid present/dismiss cycles. ([#593](https://github.com/lodev09/react-native-true-sheet/pull/593) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position change not emitting when detent or index changed. ([#584](https://github.com/lodev09/react-native-true-sheet/pull/584) by [@lodev09](https://github.com/lodev09))
 - **Android**: Use RN `BackHandler` for back press detection for reliability across Android versions. ([#580](https://github.com/lodev09/react-native-true-sheet/pull/580) by [@lodev09](https://github.com/lodev09))

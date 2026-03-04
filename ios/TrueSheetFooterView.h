@@ -17,7 +17,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
+@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate> {
+  RCTSurfaceTouchHandler *_footerTouchHandler;
+}
 
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
