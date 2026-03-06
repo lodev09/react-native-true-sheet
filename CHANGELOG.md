@@ -10,6 +10,7 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed keyboard scroll positioning when sheet auto-expands from a smaller detent. ([#592](https://github.com/lodev09/react-native-true-sheet/pull/592) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed dead state after rapid present/dismiss cycles. ([#593](https://github.com/lodev09/react-native-true-sheet/pull/593) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position change not emitting when detent or index changed. ([#584](https://github.com/lodev09/react-native-true-sheet/pull/584) by [@lodev09](https://github.com/lodev09))
 - **Android**: Use RN `BackHandler` for back press detection for reliability across Android versions. ([#580](https://github.com/lodev09/react-native-true-sheet/pull/580) by [@lodev09](https://github.com/lodev09))
 
