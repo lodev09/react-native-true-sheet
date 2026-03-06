@@ -4,11 +4,12 @@ import { BUTTON_HEIGHT, DARK_BLUE, SPACING } from '../utils';
 
 interface ButtonProps extends PressableProps {
   text: string;
+  hint?: string;
   loading?: boolean;
 }
 
 export const Button = (props: ButtonProps) => {
-  const { text, style, loading, ...rest } = props;
+  const { text, hint, style, loading, ...rest } = props;
   return (
     <Pressable
       style={(state) => [
@@ -19,6 +20,7 @@ export const Button = (props: ButtonProps) => {
       {...rest}
     >
       <Text style={styles.text}>{text}</Text>
+      {hint && <Text style={styles.hint}>{hint}</Text>}
       {loading && <ActivityIndicator style={styles.loader} size="small" color="#fff" />}
     </Pressable>
   );
@@ -38,6 +40,10 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#fff',
+  },
+  hint: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   loader: {
     position: 'absolute',

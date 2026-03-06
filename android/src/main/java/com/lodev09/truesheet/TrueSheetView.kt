@@ -119,9 +119,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     if (child is TrueSheetContainerView) {
       child.delegate = this
-      viewController.createSheet()
-      setupScrollable()
-
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
     }
@@ -349,11 +346,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    if (viewController.coordinatorLayout == null || viewController.sheetView == null) {
-      RNLog.w(reactContext, "TrueSheet: sheet is not ready. Ensure it is mounted before presenting.")
-      promiseCallback()
-      return
-    }
+    viewController.createSheet()
+    setupScrollable()
 
     // Dismiss keyboard if focused view is within a sheet or if target detent will be dimmed
     val parentSheet = TrueSheetStackManager.getTopmostSheet()
