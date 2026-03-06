@@ -15,13 +15,14 @@ fi
 # Tidy up
 yarn tidy
 
-# Update CHANGELOG
-sed -i '' "s/## Unreleased/## Unreleased\\n\\n## ${VERSION}/" CHANGELOG.md
-
-# Version docs (skip pre-releases like beta, alpha, rc)
+# Skip changelog and docs versioning for pre-releases (beta, alpha, rc)
 if echo "$VERSION" | grep -q '-'; then
-  echo "Pre-release detected, skipping docs versioning."
+  echo "Pre-release detected, skipping changelog and docs versioning."
 else
+  # Update CHANGELOG
+  sed -i '' "s/## Unreleased/## Unreleased\\n\\n## ${VERSION}/" CHANGELOG.md
+
+  # Version docs
   echo "Creating docs version $VERSION..."
   rm -rf docs/versioned_docs docs/versioned_sidebars docs/versions.json
   cd docs && ./node_modules/.bin/docusaurus docs:version "$VERSION" && cd ..
