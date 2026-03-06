@@ -216,15 +216,18 @@ using namespace facebook::react;
                    animations:^{
                      [self setScrollViewContentInset:height
                                       indicatorInset:self->_originalIndicatorBottomInset + height];
-
-                     if (firstResponder) {
-                       CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
-                                                                    toView:self->_pinnedScrollView.scrollView];
-                       responderFrame.size.height += self.keyboardScrollOffset;
-                       [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:NO];
-                     }
                    }
                    completion:nil];
+
+  // Defer scroll until the next run loop so content insets are applied first
+  if (firstResponder) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
+                                                   toView:self->_pinnedScrollView.scrollView];
+      responderFrame.size.height += self.keyboardScrollOffset;
+      [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:YES];
+    });
+  }
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
