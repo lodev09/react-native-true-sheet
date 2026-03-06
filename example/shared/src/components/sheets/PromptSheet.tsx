@@ -44,7 +44,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
     <TrueSheet
       ref={sheetRef}
       name="prompt-sheet"
-      detents={[1]}
+      detents={[0.75, 1]}
       scrollable
       scrollableOptions={{ keyboardScrollOffset: FOOTER_HEIGHT + SPACING }}
       backgroundBlur="dark"
