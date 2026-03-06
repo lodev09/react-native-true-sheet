@@ -261,11 +261,7 @@ using namespace facebook::react;
   _insetAdjustment = (NSInteger)newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;
 
-  if (_containerView) {
-    _containerView.scrollableEnabled = _scrollable;
-    _containerView.insetAdjustment = _insetAdjustment;
-    _containerView.scrollableOptions = _scrollableOptions;
-  }
+  [self setupScrollable];
 }
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
@@ -314,9 +310,7 @@ using namespace facebook::react;
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
-  if (_containerView) {
-    [_containerView setupScrollable];
-  }
+  [self setupScrollable];
 
   if (_controller.isPresented) {
     [self applySheetPropsUpdate];
@@ -384,11 +378,6 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  _containerView.scrollableEnabled = _scrollable;
-  _containerView.insetAdjustment = _insetAdjustment;
-  _containerView.scrollableOptions = _scrollableOptions;
-  [_containerView setupScrollable];
-
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   } else {
@@ -448,6 +437,8 @@ using namespace facebook::react;
   [_controller setupSheetProps];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
+
+  [self setupScrollable];
 
   [_screensEventObserver capturePresenterScreenFromView:self];
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
@@ -575,7 +566,7 @@ using namespace facebook::react;
 
 // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.
 - (void)containerViewScrollViewDidChange {
-  [_containerView setupScrollable];
+  [self setupScrollable];
 }
 
 #pragma mark - TrueSheetViewControllerDelegate
@@ -696,6 +687,16 @@ using namespace facebook::react;
 }
 
 #pragma mark - Private Helpers
+
+- (void)setupScrollable {
+  if (!_containerView)
+    return;
+
+  _containerView.scrollableEnabled = _scrollable;
+  _containerView.insetAdjustment = _insetAdjustment;
+  _containerView.scrollableOptions = _scrollableOptions;
+  [_containerView setupScrollable];
+}
 
 - (void)applySheetPropsUpdate {
   BOOL pendingLayoutUpdate = _pendingLayoutUpdate;

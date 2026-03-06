@@ -78,6 +78,14 @@ const MapScreenInner = ({
     console.log('basic sheet presented');
   };
 
+  const rapidPresentDismiss = async () => {
+    for (let i = 0; i < 5; i++) {
+      await basicSheet.current?.present(0);
+      await basicSheet.current?.dismiss();
+    }
+    await basicSheet.current?.present(0);
+  };
+
   const presentScrollViewSheet = () => {
     setScrollViewLoading(true);
     requestAnimationFrame(async () => {
@@ -166,7 +174,12 @@ const MapScreenInner = ({
           <Text style={styles.title}>True Sheet</Text>
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
         </View>
-        <Button text="TrueSheet View" onPress={() => presentBasicSheet(0)} />
+        <Button
+          text="TrueSheet View"
+          hint="Long press to stress test"
+          onPress={() => presentBasicSheet(0)}
+          onLongPress={rapidPresentDismiss}
+        />
         <Button text="Open Modal" onPress={onNavigateToModal} />
         <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
         {isTablet && (

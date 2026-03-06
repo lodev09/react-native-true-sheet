@@ -28,10 +28,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         </Header>
       }
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
-      onDidPresent={() => {
-        console.log(`Sheet FlatList presented!`);
-        scrollRef.current?.scrollToOffset({ offset: 99999, animated: true });
-      }}
+      onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
       {...props}
     >
