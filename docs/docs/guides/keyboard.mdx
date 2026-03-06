@@ -36,15 +36,21 @@ const App = () => {
 
 ## Scrollable + Keyboard
 
-When using [`scrollable`](../reference/configuration#scrollable) with `TextInput` inside a `ScrollView`, the sheet auto-scrolls to keep the focused input visible above the keyboard. Use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configuration#scrollableoptions) to add extra spacing between the input and the keyboard:
+When using [`scrollable`](../reference/configuration#scrollable), keyboard handling works out of the box. If a `TextInput` inside a `ScrollView` is focused, the sheet automatically scrolls to keep the input visible above the keyboard — no extra setup needed.
+
+You can use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configuration#scrollableoptions) to add extra spacing between the focused input and the keyboard:
 
 ```tsx
 <TrueSheet scrollable scrollableOptions={{ keyboardScrollOffset: 16 }}>
   <ScrollView>
-    <TextInput placeholder="Type something..." />
+    <TextInput placeholder="Input 1" />
+    <TextInput placeholder="Input 2" />
+    <TextInput placeholder="Input 3" />
   </ScrollView>
 </TrueSheet>
 ```
+
+This is especially useful for forms with multiple inputs — as the user taps between fields, the scroll view adjusts automatically to keep the active input in view.
 
 ## Footer Behavior
 
