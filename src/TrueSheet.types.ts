@@ -119,7 +119,7 @@ export interface ScrollableOptions {
    * The scroll edge effect applied to the top edge of the scroll view.
    *
    * @platform ios 26+
-   * @default 'automatic'
+   * @default 'hidden'
    */
   topScrollEdgeEffect?: ScrollEdgeEffect;
 
@@ -127,7 +127,7 @@ export interface ScrollableOptions {
    * The scroll edge effect applied to the bottom edge of the scroll view.
    *
    * @platform ios 26+
-   * @default 'automatic'
+   * @default 'hidden'
    */
   bottomScrollEdgeEffect?: ScrollEdgeEffect;
 }

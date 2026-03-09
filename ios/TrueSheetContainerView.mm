@@ -34,8 +34,8 @@ using namespace facebook::react;
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
     _scrollingExpandsSheet = YES;
-    _topScrollEdgeEffect = 0;
-    _bottomScrollEdgeEffect = 0;
+    _topScrollEdgeEffect = (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+    _bottomScrollEdgeEffect = (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
   }
   return self;
 }
@@ -124,14 +124,24 @@ using namespace facebook::react;
     return;
   }
 
+  NSInteger topEffect = _scrollableOptions
+    ? _scrollableOptions.topScrollEdgeEffect
+    : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+  NSInteger bottomEffect = _scrollableOptions
+    ? _scrollableOptions.bottomScrollEdgeEffect
+    : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+
+  BOOL topHidden = topEffect == (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+  BOOL bottomHidden = bottomEffect == (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+
   RCTScrollViewComponentView *scrollViewComponent = [_contentView findScrollView];
   UIScrollView *scrollView = scrollViewComponent.scrollView;
 
   if (_headerView) {
-    [_headerView setupEdgeInteractionWithScrollView:scrollView];
+    [_headerView setupEdgeInteractionWithScrollView:topHidden ? nil : scrollView];
   }
   if (_footerView) {
-    [_footerView setupEdgeInteractionWithScrollView:scrollView];
+    [_footerView setupEdgeInteractionWithScrollView:bottomHidden ? nil : scrollView];
   }
 }
 

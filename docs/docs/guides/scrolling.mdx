@@ -80,6 +80,38 @@ By default, scrolling content to the top edge expands the sheet to the next dete
 
 On iOS, this uses [`prefersScrollingExpandsWhenScrolledToEdge`](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller/3858107-prefersscrollingexpandswhenscrol). On Android, a custom `BottomSheetBehavior` selectively blocks scroll-driven expansion while preserving normal scrolling, fling deceleration, and grabber-based dragging.
 
+## Scroll Edge Effect
+
+On iOS 26+, you can apply a blur/gradient edge effect on the header and footer when content scrolls behind them. This uses [`UIScrollEdgeElementContainerInteraction`](https://developer.apple.com/documentation/uikit/uiscrolledgeelementcontainerinteraction) under the hood.
+
+Set [`topScrollEdgeEffect`](../reference/types#scrollableoptions) and/or [`bottomScrollEdgeEffect`](../reference/types#scrollableoptions) in [`scrollableOptions`](../reference/configuration#scrollableoptions) to enable it:
+
+```tsx
+<TrueSheet
+  scrollable
+  scrollableOptions={{
+    topScrollEdgeEffect: 'automatic',
+    bottomScrollEdgeEffect: 'soft',
+  }}
+  header={<Header />}
+  footer={<Footer />}
+>
+  <ScrollView>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+Available values: `'automatic'`, `'hard'`, `'soft'`, or `'hidden'` (default). See [`ScrollEdgeEffect`](../reference/types#scrolledgeeffect).
+
+:::info
+This also controls the scroll view's own edge effects ([`UIScrollEdgeEffect`](https://developer.apple.com/documentation/uikit/uiscrolledgeeffect)). `topScrollEdgeEffect` applies to both the header interaction and the scroll view's top edge, and `bottomScrollEdgeEffect` applies to both the footer interaction and the scroll view's bottom edge.
+:::
+
+:::note
+This feature requires iOS 26 or later. On older versions, these options are ignored.
+:::
+
 ## Using `scrollToEnd`
 
 When using `scrollable`, the native scroll view frame is modified to fit within the sheet container. This can cause `scrollToEnd()` on `FlatList` or `ScrollView` to not work as expected because React Native's JS-side scroll metrics may not reflect the actual native dimensions.

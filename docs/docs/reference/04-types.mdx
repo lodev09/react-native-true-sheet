@@ -97,6 +97,19 @@ Options for customizing scrollable behavior. Only applies when `scrollable` is `
 | - | - | - | - |
 | `scrollingExpandsSheet` | `boolean` | When `false`, scrolling the content does not expand the sheet to the next detent. Only dragging the grabber or sheet background expands it. Useful for YouTube-style comments sheets. | `true` |
 | `keyboardScrollOffset` | `number` | Additional offset when scrolling to a focused input above the keyboard. | `0` |
+| `topScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the top edge of the scroll view and header. iOS 26+ only. | `'hidden'` |
+| `bottomScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the bottom edge of the scroll view and footer. iOS 26+ only. | `'hidden'` |
+
+## `ScrollEdgeEffect`
+
+Controls the blur/gradient edge effect on the scroll view edges and header/footer overlay views. iOS 26+ only.
+
+| Value | Description |
+| - | - |
+| `'automatic'` | System default edge effect style. |
+| `'hard'` | A hard, opaque edge effect. |
+| `'soft'` | A soft, gradient edge effect. |
+| `'hidden'` | No edge effect. This is the default. |
 
 ## `GrabberOptions`
 
