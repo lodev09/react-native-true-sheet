@@ -28,16 +28,20 @@ export const Footer = ({ children, text = 'FOOTER', onPress, ...rest }: FooterPr
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: DARK_GRAY,
+    backgroundColor: Platform.select({
+      default: DARK_GRAY,
+      ios: undefined,
+    }),
   },
   container: {
     height: FOOTER_HEIGHT,
-    padding: SPACING,
+    paddingHorizontal: SPACING,
   },
   pressed: {
     opacity: 0.6,
   },
   text: {
+    marginTop: SPACING,
     textAlign: 'center',
     color: '#fff',
   },

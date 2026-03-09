@@ -9,11 +9,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
+#import <React/RCTScrollViewComponentView.h>
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
+#import "utils/UIView+ScrollEdgeInteraction.h"
 #import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
@@ -33,6 +35,8 @@ using namespace facebook::react;
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
     _scrollingExpandsSheet = YES;
+    _topScrollEdgeEffect = (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+    _bottomScrollEdgeEffect = (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
   }
   return self;
 }
@@ -111,6 +115,34 @@ using namespace facebook::react;
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
+    [_contentView applyScrollEdgeEffects:_scrollableOptions];
+    if (@available(iOS 26.0, *)) {
+      [self setupEdgeInteractions];
+    }
+  }
+}
+
+- (void)setupEdgeInteractions API_AVAILABLE(ios(26.0)) {
+  if (!_contentView) {
+    return;
+  }
+
+  NSInteger topEffect =
+    _scrollableOptions ? _scrollableOptions.topScrollEdgeEffect : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+  NSInteger bottomEffect = _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect
+                                              : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+
+  BOOL topHidden = topEffect == (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+  BOOL bottomHidden = bottomEffect == (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+
+  RCTScrollViewComponentView *scrollViewComponent = [_contentView findScrollView];
+  UIScrollView *scrollView = scrollViewComponent.scrollView;
+
+  if (_headerView) {
+    [_headerView setupEdgeInteractionWithScrollView:topHidden ? nil : scrollView edge:UIRectEdgeTop];
+  }
+  if (_footerView) {
+    [_footerView setupEdgeInteractionWithScrollView:bottomHidden ? nil : scrollView edge:UIRectEdgeBottom];
   }
 }
 

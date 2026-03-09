@@ -89,6 +89,14 @@ export interface GrabberOptions {
 }
 
 /**
+ * Scroll edge effect style for iOS 26+.
+ * Controls the blur/gradient overlay applied to scroll view edges.
+ *
+ * @platform ios 26+
+ */
+export type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
+
+/**
  * Options for scrollable behavior.
  */
 export interface ScrollableOptions {
@@ -106,6 +114,22 @@ export interface ScrollableOptions {
    * @default true
    */
   scrollingExpandsSheet?: boolean;
+
+  /**
+   * The scroll edge effect applied to the top edge of the scroll view.
+   *
+   * @platform ios 26+
+   * @default 'hidden'
+   */
+  topScrollEdgeEffect?: ScrollEdgeEffect;
+
+  /**
+   * The scroll edge effect applied to the bottom edge of the scroll view.
+   *
+   * @platform ios 26+
+   * @default 'hidden'
+   */
+  bottomScrollEdgeEffect?: ScrollEdgeEffect;
 }
 
 /**

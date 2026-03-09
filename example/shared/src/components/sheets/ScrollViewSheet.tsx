@@ -11,9 +11,19 @@ import {
 } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { BORDER_RADIUS, DARK, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
+import {
+  BORDER_RADIUS,
+  DARK,
+  FOOTER_HEIGHT,
+  GAP,
+  HEADER_HEIGHT,
+  LIGHT_GRAY,
+  SPACING,
+  times,
+} from '../../utils';
 import { Footer } from '../Footer';
 import { Header } from '../Header';
+import { Button } from '../Button';
 
 interface ScrollViewSheetProps extends TrueSheetProps {}
 
@@ -55,10 +65,19 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       detents={[0.8, 1]}
       name="scrollview"
       scrollable
-      scrollableOptions={{ scrollingExpandsSheet: false }}
+      scrollableOptions={{
+        scrollingExpandsSheet: false,
+        bottomScrollEdgeEffect: 'soft',
+        topScrollEdgeEffect: 'soft',
+      }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
-      footer={<Footer text="TOGGLE LISTVIEW" onPress={() => setShowList(!showList)} />}
+      headerStyle={styles.header}
+      footer={
+        <Footer>
+          <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
+        </Footer>
+      }
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       {...props}
@@ -89,8 +108,15 @@ ScrollViewSheet.displayName = 'ScrollViewSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
+    paddingTop: HEADER_HEIGHT,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
+  },
+  header: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 1,
   },
   item: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',

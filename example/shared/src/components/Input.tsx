@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { LIGHT_GRAY, INPUT_HEIGHT, SPACING } from '../utils';
 import { forwardRef } from 'react';
@@ -25,7 +25,10 @@ export const Input = forwardRef<TextInput, TextInputProps>((props, ref) => {
 
 const styles = StyleSheet.create({
   inputContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: Platform.select({
+      ios: 'rgba(0, 0, 0, 0.5)',
+      default: 'rgba(0, 0, 0, 0.3)',
+    }),
     paddingHorizontal: SPACING,
     height: INPUT_HEIGHT,
     borderRadius: INPUT_HEIGHT,

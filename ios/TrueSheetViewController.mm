@@ -234,7 +234,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
-      [_grabberView updateAccessibilityValueWithIndex:index detentCount:_detents.count];
+      [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
       [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
     });
 

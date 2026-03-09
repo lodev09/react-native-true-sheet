@@ -14,6 +14,7 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
@@ -41,7 +42,6 @@ using namespace facebook::react;
 
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
 
-  // Notify delegate when header size changes
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
     [self.delegate headerViewDidChangeSize:newSize];
@@ -51,6 +51,9 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   _lastSize = CGSizeZero;
+  if (@available(iOS 26.0, *)) {
+    [self cleanupEdgeInteraction];
+  }
 }
 
 @end

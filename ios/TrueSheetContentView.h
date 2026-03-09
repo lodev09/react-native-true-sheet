@@ -16,6 +16,7 @@
 
 @class TrueSheetViewController;
 @class RCTScrollViewComponentView;
+@class ScrollableOptions;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -45,6 +46,11 @@ NS_ASSUME_NONNULL_BEGIN
  * Update the pinned scroll view's height to fill the container
  */
 - (void)updateScrollViewHeight;
+
+/**
+ * Apply scroll edge effects to the pinned scroll view (iOS 26+)
+ */
+- (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options;
 
 @end
 

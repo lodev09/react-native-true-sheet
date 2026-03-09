@@ -15,6 +15,7 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetViewController.h"
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
@@ -34,7 +35,6 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const TrueSheetFooterViewProps>();
     _props = defaultProps;
 
-    // Set background color to clear by default
     self.backgroundColor = [UIColor clearColor];
 
     _lastHeight = 0;
@@ -45,28 +45,26 @@ using namespace facebook::react;
   return self;
 }
 
+#pragma mark - Layout
+
 - (void)setupConstraintsWithHeight:(CGFloat)height {
   UIView *parentView = self.superview;
   if (!parentView) {
     return;
   }
 
-  // Remove existing constraints before applying new ones
   [LayoutUtil unpinView:self fromParentView:parentView];
   _bottomConstraint = nil;
 
   self.translatesAutoresizingMaskIntoConstraints = NO;
 
-  // Pin footer to sides of container
   [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
   [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
 
-  // Store bottom constraint for keyboard adjustment, preserving current keyboard offset
   _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor
                                                         constant:-_currentKeyboardOffset];
   _bottomConstraint.active = YES;
 
-  // Apply height constraint
   if (height > 0) {
     [self.heightAnchor constraintEqualToConstant:height].active = YES;
   }
@@ -77,7 +75,6 @@ using namespace facebook::react;
 - (void)didMoveToSuperview {
   [super didMoveToSuperview];
 
-  // Setup footer constraints when added to container
   if (self.superview) {
     CGFloat initialHeight = self.frame.size.height;
     [self setupConstraintsWithHeight:initialHeight];
@@ -88,14 +85,11 @@ using namespace facebook::react;
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   CGFloat height = layoutMetrics.frame.size.height;
 
-  // On initial layout, call super to let React Native position the view
-  // After that, we use Auto Layout constraints instead
   if (!_didInitialLayout) {
     [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
     _didInitialLayout = YES;
   }
 
-  // Update footer constraints when height changes
   if (height != _lastHeight) {
     [self setupConstraintsWithHeight:height];
   }
@@ -104,8 +98,10 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  // Remove footer constraints
   [LayoutUtil unpinView:self fromParentView:self.superview];
+  if (@available(iOS 26.0, *)) {
+    [self cleanupEdgeInteraction];
+  }
 
   _lastHeight = 0;
   _didInitialLayout = NO;

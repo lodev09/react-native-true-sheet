@@ -21,9 +21,13 @@ type BlurOptionsType = Readonly<{
   interaction?: WithDefault<boolean, true>;
 }>;
 
+type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
+
 type ScrollableOptionsType = Readonly<{
   keyboardScrollOffset?: WithDefault<Double, 0>;
   scrollingExpandsSheet?: WithDefault<boolean, true>;
+  topScrollEdgeEffect?: WithDefault<ScrollEdgeEffect, 'hidden'>;
+  bottomScrollEdgeEffect?: WithDefault<ScrollEdgeEffect, 'hidden'>;
 }>;
 
 export interface DetentInfoEventPayload {

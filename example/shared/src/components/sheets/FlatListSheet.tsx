@@ -2,8 +2,7 @@ import { forwardRef, useRef } from 'react';
 import { StyleSheet, FlatList, View } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, DARK_GRAY, FOOTER_HEIGHT, SPACING, times } from '../../utils';
-import { Input } from '../Input';
+import { DARK, DARK_GRAY, FOOTER_HEIGHT, HEADER_HEIGHT, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
@@ -22,11 +21,11 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       backgroundBlur="dark"
       backgroundColor={DARK}
       scrollable
-      header={
-        <Header>
-          <Input />
-        </Header>
-      }
+      scrollableOptions={{
+        bottomScrollEdgeEffect: 'soft',
+        topScrollEdgeEffect: 'soft',
+      }}
+      header={<Header style={styles.header} />}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
@@ -56,8 +55,15 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
   },
+  header: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
   content: {
     padding: SPACING,
+    paddingTop: HEADER_HEIGHT,
     paddingBottom: FOOTER_HEIGHT + SPACING,
   },
 });

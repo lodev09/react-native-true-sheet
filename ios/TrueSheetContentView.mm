@@ -14,8 +14,10 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import "TrueSheetContainerView.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
+#import "utils/PlatformUtil.h"
 #import "utils/UIView+FirstResponder.h"
 
 using namespace facebook::react;
@@ -199,6 +201,47 @@ using namespace facebook::react;
   }
   return nil;
 }
+
+#pragma mark - Scroll Edge Effects
+
+- (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+  if (!_pinnedScrollView)
+    return;
+
+  if (@available(iOS 26.0, *)) {
+    UIScrollView *scrollView = _pinnedScrollView.scrollView;
+    NSInteger topEffect = options ? options.topScrollEdgeEffect : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+    NSInteger bottomEffect =
+      options ? options.bottomScrollEdgeEffect : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+
+    [self applyEdgeEffect:topEffect toEdge:scrollView.topEdgeEffect];
+    [self applyEdgeEffect:bottomEffect toEdge:scrollView.bottomEdgeEffect];
+  }
+#endif
+}
+
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+- (void)applyEdgeEffect:(NSInteger)effect toEdge:(UIScrollEdgeEffect *)edgeEffect API_AVAILABLE(ios(26.0)) {
+  switch (effect) {
+    case (NSInteger)TrueSheetViewTopScrollEdgeEffect::Automatic:
+      edgeEffect.hidden = NO;
+      edgeEffect.style = UIScrollEdgeEffectStyle.automaticStyle;
+      break;
+    case (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hard:
+      edgeEffect.hidden = NO;
+      edgeEffect.style = UIScrollEdgeEffectStyle.hardStyle;
+      break;
+    case (NSInteger)TrueSheetViewTopScrollEdgeEffect::Soft:
+      edgeEffect.hidden = NO;
+      edgeEffect.style = UIScrollEdgeEffectStyle.softStyle;
+      break;
+    case (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden:
+      edgeEffect.hidden = YES;
+      break;
+  }
+}
+#endif
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
