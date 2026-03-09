@@ -22,7 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 - (void)setupConstraintsWithHeight:(CGFloat)height;
-- (void)setupEdgeInteractionWithScrollView:(UIScrollView *)scrollView API_AVAILABLE(ios(26.0));
 
 @end
 

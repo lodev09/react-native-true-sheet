@@ -8,19 +8,15 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol TrueSheetHeaderViewDelegate <NSObject>
-@optional
-- (void)headerViewDidChangeSize:(CGSize)size;
-@end
+@interface UIView (ScrollEdgeInteraction)
 
-@interface TrueSheetHeaderView : RCTViewComponentView
-
-@property (nonatomic, weak, nullable) id<TrueSheetHeaderViewDelegate> delegate;
+- (void)setupEdgeInteractionWithScrollView:(nullable UIScrollView *)scrollView
+                                      edge:(UIRectEdge)edge API_AVAILABLE(ios(26.0));
+- (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0));
 
 @end
 

@@ -14,12 +14,12 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "utils/LayoutUtil.h"
+#import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
 @implementation TrueSheetHeaderView {
   CGSize _lastSize;
-  UILabel *_edgeEffectHint;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -51,46 +51,9 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   _lastSize = CGSizeZero;
-
   if (@available(iOS 26.0, *)) {
     [self cleanupEdgeInteraction];
   }
-}
-
-#pragma mark - Scroll Edge Interaction
-
-- (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0)) {
-  for (id<UIInteraction> interaction in [self.interactions copy]) {
-    if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
-      [self removeInteraction:interaction];
-      break;
-    }
-  }
-
-  [_edgeEffectHint removeFromSuperview];
-  _edgeEffectHint = nil;
-}
-
-- (void)setupEdgeInteractionWithScrollView:(UIScrollView *)scrollView API_AVAILABLE(ios(26.0)) {
-  [self cleanupEdgeInteraction];
-
-  if (!scrollView) {
-    return;
-  }
-
-  // UIScrollEdgeElementContainerInteraction requires standard UIKit element
-  // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
-  // RCTViewComponentView subviews are not recognized, so we add a
-  // non-visible UILabel as an element hint.
-  _edgeEffectHint = [[UILabel alloc] initWithFrame:self.bounds];
-  _edgeEffectHint.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  _edgeEffectHint.userInteractionEnabled = NO;
-  [self addSubview:_edgeEffectHint];
-
-  UIScrollEdgeElementContainerInteraction *interaction = [[UIScrollEdgeElementContainerInteraction alloc] init];
-  interaction.scrollView = scrollView;
-  interaction.edge = UIRectEdgeTop;
-  [self addInteraction:interaction];
 }
 
 @end

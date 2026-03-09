@@ -15,6 +15,7 @@
 #import "TrueSheetHeaderView.h"
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
+#import "utils/UIView+ScrollEdgeInteraction.h"
 #import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
@@ -115,7 +116,9 @@ using namespace facebook::react;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
-    [self setupEdgeInteractions];
+    if (@available(iOS 26.0, *)) {
+      [self setupEdgeInteractions];
+    }
   }
 }
 
@@ -138,10 +141,10 @@ using namespace facebook::react;
   UIScrollView *scrollView = scrollViewComponent.scrollView;
 
   if (_headerView) {
-    [_headerView setupEdgeInteractionWithScrollView:topHidden ? nil : scrollView];
+    [_headerView setupEdgeInteractionWithScrollView:topHidden ? nil : scrollView edge:UIRectEdgeTop];
   }
   if (_footerView) {
-    [_footerView setupEdgeInteractionWithScrollView:bottomHidden ? nil : scrollView];
+    [_footerView setupEdgeInteractionWithScrollView:bottomHidden ? nil : scrollView edge:UIRectEdgeBottom];
   }
 }
 
@@ -175,10 +178,6 @@ using namespace facebook::react;
       return;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
-  }
-
-  if (@available(iOS 26.0, *)) {
-    [self setupEdgeInteractions];
   }
 }
 
@@ -219,10 +218,6 @@ using namespace facebook::react;
 
 - (void)contentViewScrollViewDidChange {
   [self.delegate containerViewScrollViewDidChange];
-
-  if (@available(iOS 26.0, *)) {
-    [self setupEdgeInteractions];
-  }
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate
