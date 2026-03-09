@@ -17,6 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
+@property (nonatomic, assign) NSInteger topScrollEdgeEffect;
+@property (nonatomic, assign) NSInteger bottomScrollEdgeEffect;
 
 @end
 

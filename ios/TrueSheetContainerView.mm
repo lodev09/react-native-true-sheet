@@ -33,6 +33,8 @@ using namespace facebook::react;
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
     _scrollingExpandsSheet = YES;
+    _topScrollEdgeEffect = 0;
+    _bottomScrollEdgeEffect = 0;
   }
   return self;
 }
@@ -111,6 +113,7 @@ using namespace facebook::react;
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
+    [_contentView applyScrollEdgeEffects:_scrollableOptions];
   }
 }
 
