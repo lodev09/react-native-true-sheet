@@ -21,6 +21,10 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       backgroundBlur="dark"
       backgroundColor={DARK}
       scrollable
+      scrollableOptions={{
+        bottomScrollEdgeEffect: 'soft',
+        topScrollEdgeEffect: 'soft',
+      }}
       header={<Header style={styles.header} />}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}

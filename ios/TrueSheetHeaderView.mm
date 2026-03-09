@@ -53,21 +53,13 @@ using namespace facebook::react;
   _lastSize = CGSizeZero;
 
   if (@available(iOS 26.0, *)) {
-    [_edgeEffectHint removeFromSuperview];
-    _edgeEffectHint = nil;
-
-    for (id<UIInteraction> interaction in [self.interactions copy]) {
-      if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
-        [self removeInteraction:interaction];
-        break;
-      }
-    }
+    [self cleanupEdgeInteraction];
   }
 }
 
 #pragma mark - Scroll Edge Interaction
 
-- (void)setupEdgeInteractionWithScrollView:(UIScrollView *)scrollView API_AVAILABLE(ios(26.0)) {
+- (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0)) {
   for (id<UIInteraction> interaction in [self.interactions copy]) {
     if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
       [self removeInteraction:interaction];
@@ -77,6 +69,10 @@ using namespace facebook::react;
 
   [_edgeEffectHint removeFromSuperview];
   _edgeEffectHint = nil;
+}
+
+- (void)setupEdgeInteractionWithScrollView:(UIScrollView *)scrollView API_AVAILABLE(ios(26.0)) {
+  [self cleanupEdgeInteraction];
 
   if (!scrollView) {
     return;

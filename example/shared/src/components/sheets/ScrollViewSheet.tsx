@@ -65,7 +65,11 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       detents={[0.8, 1]}
       name="scrollview"
       scrollable
-      scrollableOptions={{ scrollingExpandsSheet: false }}
+      scrollableOptions={{
+        scrollingExpandsSheet: false,
+        bottomScrollEdgeEffect: 'soft',
+        topScrollEdgeEffect: 'soft',
+      }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
       headerStyle={styles.header}
