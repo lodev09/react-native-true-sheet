@@ -127,12 +127,10 @@ using namespace facebook::react;
     return;
   }
 
-  NSInteger topEffect = _scrollableOptions
-    ? _scrollableOptions.topScrollEdgeEffect
-    : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
-  NSInteger bottomEffect = _scrollableOptions
-    ? _scrollableOptions.bottomScrollEdgeEffect
-    : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  NSInteger topEffect =
+    _scrollableOptions ? _scrollableOptions.topScrollEdgeEffect : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
+  NSInteger bottomEffect = _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect
+                                              : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   BOOL topHidden = topEffect == (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
   BOOL bottomHidden = bottomEffect == (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;

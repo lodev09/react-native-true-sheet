@@ -8,8 +8,8 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import "UIView+ScrollEdgeInteraction.h"
 #import <objc/runtime.h>
+#import "UIView+ScrollEdgeInteraction.h"
 
 static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
 
