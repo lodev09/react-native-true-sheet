@@ -19,6 +19,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetHeaderView {
   CGSize _lastSize;
+  UILabel *_edgeEffectHint;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -41,7 +42,6 @@ using namespace facebook::react;
 
   CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
 
-  // Notify delegate when header size changes
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
     [self.delegate headerViewDidChangeSize:newSize];
@@ -51,6 +51,50 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   _lastSize = CGSizeZero;
+
+  if (@available(iOS 26.0, *)) {
+    [_edgeEffectHint removeFromSuperview];
+    _edgeEffectHint = nil;
+
+    for (id<UIInteraction> interaction in [self.interactions copy]) {
+      if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
+        [self removeInteraction:interaction];
+        break;
+      }
+    }
+  }
+}
+
+#pragma mark - Scroll Edge Interaction
+
+- (void)setupEdgeInteractionWithScrollView:(UIScrollView *)scrollView API_AVAILABLE(ios(26.0)) {
+  for (id<UIInteraction> interaction in [self.interactions copy]) {
+    if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
+      [self removeInteraction:interaction];
+      break;
+    }
+  }
+
+  [_edgeEffectHint removeFromSuperview];
+  _edgeEffectHint = nil;
+
+  if (!scrollView) {
+    return;
+  }
+
+  // UIScrollEdgeElementContainerInteraction requires standard UIKit element
+  // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
+  // RCTViewComponentView subviews are not recognized, so we add a
+  // non-visible UILabel as an element hint.
+  _edgeEffectHint = [[UILabel alloc] initWithFrame:self.bounds];
+  _edgeEffectHint.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  _edgeEffectHint.userInteractionEnabled = NO;
+  [self addSubview:_edgeEffectHint];
+
+  UIScrollEdgeElementContainerInteraction *interaction = [[UIScrollEdgeElementContainerInteraction alloc] init];
+  interaction.scrollView = scrollView;
+  interaction.edge = UIRectEdgeTop;
+  [self addInteraction:interaction];
 }
 
 @end

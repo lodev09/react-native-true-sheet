@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetContainerView.h"
+#import <React/RCTScrollViewComponentView.h>
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
@@ -114,6 +115,23 @@ using namespace facebook::react;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
+    [self setupEdgeInteractions];
+  }
+}
+
+- (void)setupEdgeInteractions API_AVAILABLE(ios(26.0)) {
+  if (!_contentView) {
+    return;
+  }
+
+  RCTScrollViewComponentView *scrollViewComponent = [_contentView findScrollView];
+  UIScrollView *scrollView = scrollViewComponent.scrollView;
+
+  if (_headerView) {
+    [_headerView setupEdgeInteractionWithScrollView:scrollView];
+  }
+  if (_footerView) {
+    [_footerView setupEdgeInteractionWithScrollView:scrollView];
   }
 }
 
@@ -147,6 +165,10 @@ using namespace facebook::react;
       return;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
+  }
+
+  if (@available(iOS 26.0, *)) {
+    [self setupEdgeInteractions];
   }
 }
 
@@ -187,6 +209,10 @@ using namespace facebook::react;
 
 - (void)contentViewScrollViewDidChange {
   [self.delegate containerViewScrollViewDidChange];
+
+  if (@available(iOS 26.0, *)) {
+    [self setupEdgeInteractions];
+  }
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate
