@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed liquid glass background showing instead of configured `backgroundColor` on macOS "Designed for iPhone/iPad" compatibility mode. ([#598](https://github.com/lodev09/react-native-true-sheet/pull/598) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **iOS**: Added mouse drag gesture support for macOS "Designed for iPhone/iPad" where the native sheet pan gesture doesn't respond to mouse input. ([#598](https://github.com/lodev09/react-native-true-sheet/pull/598) by [@isaacrowntree](https://github.com/isaacrowntree))
 - **iOS**: Fixed keyboard scroll positioning when sheet auto-expands from a smaller detent. ([#592](https://github.com/lodev09/react-native-true-sheet/pull/592) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed dead state after rapid present/dismiss cycles. ([#593](https://github.com/lodev09/react-native-true-sheet/pull/593) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position change not emitting when detent or index changed. ([#584](https://github.com/lodev09/react-native-true-sheet/pull/584) by [@lodev09](https://github.com/lodev09))
