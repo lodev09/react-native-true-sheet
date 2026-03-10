@@ -40,6 +40,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)detentValueForIndex:(NSInteger)index;
 
 /**
+ Returns the resolved height in points for a given detent index.
+ Accounts for safe area insets, max content height, and learned offsets.
+ */
+- (CGFloat)resolvedHeightForIndex:(NSInteger)index;
+
+/**
  Learns the offset between resolver height and actual presented height for a detent.
  Called when the sheet settles at a detent.
  */
