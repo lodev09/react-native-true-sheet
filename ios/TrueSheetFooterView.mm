@@ -41,6 +41,10 @@ using namespace facebook::react;
     _didInitialLayout = NO;
     _bottomConstraint = nil;
     _currentKeyboardOffset = 0;
+
+    // Create a dedicated touch handler so touches are hit-tested against
+    // the footer's actual AutoLayout frame, not the stale Yoga frame.
+    _footerTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
   }
   return self;
 }
@@ -61,7 +65,9 @@ using namespace facebook::react;
   [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
   [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
 
-  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor
+  // Pin to safe area so footer content doesn't render behind the home indicator.
+  // When the keyboard is visible, its height already includes the safe area inset.
+  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.safeAreaLayoutGuide.bottomAnchor
                                                         constant:-_currentKeyboardOffset];
   _bottomConstraint.active = YES;
 
@@ -78,6 +84,12 @@ using namespace facebook::react;
   if (self.superview) {
     CGFloat initialHeight = self.frame.size.height;
     [self setupConstraintsWithHeight:initialHeight];
+
+    // Attach the footer's own touch handler so it has an independent
+    // coordinate space for hit-testing (bypasses container's Yoga tree).
+    [_footerTouchHandler attachToView:self];
+  } else {
+    [_footerTouchHandler detachFromView:self];
   }
 }
 
@@ -96,6 +108,7 @@ using namespace facebook::react;
 }
 
 - (void)prepareForRecycle {
+  [_footerTouchHandler detachFromView:self];
   [super prepareForRecycle];
 
   [LayoutUtil unpinView:self fromParentView:self.superview];
