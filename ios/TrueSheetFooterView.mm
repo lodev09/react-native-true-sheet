@@ -92,6 +92,7 @@ using namespace facebook::react;
 
   if (height != _lastHeight) {
     [self setupConstraintsWithHeight:height];
+    [self.delegate footerViewDidChangeSize:CGSizeMake(layoutMetrics.frame.size.width, height)];
   }
 }
 

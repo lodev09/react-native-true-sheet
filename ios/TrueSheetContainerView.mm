@@ -43,7 +43,7 @@ using namespace facebook::react;
 
 @end
 
-@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate>
+@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate, TrueSheetFooterViewDelegate>
 @end
 
 @implementation TrueSheetContainerView {
@@ -176,6 +176,7 @@ using namespace facebook::react;
       return;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
+    _footerView.delegate = self;
   }
 }
 
@@ -192,6 +193,7 @@ using namespace facebook::react;
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
+    _footerView.delegate = nil;
     _footerView = nil;
   }
 
@@ -222,6 +224,17 @@ using namespace facebook::react;
 
 - (void)headerViewDidChangeSize:(CGSize)newSize {
   [self.delegate containerViewHeaderDidChangeSize:newSize];
+  if (@available(iOS 26.0, *)) {
+    [self setupEdgeInteractions];
+  }
+}
+
+#pragma mark - TrueSheetFooterViewDelegate
+
+- (void)footerViewDidChangeSize:(CGSize)newSize {
+  if (@available(iOS 26.0, *)) {
+    [self setupEdgeInteractions];
+  }
 }
 
 #pragma mark - Keyboard Observer

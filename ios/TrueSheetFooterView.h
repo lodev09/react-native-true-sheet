@@ -17,9 +17,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol TrueSheetFooterViewDelegate <NSObject>
+@optional
+- (void)footerViewDidChangeSize:(CGSize)size;
+@end
+
 @interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
 
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
+@property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;
 
 - (void)setupConstraintsWithHeight:(CGFloat)height;
 
