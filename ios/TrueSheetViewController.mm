@@ -58,6 +58,10 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
+
+  // macOS "Designed for iPhone/iPad" mouse drag support
+  UIPanGestureRecognizer *_macPanGesture;
+  NSInteger _macDragStartIndex;
 }
 
 #pragma mark - Initialization
@@ -372,6 +376,122 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
                                     target:self
                                   selector:@selector(handlePanGesture:)];
     }
+  }
+
+  [self setupMacPanGesture];
+}
+
+#pragma mark - macOS Mouse Drag Support
+
+- (void)setupMacPanGesture {
+  if (!NSProcessInfo.processInfo.isiOSAppOnMac) return;
+
+  UIView *presentedView = self.presentedView;
+  if (!presentedView || _macPanGesture) return;
+
+  _macPanGesture = [[UIPanGestureRecognizer alloc]
+                     initWithTarget:self
+                             action:@selector(handleMacPanGesture:)];
+  _macPanGesture.minimumNumberOfTouches = 0;
+  _macPanGesture.maximumNumberOfTouches = 1;
+
+  // Add to the presented view — covers the header/grabber area for sheet dragging.
+  // Deliberately NOT added to the scroll view: the scroll view should handle mouse
+  // scrolling normally (like native iOS where content scrolls at the largest detent).
+  [presentedView addGestureRecognizer:_macPanGesture];
+}
+
+/**
+ * Handles mouse drag on macOS "Designed for iPhone/iPad" mode.
+ *
+ * Native iOS sheets follow the finger smoothly during drag, then snap to
+ * the target detent on release based on position + velocity. Since we can
+ * only snap to detents (no smooth tracking), we defer ALL snapping to
+ * the release phase:
+ *
+ * - During drag: track translation, emit drag events, but don't move the sheet.
+ * - On release: compute the projected landing position using the drag's
+ *   cumulative translation + velocity (decelerating over ~0.3s). Snap to
+ *   whichever detent that projected position is closest to.
+ *
+ * This eliminates mid-drag jitter and gives natural flick-to-expand/collapse.
+ */
+- (void)handleMacPanGesture:(UIPanGestureRecognizer *)gesture {
+  if (!self.draggable) return;
+
+  NSInteger detentCount = self.detents.count;
+  if (detentCount == 0) return;
+
+  switch (gesture.state) {
+    case UIGestureRecognizerStateBegan: {
+      _isDragging = YES;
+      _macDragStartIndex = _activeDetentIndex;
+
+      NSInteger index = self.currentDetentIndex;
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
+      break;
+    }
+
+    case UIGestureRecognizerStateChanged: {
+      NSInteger index = self.currentDetentIndex;
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
+      break;
+    }
+
+    case UIGestureRecognizerStateEnded:
+    case UIGestureRecognizerStateCancelled: {
+      CGFloat translationY = [gesture translationInView:gesture.view.window].y;
+      CGFloat velocityY = [gesture velocityInView:gesture.view.window].y;
+
+      // Project where the drag would land: current translation + velocity
+      // decelerating over a short duration (mimics UIScrollView deceleration).
+      static const CGFloat kDecelerationDuration = 0.3;
+      CGFloat projectedTranslation = translationY + velocityY * kDecelerationDuration;
+
+      // The sheet's current top-edge Y for the start detent
+      CGFloat startHeight = [_detentCalculator resolvedHeightForIndex:_macDragStartIndex];
+      CGFloat screenHeight = self.screenHeight;
+      CGFloat startTopY = screenHeight - startHeight;
+
+      // Projected top-edge Y of the sheet (positive translation = dragged down = higher Y)
+      CGFloat projectedTopY = startTopY + projectedTranslation;
+
+      // Find the detent whose top-edge position is closest to the projected Y
+      NSInteger targetIndex = _macDragStartIndex;
+      CGFloat bestDistance = CGFLOAT_MAX;
+
+      for (NSInteger i = 0; i < detentCount; i++) {
+        CGFloat detentHeight = [_detentCalculator resolvedHeightForIndex:i];
+        CGFloat detentTopY = screenHeight - detentHeight;
+        CGFloat distance = fabs(projectedTopY - detentTopY);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          targetIndex = i;
+        }
+      }
+
+      if (targetIndex != _activeDetentIndex) {
+        [self.sheet animateChanges:^{
+          [self resizeToDetentIndex:targetIndex];
+        }];
+      }
+
+      _isDragging = NO;
+      NSInteger index = self.currentDetentIndex;
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidDrag:gesture.state index:index position:self.currentPosition detent:detent];
+
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger settledIndex = self.currentDetentIndex;
+        [self learnOffsetForDetentIndex:settledIndex];
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"mac drag end"];
+      });
+      break;
+    }
+    default:
+      break;
   }
 }
 
@@ -741,7 +861,12 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
       } else {
         self.sheet.backgroundEffect = nil;
       }
-      return;
+      // macOS "Designed for iPhone/iPad" compatibility mode does not respect
+      // sheet.backgroundEffect (UIColorEffect is ignored), so fall through to
+      // also set view.backgroundColor as a fallback for a solid background.
+      if (!NSProcessInfo.processInfo.isiOSAppOnMac) {
+        return;
+      }
     }
   }
 #endif
