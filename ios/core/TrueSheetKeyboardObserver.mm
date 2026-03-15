@@ -15,6 +15,7 @@
 @implementation TrueSheetKeyboardObserver {
   NSHashTable<id<TrueSheetKeyboardObserverDelegate>> *_delegates;
   CGFloat _currentHeight;
+  BOOL _wasShowingForSheet;
 }
 
 - (CGFloat)currentHeight {
@@ -64,10 +65,6 @@
     return;
   }
 
-  if (![self isFirstResponderWithinSheet]) {
-    return;
-  }
-
   NSDictionary *userInfo = notification.userInfo;
   CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
   NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
@@ -80,6 +77,21 @@
 
   CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
   CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+
+  if (keyboardHeight > 0) {
+    // Keyboard is showing — require first responder to be within this sheet
+    if (![self isFirstResponderWithinSheet]) {
+      return;
+    }
+    _wasShowingForSheet = YES;
+  } else {
+    // Keyboard is hiding — allow if we previously tracked it as showing for this sheet
+    // (first responder may have already resigned by the time this notification fires)
+    if (!_wasShowingForSheet) {
+      return;
+    }
+    _wasShowingForSheet = NO;
+  }
 
   _currentHeight = keyboardHeight;
 

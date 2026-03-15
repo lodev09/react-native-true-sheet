@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
+- (void)containerViewKeyboardWillHide;
 
 @end
 
