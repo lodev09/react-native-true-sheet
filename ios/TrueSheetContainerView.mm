@@ -43,7 +43,7 @@ using namespace facebook::react;
 
 @end
 
-@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate, TrueSheetFooterViewDelegate>
+@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate, TrueSheetFooterViewDelegate, TrueSheetKeyboardObserverDelegate>
 @end
 
 @implementation TrueSheetContainerView {
@@ -255,7 +255,25 @@ using namespace facebook::react;
     [_keyboardObserver addDelegate:_footerView];
   }
 
+  // Register self to handle keyboard hide for animated detent reconfiguration
+  [_keyboardObserver addDelegate:self];
+
   [_keyboardObserver start];
+}
+
+#pragma mark - TrueSheetKeyboardObserverDelegate (Container)
+
+- (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  // No-op — content view and footer handle their own show logic
+}
+
+- (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  // Notify delegate so the sheet can force an animated detent reconfiguration.
+  // Without this, UISheetPresentationController snaps back to the custom detent
+  // instead of animating when the keyboard dismisses.
+  if ([self.delegate respondsToSelector:@selector(containerViewKeyboardWillHide)]) {
+    [self.delegate containerViewKeyboardWillHide];
+  }
 }
 
 - (void)cleanupKeyboardObserver {

@@ -575,6 +575,15 @@ using namespace facebook::react;
   [self setupScrollable];
 }
 
+- (void)containerViewKeyboardWillHide {
+  // Force an animated detent reconfiguration when the keyboard dismisses.
+  // Without this, UISheetPresentationController snaps back to the custom detent
+  // (especially 'auto') instead of smoothly animating the transition.
+  if (_controller.isPresented && !_controller.isBeingDismissed) {
+    [_controller setupSheetDetentsForSizeChange];
+  }
+}
+
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
