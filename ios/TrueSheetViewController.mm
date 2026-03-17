@@ -853,7 +853,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
   if (@available(iOS 26.1, *)) {
-    if (!self.isDesignCompatibilityMode) {
+    if (!self.isDesignCompatibilityMode && [self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
       if (self.backgroundColor) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
       } else if (hasBlur) {
