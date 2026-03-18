@@ -43,7 +43,9 @@ using namespace facebook::react;
 
 @end
 
-@interface TrueSheetContainerView () <TrueSheetContentViewDelegate, TrueSheetHeaderViewDelegate, TrueSheetFooterViewDelegate>
+@interface TrueSheetContainerView () <TrueSheetContentViewDelegate,
+  TrueSheetHeaderViewDelegate,
+  TrueSheetFooterViewDelegate>
 @end
 
 @implementation TrueSheetContainerView {
