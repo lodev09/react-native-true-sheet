@@ -11,6 +11,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 
 /**
@@ -131,12 +132,13 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
   }
 
   fun updateAccessibilityValue(index: Int, detentCount: Int) {
-    stateDescription = when {
+    val description: CharSequence? = when {
       index < 0 || detentCount <= 0 -> null
       index >= detentCount - 1 -> "Expanded"
       index == 0 -> "Collapsed"
       else -> "Detent ${index + 1} of $detentCount"
     }
+    ViewCompat.setStateDescription(this, description)
   }
 
   private fun getAdaptiveColor(baseColor: Int? = null): Int {
