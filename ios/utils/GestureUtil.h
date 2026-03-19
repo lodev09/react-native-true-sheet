@@ -21,6 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)attachPanGestureHandler:(UIView *)view target:(id)target selector:(SEL)selector;
 
 /**
+ * Detaches a pan gesture handler from all pan gesture recognizers on a view
+ * @param view The view whose pan gesture recognizers to detach from
+ * @param target The target object to remove
+ * @param selector The selector to remove
+ */
++ (void)detachPanGestureHandler:(UIView *)view target:(id)target selector:(SEL)selector;
+
+/**
  * Enables or disables all pan gesture recognizers on a view
  * @param view The view whose pan gesture recognizers to enable/disable
  * @param enabled Whether the pan gestures should be enabled

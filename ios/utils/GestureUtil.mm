@@ -23,6 +23,19 @@
   }
 }
 
++ (void)detachPanGestureHandler:(UIView *)view target:(id)target selector:(SEL)selector {
+  if (!view || !target || !selector) {
+    return;
+  }
+
+  for (UIGestureRecognizer *recognizer in view.gestureRecognizers ?: @[]) {
+    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+      UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)recognizer;
+      [panGesture removeTarget:target action:selector];
+    }
+  }
+}
+
 + (void)setPanGesturesEnabled:(BOOL)enabled forView:(UIView *)view {
   if (!view) {
     return;

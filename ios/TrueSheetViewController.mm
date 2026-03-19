@@ -240,6 +240,10 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
     [self setupGestureRecognizer];
     _isPresented = YES;
+  } else {
+    // Re-attach gesture handlers that were cleaned up in viewWillDisappear
+    // (e.g. when a child sheet was presented on top and is now dismissed)
+    [self setupGestureRecognizer];
   }
 }
 
@@ -271,6 +275,10 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+
+  // Remove gesture handler targets before the view disappears to prevent
+  // orphaned handlers from blocking scroll on the presenting view controller.
+  [self cleanupGestureRecognizer];
 
   // Dispatch to allow pan gesture to set _isDragging before checking
   // handleTransitionTracker will emit when sheet is transitioning to dismiss
@@ -369,6 +377,24 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView];
     if (scrollViewComponent && scrollViewComponent.scrollView) {
       [GestureUtil attachPanGestureHandler:scrollViewComponent.scrollView
+                                    target:self
+                                  selector:@selector(handlePanGesture:)];
+    }
+  }
+}
+
+- (void)cleanupGestureRecognizer {
+  UIView *presentedView = self.presentedView;
+  if (!presentedView)
+    return;
+
+  [GestureUtil detachPanGestureHandler:presentedView target:self selector:@selector(handlePanGesture:)];
+
+  TrueSheetContentView *contentView = [self findContentView:presentedView];
+  if (contentView) {
+    RCTScrollViewComponentView *scrollViewComponent = [contentView findScrollView];
+    if (scrollViewComponent && scrollViewComponent.scrollView) {
+      [GestureUtil detachPanGestureHandler:scrollViewComponent.scrollView
                                     target:self
                                   selector:@selector(handlePanGesture:)];
     }
