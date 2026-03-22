@@ -48,7 +48,7 @@ using namespace facebook::react;
 - (void)applyBlurEffect {
   self.userInteractionEnabled = self.blurInteraction;
 
-  if (self.backgroundBlur == (NSInteger)TrueSheetViewBackgroundBlur::None) {
+  if (self.backgroundBlur == TrueSheetViewBackgroundBlur::None) {
     [self clearAnimator];
     self.effect = nil;
     return;
