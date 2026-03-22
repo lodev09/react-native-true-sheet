@@ -87,7 +87,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
-    _insetAdjustment = (NSInteger)TrueSheetViewInsetAdjustment::Automatic;
+    _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
   }
@@ -128,7 +128,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 }
 
 - (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
-  if (_insetAdjustment == (NSInteger)TrueSheetViewInsetAdjustment::Automatic) {
+  if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
     return 0;
   }
 
@@ -717,16 +717,16 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 }
 
 - (void)setupBackground {
-  NSInteger effectiveBackgroundBlur = self.backgroundBlur;
+  auto effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
-  } else if (effectiveBackgroundBlur == (NSInteger)TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
-    effectiveBackgroundBlur = (NSInteger)TrueSheetViewBackgroundBlur::SystemMaterial;
+  } else if (effectiveBackgroundBlur == TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
+    effectiveBackgroundBlur = TrueSheetViewBackgroundBlur::SystemMaterial;
   }
 
-  BOOL hasBlur = effectiveBackgroundBlur != (NSInteger)TrueSheetViewBackgroundBlur::None;
+  BOOL hasBlur = effectiveBackgroundBlur != TrueSheetViewBackgroundBlur::None;
 
-  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : (NSInteger)TrueSheetViewBackgroundBlur::None;
+  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : TrueSheetViewBackgroundBlur::None;
   _blurView.blurIntensity = self.blurIntensity;
   _blurView.blurInteraction = self.blurInteraction;
   [_blurView applyBlurEffect];
@@ -825,7 +825,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 }
 
 - (BOOL)isAnchored {
-  return self.anchor == (NSInteger)TrueSheetViewAnchor::Left || self.anchor == (NSInteger)TrueSheetViewAnchor::Right;
+  return self.anchor == TrueSheetViewAnchor::Left || self.anchor == TrueSheetViewAnchor::Right;
 }
 
 - (void)setupAnchorViewInView:(UIView *)parentView {
@@ -846,7 +846,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   [parentView addSubview:_anchorView];
 
   NSLayoutAnchor *horizontalAnchor =
-    self.anchor == (NSInteger)TrueSheetViewAnchor::Right ? parentView.trailingAnchor : parentView.leadingAnchor;
+    self.anchor == TrueSheetViewAnchor::Right ? parentView.trailingAnchor : parentView.leadingAnchor;
 
   [NSLayoutConstraint activateConstraints:@[
     [_anchorView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor],

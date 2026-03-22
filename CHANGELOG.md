@@ -18,6 +18,7 @@
 
 ### 💡 Others
 
+- **iOS**: Use codegen enum types instead of `NSInteger` casts for better type safety. ([#612](https://github.com/lodev09/react-native-true-sheet/pull/612) by [@lodev09](https://github.com/lodev09))
 - Add docs versioning with automated release script. ([#586](https://github.com/lodev09/react-native-true-sheet/pull/586) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking
