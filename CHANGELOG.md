@@ -21,6 +21,8 @@
 - **iOS**: Use codegen enum types instead of `NSInteger` casts for better type safety. ([#612](https://github.com/lodev09/react-native-true-sheet/pull/612) by [@lodev09](https://github.com/lodev09))
 - Add docs versioning with automated release script. ([#586](https://github.com/lodev09/react-native-true-sheet/pull/586) by [@lodev09](https://github.com/lodev09))
 
+- Add missing `layout` and `screenLayout` props to `TrueSheetNavigator`. ([#615](https://github.com/lodev09/react-native-true-sheet/pull/615) by [@bram-dc](https://github.com/bram-dc))
+
 ### ⚠️ Breaking
 
 - **Android**: `nestedScrollingEnabled` is now automatically managed when `scrollable` is enabled. ([#585](https://github.com/lodev09/react-native-true-sheet/pull/585))
@@ -150,7 +152,7 @@
 ### ⚠️ Breaking changes
 
 - **Dismiss Behavior**: `dismiss()` now dismisses the sheet and all sheets presented on top of it. Previously, calling `dismiss()` on a sheet with children would only either dismiss the current sheet if it had no children or only the child sheets presented on top of it, keeping the current sheet open. Now it performs a cascade dismiss of the entire stack.
-Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets.
+  Use the `dismissStack()` method if you need the old behavior of dismissing only child sheets.
 
 - **Remove Static Methods on Web**: Static methods (`TrueSheet.present()`, `TrueSheet.dismiss()`, etc.) are no longer supported on web. Use the `useTrueSheet()` hook instead.
 
