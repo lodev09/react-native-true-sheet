@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TrueSheet } from '../../TrueSheet';
 import type {
@@ -23,7 +23,7 @@ import type {
   TrueSheetNavigationProp,
 } from '../types';
 import { TrueSheetActions } from '../TrueSheetRouter';
-import type { ParamListBase } from '@react-navigation/native';
+import { useFocusEffect, type ParamListBase } from '@react-navigation/native';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
@@ -43,6 +43,16 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const isDismissedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
+
+  const [didPresent, setDidPresent] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!didPresent) {
+        ref.current?.present();
+      }
+    }, [didPresent])
+  );
 
   useEffect(() => {
     if (closing && !isDismissedRef.current) {
@@ -73,6 +83,14 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
     [emit, routeKey]
   );
 
+  const onDidPresent = useCallback(
+    (e: DidPresentEvent) => {
+      setDidPresent(true);
+      emitEvent('sheetDidPresent', e.nativeEvent);
+    },
+    [emitEvent]
+  );
+
   const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
     isDismissedRef.current = true;
@@ -82,7 +100,7 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const eventHandlers = useMemo(
     () => ({
       onWillPresent: (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
-      onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
+      onDidPresent: onDidPresent,
       onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
       onDidDismiss,
       onDetentChange: (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
