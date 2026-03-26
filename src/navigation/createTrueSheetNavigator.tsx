@@ -22,8 +22,10 @@ const TrueSheetNavigator = ({
   id,
   initialRouteName,
   children,
+  layout,
   screenListeners,
   screenOptions,
+  screenLayout,
 }: TrueSheetNavigatorProps) => {
   const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
     TrueSheetNavigationState<ParamListBase>,
@@ -35,8 +37,10 @@ const TrueSheetNavigator = ({
     id,
     initialRouteName,
     children,
+    layout,
     screenListeners,
     screenOptions,
+    screenLayout,
   });
 
   return (
