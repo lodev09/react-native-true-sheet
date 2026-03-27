@@ -26,18 +26,12 @@ export type TrueSheetActionType =
       type: 'DISMISS';
       source?: string;
       target?: string;
-    }
-  | {
-      type: 'REMOVE';
-      source?: string;
-      target?: string;
     };
 
 export const TrueSheetActions = {
   ...StackActions,
   resize: (index: number): TrueSheetActionType => ({ type: 'RESIZE', index }),
   dismiss: (): TrueSheetActionType => ({ type: 'DISMISS' }),
-  remove: (): TrueSheetActionType => ({ type: 'REMOVE' }),
 };
 
 const ensureBaseRoute = <T extends { routes: { name: string }[] }>(
@@ -115,92 +109,8 @@ export const TrueSheetRouter = (
           };
         }
 
-        case 'GO_BACK':
         case 'DISMISS': {
           return this.getStateForAction(state, StackActions.pop(1), options);
-        }
-
-        case 'POP': {
-          // Only base screen remains - let parent navigator handle it
-          if (state.routes.length <= 1) {
-            return null;
-          }
-
-          const count =
-            'payload' in action && typeof action.payload?.count === 'number'
-              ? action.payload.count
-              : 1;
-
-          // Calculate how many routes we can actually pop (don't pop base screen)
-          const maxPopCount = state.routes.length - 1;
-          const actualCount = Math.min(count, maxPopCount);
-
-          // Base screen - let parent navigator handle it
-          if (actualCount <= 0) {
-            return null;
-          }
-
-          // Target index is the route we want to stay on (land on after pop)
-          // closingIndex is the first route to be dismissed (the one after target)
-          const targetIndex = state.routes.length - 1 - actualCount;
-          const closingIndex = targetIndex + 1;
-
-          // Mark only the bottom-most route to pop as closing
-          // The sheet's dismiss() will handle dismissing sheets above it first
-          return {
-            ...state,
-            index: closingIndex,
-            routes: state.routes.map((route, i) =>
-              i === closingIndex ? { ...route, closing: true } : route
-            ),
-          };
-        }
-
-        case 'POP_TO_TOP': {
-          const popCount = state.routes.length - 1;
-          return this.getStateForAction(state, StackActions.pop(popCount), options);
-        }
-
-        case 'POP_TO': {
-          const targetName =
-            'payload' in action && typeof action.payload?.name === 'string'
-              ? action.payload.name
-              : null;
-
-          if (!targetName) {
-            return null;
-          }
-
-          const targetIndex = state.routes.findIndex((r) => r.name === targetName);
-
-          // Target not found or is the current route
-          if (targetIndex === -1 || targetIndex >= state.index) {
-            return null;
-          }
-
-          const popCount = state.routes.length - 1 - targetIndex;
-          return this.getStateForAction(state, StackActions.pop(popCount), options);
-        }
-
-        case 'REMOVE': {
-          // Actually remove the closing route and all routes above it
-          const routeKey = action.source;
-          const routeIndex = routeKey
-            ? state.routes.findIndex((r) => r.key === routeKey)
-            : state.routes.findIndex((r) => r.closing);
-
-          if (routeIndex === -1) {
-            return state;
-          }
-
-          // Remove the route and all routes above it (they were dismissed together)
-          const routes = state.routes.filter((_, i) => i < routeIndex);
-
-          return {
-            ...state,
-            index: Math.min(state.index, routes.length - 1),
-            routes,
-          };
         }
 
         default:

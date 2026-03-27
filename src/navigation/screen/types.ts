@@ -14,7 +14,6 @@ export interface TrueSheetScreenProps extends TrueSheetNavigationSheetProps {
   navigation: TrueSheetNavigationProp<ParamListBase>;
   emit: TrueSheetNavigationHelpers['emit'];
   routeKey: string;
-  closing?: boolean;
   detents: TrueSheetProps['detents'];
   children: React.ReactNode;
   positionChangeHandler?: PositionChangeHandler;

@@ -22,34 +22,45 @@ import type {
   TrueSheetNavigationHelpers,
   TrueSheetNavigationProp,
 } from '../types';
-import { TrueSheetActions } from '../TrueSheetRouter';
 import type { ParamListBase } from '@react-navigation/native';
+import { TrueSheetActions } from '../TrueSheetRouter';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 
 interface UseSheetScreenStateProps {
   detentIndex: number;
   resizeKey?: number;
-  closing?: boolean;
   navigation: TrueSheetNavigationProp<ParamListBase>;
   routeKey: string;
   emit: EmitFn;
 }
 
 export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
-  const { detentIndex, resizeKey, closing, navigation, routeKey, emit } = props;
+  const { detentIndex, resizeKey, navigation, routeKey, emit } = props;
 
   const ref = useRef<TrueSheet>(null);
   const isDismissedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
 
+  const isMountedRef = useRef(false);
   useEffect(() => {
-    if (closing && !isDismissedRef.current) {
-      isDismissedRef.current = true;
-      ref.current?.dismiss();
-    }
-  }, [closing]);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!isDismissedRef.current) {
+        e.preventDefault();
+        ref.current?.dismiss();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     if (isFirstRenderRef.current) {
@@ -76,7 +87,7 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
     isDismissedRef.current = true;
-    navigation.dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+    navigation.dispatch({ ...TrueSheetActions.pop(), source: routeKey });
   }, [emitEvent, navigation, routeKey]);
 
   const eventHandlers = useMemo(

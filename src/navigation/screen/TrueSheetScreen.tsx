@@ -11,7 +11,6 @@ export const TrueSheetScreen = ({
   navigation,
   emit,
   routeKey,
-  closing,
   detents,
   children,
   positionChangeHandler,
@@ -24,7 +23,6 @@ export const TrueSheetScreen = ({
   } = useSheetScreenState({
     detentIndex,
     resizeKey,
-    closing,
     navigation,
     routeKey,
     emit,

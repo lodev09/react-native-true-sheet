@@ -130,7 +130,6 @@ describe('TrueSheet Mocks', () => {
       expect(TrueSheetActions.replace).toBeDefined();
       expect(TrueSheetActions.resize).toBeDefined();
       expect(TrueSheetActions.dismiss).toBeDefined();
-      expect(TrueSheetActions.remove).toBeDefined();
     });
 
     it('should return action objects', () => {

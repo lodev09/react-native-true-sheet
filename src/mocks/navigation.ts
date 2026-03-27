@@ -29,7 +29,6 @@ export const TrueSheetActions = {
   })),
   resize: jest.fn((index: number) => ({ type: 'RESIZE', index })),
   dismiss: jest.fn(() => ({ type: 'DISMISS' })),
-  remove: jest.fn(() => ({ type: 'REMOVE' })),
 };
 
 /**

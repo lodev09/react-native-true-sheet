@@ -63,7 +63,6 @@ export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewP
             <ReanimatedScreen
               key={route.key}
               routeKey={route.key}
-              closing={route.closing}
               detentIndex={resolvedIndex}
               resizeKey={route.resizeKey}
               detents={detents}
@@ -81,7 +80,6 @@ export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewP
           <TrueSheetScreen
             key={route.key}
             routeKey={route.key}
-            closing={route.closing}
             detentIndex={resolvedIndex}
             resizeKey={route.resizeKey}
             detents={detents}

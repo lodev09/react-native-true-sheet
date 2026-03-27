@@ -15,7 +15,6 @@ export const ReanimatedTrueSheetScreen = ({
   navigation,
   emit,
   routeKey,
-  closing,
   detents,
   children,
   positionChangeHandler,
@@ -28,7 +27,6 @@ export const ReanimatedTrueSheetScreen = ({
   } = useSheetScreenState({
     detentIndex,
     resizeKey,
-    closing,
     navigation,
     routeKey,
     emit,
