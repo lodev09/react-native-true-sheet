@@ -43,14 +43,6 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
 
-  const isMountedRef = useRef(false);
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       if (!isDismissedRef.current) {
