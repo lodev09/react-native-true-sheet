@@ -12,7 +12,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View, StyleSheet, useColorScheme, useWindowDimensions } from 'react-native';
+import {
+  type LayoutChangeEvent,
+  View,
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+} from 'react-native';
 
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -155,8 +161,15 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
 
   const [snapIndex, setSnapIndex] = useState(initialDetentIndex);
   const [isMounted, setIsMounted] = useState(false);
+  const [footerLayoutHeight, setFooterLayoutHeight] = useState(0);
 
   const isNonModal = stackBehavior === 'none';
+
+  const handleFooterLayout = useCallback((event: LayoutChangeEvent) => {
+    const h = event.nativeEvent.layout.height;
+
+    setFooterLayoutHeight((prev) => (prev === h ? prev : h));
+  }, []);
 
   useDerivedValue(() => {
     onPositionChange?.({
@@ -379,12 +392,15 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
               style={StyleSheet.flatten([styles.footer, footerStyle])}
               {...footerProps}
             >
-              {renderSlot(footer)}
+              <View onLayout={handleFooterLayout}>{renderSlot(footer)}</View>
             </BottomSheetFooter>
           )
         : undefined,
-    [footer, footerStyle]
+    [footer, footerStyle, handleFooterLayout]
   );
+
+  const autoFooterInset =
+    hasAutoDetent && footer && footerLayoutHeight > 0 ? footerLayoutHeight : 0;
 
   // For scrollable, we render the child directly
   const ContainerComponent = scrollable ? Fragment : BottomSheetView;
@@ -457,7 +473,19 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
   const sheetContent = (
     <ContainerComponent>
       {header && <View style={headerStyle}>{renderSlot(header)}</View>}
-      {scrollable ? children : <View style={style}>{children}</View>}
+      {scrollable ? (
+        autoFooterInset > 0 ? (
+          <View style={[styles.autoFooterInset, { paddingBottom: autoFooterInset }]}>
+            {children}
+          </View>
+        ) : (
+          children
+        )
+      ) : (
+        <View style={[style, autoFooterInset > 0 && { paddingBottom: autoFooterInset }]}>
+          {children}
+        </View>
+      )}
     </ContainerComponent>
   );
 
@@ -567,5 +595,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     pointerEvents: 'box-none',
+  },
+  autoFooterInset: {
+    flexGrow: 1,
+    minHeight: 0,
   },
 });

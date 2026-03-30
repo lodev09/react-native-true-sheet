@@ -67,6 +67,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _detents = @[ @0.5, @1 ];
     _contentHeight = @(0);
     _headerHeight = @(0);
+    _footerHeight = @(0);
     _grabber = YES;
     _draggable = YES;
     _scrollingExpandsSheet = YES;
@@ -561,7 +562,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  CGFloat autoHeight =
+    [self.contentHeight floatValue] + [self.headerHeight floatValue] + [self.footerHeight floatValue];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];

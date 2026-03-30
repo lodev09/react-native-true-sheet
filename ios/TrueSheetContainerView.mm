@@ -91,6 +91,10 @@ using namespace facebook::react;
   return _headerView ? _headerView.frame.size.height : 0;
 }
 
+- (CGFloat)footerHeight {
+  return _footerView ? _footerView.frame.size.height : 0;
+}
+
 - (void)layoutFooter {
   if (_footerView) {
     CGFloat height = _footerView.frame.size.height;
@@ -179,6 +183,7 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    [self footerViewDidChangeSize:_footerView.frame.size];
   }
 }
 
@@ -195,6 +200,7 @@ using namespace facebook::react;
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
+    [self footerViewDidChangeSize:CGSizeZero];
     _footerView.delegate = nil;
     _footerView = nil;
   }
@@ -234,6 +240,9 @@ using namespace facebook::react;
 #pragma mark - TrueSheetFooterViewDelegate
 
 - (void)footerViewDidChangeSize:(CGSize)newSize {
+  if ([self.delegate respondsToSelector:@selector(containerViewFooterDidChangeSize:)]) {
+    [self.delegate containerViewFooterDidChangeSize:newSize];
+  }
   if (@available(iOS 26.0, *)) {
     [self setupEdgeInteractions];
   }

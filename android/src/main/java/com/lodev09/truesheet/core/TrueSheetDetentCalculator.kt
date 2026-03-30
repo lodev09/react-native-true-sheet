@@ -14,6 +14,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
+  val footerHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
   val keyboardInset: Int
@@ -31,6 +32,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
+  private val footerHeight: Int get() = delegate?.footerHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
@@ -41,7 +43,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset
+      contentHeight + headerHeight + footerHeight + contentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -82,7 +84,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     if (index < 0 || index >= detents.size) return 0f
     val value = detents[index]
     return if (value == -1.0) {
-      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+      (contentHeight + headerHeight + footerHeight).toFloat() / screenHeight.toFloat()
     } else {
       value.toFloat()
     }

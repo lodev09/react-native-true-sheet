@@ -19,7 +19,8 @@
   if (index >= 0 && index < (NSInteger)detents.count) {
     CGFloat value = [detents[index] doubleValue];
     if (value == -1) {
-      CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue];
+      CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue] +
+                           [self.delegate.footerHeight floatValue];
       return autoHeight / self.delegate.screenHeight;
     }
     return value;

@@ -10,6 +10,7 @@
 
 ### 🐛 Bug fixes
 
+- Fixed dedent 'auto' not respecting footer height ([#620](https://github.com/lodev09/react-native-true-sheet/pull/620) by [@seanpcoyle](https://github.com/seanpcoyle))
 - **Android**: Fixed `NoSuchMethodError` crash on Android < 11 (API 30) when presenting a sheet with grabber accessibility. ([#606](https://github.com/lodev09/react-native-true-sheet/pull/606) by [@Mohamed-kassim](https://github.com/Mohamed-kassim))
 - **iOS**: Fixed keyboard scroll positioning when sheet auto-expands from a smaller detent. ([#592](https://github.com/lodev09/react-native-true-sheet/pull/592) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed dead state after rapid present/dismiss cycles. ([#593](https://github.com/lodev09/react-native-true-sheet/pull/593) by [@lodev09](https://github.com/lodev09))

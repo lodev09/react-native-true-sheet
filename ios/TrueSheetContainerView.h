@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
+- (void)containerViewFooterDidChangeSize:(CGSize)newSize;
 
 @end
 
@@ -65,6 +66,11 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the current header height
  */
 - (CGFloat)headerHeight;
+
+/**
+ * Returns the current footer height
+ */
+- (CGFloat)footerHeight;
 
 /**
  * Updates footer layout constraints if needed

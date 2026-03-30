@@ -602,8 +602,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun containerViewFooterDidChangeSize(width: Int, height: Int) {
-    // Footer changes don't affect detents, only reposition it
-    viewController.positionFooter()
+    updateSheetIfNeeded()
   }
 
   // ==================== RNScreensEventObserverDelegate ====================

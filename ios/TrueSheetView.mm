@@ -384,6 +384,11 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
+  CGFloat footerHeight = [_containerView footerHeight];
+  if (footerHeight > 0) {
+    _controller.footerHeight = @(footerHeight);
+  }
+
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   } else {
@@ -567,6 +572,11 @@ using namespace facebook::react;
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize {
   _controller.headerHeight = @(newSize.height);
+  [self setupSheetDetentsForSizeChange];
+}
+
+- (void)containerViewFooterDidChangeSize:(CGSize)newSize {
+  _controller.footerHeight = @(newSize.height);
   [self setupSheetDetentsForSizeChange];
 }
 
