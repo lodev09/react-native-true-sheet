@@ -119,7 +119,7 @@ export default function SheetLayout() {
 
 ## Reanimated
 
-Requires `react-native-reanimated` ^4.0.0 and `react-native-worklets`.
+Requires `react-native-reanimated` >=4 and `react-native-worklets` (mandatory dependency of Reanimated 4+). Both packages are optional TrueSheet peer dependencies — you only need them if you use TrueSheet's Reanimated features.
 
 ### Provider setup
 

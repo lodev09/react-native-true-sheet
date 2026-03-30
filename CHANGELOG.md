@@ -7,7 +7,6 @@
 - Add accessibility support to grabber view with VoiceOver/TalkBack actions and state descriptions. ([#587](https://github.com/lodev09/react-native-true-sheet/pull/587) by [@lodev09](https://github.com/lodev09))
 - Add `scrollingExpandsSheet` option to `scrollableOptions`. ([#585](https://github.com/lodev09/react-native-true-sheet/pull/585) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Add `topScrollEdgeEffect` and `bottomScrollEdgeEffect` to `scrollableOptions` for iOS 26+. ([#595](https://github.com/lodev09/react-native-true-sheet/pull/595) by [@lodev09](https://github.com/lodev09))
-- Add `truesheet-usage` AI skill and documentation for AI coding agents. ([#621](https://github.com/lodev09/react-native-true-sheet/pull/621) by [@mehradotdev](https://github.com/mehradotdev))
 
 ### 🐛 Bug fixes
 
@@ -21,6 +20,7 @@
 
 - **iOS**: Use codegen enum types instead of `NSInteger` casts for better type safety. ([#612](https://github.com/lodev09/react-native-true-sheet/pull/612) by [@lodev09](https://github.com/lodev09))
 - Add docs versioning with automated release script. ([#586](https://github.com/lodev09/react-native-true-sheet/pull/586) by [@lodev09](https://github.com/lodev09))
+- Add `truesheet-usage` AI skill and documentation for AI coding agents. ([#621](https://github.com/lodev09/react-native-true-sheet/pull/621) by [@mehradotdev](https://github.com/mehradotdev))
 
 - Add missing `layout` and `screenLayout` props to `TrueSheetNavigator`. ([#615](https://github.com/lodev09/react-native-true-sheet/pull/615) by [@bram-dc](https://github.com/bram-dc))
 
