@@ -98,6 +98,16 @@ export const App = () => {
 }
 ```
 
+## AI Skills
+
+Skills are reusable AI capabilities that give your AI coding agent knowledge about TrueSheet. With the right skill loaded, your agent can pick the right patterns, avoid common mistakes, and generate correct code without you having to explain the library every time.
+
+```sh
+npx skills add lodev09/react-native-true-sheet
+```
+
+This will install the **TrueSheet Usage** skill into your project.
+
 ## That map is awesome!
 
 Yes it is! Checkout [`@lugg/maps`](https://github.com/lugg/maps), a universal maps library for React Native that I'm developing at [Lugg](https://lugg.com).
