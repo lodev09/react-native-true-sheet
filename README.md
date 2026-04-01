@@ -1,4 +1,4 @@
-# React Native True Sheet
+# React Native TrueSheet
 
 [![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml)
 [![NPM Downloads](https://img.shields.io/npm/d18m/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
@@ -97,6 +97,16 @@ export const App = () => {
   )
 }
 ```
+
+## AI Skills
+
+Skills are reusable AI capabilities that give your AI coding agent knowledge about TrueSheet. With the right skill loaded, your agent can pick the right patterns, avoid common mistakes, and generate correct code without you having to explain the library every time.
+
+```sh
+npx skills add lodev09/react-native-true-sheet
+```
+
+This will install the **TrueSheet Usage** skill into your project.
 
 ## That map is awesome!
 

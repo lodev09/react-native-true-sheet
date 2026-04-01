@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <react/renderer/components/TrueSheetSpec/Props.h>
 #import "core/TrueSheetDetentCalculator.h"
 #import "core/TrueSheetGrabberView.h"
 
@@ -63,12 +64,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL draggable;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
-@property (nonatomic, assign) NSInteger backgroundBlur;
+@property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
 @property (nonatomic, assign) BOOL pageSizing;
-@property (nonatomic, assign) NSInteger anchor;
-@property (nonatomic, assign) NSInteger insetAdjustment;
+@property (nonatomic, assign) facebook::react::TrueSheetViewAnchor anchor;
+@property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) BOOL dismissible;
 @property (nonatomic, assign) BOOL isPresented;
