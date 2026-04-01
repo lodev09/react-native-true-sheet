@@ -14,6 +14,7 @@ import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet
 import {
   BORDER_RADIUS,
   DARK,
+  DARK_GRAY,
   FOOTER_HEIGHT,
   GAP,
   HEADER_HEIGHT,
@@ -74,7 +75,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       header={<Header />}
       headerStyle={styles.header}
       footer={
-        <Footer>
+        <Footer wrapperStyle={styles.footer}>
           <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
@@ -117,6 +118,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1,
+  },
+  footer: {
+    backgroundColor: Platform.select({
+      default: DARK_GRAY,
+      ios: undefined,
+    }),
   },
   item: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',

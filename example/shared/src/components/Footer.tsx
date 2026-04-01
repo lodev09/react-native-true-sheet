@@ -1,4 +1,13 @@
-import { Platform, StyleSheet, Text, View, type PressableProps, Pressable } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  type PressableProps,
+  Pressable,
+  type ViewStyle,
+  type StyleProp,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
@@ -6,15 +15,22 @@ import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
 const isIPad = Platform.OS === 'ios' && Platform.isPad;
 
 interface FooterProps extends PressableProps {
+  wrapperStyle?: StyleProp<ViewStyle>;
   text?: string;
 }
 
-export const Footer = ({ children, text = 'FOOTER', onPress, ...rest }: FooterProps) => {
+export const Footer = ({
+  children,
+  text = 'FOOTER',
+  onPress,
+  wrapperStyle,
+  ...rest
+}: FooterProps) => {
   const insets = useSafeAreaInsets();
   const bottomInset = isIPad ? 0 : insets.bottom;
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: bottomInset }]}>
+    <View style={[styles.wrapper, { paddingBottom: bottomInset }, wrapperStyle]}>
       <Pressable
         style={({ pressed }) => [styles.container, onPress && pressed && styles.pressed]}
         onPress={onPress}
@@ -28,10 +44,7 @@ export const Footer = ({ children, text = 'FOOTER', onPress, ...rest }: FooterPr
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: Platform.select({
-      default: DARK_GRAY,
-      ios: undefined,
-    }),
+    backgroundColor: DARK_GRAY,
   },
   container: {
     height: FOOTER_HEIGHT,
