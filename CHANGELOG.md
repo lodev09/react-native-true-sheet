@@ -15,6 +15,7 @@
 - **Android**: Fixed dead state after rapid present/dismiss cycles. ([#593](https://github.com/lodev09/react-native-true-sheet/pull/593) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed position change not emitting when detent or index changed. ([#584](https://github.com/lodev09/react-native-true-sheet/pull/584) by [@lodev09](https://github.com/lodev09))
 - **Android**: Use RN `BackHandler` for back press detection for reliability across Android versions. ([#580](https://github.com/lodev09/react-native-true-sheet/pull/580) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed sheet snapping instead of animating back to detent on keyboard dismiss. ([#604](https://github.com/lodev09/react-native-true-sheet/pull/604) by [@TheOmran](https://github.com/TheOmran))
 
 ### 💡 Others
 
