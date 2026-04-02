@@ -28,7 +28,7 @@
     "expo-web-browser": "~55.0.10",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-native": "0.83.4",
+    "react-native": "patch:react-native@npm%3A0.83.4#~/.yarn/patches/react-native-npm-0.83.4.patch",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",

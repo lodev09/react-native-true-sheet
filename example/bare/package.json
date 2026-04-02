@@ -17,7 +17,7 @@
     "@react-navigation/native": "^7.2.2",
     "@react-navigation/native-stack": "^7.14.10",
     "react": "19.2.0",
-    "react-native": "0.83.4",
+    "react-native": "patch:react-native@npm%3A0.83.4#~/.yarn/patches/react-native-npm-0.83.4.patch",
     "react-native-config": "^1.6.1",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-reanimated": "4.2.1",
