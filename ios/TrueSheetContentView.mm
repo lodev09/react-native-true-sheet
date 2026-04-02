@@ -212,12 +212,10 @@ using namespace facebook::react;
   if (@available(iOS 26.0, *)) {
     UIScrollView *scrollView = _pinnedScrollView.scrollView;
     auto topEffect = options ? options.topScrollEdgeEffect : TrueSheetViewTopScrollEdgeEffect::Hidden;
-    auto bottomEffect =
-      options ? options.bottomScrollEdgeEffect : TrueSheetViewBottomScrollEdgeEffect::Hidden;
+    auto bottomEffect = options ? options.bottomScrollEdgeEffect : TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
     [self applyEdgeEffect:topEffect toEdge:scrollView.topEdgeEffect];
-    [self applyEdgeEffect:(TrueSheetViewTopScrollEdgeEffect)bottomEffect
-                   toEdge:scrollView.bottomEdgeEffect];
+    [self applyEdgeEffect:(TrueSheetViewTopScrollEdgeEffect)bottomEffect toEdge:scrollView.bottomEdgeEffect];
   }
 #endif
 }

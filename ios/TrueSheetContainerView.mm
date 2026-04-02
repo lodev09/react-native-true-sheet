@@ -131,8 +131,8 @@ using namespace facebook::react;
 
   auto topEffect =
     _scrollableOptions ? _scrollableOptions.topScrollEdgeEffect : TrueSheetViewTopScrollEdgeEffect::Hidden;
-  auto bottomEffect = _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect
-                                         : TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  auto bottomEffect =
+    _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect : TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   BOOL topHidden = topEffect == TrueSheetViewTopScrollEdgeEffect::Hidden;
   BOOL bottomHidden = bottomEffect == TrueSheetViewBottomScrollEdgeEffect::Hidden;
