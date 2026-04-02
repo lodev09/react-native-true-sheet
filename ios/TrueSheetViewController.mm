@@ -200,6 +200,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
+  _blurView.alpha = 1;
+
   if (!_isPresented) {
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
@@ -474,6 +476,12 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
     if (self.currentPosition >= self.screenHeight) {
       CGFloat position = fmax(_lastEmittedPositionState.position, layerPosition);
+
+      // Hide blur at the end of dismiss to prevent UIVisualEffectView
+      // from causing a flicker/flash at the bottom edge of the sheet.
+      if (self.screenHeight - position < 1) {
+        _blurView.alpha = 0;
+      }
 
       [self emitWillDismissEvents];
       [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
