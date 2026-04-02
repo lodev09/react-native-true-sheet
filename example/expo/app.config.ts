@@ -11,7 +11,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/images/icon.png',
   scheme: 'expoexample',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   splash: {
     image: './assets/images/splash-icon.png',
     resizeMode: 'contain',
@@ -26,7 +25,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#ffffff',
     },
-    edgeToEdgeEnabled: true,
     package: 'com.lodev09.truesheet.expo',
   },
   web: {
@@ -35,7 +33,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: './assets/images/favicon.png',
   },
   plugins: [
-    ['expo-router'],
+    'expo-router',
+    'expo-font',
+    'expo-web-browser',
     [
       '@lugg/maps',
       {
@@ -46,5 +46,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: {
     typedRoutes: true,
+    reactCompiler: true,
   },
 });
