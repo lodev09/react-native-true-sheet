@@ -116,7 +116,6 @@ jobs:
           key: ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-ios-${{ hashFiles('example/bare/ios/Podfile.lock') }}-
-            ${{ runner.os }}-ios-
 
       - name: Install ccache
         if: env.turbo_cache_hit != 1
