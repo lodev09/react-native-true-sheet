@@ -3595,7 +3595,7 @@ __metadata:
     "@babel/runtime": "npm:^7.25.0"
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:0.2.0-alpha.27"
+    "@lugg/maps": "npm:1.0.0-beta.8"
     "@react-native-community/cli": "npm:20.1.3"
     "@react-native-community/cli-platform-android": "npm:20.1.3"
     "@react-native-community/cli-platform-ios": "npm:20.1.3"
@@ -3625,7 +3625,7 @@ __metadata:
     "@example/shared": "npm:*"
     "@gorhom/bottom-sheet": "npm:^5.2.8"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:0.2.0-alpha.27"
+    "@lugg/maps": "npm:1.0.0-beta.8"
     "@react-navigation/native": "npm:^7.1.8"
     "@types/react": "npm:~19.2.10"
     "@vis.gl/react-google-maps": "npm:^1.7.1"
@@ -3656,12 +3656,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@example/shared@workspace:example/shared"
   dependencies:
-    "@lugg/maps": "npm:0.2.0-alpha.27"
-    "@types/react": "npm:19.1.1"
-    react-native-gesture-handler: "npm:^2.29.1"
-    react-native-reanimated: "npm:^4.2.0"
+    "@lugg/maps": "npm:1.0.0-beta.8"
+    "@types/react": "npm:~19.2.10"
+    react-native-gesture-handler: "npm:~2.30.0"
+    react-native-reanimated: "npm:4.2.1"
     react-native-safe-area-context: "npm:~5.6.0"
-    react-native-worklets: "npm:^0.7.0"
+    react-native-worklets: "npm:0.7.2"
     typescript: "npm:^5.9.2"
   peerDependencies:
     "@lodev09/react-native-true-sheet": "*"
@@ -5059,9 +5059,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lugg/maps@npm:0.2.0-alpha.27":
-  version: 0.2.0-alpha.27
-  resolution: "@lugg/maps@npm:0.2.0-alpha.27"
+"@lugg/maps@npm:1.0.0-beta.8":
+  version: 1.0.0-beta.8
+  resolution: "@lugg/maps@npm:1.0.0-beta.8"
   dependencies:
     "@expo/config-plugins": "npm:^9.0.0"
   peerDependencies:
@@ -5071,7 +5071,7 @@ __metadata:
   peerDependenciesMeta:
     "@vis.gl/react-google-maps":
       optional: true
-  checksum: 10c0/9df583fb3a02da3a0a4176021fff0f36a816267c2ed9342aee57a5f19099d4f5820315db97eb00fe6c6b9c8dd6911c29caacfe874294cdb532d092b2fddee46b
+  checksum: 10c0/e823989c57f841b8e4aa23eeca49bd4cebdbf76b09c5936459d91be96b6f5783d719048934f31f2aa2b667e926929c37fb203a132661df207c8ccfb128f4cda6
   languageName: node
   linkType: hard
 
@@ -19905,20 +19905,6 @@ __metadata:
     react-native-windows:
       optional: true
   checksum: 10c0/9e2bbb7fb04bac878471f7b06132d84233c482952fc7dd0b651669a62cd35c35428302c7502a92898402505ec9b8d7997848122356b42de5c072dcce549d5813
-  languageName: node
-  linkType: hard
-
-"react-native-gesture-handler@npm:^2.29.1":
-  version: 2.29.1
-  resolution: "react-native-gesture-handler@npm:2.29.1"
-  dependencies:
-    "@egjs/hammerjs": "npm:^2.0.17"
-    hoist-non-react-statics: "npm:^3.3.0"
-    invariant: "npm:^2.2.4"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10c0/63de75098fb5733a4a24d3359c307ee2295939c48dc0808cf0efd6a50948834370e6b32a165b908fcbd7bc186e7bb4db3afbcd66b3fde3cbccca6f6b47f1b400
   languageName: node
   linkType: hard
 
