@@ -23,6 +23,7 @@
 - Add missing `layout` and `screenLayout` props to `TrueSheetNavigator`. ([#615](https://github.com/lodev09/react-native-true-sheet/pull/615) by [@bram-dc](https://github.com/bram-dc))
 - Add `truesheet-usage` AI skill and documentation for AI coding agents. ([#621](https://github.com/lodev09/react-native-true-sheet/pull/621) by [@mehradotdev](https://github.com/mehradotdev))
 - Upgrade example to Expo SDK 55 and RN 0.83. ([#630](https://github.com/lodev09/react-native-true-sheet/pull/630) by [@lodev09](https://github.com/lodev09))
+- Add RN 0.83 keyboard animation workaround to troubleshooting docs. ([#632](https://github.com/lodev09/react-native-true-sheet/pull/632) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking
 
