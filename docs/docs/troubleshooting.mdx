@@ -28,6 +28,24 @@ const closeModal = async () => {
 A fix has been submitted to React Native. See [PR #55005](https://github.com/facebook/react-native/pull/55005).
 :::
 
+## Sheet Snaps Without Animation on Keyboard Dismiss (iOS)
+
+On React Native 0.83+, the sheet snaps back to its detent without animation when the keyboard is dismissed. This is caused by an upstream change in RN 0.83 where `canBecomeFirstResponder` returns `YES` on every `RCTViewComponentView`, disrupting `UISheetPresentationController`'s keyboard avoidance animation.
+
+**Workaround:**
+
+Apply a [patch](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-npm-0.83.4.patch) to `react-native` that gates `canBecomeFirstResponder` behind the `enableImperativeFocus` feature flag. For Yarn, add to your `package.json`:
+
+```json
+"resolutions": {
+  "react-native": "patch:react-native@npm%3A0.83.4#./.yarn/patches/react-native-npm-0.83.4.patch"
+}
+```
+
+:::info
+A fix has been submitted to React Native. See [PR #55908](https://github.com/facebook/react-native/pull/55908).
+:::
+
 ## Gesture Handler Not Working on Android
 
 If you're using `react-native-gesture-handler` inside the sheet and gestures are not working on Android, you need to wrap your sheet content with `GestureHandlerRootView`.

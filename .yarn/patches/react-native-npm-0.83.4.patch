@@ -1,0 +1,12 @@
+diff --git a/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm b/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
+--- a/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
++++ b/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
+@@ -1614,7 +1614,7 @@
+
+ - (BOOL)canBecomeFirstResponder
+ {
+-  return YES;
++  return ReactNativeFeatureFlags::enableImperativeFocus();
+ }
+
+ - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args

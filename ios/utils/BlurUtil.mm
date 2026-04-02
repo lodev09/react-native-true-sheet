@@ -16,8 +16,8 @@ using namespace facebook::react;
 
 @implementation BlurUtil
 
-+ (UIBlurEffectStyle)blurEffectStyleFromEnum:(NSInteger)blur {
-  switch ((TrueSheetViewBackgroundBlur)blur) {
++ (UIBlurEffectStyle)blurEffectStyleFromEnum:(TrueSheetViewBackgroundBlur)blur {
+  switch (blur) {
     case TrueSheetViewBackgroundBlur::Dark:
       return UIBlurEffectStyleDark;
     case TrueSheetViewBackgroundBlur::ExtraLight:

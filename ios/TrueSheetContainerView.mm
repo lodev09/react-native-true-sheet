@@ -35,8 +35,8 @@ using namespace facebook::react;
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
     _scrollingExpandsSheet = YES;
-    _topScrollEdgeEffect = (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
-    _bottomScrollEdgeEffect = (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+    _topScrollEdgeEffect = TrueSheetViewTopScrollEdgeEffect::Hidden;
+    _bottomScrollEdgeEffect = TrueSheetViewBottomScrollEdgeEffect::Hidden;
   }
   return self;
 }
@@ -113,7 +113,7 @@ using namespace facebook::react;
 - (void)setupScrollable {
   if (_scrollableSet && _contentView) {
     CGFloat bottomInset = 0;
-    if (_insetAdjustment == (NSInteger)TrueSheetViewInsetAdjustment::Automatic) {
+    if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
     [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
@@ -129,13 +129,13 @@ using namespace facebook::react;
     return;
   }
 
-  NSInteger topEffect =
-    _scrollableOptions ? _scrollableOptions.topScrollEdgeEffect : (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
-  NSInteger bottomEffect = _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect
-                                              : (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  auto topEffect =
+    _scrollableOptions ? _scrollableOptions.topScrollEdgeEffect : TrueSheetViewTopScrollEdgeEffect::Hidden;
+  auto bottomEffect =
+    _scrollableOptions ? _scrollableOptions.bottomScrollEdgeEffect : TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
-  BOOL topHidden = topEffect == (NSInteger)TrueSheetViewTopScrollEdgeEffect::Hidden;
-  BOOL bottomHidden = bottomEffect == (NSInteger)TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  BOOL topHidden = topEffect == TrueSheetViewTopScrollEdgeEffect::Hidden;
+  BOOL bottomHidden = bottomEffect == TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   RCTScrollViewComponentView *scrollViewComponent = [_contentView findScrollView];
   UIScrollView *scrollView = scrollViewComponent.scrollView;

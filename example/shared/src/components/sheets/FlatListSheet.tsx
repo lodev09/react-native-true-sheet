@@ -1,5 +1,5 @@
 import { forwardRef, useRef } from 'react';
-import { StyleSheet, FlatList, View } from 'react-native';
+import { StyleSheet, FlatList, View, Platform } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_GRAY, FOOTER_HEIGHT, HEADER_HEIGHT, SPACING, times } from '../../utils';
@@ -25,10 +25,17 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         bottomScrollEdgeEffect: 'soft',
         topScrollEdgeEffect: 'soft',
       }}
-      header={<Header style={styles.header} />}
+      header={<Header />}
+      headerStyle={styles.header}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
-      footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
+      footer={
+        <Footer
+          text="OPEN BLANK SHEET"
+          wrapperStyle={styles.footer}
+          onPress={() => testRef.current?.present()}
+        />
+      }
       {...props}
     >
       <View style={styles.wrapper}>
@@ -54,6 +61,12 @@ FlatListSheet.displayName = 'FlatListSheet';
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
+  },
+  footer: {
+    backgroundColor: Platform.select({
+      default: DARK_GRAY,
+      ios: undefined,
+    }),
   },
   header: {
     position: 'absolute',
