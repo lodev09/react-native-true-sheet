@@ -5039,6 +5039,7 @@ __metadata:
     release-it: "npm:^19.0.4"
     turbo: "npm:^2.5.6"
     typescript: "npm:^5.9.2"
+    vaul: "npm:^1.1.2"
   peerDependencies:
     "@gorhom/bottom-sheet": ">=5"
     "@react-navigation/native": ">=7"
