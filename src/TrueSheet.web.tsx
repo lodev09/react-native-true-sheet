@@ -1,8 +1,6 @@
 import {
-  createElement,
   Fragment,
   forwardRef,
-  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -27,6 +25,20 @@ import BottomSheet, {
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
 import { BottomSheetContext, type TrueSheetRefMethods } from './TrueSheetProvider.web';
+import { getElevationShadow, renderSlot } from './web/utils';
+import {
+  DEFAULT_CORNER_RADIUS,
+  DEFAULT_ELEVATION,
+  DEFAULT_MAX_WIDTH,
+  COLOR_SURFACE_CONTAINER_LOW_LIGHT,
+  COLOR_SURFACE_CONTAINER_LOW_DARK,
+  DEFAULT_ANCHOR_OFFSET,
+  DEFAULT_DETACHED_OFFSET,
+  DEFAULT_GRABBER_COLOR_LIGHT,
+  DEFAULT_GRABBER_COLOR_DARK,
+  DEFAULT_GRABBER_WIDTH,
+  DEFAULT_GRABBER_HEIGHT,
+} from './web/constants';
 import type {
   TrueSheetProps,
   DetentChangeEvent,
@@ -45,44 +57,6 @@ import type {
   DragEndEvent,
 } from './TrueSheet.types';
 
-const DEFAULT_CORNER_RADIUS = 16;
-const DEFAULT_ELEVATION = 4;
-
-const DEFAULT_MAX_WIDTH = 640;
-// M3 baseline surfaceContainerLow
-const COLOR_SURFACE_CONTAINER_LOW_LIGHT = '#F7F2FA';
-const COLOR_SURFACE_CONTAINER_LOW_DARK = '#1D1B20';
-
-const DEFAULT_ANCHOR_OFFSET = 16;
-const DEFAULT_DETACHED_OFFSET = 16;
-const DEFAULT_GRABBER_COLOR_LIGHT = 'rgba(0, 0, 0, 0.3)';
-const DEFAULT_GRABBER_COLOR_DARK = 'rgba(255, 255, 255, 0.3)';
-const DEFAULT_GRABBER_WIDTH = 32;
-const DEFAULT_GRABBER_HEIGHT = 4;
-
-/**
- * Converts elevation to CSS box-shadow based on Material Design 3 elevation system.
- * Uses a combination of ambient and key shadows for realistic depth.
- */
-const getElevationShadow = (elevation: number): string => {
-  if (elevation <= 0) return 'none';
-
-  const ambientY = elevation * 0.5;
-  const ambientBlur = elevation * 1.5;
-  const ambientOpacity = 0.08 + elevation * 0.01;
-
-  const keyY = elevation;
-  const keyBlur = elevation * 2;
-  const keyOpacity = 0.12 + elevation * 0.02;
-
-  return `0px ${ambientY}px ${ambientBlur}px rgba(0, 0, 0, ${ambientOpacity}), 0px ${keyY}px ${keyBlur}px rgba(0, 0, 0, ${keyOpacity})`;
-};
-
-const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) => {
-  if (!slot) return null;
-  if (isValidElement(slot)) return slot;
-  return createElement(slot);
-};
 
 const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
   const {
