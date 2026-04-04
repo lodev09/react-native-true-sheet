@@ -19,6 +19,11 @@
       "types": "./lib/typescript/src/reanimated/index.d.ts",
       "default": "./lib/module/reanimated/index.js"
     },
+    "./gorhom": {
+      "source": "./src/gorhom/index.ts",
+      "types": "./lib/typescript/src/gorhom/index.d.ts",
+      "default": "./lib/module/gorhom/index.js"
+    },
     "./navigation": {
       "source": "./src/navigation/index.ts",
       "types": "./lib/typescript/src/navigation/index.d.ts",
