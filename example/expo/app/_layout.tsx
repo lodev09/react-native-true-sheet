@@ -5,8 +5,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
-import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
+import { VaulRenderer } from '@lodev09/react-native-true-sheet/vaul';
 import { MapProvider } from '@lugg/maps';
+
+TrueSheet.setWebRenderer(VaulRenderer);
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 import { DARK_BLUE } from '@example/shared/utils';
 import 'react-native-reanimated';

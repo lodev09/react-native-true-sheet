@@ -3648,6 +3648,7 @@ __metadata:
     react-native-web: "npm:~0.21.0"
     react-native-worklets: "npm:0.7.2"
     typescript: "npm:~5.9.2"
+    vaul: "npm:^1.1.2"
   languageName: unknown
   linkType: soft
 
@@ -5047,6 +5048,7 @@ __metadata:
     react-native: "*"
     react-native-reanimated: ">=4"
     react-native-worklets: "*"
+    vaul: ">=1"
   peerDependenciesMeta:
     "@gorhom/bottom-sheet":
       optional: true
@@ -5055,6 +5057,8 @@ __metadata:
     react-native-reanimated:
       optional: true
     react-native-worklets:
+      optional: true
+    vaul:
       optional: true
   languageName: unknown
   linkType: soft
