@@ -1,1 +1,1 @@
-export {};
+export { VaulRenderer } from './VaulSheet';
