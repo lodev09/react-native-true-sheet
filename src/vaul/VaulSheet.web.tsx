@@ -332,6 +332,10 @@ const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) =
   const maxWidth = isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined;
 
   const contentStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: String(backgroundColor),
     borderTopLeftRadius: cornerRadius,
     borderTopRightRadius: cornerRadius,
@@ -339,7 +343,7 @@ const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) =
     borderBottomRightRadius: detached ? cornerRadius : 0,
     boxShadow: getElevationShadow(elevation),
     maxWidth,
-    maxHeight: maxContentHeight,
+    maxHeight: maxContentHeight ?? '97%',
     marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
     marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     marginBottom: detached ? detachedOffset : undefined,
@@ -361,7 +365,7 @@ const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) =
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSnapPointChange}
       dismissible={dismissible}
-      modal={!isNonModal}
+      modal={false}
       direction="bottom"
       handleOnly={!draggable}
       onDrag={handleDrag}
@@ -369,7 +373,12 @@ const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) =
       onAnimationEnd={handleAnimationEnd}
     >
       <Drawer.Portal>
-        {shouldShowOverlay && <Drawer.Overlay style={overlayStyle} />}
+        {shouldShowOverlay && (
+          <Drawer.Overlay
+            style={overlayStyle}
+            onClick={dismissible ? () => sheetMethodsRef.current.dismiss() : undefined}
+          />
+        )}
         <Drawer.Content style={contentStyle}>
           {grabber && (
             <Drawer.Handle>
