@@ -57,7 +57,6 @@ import type {
   DragEndEvent,
 } from './TrueSheet.types';
 
-
 const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
   const {
     name,
