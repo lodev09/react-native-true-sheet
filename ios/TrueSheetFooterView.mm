@@ -61,7 +61,9 @@ using namespace facebook::react;
   [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
   [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
 
-  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor
+  // Pin to safe area so footer content doesn't render behind the home indicator.
+  // When the keyboard is visible, its height already includes the safe area inset.
+  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.safeAreaLayoutGuide.bottomAnchor
                                                         constant:-_currentKeyboardOffset];
   _bottomConstraint.active = YES;
 

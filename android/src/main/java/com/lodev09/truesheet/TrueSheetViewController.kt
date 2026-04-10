@@ -964,7 +964,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
+    // Subtract bottomInset so footer content doesn't render behind the navigation/gesture bar.
+    // When the keyboard is visible, currentKeyboardInset already accounts for the bottom inset.
+    val safeAreaOffset = if (currentKeyboardInset > 0) 0 else bottomInset
+    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset - safeAreaOffset).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative
     if (slideOffset != null && slideOffset < 0) {

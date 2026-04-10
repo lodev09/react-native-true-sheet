@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed footer ignoring safe area insets by pinning to `safeAreaLayoutGuide.bottomAnchor` instead of `bottomAnchor`. ([#644](https://github.com/lodev09/react-native-true-sheet/pull/644) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **Android**: Fixed footer rendering behind the navigation/gesture bar by accounting for `bottomInset` in `positionFooter`. ([#644](https://github.com/lodev09/react-native-true-sheet/pull/644) by [@isaacrowntree](https://github.com/isaacrowntree))
+
 ## 3.10.0
 
 ### 🎉 New features
