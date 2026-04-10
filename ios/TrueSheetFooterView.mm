@@ -41,8 +41,32 @@ using namespace facebook::react;
     _didInitialLayout = NO;
     _bottomConstraint = nil;
     _currentKeyboardOffset = 0;
+
+    // Dedicated touch handler so touches are hit-tested against the footer's
+    // actual AutoLayout frame, not the stale Yoga frame in the container's
+    // touch handler.
+    _footerTouchHandler = [[RCTSurfaceTouchHandler alloc] init];
+    _footerTouchHandlerAttached = NO;
   }
   return self;
+}
+
+#pragma mark - Touch Handling
+
+- (void)attachFooterTouchHandler {
+  if (_footerTouchHandlerAttached) {
+    return;
+  }
+  [_footerTouchHandler attachToView:self];
+  _footerTouchHandlerAttached = YES;
+}
+
+- (void)detachFooterTouchHandler {
+  if (!_footerTouchHandlerAttached) {
+    return;
+  }
+  [_footerTouchHandler detachFromView:self];
+  _footerTouchHandlerAttached = NO;
 }
 
 #pragma mark - Layout
@@ -78,6 +102,12 @@ using namespace facebook::react;
   if (self.superview) {
     CGFloat initialHeight = self.frame.size.height;
     [self setupConstraintsWithHeight:initialHeight];
+
+    // Attach the footer's own touch handler so it has an independent
+    // coordinate space for hit-testing (bypasses container's Yoga tree).
+    [self attachFooterTouchHandler];
+  } else {
+    [self detachFooterTouchHandler];
   }
 }
 
@@ -97,6 +127,9 @@ using namespace facebook::react;
 }
 
 - (void)prepareForRecycle {
+  // Guarded: no-op if didMoveToSuperview:nil already detached.
+  [self detachFooterTouchHandler];
+
   [super prepareForRecycle];
 
   [LayoutUtil unpinView:self fromParentView:self.superview];

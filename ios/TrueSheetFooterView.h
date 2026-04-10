@@ -22,7 +22,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)footerViewDidChangeSize:(CGSize)size;
 @end
 
-@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
+@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate> {
+  RCTSurfaceTouchHandler *_footerTouchHandler;
+  BOOL _footerTouchHandlerAttached;
+}
 
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 @property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;
