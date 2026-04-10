@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed footer swallowing touch events by giving it a dedicated `RCTSurfaceTouchHandler`, bypassing stale Yoga frame hit-testing. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
+- **Android**: Fixed double JS touch dispatch for footer touches — footer's own `RootView` now exclusively handles events in its bounds. ([#589](https://github.com/lodev09/react-native-true-sheet/pull/589) by [@isaacrowntree](https://github.com/isaacrowntree))
+
 ## 3.10.0
 
 ### 🎉 New features
