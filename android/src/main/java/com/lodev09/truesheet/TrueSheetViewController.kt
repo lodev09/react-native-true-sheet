@@ -757,6 +757,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun dismissKeyboard() {
     isKeyboardDismissProgrammatic = true
     KeyboardUtils.dismiss(reactContext)
+
+    // Clear focus from any focused view within the sheet to prevent
+    // Android from auto-focusing the next focusable view on the main
+    // screen when the sheet is removed from the hierarchy.
+    sheetView?.findFocus()?.clearFocus()
   }
 
   fun handleBackPress() {
