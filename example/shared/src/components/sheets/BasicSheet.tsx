@@ -9,6 +9,7 @@ import { Button } from '../Button';
 import { ButtonGroup } from '../ButtonGroup';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
+import { Input } from '../Input';
 
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
@@ -119,6 +120,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <Button text="Auto" onPress={() => resize(0)} />
       </ButtonGroup>
       <Spacer />
+      <Input />
       <ButtonGroup>
         <Button text="Child Sheet" onPress={presentChild} />
         <Button text="PromptSheet" onPress={presentPromptSheet} />
