@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Fixed focused input in sheet causing auto-focus on main screen input after dismiss. ([#649](https://github.com/lodev09/react-native-true-sheet/pull/649) by [@lodev09](https://github.com/lodev09))
+
 ## 3.10.0
 
 ### 🎉 New features
