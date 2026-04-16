@@ -78,7 +78,9 @@ clean_bare() {
   cd example/bare/android
   ./gradlew clean -q
   cd ../../..
-  npx pod-install example/bare
+  cd example/bare/ios
+  pod install
+  cd ../../..
 }
 
 step "Installing dependencies" "Dependencies installed" install
