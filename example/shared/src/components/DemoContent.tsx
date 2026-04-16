@@ -1,7 +1,7 @@
-import { StyleSheet, View, type ColorValue, type ViewProps, Text } from 'react-native';
+import { StyleSheet, Pressable, type ColorValue, type PressableProps, Text } from 'react-native';
 import { BORDER_RADIUS, LIGHT_GRAY, SPACING } from '../utils';
 
-interface DemoContentProps extends ViewProps {
+interface DemoContentProps extends PressableProps {
   radius?: number;
   color?: ColorValue;
   text?: string;
@@ -10,12 +10,16 @@ interface DemoContentProps extends ViewProps {
 export const DemoContent = (props: DemoContentProps) => {
   const { text, radius = BORDER_RADIUS, style: $style, color = 'rgba(0,0,0,0.3)', ...rest } = props;
   return (
-    <View
-      style={[styles.content, { backgroundColor: color, borderRadius: radius }, $style]}
+    <Pressable
+      style={(state) => [
+        styles.content,
+        { backgroundColor: color, borderRadius: radius, opacity: state.pressed ? 0.5 : 1 },
+        typeof $style === 'function' ? $style(state) : $style,
+      ]}
       {...rest}
     >
       {text && <Text style={styles.text}>{text}</Text>}
-    </View>
+    </Pressable>
   );
 };
 

@@ -109,7 +109,7 @@ ScrollViewSheet.displayName = 'ScrollViewSheet';
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    paddingTop: HEADER_HEIGHT,
+    paddingTop: HEADER_HEIGHT + SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
