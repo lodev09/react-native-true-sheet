@@ -3,9 +3,10 @@ import { Drawer } from 'vaul';
 
 import type { WebRenderer, TrueSheetRefMethods } from '../web/types';
 import type { TrueSheetProps } from '../TrueSheet.types';
+import { View } from 'react-native';
 
 const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
-  const { children, dismissible = true } = props;
+  const { children, dismissible = true, style } = props;
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -35,7 +36,7 @@ const VaulSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) =
         <Drawer.Overlay style={overlayStyle} />
         <Drawer.Content style={contentStyle}>
           <Drawer.Handle />
-          {children}
+          <View style={style}>{children}</View>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

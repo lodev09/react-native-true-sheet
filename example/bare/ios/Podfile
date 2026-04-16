@@ -33,5 +33,17 @@ target 'TrueSheetExample' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => true
     )
+
+    # TODO: RN 0.83 fmt fix for XCode 26.4 build error
+    # https://github.com/expo/expo/issues/44229
+    fmt_base = File.join(installer.sandbox.root.to_s, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      content = File.read(fmt_base)
+      patched = content.gsub(/#\s*define FMT_USE_CONSTEVAL 1/, '# define FMT_USE_CONSTEVAL 0')
+      if patched != content
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, patched)
+      end
+    end
   end
 end
