@@ -40,6 +40,7 @@ import {
   DEFAULT_GRABBER_COLOR_DARK,
   DEFAULT_GRABBER_WIDTH,
   DEFAULT_GRABBER_HEIGHT,
+  DEFAULT_GRABBER_TOP_MARGIN,
 } from '../web/constants';
 import type { TrueSheetRefMethods, WebRenderer } from '../web/types';
 import type {
@@ -329,7 +330,7 @@ const GorhomSheet = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref)
   const handleStyle = useMemo(
     () =>
       grabber
-        ? [styles.handle, { paddingTop: grabberOptions?.topMargin }]
+        ? [styles.handle, { paddingTop: grabberOptions?.topMargin ?? DEFAULT_GRABBER_TOP_MARGIN }]
         : { display: 'none' as const },
     [grabber, grabberOptions?.topMargin]
   );

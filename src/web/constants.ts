@@ -9,3 +9,4 @@ export const DEFAULT_GRABBER_COLOR_LIGHT = 'rgba(0, 0, 0, 0.3)';
 export const DEFAULT_GRABBER_COLOR_DARK = 'rgba(255, 255, 255, 0.3)';
 export const DEFAULT_GRABBER_WIDTH = 32;
 export const DEFAULT_GRABBER_HEIGHT = 4;
+export const DEFAULT_GRABBER_TOP_MARGIN = 16;

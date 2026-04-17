@@ -10,6 +10,7 @@ import { VaulRenderer } from '@lodev09/react-native-true-sheet/vaul';
 import { MapProvider } from '@lugg/maps';
 
 TrueSheet.setWebRenderer(VaulRenderer);
+
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 import { DARK_BLUE } from '@example/shared/utils';
 import 'react-native-reanimated';

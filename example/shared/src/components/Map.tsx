@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { MapView, Polyline, type MapViewProps, type Coordinate } from '@lugg/maps';
 
 import { BLUE } from '../utils';
@@ -163,6 +163,10 @@ const SHEET_COORDS: Coordinate[] = [
 
 export const Map = (props: Omit<MapViewProps, 'style'> & { style?: MapViewProps['style'] }) => {
   const { style, children, ...rest } = props;
+
+  if (Platform.OS === 'web') {
+    return <View style={styles.map}>{children}</View>;
+  }
 
   return (
     <MapView
