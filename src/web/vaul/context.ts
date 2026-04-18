@@ -32,6 +32,7 @@ interface DrawerContextValue {
   container?: HTMLElement | null;
   autoFocus?: boolean;
   shouldAnimate?: React.RefObject<boolean>;
+  onPositionChangeRef: React.RefObject<((position: number) => void) | undefined>;
 }
 
 export const DrawerContext = React.createContext<DrawerContextValue>({
@@ -64,6 +65,7 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   noBodyStyles: false,
   container: null,
   autoFocus: false,
+  onPositionChangeRef: { current: undefined },
 });
 
 export const useDrawerContext = () => {

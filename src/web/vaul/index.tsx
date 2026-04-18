@@ -132,6 +132,12 @@ export type DialogProps = {
    * Useful to revert any state changes for example.
    */
   onAnimationEnd?: (open: boolean) => void;
+  /**
+   * Fires on every animation frame while the drawer is open with the drawer's
+   * current top edge in the viewport (px). Emits during drag, snap, and the
+   * open/close transitions.
+   */
+  onPositionChange?: (position: number) => void;
   preventScrollRestoration?: boolean;
   autoFocus?: boolean;
 } & (WithFadeFromProps | WithoutFadeFromProps);
@@ -164,6 +170,7 @@ export function Root({
   preventScrollRestoration = false,
   repositionInputs = true,
   onAnimationEnd,
+  onPositionChange,
   container,
   autoFocus = false,
 }: DialogProps) {
@@ -495,6 +502,11 @@ export function Root({
     }
   }, [isOpen]);
 
+  const onPositionChangeRef = React.useRef(onPositionChange);
+  React.useEffect(() => {
+    onPositionChangeRef.current = onPositionChange;
+  });
+
   React.useEffect(() => {
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -819,6 +831,7 @@ export function Root({
           noBodyStyles,
           container,
           autoFocus,
+          onPositionChangeRef,
         }}
       >
         {children}
@@ -886,12 +899,14 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     activeSnapPointIndex,
     modal,
     isOpen,
+    isDragging,
     direction,
     snapPoints,
     container,
     handleOnly,
     shouldAnimate,
     autoFocus,
+    onPositionChangeRef,
   } = useDrawerContext();
   // Needed to use transition instead of animations
   const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
@@ -937,6 +952,99 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
       });
     }
   }, []);
+
+  // Event-driven position tracking. We only tick RAF while the drawer is
+  // actually moving (drag / CSS transition / CSS animation). When it's idle at
+  // a snap, no frames run at all.
+  const positionTrackingRef = React.useRef<{
+    rafId: number | null;
+    movingCount: number;
+    lastPosition: number;
+    start: () => void;
+    stop: () => void;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    const state = {
+      rafId: null as number | null,
+      movingCount: 0,
+      lastPosition: Number.NaN,
+      start: () => {},
+      stop: () => {},
+    };
+
+    const emit = () => {
+      const cb = onPositionChangeRef.current;
+      if (!cb) return;
+      const position = drawer.getBoundingClientRect().top;
+      if (position !== state.lastPosition) {
+        state.lastPosition = position;
+        cb(position);
+      }
+    };
+
+    const tick = () => {
+      emit();
+      state.rafId = state.movingCount > 0 ? window.requestAnimationFrame(tick) : null;
+    };
+
+    state.start = () => {
+      state.movingCount += 1;
+      if (state.rafId === null) {
+        state.rafId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    state.stop = () => {
+      state.movingCount = Math.max(0, state.movingCount - 1);
+      // RAF loop will exit on its next tick; emit the settled position now.
+      if (state.movingCount === 0) emit();
+    };
+
+    const onTransitionRun = (e: TransitionEvent) => {
+      if (e.target === drawer && e.propertyName === 'transform') state.start();
+    };
+    const onTransitionDone = (e: TransitionEvent) => {
+      if (e.target === drawer && e.propertyName === 'transform') state.stop();
+    };
+    const onAnimationStart = (e: AnimationEvent) => {
+      if (e.target === drawer) state.start();
+    };
+    const onAnimationDone = (e: AnimationEvent) => {
+      if (e.target === drawer) state.stop();
+    };
+
+    drawer.addEventListener('transitionrun', onTransitionRun);
+    drawer.addEventListener('transitionend', onTransitionDone);
+    drawer.addEventListener('transitioncancel', onTransitionDone);
+    drawer.addEventListener('animationstart', onAnimationStart);
+    drawer.addEventListener('animationend', onAnimationDone);
+    drawer.addEventListener('animationcancel', onAnimationDone);
+
+    positionTrackingRef.current = state;
+    emit();
+
+    return () => {
+      drawer.removeEventListener('transitionrun', onTransitionRun);
+      drawer.removeEventListener('transitionend', onTransitionDone);
+      drawer.removeEventListener('transitioncancel', onTransitionDone);
+      drawer.removeEventListener('animationstart', onAnimationStart);
+      drawer.removeEventListener('animationend', onAnimationDone);
+      drawer.removeEventListener('animationcancel', onAnimationDone);
+      if (state.rafId !== null) window.cancelAnimationFrame(state.rafId);
+      positionTrackingRef.current = null;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const state = positionTrackingRef.current;
+    if (!state) return;
+    if (isDragging) state.start();
+    else state.stop();
+  }, [isDragging]);
 
   function handleOnPointerUp(event: React.PointerEvent<HTMLDivElement> | null) {
     pointerStartRef.current = null;

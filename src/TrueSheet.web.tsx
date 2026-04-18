@@ -1,13 +1,5 @@
 /// <reference lib="dom" />
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { View, useColorScheme, useWindowDimensions } from 'react-native';
 
 import { Drawer } from './web/vaul';
@@ -65,52 +57,18 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const contentRef = useRef<HTMLDivElement>(null);
-  const rafIdRef = useRef<number | null>(null);
-  const lastPositionRef = useRef<number>(-1);
-
-  const stopPolling = useCallback(() => {
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-  }, []);
-
-  const pollPosition = useCallback(() => {
-    const el = contentRef.current;
-    if (el) {
-      const position = el.getBoundingClientRect().top;
-      if (position !== lastPositionRef.current) {
-        lastPositionRef.current = position;
-        onPositionChange?.({
-          nativeEvent: {
-            position,
-            index: 0,
-            detent: 1,
-            realtime: true,
-          },
-        } as PositionChangeEvent);
-      }
-    }
-    rafIdRef.current = requestAnimationFrame(pollPosition);
-  }, [onPositionChange]);
-
-  useEffect(() => {
-    if (isOpen && rafIdRef.current === null) {
-      pollPosition();
-    }
-  }, [isOpen, pollPosition]);
-
-  useEffect(() => stopPolling, [stopPolling]);
-
-  const handleAnimationEnd = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        stopPolling();
-        lastPositionRef.current = -1;
-      }
+  const handlePositionChange = useCallback(
+    (position: number) => {
+      onPositionChange?.({
+        nativeEvent: {
+          position,
+          index: 0,
+          detent: 1,
+          realtime: true,
+        },
+      } as PositionChangeEvent);
     },
-    [stopPolling]
+    [onPositionChange]
   );
 
   const handleOpenChange = useCallback(
@@ -181,13 +139,13 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     <Drawer.Root
       open={isOpen}
       onOpenChange={handleOpenChange}
-      onAnimationEnd={handleAnimationEnd}
+      onPositionChange={handlePositionChange}
       dismissible={dismissible}
       {...snapPointsProps}
     >
       <Drawer.Portal>
         <Drawer.Overlay style={overlayStyle} />
-        <Drawer.Content ref={contentRef} style={mergedContentStyle}>
+        <Drawer.Content style={mergedContentStyle}>
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
           <View style={style}>{children}</View>
