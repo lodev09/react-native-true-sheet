@@ -17,6 +17,7 @@ interface DrawerContextValue {
   snapPointsOffset: number[] | null;
   snapPoints?: (number | string)[] | null;
   activeSnapPointIndex?: number | null;
+  fadeFromIndex?: number;
   modal: boolean;
   shouldFade: boolean;
   activeSnapPoint?: number | string | null;

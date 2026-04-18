@@ -508,6 +508,25 @@ export function Root({
     onPositionChangeRef.current = onPositionChange;
   });
 
+  // Radix's DismissableLayer (modal) sets body pointer-events to "none" so the
+  // overlay traps clicks. When the active snap is below fadeFromIndex the
+  // overlay is fully transparent, and we want clicks to reach the content
+  // behind the drawer — so we restore body interactivity. DismissableLayer
+  // captures its DOM node via a ref-callback `setNode`, so its body write
+  // runs one render later than ours on initial open — re-assert on rAF so
+  // the final write is ours.
+  React.useEffect(() => {
+    if (!isOpen || !modal || !snapPoints || fadeFromIndex === undefined) return;
+    if (typeof activeSnapPointIndex !== 'number') return;
+    const isBelowFade = activeSnapPointIndex < fadeFromIndex;
+    const value = isBelowFade ? 'auto' : 'none';
+    document.body.style.pointerEvents = value;
+    const id = window.requestAnimationFrame(() => {
+      document.body.style.pointerEvents = value;
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [isOpen, modal, snapPoints, fadeFromIndex, activeSnapPointIndex]);
+
   React.useEffect(() => {
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -826,6 +845,7 @@ export function Root({
           modal,
           snapPointsOffset,
           activeSnapPointIndex,
+          fadeFromIndex,
           direction,
           shouldScaleBackground,
           setBackgroundColorOnScale,
@@ -844,9 +864,18 @@ export function Root({
 export const Overlay = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(function ({ ...rest }, ref) {
-  const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate } =
-    useDrawerContext();
+>(function ({ style, ...rest }, ref) {
+  const {
+    overlayRef,
+    snapPoints,
+    onRelease,
+    shouldFade,
+    isOpen,
+    modal,
+    shouldAnimate,
+    activeSnapPointIndex,
+    fadeFromIndex,
+  } = useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
   const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
@@ -868,6 +897,18 @@ export const Overlay = React.forwardRef<
     return null;
   }
 
+  // When the active snap is below fadeFromIndex, the overlay is fully
+  // transparent (CSS opacity: 0). Radix's DialogOverlayImpl sets inline
+  // `pointer-events: auto` which would still catch clicks on the invisible
+  // layer — drive this via React so it stays correct even before
+  // `snapToPoint` runs (Presence defers the drawer/overlay mount, leaving
+  // refs null on the first open effect pass).
+  const isBelowFade =
+    hasSnapPoints &&
+    fadeFromIndex !== undefined &&
+    typeof activeSnapPointIndex === 'number' &&
+    activeSnapPointIndex < fadeFromIndex;
+
   return (
     <DialogPrimitive.Overlay
       onMouseUp={onMouseUp}
@@ -878,6 +919,7 @@ export const Overlay = React.forwardRef<
       data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
       data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
       {...rest}
+      style={isBelowFade ? { ...style, pointerEvents: 'none' } : style}
     />
   );
 });
@@ -898,6 +940,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     keyboardIsOpen,
     snapPointsOffset,
     activeSnapPointIndex,
+    fadeFromIndex,
     modal,
     isOpen,
     isDragging,
@@ -909,6 +952,13 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     autoFocus,
     onPositionChangeRef,
   } = useDrawerContext();
+
+  const isBelowFade =
+    snapPoints !== undefined &&
+    snapPoints !== null &&
+    fadeFromIndex !== undefined &&
+    typeof activeSnapPointIndex === 'number' &&
+    activeSnapPointIndex < fadeFromIndex;
   // Needed to use transition instead of animations
   const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
   const composedRef = useComposedRefs(ref, drawerRef);
@@ -1087,7 +1137,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
       onPointerDownOutside={(e) => {
         onPointerDownOutside?.(e);
 
-        if (!modal || e.defaultPrevented) {
+        if (!modal || e.defaultPrevented || isBelowFade) {
           e.preventDefault();
           return;
         }
@@ -1097,7 +1147,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
         }
       }}
       onFocusOutside={(e) => {
-        if (!modal) {
+        if (!modal || isBelowFade) {
           e.preventDefault();
           return;
         }

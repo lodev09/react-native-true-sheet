@@ -152,11 +152,13 @@ export function useSnapPoints({
         set(overlayRef.current, {
           transition: `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
           opacity: '0',
+          pointerEvents: 'none',
         });
       } else {
         set(overlayRef.current, {
           transition: `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
           opacity: '1',
+          pointerEvents: 'auto',
         });
       }
 
