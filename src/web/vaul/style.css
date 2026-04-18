@@ -86,10 +86,6 @@
   transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-[data-vaul-overlay][data-vaul-snap-points='true'] {
-  opacity: 1;
-}
-
 [data-vaul-drawer]:not([data-vaul-custom-container='true'])::after {
   content: '';
   position: absolute;
@@ -129,13 +125,7 @@
   width: 200%;
 }
 
-[data-vaul-overlay][data-vaul-snap-points='true']:not([data-vaul-snap-points-overlay='true']):not(
-    [data-state='closed']
-  ) {
-  opacity: 0;
-}
-
-[data-vaul-overlay][data-vaul-snap-points-overlay='true'] {
+[data-vaul-overlay][data-vaul-snap-points='true'][data-vaul-delayed-snap-points='true'][data-vaul-snap-points-overlay='true'] {
   opacity: 1;
 }
 

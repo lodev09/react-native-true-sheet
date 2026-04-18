@@ -281,9 +281,18 @@ export function useSnapPoints({
       return null;
 
     // fadeFromIndex === 0 means every snap point is fully dimmed. Only the dismiss drag
-    // (toward close from the smallest detent) should fade the overlay out.
+    // (toward close from the smallest detent) should fade the overlay out, interpolating
+    // opacity by distance from the smallest snap to the fully-dismissed position.
     if (fadeFromIndex === 0) {
-      if (activeSnapPointIndex === 0 && !isDraggingDown) return null;
+      if (activeSnapPointIndex === 0 && !isDraggingDown) {
+        const activeOffset = snapPointsOffset[activeSnapPointIndex];
+        if (activeOffset === undefined) return 0;
+        const windowDim = isVertical(direction) ? window.innerHeight : window.innerWidth;
+        const dismissOffset =
+          direction === 'bottom' || direction === 'right' ? windowDim : -windowDim;
+        const dismissRange = Math.abs(dismissOffset - activeOffset);
+        return dismissRange > 0 ? Math.min(1, absDraggedDistance / dismissRange) : 0;
+      }
       return 0;
     }
 

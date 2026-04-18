@@ -832,10 +832,19 @@ export const Overlay = React.forwardRef<
     useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
+  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
   const onMouseUp = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => onRelease(event),
     [onRelease]
   );
+
+  React.useEffect(() => {
+    if (hasSnapPoints) {
+      window.requestAnimationFrame(() => {
+        setDelayedSnapPoints(true);
+      });
+    }
+  }, []);
 
   // Overlay is the component that is locking scroll, removing it will unlock the scroll without having to dig into Radix's Dialog library
   if (!modal) {
@@ -848,6 +857,7 @@ export const Overlay = React.forwardRef<
       ref={composedRef}
       data-vaul-overlay=""
       data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
+      data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
       data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
       data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
       {...rest}
