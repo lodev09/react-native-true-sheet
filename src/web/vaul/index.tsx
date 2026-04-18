@@ -486,6 +486,15 @@ export function Root({
     });
   }, []);
 
+  // Reset to the first snap point on every open so a prior session's active snap
+  // (kept in state by `useControllableState` after dismissal) doesn't leak into
+  // the next present. Skipped when `activeSnapPoint` is controlled externally.
+  React.useEffect(() => {
+    if (isOpen && snapPoints && activeSnapPointProp === undefined) {
+      setActiveSnapPoint(snapPoints[0]);
+    }
+  }, [isOpen]);
+
   React.useEffect(() => {
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -554,12 +563,6 @@ export function Root({
     if (!fromWithin) {
       setIsOpen(false);
     }
-
-    setTimeout(() => {
-      if (snapPoints) {
-        setActiveSnapPoint(snapPoints[0]);
-      }
-    }, TRANSITIONS.DURATION * 1000); // seconds to ms
   }
 
   function resetDrawer() {
