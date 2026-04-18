@@ -280,6 +280,13 @@ export function useSnapPoints({
     )
       return null;
 
+    // fadeFromIndex === 0 means every snap point is fully dimmed. Only the dismiss drag
+    // (toward close from the smallest detent) should fade the overlay out.
+    if (fadeFromIndex === 0) {
+      if (activeSnapPointIndex === 0 && !isDraggingDown) return null;
+      return 0;
+    }
+
     // If this is true we are dragging to a snap point that is supposed to have an overlay
     const isOverlaySnapPoint = activeSnapPointIndex === fadeFromIndex - 1;
     const isOverlaySnapPointOrHigher = activeSnapPointIndex >= fadeFromIndex;

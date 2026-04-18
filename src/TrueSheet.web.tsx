@@ -39,6 +39,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     grabber = true,
     grabberOptions,
     detents = [0.5, 1],
+    dimmedDetentIndex = 0,
     onPositionChange,
   } = props;
 
@@ -47,10 +48,12 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     [detents]
   );
 
-  const snapPoints = useMemo(
-    () => (numericDetents.length >= 2 ? numericDetents : undefined),
-    [numericDetents]
-  );
+  const snapPointsProps = useMemo<
+    { snapPoints: number[]; fadeFromIndex: number } | { snapPoints?: undefined }
+  >(() => {
+    if (numericDetents.length < 2) return {};
+    return { snapPoints: numericDetents, fadeFromIndex: dimmedDetentIndex };
+  }, [numericDetents, dimmedDetentIndex]);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
@@ -180,7 +183,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       onOpenChange={handleOpenChange}
       onAnimationEnd={handleAnimationEnd}
       dismissible={dismissible}
-      snapPoints={snapPoints}
+      {...snapPointsProps}
     >
       <Drawer.Portal>
         <Drawer.Overlay style={overlayStyle} />
