@@ -1,9 +1,8 @@
 import { createContext, type ReactNode, type RefObject } from 'react';
 
-import type { TrueSheetRefMethods } from './web/types';
-import type { TrueSheetStaticMethods } from './TrueSheetProvider';
+import type { TrueSheetMethods, TrueSheetStaticMethods } from './TrueSheet.types';
 
-type SheetRef = RefObject<TrueSheetRefMethods | null>;
+type SheetRef = RefObject<TrueSheetMethods | null>;
 
 interface SheetContextValue {
   // TODO: define shape

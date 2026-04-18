@@ -10,6 +10,8 @@ import {
 
 import type {
   TrueSheetProps,
+  TrueSheetMethods,
+  TrueSheetStaticMethods,
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
@@ -59,7 +61,10 @@ interface TrueSheetState {
   shouldRenderNativeView: boolean;
 }
 
-export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
+export class TrueSheet
+  extends PureComponent<TrueSheetProps, TrueSheetState>
+  implements TrueSheetMethods
+{
   displayName = 'TrueSheet';
 
   private readonly nativeRef: RefObject<NativeRef | null>;
@@ -547,6 +552,9 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     );
   }
 }
+
+// Compile-time check: `TrueSheet`'s static surface must satisfy `TrueSheetStaticMethods`.
+TrueSheet satisfies TrueSheetStaticMethods;
 
 const styles = StyleSheet.create({
   sheetView: {

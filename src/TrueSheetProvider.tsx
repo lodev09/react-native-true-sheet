@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react';
 
 import { TrueSheet } from './TrueSheet';
+import type { TrueSheetStaticMethods } from './TrueSheet.types';
 
-export type TrueSheetStaticMethods = Pick<
-  typeof TrueSheet,
-  'present' | 'dismiss' | 'dismissStack' | 'resize' | 'dismissAll'
->;
+export type { TrueSheetStaticMethods };
 
 export interface TrueSheetProviderProps {
   children: ReactNode;

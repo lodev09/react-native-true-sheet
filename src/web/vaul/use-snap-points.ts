@@ -16,6 +16,7 @@ export function useSnapPoints({
   direction = 'bottom',
   container,
   snapToSequentialPoint,
+  isOpen,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -27,6 +28,7 @@ export function useSnapPoints({
   direction?: DrawerDirection;
   container?: HTMLElement | null | undefined;
   snapToSequentialPoint?: boolean;
+  isOpen?: boolean;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -164,6 +166,7 @@ export function useSnapPoints({
   );
 
   React.useEffect(() => {
+    if (!isOpen) return;
     if (activeSnapPoint || activeSnapPointProp) {
       const newIndex =
         snapPoints?.findIndex(
@@ -173,7 +176,7 @@ export function useSnapPoints({
         snapToPoint(snapPointsOffset[newIndex] as number);
       }
     }
-  }, [activeSnapPoint, activeSnapPointProp, snapPoints, snapPointsOffset, snapToPoint]);
+  }, [isOpen, activeSnapPoint, activeSnapPointProp, snapPoints, snapPointsOffset, snapToPoint]);
 
   function onRelease({
     draggedDistance,

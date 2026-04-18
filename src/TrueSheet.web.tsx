@@ -1,10 +1,22 @@
 /// <reference lib="dom" />
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { View, useColorScheme, useWindowDimensions } from 'react-native';
 
 import { Drawer } from './web/vaul';
-import type { TrueSheetRefMethods } from './web/types';
-import type { PositionChangeEvent, TrueSheetProps } from './TrueSheet.types';
+import type {
+  PositionChangeEvent,
+  TrueSheetMethods,
+  TrueSheetProps,
+  TrueSheetStaticMethods,
+} from './TrueSheet.types';
 import { useRegisterSheet } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
@@ -18,7 +30,7 @@ import {
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
 
-const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
+const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
     children,
     name,
@@ -31,6 +43,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     grabber = true,
     grabberOptions,
     detents = [0.5, 1],
+    dimmed = true,
     dimmedDetentIndex = 0,
     onPositionChange,
   } = props;
@@ -56,6 +69,21 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(
+    () => numericDetents[0] ?? null
+  );
+
+  // Keep activeSnapPoint valid if detents change (e.g., prop updates).
+  useEffect(() => {
+    if (numericDetents.length === 0) return;
+    setActiveSnapPoint((current) =>
+      current != null && numericDetents.includes(current as number) ? current : numericDetents[0]!
+    );
+  }, [numericDetents]);
+
+  // Latest detents in a ref so methods can stay stable-identity.
+  const numericDetentsRef = useRef(numericDetents);
+  numericDetentsRef.current = numericDetents;
 
   const handlePositionChange = useCallback(
     (position: number) => {
@@ -80,15 +108,30 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
     [isOpen]
   );
 
-  const methods = useMemo<TrueSheetRefMethods>(
+  const methods = useMemo<TrueSheetMethods>(
     () => ({
-      present: async () => {
+      present: async (index = 0) => {
+        const detent = numericDetentsRef.current[index];
+        if (detent === undefined) {
+          throw new Error(
+            `TrueSheet: present index (${index}) is out of bounds. detents array has ${numericDetentsRef.current.length} item(s)`
+          );
+        }
+        setActiveSnapPoint(detent);
         setIsOpen(true);
       },
       dismiss: async () => {
         setIsOpen(false);
       },
-      resize: async () => {},
+      resize: async (index) => {
+        const detent = numericDetentsRef.current[index];
+        if (detent === undefined) {
+          throw new Error(
+            `TrueSheet: resize index (${index}) is out of bounds. detents array has ${numericDetentsRef.current.length} item(s)`
+          );
+        }
+        setActiveSnapPoint(detent);
+      },
       dismissStack: async () => {
         setIsOpen(false);
       },
@@ -98,7 +141,7 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
 
   useImperativeHandle(ref, () => methods, [methods]);
 
-  const methodsRef = useRef<TrueSheetRefMethods | null>(methods);
+  const methodsRef = useRef<TrueSheetMethods | null>(methods);
   useRegisterSheet(name, methodsRef);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
@@ -141,6 +184,9 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
       onOpenChange={handleOpenChange}
       onPositionChange={handlePositionChange}
       dismissible={dismissible}
+      modal={dimmed}
+      activeSnapPoint={activeSnapPoint}
+      setActiveSnapPoint={setActiveSnapPoint}
       {...snapPointsProps}
     >
       <Drawer.Portal>
@@ -176,28 +222,14 @@ const visuallyHiddenStyle: React.CSSProperties = {
 const STATIC_METHOD_ERROR =
   'Static methods are not supported on web. Use the useTrueSheet() hook instead.';
 
-interface TrueSheetStatic {
-  present: (name: string, index?: number) => Promise<void>;
-  dismiss: (name: string) => Promise<void>;
-  dismissStack: (name: string) => Promise<void>;
-  resize: (name: string, index: number) => Promise<void>;
-  dismissAll: () => Promise<void>;
-}
+export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStaticMethods;
 
-export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
+const rejectStatic = async (): Promise<never> => {
+  throw new Error(STATIC_METHOD_ERROR);
+};
 
-TrueSheet.present = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-TrueSheet.dismiss = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-TrueSheet.dismissStack = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-TrueSheet.resize = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-TrueSheet.dismissAll = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
+TrueSheet.present = rejectStatic;
+TrueSheet.dismiss = rejectStatic;
+TrueSheet.dismissStack = rejectStatic;
+TrueSheet.resize = rejectStatic;
+TrueSheet.dismissAll = rejectStatic;
