@@ -27,7 +27,9 @@ export function usePositionFixed({
   preventScrollRestoration: boolean;
   noBodyStyles: boolean;
 }) {
-  const [activeUrl, setActiveUrl] = React.useState(() => (typeof window !== 'undefined' ? window.location.href : ''));
+  const [activeUrl, setActiveUrl] = React.useState(() =>
+    typeof window !== 'undefined' ? window.location.href : ''
+  );
   const scrollPos = React.useRef(0);
 
   const setPositionFixed = React.useCallback(() => {
@@ -65,7 +67,7 @@ export function usePositionFixed({
               document.body.style.top = `${-(scrollPos.current + bottomBarHeight)}px`;
             }
           }),
-        300,
+        300
       );
     }
   }, [isOpen]);

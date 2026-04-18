@@ -35,13 +35,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: [
-      'node_modules/',
-      'lib/',
-      'docs/',
-      'jest.setup.js',
-      'example/**/.expo/',
-      'src/web/vaul/',
-    ],
+    ignores: ['node_modules/', 'lib/', 'docs/', 'jest.setup.js', 'example/**/.expo/'],
   },
 ]);

@@ -216,7 +216,8 @@ export function Root({
 
   const onSnapPointChange = React.useCallback((activeSnapPointIndex: number) => {
     // Change openTime ref when we reach the last snap point to prevent dragging for 500ms incase it's scrollable.
-    if (snapPoints && activeSnapPointIndex === snapPointsOffset.length - 1) openTime.current = new Date();
+    if (snapPoints && activeSnapPointIndex === snapPointsOffset.length - 1)
+      openTime.current = new Date();
   }, []);
 
   const {
@@ -243,7 +244,13 @@ export function Root({
 
   usePreventScroll({
     isDisabled:
-      !isOpen || isDragging || !modal || justReleased || !hasBeenOpened || !repositionInputs || !disablePreventScroll,
+      !isOpen ||
+      isDragging ||
+      !modal ||
+      justReleased ||
+      !hasBeenOpened ||
+      !repositionInputs ||
+      !disablePreventScroll,
   });
 
   const { restorePositionSetting } = usePositionFixed({
@@ -363,7 +370,8 @@ export function Root({
     if (isDragging) {
       const directionMultiplier = direction === 'bottom' || direction === 'right' ? 1 : -1;
       const draggedDistance =
-        (pointerStart.current - (isVertical(direction) ? event.pageY : event.pageX)) * directionMultiplier;
+        (pointerStart.current - (isVertical(direction) ? event.pageY : event.pageX)) *
+        directionMultiplier;
       const isDraggingInDirection = draggedDistance > 0;
 
       // Pre condition for disallowing dragging in the close direction.
@@ -376,11 +384,16 @@ export function Root({
       const absDraggedDistance = Math.abs(draggedDistance);
       const wrapper = document.querySelector('[data-vaul-drawer-wrapper]');
       const drawerDimension =
-        direction === 'bottom' || direction === 'top' ? drawerHeightRef.current : drawerWidthRef.current;
+        direction === 'bottom' || direction === 'top'
+          ? drawerHeightRef.current
+          : drawerWidthRef.current;
 
       // Calculate the percentage dragged, where 1 is the closed position
       let percentageDragged = absDraggedDistance / drawerDimension;
-      const snapPointPercentageDragged = getSnapPointsPercentageDragged(absDraggedDistance, isDraggingInDirection);
+      const snapPointPercentageDragged = getSnapPointsPercentageDragged(
+        absDraggedDistance,
+        isDraggingInDirection
+      );
 
       if (snapPointPercentageDragged !== null) {
         percentageDragged = snapPointPercentageDragged;
@@ -431,7 +444,7 @@ export function Root({
             opacity: `${opacityValue}`,
             transition: 'none',
           },
-          true,
+          true
         );
       }
 
@@ -451,7 +464,7 @@ export function Root({
               : `scale(${scaleValue}) translate3d(${translateValue}px, 0, 0)`,
             transition: 'none',
           },
-          true,
+          true
         );
       }
 
@@ -508,7 +521,8 @@ export function Root({
           let newDrawerHeight = height;
 
           if (height > visualViewportHeight) {
-            newDrawerHeight = visualViewportHeight - (isTallEnough ? offsetFromTop : WINDOW_TOP_OFFSET);
+            newDrawerHeight =
+              visualViewportHeight - (isTallEnough ? offsetFromTop : WINDOW_TOP_OFFSET);
           }
           // When fixed, don't move the drawer upwards if there's space, but rather only change it's height so it's fully scrollable when the keyboard is open
           if (fixed) {
@@ -583,7 +597,7 @@ export function Root({
           transitionDuration: `${TRANSITIONS.DURATION}s`,
           transitionTimingFunction: `cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
         },
-        true,
+        true
       );
     }
   }
@@ -606,7 +620,8 @@ export function Root({
     dragEndTime.current = new Date();
     const swipeAmount = getTranslate(drawerRef.current, direction);
 
-    if (!event || !shouldDrag(event.target, false) || !swipeAmount || Number.isNaN(swipeAmount)) return;
+    if (!event || !shouldDrag(event.target, false) || !swipeAmount || Number.isNaN(swipeAmount))
+      return;
 
     if (dragStartTime.current === null) return;
 
@@ -648,11 +663,20 @@ export function Root({
       return;
     }
 
-    const visibleDrawerHeight = Math.min(drawerRef.current.getBoundingClientRect().height ?? 0, window.innerHeight);
-    const visibleDrawerWidth = Math.min(drawerRef.current.getBoundingClientRect().width ?? 0, window.innerWidth);
+    const visibleDrawerHeight = Math.min(
+      drawerRef.current.getBoundingClientRect().height ?? 0,
+      window.innerHeight
+    );
+    const visibleDrawerWidth = Math.min(
+      drawerRef.current.getBoundingClientRect().width ?? 0,
+      window.innerWidth
+    );
 
     const isHorizontalSwipe = direction === 'left' || direction === 'right';
-    if (Math.abs(swipeAmount) >= (isHorizontalSwipe ? visibleDrawerWidth : visibleDrawerHeight) * closeThreshold) {
+    if (
+      Math.abs(swipeAmount) >=
+      (isHorizontalSwipe ? visibleDrawerWidth : visibleDrawerHeight) * closeThreshold
+    ) {
       closeDrawer();
       onReleaseProp?.(event, false);
       return;
@@ -800,31 +824,36 @@ export function Root({
   );
 }
 
-export const Overlay = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>>(
-  function ({ ...rest }, ref) {
-    const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate } = useDrawerContext();
-    const composedRef = useComposedRefs(ref, overlayRef);
-    const hasSnapPoints = snapPoints && snapPoints.length > 0;
-    const onMouseUp = React.useCallback((event: React.PointerEvent<HTMLDivElement>) => onRelease(event), [onRelease]);
+export const Overlay = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(function ({ ...rest }, ref) {
+  const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate } =
+    useDrawerContext();
+  const composedRef = useComposedRefs(ref, overlayRef);
+  const hasSnapPoints = snapPoints && snapPoints.length > 0;
+  const onMouseUp = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => onRelease(event),
+    [onRelease]
+  );
 
-    // Overlay is the component that is locking scroll, removing it will unlock the scroll without having to dig into Radix's Dialog library
-    if (!modal) {
-      return null;
-    }
+  // Overlay is the component that is locking scroll, removing it will unlock the scroll without having to dig into Radix's Dialog library
+  if (!modal) {
+    return null;
+  }
 
-    return (
-      <DialogPrimitive.Overlay
-        onMouseUp={onMouseUp}
-        ref={composedRef}
-        data-vaul-overlay=""
-        data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
-        data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
-        data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
-        {...rest}
-      />
-    );
-  },
-);
+  return (
+    <DialogPrimitive.Overlay
+      onMouseUp={onMouseUp}
+      ref={composedRef}
+      data-vaul-overlay=""
+      data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
+      data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
+      data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
+      {...rest}
+    />
+  );
+});
 
 Overlay.displayName = 'Drawer.Overlay';
 
@@ -832,7 +861,7 @@ export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive
 
 export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
   { onPointerDownOutside, style, onOpenAutoFocus, ...rest },
-  ref,
+  ref
 ) {
   const {
     drawerRef,
@@ -860,7 +889,11 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
   useScaleBackground();
 
-  const isDeltaInDirection = (delta: { x: number; y: number }, direction: DrawerDirection, threshold = 0) => {
+  const isDeltaInDirection = (
+    delta: { x: number; y: number },
+    direction: DrawerDirection,
+    threshold = 0
+  ) => {
     if (wasBeyondThePointRef.current) return true;
 
     const deltaY = Math.abs(delta.y);
@@ -960,7 +993,10 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
 
         const isAllowedToSwipe = isDeltaInDirection(delta, direction, swipeStartThreshold);
         if (isAllowedToSwipe) onDrag(event);
-        else if (Math.abs(xPosition) > swipeStartThreshold || Math.abs(yPosition) > swipeStartThreshold) {
+        else if (
+          Math.abs(xPosition) > swipeStartThreshold ||
+          Math.abs(yPosition) > swipeStartThreshold
+        ) {
           pointerStartRef.current = null;
         }
       }}
@@ -995,7 +1031,7 @@ const DOUBLE_TAP_TIMEOUT = 120;
 
 export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(function (
   { preventCycle = false, children, ...rest },
-  ref,
+  ref
 ) {
   const {
     closeDrawer,

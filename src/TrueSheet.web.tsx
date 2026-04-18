@@ -143,26 +143,18 @@ const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((prop
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
+      top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
-      ...(snapPoints ? { top: 0 } : { height: `${(numericDetents[0] ?? 0.5) * 100}vh` }),
       backgroundColor: backgroundColor as string,
       maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
       marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
       marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     }),
-    [
-      snapPoints,
-      numericDetents,
-      backgroundColor,
-      isLandscapeOrTablet,
-      maxContentWidth,
-      anchor,
-      anchorOffset,
-    ]
+    [numericDetents, backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
   );
 
   const defaultGrabberColor =

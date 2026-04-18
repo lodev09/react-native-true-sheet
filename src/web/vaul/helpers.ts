@@ -20,7 +20,11 @@ export function isInView(el: HTMLElement): boolean {
   );
 }
 
-export function set(el: Element | HTMLElement | null | undefined, styles: Style, ignoreCache = false) {
+export function set(
+  el: Element | HTMLElement | null | undefined,
+  styles: Style,
+  ignoreCache = false
+) {
   if (!el || !(el instanceof HTMLElement)) return;
   let originalStyles: Style = {};
 
@@ -91,7 +95,10 @@ export function dampenValue(v: number) {
   return 8 * (Math.log(v + 1) - 2);
 }
 
-export function assignStyle(element: HTMLElement | null | undefined, style: Partial<CSSStyleDeclaration>) {
+export function assignStyle(
+  element: HTMLElement | null | undefined,
+  style: Partial<CSSStyleDeclaration>
+) {
   if (!element) return () => {};
 
   const prevStyle = element.style.cssText;

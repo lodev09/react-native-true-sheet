@@ -21,7 +21,10 @@ function useCallbackRef<T extends (...args: any[]) => any>(callback: T | undefin
   return React.useMemo(() => ((...args) => callbackRef.current?.(...args)) as T, []);
 }
 
-function useUncontrolledState<T>({ defaultProp, onChange }: Omit<UseControllableStateParams<T>, 'prop'>) {
+function useUncontrolledState<T>({
+  defaultProp,
+  onChange,
+}: Omit<UseControllableStateParams<T>, 'prop'>) {
   const uncontrolledState = React.useState<T | undefined>(defaultProp);
   const [value] = uncontrolledState;
   const prevValueRef = React.useRef(value);
@@ -36,7 +39,11 @@ function useUncontrolledState<T>({ defaultProp, onChange }: Omit<UseControllable
 
   return uncontrolledState;
 }
-export function useControllableState<T>({ prop, defaultProp, onChange = () => {} }: UseControllableStateParams<T>) {
+export function useControllableState<T>({
+  prop,
+  defaultProp,
+  onChange = () => {},
+}: UseControllableStateParams<T>) {
   const [uncontrolledProp, setUncontrolledProp] = useUncontrolledState({ defaultProp, onChange });
   const isControlled = prop !== undefined;
   const value = isControlled ? prop : uncontrolledProp;
@@ -52,7 +59,7 @@ export function useControllableState<T>({ prop, defaultProp, onChange = () => {}
         setUncontrolledProp(nextValue);
       }
     },
-    [isControlled, prop, setUncontrolledProp, handleChange],
+    [isControlled, prop, setUncontrolledProp, handleChange]
   );
 
   return [value, setValue] as const;

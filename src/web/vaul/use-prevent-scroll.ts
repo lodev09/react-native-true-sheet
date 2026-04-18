@@ -5,7 +5,8 @@ import { isIOS } from './browser';
 
 const KEYBOARD_BUFFER = 24;
 
-export const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+export const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 interface PreventScrollOptions {
   /** Whether the scroll lock is disabled. */
@@ -215,7 +216,11 @@ function preventScrollMobileSafari() {
   let scrollY = window.pageYOffset;
 
   let restoreStyles = chain(
-    setStyle(document.documentElement, 'paddingRight', `${window.innerWidth - document.documentElement.clientWidth}px`),
+    setStyle(
+      document.documentElement,
+      'paddingRight',
+      `${window.innerWidth - document.documentElement.clientWidth}px`
+    )
     // setStyle(document.documentElement, 'overflow', 'hidden'),
     // setStyle(document.body, 'marginTop', `-${scrollY}px`),
   );
@@ -228,7 +233,7 @@ function preventScrollMobileSafari() {
     addEvent(document, 'touchmove', onTouchMove, { passive: false, capture: true }),
     addEvent(document, 'touchend', onTouchEnd, { passive: false, capture: true }),
     addEvent(document, 'focus', onFocus, true),
-    addEvent(window, 'scroll', onWindowScroll),
+    addEvent(window, 'scroll', onWindowScroll)
   );
 
   return () => {
@@ -258,7 +263,7 @@ function addEvent<K extends keyof GlobalEventHandlersEventMap>(
   target: EventTarget,
   event: K,
   handler: (this: Document, ev: GlobalEventHandlersEventMap[K]) => any,
-  options?: boolean | AddEventListenerOptions,
+  options?: boolean | AddEventListenerOptions
 ) {
   // @ts-ignore
   target.addEventListener(event, handler, options);
@@ -274,7 +279,11 @@ function scrollIntoView(target: Element) {
   while (target && target !== root) {
     // Find the parent scrollable element and adjust the scroll position if the target is not already in view.
     let scrollable = getScrollParent(target);
-    if (scrollable !== document.documentElement && scrollable !== document.body && scrollable !== target) {
+    if (
+      scrollable !== document.documentElement &&
+      scrollable !== document.body &&
+      scrollable !== target
+    ) {
       let scrollableTop = scrollable.getBoundingClientRect().top;
       let targetTop = target.getBoundingClientRect().top;
       let targetBottom = target.getBoundingClientRect().bottom;
