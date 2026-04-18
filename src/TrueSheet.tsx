@@ -250,10 +250,6 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
     return TrueSheetModule?.dismissAll(animated);
   }
 
-  static setWebRenderer(_renderer: unknown) {
-    // No-op on native
-  }
-
   private registerInstance(): void {
     if (this.props.name) {
       TrueSheet.instances[this.props.name] = this;

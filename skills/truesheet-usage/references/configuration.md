@@ -123,7 +123,7 @@ Every TrueSheet prop with type, default value, and platform support.
 
 **`ScrollEdgeEffect`:** `'automatic'` | `'hard'` | `'soft'` | `'hidden'` (default: `'hidden'`)
 
-**Web scrolling:** Use `BottomSheetScrollView` from `@gorhom/bottom-sheet` instead of the `scrollable` prop.
+**Web scrolling:** The `scrollable` prop is currently native-only. On web, wrap content in a standard scrollable container.
 
 ## Layout and positioning
 
@@ -147,6 +147,3 @@ Every TrueSheet prop with type, default value, and platform support.
 |------|------|---------|-----------|-------------|
 | `detached` | `boolean` | — | 🌐 | Render as a floating card instead of bottom-attached |
 | `detachedOffset` | `number` | `16` | 🌐 | Gap from bottom edge for detached sheets |
-| `stackBehavior` | `StackBehavior` | `'switch'` | 🌐 | How multiple sheets interact |
-
-**`StackBehavior`:** `'push'` (stack on top) | `'switch'` (minimize current, default) | `'replace'` (dismiss current) | `'none'`

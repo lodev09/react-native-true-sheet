@@ -8,7 +8,6 @@ import { useReanimatedTrueSheet } from './ReanimatedTrueSheetProvider';
 interface ReanimatedTrueSheetProps extends TrueSheetProps {
   /**
    * Callback for position changes.
-   * On web, this is called with the position data from @gorhom/bottom-sheet.
    *
    * @see {@link TrueSheetProps.onPositionChange}
    */

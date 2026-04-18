@@ -2,3 +2,4 @@ lib
 build
 docs/build
 docs/.docusaurus
+src/web/vaul

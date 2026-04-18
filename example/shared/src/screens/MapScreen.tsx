@@ -118,7 +118,7 @@ const MapScreenInner = ({
       />
       <ReanimatedTrueSheet
         name="main"
-        detents={[minHeight / height, 'auto', 1]}
+        detents={[minHeight / height, 0.5, 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         anchor={anchorLeft ? 'left' : 'center'}

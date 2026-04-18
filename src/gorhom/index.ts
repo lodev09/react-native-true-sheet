@@ -1,1 +1,0 @@
-export { GorhomRenderer } from './GorhomSheet';

@@ -4,9 +4,7 @@
     "paths": {
       "@lodev09/react-native-true-sheet": ["./src/index"],
       "@lodev09/react-native-true-sheet/reanimated": ["./src/reanimated/index"],
-      "@lodev09/react-native-true-sheet/navigation": ["./src/navigation/index"],
-      "@lodev09/react-native-true-sheet/gorhom": ["./src/gorhom/index"],
-      "@lodev09/react-native-true-sheet/vaul": ["./src/vaul/index"]
+      "@lodev09/react-native-true-sheet/navigation": ["./src/navigation/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
