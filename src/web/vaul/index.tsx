@@ -516,7 +516,14 @@ export function Root({
   // runs one render later than ours on initial open — re-assert on rAF so
   // the final write is ours.
   React.useEffect(() => {
-    if (!isOpen || !modal || !snapPoints || fadeFromIndex === undefined) return;
+    if (!modal || !snapPoints || fadeFromIndex === undefined) return;
+    // On close, restore body interactivity. `useControllableState.onChange`
+    // only fires for internal `setIsOpen` calls — when the parent flips the
+    // `open` prop imperatively, the reset at line ~201 never runs.
+    if (!isOpen) {
+      document.body.style.pointerEvents = 'auto';
+      return;
+    }
     if (typeof activeSnapPointIndex !== 'number') return;
     const isBelowFade = activeSnapPointIndex < fadeFromIndex;
     const value = isBelowFade ? 'auto' : 'none';
