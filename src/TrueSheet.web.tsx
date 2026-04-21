@@ -18,7 +18,7 @@ import type {
   TrueSheetProps,
   TrueSheetStaticMethods,
 } from './TrueSheet.types';
-import { useRegisterSheet } from './TrueSheetProvider.web';
+import { useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
@@ -87,9 +87,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const handleSetActiveSnapPoint = useCallback((snapPoint: number | string | null) => {
     setActiveSnapPoint(
-      snapPoint == null ? null : typeof snapPoint === 'number' || snapPoint === 'auto'
-        ? (snapPoint as SheetDetent)
-        : null
+      snapPoint == null
+        ? null
+        : typeof snapPoint === 'number' || snapPoint === 'auto'
+          ? (snapPoint as SheetDetent)
+          : null
     );
   }, []);
 
@@ -116,6 +118,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     [isOpen]
   );
 
+  const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
+
   const methods = useMemo<TrueSheetMethods>(
     () => ({
       present: async (index = 0) => {
@@ -140,8 +144,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         }
         setActiveSnapPoint(detent);
       },
-      dismissStack: async () => {
-        setIsOpen(false);
+      dismissStack: async (animated) => {
+        await dismissAboveRef.current(animated);
       },
     }),
     []
@@ -151,6 +155,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const methodsRef = useRef<TrueSheetMethods | null>(methods);
   useRegisterSheet(name, methodsRef);
+
+  const drawerContentRef = useRef<HTMLDivElement | null>(null);
+
+  const { isNested, dismissAbove } = useSheetStack(methodsRef, drawerContentRef, isOpen);
+  dismissAboveRef.current = dismissAbove;
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -193,13 +202,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onPositionChange={handlePositionChange}
       dismissible={dismissible}
       modal={dimmed}
+      nested={isNested}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}
     >
       <Drawer.Portal>
         <Drawer.Overlay style={overlayStyle} />
-        <Drawer.Content style={mergedContentStyle}>
+        <Drawer.Content ref={drawerContentRef} style={mergedContentStyle}>
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
           <View style={style}>{children}</View>
