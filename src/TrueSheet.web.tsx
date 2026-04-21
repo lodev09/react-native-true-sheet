@@ -159,41 +159,45 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
 
-  const { isNested, dismissAbove, childEntry } = useSheetStack(
+  const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
     drawerContentRef,
     isOpen
   );
   dismissAboveRef.current = dismissAbove;
 
-  // Mirror Android: when a child sheet is presented, translate the parent down
-  // so its top aligns with the child's top, producing a stacked appearance.
+  // Mirror Android: translate this sheet down to match the deepest descendant's
+  // top so the whole stack visually aligns. Cascades because every ancestor
+  // re-runs whenever the stack (and thus its descendants) changes.
   useEffect(() => {
     const parent = drawerContentRef.current;
     if (!parent) return;
 
     const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
 
-    if (!childEntry) {
+    if (descendants.length === 0) {
       parent.style.transition = transition;
       parent.style.transform = '';
       return;
     }
 
     const raf = requestAnimationFrame(() => {
-      const child = childEntry.nodeRef.current;
-      if (!child || !parent) return;
-
-      const childSnap = parseFloat(child.style.getPropertyValue('--snap-point-height')) || 0;
+      if (!parent) return;
       const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
-      const targetY = Math.max(parentSnap, childSnap);
+      let targetY = parentSnap;
+      for (const d of descendants) {
+        const node = d.nodeRef.current;
+        if (!node) continue;
+        const snap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+        if (snap > targetY) targetY = snap;
+      }
 
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
     });
 
     return () => cancelAnimationFrame(raf);
-  }, [childEntry, activeSnapPoint]);
+  }, [descendants, activeSnapPoint]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({

@@ -157,7 +157,10 @@ export function useSheetStack(ref: SheetRef, nodeRef: NodeRef, isOpen: boolean) 
   const stack = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const stackIndex = stack.findIndex((e) => e.ref === ref);
   const isNested = stackIndex > 0;
-  const childEntry = stackIndex < 0 ? null : (stack[stackIndex + 1] ?? null);
+  const descendants = useMemo<readonly StackEntry[]>(
+    () => (stackIndex < 0 ? EMPTY_STACK : stack.slice(stackIndex + 1)),
+    [stack, stackIndex]
+  );
 
   const dismissAbove = useCallback(
     async (animated?: boolean) => {
@@ -173,5 +176,5 @@ export function useSheetStack(ref: SheetRef, nodeRef: NodeRef, isOpen: boolean) 
     [ctx, ref]
   );
 
-  return { childEntry, isNested, dismissAbove };
+  return { descendants, isNested, dismissAbove };
 }
