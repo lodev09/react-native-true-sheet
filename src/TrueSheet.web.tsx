@@ -11,6 +11,7 @@ import {
 import { View, useColorScheme, useWindowDimensions } from 'react-native';
 
 import { Drawer } from './web/vaul';
+import { TRANSITIONS } from './web/vaul/constants';
 import type {
   PositionChangeEvent,
   SheetDetent,
@@ -158,8 +159,41 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
 
-  const { isNested, dismissAbove } = useSheetStack(methodsRef, drawerContentRef, isOpen);
+  const { isNested, dismissAbove, childEntry } = useSheetStack(
+    methodsRef,
+    drawerContentRef,
+    isOpen
+  );
   dismissAboveRef.current = dismissAbove;
+
+  // Mirror Android: when a child sheet is presented, translate the parent down
+  // so its top aligns with the child's top, producing a stacked appearance.
+  useEffect(() => {
+    const parent = drawerContentRef.current;
+    if (!parent) return;
+
+    const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+
+    if (!childEntry) {
+      parent.style.transition = transition;
+      parent.style.transform = '';
+      return;
+    }
+
+    const raf = requestAnimationFrame(() => {
+      const child = childEntry.nodeRef.current;
+      if (!child || !parent) return;
+
+      const childSnap = parseFloat(child.style.getPropertyValue('--snap-point-height')) || 0;
+      const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      const targetY = Math.max(parentSnap, childSnap);
+
+      parent.style.transition = transition;
+      parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [childEntry, activeSnapPoint]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
