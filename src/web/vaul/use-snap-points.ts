@@ -17,6 +17,7 @@ export function useSnapPoints({
   container,
   snapToSequentialPoint,
   isOpen,
+  contentHeight,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -29,6 +30,7 @@ export function useSnapPoints({
   container?: HTMLElement | null | undefined;
   snapToSequentialPoint?: boolean;
   isOpen?: boolean;
+  contentHeight?: number;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -87,18 +89,25 @@ export function useSnapPoints({
 
     return (
       snapPoints?.map((snapPoint) => {
-        const isPx = typeof snapPoint === 'string';
+        // 'auto' resolves to measured content height. Falls back to half the
+        // container so the initial snap is close to final before ResizeObserver
+        // reports a real measurement.
+        const resolved =
+          snapPoint === 'auto'
+            ? `${contentHeight && contentHeight > 0 ? contentHeight : containerSize.height / 2}px`
+            : snapPoint;
+        const isPx = typeof resolved === 'string';
         let snapPointAsNumber = 0;
 
         if (isPx) {
-          snapPointAsNumber = parseInt(snapPoint, 10);
+          snapPointAsNumber = parseInt(resolved, 10);
         }
 
         if (isVertical(direction)) {
           const height = isPx
             ? snapPointAsNumber
             : windowDimensions
-              ? snapPoint * containerSize.height
+              ? resolved * containerSize.height
               : 0;
 
           if (windowDimensions) {
@@ -112,7 +121,7 @@ export function useSnapPoints({
         const width = isPx
           ? snapPointAsNumber
           : windowDimensions
-            ? snapPoint * containerSize.width
+            ? resolved * containerSize.width
             : 0;
 
         if (windowDimensions) {
@@ -122,7 +131,7 @@ export function useSnapPoints({
         return width;
       }) ?? []
     );
-  }, [snapPoints, windowDimensions, container]);
+  }, [snapPoints, windowDimensions, container, contentHeight]);
 
   const activeSnapPointOffset = React.useMemo(
     () => (activeSnapPointIndex !== null ? snapPointsOffset?.[activeSnapPointIndex] : null),

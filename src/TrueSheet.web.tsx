@@ -13,6 +13,7 @@ import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import { Drawer } from './web/vaul';
 import type {
   PositionChangeEvent,
+  SheetDetent,
   TrueSheetMethods,
   TrueSheetProps,
   TrueSheetStaticMethods,
@@ -48,17 +49,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onPositionChange,
   } = props;
 
-  const numericDetents = useMemo(
-    () => detents.filter((d): d is number => typeof d === 'number'),
+  const validDetents = useMemo(
+    () => detents.filter((d): d is SheetDetent => typeof d === 'number' || d === 'auto'),
     [detents]
   );
 
   const snapPointsProps = useMemo<
-    { snapPoints: number[]; fadeFromIndex: number } | { snapPoints?: undefined }
+    { snapPoints: SheetDetent[]; fadeFromIndex: number } | { snapPoints?: undefined }
   >(() => {
-    if (numericDetents.length < 2) return {};
-    return { snapPoints: numericDetents, fadeFromIndex: dimmedDetentIndex };
-  }, [numericDetents, dimmedDetentIndex]);
+    if (validDetents.length < 2) return {};
+    return { snapPoints: validDetents, fadeFromIndex: dimmedDetentIndex };
+  }, [validDetents, dimmedDetentIndex]);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
@@ -69,21 +70,28 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(
-    () => numericDetents[0] ?? null
+  const [activeSnapPoint, setActiveSnapPoint] = useState<SheetDetent | null>(
+    () => validDetents[0] ?? null
   );
 
   // Keep activeSnapPoint valid if detents change (e.g., prop updates).
   useEffect(() => {
-    if (numericDetents.length === 0) return;
+    if (validDetents.length === 0) return;
     setActiveSnapPoint((current) =>
-      current != null && numericDetents.includes(current as number) ? current : numericDetents[0]!
+      current != null && validDetents.includes(current) ? current : validDetents[0]!
     );
-  }, [numericDetents]);
+  }, [validDetents]);
 
-  // Latest detents in a ref so methods can stay stable-identity.
-  const numericDetentsRef = useRef(numericDetents);
-  numericDetentsRef.current = numericDetents;
+  const validDetentsRef = useRef(validDetents);
+  validDetentsRef.current = validDetents;
+
+  const handleSetActiveSnapPoint = useCallback((snapPoint: number | string | null) => {
+    setActiveSnapPoint(
+      snapPoint == null ? null : typeof snapPoint === 'number' || snapPoint === 'auto'
+        ? (snapPoint as SheetDetent)
+        : null
+    );
+  }, []);
 
   const handlePositionChange = useCallback(
     (position: number) => {
@@ -111,10 +119,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const methods = useMemo<TrueSheetMethods>(
     () => ({
       present: async (index = 0) => {
-        const detent = numericDetentsRef.current[index];
+        const detent = validDetentsRef.current[index];
         if (detent === undefined) {
           throw new Error(
-            `TrueSheet: present index (${index}) is out of bounds. detents array has ${numericDetentsRef.current.length} item(s)`
+            `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
           );
         }
         setActiveSnapPoint(detent);
@@ -124,10 +132,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         setIsOpen(false);
       },
       resize: async (index) => {
-        const detent = numericDetentsRef.current[index];
+        const detent = validDetentsRef.current[index];
         if (detent === undefined) {
           throw new Error(
-            `TrueSheet: resize index (${index}) is out of bounds. detents array has ${numericDetentsRef.current.length} item(s)`
+            `TrueSheet: resize index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
           );
         }
         setActiveSnapPoint(detent);
@@ -158,7 +166,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
       marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     }),
-    [numericDetents, backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
+    [backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
   );
 
   const defaultGrabberColor =
@@ -186,7 +194,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       dismissible={dismissible}
       modal={dimmed}
       activeSnapPoint={activeSnapPoint}
-      setActiveSnapPoint={setActiveSnapPoint}
+      setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}
     >
       <Drawer.Portal>

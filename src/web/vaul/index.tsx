@@ -220,6 +220,7 @@ export function Root({
   const drawerHeightRef = React.useRef(drawerRef.current?.getBoundingClientRect().height || 0);
   const drawerWidthRef = React.useRef(drawerRef.current?.getBoundingClientRect().width || 0);
   const initialDrawerHeight = React.useRef(0);
+  const [contentHeight, setContentHeight] = React.useState(0);
 
   const onSnapPointChange = React.useCallback((activeSnapPointIndex: number) => {
     // Change openTime ref when we reach the last snap point to prevent dragging for 500ms incase it's scrollable.
@@ -248,6 +249,7 @@ export function Root({
     container,
     snapToSequentialPoint,
     isOpen,
+    contentHeight,
   });
 
   usePreventScroll({
@@ -860,6 +862,7 @@ export function Root({
           container,
           autoFocus,
           onPositionChangeRef,
+          setContentHeight,
         }}
       >
         {children}
@@ -936,7 +939,7 @@ Overlay.displayName = 'Drawer.Overlay';
 export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
 
 export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
-  { onPointerDownOutside, style, onOpenAutoFocus, ...rest },
+  { onPointerDownOutside, style, onOpenAutoFocus, children, ...rest },
   ref
 ) {
   const {
@@ -958,7 +961,33 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     shouldAnimate,
     autoFocus,
     onPositionChangeRef,
+    setContentHeight,
   } = useDrawerContext();
+  const hasAutoSnapPoint = React.useMemo(
+    () => !!snapPoints?.some((p) => p === 'auto'),
+    [snapPoints]
+  );
+
+  // When 'auto' is used as a snap point, we need the natural content height.
+  // The drawer itself may be styled to a fixed viewport height, so we measure
+  // an inner wrapper instead. Ref callback starts the observer as soon as the
+  // node mounts (Radix Presence defers the portal mount past useEffect).
+  const autoRoRef = React.useRef<ResizeObserver | null>(null);
+  const setAutoSizeNode = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      autoRoRef.current?.disconnect();
+      if (!node || !hasAutoSnapPoint) {
+        autoRoRef.current = null;
+        return;
+      }
+      const measure = () => setContentHeight(node.offsetHeight);
+      measure();
+      const ro = new ResizeObserver(measure);
+      ro.observe(node);
+      autoRoRef.current = ro;
+    },
+    [hasAutoSnapPoint, setContentHeight]
+  );
 
   const isBelowFade =
     snapPoints !== undefined &&
@@ -1195,11 +1224,25 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
           handleOnPointerUp(lastKnownPointerEventRef.current);
         }
       }}
-    />
+    >
+      {hasAutoSnapPoint ? (
+        <div ref={setAutoSizeNode} data-vaul-auto-size-wrapper="" style={autoSizeWrapperStyle}>
+          {children}
+        </div>
+      ) : (
+        children
+      )}
+    </DialogPrimitive.Content>
   );
 });
 
 Content.displayName = 'Drawer.Content';
+
+// `flow-root` establishes a new block formatting context so the first child's
+// margin-top (e.g. a grabber) stays inside the wrapper instead of collapsing
+// out — otherwise `offsetHeight` under-reports and the drawer positions the
+// wrapper below where the content actually ends.
+const autoSizeWrapperStyle: React.CSSProperties = { display: 'flow-root' };
 
 export type HandleProps = React.ComponentPropsWithoutRef<'div'> & {
   preventCycle?: boolean;
