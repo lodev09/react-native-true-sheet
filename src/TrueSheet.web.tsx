@@ -19,7 +19,11 @@ import type {
   TrueSheetProps,
   TrueSheetStaticMethods,
 } from './TrueSheet.types';
-import { useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
+import {
+  usePortalContainer,
+  useRegisterSheet,
+  useSheetStack,
+} from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
@@ -47,6 +51,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     detents = [0.5, 1],
     dimmed = true,
     dimmedDetentIndex = 0,
+    initialDetentIndex = -1,
     onPositionChange,
   } = props;
 
@@ -70,9 +75,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     backgroundColorProp ??
     (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
+  const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const [activeSnapPoint, setActiveSnapPoint] = useState<SheetDetent | null>(
-    () => validDetents[0] ?? null
+    () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
   );
 
   // Keep activeSnapPoint valid if detents change (e.g., prop updates).
@@ -117,6 +123,21 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       }
     },
     [isOpen]
+  );
+
+  const portalContainer = usePortalContainer();
+
+  const handlePointerDownOutside = useCallback(
+    (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      // Pointer down that landed outside this sheet's portal container (e.g.,
+      // in another screen's tree when navigating) should not close the drawer.
+      if (portalContainer && !portalContainer.contains(target)) {
+        e.preventDefault();
+      }
+    },
+    [portalContainer]
   );
 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
@@ -245,9 +266,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}
     >
-      <Drawer.Portal>
+      <Drawer.Portal container={portalContainer ?? undefined}>
         <Drawer.Overlay style={overlayStyle} />
-        <Drawer.Content ref={drawerContentRef} style={mergedContentStyle}>
+        <Drawer.Content
+          ref={drawerContentRef}
+          style={mergedContentStyle}
+          onPointerDownOutside={handlePointerDownOutside}
+        >
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
           <View style={style}>{children}</View>

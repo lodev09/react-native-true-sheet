@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -27,6 +28,7 @@ interface SheetContextValue {
   popOpen: (entry: StackEntry) => void;
   subscribeStack: (listener: () => void) => () => void;
   getStackSnapshot: () => readonly StackEntry[];
+  portalContainer: HTMLElement | null;
 }
 
 const SheetContext = createContext<SheetContextValue | null>(null);
@@ -44,6 +46,26 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   const namedSheetsRef = useRef<Map<string, SheetRef>>(new Map());
   const stackRef = useRef<readonly StackEntry[]>(EMPTY_STACK);
   const listenersRef = useRef<Set<() => void>>(new Set());
+
+  // Stable portal container created once. Attached to an anchor div rendered
+  // in this provider's tree so the sheets unmount cleanly with the provider
+  // (e.g., when a screen-scoped provider unmounts on navigation).
+  const portalContainer = useMemo<HTMLDivElement | null>(
+    () => (typeof document !== 'undefined' ? document.createElement('div') : null),
+    []
+  );
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor || !portalContainer) return;
+    anchor.appendChild(portalContainer);
+    return () => {
+      if (portalContainer.parentNode) {
+        portalContainer.parentNode.removeChild(portalContainer);
+      }
+    };
+  }, [portalContainer]);
 
   const value = useMemo<SheetContextValue>(() => {
     const notify = () => listenersRef.current.forEach((listener) => listener());
@@ -83,10 +105,21 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
         };
       },
       getStackSnapshot: () => stackRef.current,
+      portalContainer,
     };
-  }, []);
+  }, [portalContainer]);
 
-  return <SheetContext.Provider value={value}>{children}</SheetContext.Provider>;
+  return (
+    <SheetContext.Provider value={value}>
+      {children}
+      <div ref={anchorRef} />
+    </SheetContext.Provider>
+  );
+}
+
+export function usePortalContainer(): HTMLElement | null {
+  const ctx = useContext(SheetContext);
+  return ctx?.portalContainer ?? null;
 }
 
 export function useTrueSheet(): TrueSheetStaticMethods {
