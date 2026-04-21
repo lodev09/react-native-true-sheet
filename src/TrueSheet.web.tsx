@@ -1,6 +1,8 @@
 /// <reference lib="dom" />
 import {
+  createElement,
   forwardRef,
+  isValidElement,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -52,6 +54,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     dimmed = true,
     dimmedDetentIndex = 0,
     initialDetentIndex = -1,
+    header,
+    headerStyle,
+    footer,
+    footerStyle,
     onPositionChange,
   } = props;
 
@@ -127,18 +133,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const portalContainer = usePortalContainer();
 
-  const handlePointerDownOutside = useCallback(
-    (e: Event) => {
-      const target = e.target;
-      if (!(target instanceof Node)) return;
-      // Pointer down that landed outside this sheet's portal container (e.g.,
-      // in another screen's tree when navigating) should not close the drawer.
-      if (portalContainer && !portalContainer.contains(target)) {
-        e.preventDefault();
-      }
-    },
-    [portalContainer]
-  );
+  const handlePointerDownOutside = (e: Event) => {
+    const target = e.target;
+    if (!(target instanceof Node)) return;
+    // Pointer down that landed outside this sheet's portal container (e.g.,
+    // in another screen's tree when navigating) should not close the drawer.
+    if (portalContainer && !portalContainer.contains(target)) {
+      e.preventDefault();
+    }
+  };
 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
 
@@ -275,7 +278,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         >
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
+          {header && (
+            <View style={headerStyle}>
+              {isValidElement(header) ? header : createElement(header)}
+            </View>
+          )}
           <View style={style}>{children}</View>
+          {footer && (
+            <View style={[footerContainerStyle, footerStyle]}>
+              {isValidElement(footer) ? footer : createElement(footer)}
+            </View>
+          )}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
@@ -287,6 +300,13 @@ const overlayStyle: React.CSSProperties = {
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
+
+const footerContainerStyle = {
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  bottom: 0,
+} as const;
 
 const visuallyHiddenStyle: React.CSSProperties = {
   position: 'absolute',
