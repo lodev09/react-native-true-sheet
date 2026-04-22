@@ -242,6 +242,24 @@ export function useSnapPoints({
       });
     }
 
+    // Distance-based dismiss: when overshooting past the lowest detent by more
+    // than half of its visible height, commit to dismiss regardless of
+    // velocity — lets a slow drag-down still close the sheet.
+    if (
+      dismissible &&
+      (direction === 'bottom' || direction === 'right') &&
+      currentPosition > snapPointsOffset[0]
+    ) {
+      const viewportDim = isVertical(direction) ? window.innerHeight : window.innerWidth;
+      const effectiveDim = Math.max(0, viewportDim - (detachedOffset || 0));
+      const visibleAtLowest = Math.max(0, effectiveDim - snapPointsOffset[0]);
+      const overshoot = currentPosition - snapPointsOffset[0];
+      if (overshoot > visibleAtLowest * 0.5) {
+        closeDrawer();
+        return;
+      }
+    }
+
     if (!snapToSequentialPoint && velocity > 2 && !hasDraggedUp) {
       if (dismissible) closeDrawer();
       else snapToPoint(snapPointsOffset[0]); // snap to initial point
