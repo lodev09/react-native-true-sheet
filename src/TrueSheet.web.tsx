@@ -69,8 +69,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const snapPointsProps = useMemo<
     { snapPoints: SheetDetent[]; fadeFromIndex: number } | { snapPoints?: undefined }
   >(() => {
-    if (validDetents.length < 2) return {};
-    return { snapPoints: validDetents, fadeFromIndex: dimmedDetentIndex };
+    if (validDetents.length === 0) return {};
+    return {
+      snapPoints: validDetents,
+      fadeFromIndex: Math.min(dimmedDetentIndex, validDetents.length - 1),
+    };
   }, [validDetents, dimmedDetentIndex]);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
