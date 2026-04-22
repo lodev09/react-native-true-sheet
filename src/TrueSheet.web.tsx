@@ -264,9 +264,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       backgroundColor: backgroundColor as string,
-      maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
-      marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
-      marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
+      // When detached on desktop, the clip wrapper already handles horizontal
+      // sizing/anchoring — letting the drawer fill the wrapper keeps its bottom
+      // corners aligned with the wrapper's rounded clip (double-margin would
+      // leave the drawer inset from the wrapper's rounded edge).
+      maxWidth:
+        isLandscapeOrTablet && !detached ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
+      marginLeft:
+        isLandscapeOrTablet && !detached ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
+      marginRight:
+        isLandscapeOrTablet && !detached ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     }),
     [backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached]
   );
@@ -285,8 +292,28 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
       marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
       marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
+      // Footer lives outside the drawer's detached clip wrapper, so match its
+      // rounded bottom here instead of inheriting it.
+      borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : undefined,
+      borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : undefined,
+      overflow: detached ? 'hidden' : undefined,
     }),
     [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached, detachedOffset]
+  );
+
+  // On desktop the drawer is narrower than the viewport, so the clip wrapper's
+  // rounded bottom must match the drawer's horizontal bounds — otherwise its
+  // corners sit at the far viewport edges and the drawer appears flat-bottomed.
+  const detachedWrapperStyle = useMemo<React.CSSProperties | undefined>(
+    () =>
+      detached && isLandscapeOrTablet
+        ? {
+            maxWidth: maxContentWidth ?? DEFAULT_MAX_WIDTH,
+            marginLeft: anchor === 'left' ? anchorOffset : 'auto',
+            marginRight: anchor === 'right' ? anchorOffset : 'auto',
+          }
+        : undefined,
+    [detached, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
   );
 
   const handleStyle = useMemo<React.CSSProperties>(
@@ -313,6 +340,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       detached={detached}
       detachedOffset={detachedOffset}
       detachedRadius={DEFAULT_CORNER_RADIUS}
+      detachedWrapperStyle={detachedWrapperStyle}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}

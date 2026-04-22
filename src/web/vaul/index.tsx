@@ -161,6 +161,12 @@ export type DialogProps = {
    * @default 0
    */
   detachedRadius?: number;
+  /**
+   * Extra styles merged into the detached clip wrapper. Use this to match the
+   * wrapper's horizontal bounds to the drawer's on desktop (e.g. `maxWidth` +
+   * auto margins) so its rounded-bottom clip aligns with the drawer.
+   */
+  detachedWrapperStyle?: React.CSSProperties;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -197,6 +203,7 @@ export function Root({
   detached = false,
   detachedOffset = 0,
   detachedRadius = 0,
+  detachedWrapperStyle,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -891,6 +898,7 @@ export function Root({
           detached,
           detachedOffset: detached ? detachedOffset : 0,
           detachedRadius: detached ? detachedRadius : 0,
+          detachedWrapperStyle: detached ? detachedWrapperStyle : undefined,
         }}
       >
         {children}
@@ -993,6 +1001,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     detached,
     detachedOffset,
     detachedRadius,
+    detachedWrapperStyle: detachedWrapperStyleProp,
   } = useDrawerContext();
   const hasAutoSnapPoint = React.useMemo(
     () => !!snapPoints?.some((p) => p === 'auto'),
@@ -1191,9 +1200,10 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
             pointerEvents: 'none',
             borderBottomLeftRadius: detachedRadius,
             borderBottomRightRadius: detachedRadius,
+            ...detachedWrapperStyleProp,
           }
         : null,
-    [detached, detachedOffset, detachedRadius]
+    [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp]
   );
 
   const contentNode = (

@@ -38,6 +38,7 @@ interface DrawerContextValue {
   detached: boolean;
   detachedOffset: number;
   detachedRadius: number;
+  detachedWrapperStyle?: React.CSSProperties;
 }
 
 export const DrawerContext = React.createContext<DrawerContextValue>({
