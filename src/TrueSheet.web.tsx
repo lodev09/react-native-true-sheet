@@ -209,8 +209,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
 
-    const raf = requestAnimationFrame(() => {
-      if (!parent) return;
+    const computeTargetY = () => {
       const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
       let targetY = parentSnap;
       for (const d of descendants) {
@@ -219,12 +218,29 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         const snap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
         if (snap > targetY) targetY = snap;
       }
+      return targetY;
+    };
 
+    const apply = () => {
+      const targetY = computeTargetY();
+      const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
+      const currentY = match ? parseFloat(match[1]!) : 0;
+      if (Math.abs(currentY - targetY) < 0.5) return;
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
-    });
+    };
 
-    return () => cancelAnimationFrame(raf);
+    const raf = requestAnimationFrame(apply);
+    // Vaul re-runs snapToPoint on window resize (e.g., mobile keyboard open)
+    // which clobbers the cascade transform. Re-apply whenever the parent's
+    // inline style changes.
+    const observer = new MutationObserver(apply);
+    observer.observe(parent, { attributes: true, attributeFilter: ['style'] });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
   }, [descendants, activeSnapPoint]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
