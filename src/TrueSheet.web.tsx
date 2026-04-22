@@ -58,6 +58,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     headerStyle,
     footer,
     footerStyle,
+    scrollable = false,
     onPositionChange,
   } = props;
 
@@ -233,6 +234,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       left: 0,
       right: 0,
       bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
       backgroundColor: backgroundColor as string,
@@ -299,7 +302,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               {isValidElement(header) ? header : createElement(header)}
             </View>
           )}
-          <View style={style}>{children}</View>
+          {scrollable ? (
+            <div style={scrollableContainerStyle}>
+              <View style={style}>{children}</View>
+            </div>
+          ) : (
+            <View style={style}>{children}</View>
+          )}
         </Drawer.Content>
         {footer && (
           <div style={footerFloatStyle}>
@@ -317,6 +326,14 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+};
+
+const scrollableContainerStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  overscrollBehavior: 'contain',
+  touchAction: 'pan-y',
 };
 
 const visuallyHiddenStyle: React.CSSProperties = {
