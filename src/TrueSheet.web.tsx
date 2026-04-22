@@ -282,6 +282,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onOpenChange={handleOpenChange}
       onPositionChange={handlePositionChange}
       dismissible={dismissible}
+      repositionInputs={false}
       modal={dimmed}
       nested={isNested}
       activeSnapPoint={activeSnapPoint}
