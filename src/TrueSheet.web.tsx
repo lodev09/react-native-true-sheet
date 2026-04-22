@@ -30,6 +30,8 @@ import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
   DEFAULT_ANCHOR_OFFSET,
+  DEFAULT_CORNER_RADIUS,
+  DEFAULT_DETACHED_OFFSET,
   DEFAULT_GRABBER_COLOR_DARK,
   DEFAULT_GRABBER_COLOR_LIGHT,
   DEFAULT_GRABBER_HEIGHT,
@@ -59,6 +61,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footer,
     footerStyle,
     scrollable = false,
+    detached = false,
+    detachedOffset = DEFAULT_DETACHED_OFFSET,
     onPositionChange,
   } = props;
 
@@ -252,14 +256,19 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       bottom: 0,
       display: 'flex',
       flexDirection: 'column',
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
+      borderTopLeftRadius: DEFAULT_CORNER_RADIUS,
+      borderTopRightRadius: DEFAULT_CORNER_RADIUS,
+      // When detached, the clip wrapper's rounded bottom gives the card its
+      // floating bottom corners — match the drawer's own bottom radius so the
+      // clipped box silhouette is consistent if clipping momentarily lags.
+      borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
+      borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       backgroundColor: backgroundColor as string,
       maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
       marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
       marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     }),
-    [backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
+    [backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached]
   );
 
   const defaultGrabberColor =
@@ -272,12 +281,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       position: 'fixed',
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: detached ? detachedOffset : 0,
       maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
       marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
       marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
     }),
-    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
+    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached, detachedOffset]
   );
 
   const handleStyle = useMemo<React.CSSProperties>(
@@ -301,6 +310,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
+      detached={detached}
+      detachedOffset={detachedOffset}
+      detachedRadius={DEFAULT_CORNER_RADIUS}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}

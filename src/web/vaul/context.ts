@@ -35,6 +35,9 @@ interface DrawerContextValue {
   shouldAnimate?: React.RefObject<boolean>;
   onPositionChangeRef: React.RefObject<((position: number) => void) | undefined>;
   setContentHeight: (height: number) => void;
+  detached: boolean;
+  detachedOffset: number;
+  detachedRadius: number;
 }
 
 export const DrawerContext = React.createContext<DrawerContextValue>({
@@ -69,6 +72,9 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   autoFocus: false,
   onPositionChangeRef: { current: undefined },
   setContentHeight: () => {},
+  detached: false,
+  detachedOffset: 0,
+  detachedRadius: 0,
 });
 
 export const useDrawerContext = () => {

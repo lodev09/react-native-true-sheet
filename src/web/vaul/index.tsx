@@ -140,6 +140,27 @@ export type DialogProps = {
   onPositionChange?: (position: number) => void;
   preventScrollRestoration?: boolean;
   autoFocus?: boolean;
+  /**
+   * Renders the drawer as a floating card offset from the bottom edge so it
+   * doesn't visually attach to the viewport. Snap points are computed against
+   * the reduced floating area, so {@link detachedOffset} is preserved during
+   * drag and snap.
+   * @default false
+   */
+  detached?: boolean;
+  /**
+   * Gap (in px) between the drawer's bottom edge and the viewport bottom when
+   * {@link detached} is `true`.
+   * @default 0
+   */
+  detachedOffset?: number;
+  /**
+   * Corner radius (in px) applied to the clip wrapper's bottom when
+   * {@link detached} is `true`, so the floating card's bottom edge stays
+   * rounded while it's clipped at the floating anchor.
+   * @default 0
+   */
+  detachedRadius?: number;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -173,6 +194,9 @@ export function Root({
   onPositionChange,
   container,
   autoFocus = false,
+  detached = false,
+  detachedOffset = 0,
+  detachedRadius = 0,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -250,6 +274,7 @@ export function Root({
     snapToSequentialPoint,
     isOpen,
     contentHeight,
+    detachedOffset: detached ? detachedOffset : 0,
   });
 
   usePreventScroll({
@@ -863,6 +888,9 @@ export function Root({
           autoFocus,
           onPositionChangeRef,
           setContentHeight,
+          detached,
+          detachedOffset: detached ? detachedOffset : 0,
+          detachedRadius: detached ? detachedRadius : 0,
         }}
       >
         {children}
@@ -962,6 +990,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     autoFocus,
     onPositionChangeRef,
     setContentHeight,
+    detached,
+    detachedOffset,
+    detachedRadius,
   } = useDrawerContext();
   const hasAutoSnapPoint = React.useMemo(
     () => !!snapPoints?.some((p) => p === 'auto'),
@@ -1139,10 +1170,37 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     onRelease(event);
   }
 
-  return (
+  // When `detached`, the drawer sits inside a fixed clip wrapper that's
+  // anchored `detachedOffset` above the viewport bottom. The wrapper's
+  // `transform` establishes a containing block so the drawer's own
+  // `position: fixed` is constrained to the wrapper, and `overflow: hidden`
+  // + rounded bottom corners produce the floating card's bottom edge — the
+  // drawer's translate moves freely inside, so the bottom visually stays
+  // anchored while dragging and resizing.
+  const detachedWrapperStyle = React.useMemo<React.CSSProperties | null>(
+    () =>
+      detached
+        ? {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: detachedOffset,
+            overflow: 'hidden',
+            transform: 'translateZ(0)',
+            pointerEvents: 'none',
+            borderBottomLeftRadius: detachedRadius,
+            borderBottomRightRadius: detachedRadius,
+          }
+        : null,
+    [detached, detachedOffset, detachedRadius]
+  );
+
+  const contentNode = (
     <DialogPrimitive.Content
       data-vaul-drawer-direction={direction}
       data-vaul-drawer=""
+      data-vaul-detached={detached ? 'true' : 'false'}
       data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
       data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
       data-vaul-custom-container={container ? 'true' : 'false'}
@@ -1154,8 +1212,11 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
           ? ({
               '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
               ...style,
+              ...(detached ? { pointerEvents: 'auto' } : null),
             } as React.CSSProperties)
-          : style
+          : detached
+            ? ({ ...style, pointerEvents: 'auto' } as React.CSSProperties)
+            : style
       }
       onPointerDown={(event) => {
         if (handleOnly) return;
@@ -1234,6 +1295,16 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
       )}
     </DialogPrimitive.Content>
   );
+
+  if (detachedWrapperStyle) {
+    return (
+      <div data-vaul-detached-wrapper="" style={detachedWrapperStyle}>
+        {contentNode}
+      </div>
+    );
+  }
+
+  return contentNode;
 });
 
 Content.displayName = 'Drawer.Content';

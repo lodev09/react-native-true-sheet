@@ -18,6 +18,7 @@ export function useSnapPoints({
   snapToSequentialPoint,
   isOpen,
   contentHeight,
+  detachedOffset = 0,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -31,6 +32,7 @@ export function useSnapPoints({
   snapToSequentialPoint?: boolean;
   isOpen?: boolean;
   contentHeight?: number;
+  detachedOffset?: number;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -87,6 +89,11 @@ export function useSnapPoints({
         ? { width: window.innerWidth, height: window.innerHeight }
         : { width: 0, height: 0 };
 
+    // Shrink the effective vertical area by detachedOffset so snap math
+    // reserves a fixed gap at the bottom — the floating card stays offset
+    // from the viewport edge through drag, snap and resize.
+    const effectiveHeight = Math.max(0, containerSize.height - (detachedOffset || 0));
+
     return (
       snapPoints?.map((snapPoint) => {
         // 'auto' resolves to measured content height. Falls back to half the
@@ -94,7 +101,7 @@ export function useSnapPoints({
         // reports a real measurement.
         const resolved =
           snapPoint === 'auto'
-            ? `${contentHeight && contentHeight > 0 ? contentHeight : containerSize.height / 2}px`
+            ? `${contentHeight && contentHeight > 0 ? contentHeight : effectiveHeight / 2}px`
             : snapPoint;
         const isPx = typeof resolved === 'string';
         let snapPointAsNumber = 0;
@@ -107,13 +114,13 @@ export function useSnapPoints({
           const height = isPx
             ? snapPointAsNumber
             : windowDimensions
-              ? resolved * containerSize.height
+              ? resolved * effectiveHeight
               : 0;
 
           if (windowDimensions) {
             return direction === 'bottom'
-              ? containerSize.height - height
-              : -containerSize.height + height;
+              ? effectiveHeight - height
+              : -effectiveHeight + height;
           }
 
           return height;
@@ -131,7 +138,7 @@ export function useSnapPoints({
         return width;
       }) ?? []
     );
-  }, [snapPoints, windowDimensions, container, contentHeight]);
+  }, [snapPoints, windowDimensions, container, contentHeight, detachedOffset]);
 
   const activeSnapPointOffset = React.useMemo(
     () => (activeSnapPointIndex !== null ? snapPointsOffset?.[activeSnapPointIndex] : null),
