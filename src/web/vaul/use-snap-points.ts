@@ -145,6 +145,22 @@ export function useSnapPoints({
     [snapPointsOffset, activeSnapPointIndex]
   );
 
+  // Detached-only: the drawer sits inside a clip wrapper. When drag overshoots
+  // below the lowest detent we translate the wrapper by the excess so the
+  // whole floating card follows the pointer instead of the drawer sliding
+  // behind the wrapper's rounded-bottom clip.
+  const setDetachedWrapperTransform = (y: number, animated: boolean) => {
+    if (!drawerRef.current || !isVertical(direction)) return;
+    const wrapper = drawerRef.current.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+    if (!wrapper) return;
+    set(wrapper, {
+      transition: animated
+        ? `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`
+        : 'none',
+      transform: `translate3d(0, ${y}px, 0)`,
+    });
+  };
+
   const snapToPoint = React.useCallback(
     (dimension: number) => {
       const newSnapPointIndex =
@@ -157,6 +173,9 @@ export function useSnapPoints({
           ? `translate3d(0, ${dimension}px, 0)`
           : `translate3d(${dimension}px, 0, 0)`,
       });
+
+      // Snapping implies drag overshoot (if any) should be undone.
+      setDetachedWrapperTransform(0, true);
 
       if (
         snapPointsOffset &&
@@ -285,6 +304,20 @@ export function useSnapPoints({
       return;
     }
 
+    // Past the lowest detent: cap the drawer and translate the detached
+    // wrapper by the excess so the floating card follows the pointer.
+    if ((direction === 'bottom' || direction === 'right') && newValue > snapPointsOffset[0]) {
+      const excess = newValue - snapPointsOffset[0];
+      set(drawerRef.current, {
+        transform: isVertical(direction)
+          ? `translate3d(0, ${snapPointsOffset[0]}px, 0)`
+          : `translate3d(${snapPointsOffset[0]}px, 0, 0)`,
+      });
+      setDetachedWrapperTransform(excess, false);
+      return;
+    }
+
+    setDetachedWrapperTransform(0, false);
     set(drawerRef.current, {
       transform: isVertical(direction)
         ? `translate3d(0, ${newValue}px, 0)`

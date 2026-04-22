@@ -898,7 +898,7 @@ export function Root({
           detached,
           detachedOffset: detached ? detachedOffset : 0,
           detachedRadius: detached ? detachedRadius : 0,
-          detachedWrapperStyle: detached ? detachedWrapperStyle : undefined,
+          detachedWrapperStyle,
         }}
       >
         {children}
@@ -972,10 +972,17 @@ export const Overlay = React.forwardRef<
 
 Overlay.displayName = 'Drawer.Overlay';
 
-export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
+export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  /**
+   * Extra nodes rendered inside the detached clip wrapper as siblings of the
+   * drawer. Use for floating elements (e.g. a footer) that should slide with
+   * the wrapper on dismiss and drag-overshoot instead of staying pinned.
+   */
+  detachedSiblings?: React.ReactNode;
+};
 
 export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
-  { onPointerDownOutside, style, onOpenAutoFocus, children, ...rest },
+  { onPointerDownOutside, style, onOpenAutoFocus, children, detachedSiblings, ...rest },
   ref
 ) {
   const {
@@ -1179,32 +1186,62 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     onRelease(event);
   }
 
-  // When `detached`, the drawer sits inside a fixed clip wrapper that's
-  // anchored `detachedOffset` above the viewport bottom. The wrapper's
-  // `transform` establishes a containing block so the drawer's own
-  // `position: fixed` is constrained to the wrapper, and `overflow: hidden`
-  // + rounded bottom corners produce the floating card's bottom edge — the
-  // drawer's translate moves freely inside, so the bottom visually stays
-  // anchored while dragging and resizing.
-  const detachedWrapperStyle = React.useMemo<React.CSSProperties | null>(
-    () =>
-      detached
-        ? {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: detachedOffset,
-            overflow: 'hidden',
-            transform: 'translateZ(0)',
-            pointerEvents: 'none',
-            borderBottomLeftRadius: detachedRadius,
-            borderBottomRightRadius: detachedRadius,
-            ...detachedWrapperStyleProp,
-          }
-        : null,
+  // The drawer always sits inside a fixed clip wrapper. `contain: paint`
+  // establishes the wrapper as the containing block so the drawer's own
+  // `position: fixed` is constrained here, and `overflow: hidden` keeps any
+  // overshoot out of the viewport. When `detached` the wrapper also floats
+  // with a bottom gap and rounded bottom corners; otherwise it sits flush.
+  // Transform/transition are managed imperatively (via drag overshoot and the
+  // dismiss effect) so React doesn't skip DOM writes for values it thinks it
+  // already owns.
+  const wrapperStyle = React.useMemo<React.CSSProperties>(
+    () => ({
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: detached ? detachedOffset : 0,
+      overflow: 'hidden',
+      contain: 'paint',
+      pointerEvents: 'none',
+      borderBottomLeftRadius: detached ? detachedRadius : 0,
+      borderBottomRightRadius: detached ? detachedRadius : 0,
+      ...detachedWrapperStyleProp,
+    }),
     [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp]
   );
+
+  // Translate the wrapper off-screen on dismiss so the whole card slides out
+  // as one. The reset-then-target pattern on open forces the browser to
+  // record a starting value so the transition actually animates.
+  const wasOpenRef = React.useRef(isOpen);
+  React.useEffect(() => {
+    if (!drawerRef.current) {
+      wasOpenRef.current = isOpen;
+      return;
+    }
+    const wrapper = drawerRef.current.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+    if (wrapper) {
+      const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+      const viewportH = typeof window !== 'undefined' ? window.innerHeight : 0;
+      if (!isOpen && wasOpenRef.current) {
+        wrapper.style.transition = transition;
+        wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
+      } else if (isOpen && !wasOpenRef.current) {
+        wrapper.style.transition = 'none';
+        wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
+        // eslint-disable-next-line no-void
+        void wrapper.offsetHeight;
+        wrapper.style.transition = transition;
+        wrapper.style.transform = 'translate3d(0, 0, 0)';
+      } else if (isOpen && !wrapper.style.transform) {
+        // Fresh mount with open=true — ensure the wrapper starts at rest.
+        wrapper.style.transition = transition;
+        wrapper.style.transform = 'translate3d(0, 0, 0)';
+      }
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen, detached, drawerRef]);
 
   const contentNode = (
     <DialogPrimitive.Content
@@ -1222,11 +1259,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
           ? ({
               '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
               ...style,
-              ...(detached ? { pointerEvents: 'auto' } : null),
+              'pointerEvents': 'auto',
             } as React.CSSProperties)
-          : detached
-            ? ({ ...style, pointerEvents: 'auto' } as React.CSSProperties)
-            : style
+          : ({ ...style, pointerEvents: 'auto' } as React.CSSProperties)
       }
       onPointerDown={(event) => {
         if (handleOnly) return;
@@ -1306,15 +1341,12 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     </DialogPrimitive.Content>
   );
 
-  if (detachedWrapperStyle) {
-    return (
-      <div data-vaul-detached-wrapper="" style={detachedWrapperStyle}>
-        {contentNode}
-      </div>
-    );
-  }
-
-  return contentNode;
+  return (
+    <div data-vaul-detached-wrapper="" style={wrapperStyle}>
+      {contentNode}
+      {detachedSiblings}
+    </div>
+  );
 });
 
 Content.displayName = 'Drawer.Content';

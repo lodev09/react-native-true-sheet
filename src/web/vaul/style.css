@@ -13,6 +13,24 @@
   animation-name: slideToBottom;
 }
 
+/* Drawers always dismiss by sliding the wrapper off-screen, so we don't want
+   vaul's default `slideTo*` drawer keyframes (they'd stack with the wrapper
+   translate and look twice as fast). Override with a no-op animation of
+   matching duration so Radix Presence still waits for it before unmounting.
+   Specificity needs to beat the 4-attribute `slideTo*` selectors above. */
+[data-vaul-drawer][data-vaul-drawer-direction='bottom'][data-vaul-animate='true'][data-state='closed'] {
+  animation-name: vaulHold;
+  animation-duration: 0.5s;
+}
+@keyframes vaulHold {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 [data-vaul-drawer][data-vaul-snap-points='false'][data-vaul-drawer-direction='top'][data-state='open'] {
   animation-name: slideFromTop;
 }

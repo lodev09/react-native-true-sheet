@@ -258,24 +258,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       flexDirection: 'column',
       borderTopLeftRadius: DEFAULT_CORNER_RADIUS,
       borderTopRightRadius: DEFAULT_CORNER_RADIUS,
-      // When detached, the clip wrapper's rounded bottom gives the card its
-      // floating bottom corners — match the drawer's own bottom radius so the
-      // clipped box silhouette is consistent if clipping momentarily lags.
+      // The wrapper's rounded bottom gives the card its floating bottom
+      // corners when detached — match the drawer's own bottom radius so the
+      // silhouette stays consistent if clipping momentarily lags.
       borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       backgroundColor: backgroundColor as string,
-      // When detached on desktop, the clip wrapper already handles horizontal
-      // sizing/anchoring — letting the drawer fill the wrapper keeps its bottom
-      // corners aligned with the wrapper's rounded clip (double-margin would
-      // leave the drawer inset from the wrapper's rounded edge).
-      maxWidth:
-        isLandscapeOrTablet && !detached ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
-      marginLeft:
-        isLandscapeOrTablet && !detached ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
-      marginRight:
-        isLandscapeOrTablet && !detached ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
+      // Horizontal sizing/anchoring always lives on the wrapper now, so the
+      // drawer just fills it.
     }),
-    [backgroundColor, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached]
+    [backgroundColor, detached]
   );
 
   const defaultGrabberColor =
@@ -283,37 +275,35 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const grabberHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
 
+  // Footer is rendered inside the wrapper via `detachedSiblings`, so it
+  // follows the wrapper on dismiss and drag-overshoot. Positioning is
+  // relative to the wrapper (contain: paint creates the containing block).
   const footerFloatStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
       left: 0,
       right: 0,
-      bottom: detached ? detachedOffset : 0,
-      maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
-      marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
-      marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
-      // Footer lives outside the drawer's detached clip wrapper, so match its
-      // rounded bottom here instead of inheriting it.
-      borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : undefined,
-      borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : undefined,
-      overflow: detached ? 'hidden' : undefined,
+      bottom: 0,
+      // Wrapper has `pointer-events: none` to let clicks fall through; the
+      // footer must opt back in.
+      pointerEvents: 'auto',
     }),
-    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset, detached, detachedOffset]
+    []
   );
 
-  // On desktop the drawer is narrower than the viewport, so the clip wrapper's
-  // rounded bottom must match the drawer's horizontal bounds — otherwise its
-  // corners sit at the far viewport edges and the drawer appears flat-bottomed.
-  const detachedWrapperStyle = useMemo<React.CSSProperties | undefined>(
+  // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
+  // clip (when detached) aligns with the drawer's horizontal bounds on
+  // desktop — otherwise its corners sit at the far viewport edges.
+  const wrapperStyle = useMemo<React.CSSProperties | undefined>(
     () =>
-      detached && isLandscapeOrTablet
+      isLandscapeOrTablet
         ? {
             maxWidth: maxContentWidth ?? DEFAULT_MAX_WIDTH,
             marginLeft: anchor === 'left' ? anchorOffset : 'auto',
             marginRight: anchor === 'right' ? anchorOffset : 'auto',
           }
         : undefined,
-    [detached, isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
+    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
   );
 
   const handleStyle = useMemo<React.CSSProperties>(
@@ -340,7 +330,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       detached={detached}
       detachedOffset={detachedOffset}
       detachedRadius={DEFAULT_CORNER_RADIUS}
-      detachedWrapperStyle={detachedWrapperStyle}
+      detachedWrapperStyle={wrapperStyle}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}
@@ -351,6 +341,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           ref={drawerContentRef}
           style={mergedContentStyle}
           onPointerDownOutside={handlePointerDownOutside}
+          detachedSiblings={
+            footer ? (
+              <div style={footerFloatStyle}>
+                <View style={footerStyle}>
+                  {isValidElement(footer) ? footer : createElement(footer)}
+                </View>
+              </div>
+            ) : undefined
+          }
         >
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
@@ -367,13 +366,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             <View style={style}>{children}</View>
           )}
         </Drawer.Content>
-        {footer && (
-          <div style={footerFloatStyle}>
-            <View style={footerStyle}>
-              {isValidElement(footer) ? footer : createElement(footer)}
-            </View>
-          </div>
-        )}
       </Drawer.Portal>
     </Drawer.Root>
   );
