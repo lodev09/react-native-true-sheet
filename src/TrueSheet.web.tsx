@@ -245,6 +245,19 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const grabberHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
 
+  const footerFloatStyle = useMemo<React.CSSProperties>(
+    () => ({
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
+      marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
+      marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
+    }),
+    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
+  );
+
   const handleStyle = useMemo<React.CSSProperties>(
     () => ({
       height: grabberHeight,
@@ -284,12 +297,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             </View>
           )}
           <View style={style}>{children}</View>
-          {footer && (
-            <View style={[footerContainerStyle, footerStyle]}>
+        </Drawer.Content>
+        {footer && (
+          <div style={footerFloatStyle}>
+            <View style={footerStyle}>
               {isValidElement(footer) ? footer : createElement(footer)}
             </View>
-          )}
-        </Drawer.Content>
+          </div>
+        )}
       </Drawer.Portal>
     </Drawer.Root>
   );
@@ -300,13 +315,6 @@ const overlayStyle: React.CSSProperties = {
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
-
-const footerContainerStyle = {
-  position: 'absolute',
-  left: 0,
-  right: 0,
-  bottom: 0,
-} as const;
 
 const visuallyHiddenStyle: React.CSSProperties = {
   position: 'absolute',
