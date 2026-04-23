@@ -65,6 +65,10 @@ using namespace facebook::react;
   BOOL _pendingPropsUpdate;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
+  // Fallback dim view used when the presenter VC is detached from the window's
+  // VC hierarchy — UIKit's built-in sheet dim renders in the wrong UIWindow in
+  // that case, so we render our own in the presenter's view instead.
+  UIView *_detachedPresenterDimView;
 }
 
 #pragma mark - Initialization
@@ -147,6 +151,9 @@ using namespace facebook::react;
 
   [_snapshotView removeFromSuperview];
   _snapshotView = nil;
+
+  [_detachedPresenterDimView removeFromSuperview];
+  _detachedPresenterDimView = nil;
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
@@ -332,6 +339,9 @@ using namespace facebook::react;
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 
+  [_detachedPresenterDimView removeFromSuperview];
+  _detachedPresenterDimView = nil;
+
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
   _dismissedByNavigation = NO;
@@ -449,6 +459,12 @@ using namespace facebook::react;
   [_screensEventObserver capturePresenterScreenFromView:self];
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
+  // If the presenter VC is detached from the window's VC hierarchy, UIKit's
+  // built-in sheet dim renders in the wrong UIWindow. Add our own dim as a
+  // subview of the presenter's view so it lives in the correct window below
+  // the natively-presented sheet.
+  [self addDetachedPresenterDimIfNeededForPresenter:presentingViewController animated:animated];
+
   [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{
@@ -456,6 +472,94 @@ using namespace facebook::react;
                                            completion(YES, nil);
                                          }
                                        }];
+}
+
+- (BOOL)isPresenterDetached:(UIViewController *)presenter {
+  // A VC is attached if we can walk up its parent/presenting chain and reach
+  // the window's root VC. Detachment is *inherited* — a VC can have a non-nil
+  // `presentingViewController` but still be detached if that presenter is
+  // itself detached. UIKit applies the same rule and emits "Presenting view
+  // controller ... from detached view controller ..." in that case.
+  if (!presenter) {
+    return NO;
+  }
+  UIWindow *window = presenter.viewIfLoaded.window ?: self.window;
+  UIViewController *rootVC = window.rootViewController;
+  NSMutableSet *visited = [NSMutableSet set];
+  UIViewController *current = presenter;
+  while (current) {
+    if (current == rootVC) {
+      return NO;  // reached the root — attached
+    }
+    if ([visited containsObject:current]) {
+      return YES;  // cycle guard — treat as detached
+    }
+    [visited addObject:current];
+    // Walk up: prefer containment parent, fall back to modal presenter.
+    UIViewController *next = current.parentViewController;
+    if (!next) {
+      next = current.presentingViewController;
+    }
+    current = next;
+  }
+  return YES;  // chain ends before root — detached
+}
+
+- (void)addDetachedPresenterDimIfNeededForPresenter:(UIViewController *)presenter animated:(BOOL)animated {
+  if (!_controller.dimmed) {
+    return;
+  }
+  if (![self isPresenterDetached:presenter]) {
+    return;
+  }
+  if (!presenter.isViewLoaded) {
+    return;
+  }
+
+  // Use a fully-opaque background color and animate the view's alpha from 0
+  // up to the target opacity. A `colorWithWhite:alpha:0.4` background *plus*
+  // a view alpha of 0.4 would multiply (0.4 × 0.4 = 0.16), producing a dim
+  // that is ~16% black — noticeably lighter than UIKit's default sheet dim.
+  UIView *dim = [[UIView alloc] initWithFrame:presenter.view.bounds];
+  dim.backgroundColor = [UIColor blackColor];
+  dim.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  dim.alpha = 0.0;
+  dim.userInteractionEnabled = NO;
+  [presenter.view addSubview:dim];
+
+  _detachedPresenterDimView = dim;
+
+  CGFloat duration = animated ? 0.35 : 0.0;
+  [UIView animateWithDuration:duration
+                        delay:0.0
+                      options:UIViewAnimationOptionCurveEaseInOut
+                   animations:^{
+                     dim.alpha = 0.4;
+                   }
+                   completion:nil];
+}
+
+- (void)removeDetachedPresenterDimAnimated:(BOOL)animated {
+  UIView *dim = _detachedPresenterDimView;
+  if (!dim) {
+    return;
+  }
+  _detachedPresenterDimView = nil;
+
+  if (!animated) {
+    [dim removeFromSuperview];
+    return;
+  }
+
+  [UIView animateWithDuration:0.35
+    delay:0.0
+    options:UIViewAnimationOptionCurveEaseInOut
+    animations:^{
+      dim.alpha = 0.0;
+    }
+    completion:^(BOOL finished) {
+      [dim removeFromSuperview];
+    }];
 }
 
 - (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion {
@@ -497,6 +601,10 @@ using namespace facebook::react;
     }
     return;
   }
+
+  // Fade out the detached-presenter dim (if any) in lockstep with the sheet
+  // animation so it's gone by the time the sheet finishes dismissing.
+  [self removeDetachedPresenterDimAnimated:animated];
 
   // Dismiss from the presenting view controller to dismiss this sheet and all its children
   UIViewController *presenter = _controller.presentingViewController;
@@ -618,6 +726,11 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillDismiss {
+  // Also fade out the detached-presenter dim for swipe-dismiss and other paths
+  // that don't go through dismissAnimated: — willDismiss fires once the
+  // dismissal transition begins regardless of what triggered it.
+  [self removeDetachedPresenterDimAnimated:YES];
+
   if (!_dismissedByNavigation) {
     [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
   }
@@ -734,7 +847,24 @@ using namespace facebook::react;
   if (!self.window)
     return nil;
 
-  UIViewController *rootViewController = self.window.rootViewController;
+  // Walk the view hierarchy to find the nearest ancestor view controller.
+  // Some navigators (e.g. React Navigation's custom navigators, RN's `<Modal>`
+  // nested inside one) attach their VCs to the tree via `addSubview:` rather
+  // than modal presentation, so `window.rootViewController.presentedViewController`
+  // never reaches them. Walking `superview.nextResponder` finds the real
+  // owning VC of the view we're in.
+  UIView *ancestor = self.superview;
+  UIViewController *nearestVC = nil;
+  while (ancestor) {
+    UIResponder *responder = ancestor.nextResponder;
+    if ([responder isKindOfClass:[UIViewController class]]) {
+      nearestVC = (UIViewController *)responder;
+      break;
+    }
+    ancestor = ancestor.superview;
+  }
+
+  UIViewController *rootViewController = nearestVC ?: self.window.rootViewController;
   if (!rootViewController)
     return nil;
 

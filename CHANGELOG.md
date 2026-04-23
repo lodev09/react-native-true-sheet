@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed sheet dim rendering in the wrong `UIWindow` when the presenter view controller is detached from the window's VC hierarchy (e.g. inside a custom navigator or RN `<Modal>`). `findPresentingViewController` now walks the responder chain to find the real owning VC, and a fallback dim view is added to the presenter's view when the presenter is detached. ([#662](https://github.com/lodev09/react-native-true-sheet/pull/662) by [@kanzelm3](https://github.com/kanzelm3))
 - **Android**: Fixed focused input in sheet causing auto-focus on main screen input after dismiss. ([#649](https://github.com/lodev09/react-native-true-sheet/pull/649) by [@lodev09](https://github.com/lodev09))
 
 ## 3.10.0
