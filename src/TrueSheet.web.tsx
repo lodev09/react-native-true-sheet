@@ -15,13 +15,16 @@ import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import { Drawer } from './web/vaul';
 import { TRANSITIONS } from './web/vaul/constants';
 import type {
+  DetentInfoEventPayload,
   DidDismissEvent,
+  DidPresentEvent,
   PositionChangeEvent,
   SheetDetent,
   TrueSheetMethods,
   TrueSheetProps,
   TrueSheetStaticMethods,
   WillDismissEvent,
+  WillPresentEvent,
 } from './TrueSheet.types';
 import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
@@ -62,6 +65,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
     onPositionChange,
+    onWillPresent,
+    onDidPresent,
     onWillDismiss,
     onDidDismiss,
   } = props;
@@ -191,41 +196,106 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
 
-  // Vaul slides the whole sheet off by animating the wrapper's `transform`, so
-  // its `transitionend` is the dismiss-complete signal (no timers).
+  // Present/dismiss events. The sheet settles via a CSS `transform` transition
+  // on either the drawer (snap-points on autopresent) or the wrapper (whole-
+  // card slide on reopen/dismiss). `Animation.finished` from the Web Animations
+  // API tracks whichever is actually running — reflects what the browser is
+  // doing, doesn't miss when no transition runs (same-value change), and
+  // handles interruptions correctly (a drag/resnap mid-present resolves only
+  // once all transform animations drain).
+  const onWillPresentRef = useRef(onWillPresent);
+  const onDidPresentRef = useRef(onDidPresent);
   const onWillDismissRef = useRef(onWillDismiss);
   const onDidDismissRef = useRef(onDidDismiss);
+  const activeSnapPointRef = useRef(activeSnapPoint);
   useEffect(() => {
+    onWillPresentRef.current = onWillPresent;
+    onDidPresentRef.current = onDidPresent;
     onWillDismissRef.current = onWillDismiss;
     onDidDismissRef.current = onDidDismiss;
+    activeSnapPointRef.current = activeSnapPoint;
   });
 
-  const wasOpenRef = useRef(isOpen);
+  // Start at `false` so a mount with `isOpen=true` (autopresent via
+  // `initialDetentIndex`) is detected as a false→true transition and fires
+  // `onWillPresent`.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = isOpen;
-    if (!wasOpen || isOpen) return;
 
-    onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
+    const computeDetentInfo = (): DetentInfoEventPayload => {
+      const snap = activeSnapPointRef.current;
+      const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+      const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
+      const detent = typeof snap === 'number' ? snap : 0;
+      return { index, position, detent };
+    };
 
-    const wrapper = drawerContentRef.current?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
-    if (!wrapper) {
-      onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
-      return;
+    if (!isOpen && !wasOpen) return undefined;
+
+    const present = !wasOpen && isOpen;
+    if (present) {
+      onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
+    } else if (wasOpen && !isOpen) {
+      onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
+    } else {
+      return undefined;
     }
 
-    const controller = new AbortController();
-    const handleTransitionEnd = (event: TransitionEvent) => {
-      if (event.target !== wrapper || event.propertyName !== 'transform') return;
-      controller.abort();
-      onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
+    const fireDone = () => {
+      if (present) {
+        onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
+      } else {
+        onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
+      }
     };
-    wrapper.addEventListener('transitionend', handleTransitionEnd, {
-      signal: controller.signal,
-    });
+
+    let canceled = false;
+    let rafId = 0;
+
+    const start = () => {
+      if (canceled) return;
+      const drawer = drawerContentRef.current;
+      if (!drawer) {
+        // Drawer hasn't mounted yet (Radix Presence defers the portal mount
+        // past the first effect pass). Poll until the ref is populated.
+        rafId = window.requestAnimationFrame(start);
+        return;
+      }
+      const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]') ?? null;
+      const targets = wrapper ? [drawer, wrapper] : [drawer];
+
+      const waitForSettle = (): void => {
+        if (canceled) return;
+        // Force style recalc so transitions queued by vaul's effects this
+        // commit are registered in `getAnimations()`. RAF callbacks run BEFORE
+        // the frame's style recalc, and ignoring this returns a stale empty
+        // list — we'd fire `did` immediately with nothing queued.
+
+        drawer.offsetHeight;
+        const pending = targets.flatMap((el) =>
+          el.getAnimations().filter((a) => a.playState !== 'finished')
+        );
+        if (pending.length === 0) {
+          fireDone();
+          return;
+        }
+        // allSettled: resolve even when a transition is canceled (drag /
+        // resnap), then re-check — a replacement transition may have started.
+        Promise.allSettled(pending.map((a) => a.finished)).then(() => {
+          if (!canceled) waitForSettle();
+        });
+      };
+
+      waitForSettle();
+    };
+
+    rafId = window.requestAnimationFrame(start);
 
     return () => {
-      controller.abort();
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
     };
   }, [isOpen]);
 
