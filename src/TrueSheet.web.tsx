@@ -15,11 +15,13 @@ import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import { Drawer } from './web/vaul';
 import { TRANSITIONS } from './web/vaul/constants';
 import type {
+  DidDismissEvent,
   PositionChangeEvent,
   SheetDetent,
   TrueSheetMethods,
   TrueSheetProps,
   TrueSheetStaticMethods,
+  WillDismissEvent,
 } from './TrueSheet.types';
 import {
   usePortalContainer,
@@ -64,6 +66,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
     onPositionChange,
+    onWillDismiss,
+    onDidDismiss,
   } = props;
 
   const validDetents = useMemo(
@@ -190,6 +194,46 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useRegisterSheet(name, methodsRef);
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Vaul slides the whole sheet off by animating the wrapper's `transform`, so
+  // its `transitionend` is the dismiss-complete signal (no timers).
+  const onWillDismissRef = useRef(onWillDismiss);
+  const onDidDismissRef = useRef(onDidDismiss);
+  useEffect(() => {
+    onWillDismissRef.current = onWillDismiss;
+    onDidDismissRef.current = onDidDismiss;
+  });
+
+  const wasOpenRef = useRef(isOpen);
+  useEffect(() => {
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+    if (!wasOpen || isOpen) return;
+
+    onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
+
+    const wrapper = drawerContentRef.current?.closest<HTMLElement>(
+      '[data-vaul-detached-wrapper]'
+    );
+    if (!wrapper) {
+      onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
+      return;
+    }
+
+    const controller = new AbortController();
+    const handleTransitionEnd = (event: TransitionEvent) => {
+      if (event.target !== wrapper || event.propertyName !== 'transform') return;
+      controller.abort();
+      onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
+    };
+    wrapper.addEventListener('transitionend', handleTransitionEnd, {
+      signal: controller.signal,
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [isOpen]);
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
