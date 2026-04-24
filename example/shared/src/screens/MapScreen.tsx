@@ -12,9 +12,12 @@ import {
 } from 'react-native';
 import {
   TrueSheet,
-  type WillPresentEvent,
-  type DidPresentEvent,
   type DetentChangeEvent,
+  type DidPresentEvent,
+  type DragBeginEvent,
+  // type DragChangeEvent,
+  type DragEndEvent,
+  type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import {
   ReanimatedTrueSheet,
@@ -202,6 +205,21 @@ const MapScreenInner = ({
         onDetentChange={(e: DetentChangeEvent) => {
           log(
             `detentChange i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
+          );
+        }}
+        onDragBegin={(e: DragBeginEvent) => {
+          log(
+            `dragBegin i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
+          );
+        }}
+        // onDragChange={(e: DragChangeEvent) => {
+        //   log(
+        //     `dragChange i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
+        //   );
+        // }}
+        onDragEnd={(e: DragEndEvent) => {
+          log(
+            `dragEnd i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
         onWillDismiss={() => log('willDismiss')}
