@@ -258,14 +258,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       flexDirection: 'column',
       borderTopLeftRadius: DEFAULT_CORNER_RADIUS,
       borderTopRightRadius: DEFAULT_CORNER_RADIUS,
-      // The wrapper's rounded bottom gives the card its floating bottom
-      // corners when detached — match the drawer's own bottom radius so the
-      // silhouette stays consistent if clipping momentarily lags.
-      borderBottomLeftRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
-      borderBottomRightRadius: detached ? DEFAULT_CORNER_RADIUS : 0,
       backgroundColor: backgroundColor as string,
-      // Horizontal sizing/anchoring always lives on the wrapper now, so the
-      // drawer just fills it.
     }),
     [backgroundColor, detached]
   );

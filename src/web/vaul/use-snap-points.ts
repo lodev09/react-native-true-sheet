@@ -111,11 +111,15 @@ export function useSnapPoints({
         }
 
         if (isVertical(direction)) {
-          const height = isPx
+          const rawHeight = isPx
             ? snapPointAsNumber
             : windowDimensions
               ? resolved * effectiveHeight
               : 0;
+          // Cap px/'auto' snap points so a content taller than the viewport
+          // doesn't push the drawer past the top edge (offset would go
+          // negative). Fractional detents are already ≤ effectiveHeight.
+          const height = Math.min(rawHeight, effectiveHeight);
 
           if (windowDimensions) {
             return direction === 'bottom'
@@ -125,11 +129,12 @@ export function useSnapPoints({
 
           return height;
         }
-        const width = isPx
+        const rawWidth = isPx
           ? snapPointAsNumber
           : windowDimensions
             ? resolved * containerSize.width
             : 0;
+        const width = Math.min(rawWidth, containerSize.width);
 
         if (windowDimensions) {
           return direction === 'right' ? containerSize.width - width : -containerSize.width + width;
