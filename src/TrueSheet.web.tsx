@@ -22,6 +22,7 @@ import type {
   DragBeginEvent,
   DragChangeEvent,
   DragEndEvent,
+  MountEvent,
   PositionChangeEvent,
   SheetDetent,
   TrueSheetMethods,
@@ -77,6 +78,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragBegin,
     onDragChange,
     onDragEnd,
+    onMount,
   } = props;
 
   const validDetents = useMemo(
@@ -238,6 +240,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
     const detent = typeof snap === 'number' ? snap : 0;
     return { index, position, detent };
+  }, []);
+
+  // Fire onMount once after first render. React-mount is the earliest point
+  // the component is ready for imperative calls, matching the native
+  // "ready for present" contract. Declared before the present/dismiss effect
+  // so it fires first during autopresent (onMount → onWillPresent).
+  const onMountRef = useRef(onMount);
+  useEffect(() => {
+    onMountRef.current = onMount;
+  });
+  useEffect(() => {
+    onMountRef.current?.({ nativeEvent: null } as MountEvent);
   }, []);
 
   // Start at `false` so a mount with `isOpen=true` (autopresent via
