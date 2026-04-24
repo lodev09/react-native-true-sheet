@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -20,7 +20,15 @@ import {
   ReanimatedTrueSheet,
   useReanimatedTrueSheet,
 } from '@lodev09/react-native-true-sheet/reanimated';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, {
+  FadeInLeft,
+  LinearTransition,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
@@ -36,6 +44,35 @@ import {
 } from '../components/sheets';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
+
+interface LogEntry {
+  id: number;
+  text: string;
+}
+
+const LOG_FLASH_MS = 900;
+const LOG_IDLE_COLOR = 'rgba(0, 0, 0, 0.55)';
+
+const LogLine = ({ text }: { text: string }) => {
+  const age = useSharedValue(0);
+  useEffect(() => {
+    age.value = withTiming(1, { duration: LOG_FLASH_MS });
+  }, [age]);
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(age.value, [0, 1], [BLUE, LOG_IDLE_COLOR]),
+  }));
+  return (
+    <Animated.View
+      entering={FadeInLeft.duration(180)}
+      layout={LinearTransition.duration(180)}
+      style={[styles.logLine, animatedStyle]}
+    >
+      <Text style={styles.logText} numberOfLines={1}>
+        {text}
+      </Text>
+    </Animated.View>
+  );
+};
 
 export interface MapScreenProps {
   MapComponent: ComponentType<{ style?: StyleProp<ViewStyle> }>;
@@ -73,9 +110,19 @@ const MapScreenInner = ({
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
   const [showExtraContent, setShowExtraContent] = useState(false);
 
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const logIdRef = useRef(0);
+  const log = useCallback((text: string) => {
+    const id = logIdRef.current++;
+    setLogs((prev) => [{ id, text }, ...prev].slice(0, 6));
+    setTimeout(() => {
+      setLogs((prev) => prev.filter((e) => e.id !== id));
+    }, 4000);
+  }, []);
+
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
-    console.log('basic sheet presented');
+    log('basic sheet presented');
   };
 
   const rapidPresentDismiss = async () => {
@@ -111,6 +158,11 @@ const MapScreenInner = ({
   return (
     <View style={styles.container}>
       <MapComponent style={styles.map} />
+      <View pointerEvents="none" style={styles.logContainer}>
+        {logs.map((entry) => (
+          <LogLine key={entry.id} text={entry.text} />
+        ))}
+      </View>
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
@@ -128,46 +180,32 @@ const MapScreenInner = ({
         style={styles.content}
         detached
         onLayout={(e: LayoutChangeEvent) => {
-          console.log(
-            `sheet layout width: ${e.nativeEvent.layout.width}, height: ${e.nativeEvent.layout.height}`
+          log(
+            `layout ${Math.round(e.nativeEvent.layout.width)}×${Math.round(e.nativeEvent.layout.height)}`
           );
         }}
         onWillPresent={(e: WillPresentEvent) => {
-          console.log(
-            `will present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          log(
+            `willPresent i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
         onDidPresent={(e: DidPresentEvent) => {
-          console.log(
-            `did present index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          log(
+            `didPresent i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
-        onDidFocus={() => {
-          console.log('sheet is focused');
-        }}
-        onWillFocus={() => {
-          console.log('sheet will focus');
-        }}
-        onWillBlur={() => {
-          console.log('sheet will blur');
-        }}
-        onDidBlur={() => {
-          console.log('sheet is blurred');
-        }}
-        onMount={() => {
-          console.log('sheet is ready!');
-        }}
+        onDidFocus={() => log('didFocus')}
+        onWillFocus={() => log('willFocus')}
+        onWillBlur={() => log('willBlur')}
+        onDidBlur={() => log('didBlur')}
+        onMount={() => log('mounted')}
         onDetentChange={(e: DetentChangeEvent) => {
-          console.log(
-            `detent changed to index: ${e.nativeEvent.index}, detent: ${e.nativeEvent.detent}, position: ${e.nativeEvent.position}`
+          log(
+            `detentChange i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
-        onWillDismiss={() => {
-          console.log('sheet will dismiss');
-        }}
-        onDidDismiss={() => {
-          console.log('sheet has been dismissed');
-        }}
+        onWillDismiss={() => log('willDismiss')}
+        onDidDismiss={() => log('didDismiss')}
         header={<Header />}
       >
         <View style={styles.heading}>
@@ -278,5 +316,26 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 24,
     color: GRAY,
+  },
+  logContainer: {
+    position: 'absolute',
+    top: Platform.select({ ios: 60, default: 30 }),
+    left: SPACING,
+    right: SPACING,
+    gap: 4,
+    alignItems: 'flex-start',
+    zIndex: 10,
+  },
+  logLine: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    maxWidth: '100%',
+  },
+  logText: {
+    color: 'white',
+    fontSize: 11,
+    letterSpacing: 0.2,
+    fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }),
   },
 });
