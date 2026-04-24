@@ -450,6 +450,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       scrollable = false,
       scrollableOptions,
       pageSizing = true,
+      preferLegacyStyle = false,
       children,
       style,
       header,
@@ -505,6 +506,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         scrollable={scrollable}
         scrollableOptions={scrollableOptions}
         pageSizing={pageSizing}
+        preferLegacyStyle={preferLegacyStyle}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}

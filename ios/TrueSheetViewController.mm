@@ -74,6 +74,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
     _pageSizing = YES;
+    _preferLegacyStyle = NO;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
     _isDragging = NO;
     _isPresented = NO;
@@ -726,8 +727,12 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 - (void)setupBackground {
   auto effectiveBackgroundBlur = self.backgroundBlur;
-  if (@available(iOS 26.0, *)) {
-    // iOS 26+ has default liquid glass effect
+  if (!self.preferLegacyStyle) {
+    if (@available(iOS 26.0, *)) {
+      // iOS 26+ has default liquid glass effect
+    } else if (effectiveBackgroundBlur == TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
+      effectiveBackgroundBlur = TrueSheetViewBackgroundBlur::SystemMaterial;
+    }
   } else if (effectiveBackgroundBlur == TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
     effectiveBackgroundBlur = TrueSheetViewBackgroundBlur::SystemMaterial;
   }

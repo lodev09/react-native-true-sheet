@@ -61,6 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;
 @property (nonatomic, strong, nullable) GrabberOptions *grabberOptions;
+@property (nonatomic, assign) BOOL preferLegacyStyle;
 @property (nonatomic, assign) BOOL draggable;
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;

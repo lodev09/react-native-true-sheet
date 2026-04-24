@@ -88,6 +88,7 @@ export interface NativeProps extends ViewProps {
   anchor?: WithDefault<'left' | 'center' | 'right', 'center'>;
   anchorOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
+  preferLegacyStyle?: WithDefault<boolean, false>;
 
   // Blur options
   blurOptions?: BlurOptionsType;

@@ -364,6 +364,15 @@ export interface TrueSheetProps extends ViewProps {
   pageSizing?: boolean;
 
   /**
+   * When `true`, uses the pre–iOS 26 material background path instead of the default
+   * liquid glass sheet appearance on iOS 26 and later.
+   *
+   * @platform ios
+   * @default false
+   */
+  preferLegacyStyle?: boolean;
+
+  /**
    * The blur effect style on iOS.
    * Blends with `backgroundColor` when provided.
    *

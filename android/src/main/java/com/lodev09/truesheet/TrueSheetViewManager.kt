@@ -211,6 +211,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "preferLegacyStyle", defaultBoolean = false)
+  override fun setPreferLegacyStyle(view: TrueSheetView, value: Boolean) {
+    // iOS-specific prop - no-op on Android
+  }
+
   @ReactProp(name = "elevation", defaultDouble = -1.0)
   override fun setElevation(view: TrueSheetView, elevation: Double) {
     view.setSheetElevation(elevation.toFloat())
