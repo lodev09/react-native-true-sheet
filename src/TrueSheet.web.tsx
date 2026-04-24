@@ -74,8 +74,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footer,
     footerStyle,
     scrollable = false,
+    scrollableOptions,
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
+    elevation = 4,
+    insetAdjustment = 'automatic',
+    initialDetentAnimated = true,
     onPositionChange,
     onWillPresent,
     onDidPresent,
@@ -568,6 +572,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
 
+  // Shadow cast upward from the sheet's top edge toward the background. Matches
+  // Android's `elevation` semantics roughly — the sheet "lifts" off whatever is
+  // behind it. Scales linearly so higher elevation reads as more separation.
+  const boxShadow =
+    elevation > 0 ? `0 ${-elevation}px ${elevation * 3}px rgba(0, 0, 0, 0.15)` : undefined;
+
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
@@ -580,8 +590,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderTopLeftRadius: effectiveCornerRadius,
       borderTopRightRadius: effectiveCornerRadius,
       backgroundColor: backgroundColor as string,
+      boxShadow,
+      // Lift content above iOS home indicator / bottom safe area when enabled.
+      paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
     }),
-    [backgroundColor, effectiveCornerRadius]
+    [backgroundColor, effectiveCornerRadius, boxShadow, insetAdjustment]
   );
 
   const defaultGrabberColor =
@@ -641,6 +654,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onRelease={handleRelease}
       dismissible={dismissible}
       draggable={draggable}
+      handleOnly={scrollable && scrollableOptions?.scrollingExpandsSheet === false}
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
@@ -648,6 +662,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       detachedOffset={detachedOffset}
       detachedRadius={effectiveCornerRadius}
       maxContentHeight={maxContentHeight}
+      initialAnimated={initialDetentAnimated}
       detachedWrapperStyle={wrapperStyle}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}

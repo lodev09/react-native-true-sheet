@@ -20,6 +20,7 @@ export function useSnapPoints({
   contentHeight,
   detachedOffset = 0,
   maxContentHeight,
+  initialAnimated = true,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -35,6 +36,7 @@ export function useSnapPoints({
   contentHeight?: number;
   detachedOffset?: number;
   maxContentHeight?: number;
+  initialAnimated?: boolean;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -172,21 +174,28 @@ export function useSnapPoints({
     });
   };
 
+  // Skip the transition on the very first snap when the consumer opts out of
+  // the initial presentation animation. All subsequent snaps still animate.
+  const hasSnappedRef = React.useRef(false);
   const snapToPoint = React.useCallback(
     (dimension: number) => {
       const newSnapPointIndex =
         snapPointsOffset?.findIndex((snapPointDim) => snapPointDim === dimension) ?? null;
       onSnapPointChange(newSnapPointIndex);
 
+      const animateThisSnap = hasSnappedRef.current || initialAnimated;
+      hasSnappedRef.current = true;
       set(drawerRef.current, {
-        transition: `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
+        transition: animateThisSnap
+          ? `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`
+          : 'none',
         transform: isVertical(direction)
           ? `translate3d(0, ${dimension}px, 0)`
           : `translate3d(${dimension}px, 0, 0)`,
       });
 
       // Snapping implies drag overshoot (if any) should be undone.
-      setDetachedWrapperTransform(0, true);
+      setDetachedWrapperTransform(0, animateThisSnap);
 
       if (
         snapPointsOffset &&

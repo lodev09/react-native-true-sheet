@@ -177,6 +177,11 @@ export type DialogProps = {
    * respect a user-specified ceiling.
    */
   maxContentHeight?: number;
+  /**
+   * When `false` the first snap on mount is applied without a transition so
+   * the sheet appears at its target detent instantly. Defaults to `true`.
+   */
+  initialAnimated?: boolean;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -216,6 +221,7 @@ export function Root({
   detachedRadius = 0,
   detachedWrapperStyle,
   maxContentHeight,
+  initialAnimated = true,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -295,6 +301,7 @@ export function Root({
     contentHeight,
     detachedOffset: detached ? detachedOffset : 0,
     maxContentHeight,
+    initialAnimated,
   });
 
   usePreventScroll({
