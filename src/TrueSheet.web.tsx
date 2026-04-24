@@ -15,6 +15,7 @@ import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import { Drawer } from './web/vaul';
 import { TRANSITIONS } from './web/vaul/constants';
 import type {
+  DetentChangeEvent,
   DetentInfoEventPayload,
   DidDismissEvent,
   DidPresentEvent,
@@ -69,6 +70,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDidPresent,
     onWillDismiss,
     onDidDismiss,
+    onDetentChange,
   } = props;
 
   const validDetents = useMemo(
@@ -207,14 +209,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const onDidPresentRef = useRef(onDidPresent);
   const onWillDismissRef = useRef(onWillDismiss);
   const onDidDismissRef = useRef(onDidDismiss);
+  const onDetentChangeRef = useRef(onDetentChange);
   const activeSnapPointRef = useRef(activeSnapPoint);
   useEffect(() => {
     onWillPresentRef.current = onWillPresent;
     onDidPresentRef.current = onDidPresent;
     onWillDismissRef.current = onWillDismiss;
     onDidDismissRef.current = onDidDismiss;
+    onDetentChangeRef.current = onDetentChange;
     activeSnapPointRef.current = activeSnapPoint;
   });
+
+  const computeDetentInfo = useCallback((): DetentInfoEventPayload => {
+    const snap = activeSnapPointRef.current;
+    const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+    const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
+    const detent = typeof snap === 'number' ? snap : 0;
+    return { index, position, detent };
+  }, []);
 
   // Start at `false` so a mount with `isOpen=true` (autopresent via
   // `initialDetentIndex`) is detected as a false→true transition and fires
@@ -223,14 +235,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useEffect(() => {
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = isOpen;
-
-    const computeDetentInfo = (): DetentInfoEventPayload => {
-      const snap = activeSnapPointRef.current;
-      const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
-      const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
-      const detent = typeof snap === 'number' ? snap : 0;
-      return { index, position, detent };
-    };
 
     if (!isOpen && !wasOpen) return undefined;
 
@@ -297,7 +301,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       canceled = true;
       window.cancelAnimationFrame(rafId);
     };
-  }, [isOpen]);
+  }, [isOpen, computeDetentInfo]);
+
+  // Fire onDetentChange only while open→open. Present/dismiss have their own
+  // events and carry detent info via onDidPresent, so we skip those edges.
+  const detentChangeStateRef = useRef({ isOpen, activeSnapPoint });
+  useEffect(() => {
+    const prev = detentChangeStateRef.current;
+    detentChangeStateRef.current = { isOpen, activeSnapPoint };
+    if (!prev.isOpen || !isOpen) return;
+    if (prev.activeSnapPoint === activeSnapPoint) return;
+    onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
+  }, [isOpen, activeSnapPoint, computeDetentInfo]);
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
