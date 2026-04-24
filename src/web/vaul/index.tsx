@@ -1173,17 +1173,25 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
       if (state.movingCount === 0) emit();
     };
 
+    const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+
+    // Listen on the wrapper too: drag-overshoot snap-back animates the wrapper
+    // alone when the drawer's target is unchanged (e.g. snapping back to the
+    // same detent). Without this, position goes stale mid-animation because
+    // the drawer's `transitionrun` never fires.
     const onTransitionRun = (e: TransitionEvent) => {
-      if (e.target === drawer && e.propertyName === 'transform') state.start();
+      if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+        state.start();
     };
     const onTransitionDone = (e: TransitionEvent) => {
-      if (e.target === drawer && e.propertyName === 'transform') state.stop();
+      if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+        state.stop();
     };
     const onAnimationStart = (e: AnimationEvent) => {
-      if (e.target === drawer) state.start();
+      if (e.target === drawer || e.target === wrapper) state.start();
     };
     const onAnimationDone = (e: AnimationEvent) => {
-      if (e.target === drawer) state.stop();
+      if (e.target === drawer || e.target === wrapper) state.stop();
     };
 
     drawer.addEventListener('transitionrun', onTransitionRun);
@@ -1192,6 +1200,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     drawer.addEventListener('animationstart', onAnimationStart);
     drawer.addEventListener('animationend', onAnimationDone);
     drawer.addEventListener('animationcancel', onAnimationDone);
+    wrapper?.addEventListener('transitionrun', onTransitionRun);
+    wrapper?.addEventListener('transitionend', onTransitionDone);
+    wrapper?.addEventListener('transitioncancel', onTransitionDone);
 
     positionTrackingRef.current = state;
     emit();
@@ -1203,6 +1214,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
       drawer.removeEventListener('animationstart', onAnimationStart);
       drawer.removeEventListener('animationend', onAnimationDone);
       drawer.removeEventListener('animationcancel', onAnimationDone);
+      wrapper?.removeEventListener('transitionrun', onTransitionRun);
+      wrapper?.removeEventListener('transitionend', onTransitionDone);
+      wrapper?.removeEventListener('transitioncancel', onTransitionDone);
       if (state.rafId !== null) window.cancelAnimationFrame(state.rafId);
       positionTrackingRef.current = null;
     };
