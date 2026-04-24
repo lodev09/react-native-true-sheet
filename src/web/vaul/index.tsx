@@ -565,7 +565,38 @@ export function Root({
     const id = window.requestAnimationFrame(() => {
       document.body.style.pointerEvents = value;
     });
-    return () => window.cancelAnimationFrame(id);
+
+    // React Navigation keeps unfocused screens mounted with `display: none` on
+    // web, so the drawer never unmounts and neither `isOpen` nor this effect's
+    // deps change — a lingering `none` body style would then leak to whichever
+    // screen becomes visible. Observe the drawer: when an ancestor hides it,
+    // restore `auto`; when it returns, re-apply the desired value.
+    let observer: IntersectionObserver | null = null;
+    let rafId = 0;
+    const startObserving = () => {
+      const node = drawerRef.current;
+      if (!node) {
+        rafId = window.requestAnimationFrame(startObserving);
+        return;
+      }
+      observer = new IntersectionObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        if (!entry) return;
+        document.body.style.pointerEvents = entry.isIntersecting ? value : 'auto';
+      });
+      observer.observe(node);
+    };
+    rafId = window.requestAnimationFrame(startObserving);
+
+    // Always restore on cleanup so an unmount while the sheet is still open
+    // doesn't leave the page uninteractive. If the effect re-runs for a
+    // normal state change, it re-applies the correct value.
+    return () => {
+      window.cancelAnimationFrame(id);
+      window.cancelAnimationFrame(rafId);
+      observer?.disconnect();
+      document.body.style.pointerEvents = 'auto';
+    };
   }, [isOpen, modal, snapPoints, fadeFromIndex, activeSnapPointIndex]);
 
   React.useEffect(() => {

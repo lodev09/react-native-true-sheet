@@ -23,11 +23,7 @@ import type {
   TrueSheetStaticMethods,
   WillDismissEvent,
 } from './TrueSheet.types';
-import {
-  usePortalContainer,
-  useRegisterSheet,
-  useSheetStack,
-} from './TrueSheetProvider.web';
+import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
@@ -212,9 +208,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
 
-    const wrapper = drawerContentRef.current?.closest<HTMLElement>(
-      '[data-vaul-detached-wrapper]'
-    );
+    const wrapper = drawerContentRef.current?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
     if (!wrapper) {
       onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
       return;
