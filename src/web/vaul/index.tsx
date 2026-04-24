@@ -996,12 +996,16 @@ export const Overlay = React.forwardRef<
       data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
       data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
       {...rest}
-      style={isBelowFade ? { ...style, pointerEvents: 'none' } : style}
+      style={isBelowFade ? overlayBelowFadeStyle(style) : style}
     />
   );
 });
 
 Overlay.displayName = 'Drawer.Overlay';
+
+const overlayPointerEventsNone: React.CSSProperties = { pointerEvents: 'none' };
+const overlayBelowFadeStyle = (style: React.CSSProperties | undefined): React.CSSProperties =>
+  style ? { ...style, ...overlayPointerEventsNone } : overlayPointerEventsNone;
 
 export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   /**
@@ -1084,7 +1088,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
 
   const isDeltaInDirection = (
     delta: { x: number; y: number },
-    direction: DrawerDirection,
+    dir: DrawerDirection,
     threshold = 0
   ) => {
     if (wasBeyondThePointRef.current) return true;
@@ -1092,9 +1096,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     const deltaY = Math.abs(delta.y);
     const deltaX = Math.abs(delta.x);
     const isDeltaX = deltaX > deltaY;
-    const dFactor = ['bottom', 'right'].includes(direction) ? 1 : -1;
+    const dFactor = ['bottom', 'right'].includes(dir) ? 1 : -1;
 
-    if (direction === 'left' || direction === 'right') {
+    if (dir === 'left' || dir === 'right') {
       const isReverseDirection = delta.x * dFactor < 0;
       if (!isReverseDirection && deltaX >= 0 && deltaX <= threshold) {
         return isDeltaX;

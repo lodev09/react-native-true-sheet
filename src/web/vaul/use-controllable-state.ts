@@ -53,8 +53,8 @@ export function useControllableState<T>({
     (nextValue) => {
       if (isControlled) {
         const setter = nextValue as SetStateFn<T>;
-        const value = typeof nextValue === 'function' ? setter(prop) : nextValue;
-        if (value !== prop) handleChange(value as T);
+        const next = typeof nextValue === 'function' ? setter(prop) : nextValue;
+        if (next !== prop) handleChange(next as T);
       } else {
         setUncontrolledProp(nextValue);
       }
