@@ -155,30 +155,6 @@ export interface BlurOptions {
 }
 
 /**
- * Defines the stack behavior when a modal is presented on web.
- *
- * @platform web
- */
-export type StackBehavior =
-  /**
-   * Mount the modal on top of the current one.
-   */
-  | 'push'
-  /**
-   * Minimize the current modal then mount the new one.
-   */
-  | 'switch'
-  /**
-   * Dismiss the current modal then mount the new one.
-   */
-  | 'replace'
-  /**
-   * Use a regular BottomSheet instead of BottomSheetModal.
-   * This bypasses the modal stack entirely.
-   */
-  | 'none';
-
-/**
  * Inset adjustment behavior for the sheet content.
  */
 export type InsetAdjustment =
@@ -488,18 +464,6 @@ export interface TrueSheetProps extends ViewProps {
    * @default 16
    */
   detachedOffset?: number;
-
-  /**
-   * Defines the stack behavior when a modal is presented.
-   * - `push`: Mount the modal on top of the current one.
-   * - `switch`: Minimize the current modal then mount the new one.
-   * - `replace`: Dismiss the current modal then mount the new one.
-   * - `none`: Use a regular BottomSheet instead of BottomSheetModal.
-   *
-   * @platform web
-   * @default 'switch'
-   */
-  stackBehavior?: StackBehavior;
 
   /**
    * Called when the sheet's content is mounted and ready.
