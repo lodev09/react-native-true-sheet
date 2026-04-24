@@ -17,7 +17,9 @@ import { TRANSITIONS } from './web/vaul/constants';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
+  DidBlurEvent,
   DidDismissEvent,
+  DidFocusEvent,
   DidPresentEvent,
   DragBeginEvent,
   DragChangeEvent,
@@ -28,7 +30,9 @@ import type {
   TrueSheetMethods,
   TrueSheetProps,
   TrueSheetStaticMethods,
+  WillBlurEvent,
   WillDismissEvent,
+  WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
 import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
@@ -79,6 +83,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragChange,
     onDragEnd,
     onMount,
+    onWillFocus,
+    onDidFocus,
+    onWillBlur,
+    onDidBlur,
   } = props;
 
   const validDetents = useMemo(
@@ -411,6 +419,67 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       observer.disconnect();
     };
   }, [descendants, activeSnapPoint]);
+
+  // Focus/blur events fire when a descendant sheet appears on top of this one
+  // (blur) or when all descendants are dismissed (focus). will-events fire
+  // synchronously at the transition boundary; did-events fire once the cascade
+  // transform drains. Intermediate count changes (1↔2) don't re-fire — this
+  // sheet stays blurred throughout.
+  const onWillBlurRef = useRef(onWillBlur);
+  const onDidBlurRef = useRef(onDidBlur);
+  const onWillFocusRef = useRef(onWillFocus);
+  const onDidFocusRef = useRef(onDidFocus);
+  useEffect(() => {
+    onWillBlurRef.current = onWillBlur;
+    onDidBlurRef.current = onDidBlur;
+    onWillFocusRef.current = onWillFocus;
+    onDidFocusRef.current = onDidFocus;
+  });
+
+  const prevDescendantCountRef = useRef(0);
+  useEffect(() => {
+    const prevCount = prevDescendantCountRef.current;
+    const count = descendants.length;
+    prevDescendantCountRef.current = count;
+    if (!isOpen) return;
+    const gained = count > 0 && prevCount === 0;
+    const lost = count === 0 && prevCount > 0;
+    if (!gained && !lost) return;
+
+    if (gained) {
+      onWillBlurRef.current?.({ nativeEvent: null } as WillBlurEvent);
+    } else {
+      onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
+    }
+
+    const drawer = drawerContentRef.current;
+    if (!drawer) return;
+
+    let canceled = false;
+    const fireDone = () => {
+      if (canceled) return;
+      if (gained) onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
+      else onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
+    };
+    const rafId = window.requestAnimationFrame(() => {
+      if (canceled) return;
+      // Force style recalc so the cascade effect's queued transform registers.
+      drawer.offsetHeight;
+      const pending = drawer.getAnimations().filter((a) => a.playState !== 'finished');
+      if (pending.length === 0) {
+        fireDone();
+        return;
+      }
+      Promise.allSettled(pending.map((a) => a.finished)).then(() => {
+        if (!canceled) fireDone();
+      });
+    });
+
+    return () => {
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [isOpen, descendants.length]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
