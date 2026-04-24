@@ -85,6 +85,10 @@ export interface NativeProps extends ViewProps {
     'none'
   >;
 
+  // iOS 26+ Liquid Glass style. Ignored when backgroundColor or
+  // backgroundBlur is set, or on pre-iOS 26 runtimes.
+  backgroundGlass?: WithDefault<'regular' | 'clear', 'regular'>;
+
   anchor?: WithDefault<'left' | 'center' | 'right', 'center'>;
   anchorOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;

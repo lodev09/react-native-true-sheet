@@ -194,6 +194,16 @@ export type InsetAdjustment =
   | 'never';
 
 /**
+ * iOS 26+ Liquid Glass style.
+ *
+ * - 'regular': Standard glass with luminosity veil for readability (default).
+ * - 'clear': High-transparency glass for media-rich backgrounds.
+ *
+ * @platform ios 26+
+ */
+export type BackgroundGlass = 'regular' | 'clear';
+
+/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios
@@ -370,6 +380,15 @@ export interface TrueSheetProps extends ViewProps {
    * @platform ios
    */
   backgroundBlur?: BackgroundBlur;
+
+  /**
+   * iOS 26+ Liquid Glass style. Ignored when `backgroundColor` or
+   * `backgroundBlur` is set, or on pre-iOS 26 runtimes.
+   *
+   * @platform ios 26+
+   * @default 'regular'
+   */
+  backgroundGlass?: BackgroundGlass;
 
   /**
    * Options for customizing the blur effect.

@@ -441,6 +441,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
       initialDetentAnimated = true,
       dimmedDetentIndex,
       backgroundBlur,
+      backgroundGlass,
       blurOptions,
       cornerRadius,
       maxContentHeight,
@@ -487,6 +488,7 @@ export class TrueSheet extends PureComponent<TrueSheetProps, TrueSheetState> {
         style={styles.sheetView}
         detents={resolvedDetents}
         backgroundBlur={backgroundBlur}
+        backgroundGlass={backgroundGlass}
         blurOptions={blurOptions}
         backgroundColor={backgroundColor}
         cornerRadius={cornerRadius}
