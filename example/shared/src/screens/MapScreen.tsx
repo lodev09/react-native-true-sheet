@@ -15,9 +15,7 @@ import {
   type DetentChangeEvent,
   type DidPresentEvent,
   type DragBeginEvent,
-  // type DragChangeEvent,
   type DragEndEvent,
-  // type PositionChangeEvent,
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import {
@@ -28,7 +26,6 @@ import Animated, {
   FadeInLeft,
   LinearTransition,
   interpolateColor,
-  // runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -181,7 +178,6 @@ const MapScreenInner = ({
         anchor={anchorLeft ? 'left' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
-        // dismissible={false}
         style={styles.content}
         detached
         onLayout={(e: LayoutChangeEvent) => {

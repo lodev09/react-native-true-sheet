@@ -202,9 +202,7 @@ export function useSheetStack(ref: SheetRef, nodeRef: NodeRef, isOpen: boolean) 
       const idx = snapshot.findIndex((e) => e.ref === ref);
       if (idx < 0) return;
       const above = snapshot.slice(idx + 1);
-      await Promise.all(
-        [...above].reverse().map((e) => e.ref.current?.dismiss(animated))
-      );
+      await Promise.all([...above].reverse().map((e) => e.ref.current?.dismiss(animated)));
     },
     [ctx, ref]
   );

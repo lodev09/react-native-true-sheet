@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { MapProvider } from '@lugg/maps';
-
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 import { DARK_BLUE } from '@example/shared/utils';
 import 'react-native-reanimated';

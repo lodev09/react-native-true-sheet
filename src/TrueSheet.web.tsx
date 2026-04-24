@@ -553,6 +553,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const rafId = window.requestAnimationFrame(() => {
       if (canceled) return;
       // Force style recalc so the cascade effect's queued transform registers.
+
       drawer.offsetHeight;
       const pending = drawer.getAnimations().filter((a) => a.playState !== 'finished');
       if (pending.length === 0) {
