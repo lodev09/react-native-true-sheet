@@ -17,6 +17,7 @@ import {
   type DragBeginEvent,
   // type DragChangeEvent,
   type DragEndEvent,
+  // type PositionChangeEvent,
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import {
@@ -27,6 +28,7 @@ import Animated, {
   FadeInLeft,
   LinearTransition,
   interpolateColor,
+  // runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -222,6 +224,12 @@ const MapScreenInner = ({
             `dragEnd i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
+        // onPositionChange={(e: PositionChangeEvent) => {
+        //   'worklet';
+        //   runOnJS(log)(
+        //     `position i:${e.nativeEvent.index} d:${e.nativeEvent.detent.toFixed(2)} y:${Math.round(e.nativeEvent.position)} rt:${e.nativeEvent.realtime}`
+        //   );
+        // }}
         onWillDismiss={() => log('willDismiss')}
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}

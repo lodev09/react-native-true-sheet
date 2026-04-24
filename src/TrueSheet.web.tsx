@@ -270,37 +270,45 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         }
       }
 
+      // Absorb subpixel drift from getBoundingClientRect so at-rest positions
+      // don't sneak into the below-first branch and emit near-zero negatives
+      // like `-1e-8` (which render as "-1" via JS scientific-notation toString).
+      const epsilon = 0.5;
       const firstPos = positions[0]!;
-      if (position > firstPos) {
-        // Dismiss composes wrapper + drawer transforms, so the drawer's rect
-        // can overshoot past windowH. Clamp progress to [0, 1] so index never
-        // dips below -1.
-        const range = windowH - firstPos;
-        const raw = range > 0 ? (position - firstPos) / range : 0;
-        const progress = Math.max(0, Math.min(1, raw));
+      const lastPos = positions[count - 1]!;
+
+      if (position > firstPos + epsilon) {
+        // Two ranges: index spans the full animation (windowH of wrapper
+        // travel) so it's smooth for driving dependent animations end-to-end;
+        // detent tracks the sheet's visible-height ratio (windowH - firstPos)
+        // so its 0–values[0] fade has fine resolution while the sheet is still
+        // in view. Both clamp to keep outputs in [-1, 0].
+        const indexRaw = (position - firstPos) / windowH;
+        const detentRaw = (position - firstPos) / Math.max(1, windowH - firstPos);
+        const indexProgress = Math.max(0, Math.min(1, indexRaw));
+        const detentProgress = Math.max(0, Math.min(1, detentRaw));
         return {
-          index: -progress,
-          detent: Math.max(0, values[0]! * (1 - progress)),
+          index: -indexProgress,
+          detent: Math.max(0, values[0]! * (1 - detentProgress)),
         };
       }
 
       if (count === 1) return { index: 0, detent: values[0]! };
 
-      const lastPos = positions[count - 1]!;
-      if (position < lastPos) {
-        return { index: count - 1, detent: values[count - 1]! };
-      }
+      // Clamp into the segment range so subpixel drift at the boundaries
+      // resolves cleanly to the nearest segment edge (index 0 or count-1).
+      const clamped = Math.max(lastPos, Math.min(firstPos, position));
 
       for (let i = 0; i < count - 1; i++) {
         const pos = positions[i]!;
         const nextPos = positions[i + 1]!;
-        if (position >= nextPos && position <= pos) {
+        if (clamped >= nextPos && clamped <= pos) {
           const range = pos - nextPos;
-          const progress = range > 0 ? (pos - position) / range : 0;
-          const clamped = Math.max(0, Math.min(1, progress));
+          const progress = range > 0 ? (pos - clamped) / range : 0;
+          const clampedProgress = Math.max(0, Math.min(1, progress));
           return {
-            index: i + clamped,
-            detent: values[i]! + clamped * (values[i + 1]! - values[i]!),
+            index: i + clampedProgress,
+            detent: values[i]! + clampedProgress * (values[i + 1]! - values[i]!),
           };
         }
       }
