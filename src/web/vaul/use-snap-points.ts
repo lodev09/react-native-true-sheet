@@ -19,6 +19,7 @@ export function useSnapPoints({
   isOpen,
   contentHeight,
   detachedOffset = 0,
+  maxContentHeight,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -33,6 +34,7 @@ export function useSnapPoints({
   isOpen?: boolean;
   contentHeight?: number;
   detachedOffset?: number;
+  maxContentHeight?: number;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -119,12 +121,16 @@ export function useSnapPoints({
           // Cap px/'auto' snap points so a content taller than the viewport
           // doesn't push the drawer past the top edge (offset would go
           // negative). Fractional detents are already ≤ effectiveHeight.
-          const height = Math.min(rawHeight, effectiveHeight);
+          // `maxContentHeight`, when set, caps the visible sheet further so
+          // full/'auto' detents respect the user's ceiling.
+          const ceiling =
+            maxContentHeight !== undefined
+              ? Math.min(effectiveHeight, maxContentHeight)
+              : effectiveHeight;
+          const height = Math.min(rawHeight, ceiling);
 
           if (windowDimensions) {
-            return direction === 'bottom'
-              ? effectiveHeight - height
-              : -effectiveHeight + height;
+            return direction === 'bottom' ? effectiveHeight - height : -effectiveHeight + height;
           }
 
           return height;
@@ -143,7 +149,7 @@ export function useSnapPoints({
         return width;
       }) ?? []
     );
-  }, [snapPoints, windowDimensions, container, contentHeight, detachedOffset]);
+  }, [snapPoints, windowDimensions, container, contentHeight, detachedOffset, maxContentHeight]);
 
   const activeSnapPointOffset = React.useMemo(
     () => (activeSnapPointIndex !== null ? snapPointsOffset?.[activeSnapPointIndex] : null),

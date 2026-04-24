@@ -55,8 +55,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     children,
     name,
     dismissible = true,
+    draggable = true,
+    cornerRadius,
     style,
     backgroundColor: backgroundColorProp,
+    maxContentHeight,
     maxContentWidth,
     anchor = 'center',
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
@@ -251,19 +254,23 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       const windowH = window.innerHeight;
       const effectiveH = detached ? windowH - detachedOffset : windowH;
+      // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
+      const ceiling =
+        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
 
       const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
         '[data-vaul-auto-size-wrapper]'
       );
-      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? effectiveH / 2, effectiveH);
+      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
 
       const positions: number[] = [];
       const values: number[] = [];
       for (let i = 0; i < count; i++) {
         const d = snaps[i];
         if (typeof d === 'number') {
-          positions.push((1 - d) * effectiveH);
-          values.push(d);
+          const h = Math.min(d * effectiveH, ceiling);
+          positions.push(effectiveH - h);
+          values.push(effectiveH > 0 ? h / effectiveH : 0);
         } else {
           positions.push(effectiveH - autoHeight);
           values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
@@ -315,7 +322,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [detached, detachedOffset]
+    [detached, detachedOffset, maxContentHeight]
   );
 
   const handlePositionChange = useCallback(
@@ -559,6 +566,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, descendants.length]);
 
+  const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
+
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
@@ -568,11 +577,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       bottom: 0,
       display: 'flex',
       flexDirection: 'column',
-      borderTopLeftRadius: DEFAULT_CORNER_RADIUS,
-      borderTopRightRadius: DEFAULT_CORNER_RADIUS,
+      borderTopLeftRadius: effectiveCornerRadius,
+      borderTopRightRadius: effectiveCornerRadius,
       backgroundColor: backgroundColor as string,
     }),
-    [backgroundColor, detached]
+    [backgroundColor, effectiveCornerRadius]
   );
 
   const defaultGrabberColor =
@@ -631,12 +640,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onDrag={handleDrag}
       onRelease={handleRelease}
       dismissible={dismissible}
+      draggable={draggable}
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
       detached={detached}
       detachedOffset={detachedOffset}
-      detachedRadius={DEFAULT_CORNER_RADIUS}
+      detachedRadius={effectiveCornerRadius}
+      maxContentHeight={maxContentHeight}
       detachedWrapperStyle={wrapperStyle}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}

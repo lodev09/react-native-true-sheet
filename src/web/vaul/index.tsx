@@ -89,6 +89,11 @@ export type DialogProps = {
    * @default true
    */
   dismissible?: boolean;
+  /**
+   * When `false` the drawer can't be dragged by the user. Programmatic snap-point
+   * changes still animate. Defaults to `true`.
+   */
+  draggable?: boolean;
   onDrag?: (event: React.PointerEvent<HTMLDivElement>, percentageDragged: number) => void;
   onRelease?: (event: React.PointerEvent<HTMLDivElement>, open: boolean) => void;
   /**
@@ -167,6 +172,11 @@ export type DialogProps = {
    * auto margins) so its rounded-bottom clip aligns with the drawer.
    */
   detachedWrapperStyle?: React.CSSProperties;
+  /**
+   * Caps the visible sheet height (in px) so full and 'auto' snap points
+   * respect a user-specified ceiling.
+   */
+  maxContentHeight?: number;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -181,6 +191,7 @@ export function Root({
   closeThreshold = CLOSE_THRESHOLD,
   scrollLockTimeout = SCROLL_LOCK_TIMEOUT,
   dismissible = true,
+  draggable = true,
   handleOnly = false,
   fadeFromIndex = snapPoints && snapPoints.length - 1,
   activeSnapPoint: activeSnapPointProp,
@@ -204,6 +215,7 @@ export function Root({
   detachedOffset = 0,
   detachedRadius = 0,
   detachedWrapperStyle,
+  maxContentHeight,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -282,6 +294,7 @@ export function Root({
     isOpen,
     contentHeight,
     detachedOffset: detached ? detachedOffset : 0,
+    maxContentHeight,
   });
 
   usePreventScroll({
@@ -309,6 +322,7 @@ export function Root({
   }
 
   function onPress(event: React.PointerEvent<HTMLDivElement>) {
+    if (!draggable) return;
     if (!dismissible && !snapPoints) return;
     if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) return;
 
