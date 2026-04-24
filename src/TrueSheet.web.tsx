@@ -19,6 +19,9 @@ import type {
   DetentInfoEventPayload,
   DidDismissEvent,
   DidPresentEvent,
+  DragBeginEvent,
+  DragChangeEvent,
+  DragEndEvent,
   PositionChangeEvent,
   SheetDetent,
   TrueSheetMethods,
@@ -71,6 +74,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onWillDismiss,
     onDidDismiss,
     onDetentChange,
+    onDragBegin,
+    onDragChange,
+    onDragEnd,
   } = props;
 
   const validDetents = useMemo(
@@ -210,6 +216,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const onWillDismissRef = useRef(onWillDismiss);
   const onDidDismissRef = useRef(onDidDismiss);
   const onDetentChangeRef = useRef(onDetentChange);
+  const onDragBeginRef = useRef(onDragBegin);
+  const onDragChangeRef = useRef(onDragChange);
+  const onDragEndRef = useRef(onDragEnd);
   const activeSnapPointRef = useRef(activeSnapPoint);
   useEffect(() => {
     onWillPresentRef.current = onWillPresent;
@@ -217,6 +226,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onWillDismissRef.current = onWillDismiss;
     onDidDismissRef.current = onDidDismiss;
     onDetentChangeRef.current = onDetentChange;
+    onDragBeginRef.current = onDragBegin;
+    onDragChangeRef.current = onDragChange;
+    onDragEndRef.current = onDragEnd;
     activeSnapPointRef.current = activeSnapPoint;
   });
 
@@ -313,6 +325,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (prev.activeSnapPoint === activeSnapPoint) return;
     onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
   }, [isOpen, activeSnapPoint, computeDetentInfo]);
+
+  // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
+  // after an idle gap marks the drag boundary, so track it via a ref.
+  const isDraggingRef = useRef(false);
+  const handleDrag = useCallback(() => {
+    if (!isDraggingRef.current) {
+      isDraggingRef.current = true;
+      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo() } as DragBeginEvent);
+    }
+    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DragChangeEvent);
+  }, [computeDetentInfo]);
+  const handleRelease = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
+  }, [computeDetentInfo]);
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
@@ -439,6 +467,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       open={isOpen}
       onOpenChange={handleOpenChange}
       onPositionChange={handlePositionChange}
+      onDrag={handleDrag}
+      onRelease={handleRelease}
       dismissible={dismissible}
       repositionInputs={false}
       modal={dimmed}

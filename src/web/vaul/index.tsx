@@ -458,6 +458,8 @@ export function Root({
         transition: 'none',
       });
 
+      onDragProp?.(event, percentageDragged);
+
       if (snapPoints) {
         onDragSnapPoints({ draggedDistance });
       }
@@ -478,8 +480,6 @@ export function Root({
       const opacityValue = 1 - percentageDragged;
 
       if (shouldFade || (fadeFromIndex && activeSnapPointIndex === fadeFromIndex - 1)) {
-        onDragProp?.(event, percentageDragged);
-
         set(
           overlayRef.current,
           {
