@@ -139,20 +139,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     );
   }, []);
 
-  const handlePositionChange = useCallback(
-    (position: number) => {
-      onPositionChange?.({
-        nativeEvent: {
-          position,
-          index: 0,
-          detent: 1,
-          realtime: true,
-        },
-      } as PositionChangeEvent);
-    },
-    [onPositionChange]
-  );
-
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open && isOpen) {
@@ -229,6 +215,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const onDragBeginRef = useRef(onDragBegin);
   const onDragChangeRef = useRef(onDragChange);
   const onDragEndRef = useRef(onDragEnd);
+  const onPositionChangeRef = useRef(onPositionChange);
   const activeSnapPointRef = useRef(activeSnapPoint);
   useEffect(() => {
     onWillPresentRef.current = onWillPresent;
@@ -239,6 +226,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragBeginRef.current = onDragBegin;
     onDragChangeRef.current = onDragChange;
     onDragEndRef.current = onDragEnd;
+    onPositionChangeRef.current = onPositionChange;
     activeSnapPointRef.current = activeSnapPoint;
   });
 
@@ -249,6 +237,88 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const detent = typeof snap === 'number' ? snap : 0;
     return { index, position, detent };
   }, []);
+
+  // Mirror Android: interpolate fractional index and detent from the drawer's
+  // top-Y so continuous position updates (drag, animation) carry smooth values
+  // between detent boundaries. Numeric detent d → top-Y = (1 - d) * effectiveH.
+  // 'auto' resolves to the [data-vaul-auto-size-wrapper] element's measured
+  // offsetHeight — same signal vaul uses to compute its snap offset.
+  const interpolateFromPosition = useCallback(
+    (position: number): { index: number; detent: number } => {
+      const snaps = validDetentsRef.current;
+      const count = snaps.length;
+      if (count === 0) return { index: -1, detent: 0 };
+
+      const windowH = window.innerHeight;
+      const effectiveH = detached ? windowH - detachedOffset : windowH;
+
+      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
+        '[data-vaul-auto-size-wrapper]'
+      );
+      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? effectiveH / 2, effectiveH);
+
+      const positions: number[] = [];
+      const values: number[] = [];
+      for (let i = 0; i < count; i++) {
+        const d = snaps[i];
+        if (typeof d === 'number') {
+          positions.push((1 - d) * effectiveH);
+          values.push(d);
+        } else {
+          positions.push(effectiveH - autoHeight);
+          values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
+        }
+      }
+
+      const firstPos = positions[0]!;
+      if (position > firstPos) {
+        // Dismiss composes wrapper + drawer transforms, so the drawer's rect
+        // can overshoot past windowH. Clamp progress to [0, 1] so index never
+        // dips below -1.
+        const range = windowH - firstPos;
+        const raw = range > 0 ? (position - firstPos) / range : 0;
+        const progress = Math.max(0, Math.min(1, raw));
+        return {
+          index: -progress,
+          detent: Math.max(0, values[0]! * (1 - progress)),
+        };
+      }
+
+      if (count === 1) return { index: 0, detent: values[0]! };
+
+      const lastPos = positions[count - 1]!;
+      if (position < lastPos) {
+        return { index: count - 1, detent: values[count - 1]! };
+      }
+
+      for (let i = 0; i < count - 1; i++) {
+        const pos = positions[i]!;
+        const nextPos = positions[i + 1]!;
+        if (position >= nextPos && position <= pos) {
+          const range = pos - nextPos;
+          const progress = range > 0 ? (pos - position) / range : 0;
+          const clamped = Math.max(0, Math.min(1, progress));
+          return {
+            index: i + clamped,
+            detent: values[i]! + clamped * (values[i + 1]! - values[i]!),
+          };
+        }
+      }
+
+      return { index: count - 1, detent: values[count - 1]! };
+    },
+    [detached, detachedOffset]
+  );
+
+  const handlePositionChange = useCallback(
+    (position: number) => {
+      const { index, detent } = interpolateFromPosition(position);
+      onPositionChangeRef.current?.({
+        nativeEvent: { index, position, detent, realtime: true },
+      } as PositionChangeEvent);
+    },
+    [interpolateFromPosition]
+  );
 
   // Fire onMount once after first render. React-mount is the earliest point
   // the component is ready for imperative calls, matching the native
