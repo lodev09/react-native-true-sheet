@@ -479,9 +479,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * Resets this sheet's translation and restores dragging when it becomes topmost.
    * Parent recalculates its translation based on this sheet's position.
    */
-  fun resetTranslation() {
+  fun resetTranslation(onTranslateEnd: (() -> Unit)? = null) {
     viewController.sheetView?.behavior?.isDraggable = viewController.draggable
-    viewController.translateSheet(0)
+    viewController.translateSheet(0, onEnd = onTranslateEnd)
 
     // Parent should recalculate its translation based on this sheet's position
     val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
@@ -510,7 +510,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
   }
 
-  override fun viewControllerDidDismiss(hadParent: Boolean) {
+  override fun viewControllerDidDismiss(parent: TrueSheetView?) {
     // Detach coordinator from the root container view
     viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
     rootContainerView = null
@@ -520,7 +520,14 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
-    TrueSheetStackManager.unregisterSheet(this, hadParent)
+    TrueSheetStackManager.unregisterSheet(this)
+
+    parent?.resetTranslation {
+      val parentController = parent.viewController
+      if (parentController.isPresented && !parentController.isBeingDismissed) {
+        parent.viewControllerDidFocus()
+      }
+    }
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {

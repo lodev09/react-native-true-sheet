@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: Emit `onDidFocus` after the parent's translate-up animation completes when a stacked child sheet is dismissed. ([#666](https://github.com/lodev09/react-native-true-sheet/pull/666) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed focused input in sheet causing auto-focus on main screen input after dismiss. ([#649](https://github.com/lodev09/react-native-true-sheet/pull/649) by [@lodev09](https://github.com/lodev09))
 
 ## 3.10.0

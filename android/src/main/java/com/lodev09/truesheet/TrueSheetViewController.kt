@@ -50,7 +50,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerWillPresent(index: Int, position: Float, detent: Float)
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
-  fun viewControllerDidDismiss(hadParent: Boolean)
+  fun viewControllerDidDismiss(parent: TrueSheetView?)
   fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
@@ -1163,12 +1163,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun emitDidDismissEvents() {
-    val hadParent = parentSheetView != null
-    parentSheetView?.viewControllerDidFocus()
+    val parent = parentSheetView
     parentSheetView = null
 
     delegate?.viewControllerDidBlur()
-    delegate?.viewControllerDidDismiss(hadParent)
+    delegate?.viewControllerDidDismiss(parent)
 
     dismissPromise?.invoke()
     dismissPromise = null
@@ -1224,7 +1223,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  fun translateSheet(translationY: Int) {
+  fun translateSheet(translationY: Int, onEnd: (() -> Unit)? = null) {
     val sheet = sheetView ?: return
 
     sheet.animate()
@@ -1234,6 +1233,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val effectiveTop = sheet.top + sheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
       }
+      .withEndAction { onEnd?.invoke() }
       .start()
   }
 
