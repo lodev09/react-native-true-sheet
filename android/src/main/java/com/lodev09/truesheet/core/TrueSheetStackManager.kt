@@ -48,15 +48,12 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Unregisters a sheet from the stack and resets parent translation if needed.
+   * Unregisters a sheet from the stack.
    */
   @JvmStatic
-  fun unregisterSheet(sheetView: TrueSheetView, hadParent: Boolean) {
+  fun unregisterSheet(sheetView: TrueSheetView) {
     synchronized(presentedSheetStack) {
       presentedSheetStack.remove(sheetView)
-      if (hadParent) {
-        presentedSheetStack.lastOrNull()?.resetTranslation()
-      }
     }
   }
 
