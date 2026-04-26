@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.10.1
+
 ### 🐛 Bug fixes
 
 - **Android**: Emit `onDidFocus` after the parent's translate-up animation completes when a stacked child sheet is dismissed. ([#666](https://github.com/lodev09/react-native-true-sheet/pull/666) by [@lodev09](https://github.com/lodev09))
