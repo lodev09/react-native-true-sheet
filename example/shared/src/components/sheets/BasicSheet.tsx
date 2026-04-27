@@ -61,6 +61,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       name="basic"
       ref={sheetRef}
       detached
+      pageSizing={false}
       grabberOptions={{
         width: 60,
       }}

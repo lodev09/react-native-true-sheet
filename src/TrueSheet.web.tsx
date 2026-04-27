@@ -47,6 +47,8 @@ import {
   DEFAULT_GRABBER_HEIGHT,
   DEFAULT_GRABBER_TOP_MARGIN,
   DEFAULT_GRABBER_WIDTH,
+  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
+  DEFAULT_FORM_SHEET_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
 
@@ -75,6 +77,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footerStyle,
     scrollable = false,
     scrollableOptions,
+    pageSizing = true,
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
     elevation = 4,
@@ -619,20 +622,42 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     []
   );
 
+  // Form-sheet style (iOS pageSizing=false): centered floating card with a
+  // default width and a height capped to a fraction of the window. We reuse
+  // the existing detached mechanic so drag/snap math stays correct — the
+  // wrapper is bottom-attached with a computed offset that centers it
+  // vertically.
+  const isFormSheet =
+    isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
+
+  const effectiveMaxContentHeight =
+    maxContentHeight ??
+    (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
+
+  const effectiveDetached = isFormSheet || detached;
+
+  const effectiveDetachedOffset = isFormSheet
+    ? Math.max(0, (windowHeight - (effectiveMaxContentHeight ?? 0)) / 2)
+    : detachedOffset;
+
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
   // desktop — otherwise its corners sit at the far viewport edges.
-  const wrapperStyle = useMemo<React.CSSProperties | undefined>(
-    () =>
-      isLandscapeOrTablet
-        ? {
-            maxWidth: maxContentWidth ?? DEFAULT_MAX_WIDTH,
-            marginLeft: anchor === 'left' ? anchorOffset : 'auto',
-            marginRight: anchor === 'right' ? anchorOffset : 'auto',
-          }
-        : undefined,
-    [isLandscapeOrTablet, maxContentWidth, anchor, anchorOffset]
-  );
+  // Mirrors iOS setupSheetSizing: maxContentWidth wins (forces pageSizing
+  // off). pageSizing on → constrain to readable width (page-sheet);
+  // pageSizing off with no maxContentWidth → form-sheet width.
+  const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
+    if (!isLandscapeOrTablet) return undefined;
+    const maxWidth = isFormSheet
+      ? DEFAULT_FORM_SHEET_WIDTH
+      : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined));
+    if (maxWidth == null) return undefined;
+    return {
+      maxWidth,
+      marginLeft: isFormSheet || anchor !== 'left' ? 'auto' : anchorOffset,
+      marginRight: isFormSheet || anchor !== 'right' ? 'auto' : anchorOffset,
+    };
+  }, [isLandscapeOrTablet, isFormSheet, maxContentWidth, pageSizing, anchor, anchorOffset]);
 
   const handleStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -659,10 +684,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
-      detached={detached}
-      detachedOffset={detachedOffset}
+      detached={effectiveDetached}
+      detachedOffset={effectiveDetachedOffset}
       detachedRadius={effectiveCornerRadius}
-      maxContentHeight={maxContentHeight}
+      maxContentHeight={effectiveMaxContentHeight}
       initialAnimated={initialDetentAnimated}
       detachedWrapperStyle={wrapperStyle}
       activeSnapPoint={activeSnapPoint}
