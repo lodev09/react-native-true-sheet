@@ -6,8 +6,11 @@
 
 - **Web**: Replace `@gorhom/bottom-sheet` with vendored `vaul` renderer. Adds full event lifecycle (`onMount`, `onWill/DidPresent`, `onWill/DidDismiss`, `onDetentChange`, `onDragBegin/Change/End`, `onPositionChange`, `onWill/DidFocus`, `onWill/DidBlur`), sheet stacking with cascade, detached mode, `auto` detent, scrollable content, and honors `elevation`, `cornerRadius`, `maxContentHeight`, `draggable`, `dimmedDetentIndex`, `insetAdjustment`, `initialDetentAnimated`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639) by [@lodev09](https://github.com/lodev09))
 
+## 3.10.1
+
 ### 🐛 Bug fixes
 
+- **Android**: Emit `onDidFocus` after the parent's translate-up animation completes when a stacked child sheet is dismissed. ([#666](https://github.com/lodev09/react-native-true-sheet/pull/666) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed focused input in sheet causing auto-focus on main screen input after dismiss. ([#649](https://github.com/lodev09/react-native-true-sheet/pull/649) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking
