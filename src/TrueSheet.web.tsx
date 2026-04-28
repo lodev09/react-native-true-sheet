@@ -627,12 +627,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // the existing detached mechanic so drag/snap math stays correct — the
   // wrapper is bottom-attached with a computed offset that centers it
   // vertically.
-  const isFormSheet =
-    isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
+  const isFormSheet = isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
 
   const effectiveMaxContentHeight =
-    maxContentHeight ??
-    (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
+    maxContentHeight ?? (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
 
   const effectiveDetached = isFormSheet || detached;
 
