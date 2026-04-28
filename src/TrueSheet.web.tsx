@@ -646,18 +646,44 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Mirrors iOS setupSheetSizing: maxContentWidth wins (forces pageSizing
   // off). pageSizing on → constrain to readable width (page-sheet);
   // pageSizing off with no maxContentWidth → form-sheet width.
+  // Detached without a width constraint applies anchorOffset on both edges so
+  // the floating card breathes from the viewport sides.
   const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
-    if (!isLandscapeOrTablet) return undefined;
-    const maxWidth = isFormSheet
-      ? DEFAULT_FORM_SHEET_WIDTH
-      : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined));
-    if (maxWidth == null) return undefined;
+    const maxWidth = isLandscapeOrTablet
+      ? isFormSheet
+        ? DEFAULT_FORM_SHEET_WIDTH
+        : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined))
+      : undefined;
+
+    if (maxWidth == null && !detached) return undefined;
+
+    let marginLeft: number | string;
+    let marginRight: number | string;
+    if (isFormSheet) {
+      marginLeft = 'auto';
+      marginRight = 'auto';
+    } else if (maxWidth == null) {
+      marginLeft = anchorOffset;
+      marginRight = anchorOffset;
+    } else {
+      marginLeft = anchor === 'left' ? anchorOffset : 'auto';
+      marginRight = anchor === 'right' ? anchorOffset : 'auto';
+    }
+
     return {
-      maxWidth,
-      marginLeft: isFormSheet || anchor !== 'left' ? 'auto' : anchorOffset,
-      marginRight: isFormSheet || anchor !== 'right' ? 'auto' : anchorOffset,
+      ...(maxWidth != null && { maxWidth }),
+      marginLeft,
+      marginRight,
     };
-  }, [isLandscapeOrTablet, isFormSheet, maxContentWidth, pageSizing, anchor, anchorOffset]);
+  }, [
+    isLandscapeOrTablet,
+    isFormSheet,
+    maxContentWidth,
+    pageSizing,
+    anchor,
+    anchorOffset,
+    detached,
+  ]);
 
   const handleStyle = useMemo<React.CSSProperties>(
     () => ({
