@@ -182,7 +182,7 @@
 }
 
 @media (pointer: fine) {
-  [data-vaul-handle-hitarea]: {
+  [data-vaul-handle-hitarea] {
     width: 100%;
     height: 100%;
   }

@@ -3,6 +3,7 @@
 import React from 'react';
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Presence } from '@radix-ui/react-presence';
 
 import { DrawerContext, useDrawerContext } from './context';
 import './style.css';
@@ -239,19 +240,6 @@ export function Root({
       setTimeout(() => {
         onAnimationEnd?.(o);
       }, TRANSITIONS.DURATION * 1000);
-
-      if (o && !modal) {
-        if (typeof window !== 'undefined') {
-          window.requestAnimationFrame(() => {
-            document.body.style.pointerEvents = 'auto';
-          });
-        }
-      }
-
-      if (!o) {
-        // This will be removed when the exit animation ends (`500ms`)
-        document.body.style.pointerEvents = 'auto';
-      }
     },
   });
   const [hasBeenOpened, setHasBeenOpened] = React.useState<boolean>(false);
@@ -566,88 +554,6 @@ export function Root({
     onPositionChangeRef.current = onPositionChange;
   });
 
-  // Radix's DismissableLayer (modal) sets body pointer-events to "none" so the
-  // overlay traps clicks. When the active snap is below fadeFromIndex the
-  // overlay is fully transparent, and we want clicks to reach the content
-  // behind the drawer — so we restore body interactivity. DismissableLayer
-  // captures its DOM node via a ref-callback `setNode`, so its body write
-  // runs one render later than ours on initial open — re-assert on rAF so
-  // the final write is ours.
-  React.useEffect(() => {
-    if (!modal || !snapPoints || fadeFromIndex === undefined) return;
-    // On close, restore body interactivity. `useControllableState.onChange`
-    // only fires for internal `setIsOpen` calls — when the parent flips the
-    // `open` prop imperatively, the reset at line ~201 never runs.
-    if (!isOpen) {
-      document.body.style.pointerEvents = 'auto';
-      return;
-    }
-    if (typeof activeSnapPointIndex !== 'number') return;
-    const isBelowFade = activeSnapPointIndex < fadeFromIndex;
-    const value = isBelowFade ? 'auto' : 'none';
-    document.body.style.pointerEvents = value;
-    const id = window.requestAnimationFrame(() => {
-      document.body.style.pointerEvents = value;
-    });
-
-    // React Navigation keeps unfocused screens mounted with `display: none` on
-    // web, so the drawer never unmounts and neither `isOpen` nor this effect's
-    // deps change — a lingering `none` body style would then leak to whichever
-    // screen becomes visible. Observe the drawer: when an ancestor hides it,
-    // restore `auto`; when it returns, re-apply the desired value.
-    let observer: IntersectionObserver | null = null;
-    let rafId = 0;
-    const startObserving = () => {
-      const node = drawerRef.current;
-      if (!node) {
-        rafId = window.requestAnimationFrame(startObserving);
-        return;
-      }
-      observer = new IntersectionObserver((entries) => {
-        const entry = entries[entries.length - 1];
-        if (!entry) return;
-        document.body.style.pointerEvents = entry.isIntersecting ? value : 'auto';
-      });
-      observer.observe(node);
-    };
-    rafId = window.requestAnimationFrame(startObserving);
-
-    // Always restore on cleanup so an unmount while the sheet is still open
-    // doesn't leave the page uninteractive. If the effect re-runs for a
-    // normal state change, it re-applies the correct value.
-    return () => {
-      window.cancelAnimationFrame(id);
-      window.cancelAnimationFrame(rafId);
-      observer?.disconnect();
-      document.body.style.pointerEvents = 'auto';
-    };
-  }, [isOpen, modal, snapPoints, fadeFromIndex, activeSnapPointIndex]);
-
-  // Radix DismissableLayer's body-restore on unmount is broken: its two
-  // useEffects (see @radix-ui/react-dismissable-layer dist/index.mjs:68-92)
-  // run cleanups in reverse declaration order, so the layers-set decrement
-  // (effect B) runs BEFORE the size-1 body-restore check (effect A). When
-  // the last layer unmounts, A sees size=0 and skips the restore — body
-  // stays 'none'. Take ownership of the restore here on Drawer.Root unmount.
-  // Skipped when nested or non-modal so an inner drawer's unmount doesn't
-  // unlock an outer drawer's modal trap. Also bail if any other Radix
-  // dismissable layer is still open (sibling Dialog/AlertDialog/Popover) —
-  // that one wants the lock kept.
-  React.useEffect(() => {
-    if (nested || !modal) return;
-    return () => {
-      if (typeof document === 'undefined') return;
-      if (document.body.style.pointerEvents !== 'none') return;
-      if (
-        document.querySelector(
-          '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
-        )
-      )
-        return;
-      document.body.style.pointerEvents = 'auto';
-    };
-  }, [nested, modal]);
-
   React.useEffect(() => {
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -916,15 +822,6 @@ export function Root({
     }
   }
 
-  React.useEffect(() => {
-    if (!modal) {
-      // Need to do this manually unfortunately
-      window.requestAnimationFrame(() => {
-        document.body.style.pointerEvents = 'auto';
-      });
-    }
-  }, [modal]);
-
   return (
     <DialogPrimitive.Root
       defaultOpen={defaultOpen}
@@ -939,7 +836,14 @@ export function Root({
         setIsOpen(open);
       }}
       open={isOpen}
-      modal={modal}
+      // Always non-modal at the Radix level — Radix's modal mode locks
+      // body.style.pointerEvents and its restore on layer unmount is buggy
+      // (see git history). Vaul's own overlay handles click-trapping; the
+      // overlay sets pointer-events: none below fadeFromIndex so clicks
+      // pass through to the page (matches native dimmedDetentIndex). Vaul's
+      // own `modal` prop still drives overlay rendering and click-outside
+      // behavior below.
+      modal={false}
     >
       <DrawerContext.Provider
         value={{
@@ -1035,26 +939,38 @@ export const Overlay = React.forwardRef<
     typeof activeSnapPointIndex === 'number' &&
     activeSnapPointIndex < fadeFromIndex;
 
+  // Render our own overlay element instead of `DialogPrimitive.Overlay`:
+  // Radix's Overlay returns null when the Dialog is non-modal, and we run
+  // Radix as `modal={false}` to keep it from locking body pointer-events.
+  // `Presence` keeps the node mounted through the closing animation
+  // (`fadeOut`) before unmounting.
   return (
-    <DialogPrimitive.Overlay
-      onMouseUp={onMouseUp}
-      ref={composedRef}
-      data-vaul-overlay=""
-      data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
-      data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
-      data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
-      data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
-      {...rest}
-      style={isBelowFade ? overlayBelowFadeStyle(style) : style}
-    />
+    <Presence present={isOpen}>
+      <div
+        onMouseUp={onMouseUp}
+        ref={composedRef}
+        data-state={isOpen ? 'open' : 'closed'}
+        data-vaul-overlay=""
+        data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
+        data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
+        data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
+        data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
+        {...rest}
+        style={overlayStyle(style, !!isBelowFade)}
+      />
+    </Presence>
   );
 });
 
 Overlay.displayName = 'Drawer.Overlay';
 
-const overlayPointerEventsNone: React.CSSProperties = { pointerEvents: 'none' };
-const overlayBelowFadeStyle = (style: React.CSSProperties | undefined): React.CSSProperties =>
-  style ? { ...style, ...overlayPointerEventsNone } : overlayPointerEventsNone;
+const overlayStyle = (
+  style: React.CSSProperties | undefined,
+  isBelowFade: boolean
+): React.CSSProperties => ({
+  ...style,
+  pointerEvents: isBelowFade ? 'none' : 'auto',
+});
 
 export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   /**
@@ -1385,10 +1301,12 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
           }
         }}
         onFocusOutside={(e) => {
-          if (!modal || isBelowFade) {
-            e.preventDefault();
-            return;
-          }
+          // Never auto-dismiss the sheet on focus shifts. Without Radix's
+          // FocusScope trap (we run modal={false}), this fires whenever
+          // focus naturally leaves the drawer — e.g. React Navigation's
+          // web driver hides the previous screen via display:none, which
+          // moves focus off the trigger and dismisses the sheet.
+          e.preventDefault();
         }}
         onPointerMove={(event) => {
           lastKnownPointerEventRef.current = event;

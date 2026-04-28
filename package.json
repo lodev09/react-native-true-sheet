@@ -122,6 +122,7 @@
   },
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
+    "@radix-ui/react-presence": ">=1",
     "@react-navigation/native": ">=7",
     "react": "*",
     "react-native": "*",
@@ -130,6 +131,9 @@
   },
   "peerDependenciesMeta": {
     "@radix-ui/react-dialog": {
+      "optional": true
+    },
+    "@radix-ui/react-presence": {
       "optional": true
     },
     "@react-navigation/native": {
