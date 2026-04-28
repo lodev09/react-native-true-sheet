@@ -89,6 +89,7 @@
     "@eslint/js": "^9.35.0",
     "@evilmartians/lefthook": "^2.0.4",
     "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-presence": "^1",
     "@react-native/babel-preset": "^0.83.4",
     "@react-native/eslint-config": "^0.83.4",
     "@react-navigation/native": "^7.1.6",

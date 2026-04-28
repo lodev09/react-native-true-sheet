@@ -4980,6 +4980,7 @@ __metadata:
     "@eslint/js": "npm:^9.35.0"
     "@evilmartians/lefthook": "npm:^2.0.4"
     "@radix-ui/react-dialog": "npm:^1.1.1"
+    "@radix-ui/react-presence": "npm:^1"
     "@react-native/babel-preset": "npm:^0.83.4"
     "@react-native/eslint-config": "npm:^0.83.4"
     "@react-navigation/native": "npm:^7.1.6"
@@ -5556,7 +5557,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-presence@npm:1.1.5":
+"@radix-ui/react-presence@npm:1.1.5, @radix-ui/react-presence@npm:^1":
   version: 1.1.5
   resolution: "@radix-ui/react-presence@npm:1.1.5"
   dependencies:
