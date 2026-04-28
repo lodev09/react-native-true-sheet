@@ -16,7 +16,7 @@ export const Header = ({ children, style, ...rest }: HeaderProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: Platform.select({ ios: HEADER_HEIGHT, default: HEADER_HEIGHT + SPACING }),
+    height: Platform.select({ android: HEADER_HEIGHT + SPACING, default: HEADER_HEIGHT }),
     paddingTop: Platform.select({ android: SPACING * 2 }),
     justifyContent: 'center',
     padding: SPACING,

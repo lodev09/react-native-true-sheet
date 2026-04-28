@@ -1,8 +1,7 @@
 import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 
-import type { TrueSheetProps } from '../TrueSheet.types';
-import type { TrueSheetStaticMethods } from '../TrueSheetProvider';
+import type { TrueSheetProps, TrueSheetStaticMethods } from '../TrueSheet.types';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;

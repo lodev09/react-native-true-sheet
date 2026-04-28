@@ -155,30 +155,6 @@ export interface BlurOptions {
 }
 
 /**
- * Defines the stack behavior when a modal is presented on web.
- *
- * @platform web
- */
-export type StackBehavior =
-  /**
-   * Mount the modal on top of the current one.
-   */
-  | 'push'
-  /**
-   * Minimize the current modal then mount the new one.
-   */
-  | 'switch'
-  /**
-   * Dismiss the current modal then mount the new one.
-   */
-  | 'replace'
-  /**
-   * Use a regular BottomSheet instead of BottomSheetModal.
-   * This bypasses the modal stack entirely.
-   */
-  | 'none';
-
-/**
  * Inset adjustment behavior for the sheet content.
  */
 export type InsetAdjustment =
@@ -354,11 +330,11 @@ export interface TrueSheetProps extends ViewProps {
   grabberOptions?: GrabberOptions;
 
   /**
-   * Controls the sheet presentation style on iPad.
+   * Controls the sheet presentation style on iPad and web (landscape/tablet).
    * When enabled (true), uses a large page sheet for better readability.
    * When disabled (false), uses a centered form sheet.
    *
-   * @platform ios 17+
+   * @platform ios 17+, web
    * @default true
    */
   pageSizing?: boolean;
@@ -490,18 +466,6 @@ export interface TrueSheetProps extends ViewProps {
   detachedOffset?: number;
 
   /**
-   * Defines the stack behavior when a modal is presented.
-   * - `push`: Mount the modal on top of the current one.
-   * - `switch`: Minimize the current modal then mount the new one.
-   * - `replace`: Dismiss the current modal then mount the new one.
-   * - `none`: Use a regular BottomSheet instead of BottomSheetModal.
-   *
-   * @platform web
-   * @default 'switch'
-   */
-  stackBehavior?: StackBehavior;
-
-  /**
    * Called when the sheet's content is mounted and ready.
    * The sheet automatically waits for this event before presenting.
    */
@@ -586,4 +550,90 @@ export interface TrueSheetProps extends ViewProps {
    * @platform android
    */
   onBackPress?: () => boolean | void;
+}
+
+/**
+ * Imperative methods available on a TrueSheet ref.
+ *
+ * Example:
+ * ```tsx
+ * const sheetRef = useRef<TrueSheetMethods>(null);
+ * sheetRef.current?.present();
+ * ```
+ */
+export interface TrueSheetMethods {
+  /**
+   * Present the sheet at a given detent index.
+   *
+   * @param index - The detent index to present at (default: `0`).
+   * @param animated - Whether to animate the presentation (default: `true`). Ignored on web.
+   */
+  present(index?: number, animated?: boolean): Promise<void>;
+
+  /**
+   * Resize the sheet to a given detent index.
+   *
+   * @param index - The detent index to resize to.
+   */
+  resize(index: number): Promise<void>;
+
+  /**
+   * Dismiss this sheet and all sheets presented on top of it in a single animation.
+   *
+   * @param animated - Whether to animate the dismissal (default: `true`). Ignored on web.
+   */
+  dismiss(animated?: boolean): Promise<void>;
+
+  /**
+   * Dismiss only the sheets presented on top of this sheet, keeping this sheet presented.
+   * No-op if no sheets are presented on top.
+   *
+   * @param animated - Whether to animate the dismissal (default: `true`). Ignored on web.
+   */
+  dismissStack(animated?: boolean): Promise<void>;
+}
+
+/**
+ * Static methods exposed on the `TrueSheet` component for controlling sheets by `name`.
+ *
+ * Example:
+ * ```ts
+ * TrueSheet.present('my-sheet')
+ * ```
+ *
+ * @note Not supported on web — use the `useTrueSheet()` hook instead.
+ */
+export interface TrueSheetStaticMethods {
+  /**
+   * Present the sheet with the given `name`.
+   *
+   * @throws if no sheet with the given `name` is registered.
+   */
+  present(name: string, index?: number, animated?: boolean): Promise<void>;
+
+  /**
+   * Resize the sheet with the given `name`.
+   *
+   * @throws if no sheet with the given `name` is registered.
+   */
+  resize(name: string, index: number): Promise<void>;
+
+  /**
+   * Dismiss the sheet with the given `name` and all sheets presented on top of it.
+   *
+   * @throws if no sheet with the given `name` is registered.
+   */
+  dismiss(name: string, animated?: boolean): Promise<void>;
+
+  /**
+   * Dismiss only the sheets presented on top of the sheet with the given `name`.
+   *
+   * @throws if no sheet with the given `name` is registered.
+   */
+  dismissStack(name: string, animated?: boolean): Promise<void>;
+
+  /**
+   * Dismiss every presented sheet, from the top of the stack downward.
+   */
+  dismissAll(animated?: boolean): Promise<void>;
 }

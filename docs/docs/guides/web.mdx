@@ -1,18 +1,18 @@
 ---
 title: Web Support
-description: Use TrueSheet on the web with @gorhom/bottom-sheet.
+description: Use TrueSheet on the web.
 keywords: [bottom sheet web, react native web, bottom sheet browser, expo web]
 ---
 
 import web from '/img/preview-web.gif'
 
-Yes, `TrueSheet` supports web! Using [@gorhom/bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet) under the hood. This allows you to use the same API across iOS, Android, and Web.
+Yes, `TrueSheet` supports web! It ships a vendored drawer implementation so the same API works across iOS, Android, and Web.
 
 <img alt="web" src={web} width="300"/>
 
 ## Installation
 
-In addition to `@lodev09/react-native-true-sheet`, install the required web dependencies. Follow the [@gorhom/bottom-sheet installation guide](https://gorhom.dev/react-native-bottom-sheet#installation).
+Install `@radix-ui/react-dialog` alongside `@lodev09/react-native-true-sheet`. It's declared as an optional peer dependency and provides the underlying dialog primitives for the web renderer.
 
 ## Setup
 
@@ -66,43 +66,6 @@ const MyComponent = () => {
 ### Using Refs
 
 You can also use refs to control sheets directly as you would on native.
-
-## Scrollable Content
-
-For scrollable content on web, use the [scrollable components](https://gorhom.dev/react-native-bottom-sheet/scrollables) from `@gorhom/bottom-sheet`:
-
-```tsx
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
-
-<TrueSheet scrollable detents={[0.5, 1]}>
-  <BottomSheetScrollView>
-    {/* Your scrollable content */}
-  </BottomSheetScrollView>
-</TrueSheet>
-```
-
-:::note
-On native platforms, standard React Native scrollables work without any changes.
-:::
-
-## Stack Behavior
-
-Control how sheets stack when presenting multiple sheets using the `stackBehavior` prop:
-
-| Value | Description |
-|-------|-------------|
-| `push` | Mount the modal on top of the current one |
-| `switch` | Minimize the current modal then mount the new one (default) |
-| `replace` | Dismiss the current modal then mount the new one |
-| `none` | Use a regular BottomSheet instead of BottomSheetModal |
-
-```tsx
-<TrueSheet stackBehavior="none" detents={[0.5, 1]}>
-  {/* Content */}
-</TrueSheet>
-```
-
-Use `stackBehavior="none"` when you need a non-modal sheet that doesn't participate in the modal stack.
 
 ## Detached Mode
 

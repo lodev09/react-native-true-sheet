@@ -198,36 +198,12 @@ await present('my-sheet')
 await dismiss('my-sheet')
 ```
 
-### Scrollable content on web
-
-The native `scrollable` prop doesn't apply on web. Use `BottomSheetScrollView`:
-
-```tsx
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
-
-<TrueSheet name="web-list" detents={[0.5, 1]}>
-  <BottomSheetScrollView>
-    {items.map(item => <Item key={item.id} {...item} />)}
-  </BottomSheetScrollView>
-</TrueSheet>
-```
-
 ### Detached mode (floating card)
 
 ```tsx
 <TrueSheet detached detachedOffset={24} detents={[0.5]}>
   <CardContent />
 </TrueSheet>
-```
-
-### Stack behavior
-
-Controls what happens when a second sheet presents while one is already visible:
-
-```tsx
-<TrueSheet stackBehavior="push" />   // stack on top
-<TrueSheet stackBehavior="switch" />  // minimize current (default)
-<TrueSheet stackBehavior="replace" /> // dismiss current
 ```
 
 ---

@@ -60,6 +60,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       detents={['auto', 0.8, 1]}
       name="basic"
       ref={sheetRef}
+      detached
+      pageSizing={false}
       grabberOptions={{
         width: 60,
       }}
@@ -141,12 +143,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         name="basic-child"
         detents={['auto', 1]}
         backgroundColor={DARK}
-        dimmed={false}
         style={styles.content}
         footer={<Footer />}
       >
-        <DemoContent color={DARK_BLUE} />
-        <DemoContent color={DARK_BLUE} />
         <DemoContent color={DARK_BLUE} />
         {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
         <Button text="Dismiss All" onPress={() => dismissAll()} />

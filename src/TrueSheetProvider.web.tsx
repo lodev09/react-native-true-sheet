@@ -1,143 +1,211 @@
-import { createContext, useContext, useRef, type ReactNode, type RefObject } from 'react';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 
-import type { TrueSheetStaticMethods } from './TrueSheetProvider';
-import type { TrueSheet } from './TrueSheet';
+import type { TrueSheetMethods, TrueSheetStaticMethods } from './TrueSheet.types';
 
-export type TrueSheetRefMethods = Pick<
-  TrueSheet,
-  'present' | 'dismiss' | 'resize' | 'dismissStack'
->;
+type SheetRef = RefObject<TrueSheetMethods | null>;
+type NodeRef = RefObject<HTMLDivElement | null>;
 
-interface BottomSheetContextValue extends TrueSheetStaticMethods {
-  register: (name: string, methods: RefObject<TrueSheetRefMethods>) => void;
-  unregister: (name: string) => void;
-  pushToStack: (name: string) => void;
-  removeFromStack: (name: string) => void;
-  getSheetsAbove: (name: string) => string[];
+interface StackEntry {
+  ref: SheetRef;
+  nodeRef: NodeRef;
 }
 
-export const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
+interface SheetContextValue {
+  registerByName: (name: string, ref: SheetRef) => () => void;
+  resolveByName: (name: string) => TrueSheetMethods;
+  pushOpen: (entry: StackEntry) => void;
+  popOpen: (entry: StackEntry) => void;
+  subscribeStack: (listener: () => void) => () => void;
+  getStackSnapshot: () => readonly StackEntry[];
+  portalContainer: HTMLElement | null;
+}
+
+const SheetContext = createContext<SheetContextValue | null>(null);
+
+const NO_PROVIDER_ERROR =
+  'TrueSheet: useTrueSheet() requires a <TrueSheetProvider> ancestor on web.';
+
+const EMPTY_STACK: readonly StackEntry[] = Object.freeze([]);
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
 }
 
-/**
- * Provider for TrueSheet on web.
- * Required to wrap your app for sheet management via useTrueSheet hook.
- */
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
-  const sheetsRef = useRef<Map<string, RefObject<TrueSheetRefMethods>>>(new Map());
-  const presentedStackRef = useRef<string[]>([]);
+  const namedSheetsRef = useRef<Map<string, SheetRef>>(new Map());
+  const stackRef = useRef<readonly StackEntry[]>(EMPTY_STACK);
+  const listenersRef = useRef<Set<() => void>>(new Set());
 
-  const register = (name: string, methods: RefObject<TrueSheetRefMethods>) => {
-    sheetsRef.current.set(name, methods);
-  };
+  // Stable portal container created once. Attached to an anchor div rendered
+  // in this provider's tree so the sheets unmount cleanly with the provider
+  // (e.g., when a screen-scoped provider unmounts on navigation).
+  const portalContainer = useMemo<HTMLDivElement | null>(
+    () => (typeof document !== 'undefined' ? document.createElement('div') : null),
+    []
+  );
+  const anchorRef = useRef<HTMLDivElement | null>(null);
 
-  const unregister = (name: string) => {
-    sheetsRef.current.delete(name);
-  };
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor || !portalContainer) return;
+    anchor.appendChild(portalContainer);
+    return () => {
+      if (portalContainer.parentNode) {
+        portalContainer.parentNode.removeChild(portalContainer);
+      }
+    };
+  }, [portalContainer]);
 
-  const pushToStack = (name: string) => {
-    const index = presentedStackRef.current.indexOf(name);
-    if (index >= 0) {
-      presentedStackRef.current.splice(index, 1);
-    }
-    presentedStackRef.current.push(name);
-  };
+  const value = useMemo<SheetContextValue>(() => {
+    const notify = () => listenersRef.current.forEach((listener) => listener());
 
-  const removeFromStack = (name: string) => {
-    const index = presentedStackRef.current.indexOf(name);
-    if (index >= 0) {
-      presentedStackRef.current.splice(index, 1);
-    }
-  };
-
-  /**
-   * Returns all sheets presented on top of the given sheet.
-   * Returns them in reverse order (top-most first) for proper dismissal.
-   */
-  const getSheetsAbove = (name: string): string[] => {
-    const index = presentedStackRef.current.indexOf(name);
-    if (index < 0 || index >= presentedStackRef.current.length - 1) return [];
-    return presentedStackRef.current.slice(index + 1).reverse();
-  };
-
-  const present = async (name: string, index: number = 0) => {
-    const sheet = sheetsRef.current.get(name);
-    if (!sheet?.current) {
-      console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
-      return;
-    }
-    return sheet.current.present(index);
-  };
-
-  const dismiss = async (name: string) => {
-    const sheet = sheetsRef.current.get(name);
-    if (!sheet?.current) {
-      console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
-      return;
-    }
-    return sheet.current.dismiss();
-  };
-
-  const dismissStack = async (name: string) => {
-    const sheet = sheetsRef.current.get(name);
-    if (!sheet?.current) {
-      console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
-      return;
-    }
-    return sheet.current.dismissStack();
-  };
-
-  const resize = async (name: string, index: number) => {
-    const sheet = sheetsRef.current.get(name);
-    if (!sheet?.current) {
-      console.warn(`TrueSheet: Could not find sheet with name "${name}"`);
-      return;
-    }
-    return sheet.current.resize(index);
-  };
-
-  const dismissAll = async () => {
-    const rootSheet = presentedStackRef.current[0];
-    if (!rootSheet) return;
-    return dismiss(rootSheet);
-  };
+    return {
+      registerByName: (name, ref) => {
+        namedSheetsRef.current.set(name, ref);
+        return () => {
+          if (namedSheetsRef.current.get(name) === ref) {
+            namedSheetsRef.current.delete(name);
+          }
+        };
+      },
+      resolveByName: (name) => {
+        const ref = namedSheetsRef.current.get(name);
+        const methods = ref?.current;
+        if (!methods) {
+          throw new Error(`TrueSheet: no sheet registered with name "${name}"`);
+        }
+        return methods;
+      },
+      pushOpen: (entry) => {
+        if (stackRef.current.some((e) => e.ref === entry.ref)) return;
+        stackRef.current = [...stackRef.current, entry];
+        notify();
+      },
+      popOpen: (entry) => {
+        const idx = stackRef.current.findIndex((e) => e.ref === entry.ref);
+        if (idx < 0) return;
+        stackRef.current = [...stackRef.current.slice(0, idx), ...stackRef.current.slice(idx + 1)];
+        notify();
+      },
+      subscribeStack: (listener) => {
+        listenersRef.current.add(listener);
+        return () => {
+          listenersRef.current.delete(listener);
+        };
+      },
+      getStackSnapshot: () => stackRef.current,
+      portalContainer,
+    };
+  }, [portalContainer]);
 
   return (
-    <BottomSheetContext.Provider
-      value={{
-        register,
-        unregister,
-        pushToStack,
-        removeFromStack,
-        getSheetsAbove,
-        present,
-        dismiss,
-        dismissStack,
-        resize,
-        dismissAll,
-      }}
-    >
-      <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
-    </BottomSheetContext.Provider>
+    <SheetContext.Provider value={value}>
+      {children}
+      <div ref={anchorRef} />
+    </SheetContext.Provider>
   );
 }
 
+export function usePortalContainer(): HTMLElement | null {
+  const ctx = useContext(SheetContext);
+  return ctx?.portalContainer ?? null;
+}
+
 export function useTrueSheet(): TrueSheetStaticMethods {
-  const context = useContext(BottomSheetContext);
+  const ctx = useContext(SheetContext);
 
-  if (!context) {
-    throw new Error('useTrueSheet must be used within a TrueSheetProvider');
-  }
+  return useMemo<TrueSheetStaticMethods>(() => {
+    if (!ctx) {
+      const reject = async (): Promise<never> => {
+        throw new Error(NO_PROVIDER_ERROR);
+      };
+      return {
+        present: reject,
+        resize: reject,
+        dismiss: reject,
+        dismissStack: reject,
+        dismissAll: reject,
+      };
+    }
 
-  return {
-    present: context.present,
-    dismiss: context.dismiss,
-    dismissStack: context.dismissStack,
-    resize: context.resize,
-    dismissAll: context.dismissAll,
-  };
+    return {
+      present: (name, index, animated) => ctx.resolveByName(name).present(index, animated),
+      resize: (name, index) => ctx.resolveByName(name).resize(index),
+      dismiss: (name, animated) => ctx.resolveByName(name).dismiss(animated),
+      dismissStack: (name, animated) => ctx.resolveByName(name).dismissStack(animated),
+      dismissAll: async (animated) => {
+        const stack = ctx.getStackSnapshot();
+        await Promise.all(
+          [...stack].reverse().map((entry) => entry.ref.current?.dismiss(animated))
+        );
+      },
+    };
+  }, [ctx]);
+}
+
+export function useRegisterSheet(name: string | undefined, ref: SheetRef): void {
+  const ctx = useContext(SheetContext);
+  useEffect(() => {
+    if (!ctx || !name) return;
+    return ctx.registerByName(name, ref);
+  }, [ctx, name, ref]);
+}
+
+/**
+ * Registers the sheet in the open stack while `isOpen` is true and returns
+ * live data used by each sheet to render stacked visuals and dismiss children.
+ */
+export function useSheetStack(ref: SheetRef, nodeRef: NodeRef, isOpen: boolean) {
+  const ctx = useContext(SheetContext);
+
+  const entry = useMemo<StackEntry>(() => ({ ref, nodeRef }), [ref, nodeRef]);
+
+  useEffect(() => {
+    if (!ctx || !isOpen) return;
+    ctx.pushOpen(entry);
+    return () => ctx.popOpen(entry);
+  }, [ctx, entry, isOpen]);
+
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      if (!ctx) return () => {};
+      return ctx.subscribeStack(listener);
+    },
+    [ctx]
+  );
+
+  const getSnapshot = useCallback(() => (ctx ? ctx.getStackSnapshot() : EMPTY_STACK), [ctx]);
+
+  const stack = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const stackIndex = stack.findIndex((e) => e.ref === ref);
+  const isNested = stackIndex > 0;
+  const descendants = useMemo<readonly StackEntry[]>(
+    () => (stackIndex < 0 ? EMPTY_STACK : stack.slice(stackIndex + 1)),
+    [stack, stackIndex]
+  );
+
+  const dismissAbove = useCallback(
+    async (animated?: boolean) => {
+      if (!ctx) return;
+      const snapshot = ctx.getStackSnapshot();
+      const idx = snapshot.findIndex((e) => e.ref === ref);
+      if (idx < 0) return;
+      const above = snapshot.slice(idx + 1);
+      await Promise.all([...above].reverse().map((e) => e.ref.current?.dismiss(animated)));
+    },
+    [ctx, ref]
+  );
+
+  return { descendants, isNested, dismissAbove };
 }

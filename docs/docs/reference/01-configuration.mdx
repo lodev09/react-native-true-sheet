@@ -312,11 +312,11 @@ Options for customizing scrollable behavior. Only applies when `scrollable` is `
 
 ## `pageSizing`
 
-Controls the sheet presentation style on iPad. When enabled (true), uses a large page sheet for better readability. When disabled (false), uses a centered form sheet.
+Controls the sheet presentation style on iPad and web (landscape/tablet). When enabled (true), uses a large page sheet for better readability. When disabled (false), uses a centered form sheet.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `boolean` | `true` | **_17+_** | | |
+| `boolean` | `true` | **_17+_** | | ✅ |
 
 ## `insetAdjustment`
 
@@ -341,14 +341,6 @@ The offset from the bottom edge when [`detached`](#detached) is enabled.
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `number` | `16` | | | ✅ |
-
-## `stackBehavior`
-
-Defines the stack behavior when a modal is presented while another is visible. See [this guide](../guides/stacking) for example.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`StackBehavior`](types#stackbehavior) | `"switch"` | | | ✅ |
 
 ## `style`
 

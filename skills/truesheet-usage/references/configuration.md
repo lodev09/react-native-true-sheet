@@ -123,7 +123,7 @@ Every TrueSheet prop with type, default value, and platform support.
 
 **`ScrollEdgeEffect`:** `'automatic'` | `'hard'` | `'soft'` | `'hidden'` (default: `'hidden'`)
 
-**Web scrolling:** Use `BottomSheetScrollView` from `@gorhom/bottom-sheet` instead of the `scrollable` prop.
+**Web scrolling:** The `scrollable` prop is currently native-only. On web, wrap content in a standard scrollable container.
 
 ## Layout and positioning
 
@@ -131,7 +131,7 @@ Every TrueSheet prop with type, default value, and platform support.
 |------|------|---------|-----------|-------------|
 | `anchor` | `'left' \| 'center' \| 'right'` | `'center'` | 🍎🤖🌐 | Horizontal positioning. Ignored on phones in portrait |
 | `anchorOffset` | `number` | `16` | 🤖🌐 | Edge margin when anchored left/right |
-| `pageSizing` | `boolean` | `true` | 🍎 | iPad: page sheet (true) vs form sheet (false). iOS 17+ |
+| `pageSizing` | `boolean` | `true` | 🍎🌐 | iPad/web (landscape/tablet): page sheet (true) vs form sheet (false). iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖🌐 | Bottom safe area handling |
 
 ## Initial presentation
@@ -147,6 +147,3 @@ Every TrueSheet prop with type, default value, and platform support.
 |------|------|---------|-----------|-------------|
 | `detached` | `boolean` | — | 🌐 | Render as a floating card instead of bottom-attached |
 | `detachedOffset` | `number` | `16` | 🌐 | Gap from bottom edge for detached sheets |
-| `stackBehavior` | `StackBehavior` | `'switch'` | 🌐 | How multiple sheets interact |
-
-**`StackBehavior`:** `'push'` (stack on top) | `'switch'` (minimize current, default) | `'replace'` (dismiss current) | `'none'`

@@ -1,571 +1,796 @@
+/// <reference lib="dom" />
 import {
   createElement,
-  Fragment,
   forwardRef,
   isValidElement,
   useCallback,
-  useContext,
   useEffect,
-  useId,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { View, StyleSheet, useColorScheme, useWindowDimensions } from 'react-native';
+import { View, useColorScheme, useWindowDimensions } from 'react-native';
 
-import BottomSheet, {
-  BottomSheetBackdrop,
-  type BottomSheetBackdropProps,
-  BottomSheetFooter,
-  type BottomSheetFooterProps,
-  BottomSheetModal,
-  type BottomSheetProps,
-  BottomSheetView,
-  type SNAP_POINT_TYPE,
-} from '@gorhom/bottom-sheet';
-import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
-
-import { BottomSheetContext, type TrueSheetRefMethods } from './TrueSheetProvider.web';
+import { Drawer } from './web/vaul';
+import { TRANSITIONS } from './web/vaul/constants';
 import type {
-  TrueSheetProps,
   DetentChangeEvent,
+  DetentInfoEventPayload,
   DidBlurEvent,
   DidDismissEvent,
   DidFocusEvent,
   DidPresentEvent,
+  DragBeginEvent,
+  DragChangeEvent,
+  DragEndEvent,
   MountEvent,
   PositionChangeEvent,
+  SheetDetent,
+  TrueSheetMethods,
+  TrueSheetProps,
+  TrueSheetStaticMethods,
   WillBlurEvent,
   WillDismissEvent,
   WillFocusEvent,
   WillPresentEvent,
-  DragBeginEvent,
-  DragChangeEvent,
-  DragEndEvent,
 } from './TrueSheet.types';
+import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
+import {
+  COLOR_SURFACE_CONTAINER_LOW_DARK,
+  COLOR_SURFACE_CONTAINER_LOW_LIGHT,
+  DEFAULT_ANCHOR_OFFSET,
+  DEFAULT_CORNER_RADIUS,
+  DEFAULT_DETACHED_OFFSET,
+  DEFAULT_GRABBER_COLOR_DARK,
+  DEFAULT_GRABBER_COLOR_LIGHT,
+  DEFAULT_GRABBER_HEIGHT,
+  DEFAULT_GRABBER_TOP_MARGIN,
+  DEFAULT_GRABBER_WIDTH,
+  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
+  DEFAULT_FORM_SHEET_WIDTH,
+  DEFAULT_MAX_WIDTH,
+} from './web/constants';
 
-const DEFAULT_CORNER_RADIUS = 16;
-const DEFAULT_ELEVATION = 4;
-
-const DEFAULT_MAX_WIDTH = 640;
-// M3 baseline surfaceContainerLow
-const COLOR_SURFACE_CONTAINER_LOW_LIGHT = '#F7F2FA';
-const COLOR_SURFACE_CONTAINER_LOW_DARK = '#1D1B20';
-
-const DEFAULT_ANCHOR_OFFSET = 16;
-const DEFAULT_DETACHED_OFFSET = 16;
-const DEFAULT_GRABBER_COLOR_LIGHT = 'rgba(0, 0, 0, 0.3)';
-const DEFAULT_GRABBER_COLOR_DARK = 'rgba(255, 255, 255, 0.3)';
-const DEFAULT_GRABBER_WIDTH = 32;
-const DEFAULT_GRABBER_HEIGHT = 4;
-
-/**
- * Converts elevation to CSS box-shadow based on Material Design 3 elevation system.
- * Uses a combination of ambient and key shadows for realistic depth.
- */
-const getElevationShadow = (elevation: number): string => {
-  if (elevation <= 0) return 'none';
-
-  const ambientY = elevation * 0.5;
-  const ambientBlur = elevation * 1.5;
-  const ambientOpacity = 0.08 + elevation * 0.01;
-
-  const keyY = elevation;
-  const keyBlur = elevation * 2;
-  const keyOpacity = 0.12 + elevation * 0.02;
-
-  return `0px ${ambientY}px ${ambientBlur}px rgba(0, 0, 0, ${ambientOpacity}), 0px ${keyY}px ${keyBlur}px rgba(0, 0, 0, ${keyOpacity})`;
-};
-
-const renderSlot = (slot: TrueSheetProps['header'] | TrueSheetProps['footer']) => {
-  if (!slot) return null;
-  if (isValidElement(slot)) return slot;
-  return createElement(slot);
-};
-
-const TrueSheetComponent = forwardRef<TrueSheetRefMethods, TrueSheetProps>((props, ref) => {
+const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
+    children,
     name,
-    detents = [0.5, 1],
     dismissible = true,
     draggable = true,
-    dimmed = true,
-    dimmedDetentIndex = 0,
-    children,
-    scrollable = false,
-    initialDetentIndex = -1,
+    cornerRadius,
+    style,
     backgroundColor: backgroundColorProp,
-    cornerRadius = DEFAULT_CORNER_RADIUS,
-    elevation = DEFAULT_ELEVATION,
-    grabber = true,
-    grabberOptions,
     maxContentHeight,
     maxContentWidth,
     anchor = 'center',
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
+    grabber = true,
+    grabberOptions,
+    detents = [0.5, 1],
+    dimmed = true,
+    dimmedDetentIndex = 0,
+    initialDetentIndex = -1,
     header,
     headerStyle,
     footer,
     footerStyle,
-    onMount,
+    scrollable = false,
+    scrollableOptions,
+    pageSizing = true,
+    detached = false,
+    detachedOffset = DEFAULT_DETACHED_OFFSET,
+    elevation = 4,
+    insetAdjustment = 'automatic',
+    initialDetentAnimated = true,
+    onPositionChange,
     onWillPresent,
     onDidPresent,
     onWillDismiss,
     onDidDismiss,
     onDetentChange,
-    onPositionChange,
     onDragBegin,
     onDragChange,
     onDragEnd,
+    onMount,
     onWillFocus,
     onDidFocus,
     onWillBlur,
     onDidBlur,
-    detached,
-    detachedOffset = DEFAULT_DETACHED_OFFSET,
-    stackBehavior = 'switch',
-    style,
   } = props;
+
+  const validDetents = useMemo(
+    () => detents.filter((d): d is SheetDetent => typeof d === 'number' || d === 'auto'),
+    [detents]
+  );
+
+  const snapPointsProps = useMemo<
+    { snapPoints: SheetDetent[]; fadeFromIndex: number } | { snapPoints?: undefined }
+  >(() => {
+    if (validDetents.length === 0) return {};
+    return {
+      snapPoints: validDetents,
+      fadeFromIndex: Math.min(dimmedDetentIndex, validDetents.length - 1),
+    };
+  }, [validDetents, dimmedDetentIndex]);
+
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
 
   const colorScheme = useColorScheme();
   const backgroundColor =
     backgroundColorProp ??
     (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
 
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
-  const defaultName = useId();
-  const sheetName = name ?? defaultName;
-  const bottomSheetContext = useContext(BottomSheetContext);
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const initialDetentIndexRef = useRef(initialDetentIndex);
-  const currentIndexRef = useRef(0);
-  const isPresenting = useRef(false);
-  const isDismissing = useRef(false);
-  const isMinimized = useRef(false);
-  const isDragging = useRef(false);
+  const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
+  const [isOpen, setIsOpen] = useState(shouldAutoPresent);
+  const [activeSnapPoint, setActiveSnapPoint] = useState<SheetDetent | null>(
+    () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
+  );
 
-  const presentResolver = useRef<(() => void) | null>(null);
-  const dismissResolver = useRef<(() => void) | null>(null);
+  // Keep activeSnapPoint valid if detents change (e.g., prop updates).
+  useEffect(() => {
+    if (validDetents.length === 0) return;
+    setActiveSnapPoint((current) =>
+      current != null && validDetents.includes(current) ? current : validDetents[0]!
+    );
+  }, [validDetents]);
 
-  const animatedPosition = useSharedValue(windowHeight);
-  const animatedIndex = useSharedValue(0);
+  const validDetentsRef = useRef(validDetents);
+  validDetentsRef.current = validDetents;
 
-  const [snapIndex, setSnapIndex] = useState(initialDetentIndex);
-  const [isMounted, setIsMounted] = useState(false);
+  const handleSetActiveSnapPoint = useCallback((snapPoint: number | string | null) => {
+    setActiveSnapPoint(
+      snapPoint == null
+        ? null
+        : typeof snapPoint === 'number' || snapPoint === 'auto'
+          ? (snapPoint as SheetDetent)
+          : null
+    );
+  }, []);
 
-  const isNonModal = stackBehavior === 'none';
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open && isOpen) {
+        setIsOpen(false);
+      }
+    },
+    [isOpen]
+  );
 
-  useDerivedValue(() => {
-    onPositionChange?.({
-      nativeEvent: {
-        position: animatedPosition.value,
-        index: animatedIndex.value,
-        detent: detents[animatedIndex.value] ?? 0,
-        realtime: true,
+  const portalContainer = usePortalContainer();
+
+  const handlePointerDownOutside = (e: Event) => {
+    const target = e.target;
+    if (!(target instanceof Node)) return;
+    // Pointer down that landed outside this sheet's portal container (e.g.,
+    // in another screen's tree when navigating) should not close the drawer.
+    if (portalContainer && !portalContainer.contains(target)) {
+      e.preventDefault();
+    }
+  };
+
+  const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
+
+  const methods = useMemo<TrueSheetMethods>(
+    () => ({
+      present: async (index = 0) => {
+        const detent = validDetentsRef.current[index];
+        if (detent === undefined) {
+          throw new Error(
+            `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
+          );
+        }
+        setActiveSnapPoint(detent);
+        setIsOpen(true);
       },
-    } as PositionChangeEvent);
+      dismiss: async () => {
+        setIsOpen(false);
+      },
+      resize: async (index) => {
+        const detent = validDetentsRef.current[index];
+        if (detent === undefined) {
+          throw new Error(
+            `TrueSheet: resize index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
+          );
+        }
+        setActiveSnapPoint(detent);
+      },
+      dismissStack: async (animated) => {
+        await dismissAboveRef.current(animated);
+      },
+    }),
+    []
+  );
+
+  useImperativeHandle(ref, () => methods, [methods]);
+
+  const methodsRef = useRef<TrueSheetMethods | null>(methods);
+  useRegisterSheet(name, methodsRef);
+
+  const drawerContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Present/dismiss events. The sheet settles via a CSS `transform` transition
+  // on either the drawer (snap-points on autopresent) or the wrapper (whole-
+  // card slide on reopen/dismiss). `Animation.finished` from the Web Animations
+  // API tracks whichever is actually running — reflects what the browser is
+  // doing, doesn't miss when no transition runs (same-value change), and
+  // handles interruptions correctly (a drag/resnap mid-present resolves only
+  // once all transform animations drain).
+  const onWillPresentRef = useRef(onWillPresent);
+  const onDidPresentRef = useRef(onDidPresent);
+  const onWillDismissRef = useRef(onWillDismiss);
+  const onDidDismissRef = useRef(onDidDismiss);
+  const onDetentChangeRef = useRef(onDetentChange);
+  const onDragBeginRef = useRef(onDragBegin);
+  const onDragChangeRef = useRef(onDragChange);
+  const onDragEndRef = useRef(onDragEnd);
+  const onPositionChangeRef = useRef(onPositionChange);
+  const activeSnapPointRef = useRef(activeSnapPoint);
+  useEffect(() => {
+    onWillPresentRef.current = onWillPresent;
+    onDidPresentRef.current = onDidPresent;
+    onWillDismissRef.current = onWillDismiss;
+    onDidDismissRef.current = onDidDismiss;
+    onDetentChangeRef.current = onDetentChange;
+    onDragBeginRef.current = onDragBegin;
+    onDragChangeRef.current = onDragChange;
+    onDragEndRef.current = onDragEnd;
+    onPositionChangeRef.current = onPositionChange;
+    activeSnapPointRef.current = activeSnapPoint;
   });
 
-  const hasAutoDetent = detents.includes('auto');
+  const computeDetentInfo = useCallback((): DetentInfoEventPayload => {
+    const snap = activeSnapPointRef.current;
+    const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+    const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
+    const detent = typeof snap === 'number' ? snap : 0;
+    return { index, position, detent };
+  }, []);
 
-  const containerHeight = maxContentHeight ?? windowHeight;
-  const snapPoints = useMemo(
-    () =>
-      detents
-        .filter((detent): detent is number => detent !== 'auto' && typeof detent === 'number')
-        .map((detent) => Math.min(1, Math.max(0.1, detent)) * containerHeight),
-    [detents, containerHeight]
-  );
+  // Mirror Android: interpolate fractional index and detent from the drawer's
+  // top-Y so continuous position updates (drag, animation) carry smooth values
+  // between detent boundaries. Numeric detent d → top-Y = (1 - d) * effectiveH.
+  // 'auto' resolves to the [data-vaul-auto-size-wrapper] element's measured
+  // offsetHeight — same signal vaul uses to compute its snap offset.
+  const interpolateFromPosition = useCallback(
+    (position: number): { index: number; detent: number } => {
+      const snaps = validDetentsRef.current;
+      const count = snaps.length;
+      if (count === 0) return { index: -1, detent: 0 };
 
-  const handleChange = useCallback(
-    (index: number, _position: number, _type: SNAP_POINT_TYPE) => {
-      const previousIndex = currentIndexRef.current;
-      currentIndexRef.current = index;
+      const windowH = window.innerHeight;
+      const effectiveH = detached ? windowH - detachedOffset : windowH;
+      // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
+      const ceiling =
+        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
 
-      // Handle drag end
-      if (isDragging.current && !isPresenting.current) {
-        isDragging.current = false;
-        onDragEnd?.({
-          nativeEvent: {
-            index,
-            position: animatedPosition.value,
-            detent: detents[index] ?? 0,
-          },
-        } as DragEndEvent);
-      }
+      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
+        '[data-vaul-auto-size-wrapper]'
+      );
+      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
 
-      if (!isPresenting.current && !isMinimized.current && previousIndex !== index && index >= 0) {
-        onDetentChange?.({
-          nativeEvent: {
-            index,
-            position: animatedPosition.value,
-            detent: detents[index] ?? 0,
-          },
-        } as DetentChangeEvent);
-      }
-
-      if (isPresenting.current) {
-        isPresenting.current = false;
-
-        // Resolve present promise
-        if (presentResolver.current) {
-          presentResolver.current();
-          presentResolver.current = null;
+      const positions: number[] = [];
+      const values: number[] = [];
+      for (let i = 0; i < count; i++) {
+        const d = snaps[i];
+        if (typeof d === 'number') {
+          const h = Math.min(d * effectiveH, ceiling);
+          positions.push(effectiveH - h);
+          values.push(effectiveH > 0 ? h / effectiveH : 0);
+        } else {
+          positions.push(effectiveH - autoHeight);
+          values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
         }
-
-        onDidPresent?.({
-          nativeEvent: {
-            index,
-            position: animatedPosition.value,
-            detent: detents[index] ?? 0,
-          },
-        } as DidPresentEvent);
-
-        onDidFocus?.({ nativeEvent: null } as DidFocusEvent);
       }
 
-      // Fire onDidBlur when sheet reaches minimized state (index -1 but still mounted)
-      if (isMinimized.current && index === -1) {
-        onDidBlur?.({ nativeEvent: null } as DidBlurEvent);
+      // Absorb subpixel drift from getBoundingClientRect so at-rest positions
+      // don't sneak into the below-first branch and emit near-zero negatives
+      // like `-1e-8` (which render as "-1" via JS scientific-notation toString).
+      const epsilon = 0.5;
+      const firstPos = positions[0]!;
+      const lastPos = positions[count - 1]!;
+
+      if (position > firstPos + epsilon) {
+        // Two ranges: index spans the full animation (windowH of wrapper
+        // travel) so it's smooth for driving dependent animations end-to-end;
+        // detent tracks the sheet's visible-height ratio (windowH - firstPos)
+        // so its 0–values[0] fade has fine resolution while the sheet is still
+        // in view. Both clamp to keep outputs in [-1, 0].
+        const indexRaw = (position - firstPos) / windowH;
+        const detentRaw = (position - firstPos) / Math.max(1, windowH - firstPos);
+        const indexProgress = Math.max(0, Math.min(1, indexRaw));
+        const detentProgress = Math.max(0, Math.min(1, detentRaw));
+        return {
+          index: -indexProgress,
+          detent: Math.max(0, values[0]! * (1 - detentProgress)),
+        };
       }
 
-      // Fire onDidFocus when sheet is restored from minimized state
-      if (isMinimized.current && index >= 0) {
-        isMinimized.current = false;
-        onDidFocus?.({ nativeEvent: null } as DidFocusEvent);
+      if (count === 1) return { index: 0, detent: values[0]! };
+
+      // Clamp into the segment range so subpixel drift at the boundaries
+      // resolves cleanly to the nearest segment edge (index 0 or count-1).
+      const clamped = Math.max(lastPos, Math.min(firstPos, position));
+
+      for (let i = 0; i < count - 1; i++) {
+        const pos = positions[i]!;
+        const nextPos = positions[i + 1]!;
+        if (clamped >= nextPos && clamped <= pos) {
+          const range = pos - nextPos;
+          const progress = range > 0 ? (pos - clamped) / range : 0;
+          const clampedProgress = Math.max(0, Math.min(1, progress));
+          return {
+            index: i + clampedProgress,
+            detent: values[i]! + clampedProgress * (values[i + 1]! - values[i]!),
+          };
+        }
       }
+
+      return { index: count - 1, detent: values[count - 1]! };
     },
-    [detents, animatedPosition]
+    [detached, detachedOffset, maxContentHeight]
   );
 
-  const handleDismiss = useCallback(() => {
-    // Remove from stack when dismissed
-    bottomSheetContext?.removeFromStack(sheetName);
+  const handlePositionChange = useCallback(
+    (position: number) => {
+      const { index, detent } = interpolateFromPosition(position);
+      onPositionChangeRef.current?.({
+        nativeEvent: { index, position, detent, realtime: true },
+      } as PositionChangeEvent);
+    },
+    [interpolateFromPosition]
+  );
 
-    // Resolve dismiss promise
-    if (dismissResolver.current) {
-      dismissResolver.current();
-      dismissResolver.current = null;
+  // Fire onMount once after first render. React-mount is the earliest point
+  // the component is ready for imperative calls, matching the native
+  // "ready for present" contract. Declared before the present/dismiss effect
+  // so it fires first during autopresent (onMount → onWillPresent).
+  const onMountRef = useRef(onMount);
+  useEffect(() => {
+    onMountRef.current = onMount;
+  });
+  useEffect(() => {
+    onMountRef.current?.({ nativeEvent: null } as MountEvent);
+  }, []);
+
+  // Start at `false` so a mount with `isOpen=true` (autopresent via
+  // `initialDetentIndex`) is detected as a false→true transition and fires
+  // `onWillPresent`.
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+
+    if (!isOpen && !wasOpen) return undefined;
+
+    const present = !wasOpen && isOpen;
+    if (present) {
+      onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
+    } else if (wasOpen && !isOpen) {
+      onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
+    } else {
+      return undefined;
     }
 
-    onDidDismiss?.({ nativeEvent: null } as DidDismissEvent);
-
-    // Reset states since sheet is being dismissed
-    isMinimized.current = false;
-    isDismissing.current = false;
-    isDragging.current = false;
-  }, [sheetName]);
-
-  const handleAnimate = useCallback(
-    (_fromIndex: number, toIndex: number) => {
-      // Detect drag begin (when not presenting or dismissing)
-      if (!isPresenting.current && !isDismissing.current && !isDragging.current && toIndex >= 0) {
-        isDragging.current = true;
-        onDragBegin?.({
-          nativeEvent: {
-            index: currentIndexRef.current,
-            position: animatedPosition.value,
-            detent: detents[currentIndexRef.current] ?? 0,
-          },
-        } as DragBeginEvent);
+    const fireDone = () => {
+      if (present) {
+        onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
+      } else {
+        onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
       }
+    };
 
-      // Drag change during animation
-      if (isDragging.current && toIndex >= 0) {
-        onDragChange?.({
-          nativeEvent: {
-            index: toIndex,
-            position: animatedPosition.value,
-            detent: detents[toIndex] ?? 0,
-          },
-        } as DragChangeEvent);
+    let canceled = false;
+    let rafId = 0;
+
+    const start = () => {
+      if (canceled) return;
+      const drawer = drawerContentRef.current;
+      if (!drawer) {
+        // Drawer hasn't mounted yet (Radix Presence defers the portal mount
+        // past the first effect pass). Poll until the ref is populated.
+        rafId = window.requestAnimationFrame(start);
+        return;
       }
+      const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]') ?? null;
+      const targets = wrapper ? [drawer, wrapper] : [drawer];
 
-      if (isPresenting.current) {
-        // Fire onMount on first present (before willPresent, matching native)
-        if (!isMounted) {
-          setIsMounted(true);
-          onMount?.({ nativeEvent: null } as MountEvent);
+      const waitForSettle = (): void => {
+        if (canceled) return;
+        // Force style recalc so transitions queued by vaul's effects this
+        // commit are registered in `getAnimations()`. RAF callbacks run BEFORE
+        // the frame's style recalc, and ignoring this returns a stale empty
+        // list — we'd fire `did` immediately with nothing queued.
+
+        drawer.offsetHeight;
+        const pending = targets.flatMap((el) =>
+          el.getAnimations().filter((a) => a.playState !== 'finished')
+        );
+        if (pending.length === 0) {
+          fireDone();
+          return;
         }
+        // allSettled: resolve even when a transition is canceled (drag /
+        // resnap), then re-check — a replacement transition may have started.
+        Promise.allSettled(pending.map((a) => a.finished)).then(() => {
+          if (!canceled) waitForSettle();
+        });
+      };
 
-        onWillPresent?.({
-          nativeEvent: {
-            index: toIndex,
-            position: animatedPosition.value,
-            detent: detents[toIndex] ?? 0,
-          },
-        } as WillPresentEvent);
+      waitForSettle();
+    };
 
-        // Focus events fire together with present events
-        onWillFocus?.({ nativeEvent: null } as WillFocusEvent);
-      }
+    rafId = window.requestAnimationFrame(start);
 
-      // Detect if sheet is being restored (will focus)
-      if (isMinimized.current && toIndex >= 0) {
-        onWillFocus?.({ nativeEvent: null } as WillFocusEvent);
-      }
+    return () => {
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [isOpen, computeDetentInfo]);
 
-      if (toIndex === -1 && !isPresenting.current) {
-        isMinimized.current = true;
-        onWillBlur?.({ nativeEvent: null } as WillBlurEvent);
+  // Fire onDetentChange only while open→open. Present/dismiss have their own
+  // events and carry detent info via onDidPresent, so we skip those edges.
+  const detentChangeStateRef = useRef({ isOpen, activeSnapPoint });
+  useEffect(() => {
+    const prev = detentChangeStateRef.current;
+    detentChangeStateRef.current = { isOpen, activeSnapPoint };
+    if (!prev.isOpen || !isOpen) return;
+    if (prev.activeSnapPoint === activeSnapPoint) return;
+    onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
+  }, [isOpen, activeSnapPoint, computeDetentInfo]);
 
-        // Only fire willDismiss if this is an actual dismiss (not being backgrounded by another sheet)
-        const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
-        if (sheetsAbove.length === 0) {
-          onWillDismiss?.({ nativeEvent: null } as WillDismissEvent);
-        }
-      }
-    },
-    [detents, animatedPosition, sheetName, bottomSheetContext, isMounted, onMount]
+  // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
+  // after an idle gap marks the drag boundary, so track it via a ref.
+  const isDraggingRef = useRef(false);
+  const handleDrag = useCallback(() => {
+    if (!isDraggingRef.current) {
+      isDraggingRef.current = true;
+      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo() } as DragBeginEvent);
+    }
+    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DragChangeEvent);
+  }, [computeDetentInfo]);
+  const handleRelease = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
+  }, [computeDetentInfo]);
+
+  const { isNested, dismissAbove, descendants } = useSheetStack(
+    methodsRef,
+    drawerContentRef,
+    isOpen
   );
+  dismissAboveRef.current = dismissAbove;
 
-  const backdropComponent = useCallback(
-    (backdropProps: BottomSheetBackdropProps) => {
-      if (!dimmed) {
-        return null;
+  // Mirror Android: translate this sheet down to match the deepest descendant's
+  // top so the whole stack visually aligns. Cascades because every ancestor
+  // re-runs whenever the stack (and thus its descendants) changes.
+  useEffect(() => {
+    const parent = drawerContentRef.current;
+    if (!parent) return;
+
+    const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+
+    if (descendants.length === 0) {
+      parent.style.transition = transition;
+      parent.style.transform = '';
+      return;
+    }
+
+    const computeTargetY = () => {
+      const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      let targetY = parentSnap;
+      for (const d of descendants) {
+        const node = d.nodeRef.current;
+        if (!node) continue;
+        const snap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+        if (snap > targetY) targetY = snap;
       }
+      return targetY;
+    };
 
-      // When not dismissible, collapse to below dimmed index instead of dismissing
-      const pressBehavior = dismissible
-        ? 'close'
-        : dimmedDetentIndex > 0
-          ? dimmedDetentIndex - 1
-          : 'none';
+    const apply = () => {
+      const targetY = computeTargetY();
+      const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
+      const currentY = match ? parseFloat(match[1]!) : 0;
+      if (Math.abs(currentY - targetY) < 0.5) return;
+      parent.style.transition = transition;
+      parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
+    };
 
-      return (
-        <BottomSheetBackdrop
-          {...backdropProps}
-          opacity={0.5}
-          appearsOnIndex={dimmedDetentIndex}
-          disappearsOnIndex={dimmedDetentIndex - 1}
-          pressBehavior={pressBehavior}
-        />
-      );
-    },
-    [dimmed, dimmedDetentIndex, dismissible]
-  );
+    const raf = requestAnimationFrame(apply);
+    // Vaul re-runs snapToPoint on window resize (e.g., mobile keyboard open)
+    // which clobbers the cascade transform. Re-apply whenever the parent's
+    // inline style changes.
+    const observer = new MutationObserver(apply);
+    observer.observe(parent, { attributes: true, attributeFilter: ['style'] });
 
-  const indicatorHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [descendants, activeSnapPoint]);
 
-  const handleStyle = useMemo(
-    () =>
-      grabber
-        ? [styles.handle, { paddingTop: grabberOptions?.topMargin }]
-        : { display: 'none' as const },
-    [grabber, grabberOptions?.topMargin]
+  // Focus/blur events fire when a descendant sheet appears on top of this one
+  // (blur) or when all descendants are dismissed (focus). will-events fire
+  // synchronously at the transition boundary; did-events fire once the cascade
+  // transform drains. Intermediate count changes (1↔2) don't re-fire — this
+  // sheet stays blurred throughout.
+  const onWillBlurRef = useRef(onWillBlur);
+  const onDidBlurRef = useRef(onDidBlur);
+  const onWillFocusRef = useRef(onWillFocus);
+  const onDidFocusRef = useRef(onDidFocus);
+  useEffect(() => {
+    onWillBlurRef.current = onWillBlur;
+    onDidBlurRef.current = onDidBlur;
+    onWillFocusRef.current = onWillFocus;
+    onDidFocusRef.current = onDidFocus;
+  });
+
+  const prevDescendantCountRef = useRef(0);
+  useEffect(() => {
+    const prevCount = prevDescendantCountRef.current;
+    const count = descendants.length;
+    prevDescendantCountRef.current = count;
+    if (!isOpen) return;
+    const gained = count > 0 && prevCount === 0;
+    const lost = count === 0 && prevCount > 0;
+    if (!gained && !lost) return;
+
+    if (gained) {
+      onWillBlurRef.current?.({ nativeEvent: null } as WillBlurEvent);
+    } else {
+      onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
+    }
+
+    const drawer = drawerContentRef.current;
+    if (!drawer) return;
+
+    let canceled = false;
+    const fireDone = () => {
+      if (canceled) return;
+      if (gained) onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
+      else onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
+    };
+    const rafId = window.requestAnimationFrame(() => {
+      if (canceled) return;
+      // Force style recalc so the cascade effect's queued transform registers.
+
+      drawer.offsetHeight;
+      const pending = drawer.getAnimations().filter((a) => a.playState !== 'finished');
+      if (pending.length === 0) {
+        fireDone();
+        return;
+      }
+      Promise.allSettled(pending.map((a) => a.finished)).then(() => {
+        if (!canceled) fireDone();
+      });
+    });
+
+    return () => {
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [isOpen, descendants.length]);
+
+  const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
+
+  // Shadow cast upward from the sheet's top edge toward the background. Matches
+  // Android's `elevation` semantics roughly — the sheet "lifts" off whatever is
+  // behind it. Scales linearly so higher elevation reads as more separation.
+  const boxShadow =
+    elevation > 0 ? `0 ${-elevation}px ${elevation * 3}px rgba(0, 0, 0, 0.15)` : undefined;
+
+  const mergedContentStyle = useMemo<React.CSSProperties>(
+    () => ({
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      borderTopLeftRadius: effectiveCornerRadius,
+      borderTopRightRadius: effectiveCornerRadius,
+      backgroundColor: backgroundColor as string,
+      boxShadow,
+      // Lift content above iOS home indicator / bottom safe area when enabled.
+      paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
+    }),
+    [backgroundColor, effectiveCornerRadius, boxShadow, insetAdjustment]
   );
 
   const defaultGrabberColor =
     colorScheme === 'dark' ? DEFAULT_GRABBER_COLOR_DARK : DEFAULT_GRABBER_COLOR_LIGHT;
 
-  const handleIndicatorStyle = useMemo(
+  const grabberHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
+
+  // Footer is rendered inside the wrapper via `detachedSiblings`, so it
+  // follows the wrapper on dismiss and drag-overshoot. Positioning is
+  // relative to the wrapper (contain: paint creates the containing block).
+  const footerFloatStyle = useMemo<React.CSSProperties>(
     () => ({
-      height: indicatorHeight,
-      borderRadius: grabberOptions?.cornerRadius ?? indicatorHeight / 2,
-      width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
-      backgroundColor: grabberOptions?.color ?? defaultGrabberColor,
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      // Wrapper has `pointer-events: none` to let clicks fall through; the
+      // footer must opt back in.
+      pointerEvents: 'auto',
     }),
-    [grabberOptions, indicatorHeight, defaultGrabberColor]
+    []
   );
 
-  const footerComponent = useMemo(
-    () =>
-      footer
-        ? (footerProps: BottomSheetFooterProps) => (
-            <BottomSheetFooter
-              style={StyleSheet.flatten([styles.footer, footerStyle])}
-              {...footerProps}
-            >
-              {renderSlot(footer)}
-            </BottomSheetFooter>
-          )
-        : undefined,
-    [footer, footerStyle]
-  );
+  // Form-sheet style (iOS pageSizing=false): centered floating card with a
+  // default width and a height capped to a fraction of the window. We reuse
+  // the existing detached mechanic so drag/snap math stays correct — the
+  // wrapper is bottom-attached with a computed offset that centers it
+  // vertically.
+  const isFormSheet = isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
 
-  // For scrollable, we render the child directly
-  const ContainerComponent = scrollable ? Fragment : BottomSheetView;
+  const effectiveMaxContentHeight =
+    maxContentHeight ?? (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
 
-  const sheetMethodsRef = useRef<TrueSheetRefMethods>({
-    present: (index = 0) => {
-      return new Promise<void>((resolve) => {
-        presentResolver.current = resolve;
-        setSnapIndex(index);
-        isPresenting.current = true;
-        if (isNonModal) {
-          bottomSheetRef.current?.snapToIndex(index);
-        } else {
-          bottomSheetContext?.pushToStack(sheetName);
-          bottomSheetModalRef.current?.present();
-        }
-      });
-    },
-    dismiss: () => {
-      return new Promise<void>((resolve) => {
-        dismissResolver.current = resolve;
-        isDismissing.current = true;
-        if (isNonModal) {
-          bottomSheetRef.current?.close();
-        } else {
-          bottomSheetModalRef.current?.dismiss();
-        }
-      });
-    },
-    dismissStack: () => {
-      return new Promise<void>((resolve) => {
-        // Dismiss only sheets above, keeping this sheet presented
-        const sheetsAbove = bottomSheetContext?.getSheetsAbove(sheetName) ?? [];
-        const immediateChild = sheetsAbove[sheetsAbove.length - 1];
-        if (immediateChild) {
-          // Dismiss the immediate child - gorhom will dismiss all sheets above it
-          bottomSheetContext?.dismiss(immediateChild).then(resolve);
-          return;
-        }
+  const effectiveDetached = isFormSheet || detached;
 
-        resolve();
-      });
-    },
-    resize: async (index: number) => {
-      if (isNonModal) {
-        bottomSheetRef.current?.snapToIndex(index);
-      } else {
-        bottomSheetModalRef.current?.snapToIndex(index);
-      }
-    },
-  });
+  const effectiveDetachedOffset = isFormSheet
+    ? Math.max(0, (windowHeight - (effectiveMaxContentHeight ?? 0)) / 2)
+    : detachedOffset;
 
-  useImperativeHandle(ref, () => sheetMethodsRef.current);
+  // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
+  // clip (when detached) aligns with the drawer's horizontal bounds on
+  // desktop — otherwise its corners sit at the far viewport edges.
+  // Mirrors iOS setupSheetSizing: maxContentWidth wins (forces pageSizing
+  // off). pageSizing on → constrain to readable width (page-sheet);
+  // pageSizing off with no maxContentWidth → form-sheet width.
+  // Detached without a width constraint applies anchorOffset on both edges so
+  // the floating card breathes from the viewport sides.
+  const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
+    const maxWidth = isLandscapeOrTablet
+      ? isFormSheet
+        ? DEFAULT_FORM_SHEET_WIDTH
+        : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined))
+      : undefined;
 
-  // Register with context provider
-  useEffect(() => {
-    bottomSheetContext?.register(sheetName, sheetMethodsRef);
-    return () => {
-      bottomSheetContext?.unregister(sheetName);
-    };
-  }, [sheetName]);
+    if (maxWidth == null && !detached) return undefined;
 
-  // Auto-present on mount if initialDetentIndex is set
-  useEffect(() => {
-    if (initialDetentIndexRef.current >= 0) {
-      sheetMethodsRef.current.present(initialDetentIndexRef.current);
+    let marginLeft: number | string;
+    let marginRight: number | string;
+    if (isFormSheet) {
+      marginLeft = 'auto';
+      marginRight = 'auto';
+    } else if (maxWidth == null) {
+      marginLeft = anchorOffset;
+      marginRight = anchorOffset;
+    } else {
+      marginLeft = anchor === 'left' ? anchorOffset : 'auto';
+      marginRight = anchor === 'right' ? anchorOffset : 'auto';
     }
-  }, []);
 
-  const sheetContent = (
-    <ContainerComponent>
-      {header && <View style={headerStyle}>{renderSlot(header)}</View>}
-      {scrollable ? children : <View style={style}>{children}</View>}
-    </ContainerComponent>
-  );
-
-  const sharedProps: Omit<BottomSheetProps, 'children'> = {
-    style: [
-      styles.root,
-      {
-        backgroundColor,
-        borderTopLeftRadius: cornerRadius,
-        borderTopRightRadius: cornerRadius,
-        borderBottomLeftRadius: detached ? cornerRadius : 0,
-        borderBottomRightRadius: detached ? cornerRadius : 0,
-        boxShadow: getElevationShadow(elevation),
-        maxWidth: isLandscapeOrTablet ? (maxContentWidth ?? DEFAULT_MAX_WIDTH) : undefined,
-        marginLeft: isLandscapeOrTablet ? (anchor === 'left' ? anchorOffset : 'auto') : undefined,
-        marginRight: isLandscapeOrTablet ? (anchor === 'right' ? anchorOffset : 'auto') : undefined,
-        marginHorizontal: detached ? anchorOffset : undefined,
-      },
-    ],
-    backgroundComponent: null,
-    index: snapIndex,
-    enablePanDownToClose: dismissible,
-    enableContentPanningGesture: draggable,
-    enableHandlePanningGesture: draggable,
-    animatedPosition,
-    animatedIndex,
-    handleStyle,
-    handleIndicatorStyle,
-    onChange: handleChange,
-    onAnimate: handleAnimate,
-    enableDynamicSizing: hasAutoDetent,
-    maxDynamicContentSize: maxContentHeight,
-    snapPoints: snapPoints.length > 0 ? snapPoints : undefined,
+    return {
+      ...(maxWidth != null && { maxWidth }),
+      marginLeft,
+      marginRight,
+    };
+  }, [
+    isLandscapeOrTablet,
+    isFormSheet,
+    maxContentWidth,
+    pageSizing,
+    anchor,
+    anchorOffset,
     detached,
-    bottomInset: detached ? detachedOffset : undefined,
-    backdropComponent,
-    footerComponent,
-  };
+  ]);
 
-  if (isNonModal) {
-    return (
-      <BottomSheet ref={bottomSheetRef} onClose={handleDismiss} {...sharedProps}>
-        {sheetContent}
-      </BottomSheet>
-    );
-  }
+  const handleStyle = useMemo<React.CSSProperties>(
+    () => ({
+      height: grabberHeight,
+      width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
+      borderRadius: grabberOptions?.cornerRadius ?? grabberHeight / 2,
+      backgroundColor: (grabberOptions?.color ?? defaultGrabberColor) as string,
+      opacity: 1,
+      marginTop: grabberOptions?.topMargin ?? DEFAULT_GRABBER_TOP_MARGIN,
+    }),
+    [grabberOptions, grabberHeight, defaultGrabberColor]
+  );
 
   return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      name={sheetName}
-      animateOnMount
-      onDismiss={handleDismiss}
-      stackBehavior={stackBehavior}
-      {...sharedProps}
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      onPositionChange={handlePositionChange}
+      onDrag={handleDrag}
+      onRelease={handleRelease}
+      dismissible={dismissible}
+      draggable={draggable}
+      handleOnly={scrollable && scrollableOptions?.scrollingExpandsSheet === false}
+      repositionInputs={false}
+      modal={dimmed}
+      nested={isNested}
+      detached={effectiveDetached}
+      detachedOffset={effectiveDetachedOffset}
+      detachedRadius={effectiveCornerRadius}
+      maxContentHeight={effectiveMaxContentHeight}
+      initialAnimated={initialDetentAnimated}
+      detachedWrapperStyle={wrapperStyle}
+      activeSnapPoint={activeSnapPoint}
+      setActiveSnapPoint={handleSetActiveSnapPoint}
+      {...snapPointsProps}
     >
-      {sheetContent}
-    </BottomSheetModal>
+      <Drawer.Portal container={portalContainer ?? undefined}>
+        <Drawer.Overlay style={overlayStyle} />
+        <Drawer.Content
+          ref={drawerContentRef}
+          style={mergedContentStyle}
+          onPointerDownOutside={handlePointerDownOutside}
+          detachedSiblings={
+            footer ? (
+              <div style={footerFloatStyle}>
+                <View style={footerStyle}>
+                  {isValidElement(footer) ? footer : createElement(footer)}
+                </View>
+              </div>
+            ) : undefined
+          }
+        >
+          <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
+          {grabber && <Drawer.Handle style={handleStyle} />}
+          {header && (
+            <View style={headerStyle}>
+              {isValidElement(header) ? header : createElement(header)}
+            </View>
+          )}
+          {scrollable ? (
+            <div style={scrollableContainerStyle}>
+              <View style={style}>{children}</View>
+            </div>
+          ) : (
+            <View style={style}>{children}</View>
+          )}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 });
+
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+};
+
+const scrollableContainerStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  overscrollBehavior: 'contain',
+  touchAction: 'pan-y',
+};
+
+const visuallyHiddenStyle: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 const STATIC_METHOD_ERROR =
   'Static methods are not supported on web. Use the useTrueSheet() hook instead.';
 
-interface TrueSheetStatic {
-  present: (name: string, index?: number) => Promise<void>;
-  dismiss: (name: string) => Promise<void>;
-  dismissStack: (name: string) => Promise<void>;
-  resize: (name: string, index: number) => Promise<void>;
-  dismissAll: () => Promise<void>;
-}
+export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStaticMethods;
 
-export const TrueSheet = TrueSheetComponent as typeof TrueSheetComponent & TrueSheetStatic;
-
-TrueSheet.present = async () => {
+const rejectStatic = async (): Promise<never> => {
   throw new Error(STATIC_METHOD_ERROR);
 };
 
-TrueSheet.dismiss = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-
-TrueSheet.dismissStack = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-
-TrueSheet.resize = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-
-TrueSheet.dismissAll = async () => {
-  throw new Error(STATIC_METHOD_ERROR);
-};
-
-const styles = StyleSheet.create({
-  root: {
-    overflow: 'hidden',
-  },
-  handle: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 999,
-    paddingVertical: 10,
-    pointerEvents: 'none',
-  },
-  footer: {
-    pointerEvents: 'box-none',
-  },
-});
+TrueSheet.present = rejectStatic;
+TrueSheet.dismiss = rejectStatic;
+TrueSheet.dismissStack = rejectStatic;
+TrueSheet.resize = rejectStatic;
+TrueSheet.dismissAll = rejectStatic;
