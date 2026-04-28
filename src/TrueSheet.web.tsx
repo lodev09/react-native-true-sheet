@@ -583,8 +583,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Shadow cast upward from the sheet's top edge toward the background. Matches
   // Android's `elevation` semantics roughly — the sheet "lifts" off whatever is
   // behind it. Scales linearly so higher elevation reads as more separation.
-  const boxShadow =
-    elevation > 0 ? `0 ${-elevation}px ${elevation * 3}px rgba(0, 0, 0, 0.15)` : undefined;
+  // Applied to the vaul wrapper (not the drawer) as `filter: drop-shadow`: the
+  // wrapper clips the drawer (overflow: hidden + contain: paint), which would
+  // cut off `box-shadow` on the drawer at the wrapper edges — visible in
+  // detached mode (bottom blur clipped in the floating gap) and when the
+  // wrapper is narrowed by maxWidth/anchor margins (lateral blur clipped at
+  // wrapper edges). drop-shadow on the wrapper follows the post-clip silhouette
+  // and isn't clipped by the wrapper itself.
+  const dropShadow =
+    elevation > 0
+      ? `drop-shadow(0 ${-elevation}px ${elevation * 3}px rgba(0, 0, 0, 0.15))`
+      : undefined;
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -598,11 +607,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderTopLeftRadius: effectiveCornerRadius,
       borderTopRightRadius: effectiveCornerRadius,
       backgroundColor: backgroundColor as string,
-      boxShadow,
       // Lift content above iOS home indicator / bottom safe area when enabled.
       paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
     }),
-    [backgroundColor, effectiveCornerRadius, boxShadow, insetAdjustment]
+    [backgroundColor, effectiveCornerRadius, insetAdjustment]
   );
 
   const defaultGrabberColor =
@@ -655,7 +663,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined))
       : undefined;
 
-    if (maxWidth == null && !effectiveDetached) return undefined;
+    const needsMargins = maxWidth != null || effectiveDetached;
+    if (!needsMargins && !dropShadow) return undefined;
+
+    const next: React.CSSProperties = {};
+    if (dropShadow) next.filter = dropShadow;
+    if (!needsMargins) return next;
 
     let marginLeft: number | string;
     let marginRight: number | string;
@@ -670,11 +683,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       marginRight = anchor === 'right' ? anchorOffset : 'auto';
     }
 
-    return {
-      ...(maxWidth != null && { maxWidth }),
-      marginLeft,
-      marginRight,
-    };
+    if (maxWidth != null) next.maxWidth = maxWidth;
+    next.marginLeft = marginLeft;
+    next.marginRight = marginRight;
+    return next;
   }, [
     isLandscapeOrTablet,
     isFormSheet,
@@ -683,6 +695,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     anchor,
     anchorOffset,
     effectiveDetached,
+    dropShadow,
   ]);
 
   const handleStyle = useMemo<React.CSSProperties>(
