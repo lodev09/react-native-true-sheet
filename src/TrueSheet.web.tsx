@@ -117,6 +117,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
 
+  // pageSizing=false implies a floating/detached sheet on web — mirrors iOS
+  // form-sheet semantics where the sheet is never edge-attached.
+  const effectiveDetached = !pageSizing || detached;
+
   const colorScheme = useColorScheme();
   const backgroundColor =
     backgroundColorProp ??
@@ -260,7 +264,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       if (count === 0) return { index: -1, detent: 0 };
 
       const windowH = window.innerHeight;
-      const effectiveH = detached ? windowH - detachedOffset : windowH;
+      const effectiveH = effectiveDetached ? windowH - detachedOffset : windowH;
       // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
       const ceiling =
         maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
@@ -329,7 +333,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [detached, detachedOffset, maxContentHeight]
+    [effectiveDetached, detachedOffset, maxContentHeight]
   );
 
   const handlePositionChange = useCallback(
@@ -632,8 +636,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const effectiveMaxContentHeight =
     maxContentHeight ?? (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
 
-  const effectiveDetached = isFormSheet || detached;
-
   const effectiveDetachedOffset = isFormSheet
     ? Math.max(0, (windowHeight - (effectiveMaxContentHeight ?? 0)) / 2)
     : detachedOffset;
@@ -653,7 +655,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined))
       : undefined;
 
-    if (maxWidth == null && !detached) return undefined;
+    if (maxWidth == null && !effectiveDetached) return undefined;
 
     let marginLeft: number | string;
     let marginRight: number | string;
@@ -680,7 +682,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     pageSizing,
     anchor,
     anchorOffset,
-    detached,
+    effectiveDetached,
   ]);
 
   const handleStyle = useMemo<React.CSSProperties>(
