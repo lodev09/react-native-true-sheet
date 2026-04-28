@@ -1,28 +1,31 @@
 'use client';
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import React from 'react';
+
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+
 import { DrawerContext, useDrawerContext } from './context';
 import './style.css';
-import { usePreventScroll, isInput } from './use-prevent-scroll';
-import { useComposedRefs } from './use-composed-refs';
-import { useSnapPoints } from './use-snap-points';
-import { set, getTranslate, dampenValue, isVertical, reset } from './helpers';
+
+import { isIOS, isMobileFirefox } from './browser';
 import {
+  BORDER_RADIUS,
+  CLOSE_THRESHOLD,
+  DRAG_CLASS,
+  NESTED_DISPLACEMENT,
+  SCROLL_LOCK_TIMEOUT,
   TRANSITIONS,
   VELOCITY_THRESHOLD,
-  CLOSE_THRESHOLD,
-  SCROLL_LOCK_TIMEOUT,
-  BORDER_RADIUS,
-  NESTED_DISPLACEMENT,
   WINDOW_TOP_OFFSET,
-  DRAG_CLASS,
 } from './constants';
+import { dampenValue, getTranslate, isVertical, reset, set } from './helpers';
 import type { DrawerDirection } from './types';
+import { useComposedRefs } from './use-composed-refs';
 import { useControllableState } from './use-controllable-state';
-import { useScaleBackground } from './use-scale-background';
 import { usePositionFixed } from './use-position-fixed';
-import { isIOS, isMobileFirefox } from './browser';
+import { isInput, usePreventScroll } from './use-prevent-scroll';
+import { useScaleBackground } from './use-scale-background';
+import { useSnapPoints } from './use-snap-points';
 
 export interface WithFadeFromProps {
   /**
@@ -620,6 +623,31 @@ export function Root({
     };
   }, [isOpen, modal, snapPoints, fadeFromIndex, activeSnapPointIndex]);
 
+  // Radix DismissableLayer's body-restore on unmount is broken: its two
+  // useEffects (see @radix-ui/react-dismissable-layer dist/index.mjs:68-92)
+  // run cleanups in reverse declaration order, so the layers-set decrement
+  // (effect B) runs BEFORE the size-1 body-restore check (effect A). When
+  // the last layer unmounts, A sees size=0 and skips the restore — body
+  // stays 'none'. Take ownership of the restore here on Drawer.Root unmount.
+  // Skipped when nested or non-modal so an inner drawer's unmount doesn't
+  // unlock an outer drawer's modal trap. Also bail if any other Radix
+  // dismissable layer is still open (sibling Dialog/AlertDialog/Popover) —
+  // that one wants the lock kept.
+  React.useEffect(() => {
+    if (nested || !modal) return;
+    return () => {
+      if (typeof document === 'undefined') return;
+      if (document.body.style.pointerEvents !== 'none') return;
+      if (
+        document.querySelector(
+          '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+        )
+      )
+        return;
+      document.body.style.pointerEvents = 'auto';
+    };
+  }, [nested, modal]);
+
   React.useEffect(() => {
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -669,7 +697,7 @@ export function Root({
         }
 
         if (snapPoints && snapPoints.length > 0 && !keyboardIsOpen.current) {
-          drawerRef.current.style.bottom = `0px`;
+          drawerRef.current.style.bottom = '0px';
         } else {
           // Negative bottom value would never make sense
           drawerRef.current.style.bottom = `${Math.max(diffFromInitial, 0)}px`;
@@ -962,7 +990,7 @@ export function Root({
 export const Overlay = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(function ({ style, ...rest }, ref) {
+>(({ style, ...rest }, ref) => {
   const {
     overlayRef,
     snapPoints,
@@ -1037,387 +1065,386 @@ export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive
   detachedSiblings?: React.ReactNode;
 };
 
-export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
-  { onPointerDownOutside, style, onOpenAutoFocus, children, detachedSiblings, ...rest },
-  ref
-) {
-  const {
-    drawerRef,
-    onPress,
-    onRelease,
-    onDrag,
-    keyboardIsOpen,
-    snapPointsOffset,
-    activeSnapPointIndex,
-    fadeFromIndex,
-    modal,
-    isOpen,
-    isDragging,
-    direction,
-    snapPoints,
-    container,
-    handleOnly,
-    shouldAnimate,
-    autoFocus,
-    onPositionChangeRef,
-    setContentHeight,
-    detached,
-    detachedOffset,
-    detachedRadius,
-    detachedWrapperStyle: detachedWrapperStyleProp,
-  } = useDrawerContext();
-  const hasAutoSnapPoint = React.useMemo(
-    () => !!snapPoints?.some((p) => p === 'auto'),
-    [snapPoints]
-  );
+export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
+  ({ onPointerDownOutside, style, onOpenAutoFocus, children, detachedSiblings, ...rest }, ref) => {
+    const {
+      drawerRef,
+      onPress,
+      onRelease,
+      onDrag,
+      keyboardIsOpen,
+      snapPointsOffset,
+      activeSnapPointIndex,
+      fadeFromIndex,
+      modal,
+      isOpen,
+      isDragging,
+      direction,
+      snapPoints,
+      container,
+      handleOnly,
+      shouldAnimate,
+      autoFocus,
+      onPositionChangeRef,
+      setContentHeight,
+      detached,
+      detachedOffset,
+      detachedRadius,
+      detachedWrapperStyle: detachedWrapperStyleProp,
+    } = useDrawerContext();
+    const hasAutoSnapPoint = React.useMemo(
+      () => !!snapPoints?.some((p) => p === 'auto'),
+      [snapPoints]
+    );
 
-  // When 'auto' is used as a snap point, we need the natural content height.
-  // The drawer itself may be styled to a fixed viewport height, so we measure
-  // an inner wrapper instead. Ref callback starts the observer as soon as the
-  // node mounts (Radix Presence defers the portal mount past useEffect).
-  const autoRoRef = React.useRef<ResizeObserver | null>(null);
-  const setAutoSizeNode = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      autoRoRef.current?.disconnect();
-      if (!node || !hasAutoSnapPoint) {
-        autoRoRef.current = null;
+    // When 'auto' is used as a snap point, we need the natural content height.
+    // The drawer itself may be styled to a fixed viewport height, so we measure
+    // an inner wrapper instead. Ref callback starts the observer as soon as the
+    // node mounts (Radix Presence defers the portal mount past useEffect).
+    const autoRoRef = React.useRef<ResizeObserver | null>(null);
+    const setAutoSizeNode = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        autoRoRef.current?.disconnect();
+        if (!node || !hasAutoSnapPoint) {
+          autoRoRef.current = null;
+          return;
+        }
+        const measure = () => setContentHeight(node.offsetHeight);
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(node);
+        autoRoRef.current = ro;
+      },
+      [hasAutoSnapPoint, setContentHeight]
+    );
+
+    const isBelowFade =
+      snapPoints !== undefined &&
+      snapPoints !== null &&
+      fadeFromIndex !== undefined &&
+      typeof activeSnapPointIndex === 'number' &&
+      activeSnapPointIndex < fadeFromIndex;
+    // Needed to use transition instead of animations
+    const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
+    const composedRef = useComposedRefs(ref, drawerRef);
+    const pointerStartRef = React.useRef<{ x: number; y: number } | null>(null);
+    const lastKnownPointerEventRef = React.useRef<React.PointerEvent<HTMLDivElement> | null>(null);
+    const wasBeyondThePointRef = React.useRef(false);
+    const hasSnapPoints = snapPoints && snapPoints.length > 0;
+    useScaleBackground();
+
+    const isDeltaInDirection = (
+      delta: { x: number; y: number },
+      dir: DrawerDirection,
+      threshold = 0
+    ) => {
+      if (wasBeyondThePointRef.current) return true;
+
+      const deltaY = Math.abs(delta.y);
+      const deltaX = Math.abs(delta.x);
+      const isDeltaX = deltaX > deltaY;
+      const dFactor = ['bottom', 'right'].includes(dir) ? 1 : -1;
+
+      if (dir === 'left' || dir === 'right') {
+        const isReverseDirection = delta.x * dFactor < 0;
+        if (!isReverseDirection && deltaX >= 0 && deltaX <= threshold) {
+          return isDeltaX;
+        }
+      } else {
+        const isReverseDirection = delta.y * dFactor < 0;
+        if (!isReverseDirection && deltaY >= 0 && deltaY <= threshold) {
+          return !isDeltaX;
+        }
+      }
+
+      wasBeyondThePointRef.current = true;
+      return true;
+    };
+
+    React.useEffect(() => {
+      if (hasSnapPoints) {
+        window.requestAnimationFrame(() => {
+          setDelayedSnapPoints(true);
+        });
+      }
+    }, []);
+
+    // Event-driven position tracking. We only tick RAF while the drawer is
+    // actually moving (drag / CSS transition / CSS animation). When it's idle at
+    // a snap, no frames run at all.
+    const positionTrackingRef = React.useRef<{
+      rafId: number | null;
+      movingCount: number;
+      lastPosition: number;
+      start: () => void;
+      stop: () => void;
+    } | null>(null);
+
+    React.useEffect(() => {
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+
+      const state = {
+        rafId: null as number | null,
+        movingCount: 0,
+        lastPosition: Number.NaN,
+        start: () => {},
+        stop: () => {},
+      };
+
+      const emit = () => {
+        const cb = onPositionChangeRef.current;
+        if (!cb) return;
+        const position = drawer.getBoundingClientRect().top;
+        if (position !== state.lastPosition) {
+          state.lastPosition = position;
+          cb(position);
+        }
+      };
+
+      const tick = () => {
+        emit();
+        state.rafId = state.movingCount > 0 ? window.requestAnimationFrame(tick) : null;
+      };
+
+      state.start = () => {
+        state.movingCount += 1;
+        if (state.rafId === null) {
+          state.rafId = window.requestAnimationFrame(tick);
+        }
+      };
+
+      state.stop = () => {
+        state.movingCount = Math.max(0, state.movingCount - 1);
+        // RAF loop will exit on its next tick; emit the settled position now.
+        if (state.movingCount === 0) emit();
+      };
+
+      const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+
+      // Listen on the wrapper too: drag-overshoot snap-back animates the wrapper
+      // alone when the drawer's target is unchanged (e.g. snapping back to the
+      // same detent). Without this, position goes stale mid-animation because
+      // the drawer's `transitionrun` never fires.
+      const onTransitionRun = (e: TransitionEvent) => {
+        if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+          state.start();
+      };
+      const onTransitionDone = (e: TransitionEvent) => {
+        if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+          state.stop();
+      };
+      const onAnimationStart = (e: AnimationEvent) => {
+        if (e.target === drawer || e.target === wrapper) state.start();
+      };
+      const onAnimationDone = (e: AnimationEvent) => {
+        if (e.target === drawer || e.target === wrapper) state.stop();
+      };
+
+      drawer.addEventListener('transitionrun', onTransitionRun);
+      drawer.addEventListener('transitionend', onTransitionDone);
+      drawer.addEventListener('transitioncancel', onTransitionDone);
+      drawer.addEventListener('animationstart', onAnimationStart);
+      drawer.addEventListener('animationend', onAnimationDone);
+      drawer.addEventListener('animationcancel', onAnimationDone);
+      wrapper?.addEventListener('transitionrun', onTransitionRun);
+      wrapper?.addEventListener('transitionend', onTransitionDone);
+      wrapper?.addEventListener('transitioncancel', onTransitionDone);
+
+      positionTrackingRef.current = state;
+      emit();
+
+      return () => {
+        drawer.removeEventListener('transitionrun', onTransitionRun);
+        drawer.removeEventListener('transitionend', onTransitionDone);
+        drawer.removeEventListener('transitioncancel', onTransitionDone);
+        drawer.removeEventListener('animationstart', onAnimationStart);
+        drawer.removeEventListener('animationend', onAnimationDone);
+        drawer.removeEventListener('animationcancel', onAnimationDone);
+        wrapper?.removeEventListener('transitionrun', onTransitionRun);
+        wrapper?.removeEventListener('transitionend', onTransitionDone);
+        wrapper?.removeEventListener('transitioncancel', onTransitionDone);
+        if (state.rafId !== null) window.cancelAnimationFrame(state.rafId);
+        positionTrackingRef.current = null;
+      };
+    }, []);
+
+    React.useEffect(() => {
+      const state = positionTrackingRef.current;
+      if (!state) return;
+      if (isDragging) state.start();
+      else state.stop();
+    }, [isDragging]);
+
+    function handleOnPointerUp(event: React.PointerEvent<HTMLDivElement> | null) {
+      pointerStartRef.current = null;
+      wasBeyondThePointRef.current = false;
+      onRelease(event);
+    }
+
+    // The drawer always sits inside a fixed clip wrapper. `contain: paint`
+    // establishes the wrapper as the containing block so the drawer's own
+    // `position: fixed` is constrained here, and `overflow: hidden` keeps any
+    // overshoot out of the viewport. When `detached` the wrapper also floats
+    // with a bottom gap and rounded bottom corners; otherwise it sits flush.
+    // Transform/transition are managed imperatively (via drag overshoot and the
+    // dismiss effect) so React doesn't skip DOM writes for values it thinks it
+    // already owns.
+    const wrapperStyle = React.useMemo<React.CSSProperties>(
+      () => ({
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: detached ? detachedOffset : 0,
+        overflow: 'hidden',
+        contain: 'paint',
+        pointerEvents: 'none',
+        borderBottomLeftRadius: detached ? detachedRadius : 0,
+        borderBottomRightRadius: detached ? detachedRadius : 0,
+        ...detachedWrapperStyleProp,
+      }),
+      [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp]
+    );
+
+    // Translate the wrapper off-screen on dismiss so the whole card slides out
+    // as one. The reset-then-target pattern on open forces the browser to
+    // record a starting value so the transition actually animates.
+    const wasOpenRef = React.useRef(isOpen);
+    React.useEffect(() => {
+      if (!drawerRef.current) {
+        wasOpenRef.current = isOpen;
         return;
       }
-      const measure = () => setContentHeight(node.offsetHeight);
-      measure();
-      const ro = new ResizeObserver(measure);
-      ro.observe(node);
-      autoRoRef.current = ro;
-    },
-    [hasAutoSnapPoint, setContentHeight]
-  );
-
-  const isBelowFade =
-    snapPoints !== undefined &&
-    snapPoints !== null &&
-    fadeFromIndex !== undefined &&
-    typeof activeSnapPointIndex === 'number' &&
-    activeSnapPointIndex < fadeFromIndex;
-  // Needed to use transition instead of animations
-  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
-  const composedRef = useComposedRefs(ref, drawerRef);
-  const pointerStartRef = React.useRef<{ x: number; y: number } | null>(null);
-  const lastKnownPointerEventRef = React.useRef<React.PointerEvent<HTMLDivElement> | null>(null);
-  const wasBeyondThePointRef = React.useRef(false);
-  const hasSnapPoints = snapPoints && snapPoints.length > 0;
-  useScaleBackground();
-
-  const isDeltaInDirection = (
-    delta: { x: number; y: number },
-    dir: DrawerDirection,
-    threshold = 0
-  ) => {
-    if (wasBeyondThePointRef.current) return true;
-
-    const deltaY = Math.abs(delta.y);
-    const deltaX = Math.abs(delta.x);
-    const isDeltaX = deltaX > deltaY;
-    const dFactor = ['bottom', 'right'].includes(dir) ? 1 : -1;
-
-    if (dir === 'left' || dir === 'right') {
-      const isReverseDirection = delta.x * dFactor < 0;
-      if (!isReverseDirection && deltaX >= 0 && deltaX <= threshold) {
-        return isDeltaX;
+      const wrapper = drawerRef.current.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+      if (wrapper) {
+        const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+        const viewportH = typeof window !== 'undefined' ? window.innerHeight : 0;
+        if (!isOpen && wasOpenRef.current) {
+          wrapper.style.transition = transition;
+          wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
+        } else if (isOpen && !wasOpenRef.current) {
+          wrapper.style.transition = 'none';
+          wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
+          // eslint-disable-next-line no-void
+          void wrapper.offsetHeight;
+          wrapper.style.transition = transition;
+          wrapper.style.transform = 'translate3d(0, 0, 0)';
+        } else if (isOpen && !wrapper.style.transform) {
+          // Fresh mount with open=true — ensure the wrapper starts at rest.
+          wrapper.style.transition = transition;
+          wrapper.style.transform = 'translate3d(0, 0, 0)';
+        }
       }
-    } else {
-      const isReverseDirection = delta.y * dFactor < 0;
-      if (!isReverseDirection && deltaY >= 0 && deltaY <= threshold) {
-        return !isDeltaX;
-      }
-    }
-
-    wasBeyondThePointRef.current = true;
-    return true;
-  };
-
-  React.useEffect(() => {
-    if (hasSnapPoints) {
-      window.requestAnimationFrame(() => {
-        setDelayedSnapPoints(true);
-      });
-    }
-  }, []);
-
-  // Event-driven position tracking. We only tick RAF while the drawer is
-  // actually moving (drag / CSS transition / CSS animation). When it's idle at
-  // a snap, no frames run at all.
-  const positionTrackingRef = React.useRef<{
-    rafId: number | null;
-    movingCount: number;
-    lastPosition: number;
-    start: () => void;
-    stop: () => void;
-  } | null>(null);
-
-  React.useEffect(() => {
-    const drawer = drawerRef.current;
-    if (!drawer) return;
-
-    const state = {
-      rafId: null as number | null,
-      movingCount: 0,
-      lastPosition: Number.NaN,
-      start: () => {},
-      stop: () => {},
-    };
-
-    const emit = () => {
-      const cb = onPositionChangeRef.current;
-      if (!cb) return;
-      const position = drawer.getBoundingClientRect().top;
-      if (position !== state.lastPosition) {
-        state.lastPosition = position;
-        cb(position);
-      }
-    };
-
-    const tick = () => {
-      emit();
-      state.rafId = state.movingCount > 0 ? window.requestAnimationFrame(tick) : null;
-    };
-
-    state.start = () => {
-      state.movingCount += 1;
-      if (state.rafId === null) {
-        state.rafId = window.requestAnimationFrame(tick);
-      }
-    };
-
-    state.stop = () => {
-      state.movingCount = Math.max(0, state.movingCount - 1);
-      // RAF loop will exit on its next tick; emit the settled position now.
-      if (state.movingCount === 0) emit();
-    };
-
-    const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]');
-
-    // Listen on the wrapper too: drag-overshoot snap-back animates the wrapper
-    // alone when the drawer's target is unchanged (e.g. snapping back to the
-    // same detent). Without this, position goes stale mid-animation because
-    // the drawer's `transitionrun` never fires.
-    const onTransitionRun = (e: TransitionEvent) => {
-      if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
-        state.start();
-    };
-    const onTransitionDone = (e: TransitionEvent) => {
-      if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
-        state.stop();
-    };
-    const onAnimationStart = (e: AnimationEvent) => {
-      if (e.target === drawer || e.target === wrapper) state.start();
-    };
-    const onAnimationDone = (e: AnimationEvent) => {
-      if (e.target === drawer || e.target === wrapper) state.stop();
-    };
-
-    drawer.addEventListener('transitionrun', onTransitionRun);
-    drawer.addEventListener('transitionend', onTransitionDone);
-    drawer.addEventListener('transitioncancel', onTransitionDone);
-    drawer.addEventListener('animationstart', onAnimationStart);
-    drawer.addEventListener('animationend', onAnimationDone);
-    drawer.addEventListener('animationcancel', onAnimationDone);
-    wrapper?.addEventListener('transitionrun', onTransitionRun);
-    wrapper?.addEventListener('transitionend', onTransitionDone);
-    wrapper?.addEventListener('transitioncancel', onTransitionDone);
-
-    positionTrackingRef.current = state;
-    emit();
-
-    return () => {
-      drawer.removeEventListener('transitionrun', onTransitionRun);
-      drawer.removeEventListener('transitionend', onTransitionDone);
-      drawer.removeEventListener('transitioncancel', onTransitionDone);
-      drawer.removeEventListener('animationstart', onAnimationStart);
-      drawer.removeEventListener('animationend', onAnimationDone);
-      drawer.removeEventListener('animationcancel', onAnimationDone);
-      wrapper?.removeEventListener('transitionrun', onTransitionRun);
-      wrapper?.removeEventListener('transitionend', onTransitionDone);
-      wrapper?.removeEventListener('transitioncancel', onTransitionDone);
-      if (state.rafId !== null) window.cancelAnimationFrame(state.rafId);
-      positionTrackingRef.current = null;
-    };
-  }, []);
-
-  React.useEffect(() => {
-    const state = positionTrackingRef.current;
-    if (!state) return;
-    if (isDragging) state.start();
-    else state.stop();
-  }, [isDragging]);
-
-  function handleOnPointerUp(event: React.PointerEvent<HTMLDivElement> | null) {
-    pointerStartRef.current = null;
-    wasBeyondThePointRef.current = false;
-    onRelease(event);
-  }
-
-  // The drawer always sits inside a fixed clip wrapper. `contain: paint`
-  // establishes the wrapper as the containing block so the drawer's own
-  // `position: fixed` is constrained here, and `overflow: hidden` keeps any
-  // overshoot out of the viewport. When `detached` the wrapper also floats
-  // with a bottom gap and rounded bottom corners; otherwise it sits flush.
-  // Transform/transition are managed imperatively (via drag overshoot and the
-  // dismiss effect) so React doesn't skip DOM writes for values it thinks it
-  // already owns.
-  const wrapperStyle = React.useMemo<React.CSSProperties>(
-    () => ({
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: detached ? detachedOffset : 0,
-      overflow: 'hidden',
-      contain: 'paint',
-      pointerEvents: 'none',
-      borderBottomLeftRadius: detached ? detachedRadius : 0,
-      borderBottomRightRadius: detached ? detachedRadius : 0,
-      ...detachedWrapperStyleProp,
-    }),
-    [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp]
-  );
-
-  // Translate the wrapper off-screen on dismiss so the whole card slides out
-  // as one. The reset-then-target pattern on open forces the browser to
-  // record a starting value so the transition actually animates.
-  const wasOpenRef = React.useRef(isOpen);
-  React.useEffect(() => {
-    if (!drawerRef.current) {
       wasOpenRef.current = isOpen;
-      return;
-    }
-    const wrapper = drawerRef.current.closest<HTMLElement>('[data-vaul-detached-wrapper]');
-    if (wrapper) {
-      const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
-      const viewportH = typeof window !== 'undefined' ? window.innerHeight : 0;
-      if (!isOpen && wasOpenRef.current) {
-        wrapper.style.transition = transition;
-        wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
-      } else if (isOpen && !wasOpenRef.current) {
-        wrapper.style.transition = 'none';
-        wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
-        // eslint-disable-next-line no-void
-        void wrapper.offsetHeight;
-        wrapper.style.transition = transition;
-        wrapper.style.transform = 'translate3d(0, 0, 0)';
-      } else if (isOpen && !wrapper.style.transform) {
-        // Fresh mount with open=true — ensure the wrapper starts at rest.
-        wrapper.style.transition = transition;
-        wrapper.style.transform = 'translate3d(0, 0, 0)';
-      }
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen, detached, drawerRef]);
+    }, [isOpen, detached, drawerRef]);
 
-  const contentNode = (
-    <DialogPrimitive.Content
-      data-vaul-drawer-direction={direction}
-      data-vaul-drawer=""
-      data-vaul-detached={detached ? 'true' : 'false'}
-      data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
-      data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
-      data-vaul-custom-container={container ? 'true' : 'false'}
-      data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
-      {...rest}
-      ref={composedRef}
-      style={
-        snapPointsOffset && snapPointsOffset.length > 0
-          ? ({
-              '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
-              ...style,
-              'pointerEvents': 'auto',
-            } as React.CSSProperties)
-          : ({ ...style, pointerEvents: 'auto' } as React.CSSProperties)
-      }
-      onPointerDown={(event) => {
-        if (handleOnly) return;
-        rest.onPointerDown?.(event);
-        pointerStartRef.current = { x: event.pageX, y: event.pageY };
-        onPress(event);
-      }}
-      onOpenAutoFocus={(e) => {
-        onOpenAutoFocus?.(e);
-
-        if (!autoFocus) {
-          e.preventDefault();
+    const contentNode = (
+      <DialogPrimitive.Content
+        data-vaul-drawer-direction={direction}
+        data-vaul-drawer=""
+        data-vaul-detached={detached ? 'true' : 'false'}
+        data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
+        data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
+        data-vaul-custom-container={container ? 'true' : 'false'}
+        data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
+        {...rest}
+        ref={composedRef}
+        style={
+          snapPointsOffset && snapPointsOffset.length > 0
+            ? ({
+                '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
+                ...style,
+                'pointerEvents': 'auto',
+              } as React.CSSProperties)
+            : ({ ...style, pointerEvents: 'auto' } as React.CSSProperties)
         }
-      }}
-      onPointerDownOutside={(e) => {
-        onPointerDownOutside?.(e);
+        onPointerDown={(event) => {
+          if (handleOnly) return;
+          rest.onPointerDown?.(event);
+          pointerStartRef.current = { x: event.pageX, y: event.pageY };
+          onPress(event);
+        }}
+        onOpenAutoFocus={(e) => {
+          onOpenAutoFocus?.(e);
 
-        if (!modal || e.defaultPrevented || isBelowFade) {
-          e.preventDefault();
-          return;
-        }
+          if (!autoFocus) {
+            e.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(e) => {
+          onPointerDownOutside?.(e);
 
-        if (keyboardIsOpen.current) {
-          keyboardIsOpen.current = false;
-        }
-      }}
-      onFocusOutside={(e) => {
-        if (!modal || isBelowFade) {
-          e.preventDefault();
-          return;
-        }
-      }}
-      onPointerMove={(event) => {
-        lastKnownPointerEventRef.current = event;
-        if (handleOnly) return;
-        rest.onPointerMove?.(event);
-        if (!pointerStartRef.current) return;
-        const yPosition = event.pageY - pointerStartRef.current.y;
-        const xPosition = event.pageX - pointerStartRef.current.x;
+          if (!modal || e.defaultPrevented || isBelowFade) {
+            e.preventDefault();
+            return;
+          }
 
-        const swipeStartThreshold = event.pointerType === 'touch' ? 10 : 2;
-        const delta = { x: xPosition, y: yPosition };
+          if (keyboardIsOpen.current) {
+            keyboardIsOpen.current = false;
+          }
+        }}
+        onFocusOutside={(e) => {
+          if (!modal || isBelowFade) {
+            e.preventDefault();
+            return;
+          }
+        }}
+        onPointerMove={(event) => {
+          lastKnownPointerEventRef.current = event;
+          if (handleOnly) return;
+          rest.onPointerMove?.(event);
+          if (!pointerStartRef.current) return;
+          const yPosition = event.pageY - pointerStartRef.current.y;
+          const xPosition = event.pageX - pointerStartRef.current.x;
 
-        const isAllowedToSwipe = isDeltaInDirection(delta, direction, swipeStartThreshold);
-        if (isAllowedToSwipe) onDrag(event);
-        else if (
-          Math.abs(xPosition) > swipeStartThreshold ||
-          Math.abs(yPosition) > swipeStartThreshold
-        ) {
+          const swipeStartThreshold = event.pointerType === 'touch' ? 10 : 2;
+          const delta = { x: xPosition, y: yPosition };
+
+          const isAllowedToSwipe = isDeltaInDirection(delta, direction, swipeStartThreshold);
+          if (isAllowedToSwipe) onDrag(event);
+          else if (
+            Math.abs(xPosition) > swipeStartThreshold ||
+            Math.abs(yPosition) > swipeStartThreshold
+          ) {
+            pointerStartRef.current = null;
+          }
+        }}
+        onPointerUp={(event) => {
+          rest.onPointerUp?.(event);
           pointerStartRef.current = null;
-        }
-      }}
-      onPointerUp={(event) => {
-        rest.onPointerUp?.(event);
-        pointerStartRef.current = null;
-        wasBeyondThePointRef.current = false;
-        onRelease(event);
-      }}
-      onPointerOut={(event) => {
-        rest.onPointerOut?.(event);
-        handleOnPointerUp(lastKnownPointerEventRef.current);
-      }}
-      onContextMenu={(event) => {
-        rest.onContextMenu?.(event);
-        if (lastKnownPointerEventRef.current) {
+          wasBeyondThePointRef.current = false;
+          onRelease(event);
+        }}
+        onPointerOut={(event) => {
+          rest.onPointerOut?.(event);
           handleOnPointerUp(lastKnownPointerEventRef.current);
-        }
-      }}
-    >
-      {hasAutoSnapPoint ? (
-        <div ref={setAutoSizeNode} data-vaul-auto-size-wrapper="" style={autoSizeWrapperStyle}>
-          {children}
-        </div>
-      ) : (
-        children
-      )}
-    </DialogPrimitive.Content>
-  );
+        }}
+        onContextMenu={(event) => {
+          rest.onContextMenu?.(event);
+          if (lastKnownPointerEventRef.current) {
+            handleOnPointerUp(lastKnownPointerEventRef.current);
+          }
+        }}
+      >
+        {hasAutoSnapPoint ? (
+          <div ref={setAutoSizeNode} data-vaul-auto-size-wrapper="" style={autoSizeWrapperStyle}>
+            {children}
+          </div>
+        ) : (
+          children
+        )}
+      </DialogPrimitive.Content>
+    );
 
-  return (
-    <div data-vaul-detached-wrapper="" style={wrapperStyle}>
-      {contentNode}
-      {detachedSiblings}
-    </div>
-  );
-});
+    return (
+      <div data-vaul-detached-wrapper="" style={wrapperStyle}>
+        {contentNode}
+        {detachedSiblings}
+      </div>
+    );
+  }
+);
 
 Content.displayName = 'Drawer.Content';
 
@@ -1434,106 +1461,105 @@ export type HandleProps = React.ComponentPropsWithoutRef<'div'> & {
 const LONG_HANDLE_PRESS_TIMEOUT = 250;
 const DOUBLE_TAP_TIMEOUT = 120;
 
-export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(function (
-  { preventCycle = false, children, ...rest },
-  ref
-) {
-  const {
-    closeDrawer,
-    isDragging,
-    snapPoints,
-    activeSnapPoint,
-    setActiveSnapPoint,
-    dismissible,
-    handleOnly,
-    isOpen,
-    onPress,
-    onDrag,
-  } = useDrawerContext();
+export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(
+  ({ preventCycle = false, children, ...rest }, ref) => {
+    const {
+      closeDrawer,
+      isDragging,
+      snapPoints,
+      activeSnapPoint,
+      setActiveSnapPoint,
+      dismissible,
+      handleOnly,
+      isOpen,
+      onPress,
+      onDrag,
+    } = useDrawerContext();
 
-  const closeTimeoutIdRef = React.useRef<number | null>(null);
-  const shouldCancelInteractionRef = React.useRef(false);
+    const closeTimeoutIdRef = React.useRef<number | null>(null);
+    const shouldCancelInteractionRef = React.useRef(false);
 
-  function handleStartCycle() {
-    // Stop if this is the second click of a double click
-    if (shouldCancelInteractionRef.current) {
-      handleCancelInteraction();
-      return;
-    }
-    window.setTimeout(() => {
-      handleCycleSnapPoints();
-    }, DOUBLE_TAP_TIMEOUT);
-  }
-
-  function handleCycleSnapPoints() {
-    // Prevent accidental taps while resizing drawer
-    if (isDragging || preventCycle || shouldCancelInteractionRef.current) {
-      handleCancelInteraction();
-      return;
-    }
-    // Make sure to clear the timeout id if the user releases the handle before the cancel timeout
-    handleCancelInteraction();
-
-    if (!snapPoints || snapPoints.length === 0) {
-      if (!dismissible) {
-        closeDrawer();
+    function handleStartCycle() {
+      // Stop if this is the second click of a double click
+      if (shouldCancelInteractionRef.current) {
+        handleCancelInteraction();
+        return;
       }
-      return;
+      window.setTimeout(() => {
+        handleCycleSnapPoints();
+      }, DOUBLE_TAP_TIMEOUT);
     }
 
-    const isLastSnapPoint = activeSnapPoint === snapPoints[snapPoints.length - 1];
+    function handleCycleSnapPoints() {
+      // Prevent accidental taps while resizing drawer
+      if (isDragging || preventCycle || shouldCancelInteractionRef.current) {
+        handleCancelInteraction();
+        return;
+      }
+      // Make sure to clear the timeout id if the user releases the handle before the cancel timeout
+      handleCancelInteraction();
 
-    if (isLastSnapPoint && dismissible) {
-      closeDrawer();
-      return;
+      if (!snapPoints || snapPoints.length === 0) {
+        if (!dismissible) {
+          closeDrawer();
+        }
+        return;
+      }
+
+      const isLastSnapPoint = activeSnapPoint === snapPoints[snapPoints.length - 1];
+
+      if (isLastSnapPoint && dismissible) {
+        closeDrawer();
+        return;
+      }
+
+      const currentSnapIndex = snapPoints.findIndex((point) => point === activeSnapPoint);
+      if (currentSnapIndex === -1) return; // activeSnapPoint not found in snapPoints
+      const nextSnapPoint = snapPoints[currentSnapIndex + 1];
+      if (nextSnapPoint === undefined) return;
+      setActiveSnapPoint(nextSnapPoint);
     }
 
-    const currentSnapIndex = snapPoints.findIndex((point) => point === activeSnapPoint);
-    if (currentSnapIndex === -1) return; // activeSnapPoint not found in snapPoints
-    const nextSnapPoint = snapPoints[currentSnapIndex + 1];
-    if (nextSnapPoint === undefined) return;
-    setActiveSnapPoint(nextSnapPoint);
-  }
-
-  function handleStartInteraction() {
-    closeTimeoutIdRef.current = window.setTimeout(() => {
-      // Cancel click interaction on a long press
-      shouldCancelInteractionRef.current = true;
-    }, LONG_HANDLE_PRESS_TIMEOUT);
-  }
-
-  function handleCancelInteraction() {
-    if (closeTimeoutIdRef.current) {
-      window.clearTimeout(closeTimeoutIdRef.current);
+    function handleStartInteraction() {
+      closeTimeoutIdRef.current = window.setTimeout(() => {
+        // Cancel click interaction on a long press
+        shouldCancelInteractionRef.current = true;
+      }, LONG_HANDLE_PRESS_TIMEOUT);
     }
-    shouldCancelInteractionRef.current = false;
-  }
 
-  return (
-    <div
-      onClick={handleStartCycle}
-      onPointerCancel={handleCancelInteraction}
-      onPointerDown={(e) => {
-        if (handleOnly) onPress(e);
-        handleStartInteraction();
-      }}
-      onPointerMove={(e) => {
-        if (handleOnly) onDrag(e);
-      }}
-      // onPointerUp is already handled by the content component
-      ref={ref}
-      data-vaul-drawer-visible={isOpen ? 'true' : 'false'}
-      data-vaul-handle=""
-      aria-hidden="true"
-      {...rest}
-    >
-      {/* Expand handle's hit area beyond what's visible to ensure a 44x44 tap target for touch devices */}
-      <span data-vaul-handle-hitarea="" aria-hidden="true">
-        {children}
-      </span>
-    </div>
-  );
-});
+    function handleCancelInteraction() {
+      if (closeTimeoutIdRef.current) {
+        window.clearTimeout(closeTimeoutIdRef.current);
+      }
+      shouldCancelInteractionRef.current = false;
+    }
+
+    return (
+      <div
+        onClick={handleStartCycle}
+        onPointerCancel={handleCancelInteraction}
+        onPointerDown={(e) => {
+          if (handleOnly) onPress(e);
+          handleStartInteraction();
+        }}
+        onPointerMove={(e) => {
+          if (handleOnly) onDrag(e);
+        }}
+        // onPointerUp is already handled by the content component
+        ref={ref}
+        data-vaul-drawer-visible={isOpen ? 'true' : 'false'}
+        data-vaul-handle=""
+        aria-hidden="true"
+        {...rest}
+      >
+        {/* Expand handle's hit area beyond what's visible to ensure a 44x44 tap target for touch devices */}
+        <span data-vaul-handle-hitarea="" aria-hidden="true">
+          {children}
+        </span>
+      </div>
+    );
+  }
+);
 
 Handle.displayName = 'Drawer.Handle';
 
