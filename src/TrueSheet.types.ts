@@ -330,11 +330,11 @@ export interface TrueSheetProps extends ViewProps {
   grabberOptions?: GrabberOptions;
 
   /**
-   * Controls the sheet presentation style on iPad.
+   * Controls the sheet presentation style on iPad and web (landscape/tablet).
    * When enabled (true), uses a large page sheet for better readability.
    * When disabled (false), uses a centered form sheet.
    *
-   * @platform ios 17+
+   * @platform ios 17+, web
    * @default true
    */
   pageSizing?: boolean;

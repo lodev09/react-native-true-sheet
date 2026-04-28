@@ -251,7 +251,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | Static global methods | Yes | Yes | No (use provider) |
 | `scrollable` | Yes | Yes | No |
 | `anchor` / side sheets | System-controlled margins | `anchorOffset` prop | `anchorOffset` prop |
-| `pageSizing` (iPad) | iOS 17+ | N/A | N/A |
+| `pageSizing` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
 | Edge-to-edge | N/A | Auto-detected | N/A |
 | Keyboard handling | Built-in | Built-in | N/A |

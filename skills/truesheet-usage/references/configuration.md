@@ -131,7 +131,7 @@ Every TrueSheet prop with type, default value, and platform support.
 |------|------|---------|-----------|-------------|
 | `anchor` | `'left' \| 'center' \| 'right'` | `'center'` | 🍎🤖🌐 | Horizontal positioning. Ignored on phones in portrait |
 | `anchorOffset` | `number` | `16` | 🤖🌐 | Edge margin when anchored left/right |
-| `pageSizing` | `boolean` | `true` | 🍎 | iPad: page sheet (true) vs form sheet (false). iOS 17+ |
+| `pageSizing` | `boolean` | `true` | 🍎🌐 | iPad/web (landscape/tablet): page sheet (true) vs form sheet (false). iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖🌐 | Bottom safe area handling |
 
 ## Initial presentation
