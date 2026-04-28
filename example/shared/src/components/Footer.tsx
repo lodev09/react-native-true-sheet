@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
 
-const isIPad = Platform.OS === 'ios' && Platform.isPad;
+const isIPad = (Platform.OS === 'ios' && Platform.isPad) || Platform.OS === 'web';
 
 interface FooterProps extends PressableProps {
   wrapperStyle?: StyleProp<ViewStyle>;
