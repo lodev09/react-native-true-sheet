@@ -5007,6 +5007,7 @@ __metadata:
     typescript: "npm:^5.9.2"
   peerDependencies:
     "@radix-ui/react-dialog": ">=1"
+    "@radix-ui/react-presence": ">=1"
     "@react-navigation/native": ">=7"
     react: "*"
     react-native: "*"
@@ -5014,6 +5015,8 @@ __metadata:
     react-native-worklets: "*"
   peerDependenciesMeta:
     "@radix-ui/react-dialog":
+      optional: true
+    "@radix-ui/react-presence":
       optional: true
     "@react-navigation/native":
       optional: true
