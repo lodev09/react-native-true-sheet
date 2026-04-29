@@ -746,7 +746,16 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
       } else if (hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
+      } else if (self.backgroundGlass == facebook::react::TrueSheetViewBackgroundGlass::Clear) {
+        // Clear glass variant (iOS 26+). Higher transparency, no luminosity
+        // veil. Designed for media-rich backgrounds; typically paired with
+        // an explicit dimming/blur layer for content legibility.
+        UIGlassEffect *glass = [UIGlassEffect effectWithStyle:UIGlassEffectStyleClear];
+        glass.interactive = YES;
+        self.sheet.backgroundEffect = glass;
       } else {
+        // Default: let the system apply iOS 26's standard Liquid Glass
+        // (UIGlassEffectStyleRegular under the hood).
         self.sheet.backgroundEffect = nil;
       }
       return;
