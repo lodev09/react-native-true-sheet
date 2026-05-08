@@ -136,7 +136,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'maxContentHeight'
   | 'maxContentWidth'
   | 'scrollable'
-  | 'pageSizing'
+  | 'presentation'
   | 'header'
   | 'headerStyle'
   | 'footer'

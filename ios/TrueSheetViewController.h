@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, strong, nullable) NSNumber *blurIntensity;
 @property (nonatomic, assign) BOOL blurInteraction;
-@property (nonatomic, assign) BOOL pageSizing;
+@property (nonatomic, assign) facebook::react::TrueSheetViewPresentation presentation;
 @property (nonatomic, assign) facebook::react::TrueSheetViewAnchor anchor;
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;

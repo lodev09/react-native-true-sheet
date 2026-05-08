@@ -101,7 +101,7 @@ export interface NativeProps extends ViewProps {
   initialDetentAnimated?: WithDefault<boolean, true>;
   scrollable?: WithDefault<boolean, false>;
   scrollableOptions?: ScrollableOptionsType;
-  pageSizing?: WithDefault<boolean, true>;
+  presentation?: WithDefault<'page' | 'form', 'page'>;
 
   // Event handlers
   onMount?: DirectEventHandler<null>;

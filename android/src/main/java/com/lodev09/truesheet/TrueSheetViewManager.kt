@@ -206,9 +206,9 @@ class TrueSheetViewManager :
     view.setScrollable(value)
   }
 
-  @ReactProp(name = "pageSizing", defaultBoolean = true)
-  override fun setPageSizing(view: TrueSheetView, value: Boolean) {
-    // iOS-specific prop - no-op on Android
+  @ReactProp(name = "presentation")
+  override fun setPresentation(view: TrueSheetView, value: String?) {
+    // iOS/web-specific prop - no-op on Android
   }
 
   @ReactProp(name = "elevation", defaultDouble = -1.0)

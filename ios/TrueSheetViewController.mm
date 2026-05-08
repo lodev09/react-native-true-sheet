@@ -73,7 +73,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _dismissible = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
-    _pageSizing = YES;
+    _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
     _isDragging = NO;
     _isPresented = NO;
@@ -869,10 +869,14 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   if (!sheet)
     return;
 
-  BOOL hasMaxWidth = self.maxContentWidth != nil;
+  // `presentation` is absolute: 'form' always renders a centered form sheet
+  // and ignores `maxContentWidth`. 'page' honors `maxContentWidth` via
+  // widthFollowsPreferredContentSizeWhenEdgeAttached.
+  BOOL formSheet = self.presentation == facebook::react::TrueSheetViewPresentation::Form;
+  BOOL hasMaxWidth = self.maxContentWidth != nil && !formSheet;
 
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = hasMaxWidth ? NO : self.pageSizing;
+    sheet.prefersPageSizing = !formSheet;
   }
 
   sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = hasMaxWidth;

@@ -454,7 +454,7 @@ export class TrueSheet
       anchorOffset,
       scrollable = false,
       scrollableOptions,
-      pageSizing = true,
+      presentation = 'page',
       children,
       style,
       header,
@@ -509,7 +509,7 @@ export class TrueSheet
         anchorOffset={anchorOffset}
         scrollable={scrollable}
         scrollableOptions={scrollableOptions}
-        pageSizing={pageSizing}
+        presentation={presentation}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}
         onWillPresent={this.onWillPresent}
