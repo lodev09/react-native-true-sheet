@@ -4,15 +4,7 @@
 
 ### 🎉 New features
 
-- **Web**: Replace `@gorhom/bottom-sheet` with vendored `vaul` renderer. Adds full event lifecycle (`onMount`, `onWill/DidPresent`, `onWill/DidDismiss`, `onDetentChange`, `onDragBegin/Change/End`, `onPositionChange`, `onWill/DidFocus`, `onWill/DidBlur`), sheet stacking with cascade, detached mode, `auto` detent, scrollable content, and honors `elevation`, `cornerRadius`, `maxContentHeight`, `draggable`, `dimmedDetentIndex`, `insetAdjustment`, `initialDetentAnimated`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639) by [@lodev09](https://github.com/lodev09))
-
-### 🐛 Bug fixes
-
-- **Web**: Collapse non-dismissible sheet to a sensible detent on dim tap and Escape, mirroring Android. ([#675](https://github.com/lodev09/react-native-true-sheet/pull/675) by [@lodev09](https://github.com/lodev09))
-- **Web**: Float the grabber over content like native iOS/Android instead of pushing the header down and inflating the `auto` detent. ([#676](https://github.com/lodev09/react-native-true-sheet/pull/676) by [@lodev09](https://github.com/lodev09))
-- **Web**: Size the form sheet (`pageSizing={false}`) to fit content, clamped between half the viewport and `viewport − 2 × detachedOffset`, instead of a fixed 50% cap. ([#677](https://github.com/lodev09/react-native-true-sheet/pull/677) by [@lodev09](https://github.com/lodev09))
-- **Web**: Clip sheet content to the rounded top corners so children with their own background don't bleed past the radius. ([#678](https://github.com/lodev09/react-native-true-sheet/pull/678) by [@lodev09](https://github.com/lodev09))
-- **Web**: Fire `onWillFocus`/`onDidFocus` on initial present and `onWillBlur`/`onDidBlur` on dismiss, mirroring native iOS ordering (`willBlur` before `willDismiss`, `didBlur` before `didDismiss`). ([#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
+- **Web**: New `vaul`-based renderer replacing `@gorhom/bottom-sheet`, with full feature parity. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639), [#675](https://github.com/lodev09/react-native-true-sheet/pull/675), [#676](https://github.com/lodev09/react-native-true-sheet/pull/676), [#677](https://github.com/lodev09/react-native-true-sheet/pull/677), [#678](https://github.com/lodev09/react-native-true-sheet/pull/678), [#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking
 
