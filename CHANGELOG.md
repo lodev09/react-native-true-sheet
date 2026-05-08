@@ -12,6 +12,7 @@
 
 - **Web**: Collapse non-dismissible sheet to a sensible detent on dim tap and Escape, mirroring Android. ([#675](https://github.com/lodev09/react-native-true-sheet/pull/675) by [@lodev09](https://github.com/lodev09))
 - **Web**: Float the grabber over content like native iOS/Android instead of pushing the header down and inflating the `auto` detent. ([#676](https://github.com/lodev09/react-native-true-sheet/pull/676) by [@lodev09](https://github.com/lodev09))
+- **Web**: Size the form sheet (`pageSizing={false}`) to fit content, clamped between half the viewport and `viewport − 2 × detachedOffset`, instead of a fixed 50% cap. ([#677](https://github.com/lodev09/react-native-true-sheet/pull/677) by [@lodev09](https://github.com/lodev09))
 
 ## 3.10.1
 

@@ -641,8 +641,21 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // vertically.
   const isFormSheet = isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
 
-  const effectiveMaxContentHeight =
-    maxContentHeight ?? (isFormSheet ? windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO : undefined);
+  // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
+  // Track it here so the form sheet can size its card to fit content,
+  // clamped between a minimum ratio of the viewport and a maximum derived
+  // from `detachedOffset` (the breathing room left at top + bottom of the
+  // floating card).
+  const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
+
+  const effectiveMaxContentHeight = useMemo<number | undefined>(() => {
+    if (maxContentHeight !== undefined) return maxContentHeight;
+    if (!isFormSheet) return undefined;
+    const min = windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO;
+    const max = Math.max(min, windowHeight - 2 * detachedOffset);
+    if (measuredContentHeight <= 0) return min;
+    return Math.max(min, Math.min(measuredContentHeight, max));
+  }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
 
   const effectiveDetachedOffset = isFormSheet
     ? Math.max(0, (windowHeight - (effectiveMaxContentHeight ?? 0)) / 2)
@@ -737,6 +750,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       maxContentHeight={effectiveMaxContentHeight}
       initialAnimated={initialDetentAnimated}
       detachedWrapperStyle={wrapperStyle}
+      onContentHeightChange={setMeasuredContentHeight}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSetActiveSnapPoint}
       {...snapPointsProps}
