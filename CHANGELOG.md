@@ -4,8 +4,6 @@
 
 ### 🎉 New features
 
-- Bump `react-native-monorepo-config` to fix build on windows. ([#672](https://github.com/lodev09/react-native-true-sheet/pull/672) by [@harveylx](https://github.com/harveylx))
-
 - **Web**: Replace `@gorhom/bottom-sheet` with vendored `vaul` renderer. Adds full event lifecycle (`onMount`, `onWill/DidPresent`, `onWill/DidDismiss`, `onDetentChange`, `onDragBegin/Change/End`, `onPositionChange`, `onWill/DidFocus`, `onWill/DidBlur`), sheet stacking with cascade, detached mode, `auto` detent, scrollable content, and honors `elevation`, `cornerRadius`, `maxContentHeight`, `draggable`, `dimmedDetentIndex`, `insetAdjustment`, `initialDetentAnimated`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
@@ -19,6 +17,10 @@
 ### ⚠️ Breaking
 
 - Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
+
+### 💡 Others
+
+- Bump `react-native-monorepo-config` to fix build on windows. ([#672](https://github.com/lodev09/react-native-true-sheet/pull/672) by [@harveylx](https://github.com/harveylx))
 
 ## 3.10.1
 
