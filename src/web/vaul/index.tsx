@@ -982,7 +982,18 @@ export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive
 };
 
 export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
-  ({ onPointerDownOutside, style, onOpenAutoFocus, children, detachedSiblings, ...rest }, ref) => {
+  (
+    {
+      onPointerDownOutside,
+      onEscapeKeyDown,
+      style,
+      onOpenAutoFocus,
+      children,
+      detachedSiblings,
+      ...rest
+    },
+    ref
+  ) => {
     const {
       drawerRef,
       onPress,
@@ -997,6 +1008,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       isDragging,
       direction,
       snapPoints,
+      setActiveSnapPoint,
+      dismissible,
       container,
       handleOnly,
       shouldAnimate,
@@ -1296,8 +1309,42 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
             return;
           }
 
+          // Non-dismissible + dimmed: collapse to the highest non-dimmed
+          // snap point instead of silently swallowing the dismiss attempt.
+          // Mirrors the native Android dim-tap behavior.
+          if (
+            !dismissible &&
+            hasSnapPoints &&
+            fadeFromIndex !== undefined &&
+            fadeFromIndex > 0 &&
+            typeof activeSnapPointIndex === 'number' &&
+            activeSnapPointIndex >= fadeFromIndex
+          ) {
+            e.preventDefault();
+            setActiveSnapPoint(snapPoints![fadeFromIndex - 1]!);
+            return;
+          }
+
           if (keyboardIsOpen.current) {
             keyboardIsOpen.current = false;
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          onEscapeKeyDown?.(e);
+          if (e.defaultPrevented) return;
+
+          // Non-dismissible: collapse to the first snap point (if above it)
+          // instead of silently swallowing the dismiss attempt. Mirrors the
+          // native Android back-press behavior.
+          if (!dismissible) {
+            e.preventDefault();
+            if (
+              hasSnapPoints &&
+              typeof activeSnapPointIndex === 'number' &&
+              activeSnapPointIndex > 0
+            ) {
+              setActiveSnapPoint(snapPoints![0]!);
+            }
           }
         }}
         onFocusOutside={(e) => {

@@ -180,6 +180,7 @@ const MapScreenInner = ({
         dimmedDetentIndex={1}
         style={styles.content}
         detached
+        dismissible={false}
         onLayout={(e: LayoutChangeEvent) => {
           log(
             `layout ${Math.round(e.nativeEvent.layout.width)}×${Math.round(e.nativeEvent.layout.height)}`
