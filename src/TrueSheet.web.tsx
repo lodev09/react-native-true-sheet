@@ -370,8 +370,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const present = !wasOpen && isOpen;
     if (present) {
+      // Pair willFocus with willPresent on initial present — mirrors native
+      // iOS where viewWillAppear dispatches both. The descendant-stack focus
+      // effect handles subsequent gained/lost transitions.
       onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
+      onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
     } else if (wasOpen && !isOpen) {
+      // Pair willBlur with willDismiss on dismiss — mirrors native iOS
+      // emitWillDismissEvents (blur fires before dismiss).
+      onWillBlurRef.current?.({ nativeEvent: null } as WillBlurEvent);
       onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
     } else {
       return undefined;
@@ -380,7 +387,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const fireDone = () => {
       if (present) {
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
+        onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
       } else {
+        onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
         onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
       }
     };
