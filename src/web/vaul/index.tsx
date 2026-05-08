@@ -186,6 +186,12 @@ export type DialogProps = {
    * the sheet appears at its target detent instantly. Defaults to `true`.
    */
   initialAnimated?: boolean;
+  /**
+   * Fires when the auto-size wrapper's measured content height changes.
+   * Useful for callers that want to size the surrounding card to fit
+   * content (e.g. iPad-style form sheets).
+   */
+  onContentHeightChange?: (height: number) => void;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -226,6 +232,7 @@ export function Root({
   detachedWrapperStyle,
   maxContentHeight,
   initialAnimated = true,
+  onContentHeightChange,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -261,6 +268,14 @@ export function Root({
   const drawerWidthRef = React.useRef(drawerRef.current?.getBoundingClientRect().width || 0);
   const initialDrawerHeight = React.useRef(0);
   const [contentHeight, setContentHeight] = React.useState(0);
+
+  const onContentHeightChangeRef = React.useRef(onContentHeightChange);
+  React.useEffect(() => {
+    onContentHeightChangeRef.current = onContentHeightChange;
+  });
+  React.useEffect(() => {
+    onContentHeightChangeRef.current?.(contentHeight);
+  }, [contentHeight]);
 
   const onSnapPointChange = React.useCallback((activeSnapPointIndex: number) => {
     // Change openTime ref when we reach the last snap point to prevent dragging for 500ms incase it's scrollable.
@@ -1021,20 +1036,17 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       detachedRadius,
       detachedWrapperStyle: detachedWrapperStyleProp,
     } = useDrawerContext();
-    const hasAutoSnapPoint = React.useMemo(
-      () => !!snapPoints?.some((p) => p === 'auto'),
-      [snapPoints]
-    );
-
-    // When 'auto' is used as a snap point, we need the natural content height.
-    // The drawer itself may be styled to a fixed viewport height, so we measure
-    // an inner wrapper instead. Ref callback starts the observer as soon as the
-    // node mounts (Radix Presence defers the portal mount past useEffect).
+    // Always measure the inner wrapper's natural height. The drawer itself may
+    // be styled to a fixed viewport height, so we measure an inner wrapper
+    // instead. Ref callback starts the observer as soon as the node mounts
+    // (Radix Presence defers the portal mount past useEffect). The measurement
+    // drives the 'auto' snap point and is also exposed via
+    // `onContentHeightChange` for callers that size the surrounding card.
     const autoRoRef = React.useRef<ResizeObserver | null>(null);
     const setAutoSizeNode = React.useCallback(
       (node: HTMLDivElement | null) => {
         autoRoRef.current?.disconnect();
-        if (!node || !hasAutoSnapPoint) {
+        if (!node) {
           autoRoRef.current = null;
           return;
         }
@@ -1044,7 +1056,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         ro.observe(node);
         autoRoRef.current = ro;
       },
-      [hasAutoSnapPoint, setContentHeight]
+      [setContentHeight]
     );
 
     const isBelowFade =
@@ -1392,13 +1404,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
           }
         }}
       >
-        {hasAutoSnapPoint ? (
-          <div ref={setAutoSizeNode} data-vaul-auto-size-wrapper="" style={autoSizeWrapperStyle}>
-            {children}
-          </div>
-        ) : (
-          children
-        )}
+        <div ref={setAutoSizeNode} data-vaul-auto-size-wrapper="" style={autoSizeWrapperStyle}>
+          {children}
+        </div>
       </DialogPrimitive.Content>
     );
 
