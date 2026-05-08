@@ -698,14 +698,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     dropShadow,
   ]);
 
+  // Absolute-position the grabber so it overlays the content top-edge
+  // instead of consuming flow height — mirrors native iOS/Android, where
+  // the grabber sits in the rounded corner zone above the content and
+  // doesn't push the header down or inflate the 'auto' detent measurement.
   const handleStyle = useMemo<React.CSSProperties>(
     () => ({
+      position: 'absolute',
+      top: grabberOptions?.topMargin ?? DEFAULT_GRABBER_TOP_MARGIN,
+      left: '50%',
+      transform: 'translateX(-50%)',
       height: grabberHeight,
       width: grabberOptions?.width ?? DEFAULT_GRABBER_WIDTH,
       borderRadius: grabberOptions?.cornerRadius ?? grabberHeight / 2,
       backgroundColor: (grabberOptions?.color ?? defaultGrabberColor) as string,
       opacity: 1,
-      marginTop: grabberOptions?.topMargin ?? DEFAULT_GRABBER_TOP_MARGIN,
+      zIndex: 1,
     }),
     [grabberOptions, grabberHeight, defaultGrabberColor]
   );
