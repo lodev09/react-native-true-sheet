@@ -6,6 +6,10 @@
 
 - **Web**: Replace `@gorhom/bottom-sheet` with vendored `vaul` renderer. Adds full event lifecycle (`onMount`, `onWill/DidPresent`, `onWill/DidDismiss`, `onDetentChange`, `onDragBegin/Change/End`, `onPositionChange`, `onWill/DidFocus`, `onWill/DidBlur`), sheet stacking with cascade, detached mode, `auto` detent, scrollable content, and honors `elevation`, `cornerRadius`, `maxContentHeight`, `draggable`, `dimmedDetentIndex`, `insetAdjustment`, `initialDetentAnimated`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639) by [@lodev09](https://github.com/lodev09))
 
+### 🐛 Bug fixes
+
+- **Web**: Collapse non-dismissible sheet to a sensible detent on dim tap and Escape, mirroring Android. ([#675](https://github.com/lodev09/react-native-true-sheet/pull/675) by [@lodev09](https://github.com/lodev09))
+
 ## 3.10.1
 
 ### 🐛 Bug fixes
