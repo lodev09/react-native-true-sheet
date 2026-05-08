@@ -331,13 +331,15 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Controls the sheet presentation style on iPad and web (landscape/tablet).
-   * When enabled (true), uses a large page sheet for better readability.
-   * When disabled (false), uses a centered form sheet.
+   * - `'page'`: bottom-attached page sheet (full or readable width).
+   * - `'form'`: centered floating form sheet (default form-sheet width).
+   *
+   * `'form'` is absolute — `maxContentWidth` is ignored when set.
    *
    * @platform ios 17+, web
-   * @default true
+   * @default 'page'
    */
-  pageSizing?: boolean;
+  presentation?: 'page' | 'form';
 
   /**
    * The blur effect style on iOS.

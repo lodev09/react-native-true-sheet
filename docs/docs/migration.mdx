@@ -251,16 +251,16 @@ These events provide more granular control over the sheet's lifecycle and user i
 
 See the [Lifecycle Events documentation](reference/events) for detailed usage and examples.
 
-### 3. iPad Support with Page Sizing
+### 3. iPad Support with Presentation
 
-Version 3 now includes first-class iPad support with the new `pageSizing` prop. When enabled (default), the sheet uses a large page sheet for better readability on iPad. When disabled, the sheet uses a centered form sheet.
+Version 3 now includes first-class iPad support with the new `presentation` prop. `'page'` (default) uses a large page sheet for better readability on iPad. `'form'` uses a centered floating form sheet.
 
 ```tsx
-<TrueSheet pageSizing />
+<TrueSheet presentation="page" />
 ```
 
 :::info
-This feature is **iOS 17+ only** and defaults to `true`. Set to `false` to use a centered form sheet presentation on iPad.
+This feature is **iOS 17+ only** and defaults to `'page'`. Set to `'form'` to use a centered form sheet presentation on iPad.
 :::
 
 ### 4. Improved Performance

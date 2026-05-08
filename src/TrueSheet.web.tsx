@@ -77,7 +77,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footerStyle,
     scrollable = false,
     scrollableOptions,
-    pageSizing = true,
+    presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
     elevation = 4,
@@ -117,9 +117,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
 
-  // pageSizing=false implies a floating/detached sheet on web — mirrors iOS
+  // presentation='form' implies a floating/detached sheet on web — mirrors iOS
   // form-sheet semantics where the sheet is never edge-attached.
-  const effectiveDetached = !pageSizing || detached;
+  const effectiveDetached = presentation === 'form' || detached;
 
   const colorScheme = useColorScheme();
   const backgroundColor =
@@ -646,12 +646,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     []
   );
 
-  // Form-sheet style (iOS pageSizing=false): centered floating card with a
-  // default width and a height capped to a fraction of the window. We reuse
-  // the existing detached mechanic so drag/snap math stays correct — the
-  // wrapper is bottom-attached with a computed offset that centers it
-  // vertically.
-  const isFormSheet = isLandscapeOrTablet && maxContentWidth == null && !pageSizing;
+  // Form-sheet style (presentation='form'): centered floating card with a
+  // default width and a height fit to content. We reuse the existing detached
+  // mechanic so drag/snap math stays correct — the wrapper is bottom-attached
+  // with a computed offset that centers it vertically. `presentation` is
+  // absolute: when 'form', `maxContentWidth` is ignored and the card uses
+  // DEFAULT_FORM_SHEET_WIDTH.
+  const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
   // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
   // Track it here so the form sheet can size its card to fit content,
@@ -676,16 +677,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
   // desktop — otherwise its corners sit at the far viewport edges.
-  // Mirrors iOS setupSheetSizing: maxContentWidth wins (forces pageSizing
-  // off). pageSizing on → constrain to readable width (page-sheet);
-  // pageSizing off with no maxContentWidth → form-sheet width.
+  // - presentation='form' → DEFAULT_FORM_SHEET_WIDTH on tablet/landscape;
+  //   `maxContentWidth` is ignored ('form' is absolute).
+  // - presentation='page' → `maxContentWidth` (any viewport) or
+  //   DEFAULT_MAX_WIDTH (tablet/landscape readability cap).
   // Detached without a width constraint applies anchorOffset on both edges so
   // the floating card breathes from the viewport sides.
   const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
+    // Mobile portrait ignores width sizing entirely (matches iOS/Android:
+    // both apply `maxContentWidth` only when not on a portrait phone).
+    // `detached` + `detachedOffset` are still respected via the wrapper.
     const maxWidth = isLandscapeOrTablet
-      ? isFormSheet
+      ? presentation === 'form'
         ? DEFAULT_FORM_SHEET_WIDTH
-        : (maxContentWidth ?? (pageSizing ? DEFAULT_MAX_WIDTH : undefined))
+        : (maxContentWidth ?? DEFAULT_MAX_WIDTH)
       : undefined;
 
     const needsMargins = maxWidth != null || effectiveDetached;
@@ -716,7 +721,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     isLandscapeOrTablet,
     isFormSheet,
     maxContentWidth,
-    pageSizing,
+    presentation,
     anchor,
     anchorOffset,
     effectiveDetached,

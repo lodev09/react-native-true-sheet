@@ -4,8 +4,6 @@
 
 ### 🎉 New features
 
-- Bump `react-native-monorepo-config` to fix build on windows. ([#672](https://github.com/lodev09/react-native-true-sheet/pull/672) by [@harveylx](https://github.com/harveylx))
-
 - **Web**: Replace `@gorhom/bottom-sheet` with vendored `vaul` renderer. Adds full event lifecycle (`onMount`, `onWill/DidPresent`, `onWill/DidDismiss`, `onDetentChange`, `onDragBegin/Change/End`, `onPositionChange`, `onWill/DidFocus`, `onWill/DidBlur`), sheet stacking with cascade, detached mode, `auto` detent, scrollable content, and honors `elevation`, `cornerRadius`, `maxContentHeight`, `draggable`, `dimmedDetentIndex`, `insetAdjustment`, `initialDetentAnimated`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
@@ -15,6 +13,14 @@
 - **Web**: Size the form sheet (`pageSizing={false}`) to fit content, clamped between half the viewport and `viewport − 2 × detachedOffset`, instead of a fixed 50% cap. ([#677](https://github.com/lodev09/react-native-true-sheet/pull/677) by [@lodev09](https://github.com/lodev09))
 - **Web**: Clip sheet content to the rounded top corners so children with their own background don't bleed past the radius. ([#678](https://github.com/lodev09/react-native-true-sheet/pull/678) by [@lodev09](https://github.com/lodev09))
 - **Web**: Fire `onWillFocus`/`onDidFocus` on initial present and `onWillBlur`/`onDidBlur` on dismiss, mirroring native iOS ordering (`willBlur` before `willDismiss`, `didBlur` before `didDismiss`). ([#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
+
+### ⚠️ Breaking
+
+- Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
+
+### 💡 Others
+
+- Bump `react-native-monorepo-config` to fix build on windows. ([#672](https://github.com/lodev09/react-native-true-sheet/pull/672) by [@harveylx](https://github.com/harveylx))
 
 ## 3.10.1
 
