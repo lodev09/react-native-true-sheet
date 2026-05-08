@@ -16,6 +16,10 @@
 - **Web**: Clip sheet content to the rounded top corners so children with their own background don't bleed past the radius. ([#678](https://github.com/lodev09/react-native-true-sheet/pull/678) by [@lodev09](https://github.com/lodev09))
 - **Web**: Fire `onWillFocus`/`onDidFocus` on initial present and `onWillBlur`/`onDidBlur` on dismiss, mirroring native iOS ordering (`willBlur` before `willDismiss`, `didBlur` before `didDismiss`). ([#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
 
+### ⚠️ Breaking
+
+- Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
+
 ## 3.10.1
 
 ### 🐛 Bug fixes
