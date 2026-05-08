@@ -647,11 +647,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   // Form-sheet style (presentation='form'): centered floating card with a
-  // default width and a height capped to fit content. We reuse the existing
-  // detached mechanic so drag/snap math stays correct — the wrapper is
-  // bottom-attached with a computed offset that centers it vertically.
-  // `presentation` is absolute: when 'form', `maxContentWidth` is ignored
-  // and the card uses DEFAULT_FORM_SHEET_WIDTH.
+  // default width and a height fit to content. We reuse the existing detached
+  // mechanic so drag/snap math stays correct — the wrapper is bottom-attached
+  // with a computed offset that centers it vertically. `presentation` is
+  // absolute: when 'form', `maxContentWidth` is ignored and the card uses
+  // DEFAULT_FORM_SHEET_WIDTH.
   const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
   // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
@@ -677,14 +677,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
   // desktop — otherwise its corners sit at the far viewport edges.
-  // - presentation='form' → DEFAULT_FORM_SHEET_WIDTH (maxContentWidth ignored).
-  // - presentation='page' → maxContentWidth caps the page-sheet width, falling
-  //   back to DEFAULT_MAX_WIDTH on tablet/landscape.
+  // - presentation='form' → DEFAULT_FORM_SHEET_WIDTH on tablet/landscape;
+  //   `maxContentWidth` is ignored ('form' is absolute).
+  // - presentation='page' → `maxContentWidth` (any viewport) or
+  //   DEFAULT_MAX_WIDTH (tablet/landscape readability cap).
   // Detached without a width constraint applies anchorOffset on both edges so
   // the floating card breathes from the viewport sides.
   const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
+    // Mobile portrait ignores width sizing entirely (matches iOS/Android:
+    // both apply `maxContentWidth` only when not on a portrait phone).
+    // `detached` + `detachedOffset` are still respected via the wrapper.
     const maxWidth = isLandscapeOrTablet
-      ? isFormSheet
+      ? presentation === 'form'
         ? DEFAULT_FORM_SHEET_WIDTH
         : (maxContentWidth ?? DEFAULT_MAX_WIDTH)
       : undefined;
@@ -717,6 +721,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     isLandscapeOrTablet,
     isFormSheet,
     maxContentWidth,
+    presentation,
     anchor,
     anchorOffset,
     effectiveDetached,

@@ -869,14 +869,16 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   if (!sheet)
     return;
 
-  // `presentation` is absolute: 'form' always renders a centered form sheet
-  // and ignores `maxContentWidth`. 'page' honors `maxContentWidth` via
-  // widthFollowsPreferredContentSizeWhenEdgeAttached.
+  // `presentation` is absolute on the form side: 'form' always renders a
+  // centered form sheet and ignores `maxContentWidth`. For 'page' with a
+  // custom `maxContentWidth`, prefersPageSizing has to flip to NO since
+  // `widthFollowsPreferredContentSizeWhenEdgeAttached` only takes effect
+  // when the sheet is edge-attached (Apple API constraint).
   BOOL formSheet = self.presentation == facebook::react::TrueSheetViewPresentation::Form;
   BOOL hasMaxWidth = self.maxContentWidth != nil && !formSheet;
 
   if (@available(iOS 17.0, *)) {
-    sheet.prefersPageSizing = !formSheet;
+    sheet.prefersPageSizing = !formSheet && !hasMaxWidth;
   }
 
   sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = hasMaxWidth;
