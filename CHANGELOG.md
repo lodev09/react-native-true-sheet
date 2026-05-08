@@ -14,6 +14,7 @@
 - **Web**: Float the grabber over content like native iOS/Android instead of pushing the header down and inflating the `auto` detent. ([#676](https://github.com/lodev09/react-native-true-sheet/pull/676) by [@lodev09](https://github.com/lodev09))
 - **Web**: Size the form sheet (`pageSizing={false}`) to fit content, clamped between half the viewport and `viewport − 2 × detachedOffset`, instead of a fixed 50% cap. ([#677](https://github.com/lodev09/react-native-true-sheet/pull/677) by [@lodev09](https://github.com/lodev09))
 - **Web**: Clip sheet content to the rounded top corners so children with their own background don't bleed past the radius. ([#678](https://github.com/lodev09/react-native-true-sheet/pull/678) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fire `onWillFocus`/`onDidFocus` on initial present and `onWillBlur`/`onDidBlur` on dismiss, mirroring native iOS ordering (`willBlur` before `willDismiss`, `didBlur` before `didDismiss`). ([#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
 
 ## 3.10.1
 
