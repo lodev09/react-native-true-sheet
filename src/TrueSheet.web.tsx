@@ -607,6 +607,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderTopLeftRadius: effectiveCornerRadius,
       borderTopRightRadius: effectiveCornerRadius,
       backgroundColor: backgroundColor as string,
+      // Clip children to the rounded top so headers/content with their own
+      // background don't bleed past the corners.
+      overflow: 'hidden',
       // Lift content above iOS home indicator / bottom safe area when enabled.
       paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
     }),
