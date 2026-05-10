@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   check-changelog:
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no changelog') }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no changelog') && github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
 
     steps:
