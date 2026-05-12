@@ -76,7 +76,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footer,
     footerStyle,
     scrollable = false,
-    scrollableOptions,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -171,6 +170,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // in another screen's tree when navigating) should not close the drawer.
     if (portalContainer && !portalContainer.contains(target)) {
       e.preventDefault();
+      return;
+    }
+    // The footer is rendered via vaul's `detachedSiblings` as a sibling of
+    // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
+    // clicks on it as "outside" the content. Don't dismiss for clicks that
+    // landed inside the wrapper.
+    if (target instanceof Element) {
+      const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
+      if (wrapper && wrapper.contains(target)) {
+        e.preventDefault();
+      }
     }
   };
 
@@ -743,7 +753,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderRadius: grabberOptions?.cornerRadius ?? grabberHeight / 2,
       backgroundColor: (grabberOptions?.color ?? defaultGrabberColor) as string,
       opacity: 1,
-      zIndex: 1,
+      // Above absolute-positioned headers (which often use zIndex:1 to overlay
+      // scroll content) so the grabber stays draggable — critical when
+      // `handleOnly` mode means only the grabber can drag the sheet.
+      zIndex: 2,
     }),
     [grabberOptions, grabberHeight, defaultGrabberColor]
   );
@@ -757,7 +770,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onRelease={handleRelease}
       dismissible={dismissible}
       draggable={draggable}
-      handleOnly={scrollable && scrollableOptions?.scrollingExpandsSheet === false}
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
@@ -790,17 +802,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         >
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
-          {header && (
-            <View style={headerStyle}>
-              {isValidElement(header) ? header : createElement(header)}
-            </View>
-          )}
           {scrollable ? (
-            <div style={scrollableContainerStyle}>
-              <View style={style}>{children}</View>
+            // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
+            // flow-root) which doesn't honor descendant flex layout. Use an
+            // absolute fill sized to the visible portion (via vaul's
+            // `--snap-point-height` var) so the inner flex column has a
+            // definite height for the scroll container's flex:1 to fill.
+            <div style={scrollableLayoutStyle}>
+              {header && (
+                <View style={headerStyle}>
+                  {isValidElement(header) ? header : createElement(header)}
+                </View>
+              )}
+              <div style={scrollableContainerStyle}>
+                <View style={style}>{children}</View>
+              </div>
             </div>
           ) : (
-            <View style={style}>{children}</View>
+            <>
+              {header && (
+                <View style={headerStyle}>
+                  {isValidElement(header) ? header : createElement(header)}
+                </View>
+              )}
+              <View style={style}>{children}</View>
+            </>
           )}
         </Drawer.Content>
       </Drawer.Portal>
@@ -812,6 +838,16 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+};
+
+const scrollableLayoutStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 'calc(100% - var(--snap-point-height, 0px))',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const scrollableContainerStyle: React.CSSProperties = {

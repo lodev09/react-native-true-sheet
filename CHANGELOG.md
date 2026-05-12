@@ -6,6 +6,10 @@
 
 - **Web**: New `vaul`-based renderer replacing `@gorhom/bottom-sheet`, with full feature parity. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639), [#675](https://github.com/lodev09/react-native-true-sheet/pull/675), [#676](https://github.com/lodev09/react-native-true-sheet/pull/676), [#677](https://github.com/lodev09/react-native-true-sheet/pull/677), [#678](https://github.com/lodev09/react-native-true-sheet/pull/678), [#679](https://github.com/lodev09/react-native-true-sheet/pull/679) by [@lodev09](https://github.com/lodev09))
 
+### 🐛 Bug fixes
+
+- **Web**: Fixed detached/form sheet autopresent animation, scrollable content, footer click, and grabber drag interactions. ([#684](https://github.com/lodev09/react-native-true-sheet/pull/684) by [@lodev09](https://github.com/lodev09))
+
 ### ⚠️ Breaking
 
 - Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))

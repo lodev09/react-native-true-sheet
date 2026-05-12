@@ -1251,7 +1251,10 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
     // Translate the wrapper off-screen on dismiss so the whole card slides out
     // as one. The reset-then-target pattern on open forces the browser to
     // record a starting value so the transition actually animates.
-    const wasOpenRef = React.useRef(isOpen);
+    // Start at `false` so a mount with `isOpen=true` (autopresent via
+    // `initialDetentIndex`) is detected as a false→true transition and runs
+    // the slide-up animation instead of snapping straight to rest.
+    const wasOpenRef = React.useRef(false);
     React.useEffect(() => {
       if (!drawerRef.current) {
         wasOpenRef.current = isOpen;
@@ -1269,10 +1272,6 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
           wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
           // eslint-disable-next-line no-void
           void wrapper.offsetHeight;
-          wrapper.style.transition = transition;
-          wrapper.style.transform = 'translate3d(0, 0, 0)';
-        } else if (isOpen && !wrapper.style.transform) {
-          // Fresh mount with open=true — ensure the wrapper starts at rest.
           wrapper.style.transition = transition;
           wrapper.style.transform = 'translate3d(0, 0, 0)';
         }
