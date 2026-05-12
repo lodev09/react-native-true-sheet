@@ -754,7 +754,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderRadius: grabberOptions?.cornerRadius ?? grabberHeight / 2,
       backgroundColor: (grabberOptions?.color ?? defaultGrabberColor) as string,
       opacity: 1,
-      zIndex: 1,
+      // Above absolute-positioned headers (which often use zIndex:1 to overlay
+      // scroll content) so the grabber stays draggable — critical when
+      // `handleOnly` mode means only the grabber can drag the sheet.
+      zIndex: 2,
     }),
     [grabberOptions, grabberHeight, defaultGrabberColor]
   );
