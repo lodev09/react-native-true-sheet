@@ -171,6 +171,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // in another screen's tree when navigating) should not close the drawer.
     if (portalContainer && !portalContainer.contains(target)) {
       e.preventDefault();
+      return;
+    }
+    // The footer is rendered via vaul's `detachedSiblings` as a sibling of
+    // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
+    // clicks on it as "outside" the content. Don't dismiss for clicks that
+    // landed inside the wrapper.
+    if (target instanceof Element) {
+      const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
+      if (wrapper && wrapper.contains(target)) {
+        e.preventDefault();
+      }
     }
   };
 
