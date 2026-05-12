@@ -790,17 +790,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         >
           <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
           {grabber && <Drawer.Handle style={handleStyle} />}
-          {header && (
-            <View style={headerStyle}>
-              {isValidElement(header) ? header : createElement(header)}
-            </View>
-          )}
           {scrollable ? (
-            <div style={scrollableContainerStyle}>
-              <View style={style}>{children}</View>
+            // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
+            // flow-root) which doesn't honor descendant flex layout. Use an
+            // absolute fill sized to the visible portion (via vaul's
+            // `--snap-point-height` var) so the inner flex column has a
+            // definite height for the scroll container's flex:1 to fill.
+            <div style={scrollableLayoutStyle}>
+              {header && (
+                <View style={headerStyle}>
+                  {isValidElement(header) ? header : createElement(header)}
+                </View>
+              )}
+              <div style={scrollableContainerStyle}>
+                <View style={style}>{children}</View>
+              </div>
             </div>
           ) : (
-            <View style={style}>{children}</View>
+            <>
+              {header && (
+                <View style={headerStyle}>
+                  {isValidElement(header) ? header : createElement(header)}
+                </View>
+              )}
+              <View style={style}>{children}</View>
+            </>
           )}
         </Drawer.Content>
       </Drawer.Portal>
@@ -812,6 +826,16 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+};
+
+const scrollableLayoutStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 'calc(100% - var(--snap-point-height, 0px))',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const scrollableContainerStyle: React.CSSProperties = {
