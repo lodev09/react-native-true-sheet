@@ -76,7 +76,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     footer,
     footerStyle,
     scrollable = false,
-    scrollableOptions,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -771,7 +770,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       onRelease={handleRelease}
       dismissible={dismissible}
       draggable={draggable}
-      handleOnly={scrollable && scrollableOptions?.scrollingExpandsSheet === false}
       repositionInputs={false}
       modal={dimmed}
       nested={isNested}
