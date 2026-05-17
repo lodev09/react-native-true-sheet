@@ -739,7 +739,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   _blurView.blurInteraction = self.blurInteraction;
   [_blurView applyBlurEffect];
 
-#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1)
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
     if (!self.isDesignCompatibilityMode) {
       if (self.backgroundColor) {

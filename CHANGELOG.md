@@ -10,6 +10,8 @@
 
 - **Web**: Fixed detached/form sheet autopresent animation, scrollable content, footer click, and grabber drag interactions. ([#684](https://github.com/lodev09/react-native-true-sheet/pull/684) by [@lodev09](https://github.com/lodev09))
 
+- **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
+
 ### ⚠️ Breaking
 
 - Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
