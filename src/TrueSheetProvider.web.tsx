@@ -178,10 +178,7 @@ export function useSheetStack(
   const isFormSheetRef = useRef(isFormSheet);
   isFormSheetRef.current = isFormSheet;
 
-  const entry = useMemo<StackEntry>(
-    () => ({ ref, nodeRef, isFormSheetRef }),
-    [ref, nodeRef]
-  );
+  const entry = useMemo<StackEntry>(() => ({ ref, nodeRef, isFormSheetRef }), [ref, nodeRef]);
 
   useEffect(() => {
     if (!ctx || !isOpen) return;
