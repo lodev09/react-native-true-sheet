@@ -115,6 +115,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
+  const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
   // presentation='form' implies a floating/detached sheet on web — mirrors iOS
   // form-sheet semantics where the sheet is never edge-attached.
@@ -482,7 +483,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
     drawerContentRef,
-    isOpen
+    isOpen,
+    isFormSheet
   );
   dismissAboveRef.current = dismissAbove;
 
@@ -492,28 +494,89 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useEffect(() => {
     const parent = drawerContentRef.current;
     if (!parent) return;
+    const parentWrapper = parent.closest<HTMLElement>('[data-vaul-detached-wrapper]');
 
     const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+    const wrapperTransition = `clip-path ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+    const CLIP_NONE = 'inset(0px round 0px)';
+
+    // Animate clip-path on the wrapper. Dedupes via DOM read so repeat ticks
+    // (mutation observer) skip identical writes. Seeds CLIP_NONE before the
+    // first inset() so the browser interpolates between two inset() shapes —
+    // `none → inset()` interpolates inconsistently.
+    const setClip = (next: string) => {
+      if (!parentWrapper) return;
+      const current = parentWrapper.style.clipPath;
+      if (current === next) return;
+      if (next === CLIP_NONE && !current) return;
+      if (!current) {
+        parentWrapper.style.transition = '';
+        parentWrapper.style.clipPath = CLIP_NONE;
+        // eslint-disable-next-line no-void
+        void parentWrapper.offsetHeight;
+      }
+      parentWrapper.style.transition = wrapperTransition;
+      parentWrapper.style.clipPath = next;
+    };
 
     if (descendants.length === 0) {
       parent.style.transition = transition;
       parent.style.transform = '';
+      setClip(CLIP_NONE);
       return;
     }
 
+    // Track only the immediate child's snap point. Walking deeper descendants
+    // would push this sheet further when a grandchild opens, even when our
+    // own child didn't move (e.g., child skipped its cascade for a page
+    // grandchild) — leaving a visible gap between this sheet and its child.
     const computeTargetY = () => {
       const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
-      let targetY = parentSnap;
-      for (const d of descendants) {
-        const node = d.nodeRef.current;
-        if (!node) continue;
-        const snap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
-        if (snap > targetY) targetY = snap;
+      const node = descendants[0]?.nodeRef.current;
+      if (!node) return parentSnap;
+      const childSnap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+      return Math.max(parentSnap, childSnap);
+    };
+
+    // When a form-sheet descendant opens, clip the parent to the child card's
+    // viewport box so it doesn't peek above/around. Geometry comes from the
+    // child's inline styles (not getBoundingClientRect) to read the at-rest
+    // box, unskewed by vaul's slide-in.
+    const applyFormClip = () => {
+      const form = descendants.find((d) => d.isFormSheetRef.current);
+      if (!form) {
+        setClip(CLIP_NONE);
+        return;
       }
-      return targetY;
+      const childDrawer = form.nodeRef.current;
+      const childWrapper = childDrawer?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+      if (!parentWrapper || !childDrawer || !childWrapper) return;
+      const snapY = parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
+      const childBottomGap = parseFloat(childWrapper.style.bottom) || 0;
+      const childMaxW = parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
+      const formLeft = (window.innerWidth - childMaxW) / 2;
+      const formRight = (window.innerWidth + childMaxW) / 2;
+      const formBottom = window.innerHeight - childBottomGap;
+      const rect = parentWrapper.getBoundingClientRect();
+      const top = Math.max(0, snapY - rect.top);
+      const left = Math.max(0, formLeft - rect.left);
+      const right = Math.max(0, rect.right - formRight);
+      const bottom = Math.max(0, rect.bottom - formBottom);
+      const radius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
+      setClip(`inset(${top}px ${right}px ${bottom}px ${left}px round ${radius}px)`);
     };
 
     const apply = () => {
+      applyFormClip();
+      // Mirror iOS: a page-sheet child fully covers a form-sheet parent, so the
+      // cascade push-down has no visible effect — and would briefly peek above
+      // the page during the present animation. Leave the parent put.
+      const child = descendants[0];
+      if (isFormSheet && child && !child.isFormSheetRef.current) {
+        parent.style.transition = transition;
+        parent.style.transform = '';
+        return;
+      }
       const targetY = computeTargetY();
       const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
       const currentY = match ? parseFloat(match[1]!) : 0;
@@ -533,7 +596,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [descendants, activeSnapPoint]);
+  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet]);
 
   // Focus/blur events fire when a descendant sheet appears on top of this one
   // (blur) or when all descendants are dismissed (focus). will-events fire
@@ -662,7 +725,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // with a computed offset that centers it vertically. `presentation` is
   // absolute: when 'form', `maxContentWidth` is ignored and the card uses
   // DEFAULT_FORM_SHEET_WIDTH.
-  const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
   // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
   // Track it here so the form sheet can size its card to fit content,
