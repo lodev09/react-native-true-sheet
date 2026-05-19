@@ -526,16 +526,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
 
+    // Track only the immediate child's snap point. Walking deeper descendants
+    // would push this sheet further when a grandchild opens, even when our
+    // own child didn't move (e.g., child skipped its cascade for a page
+    // grandchild) — leaving a visible gap between this sheet and its child.
     const computeTargetY = () => {
       const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
-      let targetY = parentSnap;
-      for (const d of descendants) {
-        const node = d.nodeRef.current;
-        if (!node) continue;
-        const snap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
-        if (snap > targetY) targetY = snap;
-      }
-      return targetY;
+      const node = descendants[0]?.nodeRef.current;
+      if (!node) return parentSnap;
+      const childSnap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+      return Math.max(parentSnap, childSnap);
     };
 
     // When a form-sheet descendant opens, clip the parent to the child card's
