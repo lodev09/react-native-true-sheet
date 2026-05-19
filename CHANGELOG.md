@@ -10,6 +10,8 @@
 
 - **Web**: Fixed detached/form sheet autopresent animation, scrollable content, footer click, and grabber drag interactions. ([#684](https://github.com/lodev09/react-native-true-sheet/pull/684) by [@lodev09](https://github.com/lodev09))
 
+- **Web**: Clip parent to form-card box when child is a form sheet, skip cascade when form parent has page child, and track only immediate child for cascade target. ([#687](https://github.com/lodev09/react-native-true-sheet/pull/687) by [@lodev09](https://github.com/lodev09))
+
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
 
 ### ⚠️ Breaking
