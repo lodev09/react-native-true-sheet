@@ -538,12 +538,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return Math.max(parentSnap, childSnap);
     };
 
-    // When a form-sheet descendant opens, clip the parent to the child card's
-    // viewport box so it doesn't peek above/around. Geometry comes from the
+    // When a form-sheet parent has a form-sheet descendant, clip the parent to
+    // the child card's viewport box so it doesn't peek above/around. Only
+    // applies when this sheet is itself form — a page parent should remain
+    // visible behind/around a floating form child. Geometry comes from the
     // child's inline styles (not getBoundingClientRect) to read the at-rest
     // box, unskewed by vaul's slide-in.
     const applyFormClip = () => {
-      const form = descendants.find((d) => d.isFormSheetRef.current);
+      const form = isFormSheet ? descendants.find((d) => d.isFormSheetRef.current) : undefined;
       if (!form) {
         setClip(CLIP_NONE);
         return;
