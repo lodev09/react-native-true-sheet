@@ -482,7 +482,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
     drawerContentRef,
-    isOpen
+    isOpen,
+    isLandscapeOrTablet && presentation === 'form'
   );
   dismissAboveRef.current = dismissAbove;
 
@@ -492,12 +493,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useEffect(() => {
     const parent = drawerContentRef.current;
     if (!parent) return;
+    const parentWrapper = parent.closest<HTMLElement>('[data-vaul-detached-wrapper]');
 
     const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+    const wrapperTransition = `clip-path ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
 
     if (descendants.length === 0) {
       parent.style.transition = transition;
       parent.style.transform = '';
+      if (parentWrapper && parentWrapper.style.clipPath) {
+        parentWrapper.style.transition = wrapperTransition;
+        parentWrapper.style.clipPath = 'inset(0px round 0px)';
+      }
       return;
     }
 
@@ -513,13 +520,67 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return targetY;
     };
 
+    // When a form-sheet descendant is present, clip the parent to the form
+    // card's viewport box so the parts that would peek above/around the card
+    // are hidden. Form-card box is derived from the child's inline styles
+    // (vs. getBoundingClientRect) so it's the at-rest box, not skewed by
+    // vaul's wrapper slide-in. Insets are relative to the parent wrapper's
+    // rect — the parent wrapper isn't necessarily viewport-sized (e.g., it
+    // has DEFAULT_MAX_WIDTH on tablet/landscape).
+    // Clip-path transitions with the same duration/easing as the cascade
+    // transform so the visible box and the drawer's content slide together;
+    // otherwise the content animates against a static wrapper boundary.
+    // We seed clip-path from `inset(0)` (= no clip) before setting the target
+    // inset so the browser interpolates between two inset() shapes — going
+    // from `none` directly to inset() is interpolated inconsistently.
+    const applyFormClip = () => {
+      if (!parentWrapper) return;
+      const form = descendants.find((d) => d.isFormSheetRef.current);
+      if (!form) {
+        if (parentWrapper.style.clipPath) {
+          parentWrapper.style.transition = wrapperTransition;
+          parentWrapper.style.clipPath = 'inset(0px round 0px)';
+        }
+        return;
+      }
+      const childDrawer = form.nodeRef.current;
+      const childWrapper = childDrawer?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+      if (!childDrawer || !childWrapper) return;
+      const snapY = parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
+      const childBottomGap = parseFloat(childWrapper.style.bottom) || 0;
+      const childMaxW =
+        parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
+      const formLeft = (window.innerWidth - childMaxW) / 2;
+      const formRight = (window.innerWidth + childMaxW) / 2;
+      const formBottom = window.innerHeight - childBottomGap;
+      const rect = parentWrapper.getBoundingClientRect();
+      const top = Math.max(0, snapY - rect.top);
+      const left = Math.max(0, formLeft - rect.left);
+      const right = Math.max(0, rect.right - formRight);
+      const bottom = Math.max(0, rect.bottom - formBottom);
+      // Seed inset(0 round 0) so the first transition interpolates between
+      // two inset() shapes with matching `round` values (a missing `round`
+      // would interpolate inconsistently).
+      if (!parentWrapper.style.clipPath) {
+        parentWrapper.style.transition = '';
+        parentWrapper.style.clipPath = 'inset(0px round 0px)';
+        // eslint-disable-next-line no-void
+        void parentWrapper.offsetHeight;
+      }
+      parentWrapper.style.transition = wrapperTransition;
+      const radius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
+      parentWrapper.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px round ${radius}px)`;
+    };
+
     const apply = () => {
       const targetY = computeTargetY();
       const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
       const currentY = match ? parseFloat(match[1]!) : 0;
-      if (Math.abs(currentY - targetY) < 0.5) return;
-      parent.style.transition = transition;
-      parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
+      if (Math.abs(currentY - targetY) >= 0.5) {
+        parent.style.transition = transition;
+        parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
+      }
+      applyFormClip();
     };
 
     const raf = requestAnimationFrame(apply);

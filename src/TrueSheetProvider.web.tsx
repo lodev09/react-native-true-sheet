@@ -19,6 +19,7 @@ type NodeRef = RefObject<HTMLDivElement | null>;
 interface StackEntry {
   ref: SheetRef;
   nodeRef: NodeRef;
+  isFormSheetRef: RefObject<boolean>;
 }
 
 interface SheetContextValue {
@@ -166,10 +167,21 @@ export function useRegisterSheet(name: string | undefined, ref: SheetRef): void 
  * Registers the sheet in the open stack while `isOpen` is true and returns
  * live data used by each sheet to render stacked visuals and dismiss children.
  */
-export function useSheetStack(ref: SheetRef, nodeRef: NodeRef, isOpen: boolean) {
+export function useSheetStack(
+  ref: SheetRef,
+  nodeRef: NodeRef,
+  isOpen: boolean,
+  isFormSheet: boolean
+) {
   const ctx = useContext(SheetContext);
 
-  const entry = useMemo<StackEntry>(() => ({ ref, nodeRef }), [ref, nodeRef]);
+  const isFormSheetRef = useRef(isFormSheet);
+  isFormSheetRef.current = isFormSheet;
+
+  const entry = useMemo<StackEntry>(
+    () => ({ ref, nodeRef, isFormSheetRef }),
+    [ref, nodeRef]
+  );
 
   useEffect(() => {
     if (!ctx || !isOpen) return;
