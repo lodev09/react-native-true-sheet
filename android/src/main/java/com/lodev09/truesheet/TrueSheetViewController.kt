@@ -705,14 +705,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun resize(detentIndex: Int) {
     if (!isPresented) return
-
     // Commit the new index so keyboardWillHide restores to it instead of the stale one
     if (detentIndexBeforeKeyboard >= 0) {
       detentIndexBeforeKeyboard = detentIndex
     }
-
     setupDimmedBackground()
+    
+    val oldIndex = currentDetentIndex
+    currentDetentIndex = detentIndex
+    
     setStateForDetentIndex(detentIndex)
+    
+    if (oldIndex != detentIndex) {
+      val (index, position, detent) = getDetentInfoWithValue(detentIndex)
+      delegate?.viewControllerDidChangeDetent(index, position, detent)
+      sheetView?.updateGrabberAccessibilityValue(index, detents.size)
+    }
     resizePromise?.invoke()
     resizePromise = null
   }
