@@ -21,6 +21,7 @@ using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
   CGFloat _lastHeight;
+  CGFloat _pendingHeight;
   BOOL _didInitialLayout;
   NSLayoutConstraint *_bottomConstraint;
   CGFloat _currentKeyboardOffset;
@@ -38,6 +39,7 @@ using namespace facebook::react;
     self.backgroundColor = [UIColor clearColor];
 
     _lastHeight = 0;
+    _pendingHeight = 0;
     _didInitialLayout = NO;
     _bottomConstraint = nil;
     _currentKeyboardOffset = 0;
@@ -50,6 +52,11 @@ using namespace facebook::react;
 - (void)setupConstraintsWithHeight:(CGFloat)height {
   UIView *parentView = self.superview;
   if (!parentView) {
+    // On recycled views, updateLayoutMetrics can fire before the view is
+    // reparented. Remember the desired height so didMoveToSuperview applies
+    // it instead of falling back to the stale self.frame from the previous
+    // present cycle.
+    _pendingHeight = height;
     return;
   }
 
@@ -70,13 +77,14 @@ using namespace facebook::react;
   }
 
   _lastHeight = height;
+  _pendingHeight = 0;
 }
 
 - (void)didMoveToSuperview {
   [super didMoveToSuperview];
 
   if (self.superview) {
-    CGFloat initialHeight = self.frame.size.height;
+    CGFloat initialHeight = _pendingHeight > 0 ? _pendingHeight : self.frame.size.height;
     [self setupConstraintsWithHeight:initialHeight];
   }
 }
@@ -105,6 +113,7 @@ using namespace facebook::react;
   }
 
   _lastHeight = 0;
+  _pendingHeight = 0;
   _didInitialLayout = NO;
   _bottomConstraint = nil;
   _currentKeyboardOffset = 0;
