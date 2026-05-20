@@ -224,7 +224,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useRegisterSheet(name, methodsRef);
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
-  const clipAnimRef = useRef<Animation | null>(null);
 
   // Present/dismiss events. The sheet settles via a CSS `transform` transition
   // on either the drawer (snap-points on autopresent) or the wrapper (whole-
@@ -498,40 +497,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const parentWrapper = parent.closest<HTMLElement>('[data-vaul-detached-wrapper]');
 
     const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
+    const wrapperTransition = `clip-path ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
     const CLIP_NONE = 'inset(0px round 0px)';
 
-    // Animate clip-path via Web Animations API so we don't pollute
-    // `wrapper.style.transition` — vaul owns that to drive the dismiss
-    // transform animation, and a leftover `clip-path` transition breaks it.
+    // Animate clip-path on the wrapper. Dedupes via DOM read so repeat ticks
+    // (mutation observer) skip identical writes. Seeds CLIP_NONE before the
+    // first inset() so the browser interpolates between two inset() shapes —
+    // `none → inset()` interpolates inconsistently.
     const setClip = (next: string) => {
       if (!parentWrapper) return;
       const current = parentWrapper.style.clipPath;
       if (current === next) return;
       if (next === CLIP_NONE && !current) return;
-      const from = current || CLIP_NONE;
+      if (!current) {
+        parentWrapper.style.transition = '';
+        parentWrapper.style.clipPath = CLIP_NONE;
+        // eslint-disable-next-line no-void
+        void parentWrapper.offsetHeight;
+      }
+      parentWrapper.style.transition = wrapperTransition;
       parentWrapper.style.clipPath = next;
-      clipAnimRef.current?.cancel();
-      clipAnimRef.current = parentWrapper.animate([{ clipPath: from }, { clipPath: next }], {
-        duration: TRANSITIONS.DURATION * 1000,
-        easing: `cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
-      });
-    };
-
-    // Set the drawer's transform with a guaranteed transition. The reflow
-    // between transition + transform commits the "before" state so the
-    // browser detects the value change as a transition. Without it, vaul's
-    // snap-points effect (which runs every render and writes transform with
-    // its own transition) can batch with our write and the transition is
-    // missed.
-    const setDrawerTransform = (next: string) => {
-      parent.style.transition = transition;
-      // eslint-disable-next-line no-void
-      void parent.offsetHeight;
-      parent.style.transform = next;
     };
 
     if (descendants.length === 0) {
-      setDrawerTransform('');
+      parent.style.transition = transition;
+      parent.style.transform = '';
       setClip(CLIP_NONE);
       return;
     }
@@ -585,14 +575,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // the page during the present animation. Leave the parent put.
       const child = descendants[0];
       if (isFormSheet && child && !child.isFormSheetRef.current) {
-        setDrawerTransform('');
+        parent.style.transition = transition;
+        parent.style.transform = '';
         return;
       }
       const targetY = computeTargetY();
       const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
       const currentY = match ? parseFloat(match[1]!) : 0;
       if (Math.abs(currentY - targetY) < 0.5) return;
-      setDrawerTransform(`translate3d(0, ${targetY}px, 0)`);
+      parent.style.transition = transition;
+      parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
     };
 
     const raf = requestAnimationFrame(apply);
