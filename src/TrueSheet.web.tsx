@@ -494,6 +494,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useEffect(() => {
     const parent = drawerContentRef.current;
     if (!parent) return;
+    // Skip while dismissing: this sheet's stack pop changes `descendants`,
+    // which would re-fire the effect and write `wrapper.style.transition =
+    // 'clip-path …'`, clobbering vaul's just-written `'transform …'` for the
+    // dismiss animation. Vaul fully owns this sheet's transitions on the way
+    // out — nothing to align with anymore.
+    if (!isOpen) return;
     const parentWrapper = parent.closest<HTMLElement>('[data-vaul-detached-wrapper]');
 
     const transition = `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`;
@@ -598,7 +604,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet]);
+  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet, isOpen]);
 
   // Focus/blur events fire when a descendant sheet appears on top of this one
   // (blur) or when all descendants are dismissed (focus). will-events fire
