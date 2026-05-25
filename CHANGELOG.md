@@ -12,6 +12,8 @@
 
 - **iOS**: Fixed footer rendering at the bottom of the content view instead of the bottom of the sheet when the footer view is recycled across present cycles. ([#688](https://github.com/lodev09/react-native-true-sheet/pull/688) by [@lucaswickstrom](https://github.com/lucaswickstrom))
 
+- **Web**: Center `presentation='form'` sheet vertically when content is short instead of resting against the bottom. ([#692](https://github.com/lodev09/react-native-true-sheet/pull/692) by [@lodev09](https://github.com/lodev09))
+
 ### ⚠️ Breaking
 
 - Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
