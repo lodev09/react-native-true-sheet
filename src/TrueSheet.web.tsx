@@ -750,9 +750,19 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     return Math.max(min, Math.min(measuredContentHeight, max));
   }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
 
-  const effectiveDetachedOffset = isFormSheet
-    ? Math.max(0, (windowHeight - (effectiveMaxContentHeight ?? 0)) / 2)
-    : detachedOffset;
+  // Center the form sheet using the actual visible drawer height. Vaul
+  // auto-sizes to content (capped by `maxContentHeight`), so when content is
+  // shorter than `effectiveMaxContentHeight`'s min-clamped floor, using that
+  // for the offset would push a small sheet below the viewport center.
+  const effectiveDetachedOffset = useMemo(() => {
+    if (!isFormSheet) return detachedOffset;
+    const max = Math.max(0, windowHeight - 2 * detachedOffset);
+    const visibleHeight =
+      measuredContentHeight > 0
+        ? Math.min(measuredContentHeight, max)
+        : (effectiveMaxContentHeight ?? 0);
+    return Math.max(0, (windowHeight - visibleHeight) / 2);
+  }, [isFormSheet, windowHeight, detachedOffset, measuredContentHeight, effectiveMaxContentHeight]);
 
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
