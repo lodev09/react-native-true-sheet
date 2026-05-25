@@ -153,6 +153,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var currentDetentIndex: Int = -1
     private set
 
+  // Target detent index during an in-flight resize animation. -1 when idle.
+  // Used by setupSheetDetents so a layout-driven reconfigure during the
+  // animation doesn't snap the sheet back to the stale currentDetentIndex.
+  private var pendingDetentIndex: Int = -1
+
   private var interactionState: InteractionState = InteractionState.Idle
   internal var isBeingDismissed = false
     private set
@@ -376,6 +381,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
+    pendingDetentIndex = -1
     isKeyboardDismissProgrammatic = false
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
@@ -568,6 +574,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleStateSettled(sheetView: View, newState: Int) {
     if (interactionState is InteractionState.Reconfiguring) return
 
+    // Sheet has reached a stable state — any in-flight resize target is now stale,
+    // whether settled at the target, interrupted by drag, or superseded.
+    pendingDetentIndex = -1
+
     val index = detentCalculator.getDetentIndexForState(newState) ?: return
     val position = getPositionDpForView(sheetView)
     val detentInfo = DetentInfo(index, position)
@@ -711,6 +721,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       detentIndexBeforeKeyboard = detentIndex
     }
 
+    pendingDetentIndex = detentIndex
     setupDimmedBackground()
     setStateForDetentIndex(detentIndex)
     resizePromise?.invoke()
@@ -859,7 +870,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     updateStateDimensions(expandedOffset)
 
     if (isPresented && applyState) {
-      setStateForDetentIndex(currentDetentIndex)
+      // Prefer the pending target while a resize animation is in flight so a
+      // layout-driven reconfigure doesn't revert to the stale currentDetentIndex.
+      val targetIndex = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
+      setStateForDetentIndex(targetIndex)
     }
 
     interactionState = InteractionState.Idle
@@ -1019,7 +1033,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
-          detentIndexBeforeKeyboard = currentDetentIndex
+          // If a resize is in flight, restore to its target — not the stale current
+          detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
+          pendingDetentIndex = -1
           setupSheetDetents()
           currentDetentIndex = detents.size - 1
           setStateForDetentIndex(currentDetentIndex)
@@ -1097,6 +1113,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun handleDragBegin(sheetView: View) {
     detentIndexBeforeKeyboard = -1
+    pendingDetentIndex = -1
 
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
