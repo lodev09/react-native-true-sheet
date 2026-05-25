@@ -4,19 +4,18 @@
 
 ### 🎉 New features
 
-- **Web**: New `vaul`-based renderer replacing `@gorhom/bottom-sheet`, with full feature parity. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639), [#675](https://github.com/lodev09/react-native-true-sheet/pull/675), [#676](https://github.com/lodev09/react-native-true-sheet/pull/676), [#677](https://github.com/lodev09/react-native-true-sheet/pull/677), [#678](https://github.com/lodev09/react-native-true-sheet/pull/678), [#679](https://github.com/lodev09/react-native-true-sheet/pull/679), [#684](https://github.com/lodev09/react-native-true-sheet/pull/684), [#687](https://github.com/lodev09/react-native-true-sheet/pull/687) by [@lodev09](https://github.com/lodev09))
+- **Web**: New `vaul`-based renderer replacing `@gorhom/bottom-sheet`, with full feature parity. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639), [#675](https://github.com/lodev09/react-native-true-sheet/pull/675), [#676](https://github.com/lodev09/react-native-true-sheet/pull/676), [#677](https://github.com/lodev09/react-native-true-sheet/pull/677), [#678](https://github.com/lodev09/react-native-true-sheet/pull/678), [#679](https://github.com/lodev09/react-native-true-sheet/pull/679), [#684](https://github.com/lodev09/react-native-true-sheet/pull/684), [#687](https://github.com/lodev09/react-native-true-sheet/pull/687), [#692](https://github.com/lodev09/react-native-true-sheet/pull/692) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
-
 - **iOS**: Fixed footer rendering at the bottom of the content view instead of the bottom of the sheet when the footer view is recycled across present cycles. ([#688](https://github.com/lodev09/react-native-true-sheet/pull/688) by [@lucaswickstrom](https://github.com/lucaswickstrom))
-
-- **Web**: Center `presentation='form'` sheet vertically when content is short instead of resting against the bottom. ([#692](https://github.com/lodev09/react-native-true-sheet/pull/692) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking
 
 - Renamed `pageSizing: boolean` to `presentation: 'page' | 'form'` (default `'page'`). `presentation='form'` is absolute and ignores `maxContentWidth`. Migration: `pageSizing={true}` → `presentation='page'` (default); `pageSizing={false}` → `presentation='form'`. ([#680](https://github.com/lodev09/react-native-true-sheet/pull/680) by [@lodev09](https://github.com/lodev09))
+- **Web**: Removed `stackBehavior` prop; stacking is now handled automatically. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639))
+- **Web**: Peer dependency changed from `@gorhom/bottom-sheet` to `@radix-ui/react-dialog`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639))
 
 ### 💡 Others
 
@@ -28,11 +27,6 @@
 
 - **Android**: Emit `onDidFocus` after the parent's translate-up animation completes when a stacked child sheet is dismissed. ([#666](https://github.com/lodev09/react-native-true-sheet/pull/666) by [@lodev09](https://github.com/lodev09))
 - **Android**: Fixed focused input in sheet causing auto-focus on main screen input after dismiss. ([#649](https://github.com/lodev09/react-native-true-sheet/pull/649) by [@lodev09](https://github.com/lodev09))
-
-### ⚠️ Breaking
-
-- **Web**: Removed `stackBehavior` prop; stacking is now handled automatically. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639))
-- **Web**: Peer dependency changed from `@gorhom/bottom-sheet` to `@radix-ui/react-dialog`. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639))
 
 ## 3.10.0
 
