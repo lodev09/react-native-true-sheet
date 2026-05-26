@@ -23,7 +23,7 @@ import type {
   TrueSheetNavigationProp,
 } from '../types';
 import { TrueSheetActions } from '../TrueSheetRouter';
-import type { ParamListBase } from '@react-navigation/native';
+import type { ParamListBase } from '@react-navigation/core';
 
 type EmitFn = TrueSheetNavigationHelpers['emit'];
 

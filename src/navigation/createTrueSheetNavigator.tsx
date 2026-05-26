@@ -5,7 +5,7 @@ import {
   type StaticConfig,
   type TypedNavigator,
   useNavigationBuilder,
-} from '@react-navigation/native';
+} from '@react-navigation/core';
 
 import { TrueSheetRouter, type TrueSheetRouterOptions } from './TrueSheetRouter';
 import { TrueSheetView } from './TrueSheetView';

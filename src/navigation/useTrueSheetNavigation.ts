@@ -1,4 +1,4 @@
-import { useNavigation, type ParamListBase } from '@react-navigation/native';
+import { useNavigation, type ParamListBase } from '@react-navigation/core';
 
 import type { TrueSheetNavigationProp } from './types';
 

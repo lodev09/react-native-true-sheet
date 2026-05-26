@@ -93,6 +93,7 @@
     "@react-native/babel-preset": "^0.85.3",
     "@react-native/eslint-config": "^0.85.3",
     "@react-native/jest-preset": "^0.85.3",
+    "@react-navigation/core": "^7.13.7",
     "@react-navigation/native": "^7.1.6",
     "@release-it/conventional-changelog": "^11.0.0",
     "@testing-library/react-native": "^13.3.3",
@@ -125,7 +126,7 @@
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
     "@radix-ui/react-presence": ">=1",
-    "@react-navigation/native": ">=7",
+    "@react-navigation/core": ">=7",
     "react": "*",
     "react-native": "*",
     "react-native-reanimated": ">=4",
@@ -138,7 +139,7 @@
     "@radix-ui/react-presence": {
       "optional": true
     },
-    "@react-navigation/native": {
+    "@react-navigation/core": {
       "optional": true
     },
     "react-native-reanimated": {
