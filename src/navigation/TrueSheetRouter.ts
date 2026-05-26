@@ -7,7 +7,7 @@ import {
   type StackActionType,
   StackActions,
   type StackRouterOptions,
-} from '@react-navigation/native';
+} from '@react-navigation/core';
 
 import type { TrueSheetNavigationState } from './types';
 

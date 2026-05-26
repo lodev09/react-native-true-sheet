@@ -20,6 +20,13 @@ const baseConfig = withMetroConfig(getDefaultConfig(__dirname), {
 const originalResolveRequest = baseConfig.resolver.resolveRequest;
 
 baseConfig.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Mirror Expo CLI's rewrite of @react-navigation/core -> expo-router/react-navigation.
+  // The CLI only applies this to imports originating from node_modules; here the library
+  // is resolved from source, so do it explicitly to exercise the real consumer path.
+  if (moduleName === '@react-navigation/core') {
+    return context.resolveRequest(context, 'expo-router/react-navigation', platform);
+  }
+
   // Handle subpath exports for the main package (e.g., @lodev09/react-native-true-sheet/reanimated)
   if (moduleName.startsWith(pkg.name + '/')) {
     context = {

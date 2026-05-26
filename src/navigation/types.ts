@@ -7,7 +7,7 @@ import type {
   ParamListBase,
   RouteProp,
   StackActionHelpers,
-} from '@react-navigation/native';
+} from '@react-navigation/core';
 
 import type {
   DetentInfoEventPayload,
