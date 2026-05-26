@@ -1,5 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -25,7 +25,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     await sheetRef.current?.dismiss();
   };
 
-  const animatedContainerStyle: ViewStyle = useAnimatedStyle(() => ({
+  const animatedContainerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: scrollX.value }],
   }));
 

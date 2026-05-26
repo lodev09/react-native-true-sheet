@@ -11,11 +11,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/images/icon.png',
   scheme: 'expoexample',
   userInterfaceStyle: 'automatic',
-  splash: {
-    image: './assets/images/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#ffffff',
-  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.lodev09.truesheet.expo',
@@ -36,6 +31,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-font',
     'expo-web-browser',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/images/splash-icon.png',
+        resizeMode: 'contain',
+        backgroundColor: '#ffffff',
+      },
+    ],
     [
       '@lugg/maps',
       {
