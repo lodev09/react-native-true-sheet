@@ -8,7 +8,8 @@ import {
 
 import { DARK } from '@example/shared/utils';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
-import type { ParamListBase } from '@react-navigation/native';
+
+type ParamListBase = Record<string, object | undefined>;
 
 const { Navigator } = createTrueSheetNavigator();
 

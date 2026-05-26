@@ -146,7 +146,7 @@ const MapScreenInner = ({
   const maxContentWidth = anchorLeft ? width * 0.4 : 500;
   const sheetOffset = isTablet ? -(width - maxContentWidth) / 2 + SPACING : 0;
 
-  const floatingControlStyles: StyleProp<ViewStyle> = useAnimatedStyle(() => {
+  const floatingControlStyles = useAnimatedStyle(() => {
     const translateY = Math.min(-HEADER_HEIGHT, -(height - animatedPosition.value));
     const translateX = withSpring(anchorLeft ? sheetOffset * 2 : sheetOffset, {
       damping: 500,
