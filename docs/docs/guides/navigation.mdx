@@ -12,7 +12,7 @@ TrueSheet integrates with React Navigation out of the box. It just works!
 
 ## How?
 
-You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets, or simply [navigate from within sheets](#navigating-from-sheets) using your existing navigation setup.
+You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets (also works with [Expo Router](#expo-router)), or simply [navigate from within sheets](#navigating-from-sheets) using your existing navigation setup.
 
 ## Sheet Navigator
 
@@ -212,9 +212,9 @@ function DetailsSheet() {
 
 See [Lifecycle Events](../reference/events) for more details.
 
-### Expo Router
+## Expo Router
 
-TrueSheet works with Expo Router using `withLayoutContext`.
+The [Sheet Navigator](#sheet-navigator) works with Expo Router using `withLayoutContext`. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
 
 ```
 app/
