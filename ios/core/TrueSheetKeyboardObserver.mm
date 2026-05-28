@@ -100,8 +100,7 @@ static const NSTimeInterval kFallbackAnimationDuration = 0.25;
 
   // presentationLayer is nil when no animation is in flight; in that case the
   // model frame already matches what's on screen, so the offset below resolves to 0.
-  CALayer *presentationLayer = presented.layer.presentationLayer;
-  CGFloat visualY = presentationLayer ? presentationLayer.frame.origin.y : presented.frame.origin.y;
+  CGFloat visualY = presented.frame.origin.y;
 
   _isSmoothingKeyboardHide = YES;
   _smoothingPresentedView = presented;
