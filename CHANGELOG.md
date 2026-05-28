@@ -11,6 +11,7 @@
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
 - **iOS**: Fixed footer rendering at the bottom of the content view instead of the bottom of the sheet when the footer view is recycled across present cycles. ([#688](https://github.com/lodev09/react-native-true-sheet/pull/688) by [@lucaswickstrom](https://github.com/lucaswickstrom))
 - **Android**: Fixed `resize()` being interrupted when sheet content size changes during the animation, causing the sheet to revert to the previous detent. ([#693](https://github.com/lodev09/react-native-true-sheet/pull/693) by [@lodev09](https://github.com/lodev09))
+- **Android**: Fixed horizontal child gestures inside the `footer` or sheet body being cancelled by `BottomSheetBehavior` when a touch drifted vertically past `touchSlop`. Footer touches are now latched on `ACTION_DOWN` and routed for the full stream, and horizontal-dominant gestures bypass sheet drag — matching iOS. ([#698](https://github.com/lodev09/react-native-true-sheet/pull/698) by [@lodev09](https://github.com/lodev09))
 - Fixed the Sheet Navigator breaking under Expo Router SDK 56 by importing from `@react-navigation/core` (auto-rewritten to `expo-router/react-navigation` on SDK 56, resolves normally in bare projects). The optional peer dependency changed from `@react-navigation/native` to `@react-navigation/core`. ([#695](https://github.com/lodev09/react-native-true-sheet/pull/695) by [@lodev09](https://github.com/lodev09))
 
 ### ⚠️ Breaking

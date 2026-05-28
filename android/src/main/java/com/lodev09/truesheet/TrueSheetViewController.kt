@@ -192,6 +192,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val jsTouchDispatcher = JSTouchDispatcher(this)
   private val jsPointerDispatcher = JSPointerDispatcher(this)
 
+  // True when the active touch stream began inside the footer. Latched on
+  // ACTION_DOWN so subsequent MOVE events keep routing to the footer even if
+  // the finger drifts outside the footer's rect mid-gesture.
+  private var footerOwnsTouchStream = false
+
   private val eventDispatcher
     get() = delegate?.eventDispatcher
 
@@ -1291,25 +1296,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun dispatchTouchEvent(event: MotionEvent): Boolean {
     val footer = containerView?.footerView
-    if (footer != null && footer.isShown) {
-      val footerLocation = ScreenUtils.getScreenLocation(footer)
-      val touchX = event.rawX.toInt()
-      val touchY = event.rawY.toInt()
+    val action = event.actionMasked
 
-      if (touchX >= footerLocation[0] &&
-        touchX <= footerLocation[0] + footer.width &&
-        touchY >= footerLocation[1] &&
-        touchY <= footerLocation[1] + footer.height
-      ) {
+    if (footer != null && footer.isShown) {
+      if (action == MotionEvent.ACTION_DOWN) {
+        val loc = ScreenUtils.getScreenLocation(footer)
+        val x = event.rawX.toInt()
+        val y = event.rawY.toInt()
+        footerOwnsTouchStream = x >= loc[0] &&
+          x <= loc[0] + footer.width &&
+          y >= loc[1] &&
+          y <= loc[1] + footer.height
+      }
+
+      if (footerOwnsTouchStream) {
+        val loc = ScreenUtils.getScreenLocation(footer)
         val localEvent = MotionEvent.obtain(event)
-        localEvent.setLocation(
-          (touchX - footerLocation[0]).toFloat(),
-          (touchY - footerLocation[1]).toFloat()
-        )
+        localEvent.setLocation(event.rawX - loc[0], event.rawY - loc[1])
         val handled = footer.dispatchTouchEvent(localEvent)
         localEvent.recycle()
+
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+          footerOwnsTouchStream = false
+        }
         if (handled) return true
       }
+    }
+
+    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+      footerOwnsTouchStream = false
     }
     return super.dispatchTouchEvent(event)
   }

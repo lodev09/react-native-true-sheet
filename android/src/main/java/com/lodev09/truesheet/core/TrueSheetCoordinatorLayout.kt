@@ -36,6 +36,14 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var initialY = 0f
   private var activePointerId = 0
 
+  // Horizontal-dominance tracking. iOS lets horizontal child gestures win over
+  // the sheet's vertical pan; we mirror that by locking out BottomSheetBehavior
+  // interception once the first significant movement of a stream is horizontal.
+  private var streamInitialX = 0f
+  private var streamInitialY = 0f
+  private var streamHorizontalLocked = false
+  private var streamDirectionDecided = false
+
   init {
     layoutParams = LayoutParams(
       LayoutParams.MATCH_PARENT,
@@ -94,8 +102,35 @@ class TrueSheetCoordinatorLayout(context: Context) :
    * See: https://github.com/facebook/react-native/pull/44099
    */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-    if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+    val action = ev.actionMasked
+
+    if (action == MotionEvent.ACTION_DOWN) {
       clearStaleNestedScrollingChildRef()
+
+      streamInitialX = ev.rawX
+      streamInitialY = ev.rawY
+      streamHorizontalLocked = false
+      streamDirectionDecided = false
+    }
+
+    // Decide gesture direction on first significant movement of the stream.
+    // If horizontal wins, lock out BottomSheetBehavior for the rest of the stream
+    // so child handlers (carousels, swipe buttons, etc.) can claim the touch.
+    if (!streamDirectionDecided && action == MotionEvent.ACTION_MOVE) {
+      val dx = kotlin.math.abs(ev.rawX - streamInitialX)
+      val dy = kotlin.math.abs(ev.rawY - streamInitialY)
+      if (dx > touchSlop || dy > touchSlop) {
+        streamDirectionDecided = true
+        streamHorizontalLocked = dx > dy
+      }
+    }
+
+    if (streamHorizontalLocked) {
+      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        streamHorizontalLocked = false
+        streamDirectionDecided = false
+      }
+      return false
     }
 
     val scrollView = delegate?.findScrollView()
