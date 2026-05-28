@@ -1,13 +1,14 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
-import { Footer } from '../Footer';
 import { Button } from '../Button';
 import { DemoContent } from '../DemoContent';
+import { SwipeButton } from '../SwipeButton';
 
 const BOXES_COUNT = 20;
 const CONTAINER_HEIGHT = 200;
@@ -20,6 +21,9 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   const scrollX = useSharedValue(0);
   const dimensions = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isIPad = (Platform.OS === 'ios' && Platform.isPad) || Platform.OS === 'web';
+  const bottomInset = isIPad ? 0 : insets.bottom;
 
   const dismiss = async () => {
     await sheetRef.current?.dismiss();
@@ -46,7 +50,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   return (
     <TrueSheet
-      detents={['auto']}
+      detents={['auto', 0.5]}
       name="gesture"
       ref={sheetRef}
       style={styles.content}
@@ -66,10 +70,19 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
           e.nativeEvent.position
         )
       }
-      footer={<Footer />}
+      footer={
+        <GestureHandlerRootView style={[styles.footerRoot, { paddingBottom: bottomInset }]}>
+          <SwipeButton onComplete={() => console.log('swipe completed!')}>
+            Swipe to confirm
+          </SwipeButton>
+        </GestureHandlerRootView>
+      }
       {...props}
     >
       <GestureHandlerRootView style={styles.gestureRoot}>
+        <SwipeButton onComplete={() => console.log('swipe completed!')}>
+          Swipe to confirm
+        </SwipeButton>
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.panContainer, animatedContainerStyle]}>
             {times(BOXES_COUNT, (i) => (
@@ -86,6 +99,11 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 const styles = StyleSheet.create({
   gestureRoot: {
     flexGrow: 1,
+  },
+  footerRoot: {
+    flexGrow: 1,
+    paddingHorizontal: SPACING,
+    paddingTop: SPACING / 2,
   },
   box: {
     alignItems: 'center',

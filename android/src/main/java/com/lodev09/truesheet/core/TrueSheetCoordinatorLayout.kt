@@ -17,6 +17,7 @@ interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidChangeConfiguration()
   fun findScrollView(): ViewGroup?
   fun findSheetView(): TrueSheetBottomSheetView?
+  fun findFooterView(): android.view.View?
 }
 
 /**
@@ -35,6 +36,19 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var dragging = false
   private var initialY = 0f
   private var activePointerId = 0
+
+  // True when the active touch stream began inside the footer. Latched on
+  // ACTION_DOWN so we never let BottomSheetBehavior intercept events that
+  // belong to the footer's own gesture handling.
+  private var footerOwnsTouchStream = false
+
+  // Horizontal-dominance tracking. iOS lets horizontal child gestures win over
+  // the sheet's vertical pan; we mirror that by locking out BottomSheetBehavior
+  // interception once the first significant movement of a stream is horizontal.
+  private var streamInitialX = 0f
+  private var streamInitialY = 0f
+  private var streamHorizontalLocked = false
+  private var streamDirectionDecided = false
 
   init {
     layoutParams = LayoutParams(
@@ -65,6 +79,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
   override val pointerEvents: PointerEvents
     get() = PointerEvents.BOX_NONE
 
+  private fun isPointInFooter(ev: MotionEvent, footer: android.view.View): Boolean {
+    val loc = IntArray(2)
+    footer.getLocationOnScreen(loc)
+    val x = ev.rawX.toInt()
+    val y = ev.rawY.toInt()
+    return x >= loc[0] && x <= loc[0] + footer.width &&
+      y >= loc[1] && y <= loc[1] + footer.height
+  }
+
   /**
    * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior.
    *
@@ -94,8 +117,48 @@ class TrueSheetCoordinatorLayout(context: Context) :
    * See: https://github.com/facebook/react-native/pull/44099
    */
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-    if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+    val action = ev.actionMasked
+
+    if (action == MotionEvent.ACTION_DOWN) {
       clearStaleNestedScrollingChildRef()
+
+      // Latch footer ownership at the very top of the dispatch so
+      // BottomSheetBehavior never gets to set `ignoreEvents = false` for a
+      // touch that belongs to the footer.
+      val footer = delegate?.findFooterView()
+      footerOwnsTouchStream = footer != null && footer.isShown && isPointInFooter(ev, footer)
+
+      streamInitialX = ev.rawX
+      streamInitialY = ev.rawY
+      streamHorizontalLocked = false
+      streamDirectionDecided = false
+    }
+
+    if (footerOwnsTouchStream) {
+      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        footerOwnsTouchStream = false
+      }
+      return false
+    }
+
+    // Decide gesture direction on first significant movement of the stream.
+    // If horizontal wins, lock out BottomSheetBehavior for the rest of the stream
+    // so child handlers (carousels, swipe buttons, etc.) can claim the touch.
+    if (!streamDirectionDecided && action == MotionEvent.ACTION_MOVE) {
+      val dx = kotlin.math.abs(ev.rawX - streamInitialX)
+      val dy = kotlin.math.abs(ev.rawY - streamInitialY)
+      if (dx > touchSlop || dy > touchSlop) {
+        streamDirectionDecided = true
+        streamHorizontalLocked = dx > dy
+      }
+    }
+
+    if (streamHorizontalLocked) {
+      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        streamHorizontalLocked = false
+        streamDirectionDecided = false
+      }
+      return false
     }
 
     val scrollView = delegate?.findScrollView()
