@@ -442,7 +442,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
-  override fun findFooterView(): View? = containerView?.footerView
 
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
