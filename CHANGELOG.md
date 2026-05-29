@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed sheet footer controls being hidden from XCTest and assistive technologies by exposing mounted sheet content and footer accessibility elements. ([#699](https://github.com/lodev09/react-native-true-sheet/pull/699) by [@erickreutz](https://github.com/erickreutz))
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
 - **iOS**: Fixed footer rendering at the bottom of the content view instead of the bottom of the sheet when the footer view is recycled across present cycles. ([#688](https://github.com/lodev09/react-native-true-sheet/pull/688) by [@lucaswickstrom](https://github.com/lucaswickstrom))
 - **Android**: Fixed `resize()` being interrupted when sheet content size changes during the animation, causing the sheet to revert to the previous detent. ([#693](https://github.com/lodev09/react-native-true-sheet/pull/693) by [@lodev09](https://github.com/lodev09))
