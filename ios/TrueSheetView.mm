@@ -373,6 +373,9 @@ using namespace facebook::react;
   [_controller.view addSubview:_containerView];
   [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
   [_controller.view bringSubviewToFront:_containerView];
+  _containerView.accessibilityViewIsModal = YES;
+  _controller.accessibilityContentView = _containerView;
+  [_controller setupAccessibilityContainer];
 
   CGFloat contentHeight = [_containerView contentHeight];
   if (contentHeight > 0) {
