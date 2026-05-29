@@ -34,6 +34,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 @interface TrueSheetViewController ()
 
+- (void)setAccessibilityContentElement:(UIView *)contentView;
+
 @end
 
 @implementation TrueSheetViewController {
@@ -207,6 +209,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
       [_parentSheetController.delegate viewControllerWillBlur];
+      [_parentSheetController setAccessibilityContentElement:self.accessibilityContentView ?: self.view];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -241,7 +244,30 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     });
 
     [self setupGestureRecognizer];
+    [self setupAccessibilityContainer];
     _isPresented = YES;
+  }
+}
+
+- (void)setupAccessibilityContainer {
+  UIView *contentView = self.accessibilityContentView;
+  if (!contentView) {
+    return;
+  }
+
+  [self setAccessibilityContentElement:contentView];
+}
+
+- (void)setAccessibilityContentElement:(UIView *)contentView {
+  self.view.isAccessibilityElement = NO;
+  self.view.accessibilityViewIsModal = YES;
+  self.view.accessibilityElements = @[ contentView ];
+
+  UIView *presentedView = self.presentationController.presentedView;
+  if (presentedView) {
+    presentedView.isAccessibilityElement = NO;
+    presentedView.accessibilityViewIsModal = YES;
+    presentedView.accessibilityElements = @[ contentView ];
   }
 }
 
@@ -264,6 +290,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _anchorView = nil;
 
     [_parentSheetController.delegate viewControllerDidFocus];
+    [_parentSheetController setupAccessibilityContainer];
     _parentSheetController = nil;
 
     [self.delegate viewControllerDidBlur];

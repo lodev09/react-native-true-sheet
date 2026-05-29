@@ -75,9 +75,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;
+@property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
 @property (nonatomic, readonly) CGFloat screenHeight;
 
+- (void)setupAccessibilityContainer;
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)resizeToDetentIndex:(NSInteger)index;

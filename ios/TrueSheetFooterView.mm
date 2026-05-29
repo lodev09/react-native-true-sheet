@@ -37,6 +37,7 @@ using namespace facebook::react;
     _props = defaultProps;
 
     self.backgroundColor = [UIColor clearColor];
+    self.isAccessibilityElement = NO;
 
     _lastHeight = 0;
     _pendingHeight = 0;
@@ -45,6 +46,24 @@ using namespace facebook::react;
     _currentKeyboardOffset = 0;
   }
   return self;
+}
+
+#pragma mark - Accessibility
+
+- (NSArray *)accessibilityElements {
+  NSMutableArray *elements = [NSMutableArray array];
+  [self collectAccessibilityElementsFromView:self into:elements];
+  return elements;
+}
+
+- (void)collectAccessibilityElementsFromView:(UIView *)view into:(NSMutableArray *)elements {
+  for (UIView *subview in view.subviews) {
+    if (subview.isAccessibilityElement || subview.accessibilityLabel || subview.accessibilityIdentifier) {
+      [elements addObject:subview];
+    } else {
+      [self collectAccessibilityElementsFromView:subview into:elements];
+    }
+  }
 }
 
 #pragma mark - Layout

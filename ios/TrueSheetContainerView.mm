@@ -72,8 +72,25 @@ using namespace facebook::react;
     _headerView = nil;
     _footerView = nil;
     _scrollableSet = NO;
+    self.isAccessibilityElement = NO;
   }
   return self;
+}
+
+#pragma mark - Accessibility
+
+- (NSArray *)accessibilityElements {
+  NSMutableArray *elements = [NSMutableArray array];
+  if (_headerView) {
+    [elements addObject:_headerView];
+  }
+  if (_contentView) {
+    [elements addObject:_contentView];
+  }
+  if (_footerView) {
+    [elements addObject:_footerView];
+  }
+  return elements;
 }
 
 #pragma mark - Layout
