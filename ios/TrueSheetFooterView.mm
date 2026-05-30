@@ -53,13 +53,19 @@ using namespace facebook::react;
 - (NSArray *)accessibilityElements {
   NSMutableArray *elements = [NSMutableArray array];
   [self collectAccessibilityElementsFromView:self into:elements];
-  return elements;
+  if (elements.count > 0) {
+    return elements;
+  }
+
+  return [super accessibilityElements];
 }
 
 - (void)collectAccessibilityElementsFromView:(UIView *)view into:(NSMutableArray *)elements {
   for (UIView *subview in view.subviews) {
     if (subview.isAccessibilityElement || subview.accessibilityLabel || subview.accessibilityIdentifier) {
       [elements addObject:subview];
+    } else if (subview.accessibilityElements.count > 0) {
+      [elements addObjectsFromArray:subview.accessibilityElements];
     } else {
       [self collectAccessibilityElementsFromView:subview into:elements];
     }

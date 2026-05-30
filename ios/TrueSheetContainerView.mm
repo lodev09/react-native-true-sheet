@@ -88,9 +88,20 @@ using namespace facebook::react;
     [elements addObject:_contentView];
   }
   if (_footerView) {
-    [elements addObject:_footerView];
+    // Footer hosts are layout containers; expose their children when present so
+    // VoiceOver and XCTest can target the actual footer controls.
+    NSArray *footerElements = _footerView.accessibilityElements;
+    if (footerElements.count > 0) {
+      [elements addObjectsFromArray:footerElements];
+    } else {
+      [elements addObject:_footerView];
+    }
   }
   return elements;
+}
+
+- (BOOL)hasAccessibilityFooterElements {
+  return _footerView && _footerView.accessibilityElements.count > 0;
 }
 
 #pragma mark - Layout
@@ -251,6 +262,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetFooterViewDelegate
 
 - (void)footerViewDidChangeSize:(CGSize)newSize {
+  [self.delegate containerViewFooterDidChangeSize:newSize];
   if (@available(iOS 26.0, *)) {
     [self setupEdgeInteractions];
   }
