@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
+- (void)containerViewFooterDidChangeSize:(CGSize)newSize;
 
 @end
 
@@ -70,6 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Updates footer layout constraints if needed
  */
 - (void)layoutFooter;
+
+- (BOOL)hasAccessibilityFooterElements;
 
 /**
  * Setup scrollable content

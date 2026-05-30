@@ -573,6 +573,10 @@ using namespace facebook::react;
   [self setupSheetDetentsForSizeChange];
 }
 
+- (void)containerViewFooterDidChangeSize:(CGSize)newSize {
+  [_controller setupAccessibilityContainer];
+}
+
 // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.
 - (void)containerViewScrollViewDidChange {
   [self setupScrollable];

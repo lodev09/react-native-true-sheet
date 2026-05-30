@@ -7,6 +7,7 @@
 //
 
 #import "TrueSheetViewController.h"
+#import "TrueSheetContainerView.h"
 #import "TrueSheetContentView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
@@ -18,6 +19,7 @@
 
 #import <React/RCTLog.h>
 #import <React/RCTScrollViewComponentView.h>
+#import <objc/runtime.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 
 using namespace facebook::react;
@@ -32,8 +34,14 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   return fabs(a.position - b.position) <= 0.01 && fabs(a.detent - b.detent) <= 0.01 && fabs(a.index - b.index) <= 0.01;
 }
 
+static char TrueSheetAccessibilityWindowOwnerKey;
+static char TrueSheetAccessibilityWindowPreviousElementsKey;
+
 @interface TrueSheetViewController ()
 
+- (UIViewController *)accessibilityPresentingViewController;
+- (void)restoreWindowAccessibilityElements;
+- (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 
 @end
@@ -56,6 +64,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   __weak TrueSheetViewController *_parentSheetController;
 
   UIView *_anchorView;
+
+  __weak UIWindow *_accessibilityWindow;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -97,6 +107,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 }
 
 - (void)dealloc {
+  [self restoreWindowAccessibilityElements];
   [_transitioningTimer invalidate];
   _transitioningTimer = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -227,6 +238,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
+  [self setSheetAccessibilityElementsHidden:NO];
 
   if (!_isPresented) {
     [_parentSheetController.delegate viewControllerDidBlur];
@@ -244,9 +256,10 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     });
 
     [self setupGestureRecognizer];
-    [self setupAccessibilityContainer];
     _isPresented = YES;
   }
+
+  [self setupAccessibilityContainer];
 }
 
 - (void)setupAccessibilityContainer {
@@ -258,17 +271,78 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   [self setAccessibilityContentElement:contentView];
 }
 
+- (UIViewController *)accessibilityPresentingViewController {
+  UIViewController *presentingViewController = self.presentingViewController;
+  while ([presentingViewController isKindOfClass:[TrueSheetViewController class]] &&
+         presentingViewController.presentingViewController) {
+    presentingViewController = presentingViewController.presentingViewController;
+  }
+  return presentingViewController;
+}
+
+- (void)restoreWindowAccessibilityElements {
+  UIWindow *window = _accessibilityWindow;
+  if (window) {
+    NSValue *ownerValue = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey);
+    if (ownerValue && ownerValue.nonretainedObjectValue == self) {
+      id previousElements = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey);
+      window.accessibilityElements = previousElements == [NSNull null] ? nil : previousElements;
+      objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+      objc_setAssociatedObject(
+        window, &TrueSheetAccessibilityWindowPreviousElementsKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+
+    _accessibilityWindow = nil;
+  }
+}
+
+- (void)setSheetAccessibilityElementsHidden:(BOOL)hidden {
+  self.view.accessibilityElementsHidden = hidden;
+
+  UIView *presentedView = self.presentationController.presentedView;
+  if (presentedView) {
+    presentedView.accessibilityElementsHidden = hidden;
+  }
+}
+
 - (void)setAccessibilityContentElement:(UIView *)contentView {
+  NSArray *contentElements = contentView.accessibilityElements;
+  NSArray *accessibilityElements = contentElements.count > 0 ? contentElements : @[ contentView ];
+  BOOL hasAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]] &&
+                                        [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements];
+  BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
+
   self.view.isAccessibilityElement = NO;
   self.view.accessibilityViewIsModal = YES;
-  self.view.accessibilityElements = @[ contentView ];
+  self.view.accessibilityElements = accessibilityElements;
 
   UIView *presentedView = self.presentationController.presentedView;
   if (presentedView) {
     presentedView.isAccessibilityElement = NO;
-    presentedView.accessibilityViewIsModal = YES;
-    presentedView.accessibilityElements = @[ contentView ];
+    presentedView.accessibilityViewIsModal = isAccessibilityModal;
+    presentedView.accessibilityElements = accessibilityElements;
+
+    UIWindow *window = self.view.window;
+    UIViewController *presentingViewController = [self accessibilityPresentingViewController];
+    if (window && presentingViewController.view) {
+      if (!_accessibilityWindow) {
+        _accessibilityWindow = window;
+        id previousElements = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey);
+        if (!previousElements) {
+          previousElements = window.accessibilityElements ?: [NSNull null];
+          objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey, previousElements,
+            OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+      }
+      objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, [NSValue valueWithNonretainedObject:self],
+        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+      window.accessibilityElements =
+        isAccessibilityModal ? @[ presentedView ] : @[ presentingViewController.view, presentedView ];
+      return;
+    }
   }
+
+  [self restoreWindowAccessibilityElements];
 }
 
 - (void)emitWillDismissEvents {
@@ -283,6 +357,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 - (void)emitDidDismissEvents {
   if (self.isBeingDismissed) {
+    [self restoreWindowAccessibilityElements];
     _isPresented = NO;
     _isWillDismissEmitted = NO;
 
@@ -290,6 +365,7 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
     _anchorView = nil;
 
     [_parentSheetController.delegate viewControllerDidFocus];
+    [_parentSheetController setSheetAccessibilityElementsHidden:NO];
     [_parentSheetController setupAccessibilityContainer];
     _parentSheetController = nil;
 
@@ -300,6 +376,8 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+  [self restoreWindowAccessibilityElements];
+  [self setSheetAccessibilityElementsHidden:YES];
 
   // Dispatch to allow pan gesture to set _isDragging before checking
   // handleTransitionTracker will emit when sheet is transitioning to dismiss
