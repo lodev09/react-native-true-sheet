@@ -88,6 +88,8 @@ using namespace facebook::react;
     [elements addObject:_contentView];
   }
   if (_footerView) {
+    // Footer hosts are layout containers; expose their children when present so
+    // VoiceOver and XCTest can target the actual footer controls.
     NSArray *footerElements = _footerView.accessibilityElements;
     if (footerElements.count > 0) {
       [elements addObjectsFromArray:footerElements];

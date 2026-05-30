@@ -283,6 +283,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)restoreWindowAccessibilityElements {
   UIWindow *window = _accessibilityWindow;
   if (window) {
+    // The active sheet may temporarily own window accessibility traversal. Only
+    // restore the previous value when this controller still owns that override.
     NSValue *ownerValue = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey);
     if (ownerValue && ownerValue.nonretainedObjectValue == self) {
       id previousElements = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey);
@@ -310,6 +312,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSArray *accessibilityElements = contentElements.count > 0 ? contentElements : @[ contentView ];
   BOOL hasAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]] &&
                                         [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements];
+  // Footer controls exposed as separate accessibility elements can be skipped
+  // by XCTest when the presented sheet is a hard modal accessibility boundary.
   BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
 
   self.view.isAccessibilityElement = NO;
