@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fixed footer accessibility elements going stale when a footer or content subtree remounts while the sheet stays presented (e.g. swapping a footer button on a state change), which hid the new controls from XCTest and assistive technologies. ([#702](https://github.com/lodev09/react-native-true-sheet/pull/702) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed nested footer accessibility elements and window accessibility restoration when footer controls are present. ([#700](https://github.com/lodev09/react-native-true-sheet/pull/700) by [@erickreutz](https://github.com/erickreutz))
 - **iOS**: Fixed sheet footer controls being hidden from XCTest and assistive technologies by exposing mounted sheet content and footer accessibility elements. ([#699](https://github.com/lodev09/react-native-true-sheet/pull/699) by [@erickreutz](https://github.com/erickreutz))
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
