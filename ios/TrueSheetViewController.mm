@@ -360,6 +360,37 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [self restoreWindowAccessibilityElements];
 }
 
+#pragma mark - Presentation
+
+- (void)presentViewController:(UIViewController *)viewControllerToPresent
+                     animated:(BOOL)flag
+                   completion:(void (^)(void))completion {
+  // A non-sheet controller (e.g. an action sheet, alert, or image picker) is about
+  // to present over us. Clear our window accessibility override so UIKit's default
+  // traversal surfaces it for XCTest and assistive technologies; we reclaim the
+  // override when it dismisses. Nested sheets claim their own override.
+  if (![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]]) {
+    self.view.window.accessibilityElements = nil;
+  }
+
+  [super presentViewController:viewControllerToPresent animated:flag completion:completion];
+}
+
+- (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion {
+  [super dismissViewControllerAnimated:flag
+                            completion:^{
+                              if (completion) {
+                                completion();
+                              }
+
+                              // Reclaim the window accessibility override once nothing
+                              // else is presented over us.
+                              if (self.isPresented && self.presentedViewController == nil) {
+                                [self setupAccessibilityContainer];
+                              }
+                            }];
+}
+
 - (void)emitWillDismissEvents {
   if (self.isBeingDismissed && !_isWillDismissEmitted) {
     _isWillDismissEmitted = YES;
