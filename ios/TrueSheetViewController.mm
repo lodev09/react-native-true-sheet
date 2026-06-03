@@ -366,10 +366,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
                      animated:(BOOL)flag
                    completion:(void (^)(void))completion {
   // A non-sheet controller (e.g. an action sheet, alert, or image picker) is about
-  // to present over us. Yield our window accessibility override so XCTest and
-  // assistive technologies can reach it; nested sheets claim their own override.
+  // to present over us. Clear our window accessibility override so UIKit's default
+  // traversal surfaces it for XCTest and assistive technologies; we reclaim the
+  // override when it dismisses. Nested sheets claim their own override.
   if (![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]]) {
-    [self restoreWindowAccessibilityElements];
+    self.view.window.accessibilityElements = nil;
   }
 
   [super presentViewController:viewControllerToPresent animated:flag completion:completion];
