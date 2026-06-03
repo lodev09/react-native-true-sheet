@@ -308,13 +308,24 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 - (void)setAccessibilityContentElement:(UIView *)contentView {
-  NSArray *contentElements = contentView.accessibilityElements;
-  NSArray *accessibilityElements = contentElements.count > 0 ? contentElements : @[ contentView ];
   BOOL hasAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]] &&
                                         [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements];
   // Footer controls exposed as separate accessibility elements can be skipped
   // by XCTest when the presented sheet is a hard modal accessibility boundary.
   BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
+
+  // At a hard modal boundary XCTest skips nested elements, so flatten the
+  // container's children into the array. Otherwise expose the container itself:
+  // its accessibilityElements getter recomputes live, so a footer/content subtree
+  // that remounts (e.g. swapping a footer button on a state change) stays
+  // discoverable instead of leaving this snapshot pointing at destroyed views.
+  NSArray *accessibilityElements;
+  if (isAccessibilityModal) {
+    NSArray *contentElements = contentView.accessibilityElements;
+    accessibilityElements = contentElements.count > 0 ? contentElements : @[ contentView ];
+  } else {
+    accessibilityElements = @[ contentView ];
+  }
 
   self.view.isAccessibilityElement = NO;
   self.view.accessibilityViewIsModal = YES;
