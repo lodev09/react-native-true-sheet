@@ -66,7 +66,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   return (
     <TrueSheet
-      detents={['auto', 0.5]}
+      detents={['auto', 0.8]}
       name="gesture"
       ref={sheetRef}
       style={styles.content}

@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
@@ -105,13 +106,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
   }
 
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-    // PR #44099: sheet-drag relies on ViewDragHelper / our onInterceptTouchEvent detection. RN's
-    // ReactEditText fires this(true) on ACTION_DOWN, killing drag over an input. Honor the disallow
-    // only when whatever is under the touch genuinely scrolls (pinned ScrollView, or an overflowing
-    // multiline EditText); otherwise swallow so the sheet stays draggable over inputs.
-    if (disallowIntercept && !touchedViewCanScrollVertically()) return
+    // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
+    // Swallow only that case — an EditText under the touch with nothing vertically scrollable
+    // (a pinned ScrollView or an overflowing multiline EditText still scrolls). Other children
+    // (maps, sliders, scrollables) keep the standard disallow contract.
+    if (disallowIntercept && touchedViewIsEditText() && !touchedViewCanScrollVertically()) return
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
+
+  private fun touchedViewIsEditText(): Boolean = findDescendantAt(this, streamInitialX.toInt(), streamInitialY.toInt()) { it is EditText }
 
   private fun touchedViewCanScrollVertically(): Boolean {
     delegate?.findScrollView()?.let {
