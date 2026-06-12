@@ -1357,6 +1357,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
+    coordinatorLayout?.childDidClaimNativeGesture()
     eventDispatcher?.let {
       jsTouchDispatcher.onChildStartedNativeGesture(ev, it)
       jsPointerDispatcher.onChildStartedNativeGesture(childView, ev, it)
