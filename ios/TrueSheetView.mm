@@ -187,6 +187,9 @@ using namespace facebook::react;
   // Blur tint
   _controller.backgroundBlur = newProps.backgroundBlur;
 
+  // Liquid Glass style (iOS 26+)
+  _controller.backgroundGlass = newProps.backgroundGlass;
+
   // Blur options
   const auto &blurOpts = newProps.blurOptions;
   _controller.blurIntensity = blurOpts.intensity >= 0 ? @(blurOpts.intensity) : nil;

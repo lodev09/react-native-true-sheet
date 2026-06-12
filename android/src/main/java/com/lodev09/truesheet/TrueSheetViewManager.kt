@@ -191,6 +191,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "backgroundGlass")
+  override fun setBackgroundGlass(view: TrueSheetView, value: String?) {
+    // iOS-specific prop (liquid glass) - no-op on Android
+  }
+
   @ReactProp(name = "blurOptions")
   override fun setBlurOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
