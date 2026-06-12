@@ -11,6 +11,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.lodev09.truesheet.utils.isDescendantOf
+import android.view.View
 
 interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidLayout(changed: Boolean)
@@ -92,6 +93,33 @@ class TrueSheetCoordinatorLayout(context: Context) :
         ref.clear()
       }
     } catch (_: Exception) {}
+  }
+
+  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+    // PR #44099: sheet-drag relies on ViewDragHelper / our onInterceptTouchEvent detection. RN's
+    // ReactEditText fires this(true) on ACTION_DOWN, killing drag over an input. Honor the disallow
+    // only when whatever is under the touch genuinely scrolls (pinned ScrollView, or an overflowing
+    // multiline EditText); otherwise swallow so the sheet stays draggable over inputs.
+    if (disallowIntercept && !touchedViewCanScrollVertically()) return
+    super.requestDisallowInterceptTouchEvent(disallowIntercept)
+  }
+
+  private fun touchedViewCanScrollVertically(): Boolean {
+    delegate?.findScrollView()?.let {
+      if (it.canScrollVertically(1) || it.canScrollVertically(-1)) return true
+    }
+    return findScrollableAt(this, streamInitialX.toInt(), streamInitialY.toInt())
+  }
+
+  private fun findScrollableAt(view: View, rawX: Int, rawY: Int): Boolean {
+    val loc = IntArray(2)
+    view.getLocationOnScreen(loc)
+    if (rawX < loc[0] || rawX > loc[0] + view.width || rawY < loc[1] || rawY > loc[1] + view.height) return false
+    if (view.canScrollVertically(1) || view.canScrollVertically(-1)) return true
+    if (view is ViewGroup) for (i in 0 until view.childCount) {
+      if (findScrollableAt(view.getChildAt(i), rawX, rawY)) return true
+    }
+    return false
   }
 
   /**
