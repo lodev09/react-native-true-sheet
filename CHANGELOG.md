@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: Fixed dragging over react-native TextInputs ([#712](https://github.com/lodev09/react-native-true-sheet/pull/712) by [@bigcupcoffee](https://github.com/https://github.com/bigcupcoffee))
 - **iOS**: Improved accessibility support so sheet content, footer controls, and controllers presented over the sheet (alert, action sheet, image picker) are reliably reachable by XCTest and assistive technologies. ([#699](https://github.com/lodev09/react-native-true-sheet/pull/699), [#700](https://github.com/lodev09/react-native-true-sheet/pull/700) by [@erickreutz](https://github.com/erickreutz), [#702](https://github.com/lodev09/react-native-true-sheet/pull/702), [#703](https://github.com/lodev09/react-native-true-sheet/pull/703) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fixed Mac Catalyst build issue. ([#685](https://github.com/lodev09/react-native-true-sheet/pull/685) by [@theeket](https://github.com/theeket))
 - **iOS**: Fixed footer rendering at the bottom of the content view instead of the bottom of the sheet when the footer view is recycled across present cycles. ([#688](https://github.com/lodev09/react-native-true-sheet/pull/688) by [@lucaswickstrom](https://github.com/lucaswickstrom))
