@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
@@ -43,6 +45,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var streamInitialY = 0f
   private var streamHorizontalLocked = false
   private var streamDirectionDecided = false
+
+  // Native-gesture-claim tracking. RNGH handlers activate past BottomSheetBehavior's
+  // drag slop and never call requestDisallowInterceptTouchEvent, so the sheet would
+  // steal vertical gestures (e.g. a vertical pan) before they can activate. While the
+  // touch is inside a descendant GestureHandlerRootView we hold off interception within
+  // a grace distance; once a child claims the gesture (relayed from the RootView impls
+  // via childDidClaimNativeGesture) we yield the rest of the stream, mirroring iOS.
+  private var streamHasGestureRoot = false
+  private var streamGestureClaimed = false
 
   init {
     layoutParams = LayoutParams(
@@ -94,6 +105,48 @@ class TrueSheetCoordinatorLayout(context: Context) :
     } catch (_: Exception) {}
   }
 
+  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+    // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
+    // Swallow only that case — an EditText under the touch with nothing vertically scrollable
+    // (a pinned ScrollView or an overflowing multiline EditText still scrolls). Other children
+    // (maps, sliders, scrollables) keep the standard disallow contract.
+    if (disallowIntercept && touchedViewIsEditText() && !touchedViewCanScrollVertically()) return
+    super.requestDisallowInterceptTouchEvent(disallowIntercept)
+  }
+
+  private fun touchedViewIsEditText(): Boolean = findDescendantAt(this, streamInitialX.toInt(), streamInitialY.toInt()) { it is EditText }
+
+  private fun touchedViewCanScrollVertically(): Boolean {
+    delegate?.findScrollView()?.let {
+      if (it.canScrollVertically(1) || it.canScrollVertically(-1)) return true
+    }
+    return findDescendantAt(this, streamInitialX.toInt(), streamInitialY.toInt()) {
+      it.canScrollVertically(1) || it.canScrollVertically(-1)
+    }
+  }
+
+  private fun findDescendantAt(view: View, rawX: Int, rawY: Int, predicate: (View) -> Boolean): Boolean {
+    val loc = IntArray(2)
+    view.getLocationOnScreen(loc)
+    if (rawX < loc[0] || rawX > loc[0] + view.width || rawY < loc[1] || rawY > loc[1] + view.height) return false
+    if (predicate(view)) return true
+    if (view is ViewGroup) {
+      for (i in 0 until view.childCount) {
+        if (findDescendantAt(view.getChildAt(i), rawX, rawY, predicate)) return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Called by descendant RootView implementations (controller, footer) when a child
+   * starts a native gesture — e.g. an RNGH handler activated or a scrollable began
+   * scrolling. Yields sheet interception for the rest of the touch stream.
+   */
+  fun childDidClaimNativeGesture() {
+    streamGestureClaimed = true
+  }
+
   /**
    * Intercepts touch events for ScrollViews that can't scroll (content < viewport),
    * allowing the sheet to be dragged in these cases.
@@ -111,6 +164,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
       streamInitialY = ev.rawY
       streamHorizontalLocked = false
       streamDirectionDecided = false
+      streamGestureClaimed = false
+      streamHasGestureRoot = findDescendantAt(this, ev.rawX.toInt(), ev.rawY.toInt()) {
+        it.javaClass.name == GESTURE_HANDLER_ROOT_VIEW_CLASS
+      }
     }
 
     // Decide gesture direction on first significant movement of the stream.
@@ -130,6 +187,22 @@ class TrueSheetCoordinatorLayout(context: Context) :
         streamHorizontalLocked = false
         streamDirectionDecided = false
       }
+      return false
+    }
+
+    if (streamGestureClaimed) {
+      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        streamGestureClaimed = false
+      }
+      return false
+    }
+
+    // Hold off BottomSheetBehavior within the grace distance so a gesture handler
+    // under the touch can activate and claim the stream first.
+    if (streamHasGestureRoot &&
+      action == MotionEvent.ACTION_MOVE &&
+      kotlin.math.abs(ev.rawY - streamInitialY) < touchSlop * GESTURE_CLAIM_SLOP_FACTOR
+    ) {
       return false
     }
 
@@ -185,5 +258,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
       return super.onTouchEvent(ev)
     }
     return super.onTouchEvent(ev)
+  }
+
+  companion object {
+    private const val GESTURE_HANDLER_ROOT_VIEW_CLASS = "com.swmansion.gesturehandler.react.RNGestureHandlerRootView"
+    private const val GESTURE_CLAIM_SLOP_FACTOR = 3
   }
 }

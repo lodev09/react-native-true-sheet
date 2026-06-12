@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewParent
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PointerEvents
@@ -10,6 +11,7 @@ import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
+import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
 
 /**
  * Delegate interface for footer view size changes and event dispatching
@@ -90,10 +92,19 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   }
 
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
+    findCoordinatorLayout()?.childDidClaimNativeGesture()
     eventDispatcher?.let { dispatcher ->
       jsTouchDispatcher.onChildStartedNativeGesture(ev, dispatcher)
       jsPointerDispatcher?.onChildStartedNativeGesture(childView, ev, dispatcher)
     }
+  }
+
+  private fun findCoordinatorLayout(): TrueSheetCoordinatorLayout? {
+    var current: ViewParent? = parent
+    while (current != null && current !is TrueSheetCoordinatorLayout) {
+      current = current.parent
+    }
+    return current as? TrueSheetCoordinatorLayout
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {

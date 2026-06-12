@@ -1,11 +1,11 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { Button } from '../Button';
 import { DemoContent } from '../DemoContent';
 import { SwipeButton } from '../SwipeButton';
@@ -13,6 +13,8 @@ import { SwipeButton } from '../SwipeButton';
 const BOXES_COUNT = 20;
 const CONTAINER_HEIGHT = 200;
 const BOX_SIZE = CONTAINER_HEIGHT - SPACING * 2;
+const TRACK_HEIGHT = 180;
+const THUMB_HEIGHT = 56;
 
 interface GestureSheetProps extends TrueSheetProps {}
 
@@ -33,6 +35,20 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
     transform: [{ translateX: scrollX.value }],
   }));
 
+  // Vertical pan on a non-scrollable view competes with sheet drag.
+  // The thumb should win once RNGH activates and disallows parent interception.
+  const thumbY = useSharedValue(0);
+
+  const verticalPan = Gesture.Pan()
+    .onChange((e) => {
+      thumbY.value = Math.min(Math.max(thumbY.value + e.changeY, 0), TRACK_HEIGHT - THUMB_HEIGHT);
+    })
+    .activeOffsetY([-10, 10]);
+
+  const animatedThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: thumbY.value }],
+  }));
+
   const pan = Gesture.Pan()
     .onChange((e) => {
       scrollX.value += e.changeX;
@@ -50,7 +66,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   return (
     <TrueSheet
-      detents={['auto', 0.5]}
+      detents={['auto', 0.8]}
       name="gesture"
       ref={sheetRef}
       style={styles.content}
@@ -90,6 +106,13 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
             ))}
           </Animated.View>
         </GestureDetector>
+        <Animated.View style={styles.track}>
+          <GestureDetector gesture={verticalPan}>
+            <Animated.View style={[styles.thumb, animatedThumbStyle]}>
+              <Text style={styles.thumbText}>Drag me ↕</Text>
+            </Animated.View>
+          </GestureDetector>
+        </Animated.View>
         <Button text="Dismiss" onPress={dismiss} />
       </GestureHandlerRootView>
     </TrueSheet>
@@ -122,6 +145,25 @@ const styles = StyleSheet.create({
     gap: GAP,
     height: CONTAINER_HEIGHT,
     paddingVertical: SPACING,
+  },
+  track: {
+    backgroundColor: DARK_GRAY,
+    borderRadius: SPACING,
+    height: TRACK_HEIGHT,
+    marginBottom: SPACING,
+    padding: SPACING / 4,
+    width: '100%',
+  },
+  thumb: {
+    alignItems: 'center',
+    backgroundColor: BLUE,
+    borderRadius: SPACING - SPACING / 4,
+    height: THUMB_HEIGHT,
+    justifyContent: 'center',
+  },
+  thumbText: {
+    color: LIGHT_GRAY,
+    fontSize: 16,
   },
 });
 
