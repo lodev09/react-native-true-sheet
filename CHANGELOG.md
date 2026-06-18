@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.0
+
 ### 🎉 New features
 
 - **Web**: New `vaul`-based renderer replacing `@gorhom/bottom-sheet`, with full feature parity. ([#639](https://github.com/lodev09/react-native-true-sheet/pull/639), [#675](https://github.com/lodev09/react-native-true-sheet/pull/675), [#676](https://github.com/lodev09/react-native-true-sheet/pull/676), [#677](https://github.com/lodev09/react-native-true-sheet/pull/677), [#678](https://github.com/lodev09/react-native-true-sheet/pull/678), [#679](https://github.com/lodev09/react-native-true-sheet/pull/679), [#684](https://github.com/lodev09/react-native-true-sheet/pull/684), [#687](https://github.com/lodev09/react-native-true-sheet/pull/687), [#692](https://github.com/lodev09/react-native-true-sheet/pull/692) by [@lodev09](https://github.com/lodev09))
