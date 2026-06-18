@@ -1,0 +1,67 @@
+---
+date: 2026-06-18
+slug: release-3-11
+title: True Sheet 3.11
+description: True Sheet 3.11 ships a brand-new vaul-based web renderer, renames pageSizing to presentation, improves iOS accessibility, and fixes Android gesture conflicts.
+authors: [lodev09]
+tags: [release, web, accessibility, gestures, bug-fixes]
+---
+
+import preview from './assets/release-3-11.gif'
+
+True Sheet 3.11 brings a **complete rewrite of the web renderer**, a cleaner `presentation` API, big accessibility wins on iOS, and gesture fixes on Android.
+
+<img alt="True Sheet 3.11 preview" src={preview} width="300" />
+
+{/* truncate */}
+
+## New Web Renderer
+
+The web implementation is rebuilt on top of [`vaul`](https://vaul.emilkowal.ski/), replacing `@gorhom/bottom-sheet`. Vaul's drawer primitives feel much closer to the native sheet, so the web experience is now far more consistent with iOS and Android. It has full feature, event, and stacking parity with native — drag, detents, footer, grabber, focus/blur events, and stacked sheets all behave like their iOS and Android counterparts.
+
+Stacking is now handled automatically, and the web peer dependency changed from `@gorhom/bottom-sheet` to `@radix-ui/react-dialog`.
+
+```sh
+yarn add @radix-ui/react-dialog
+```
+
+## `presentation` Replaces `pageSizing`
+
+The `pageSizing` boolean is replaced by a clearer `presentation` prop:
+
+```tsx
+// Before
+<TrueSheet pageSizing={false} />
+
+// After
+<TrueSheet presentation="form" />
+```
+
+- `presentation="page"` (default) — was `pageSizing={true}`
+- `presentation="form"` — was `pageSizing={false}`
+
+`presentation="form"` is absolute and ignores `maxContentWidth`.
+
+## Accessible Sheets on iOS
+
+Sheet content, footer controls, and controllers presented over the sheet (alert, action sheet, image picker) are now reliably reachable by XCTest and assistive technologies like VoiceOver. Footer accessibility also survives footer/content remounts.
+
+## Android Gesture Fixes
+
+- Horizontal child gestures inside the `footer` or sheet body are no longer cancelled by `BottomSheetBehavior` when a touch drifts vertically past `touchSlop`. Footer touches are latched on `ACTION_DOWN`, and horizontal-dominant gestures bypass sheet drag — matching iOS.
+- Sheet drag no longer steals touches that start over a `TextInput`, and vertical child gestures (e.g. a `react-native-gesture-handler` pan) activate correctly. The sheet yields the touch stream once a child claims a native gesture.
+
+## More Bug Fixes
+
+- **iOS**: Fixed Mac Catalyst build issue.
+- **iOS**: Fixed footer rendering at the bottom of the content view instead of the sheet when the footer view is recycled across present cycles.
+- **Android**: Fixed `resize()` being interrupted when content size changes mid-animation, reverting to the previous detent.
+- **Navigation**: Fixed the Sheet Navigator breaking under Expo Router SDK 56 by importing from `@react-navigation/core`. The optional peer dependency changed from `@react-navigation/native` to `@react-navigation/core`.
+
+## Get It
+
+```sh
+yarn add @lodev09/react-native-true-sheet@^3.11.0
+```
+
+Have feedback? [Open an issue](https://github.com/lodev09/react-native-true-sheet/issues)!
