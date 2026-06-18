@@ -1,0 +1,41 @@
+---
+title: Edge-to-Edge
+description: Configure edge-to-edge display mode on Android.
+keywords: [bottom sheet edge-to-edge, android edge-to-edge, full screen sheet]
+---
+
+TrueSheet automatically detects and adapts to Android's edge-to-edge display mode, providing a modern, immersive experience.
+
+## Enabling Edge-to-Edge
+
+Edge-to-edge is supported in React Native 0.81+ via the `edgeToEdgeEnabled` Gradle property.
+
+Enable it in your `android/gradle.properties`:
+
+```gradle title="android/gradle.properties"
+edgeToEdgeEnabled=true
+```
+
+:::info
+This property is **disabled by default** for current Android versions. TrueSheet will auto-detect when you enable it.
+
+Starting with **Android 16+ (API level 36)**, edge-to-edge will be [automatically enabled by default](https://developer.android.com/about/versions/16/behavior-changes-16#edge-to-edge) by the system.
+:::
+
+:::tip
+**Learn more:**
+- [React Native 0.81 edge-to-edge announcement](https://reactnative.dev/blog/2025/08/12/react-native-0.81)
+- [Android 16 edge-to-edge enforcement](https://developer.android.com/about/versions/16/behavior-changes-16#edge-to-edge)
+:::
+
+## Default Behavior
+
+By default, when edge-to-edge is enabled, the sheet respects the status bar and stops at the bottom of it when fully expanded. This ensures content remains visible and not obscured by the status bar.
+
+```tsx
+<TrueSheet ref={sheet}>
+  <View />
+</TrueSheet>
+```
+
+TrueSheet works seamlessly with edge-to-edge enabled and provides automatic status bar detection.

@@ -1,0 +1,70 @@
+---
+title: Adding Header
+description: Add a header component that stays above the scrollable content.
+keywords: [bottom sheet header, bottom sheet fixed header, bottom sheet sticky header]
+---
+
+Need a fixed header above your scrollable content? A title bar, search input, or navigation controls? TrueSheet makes it simple with the `header` prop!
+
+## Using the `header` Prop
+
+The recommended way to add a header is using the `header` prop. This creates a native header view that is properly accounted for in layout calculations, ensuring your scrollable content gets the correct available height.
+
+```tsx {4-8}
+const App = () => {
+  return (
+    <TrueSheet
+      ref={sheet}
+      header={
+        <View style={styles.header}>
+          <Text>My Header</Text>
+        </View>
+      }
+    >
+      <ScrollView>
+        <View>{/* Your scrollable content */}</View>
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+
+const styles = StyleSheet.create({
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+})
+```
+
+## With Search Input
+
+A common use case is adding a search bar in the header:
+
+```tsx {4-8}
+const App = () => {
+  return (
+    <TrueSheet
+      ref={sheet}
+      header={
+        <View style={styles.header}>
+          <TextInput placeholder="Search..." style={styles.input} />
+        </View>
+      }
+    >
+      <FlatList
+        data={items}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+When using `header` with `FlatList` or `ScrollView`, the content area height is automatically adjusted to account for the header height. This ensures proper scrolling behavior on both iOS and Android.
+:::
+
+## Platform Support
+
+The `header` prop is supported on both **iOS** and **Android**.

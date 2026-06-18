@@ -1,0 +1,140 @@
+---
+title: Testing with Jest
+description: Mock the bottom sheet component for testing.
+keywords: [bottom sheet jest, testing bottom sheet, mocking bottom sheet]
+---
+
+Testing components that use `TrueSheet` is straightforward with the built-in Jest mocks.
+
+## Setup
+
+Add the mocks to your Jest setup file:
+
+```js
+// jest.setup.js
+
+// Main component
+jest.mock('@lodev09/react-native-true-sheet', () =>
+  require('@lodev09/react-native-true-sheet/mock')
+);
+
+// Navigation (if using)
+jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
+  require('@lodev09/react-native-true-sheet/navigation/mock')
+);
+
+// Reanimated (if using)
+jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
+  require('@lodev09/react-native-true-sheet/reanimated/mock')
+);
+```
+
+Configure Jest to use the setup file and transform the package:
+
+```json
+{
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-native|@react-native|@lodev09/react-native-true-sheet)/)"
+    ]
+  }
+}
+```
+
+:::note
+The `transformIgnorePatterns` config is required because the mock files use ESM syntax. This tells Jest to transform the package instead of skipping it.
+:::
+
+## Available Mocks
+
+### Main Module (`/mock`)
+
+- `TrueSheet` - Component with mocked `present`, `dismiss`, `resize` methods
+- `TrueSheetProvider` - Pass-through provider
+- `useTrueSheet` - Hook returning mocked methods
+
+### Navigation Module (`/navigation/mock`)
+
+- `createTrueSheetNavigator` - Mocked navigator factory
+- `TrueSheetActions` - Mocked action creators
+- `useTrueSheetNavigation` - Hook returning mocked navigation object
+
+### Reanimated Module (`/reanimated/mock`)
+
+- `ReanimatedTrueSheet` - Component with mocked methods
+- `ReanimatedTrueSheetProvider` - Pass-through provider
+- `useReanimatedTrueSheet` - Hook returning mocked shared values
+- `useReanimatedPositionChangeHandler` - Mocked handler hook
+
+## Testing Static Methods
+
+All static methods are mocked as Jest functions.
+
+```tsx
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+
+it('should present sheet', async () => {
+  await TrueSheet.present('my-sheet', 0);
+
+  expect(TrueSheet.present).toHaveBeenCalledWith('my-sheet', 0);
+});
+
+it('should dismiss sheet', async () => {
+  await TrueSheet.dismiss('my-sheet');
+
+  expect(TrueSheet.dismiss).toHaveBeenCalledWith('my-sheet');
+});
+```
+
+## Testing Component Rendering
+
+The mock renders `TrueSheet` as a View with all props passed through.
+
+```tsx
+it('should render sheet content', () => {
+  const { getByText } = render(
+    <TrueSheet name="test" initialDetentIndex={0}>
+      <Text>Sheet Content</Text>
+    </TrueSheet>
+  );
+
+  expect(getByText('Sheet Content')).toBeDefined();
+});
+```
+
+## Testing Reanimated Integration
+
+```tsx
+import {
+  useReanimatedTrueSheet,
+  ReanimatedTrueSheetProvider,
+} from '@lodev09/react-native-true-sheet/reanimated';
+
+it('should return mocked shared values', () => {
+  const { result } = renderHook(() => useReanimatedTrueSheet(), {
+    wrapper: ReanimatedTrueSheetProvider,
+  });
+
+  expect(result.current.animatedPosition.value).toBe(0);
+  expect(result.current.animatedIndex.value).toBe(-1);
+});
+```
+
+## Best Practices
+
+Clear mock calls between tests to avoid interference.
+
+```tsx
+describe('MyComponent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Your tests...
+});
+```
+
+:::info
+All methods return resolved Promises, so remember to `await` them in your tests.
+:::

@@ -1,0 +1,75 @@
+---
+title: Keyboard Handling
+description: How TrueSheet handles keyboard visibility.
+keywords: [bottom sheet keyboard, bottom sheet input, bottom sheet text input]
+---
+
+import keyboard from './assets/keyboard.gif'
+
+TrueSheet handles keyboard visibility natively on both iOS and Android. When a `TextInput` inside the sheet is focused, the sheet automatically adjusts to keep the input visible above the keyboard.
+
+<img alt="keyboard" src={keyboard} width="300"/>
+
+## How?
+
+The keyboard handling is built into the native implementation:
+
+- **iOS**: Uses `UISheetPresentationController`'s built-in keyboard avoidance
+- **Android**: Tracks keyboard height via `WindowInsetsAnimationCompat` and reconfigures sheet detents in real-time
+
+No additional configuration is required. Simply add your `TextInput` components inside the sheet:
+
+```tsx
+const App = () => {
+  return (
+    <TrueSheet ref={sheet} detents={['auto']}>
+      <View style={{ padding: 16 }}>
+        <TextInput
+          placeholder="Type something..."
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8 }}
+        />
+      </View>
+    </TrueSheet>
+  )
+}
+```
+
+## Scrollable + Keyboard
+
+When using [`scrollable`](../reference/configuration#scrollable), keyboard handling works out of the box. If a `TextInput` inside a `ScrollView` is focused, the sheet automatically scrolls to keep the input visible above the keyboard — no extra setup needed.
+
+You can use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configuration#scrollableoptions) to add extra spacing between the focused input and the keyboard:
+
+```tsx
+<TrueSheet scrollable scrollableOptions={{ keyboardScrollOffset: 16 }}>
+  <ScrollView>
+    <TextInput placeholder="Input 1" />
+    <TextInput placeholder="Input 2" />
+    <TextInput placeholder="Input 3" />
+  </ScrollView>
+</TrueSheet>
+```
+
+This is especially useful for forms with multiple inputs — as the user taps between fields, the scroll view adjusts automatically to keep the active input in view.
+
+## Footer Behavior
+
+When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
+
+## Autofocus Limitation
+
+Avoid using `autoFocus` on `TextInput` components inside the sheet. The keyboard may appear before the sheet has finished presenting, causing layout issues.
+
+Instead, focus the input programmatically after the sheet has presented:
+
+```tsx {4,7}
+const inputRef = useRef<TextInput>(null)
+
+const handlePresent = () => {
+  inputRef.current?.focus()
+}
+
+<TrueSheet onDidPresent={handlePresent}>
+  <TextInput ref={inputRef} placeholder="Type something..." />
+</TrueSheet>
+```
