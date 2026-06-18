@@ -140,3 +140,43 @@ When using [EAS Build](https://docs.expo.dev/build/introduction/), configure you
   }
 }
 ```
+
+### Patched `react-native-screens` Not Applied on EAS (Precompiled Modules)
+
+If you apply the [`react-native-screens` patch](guides/navigation) so the sheet stays visible when presenting screens on top, you may find that on **Expo SDK 56+ EAS builds** the sheet dismisses — or a full-screen modal fails to present over the sheet — even though it works in a local build.
+
+This is because Expo SDK 56 ships `react-native-screens` (and other common libraries like `react-native-reanimated`, `react-native-svg`) as **precompiled XCFrameworks** on EAS. The prebuilt framework is built from the library's own source, so any patch you apply to `react-native-screens` (via `patch-package`, `pnpm patch`, or Yarn `patches`) is **never compiled in** — it's silently ignored on EAS, while local builds still work because they fall back to compiling from source.
+
+**Fix:**
+
+Disable precompiled modules so `react-native-screens` builds from your patched source. Add the env var to each build profile in `eas.json`:
+
+```json
+{
+  "build": {
+    "development": { "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" } },
+    "preview": { "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" } },
+    "production": { "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" } }
+  }
+}
+```
+
+This only disables **module** precompilation — React Native core stays prebuilt, so build times are largely unaffected.
+
+:::info
+To keep precompiled modules for everything else and only build `react-native-screens` from source, opt it out per-package in `package.json` instead:
+
+```json
+{
+  "expo": {
+    "autolinking": {
+      "ios": { "buildFromSource": ["react-native-screens"] }
+    }
+  }
+}
+```
+:::
+
+:::warning
+Avoid `ios.buildReactNativeFromSource: true` for this — it also rebuilds React Native core from source, which is much slower.
+:::
