@@ -26,6 +26,7 @@
 
 - Bump `react-native-monorepo-config` to fix build on windows. ([#672](https://github.com/lodev09/react-native-true-sheet/pull/672) by [@harveylx](https://github.com/harveylx))
 - Upgrade examples to Expo SDK 56 / React Native 0.85.3, TypeScript 6, and `react-native-builder-bob` 0.41. ([#694](https://github.com/lodev09/react-native-true-sheet/pull/694) by [@lodev09](https://github.com/lodev09))
+- **Docs**: Documented that Expo SDK 56+ ships `react-native-screens` precompiled on EAS, silently dropping the navigation patch; added a Troubleshooting fix (`EXPO_USE_PRECOMPILED_MODULES=0`). ([#715](https://github.com/lodev09/react-native-true-sheet/pull/715) by [@lodev09](https://github.com/lodev09))
 
 ## 3.10.1
 
