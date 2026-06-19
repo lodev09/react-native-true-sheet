@@ -133,6 +133,19 @@ export interface ScrollableOptions {
 }
 
 /**
+ * Options for footer behavior
+ */
+export interface FooterOptions {
+  /**
+   * Reduces how far the footer rises when the keyboard opens.
+   * Use it to tuck the footer's safe-area padding behind the keyboard.
+   *
+   * @default 0
+   */
+  keyboardOffset?: number;
+}
+
+/**
  * Options for customizing the blur effect.
  * Only applies when `backgroundBlur` is set.
  *
@@ -450,6 +463,11 @@ export interface TrueSheetProps extends ViewProps {
    * Options for scrollable behavior.
    */
   scrollableOptions?: ScrollableOptions;
+
+  /**
+   * Options for footer behavior.
+   */
+  footerOptions?: FooterOptions;
 
   /**
    * Renders the sheet as a detached floating card, not attached to the bottom edge.

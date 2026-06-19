@@ -979,6 +979,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Footer Positioning
   // =============================================================================
 
+  var footerKeyboardOffset: Int = 0
+
   fun positionFooter(slideOffset: Float? = null) {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
@@ -988,7 +990,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - currentKeyboardInset).toFloat()
+    val keyboardShift = maxOf(0, currentKeyboardInset - footerKeyboardOffset)
+    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative
     if (slideOffset != null && slideOffset < 0) {

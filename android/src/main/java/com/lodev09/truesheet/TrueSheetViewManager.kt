@@ -230,6 +230,13 @@ class TrueSheetViewManager :
     view.setScrollableOptions(scrollableOptions)
   }
 
+  @ReactProp(name = "footerOptions")
+  override fun setFooterOptions(view: TrueSheetView, options: ReadableMap?) {
+    val keyboardOffset =
+      if (options != null && options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f
+    view.setFooterKeyboardOffset(keyboardOffset)
+  }
+
   companion object {
     const val REACT_CLASS = "TrueSheetView"
     const val TAG_NAME = "TrueSheet"

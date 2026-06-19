@@ -263,6 +263,7 @@ using namespace facebook::react;
   }
 
   _controller.scrollingExpandsSheet = scrollingExpandsSheet;
+  _controller.footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
 
   _insetAdjustment = newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;

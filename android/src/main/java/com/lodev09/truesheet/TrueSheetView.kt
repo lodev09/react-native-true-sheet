@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
@@ -281,6 +282,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setScrollableOptions(options: ScrollableOptions?) {
     viewController.scrollableOptions = options
     setupScrollable()
+  }
+
+  fun setFooterKeyboardOffset(offset: Float) {
+    viewController.footerKeyboardOffset = offset.dpToPx().toInt()
   }
 
   private fun setupScrollable() {
