@@ -80,7 +80,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       <ScrollView
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { paddingBottom: FOOTER_HEIGHT + GAP * 2 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: FOOTER_HEIGHT + GAP + SPACING }]}
         scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT + GAP }}
       >
         <Input
