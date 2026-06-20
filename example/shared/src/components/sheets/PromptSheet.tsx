@@ -1,17 +1,18 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { ScrollView, StyleSheet, TextInput } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
+import { DARK, BUTTON_HEIGHT as FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
-import { Spacer } from '../Spacer';
-import { Footer } from '../Footer';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
+  const { bottom } = useSafeAreaInsets();
+
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
@@ -67,14 +68,20 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         console.log('Back button pressed!');
       }}
       header={<Header />}
-      footer={<Footer />}
+      footer={
+        <View style={[styles.footer, { paddingBottom: bottom + GAP }]}>
+          <Button style={styles.button} text="Dismiss" onPress={handleDismissPress} />
+          <Button style={styles.button} text="Submit" onPress={handleSubmitPress} />
+        </View>
+      }
+      footerOptions={{ keyboardOffset: bottom }}
       {...props}
     >
       <ScrollView
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.content}
-        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
+        contentContainerStyle={[styles.content, { paddingBottom: FOOTER_HEIGHT + GAP * 2 }]}
+        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT + GAP }}
       >
         <Input
           ref={input1Ref}
@@ -150,9 +157,6 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           onSubmitEditing={() => textAreaRef.current?.focus()}
         />
         <Input ref={textAreaRef} placeholder="Message..." multiline />
-        <Spacer />
-        <Button text="Submit" onPress={handleSubmitPress} />
-        <Button text="Dismiss" onPress={handleDismissPress} />
       </ScrollView>
     </TrueSheet>
   );
@@ -161,8 +165,15 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
+  },
+  footer: {
+    flexDirection: 'row',
+    paddingHorizontal: SPACING,
+    gap: GAP,
+  },
+  button: {
+    flex: 1,
   },
 });
 
