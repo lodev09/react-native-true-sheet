@@ -47,7 +47,11 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       name="prompt-sheet"
       detents={[0.75, 1]}
       scrollable
-      scrollableOptions={{ keyboardScrollOffset: FOOTER_HEIGHT + SPACING }}
+      scrollableOptions={{
+        keyboardScrollOffset: FOOTER_HEIGHT + SPACING,
+        topScrollEdgeEffect: 'soft',
+        bottomScrollEdgeEffect: 'soft',
+      }}
       backgroundBlur="dark"
       backgroundColor={DARK}
       onDidDismiss={handleDismiss}
