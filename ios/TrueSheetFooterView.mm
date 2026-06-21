@@ -182,6 +182,19 @@ using namespace facebook::react;
                    completion:nil];
 }
 
+- (void)applyKeyboardOffset {
+  CGFloat height = self.keyboardObserver.currentHeight;
+  if (!_bottomConstraint || height <= 0) {
+    return;
+  }
+
+  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
+  CGFloat slide = MAX(0, height + keyboardOffset);
+  _currentKeyboardOffset = slide;
+  _bottomConstraint.constant = -slide;
+  [self.superview layoutIfNeeded];
+}
+
 @end
 
 Class<RCTComponentViewProtocol> TrueSheetFooterViewCls(void) {

@@ -72,6 +72,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)layoutFooter;
 
+/**
+ * Re-applies the footer's keyboard slide to reflect a live `keyboardOffset` change.
+ */
+- (void)updateFooterKeyboardOffset;
+
 - (BOOL)hasAccessibilityFooterElements;
 
 /**
