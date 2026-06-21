@@ -86,7 +86,7 @@ const MyFooter = () => {
 
 This ensures the footer background extends into the safe area while keeping the content above the home indicator.
 
-When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pass the same inset to [`footerOptions.keyboardOffset`](../reference/configuration#footeroptions) to tuck it behind the keyboard — see [Keyboard Handling](./keyboard#footer-behavior).
+When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pass `-insets.bottom` to [`footerOptions.keyboardOffset`](../reference/configuration#footeroptions) to tuck it behind the keyboard — see [Keyboard Handling](./keyboard#footer-behavior).
 
 :::note
 On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.

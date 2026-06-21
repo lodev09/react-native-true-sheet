@@ -74,7 +74,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           <Button style={styles.button} text="Submit" onPress={handleSubmitPress} />
         </View>
       }
-      footerOptions={{ keyboardOffset: bottom }}
+      footerOptions={{ keyboardOffset: -bottom }}
       {...props}
     >
       <ScrollView

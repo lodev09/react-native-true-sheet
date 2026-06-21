@@ -152,7 +152,7 @@ using namespace facebook::react;
   }
 
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
-  CGFloat slide = MAX(0, height - keyboardOffset);
+  CGFloat slide = MAX(0, height + keyboardOffset);
   _currentKeyboardOffset = slide;
 
   [UIView animateWithDuration:duration

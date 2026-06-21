@@ -137,8 +137,9 @@ export interface ScrollableOptions {
  */
 export interface FooterOptions {
   /**
-   * Reduces how far the footer rises when the keyboard opens.
-   * Use it to tuck the footer's safe-area padding behind the keyboard.
+   * Adjusts how far the footer rises when the keyboard opens.
+   * Positive values raise it higher; negative values reduce the rise.
+   * Pass `-insets.bottom` to tuck the footer's safe-area padding behind the keyboard.
    *
    * @default 0
    */

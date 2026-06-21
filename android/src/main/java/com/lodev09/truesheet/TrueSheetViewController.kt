@@ -990,7 +990,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    val keyboardShift = maxOf(0, currentKeyboardInset - footerKeyboardOffset)
+    val keyboardShift = maxOf(0, currentKeyboardInset + footerKeyboardOffset)
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative
