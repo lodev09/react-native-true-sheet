@@ -454,6 +454,7 @@ export class TrueSheet
       anchorOffset,
       scrollable = false,
       scrollableOptions,
+      footerOptions,
       presentation = 'page',
       children,
       style,
@@ -509,6 +510,7 @@ export class TrueSheet
         anchorOffset={anchorOffset}
         scrollable={scrollable}
         scrollableOptions={scrollableOptions}
+        footerOptions={footerOptions}
         presentation={presentation}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}

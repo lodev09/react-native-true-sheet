@@ -56,6 +56,18 @@ This is especially useful for forms with multiple inputs — as the user taps be
 
 When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
 
+If your footer renders its own bottom inset (e.g. safe-area padding for the home indicator), that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass `-insets.bottom` to tuck the inset behind the keyboard:
+
+```tsx
+const insets = useSafeAreaInsets()
+
+<TrueSheet footer={<Footer />} footerOptions={{ keyboardOffset: -insets.bottom }}>
+  {/* ... */}
+</TrueSheet>
+```
+
+The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the inset sits behind the keyboard; a positive value raises the footer higher.
+
 ## Autofocus Limitation
 
 Avoid using `autoFocus` on `TextInput` components inside the sheet. The keyboard may appear before the sheet has finished presenting, causing layout issues.

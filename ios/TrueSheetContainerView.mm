@@ -128,6 +128,10 @@ using namespace facebook::react;
   }
 }
 
+- (void)updateFooterKeyboardOffset {
+  [_footerView applyKeyboardOffset];
+}
+
 - (void)setScrollableEnabled:(BOOL)scrollableEnabled {
   _scrollableEnabled = scrollableEnabled;
   _scrollableSet = YES;

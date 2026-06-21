@@ -71,6 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) facebook::react::TrueSheetViewAnchor anchor;
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
+@property (nonatomic, assign) CGFloat footerKeyboardOffset;
 @property (nonatomic, assign) BOOL dismissible;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;

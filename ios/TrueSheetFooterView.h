@@ -29,6 +29,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setupConstraintsWithHeight:(CGFloat)height;
 
+/**
+ * Re-applies the footer's keyboard slide using the current keyboard height.
+ * No-op when the keyboard is hidden. Used to reflect live `keyboardOffset` changes.
+ */
+- (void)applyKeyboardOffset;
+
 @end
 
 NS_ASSUME_NONNULL_END

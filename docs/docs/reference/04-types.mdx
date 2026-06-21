@@ -100,6 +100,25 @@ Options for customizing scrollable behavior. Only applies when `scrollable` is `
 | `topScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the top edge of the scroll view and header. iOS 26+ only. | `'hidden'` |
 | `bottomScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the bottom edge of the scroll view and footer. iOS 26+ only. | `'hidden'` |
 
+## `FooterOptions`
+
+Options for customizing footer behavior.
+
+```tsx
+<TrueSheet
+  footer={<Footer />}
+  footerOptions={{
+    keyboardOffset: -insets.bottom,
+  }}
+>
+  {/* ... */}
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `keyboardOffset` | `number` | Adjusts how far the footer rises when the keyboard opens. Positive values raise it higher; pass `-insets.bottom` to tuck its safe-area padding behind the keyboard instead of leaving a gap. | `0` |
+
 ## `ScrollEdgeEffect`
 
 Controls the blur/gradient edge effect on the scroll view edges and header/footer overlay views. iOS 26+ only.

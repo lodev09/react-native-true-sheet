@@ -151,13 +151,15 @@ using namespace facebook::react;
     return;
   }
 
-  _currentKeyboardOffset = height;
+  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
+  CGFloat slide = MAX(0, height + keyboardOffset);
+  _currentKeyboardOffset = slide;
 
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     self->_bottomConstraint.constant = -height;
+                     self->_bottomConstraint.constant = -slide;
                      [self.superview layoutIfNeeded];
                    }
                    completion:nil];
@@ -178,6 +180,19 @@ using namespace facebook::react;
                      [self.superview layoutIfNeeded];
                    }
                    completion:nil];
+}
+
+- (void)applyKeyboardOffset {
+  CGFloat height = self.keyboardObserver.currentHeight;
+  if (!_bottomConstraint || height <= 0) {
+    return;
+  }
+
+  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
+  CGFloat slide = MAX(0, height + keyboardOffset);
+  _currentKeyboardOffset = slide;
+  _bottomConstraint.constant = -slide;
+  [self.superview layoutIfNeeded];
 }
 
 @end

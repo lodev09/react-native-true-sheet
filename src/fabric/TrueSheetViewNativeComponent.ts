@@ -30,6 +30,10 @@ type ScrollableOptionsType = Readonly<{
   bottomScrollEdgeEffect?: WithDefault<ScrollEdgeEffect, 'hidden'>;
 }>;
 
+type FooterOptionsType = Readonly<{
+  keyboardOffset?: WithDefault<Double, 0>;
+}>;
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -101,6 +105,7 @@ export interface NativeProps extends ViewProps {
   initialDetentAnimated?: WithDefault<boolean, true>;
   scrollable?: WithDefault<boolean, false>;
   scrollableOptions?: ScrollableOptionsType;
+  footerOptions?: FooterOptionsType;
   presentation?: WithDefault<'page' | 'form', 'page'>;
 
   // Event handlers
