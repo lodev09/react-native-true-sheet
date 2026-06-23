@@ -186,7 +186,8 @@
     "git": {
       "commitMessage": "chore: release ${version}",
       "tagName": "v${version}",
-      "tagExclude": "*-beta*"
+      "tagExclude": "*-beta*",
+      "addUntrackedFiles": true
     },
     "npm": {
       "publish": false
