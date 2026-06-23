@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.1
+
 ### 🎉 New features
 
 - Added `footerOptions.keyboardOffset` to adjust how far the footer rises when the keyboard opens. Pass `-insets.bottom` to tuck its safe-area padding behind the keyboard instead of leaving a gap. ([#716](https://github.com/lodev09/react-native-true-sheet/pull/716) by [@bigcupcoffee](https://github.com/bigcupcoffee))
