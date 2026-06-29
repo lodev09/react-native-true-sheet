@@ -24,7 +24,7 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
         <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
         <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
 
-        <BasicSheet dimmed={false} ref={basicSheet} />
+        <BasicSheet dismissible={false} initialDetentIndex={0} dimmed={false} ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <FlatListSheet ref={flatListSheet} />
       </View>

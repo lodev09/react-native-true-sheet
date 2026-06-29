@@ -27,6 +27,11 @@ using namespace facebook::react;
   BOOL _dismissedByNavigation;
   BOOL _pendingInteractiveDismiss;
   BOOL _pendingInteractiveAppear;
+
+  CADisplayLink *_interactiveDisplayLink;
+  __weak id<UIViewControllerTransitionCoordinator> _interactiveCoordinator;
+  BOOL _isInteractiveTracking;
+  BOOL _interactiveEnded;
 }
 
 - (instancetype)init {
@@ -70,13 +75,22 @@ using namespace facebook::react;
 
         if (event.type == "topWillDisappear") {
           if (interactive) {
-            strongSelf->_pendingInteractiveDismiss = YES;
+            // Track the swipe in realtime so the sheet slides closed with the screen,
+            // and reverses if the gesture is cancelled. Falls back to dismissing once
+            // the pop commits when realtime tracking can't start.
+            if (![strongSelf beginInteractiveTracking]) {
+              strongSelf->_pendingInteractiveDismiss = YES;
+            }
           } else if ([strongSelf shouldDismissForScreenTag:screenTag]) {
             strongSelf->_dismissedByNavigation = YES;
             [strongSelf.delegate presenterScreenWillDisappear];
           }
         } else if (event.type == "topDisappear") {
-          if (strongSelf->_pendingInteractiveDismiss) {
+          if (strongSelf->_isInteractiveTracking && !strongSelf->_interactiveEnded) {
+            // Safety net: end as committed if the coordinator's interaction-change
+            // notification didn't fire before the screen finished disappearing.
+            [strongSelf endInteractiveTrackingCancelled:NO duration:0.3];
+          } else if (strongSelf->_pendingInteractiveDismiss) {
             strongSelf->_pendingInteractiveDismiss = NO;
             strongSelf->_dismissedByNavigation = YES;
             [strongSelf.delegate presenterScreenWillDisappear];
@@ -100,6 +114,10 @@ using namespace facebook::react;
         } else if (event.type == "topGestureCancel") {
           strongSelf->_pendingInteractiveDismiss = NO;
           strongSelf->_pendingInteractiveAppear = NO;
+          if (strongSelf->_isInteractiveTracking && !strongSelf->_interactiveEnded) {
+            // Safety net for cancel in case the coordinator notification didn't fire.
+            [strongSelf endInteractiveTrackingCancelled:YES duration:0.3];
+          }
         }
       }
       return false;
@@ -110,6 +128,8 @@ using namespace facebook::react;
 }
 
 - (void)stopObserving {
+  [self stopInteractiveTracking];
+
   if (_eventListener) {
     if (auto dispatcher = _eventDispatcher.lock()) {
       dispatcher->removeListener(_eventListener);
@@ -155,6 +175,67 @@ using namespace facebook::react;
 - (BOOL)isInteractiveTransition {
   UINavigationController *navController = _presenterScreenController.navigationController;
   return navController.transitionCoordinator.isInteractive;
+}
+
+#pragma mark - Interactive Dismiss Tracking
+
+- (BOOL)beginInteractiveTracking {
+  if (_isInteractiveTracking) {
+    return YES;
+  }
+
+  UINavigationController *navController = _presenterScreenController.navigationController;
+  id<UIViewControllerTransitionCoordinator> coordinator = navController.transitionCoordinator;
+  if (!coordinator || !coordinator.isInteractive) {
+    return NO;
+  }
+
+  _isInteractiveTracking = YES;
+  _interactiveEnded = NO;
+  _interactiveCoordinator = coordinator;
+
+  [self.delegate presenterInteractiveDismissDidBegin];
+
+  _interactiveDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleInteractiveTick)];
+  [_interactiveDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+
+  __weak RNScreensEventObserver *weakSelf = self;
+  [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+    RNScreensEventObserver *strongSelf = weakSelf;
+    if (!strongSelf || strongSelf->_interactiveEnded || context.isInteractive) {
+      return;
+    }
+    [strongSelf endInteractiveTrackingCancelled:context.isCancelled duration:context.transitionDuration];
+  }];
+
+  return YES;
+}
+
+- (void)handleInteractiveTick {
+  if (!_isInteractiveTracking) {
+    return;
+  }
+  id<UIViewControllerTransitionCoordinator> coordinator = _interactiveCoordinator;
+  if (!coordinator) {
+    return;
+  }
+  [self.delegate presenterInteractiveDismissDidUpdate:coordinator.percentComplete];
+}
+
+- (void)endInteractiveTrackingCancelled:(BOOL)cancelled duration:(NSTimeInterval)duration {
+  if (_interactiveEnded) {
+    return;
+  }
+  [self stopInteractiveTracking];
+  [self.delegate presenterInteractiveDismissDidEnd:cancelled duration:duration];
+}
+
+- (void)stopInteractiveTracking {
+  _interactiveEnded = YES;
+  _isInteractiveTracking = NO;
+  _interactiveCoordinator = nil;
+  [_interactiveDisplayLink invalidate];
+  _interactiveDisplayLink = nil;
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {

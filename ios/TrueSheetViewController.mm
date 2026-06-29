@@ -43,6 +43,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)restoreWindowAccessibilityElements;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
+- (void)endInteractiveDismissState;
+- (void)emitInteractivePosition;
+- (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
+                                      duration:(NSTimeInterval)duration
+                          allowUserInteraction:(BOOL)allowUserInteraction
+                                    completion:(void (^)(void))completion;
 
 @end
 
@@ -60,6 +66,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   BOOL _isTransitionSnapping;
   BOOL _isTrackingPositionFromLayout;
   BOOL _isWillDismissEmitted;
+
+  BOOL _isInteractiveDismiss;
+  CGFloat _interactiveStartPosition;
+  UIView *_interactiveContainerView;
+  CADisplayLink *_interactivePositionLink;
+  NSUInteger _interactiveGeneration;
 
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -110,6 +122,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [self restoreWindowAccessibilityElements];
   [_transitioningTimer invalidate];
   _transitioningTimer = nil;
+  [_interactivePositionLink invalidate];
+  _interactivePositionLink = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -438,13 +452,23 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
+
+  // Backstop: if the sheet is torn down mid-gesture (e.g. owning view deallocated),
+  // the observer can't reach us through its weak delegate, so end here to invalidate
+  // _interactivePositionLink — which otherwise retains this controller indefinitely.
+  if (_isInteractiveDismiss) {
+    [self endInteractiveDismissState];
+  }
+
   [self emitDidDismissEvents];
 }
 
 - (void)viewWillLayoutSubviews {
   [super viewWillLayoutSubviews];
 
-  if (!_isTransitioning) {
+  // Skip during an interactive nav dismiss; emitInteractivePosition owns position then,
+  // and currentPosition (presentedView frame) stays at rest since we move the container.
+  if (!_isTransitioning && !_isInteractiveDismiss) {
     _isTrackingPositionFromLayout = YES;
 
     UIViewController *presented = self.presentedViewController;
@@ -648,6 +672,110 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       [self emitChangePositionDelegateWithPosition:position realtime:realtime debug:@"transition in"];
     }
   }
+}
+
+#pragma mark - Interactive Navigation Dismiss
+
+- (void)beginInteractiveDismiss {
+  if (_isInteractiveDismiss) {
+    // A settle animation from a prior gesture is still running. Stop it and reset so
+    // this gesture tracks from a clean state; its stale completion is ignored via the
+    // generation check in animateInteractiveContainerToTransform.
+    [_interactiveContainerView.layer removeAllAnimations];
+    [self endInteractiveDismissState];
+  }
+
+  _interactiveGeneration += 1;
+  _isInteractiveDismiss = YES;
+  _interactiveStartPosition = self.currentPosition;
+  _interactiveContainerView = self.sheet.containerView;
+
+  // Emit position from the container's presentation layer for the whole gesture, so
+  // both the direct-set drag and the settle animation report a live, smooth position.
+  _interactivePositionLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(emitInteractivePosition)];
+  [_interactivePositionLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+}
+
+- (void)emitInteractivePosition {
+  CALayer *presentation = _interactiveContainerView.layer.presentationLayer;
+  CGFloat offset = presentation ? presentation.affineTransform.ty : 0;
+  [self emitChangePositionDelegateWithPosition:_interactiveStartPosition + offset realtime:YES debug:@"nav swipe"];
+}
+
+// Translate the presentation container, not the sheet's presentedView (whose transform
+// UISheetPresentationController owns for the floating-sheet inset). Only runs for undimmed
+// sheets — a dimmed sheet's dimming view intercepts the edge-swipe so the pop never starts.
+- (void)updateInteractiveDismiss:(CGFloat)progress {
+  if (!_isInteractiveDismiss) {
+    return;
+  }
+  CGFloat clamped = fmin(1, fmax(0, progress));
+  CGFloat dy = clamped * (self.screenHeight - _interactiveStartPosition);
+  _interactiveContainerView.transform = CGAffineTransformMakeTranslation(0, dy);
+}
+
+- (void)cancelInteractiveDismissWithDuration:(NSTimeInterval)duration {
+  if (!_isInteractiveDismiss) {
+    return;
+  }
+  [self animateInteractiveContainerToTransform:CGAffineTransformIdentity
+                                      duration:duration
+                          allowUserInteraction:YES
+                                    completion:nil];
+}
+
+- (void)finishInteractiveDismissWithDuration:(NSTimeInterval)duration completion:(void (^)(void))completion {
+  if (!_isInteractiveDismiss) {
+    if (completion) {
+      completion();
+    }
+    return;
+  }
+  // Leave the sheet translated off-screen; the caller tears it down non-animated
+  // from here so there is no second slide.
+  CGFloat dy = self.screenHeight - _interactiveStartPosition;
+  [self animateInteractiveContainerToTransform:CGAffineTransformMakeTranslation(0, dy)
+                                      duration:duration
+                          allowUserInteraction:NO
+                                    completion:completion];
+}
+
+- (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
+                                      duration:(NSTimeInterval)duration
+                          allowUserInteraction:(BOOL)allowUserInteraction
+                                    completion:(void (^)(void))completion {
+  UIView *container = _interactiveContainerView;
+  NSUInteger generation = _interactiveGeneration;
+
+  UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState;
+  if (allowUserInteraction) {
+    options |= UIViewAnimationOptionAllowUserInteraction;
+  }
+
+  [UIView animateWithDuration:fmax(duration, 0.2)
+    delay:0
+    options:options
+    animations:^{
+      container.transform = transform;
+    }
+    completion:^(BOOL finished) {
+      // A newer gesture superseded this settle and owns teardown now.
+      if (generation != self->_interactiveGeneration) {
+        return;
+      }
+      [self endInteractiveDismissState];
+      if (completion) {
+        completion();
+      }
+    }];
+}
+
+- (void)endInteractiveDismissState {
+  _isInteractiveDismiss = NO;
+  _interactiveContainerView = nil;
+  _interactiveStartPosition = 0;
+  [_interactivePositionLink invalidate];
+  _interactivePositionLink = nil;
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
