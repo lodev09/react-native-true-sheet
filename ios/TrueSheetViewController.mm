@@ -44,6 +44,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 - (void)endInteractiveDismissState;
+- (void)emitInteractivePosition;
 
 @end
 
@@ -65,6 +66,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   BOOL _isInteractiveDismiss;
   CGFloat _interactiveStartPosition;
   UIView *_interactiveContainerView;
+  CADisplayLink *_interactivePositionLink;
 
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -115,6 +117,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [self restoreWindowAccessibilityElements];
   [_transitioningTimer invalidate];
   _transitioningTimer = nil;
+  [_interactivePositionLink invalidate];
+  _interactivePositionLink = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -449,7 +453,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)viewWillLayoutSubviews {
   [super viewWillLayoutSubviews];
 
-  if (!_isTransitioning) {
+  // Skip during an interactive nav dismiss; emitInteractivePosition owns position then,
+  // and currentPosition (presentedView frame) stays at rest since we move the container.
+  if (!_isTransitioning && !_isInteractiveDismiss) {
     _isTrackingPositionFromLayout = YES;
 
     UIViewController *presented = self.presentedViewController;
@@ -664,6 +670,17 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   _isInteractiveDismiss = YES;
   _interactiveStartPosition = self.currentPosition;
   _interactiveContainerView = self.sheet.containerView;
+
+  // Emit position from the container's presentation layer for the whole gesture, so
+  // both the direct-set drag and the settle animation report a live, smooth position.
+  _interactivePositionLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(emitInteractivePosition)];
+  [_interactivePositionLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+}
+
+- (void)emitInteractivePosition {
+  CALayer *presentation = _interactiveContainerView.layer.presentationLayer;
+  CGFloat offset = presentation ? presentation.affineTransform.ty : 0;
+  [self emitChangePositionDelegateWithPosition:_interactiveStartPosition + offset realtime:YES debug:@"nav swipe"];
 }
 
 // Translate the presentation container, not the sheet's presentedView (whose transform
@@ -725,6 +742,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   _isInteractiveDismiss = NO;
   _interactiveContainerView = nil;
   _interactiveStartPosition = 0;
+  [_interactivePositionLink invalidate];
+  _interactivePositionLink = nil;
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
