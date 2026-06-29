@@ -20,6 +20,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)presenterScreenWillDisappear;
 - (void)presenterScreenWillAppear;
 
+- (void)presenterInteractiveDismissDidBegin;
+- (void)presenterInteractiveDismissDidUpdate:(CGFloat)progress;
+- (void)presenterInteractiveDismissDidEnd:(BOOL)cancelled duration:(NSTimeInterval)duration;
+
 @end
 
 /**

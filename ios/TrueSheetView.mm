@@ -705,6 +705,28 @@ using namespace facebook::react;
   }
 }
 
+- (void)presenterInteractiveDismissDidBegin {
+  [_controller beginInteractiveDismiss];
+}
+
+- (void)presenterInteractiveDismissDidUpdate:(CGFloat)progress {
+  [_controller updateInteractiveDismiss:progress];
+}
+
+- (void)presenterInteractiveDismissDidEnd:(BOOL)cancelled duration:(NSTimeInterval)duration {
+  if (cancelled) {
+    [_controller cancelInteractiveDismissWithDuration:duration];
+    return;
+  }
+
+  _dismissedByNavigation = YES;
+  __weak __typeof(self) weakSelf = self;
+  [_controller finishInteractiveDismissWithDuration:duration
+                                         completion:^{
+                                           [weakSelf dismissAnimated:NO completion:nil];
+                                         }];
+}
+
 #pragma mark - Private Helpers
 
 - (void)setupScrollable {

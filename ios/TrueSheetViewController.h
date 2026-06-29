@@ -92,6 +92,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupDraggable;
 - (void)setupAnchorViewInView:(UIView *)parentView;
 
+- (void)beginInteractiveDismiss;
+- (void)updateInteractiveDismiss:(CGFloat)progress;
+- (void)cancelInteractiveDismissWithDuration:(NSTimeInterval)duration;
+- (void)finishInteractiveDismissWithDuration:(NSTimeInterval)duration completion:(void (^)(void))completion;
+
 @end
 
 NS_ASSUME_NONNULL_END

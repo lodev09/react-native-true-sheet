@@ -43,6 +43,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)restoreWindowAccessibilityElements;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
+- (void)endInteractiveDismissState;
 
 @end
 
@@ -60,6 +61,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   BOOL _isTransitionSnapping;
   BOOL _isTrackingPositionFromLayout;
   BOOL _isWillDismissEmitted;
+
+  BOOL _isInteractiveDismiss;
+  CGFloat _interactiveStartPosition;
+  UIView *_interactiveContainerView;
 
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -648,6 +653,78 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       [self emitChangePositionDelegateWithPosition:position realtime:realtime debug:@"transition in"];
     }
   }
+}
+
+#pragma mark - Interactive Navigation Dismiss
+
+- (void)beginInteractiveDismiss {
+  if (_isInteractiveDismiss) {
+    return;
+  }
+  _isInteractiveDismiss = YES;
+  _interactiveStartPosition = self.currentPosition;
+  _interactiveContainerView = self.sheet.containerView;
+}
+
+// Translate the presentation container, not the sheet's presentedView (whose transform
+// UISheetPresentationController owns for the floating-sheet inset). Only runs for undimmed
+// sheets — a dimmed sheet's dimming view intercepts the edge-swipe so the pop never starts.
+- (void)updateInteractiveDismiss:(CGFloat)progress {
+  if (!_isInteractiveDismiss) {
+    return;
+  }
+  CGFloat clamped = fmin(1, fmax(0, progress));
+  CGFloat dy = clamped * (self.screenHeight - _interactiveStartPosition);
+  _interactiveContainerView.transform = CGAffineTransformMakeTranslation(0, dy);
+}
+
+- (void)cancelInteractiveDismissWithDuration:(NSTimeInterval)duration {
+  if (!_isInteractiveDismiss) {
+    return;
+  }
+  UIView *container = _interactiveContainerView;
+  [UIView animateWithDuration:fmax(duration, 0.2)
+                        delay:0
+                      options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState |
+                              UIViewAnimationOptionAllowUserInteraction
+                   animations:^{
+                     container.transform = CGAffineTransformIdentity;
+                   }
+                   completion:^(BOOL finished) {
+                     [self endInteractiveDismissState];
+                   }];
+}
+
+- (void)finishInteractiveDismissWithDuration:(NSTimeInterval)duration completion:(void (^)(void))completion {
+  if (!_isInteractiveDismiss) {
+    if (completion) {
+      completion();
+    }
+    return;
+  }
+  UIView *container = _interactiveContainerView;
+  CGFloat dy = self.screenHeight - _interactiveStartPosition;
+
+  [UIView animateWithDuration:fmax(duration, 0.2)
+                        delay:0
+                      options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     // Leave the sheet translated off-screen; the caller tears it down
+                     // non-animated from here so there is no second slide.
+                     container.transform = CGAffineTransformMakeTranslation(0, dy);
+                   }
+                   completion:^(BOOL finished) {
+                     [self endInteractiveDismissState];
+                     if (completion) {
+                       completion();
+                     }
+                   }];
+}
+
+- (void)endInteractiveDismissState {
+  _isInteractiveDismiss = NO;
+  _interactiveContainerView = nil;
+  _interactiveStartPosition = 0;
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
