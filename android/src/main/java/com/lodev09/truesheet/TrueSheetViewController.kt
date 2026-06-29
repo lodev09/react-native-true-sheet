@@ -783,8 +783,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun handleBackPress() {
     if (dismissible) {
       dismiss(animated = true)
-    } else if (currentDetentIndex > 0) {
-      setStateForDetentIndex(0)
     }
   }
 
