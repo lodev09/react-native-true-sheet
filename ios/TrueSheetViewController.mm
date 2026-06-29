@@ -45,6 +45,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 - (void)endInteractiveDismissState;
 - (void)emitInteractivePosition;
+- (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
+                                      duration:(NSTimeInterval)duration
+                          allowUserInteraction:(BOOL)allowUserInteraction
+                                    completion:(void (^)(void))completion;
 
 @end
 
@@ -67,6 +71,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _interactiveStartPosition;
   UIView *_interactiveContainerView;
   CADisplayLink *_interactivePositionLink;
+  NSUInteger _interactiveGeneration;
 
   __weak TrueSheetViewController *_parentSheetController;
 
@@ -447,6 +452,14 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
+
+  // Backstop: if the sheet is torn down mid-gesture (e.g. owning view deallocated),
+  // the observer can't reach us through its weak delegate, so end here to invalidate
+  // _interactivePositionLink — which otherwise retains this controller indefinitely.
+  if (_isInteractiveDismiss) {
+    [self endInteractiveDismissState];
+  }
+
   [self emitDidDismissEvents];
 }
 
@@ -665,8 +678,14 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)beginInteractiveDismiss {
   if (_isInteractiveDismiss) {
-    return;
+    // A settle animation from a prior gesture is still running. Stop it and reset so
+    // this gesture tracks from a clean state; its stale completion is ignored via the
+    // generation check in animateInteractiveContainerToTransform.
+    [_interactiveContainerView.layer removeAllAnimations];
+    [self endInteractiveDismissState];
   }
+
+  _interactiveGeneration += 1;
   _isInteractiveDismiss = YES;
   _interactiveStartPosition = self.currentPosition;
   _interactiveContainerView = self.sheet.containerView;
@@ -699,17 +718,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   if (!_isInteractiveDismiss) {
     return;
   }
-  UIView *container = _interactiveContainerView;
-  [UIView animateWithDuration:fmax(duration, 0.2)
-                        delay:0
-                      options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState |
-                              UIViewAnimationOptionAllowUserInteraction
-                   animations:^{
-                     container.transform = CGAffineTransformIdentity;
-                   }
-                   completion:^(BOOL finished) {
-                     [self endInteractiveDismissState];
-                   }];
+  [self animateInteractiveContainerToTransform:CGAffineTransformIdentity
+                                      duration:duration
+                          allowUserInteraction:YES
+                                    completion:nil];
 }
 
 - (void)finishInteractiveDismissWithDuration:(NSTimeInterval)duration completion:(void (^)(void))completion {
@@ -719,18 +731,38 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     }
     return;
   }
-  UIView *container = _interactiveContainerView;
+  // Leave the sheet translated off-screen; the caller tears it down non-animated
+  // from here so there is no second slide.
   CGFloat dy = self.screenHeight - _interactiveStartPosition;
+  [self animateInteractiveContainerToTransform:CGAffineTransformMakeTranslation(0, dy)
+                                      duration:duration
+                          allowUserInteraction:NO
+                                    completion:completion];
+}
+
+- (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
+                                      duration:(NSTimeInterval)duration
+                          allowUserInteraction:(BOOL)allowUserInteraction
+                                    completion:(void (^)(void))completion {
+  UIView *container = _interactiveContainerView;
+  NSUInteger generation = _interactiveGeneration;
+
+  UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState;
+  if (allowUserInteraction) {
+    options |= UIViewAnimationOptionAllowUserInteraction;
+  }
 
   [UIView animateWithDuration:fmax(duration, 0.2)
                         delay:0
-                      options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState
+                      options:options
                    animations:^{
-                     // Leave the sheet translated off-screen; the caller tears it down
-                     // non-animated from here so there is no second slide.
-                     container.transform = CGAffineTransformMakeTranslation(0, dy);
+                     container.transform = transform;
                    }
                    completion:^(BOOL finished) {
+                     // A newer gesture superseded this settle and owns teardown now.
+                     if (generation != self->_interactiveGeneration) {
+                       return;
+                     }
                      [self endInteractiveDismissState];
                      if (completion) {
                        completion();

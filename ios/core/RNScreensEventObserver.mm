@@ -226,12 +226,7 @@ using namespace facebook::react;
   if (_interactiveEnded) {
     return;
   }
-  _interactiveEnded = YES;
-  _isInteractiveTracking = NO;
-  _interactiveCoordinator = nil;
-  [_interactiveDisplayLink invalidate];
-  _interactiveDisplayLink = nil;
-
+  [self stopInteractiveTracking];
   [self.delegate presenterInteractiveDismissDidEnd:cancelled duration:duration];
 }
 
