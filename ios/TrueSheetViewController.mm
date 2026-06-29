@@ -753,21 +753,21 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   }
 
   [UIView animateWithDuration:fmax(duration, 0.2)
-                        delay:0
-                      options:options
-                   animations:^{
-                     container.transform = transform;
-                   }
-                   completion:^(BOOL finished) {
-                     // A newer gesture superseded this settle and owns teardown now.
-                     if (generation != self->_interactiveGeneration) {
-                       return;
-                     }
-                     [self endInteractiveDismissState];
-                     if (completion) {
-                       completion();
-                     }
-                   }];
+    delay:0
+    options:options
+    animations:^{
+      container.transform = transform;
+    }
+    completion:^(BOOL finished) {
+      // A newer gesture superseded this settle and owns teardown now.
+      if (generation != self->_interactiveGeneration) {
+        return;
+      }
+      [self endInteractiveDismissState];
+      if (completion) {
+        completion();
+      }
+    }];
 }
 
 - (void)endInteractiveDismissState {
