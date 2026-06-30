@@ -10,18 +10,21 @@
 
 #import <objc/runtime.h>
 #import "UIView+ScrollEdgeInteraction.h"
+#import "PlatformUtil.h"
 
 static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
 
 @implementation UIView (ScrollEdgeInteraction)
 
 - (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0)) {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
   for (id<UIInteraction> interaction in [self.interactions copy]) {
     if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
       [self removeInteraction:interaction];
       break;
     }
   }
+#endif
 
   UILabel *hint = objc_getAssociatedObject(self, kEdgeEffectHintKey);
   [hint removeFromSuperview];
@@ -36,6 +39,7 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
     return;
   }
 
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
   // UIScrollEdgeElementContainerInteraction requires standard UIKit element
   // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
   // RCTViewComponentView subviews are not recognized, so we add a
@@ -50,6 +54,7 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   interaction.scrollView = scrollView;
   interaction.edge = edge;
   [self addInteraction:interaction];
+#endif
 }
 
 @end
