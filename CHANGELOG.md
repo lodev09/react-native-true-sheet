@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.2
+
 ### 🎉 New features
 
 - **iOS**: The system back-swipe now interactively drags the sheet closed, tracking the finger and emitting `onPositionChange` through the drag and cancel/commit settle. ([#719](https://github.com/lodev09/react-native-true-sheet/pull/719) by [@lodev09](https://github.com/lodev09))
