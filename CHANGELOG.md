@@ -9,6 +9,7 @@
 ### 🐛 Bug fixes
 
 - **Android**: A non-dismissible sheet no longer collapses to the first detent on back; back now propagates so navigation can go back to the previous screen. ([#719](https://github.com/lodev09/react-native-true-sheet/pull/719) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Fixed build failure on Xcode versions older than 26 (e.g. Xcode 16 / iOS 18.5 SDK) by guarding the iOS 26 scroll-edge interaction code behind a compile-time SDK check. ([#721](https://github.com/lodev09/react-native-true-sheet/pull/721) by [@murattil](https://github.com/murattil))
 
 ## 3.11.1
 
