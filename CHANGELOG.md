@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.3
+
 ### 🐛 Bug fixes
 
 - **Web**: A `presentation="form"` sheet no longer floats on mobile portrait when `detached` is not set; it stays edge-attached, mirroring iOS form-sheet behavior on compact devices. ([#724](https://github.com/lodev09/react-native-true-sheet/pull/724) by [@lodev09](https://github.com/lodev09))
