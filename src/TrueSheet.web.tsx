@@ -117,9 +117,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
   const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
-  // presentation='form' implies a floating/detached sheet on web — mirrors iOS
-  // form-sheet semantics where the sheet is never edge-attached.
-  const effectiveDetached = presentation === 'form' || detached;
+  // A form sheet floats (detached) only on tablet/landscape — mirrors iOS where
+  // a form sheet is a centered card on iPad but an edge-attached bottom sheet on
+  // a compact iPhone. On mobile portrait it stays edge-attached unless `detached`
+  // is explicitly set.
+  const effectiveDetached = isFormSheet || detached;
 
   const colorScheme = useColorScheme();
   const backgroundColor =
