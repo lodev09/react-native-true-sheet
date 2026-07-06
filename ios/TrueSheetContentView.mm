@@ -38,8 +38,17 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetContentViewProps>();
     _props = defaultProps;
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(focusedInputTextDidChange:)
+                                                 name:UITextViewTextDidChangeNotification
+                                               object:nil];
   }
   return self;
+}
+
+- (void)dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextViewTextDidChangeNotification object:nil];
 }
 
 #pragma mark - Layout
@@ -265,12 +274,54 @@ using namespace facebook::react;
   // Defer scroll until the next run loop so content insets are applied first
   if (firstResponder) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
-                                                   toView:self->_pinnedScrollView.scrollView];
-      responderFrame.size.height += self.keyboardScrollOffset;
-      [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:YES];
+      [self scrollToFocusedCaretAnimated:YES];
     });
   }
+}
+
+- (void)focusedInputTextDidChange:(NSNotification *)notification {
+  if (!_pinnedScrollView || !_keyboardObserver || _keyboardObserver.currentHeight <= 0) {
+    return;
+  }
+
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
+  if (!firstResponder || notification.object != firstResponder) {
+    return;
+  }
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self scrollToFocusedCaretAnimated:YES];
+  });
+}
+
+- (void)scrollToFocusedCaretAnimated:(BOOL)animated {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
+  if (!firstResponder) {
+    return;
+  }
+
+  UIScrollView *scrollView = _pinnedScrollView.scrollView;
+  CGRect targetRect = [firstResponder convertRect:firstResponder.bounds toView:scrollView];
+
+  if ([firstResponder conformsToProtocol:@protocol(UITextInput)]) {
+    id<UITextInput> textInput = (id<UITextInput>)firstResponder;
+    UITextRange *selectedRange = textInput.selectedTextRange;
+    if (selectedRange) {
+      CGRect caretRect = [textInput caretRectForPosition:selectedRange.end];
+      if (!CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect)) {
+        targetRect = [firstResponder convertRect:caretRect toView:scrollView];
+      }
+    }
+  }
+
+  targetRect.size.height += self.keyboardScrollOffset;
+  [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
