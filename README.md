@@ -106,7 +106,7 @@ Skills are reusable AI capabilities that give your AI coding agent knowledge abo
 npx skills add lodev09/react-native-true-sheet
 ```
 
-This will install the **TrueSheet Usage** skill into your project.
+This will install the **TrueSheet Usage** and **Tracer Bullets** skills into your project.
 
 ## That map is awesome!
 
