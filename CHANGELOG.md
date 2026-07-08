@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- **Docs**: Added the Tracer Bullets AI skill so agents can build small end-to-end slices before expanding uncertain feature work. ([#725](https://github.com/lodev09/react-native-true-sheet/pull/725) by [@jakequade-pc](https://github.com/jakequade-pc))
+
 ## 3.11.3
 
 ### 🐛 Bug fixes
