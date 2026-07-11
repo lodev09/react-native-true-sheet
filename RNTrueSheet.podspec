@@ -10,10 +10,14 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.platforms    = { :ios => min_ios_version_supported, :tvos => min_ios_version_supported }
   s.source       = { :git => "https://github.com/lodev09/react-native-true-sheet.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm,swift,cpp}", "common/cpp/**/*.{cpp,h}"
+  # tvOS compiles stubs only — sheets are not supported there, but codegen
+  # still registers the components so the classes must exist (#722)
+  s.ios.source_files = "ios/**/*.{h,m,mm,swift,cpp}", "common/cpp/**/*.{cpp,h}"
+  s.ios.exclude_files = "ios/tvos/**/*"
+  s.tvos.source_files = "ios/tvos/**/*.mm", "common/cpp/**/*.{cpp,h}"
   s.private_header_files = "ios/**/*.h"
 
   s.pod_target_xcconfig = {
