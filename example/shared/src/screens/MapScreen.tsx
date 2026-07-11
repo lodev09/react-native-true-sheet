@@ -100,7 +100,6 @@ const MapScreenInner = ({
   }, [width, height]);
 
   const sheetRef = useRef<TrueSheet>(null);
-  const minHeight = HEADER_HEIGHT + Platform.select({ ios: 0, default: SPACING });
 
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
@@ -172,7 +171,7 @@ const MapScreenInner = ({
       />
       <ReanimatedTrueSheet
         name="main"
-        detents={[minHeight / height, 'auto', 1]}
+        detents={['peek', 'auto', 1]}
         ref={sheetRef}
         initialDetentIndex={0}
         anchor={anchorLeft ? 'left' : 'center'}

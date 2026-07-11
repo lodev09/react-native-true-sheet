@@ -65,6 +65,28 @@ const App = () => {
 When using `header` with `FlatList` or `ScrollView`, the content area height is automatically adjusted to account for the header height. This ensures proper scrolling behavior on both iOS and Android.
 :::
 
+## Collapsing to the Header
+
+Use the [`"peek"`](../reference/types#sheetdetent) detent to collapse the sheet down to just the header (plus [`footer`](footer), if provided). Great for map-style sheets with a compact summary that expands into full content.
+
+```tsx {4-4}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['peek', 0.9]}
+      initialDetentIndex={0}
+      header={<BookingSummary />}
+      footer={<SheetActions />}
+      scrollable
+    >
+      <BookingDetails />
+    </TrueSheet>
+  )
+}
+```
+
+The peek height automatically follows the measured header and footer sizes — no `onLayout` juggling needed. When neither `header` nor `footer` is provided, it falls back to a fixed height of `150`.
+
 ## Platform Support
 
 The `header` prop is supported on both **iOS** and **Android**.

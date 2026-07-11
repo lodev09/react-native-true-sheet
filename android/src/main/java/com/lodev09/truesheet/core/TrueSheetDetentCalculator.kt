@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.util.RNLog
@@ -14,6 +15,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
+  val footerHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
   val keyboardInset: Int
@@ -31,17 +33,30 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
+  private val footerHeight: Int get() = delegate?.footerHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
+   * Height for peek (-2.0) detents: header + footer height.
+   * Falls back to 150dp when neither is present.
+   */
+  private val peekDetentHeight: Int
+    get() {
+      val height = headerHeight + footerHeight
+      return if (height > 0) height else DEFAULT_PEEK_HEIGHT.dpToPx().toInt()
+    }
+
+  /**
    * Calculate the height in pixels for a given detent value.
-   * @param detent The detent value: -1.0 for content-fit, or 0.0-1.0 for screen fraction
+   * @param detent The detent value: -1.0 for content-fit, -2.0 for peek, or 0.0-1.0 for screen fraction
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
       contentHeight + headerHeight + contentBottomInset
+    } else if (detent == -2.0) {
+      peekDetentHeight + contentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -83,6 +98,8 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val value = detents[index]
     return if (value == -1.0) {
       (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+    } else if (value == -2.0) {
+      peekDetentHeight.toFloat() / screenHeight.toFloat()
     } else {
       value.toFloat()
     }
@@ -210,5 +227,9 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val fromDetent = getDetentValueForIndex(fromIndex)
     val toDetent = getDetentValueForIndex(toIndex)
     return fromDetent + progress * (toDetent - fromDetent)
+  }
+
+  companion object {
+    private const val DEFAULT_PEEK_HEIGHT = 150f
   }
 }

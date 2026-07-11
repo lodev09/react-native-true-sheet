@@ -5,6 +5,8 @@ export const TRANSITIONS = {
 
 export const VELOCITY_THRESHOLD = 0.4;
 
+export const DEFAULT_PEEK_HEIGHT = 150;
+
 export const CLOSE_THRESHOLD = 0.25;
 
 export const SCROLL_LOCK_TIMEOUT = 100;
