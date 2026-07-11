@@ -92,6 +92,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _contentHeight = @(0);
     _headerHeight = @(0);
     _footerHeight = @(0);
+    _peekContentHeight = @(0);
     _grabber = YES;
     _draggable = YES;
     _scrollingExpandsSheet = YES;

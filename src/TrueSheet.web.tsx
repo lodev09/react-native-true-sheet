@@ -15,6 +15,7 @@ import type { LayoutChangeEvent } from 'react-native';
 
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
+import { TrueSheetPeekContext } from './TrueSheetPeek.web';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -244,8 +245,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     setFooterHeight(e.nativeEvent.layout.height);
   }, []);
 
+  // Measured height of a `TrueSheetPeek` rendered within the content
+  const [peekContentHeight, setPeekContentHeight] = useState(0);
+
   const peekHeight =
-    (header ? headerHeight : 0) + (footer ? footerHeight : 0) || DEFAULT_PEEK_HEIGHT;
+    (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
+    DEFAULT_PEEK_HEIGHT;
 
   // Present/dismiss events. The sheet settles via a CSS `transform` transition
   // on either the drawer (snap-points on autopresent) or the wrapper (whole-
@@ -868,76 +873,78 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   return (
-    <Drawer.Root
-      open={isOpen}
-      onOpenChange={handleOpenChange}
-      onPositionChange={handlePositionChange}
-      onDrag={handleDrag}
-      onRelease={handleRelease}
-      dismissible={dismissible}
-      draggable={draggable}
-      repositionInputs={false}
-      modal={dimmed}
-      nested={isNested}
-      detached={effectiveDetached}
-      detachedOffset={effectiveDetachedOffset}
-      detachedRadius={effectiveCornerRadius}
-      maxContentHeight={effectiveMaxContentHeight}
-      peekHeight={peekHeight}
-      initialAnimated={initialDetentAnimated}
-      detachedWrapperStyle={wrapperStyle}
-      onContentHeightChange={setMeasuredContentHeight}
-      activeSnapPoint={activeSnapPoint}
-      setActiveSnapPoint={handleSetActiveSnapPoint}
-      {...snapPointsProps}
-    >
-      <Drawer.Portal container={portalContainer ?? undefined}>
-        <Drawer.Overlay style={overlayStyle} />
-        <Drawer.Content
-          ref={drawerContentRef}
-          style={mergedContentStyle}
-          onPointerDownOutside={handlePointerDownOutside}
-          detachedSiblings={
-            footer ? (
-              <div style={footerFloatStyle}>
-                <View style={footerStyle} onLayout={handleFooterLayout}>
-                  {isValidElement(footer) ? footer : createElement(footer)}
-                </View>
+    <TrueSheetPeekContext.Provider value={setPeekContentHeight}>
+      <Drawer.Root
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        onPositionChange={handlePositionChange}
+        onDrag={handleDrag}
+        onRelease={handleRelease}
+        dismissible={dismissible}
+        draggable={draggable}
+        repositionInputs={false}
+        modal={dimmed}
+        nested={isNested}
+        detached={effectiveDetached}
+        detachedOffset={effectiveDetachedOffset}
+        detachedRadius={effectiveCornerRadius}
+        maxContentHeight={effectiveMaxContentHeight}
+        peekHeight={peekHeight}
+        initialAnimated={initialDetentAnimated}
+        detachedWrapperStyle={wrapperStyle}
+        onContentHeightChange={setMeasuredContentHeight}
+        activeSnapPoint={activeSnapPoint}
+        setActiveSnapPoint={handleSetActiveSnapPoint}
+        {...snapPointsProps}
+      >
+        <Drawer.Portal container={portalContainer ?? undefined}>
+          <Drawer.Overlay style={overlayStyle} />
+          <Drawer.Content
+            ref={drawerContentRef}
+            style={mergedContentStyle}
+            onPointerDownOutside={handlePointerDownOutside}
+            detachedSiblings={
+              footer ? (
+                <div style={footerFloatStyle}>
+                  <View style={footerStyle} onLayout={handleFooterLayout}>
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                </div>
+              ) : undefined
+            }
+          >
+            <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
+            {grabber && <Drawer.Handle style={handleStyle} />}
+            {scrollable ? (
+              // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
+              // flow-root) which doesn't honor descendant flex layout. Use an
+              // absolute fill sized to the visible portion (via vaul's
+              // `--snap-point-height` var) so the inner flex column has a
+              // definite height for the scroll container's flex:1 to fill.
+              <div style={scrollableLayoutStyle}>
+                {header && (
+                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                    {isValidElement(header) ? header : createElement(header)}
+                  </View>
+                )}
+                <div style={scrollableContainerStyle}>
+                  <View style={style}>{children}</View>
+                </div>
               </div>
-            ) : undefined
-          }
-        >
-          <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
-          {grabber && <Drawer.Handle style={handleStyle} />}
-          {scrollable ? (
-            // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
-            // flow-root) which doesn't honor descendant flex layout. Use an
-            // absolute fill sized to the visible portion (via vaul's
-            // `--snap-point-height` var) so the inner flex column has a
-            // definite height for the scroll container's flex:1 to fill.
-            <div style={scrollableLayoutStyle}>
-              {header && (
-                <View style={headerStyle} onLayout={handleHeaderLayout}>
-                  {isValidElement(header) ? header : createElement(header)}
-                </View>
-              )}
-              <div style={scrollableContainerStyle}>
+            ) : (
+              <>
+                {header && (
+                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                    {isValidElement(header) ? header : createElement(header)}
+                  </View>
+                )}
                 <View style={style}>{children}</View>
-              </div>
-            </div>
-          ) : (
-            <>
-              {header && (
-                <View style={headerStyle} onLayout={handleHeaderLayout}>
-                  {isValidElement(header) ? header : createElement(header)}
-                </View>
-              )}
-              <View style={style}>{children}</View>
-            </>
-          )}
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+              </>
+            )}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+    </TrueSheetPeekContext.Provider>
   );
 });
 

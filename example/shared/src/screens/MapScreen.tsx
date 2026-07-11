@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {
   TrueSheet,
+  TrueSheetPeek,
   type DetentChangeEvent,
   type DidPresentEvent,
   type DragBeginEvent,
@@ -230,10 +231,10 @@ const MapScreenInner = ({
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}
       >
-        <View style={styles.heading}>
+        <TrueSheetPeek style={styles.heading}>
           <Text style={styles.title}>True Sheet</Text>
           <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
+        </TrueSheetPeek>
         <Button
           text="TrueSheet View"
           hint="Long press to stress test"

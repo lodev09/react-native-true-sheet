@@ -2,6 +2,7 @@ package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
 import android.view.View
+import android.view.ViewGroup
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
@@ -13,6 +14,7 @@ interface TrueSheetContainerViewDelegate {
   fun containerViewScrollViewDidChange()
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
+  fun containerViewPeekDidChangeSize(width: Int, height: Int)
 }
 
 /**
@@ -24,17 +26,20 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   TrueSheetContentViewDelegate,
   TrueSheetHeaderViewDelegate,
-  TrueSheetFooterViewDelegate {
+  TrueSheetFooterViewDelegate,
+  TrueSheetPeekViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
 
   var contentView: TrueSheetContentView? = null
   var headerView: TrueSheetHeaderView? = null
   var footerView: TrueSheetFooterView? = null
+  var peekView: TrueSheetPeekView? = null
 
   var contentHeight: Int = 0
   var headerHeight: Int = 0
   var footerHeight: Int = 0
+  var peekContentHeight: Int = 0
 
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
   var scrollViewBottomInset: Int = 0
@@ -75,6 +80,10 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         child.delegate = this
         child.scrollableOptions = scrollableOptions
         contentView = child
+
+        // Children mount bottom-up, so the content subtree is complete here.
+        // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
+        findPeekView(child)?.let { attachPeekView(it) }
       }
 
       is TrueSheetHeaderView -> {
@@ -113,6 +122,36 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     super.removeViewAt(index)
   }
 
+  // ==================== Peek View ====================
+
+  private fun findPeekView(view: View): TrueSheetPeekView? {
+    if (view is TrueSheetPeekView) return view
+
+    if (view is ViewGroup) {
+      for (i in 0 until view.childCount) {
+        findPeekView(view.getChildAt(i))?.let { return it }
+      }
+    }
+
+    return null
+  }
+
+  fun attachPeekView(view: TrueSheetPeekView) {
+    if (peekView === view || peekView != null) return
+
+    peekView = view
+    view.delegate = this
+    peekViewDidChangeSize(view.width, view.height)
+  }
+
+  fun detachPeekView(view: TrueSheetPeekView) {
+    if (peekView !== view) return
+
+    view.delegate = null
+    peekView = null
+    peekViewDidChangeSize(0, 0)
+  }
+
   // ==================== Delegate Implementations ====================
 
   override fun contentViewDidChangeSize(width: Int, height: Int) {
@@ -136,6 +175,11 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override fun footerViewDidChangeSize(width: Int, height: Int) {
     footerHeight = height
     delegate?.containerViewFooterDidChangeSize(width, height)
+  }
+
+  override fun peekViewDidChangeSize(width: Int, height: Int) {
+    peekContentHeight = height
+    delegate?.containerViewPeekDidChangeSize(width, height)
   }
 
   companion object {

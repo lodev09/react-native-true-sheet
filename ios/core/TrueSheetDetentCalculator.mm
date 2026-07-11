@@ -31,7 +31,8 @@
 }
 
 - (CGFloat)peekHeight {
-  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue];
+  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue] +
+                   [self.delegate.peekContentHeight floatValue];
   return height > 0 ? height : 150;
 }
 

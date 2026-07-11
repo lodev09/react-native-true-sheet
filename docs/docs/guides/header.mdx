@@ -87,6 +87,25 @@ const App = () => {
 
 The peek height automatically follows the measured header and footer sizes — no `onLayout` juggling needed. When neither `header` nor `footer` is provided, it falls back to a fixed height of `150`.
 
+### Peeking Content
+
+To include part of the content in the peek height, wrap it with the `TrueSheetPeek` component. Its measured height is added to the header and footer heights.
+
+```tsx {8-10}
+import { TrueSheet, TrueSheetPeek } from '@lodev09/react-native-true-sheet'
+
+const App = () => {
+  return (
+    <TrueSheet detents={['peek', 0.9]} initialDetentIndex={0}>
+      <TrueSheetPeek>
+        <BookingSummary />
+      </TrueSheetPeek>
+      <BookingDetails />
+    </TrueSheet>
+  )
+}
+```
+
 ## Platform Support
 
 The `header` prop is supported on both **iOS** and **Android**.

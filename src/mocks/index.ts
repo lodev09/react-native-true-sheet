@@ -1,5 +1,5 @@
 import React, { createElement, isValidElement, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
 import type { TrueSheetProps, TrueSheetStaticMethods } from '../TrueSheet.types';
 
@@ -57,6 +57,13 @@ export class TrueSheet extends React.Component<TrueSheetProps, TrueSheetState> {
     const { children, style } = this.props;
     return React.createElement(View, { style }, this.renderHeader(), children, this.renderFooter());
   }
+}
+
+/**
+ * Mock TrueSheetPeek component for testing.
+ */
+export function TrueSheetPeek({ children, ...rest }: ViewProps) {
+  return React.createElement(View, rest, children);
 }
 
 /**

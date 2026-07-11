@@ -13,6 +13,7 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
+#import "TrueSheetPeekView.h"
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
@@ -45,13 +46,15 @@ using namespace facebook::react;
 
 @interface TrueSheetContainerView () <TrueSheetContentViewDelegate,
   TrueSheetHeaderViewDelegate,
-  TrueSheetFooterViewDelegate>
+  TrueSheetFooterViewDelegate,
+  TrueSheetPeekViewDelegate>
 @end
 
 @implementation TrueSheetContainerView {
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
+  TrueSheetPeekView *__weak _peekView;
   TrueSheetKeyboardObserver *_keyboardObserver;
   BOOL _scrollableSet;
 }
@@ -121,6 +124,10 @@ using namespace facebook::react;
 
 - (CGFloat)footerHeight {
   return _footerView ? _footerView.frame.size.height : 0;
+}
+
+- (CGFloat)peekContentHeight {
+  return _peekView ? _peekView.frame.size.height : 0;
 }
 
 - (void)layoutFooter {
@@ -196,6 +203,13 @@ using namespace facebook::react;
     }
     _contentView = (TrueSheetContentView *)childComponentView;
     _contentView.delegate = self;
+
+    // Children mount bottom-up, so the content subtree is complete here.
+    // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
+    TrueSheetPeekView *peekView = [self findPeekViewIn:_contentView];
+    if (peekView) {
+      [self attachPeekView:peekView];
+    }
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
@@ -276,6 +290,52 @@ using namespace facebook::react;
   if (@available(iOS 26.0, *)) {
     [self setupEdgeInteractions];
   }
+}
+
+#pragma mark - TrueSheetPeekViewDelegate
+
+- (nullable TrueSheetPeekView *)findPeekViewIn:(UIView *)view {
+  if ([view isKindOfClass:[TrueSheetPeekView class]]) {
+    return (TrueSheetPeekView *)view;
+  }
+
+  for (UIView *subview in view.subviews) {
+    TrueSheetPeekView *found = [self findPeekViewIn:subview];
+    if (found) {
+      return found;
+    }
+  }
+
+  return nil;
+}
+
+- (void)attachPeekView:(TrueSheetPeekView *)peekView {
+  if (_peekView == peekView) {
+    return;
+  }
+
+  if (_peekView != nil) {
+    RCTLogWarn(@"TrueSheet: Sheet can only have one peek component.");
+    return;
+  }
+
+  _peekView = peekView;
+  peekView.delegate = self;
+  [self peekViewDidChangeSize:peekView.frame.size];
+}
+
+- (void)peekViewDidChangeSize:(CGSize)newSize {
+  [self.delegate containerViewPeekDidChangeSize:newSize];
+}
+
+- (void)peekViewWillDetach:(TrueSheetPeekView *)peekView {
+  if (_peekView != peekView) {
+    return;
+  }
+
+  _peekView.delegate = nil;
+  _peekView = nil;
+  [self peekViewDidChangeSize:CGSizeZero];
 }
 
 #pragma mark - Keyboard Observer

@@ -58,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, nullable) NSNumber *headerHeight;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
+@property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, assign) BOOL grabber;

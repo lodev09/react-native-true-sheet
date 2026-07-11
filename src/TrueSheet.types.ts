@@ -226,7 +226,9 @@ export type SheetDetent =
 
   /**
    * Collapsed height based on the combined `header` and `footer` heights.
-   * Falls back to a fixed height of `150` when neither is provided.
+   * Render a `TrueSheetPeek` component within the content to include its
+   * measured height as well.
+   * Falls back to a fixed height of `150` when none is provided.
    *
    * @platform android
    * @platform ios 16+

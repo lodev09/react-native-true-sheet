@@ -16,6 +16,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val contentHeight: Int
   val headerHeight: Int
   val footerHeight: Int
+  val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
   val keyboardInset: Int
@@ -34,17 +35,18 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
   private val footerHeight: Int get() = delegate?.footerHeight ?: 0
+  private val peekContentHeight: Int get() = delegate?.peekContentHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
-   * Height for peek (-2.0) detents: header + footer height.
-   * Falls back to 150dp when neither is present.
+   * Height for peek (-2.0) detents: header + footer + peek content height.
+   * Falls back to 150dp when none is present.
    */
   private val peekDetentHeight: Int
     get() {
-      val height = headerHeight + footerHeight
+      val height = headerHeight + footerHeight + peekContentHeight
       return if (height > 0) height else DEFAULT_PEEK_HEIGHT.dpToPx().toInt()
     }
 

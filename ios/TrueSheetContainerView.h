@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@class TrueSheetPeekView;
+
 @protocol TrueSheetContainerViewDelegate <NSObject>
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
@@ -32,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize;
+- (void)containerViewPeekDidChangeSize:(CGSize)newSize;
 
 @end
 
@@ -71,6 +74,16 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the current footer height
  */
 - (CGFloat)footerHeight;
+
+/**
+ * Returns the current height of the peek view within the content
+ */
+- (CGFloat)peekContentHeight;
+
+/**
+ * Registers a peek view found within the content subtree
+ */
+- (void)attachPeekView:(TrueSheetPeekView *)peekView;
 
 /**
  * Updates footer layout constraints if needed

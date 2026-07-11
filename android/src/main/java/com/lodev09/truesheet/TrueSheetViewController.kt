@@ -276,6 +276,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var cachedContentHeight: Int = 0
   private var cachedHeaderHeight: Int = 0
   private var cachedFooterHeight: Int = 0
+  private var cachedPeekContentHeight: Int = 0
 
   override val contentHeight: Int
     get() = containerView?.contentHeight ?: cachedContentHeight
@@ -285,6 +286,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override val footerHeight: Int
     get() = containerView?.footerHeight ?: cachedFooterHeight
+
+  override val peekContentHeight: Int
+    get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
   // Insets
   // Target keyboard height used for detent calculations
@@ -841,6 +845,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       cachedContentHeight = it.contentHeight
       cachedHeaderHeight = it.headerHeight
       cachedFooterHeight = it.footerHeight
+      cachedPeekContentHeight = it.peekContentHeight
     }
 
     interactionState = InteractionState.Reconfiguring

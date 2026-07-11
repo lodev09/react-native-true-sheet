@@ -620,6 +620,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.positionFooter()
   }
 
+  override fun containerViewPeekDidChangeSize(width: Int, height: Int) {
+    // Peek content height affects peek detents
+    updateSheetIfNeeded()
+  }
+
   // ==================== RNScreensEventObserverDelegate ====================
 
   override fun presenterScreenWillDisappear() {
