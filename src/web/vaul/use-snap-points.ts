@@ -1,7 +1,7 @@
 // @ts-nocheck — vendored upstream, incompatible with noUncheckedIndexedAccess
 import React from 'react';
 import { set, isVertical } from './helpers';
-import { TRANSITIONS, VELOCITY_THRESHOLD } from './constants';
+import { DEFAULT_PEEK_HEIGHT, TRANSITIONS, VELOCITY_THRESHOLD } from './constants';
 import { useControllableState } from './use-controllable-state';
 import type { DrawerDirection } from './types';
 
@@ -20,6 +20,7 @@ export function useSnapPoints({
   contentHeight,
   detachedOffset = 0,
   maxContentHeight,
+  peekHeight,
   initialAnimated = true,
 }: {
   activeSnapPointProp?: number | string | null;
@@ -36,6 +37,7 @@ export function useSnapPoints({
   contentHeight?: number;
   detachedOffset?: number;
   maxContentHeight?: number;
+  peekHeight?: number;
   initialAnimated?: boolean;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
@@ -102,11 +104,14 @@ export function useSnapPoints({
       snapPoints?.map((snapPoint) => {
         // 'auto' resolves to measured content height. Falls back to half the
         // container so the initial snap is close to final before ResizeObserver
-        // reports a real measurement.
+        // reports a real measurement. 'peek' resolves to the caller-measured
+        // header + footer height.
         const resolved =
           snapPoint === 'auto'
             ? `${contentHeight && contentHeight > 0 ? contentHeight : effectiveHeight / 2}px`
-            : snapPoint;
+            : snapPoint === 'peek'
+              ? `${peekHeight && peekHeight > 0 ? peekHeight : DEFAULT_PEEK_HEIGHT}px`
+              : snapPoint;
         const isPx = typeof resolved === 'string';
         let snapPointAsNumber = 0;
 
@@ -151,7 +156,15 @@ export function useSnapPoints({
         return width;
       }) ?? []
     );
-  }, [snapPoints, windowDimensions, container, contentHeight, detachedOffset, maxContentHeight]);
+  }, [
+    snapPoints,
+    windowDimensions,
+    container,
+    contentHeight,
+    detachedOffset,
+    maxContentHeight,
+    peekHeight,
+  ]);
 
   const activeSnapPointOffset = React.useMemo(
     () => (activeSnapPointIndex !== null ? snapPointsOffset?.[activeSnapPointIndex] : null),

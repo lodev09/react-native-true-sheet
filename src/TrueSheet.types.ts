@@ -225,6 +225,15 @@ export type SheetDetent =
   | 'auto'
 
   /**
+   * Collapsed height based on the combined `header` and `footer` heights.
+   * Falls back to a fixed height of `150` when neither is provided.
+   *
+   * @platform android
+   * @platform ios 16+
+   */
+  | 'peek'
+
+  /**
    * Relative height as a fraction (0-1) of the available height.
    * For example, 0.5 represents 50% of the available height.
    *

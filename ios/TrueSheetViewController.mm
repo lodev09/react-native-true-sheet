@@ -91,6 +91,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _detents = @[ @0.5, @1 ];
     _contentHeight = @(0);
     _headerHeight = @(0);
+    _footerHeight = @(0);
     _grabber = YES;
     _draggable = YES;
     _scrollingExpandsSheet = YES;
@@ -893,6 +894,14 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
       return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight atIndex:index];
+    } else {
+      return [UISheetPresentationControllerDetent mediumDetent];
+    }
+  }
+
+  if (value == -2) {
+    if (@available(iOS 16.0, *)) {
+      return [self customDetentWithIdentifier:@"custom-peek" height:[_detentCalculator peekHeight] atIndex:index];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }

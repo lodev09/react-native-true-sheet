@@ -119,6 +119,10 @@ using namespace facebook::react;
   return _headerView ? _headerView.frame.size.height : 0;
 }
 
+- (CGFloat)footerHeight {
+  return _footerView ? _footerView.frame.size.height : 0;
+}
+
 - (void)layoutFooter {
   if (_footerView) {
     CGFloat height = _footerView.frame.size.height;
