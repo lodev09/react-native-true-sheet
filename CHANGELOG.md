@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fixed tvOS builds crashing at launch (`RCTThirdPartyComponentsProvider` nil class). The podspec now supports tvOS by compiling inert stub components — sheets remain unsupported on tvOS. ([#729](https://github.com/lodev09/react-native-true-sheet/pull/729) by [@lodev09](https://github.com/lodev09))
+
 ### 🎉 New features
 
 - **iOS**, **Android**: Scrollable sheets now follow the text caret as the user types, scrolling to the caret line instead of the input's full bounds. ([#723](https://github.com/lodev09/react-native-true-sheet/pull/723) by [@bigcupcoffee](https://github.com/bigcupcoffee))
