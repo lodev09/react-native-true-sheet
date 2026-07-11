@@ -1,8 +1,11 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ScrollView
 import androidx.core.widget.NestedScrollView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -44,6 +47,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
+
+  private var watchedEditText: EditText? = null
+  private var caretTextWatcher: TextWatcher? = null
 
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
@@ -190,14 +196,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
         }
 
         override fun keyboardDidShow(height: Int) {
+          attachCaretListener()
           scrollToFocusedInput()
         }
 
         override fun keyboardWillHide() {
+          detachCaretListener()
           updateScrollViewInsetForKeyboard(0)
         }
 
         override fun focusDidChange(newFocus: View) {
+          attachCaretListener()
           scrollToFocusedInput()
         }
       }
@@ -206,8 +215,35 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   fun cleanupKeyboardHandler() {
+    detachCaretListener()
     keyboardObserver?.stop()
     keyboardObserver = null
+  }
+
+  private fun attachCaretListener() {
+    val focused = findFocus() as? EditText
+    if (focused === watchedEditText) return
+
+    detachCaretListener()
+    if (focused == null) return
+
+    val watcher = object : TextWatcher {
+      override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+      override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+      override fun afterTextChanged(s: Editable?) {
+        focused.post { scrollToFocusedInput() }
+      }
+    }
+
+    focused.addTextChangedListener(watcher)
+    watchedEditText = focused
+    caretTextWatcher = watcher
+  }
+
+  private fun detachCaretListener() {
+    caretTextWatcher?.let { watchedEditText?.removeTextChangedListener(it) }
+    caretTextWatcher = null
+    watchedEditText = null
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
@@ -234,14 +270,35 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     focusedView.getLocationOnScreen(focusedLocation)
     scrollView.getLocationOnScreen(scrollViewLocation)
 
-    val relativeTop = focusedLocation[1] - scrollViewLocation[1] + scrollView.scrollY
-    val relativeBottom = relativeTop + focusedView.height + keyboardScrollOffset.toInt()
+    val viewTop = focusedLocation[1] - scrollViewLocation[1] + scrollView.scrollY
 
+    // Resolve the caret's line within the focused input so we follow the cursor
+    // rather than the input's full bounds (which over-scrolls tall inputs).
+    val editText = focusedView as? EditText
+    val layout = editText?.layout
+
+    val caretTop: Int
+    val caretBottom: Int
+    if (editText != null && layout != null) {
+      val line = layout.getLineForOffset(editText.selectionEnd.coerceAtLeast(0))
+      val textTop = viewTop + editText.totalPaddingTop - editText.scrollY
+      caretTop = textTop + layout.getLineTop(line)
+      caretBottom = textTop + layout.getLineBottom(line)
+    } else {
+      caretTop = viewTop
+      caretBottom = viewTop + focusedView.height
+    }
+
+    val offset = keyboardScrollOffset.toInt()
     val visibleHeight = scrollView.height - scrollView.paddingBottom
+    val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
 
-    if (relativeBottom > visibleBottom) {
-      scrollView.smoothScrollTo(0, relativeBottom - visibleHeight)
+    when {
+      caretBottom + offset > visibleBottom ->
+        scrollView.smoothScrollTo(0, caretBottom + offset - visibleHeight)
+      caretTop - offset < visibleTop ->
+        scrollView.smoothScrollTo(0, (caretTop - offset).coerceAtLeast(0))
     }
   }
 

@@ -4,6 +4,7 @@
 
 ### 🎉 New features
 
+- **iOS**, **Android**: Scrollable sheets now follow the text caret as the user types, scrolling to the caret line instead of the input's full bounds. ([#723](https://github.com/lodev09/react-native-true-sheet/pull/723) by [@bigcupcoffee](https://github.com/bigcupcoffee))
 - New `peek` detent that collapses the sheet to the combined `header` and `footer` height, falling back to a fixed `150` when neither is provided. ([#728](https://github.com/lodev09/react-native-true-sheet/pull/728) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.3

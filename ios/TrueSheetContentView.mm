@@ -28,6 +28,7 @@ using namespace facebook::react;
   CGFloat _bottomInset;
   CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
+  BOOL _observingTextChanges;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -40,6 +41,32 @@ using namespace facebook::react;
     _props = defaultProps;
   }
   return self;
+}
+
+- (void)dealloc {
+  [self stopObservingTextChanges];
+}
+
+#pragma mark - Text Change Observing
+
+// The notification is app-wide (object:nil), so only observe while the keyboard is up
+- (void)startObservingTextChanges {
+  if (_observingTextChanges) {
+    return;
+  }
+  _observingTextChanges = YES;
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(focusedInputTextDidChange:)
+                                               name:UITextViewTextDidChangeNotification
+                                             object:nil];
+}
+
+- (void)stopObservingTextChanges {
+  if (!_observingTextChanges) {
+    return;
+  }
+  _observingTextChanges = NO;
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextViewTextDidChangeNotification object:nil];
 }
 
 #pragma mark - Layout
@@ -250,6 +277,8 @@ using namespace facebook::react;
     return;
   }
 
+  [self startObservingTextChanges];
+
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
@@ -265,15 +294,63 @@ using namespace facebook::react;
   // Defer scroll until the next run loop so content insets are applied first
   if (firstResponder) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      CGRect responderFrame = [firstResponder convertRect:firstResponder.bounds
-                                                   toView:self->_pinnedScrollView.scrollView];
-      responderFrame.size.height += self.keyboardScrollOffset;
-      [self->_pinnedScrollView.scrollView scrollRectToVisible:responderFrame animated:YES];
+      [self scrollToFocusedCaretAnimated:YES];
     });
   }
 }
 
+- (void)focusedInputTextDidChange:(NSNotification *)notification {
+  if (!_pinnedScrollView || !_keyboardObserver || _keyboardObserver.currentHeight <= 0) {
+    return;
+  }
+
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
+  if (!firstResponder || notification.object != firstResponder) {
+    return;
+  }
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self scrollToFocusedCaretAnimated:YES];
+  });
+}
+
+- (void)scrollToFocusedCaretAnimated:(BOOL)animated {
+  if (!_pinnedScrollView) {
+    return;
+  }
+
+  TrueSheetViewController *sheetController = _keyboardObserver.viewController;
+  UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
+  if (!firstResponder) {
+    return;
+  }
+
+  UIScrollView *scrollView = _pinnedScrollView.scrollView;
+  CGRect targetRect = [firstResponder convertRect:firstResponder.bounds toView:scrollView];
+
+  if ([firstResponder conformsToProtocol:@protocol(UITextInput)]) {
+    id<UITextInput> textInput = (id<UITextInput>)firstResponder;
+    UITextRange *selectedRange = textInput.selectedTextRange;
+    if (selectedRange) {
+      CGRect caretRect = [textInput caretRectForPosition:selectedRange.end];
+      // caretRectForPosition: can return non-finite coordinates during layout/selection transitions
+      BOOL caretRectValid = !CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect) &&
+          isfinite(caretRect.origin.x) && isfinite(caretRect.origin.y) && isfinite(caretRect.size.width) &&
+          isfinite(caretRect.size.height);
+      if (caretRectValid) {
+        targetRect = [firstResponder convertRect:caretRect toView:scrollView];
+      }
+    }
+  }
+
+  targetRect.size.height += self.keyboardScrollOffset;
+  [scrollView scrollRectToVisible:targetRect animated:animated];
+}
+
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self stopObservingTextChanges];
+
   if (!_pinnedScrollView) {
     return;
   }
@@ -292,6 +369,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+  [self stopObservingTextChanges];
   [self clearScrollable];
 }
 
