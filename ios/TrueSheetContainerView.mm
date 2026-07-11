@@ -215,6 +215,7 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    [self footerViewDidChangeSize:_footerView.frame.size];
   }
 }
 
@@ -233,6 +234,7 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     _footerView.delegate = nil;
     _footerView = nil;
+    [self footerViewDidChangeSize:CGSizeZero];
   }
 
   [super unmountChildComponentView:childComponentView index:index];
