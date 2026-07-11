@@ -182,6 +182,11 @@ export type DialogProps = {
    */
   maxContentHeight?: number;
   /**
+   * Resolved height (in px) for the 'peek' snap point — the caller measures
+   * its header/footer and passes the combined height.
+   */
+  peekHeight?: number;
+  /**
    * When `false` the first snap on mount is applied without a transition so
    * the sheet appears at its target detent instantly. Defaults to `true`.
    */
@@ -231,6 +236,7 @@ export function Root({
   detachedRadius = 0,
   detachedWrapperStyle,
   maxContentHeight,
+  peekHeight,
   initialAnimated = true,
   onContentHeightChange,
 }: DialogProps) {
@@ -307,6 +313,7 @@ export function Root({
     contentHeight,
     detachedOffset: detached ? detachedOffset : 0,
     maxContentHeight,
+    peekHeight,
     initialAnimated,
   });
 

@@ -275,12 +275,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Cached values used during dismiss when container is unmounted
   private var cachedContentHeight: Int = 0
   private var cachedHeaderHeight: Int = 0
+  private var cachedFooterHeight: Int = 0
 
   override val contentHeight: Int
     get() = containerView?.contentHeight ?: cachedContentHeight
 
   override val headerHeight: Int
     get() = containerView?.headerHeight ?: cachedHeaderHeight
+
+  override val footerHeight: Int
+    get() = containerView?.footerHeight ?: cachedFooterHeight
 
   // Insets
   // Target keyboard height used for detent calculations
@@ -836,6 +840,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     containerView?.let {
       cachedContentHeight = it.contentHeight
       cachedHeaderHeight = it.headerHeight
+      cachedFooterHeight = it.footerHeight
     }
 
     interactionState = InteractionState.Reconfiguring

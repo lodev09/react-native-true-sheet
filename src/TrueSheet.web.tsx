@@ -11,9 +11,10 @@ import {
   useState,
 } from 'react';
 import { View, useColorScheme, useWindowDimensions } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 
 import { Drawer } from './web/vaul';
-import { TRANSITIONS } from './web/vaul/constants';
+import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -99,7 +100,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   } = props;
 
   const validDetents = useMemo(
-    () => detents.filter((d): d is SheetDetent => typeof d === 'number' || d === 'auto'),
+    () =>
+      detents.filter(
+        (d): d is SheetDetent => typeof d === 'number' || d === 'auto' || d === 'peek'
+      ),
     [detents]
   );
 
@@ -149,7 +153,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     setActiveSnapPoint(
       snapPoint == null
         ? null
-        : typeof snapPoint === 'number' || snapPoint === 'auto'
+        : typeof snapPoint === 'number' || snapPoint === 'auto' || snapPoint === 'peek'
           ? (snapPoint as SheetDetent)
           : null
     );
@@ -227,6 +231,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
 
+  // Measured header/footer heights drive the 'peek' snap point — mirrors
+  // native, where the controller tracks headerHeight/footerHeight.
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+
+  const handleHeaderLayout = useCallback((e: LayoutChangeEvent) => {
+    setHeaderHeight(e.nativeEvent.layout.height);
+  }, []);
+
+  const handleFooterLayout = useCallback((e: LayoutChangeEvent) => {
+    setFooterHeight(e.nativeEvent.layout.height);
+  }, []);
+
+  const peekHeight =
+    (header ? headerHeight : 0) + (footer ? footerHeight : 0) || DEFAULT_PEEK_HEIGHT;
+
   // Present/dismiss events. The sheet settles via a CSS `transform` transition
   // on either the drawer (snap-points on autopresent) or the wrapper (whole-
   // card slide on reopen/dismiss). `Animation.finished` from the Web Animations
@@ -295,6 +315,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           const h = Math.min(d * effectiveH, ceiling);
           positions.push(effectiveH - h);
           values.push(effectiveH > 0 ? h / effectiveH : 0);
+        } else if (d === 'peek') {
+          const h = Math.min(peekHeight, ceiling);
+          positions.push(effectiveH - h);
+          values.push(effectiveH > 0 ? h / effectiveH : 0);
         } else {
           positions.push(effectiveH - autoHeight);
           values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
@@ -346,7 +370,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [effectiveDetached, detachedOffset, maxContentHeight]
+    [effectiveDetached, detachedOffset, maxContentHeight, peekHeight]
   );
 
   const handlePositionChange = useCallback(
@@ -859,6 +883,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       detachedOffset={effectiveDetachedOffset}
       detachedRadius={effectiveCornerRadius}
       maxContentHeight={effectiveMaxContentHeight}
+      peekHeight={peekHeight}
       initialAnimated={initialDetentAnimated}
       detachedWrapperStyle={wrapperStyle}
       onContentHeightChange={setMeasuredContentHeight}
@@ -875,7 +900,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           detachedSiblings={
             footer ? (
               <div style={footerFloatStyle}>
-                <View style={footerStyle}>
+                <View style={footerStyle} onLayout={handleFooterLayout}>
                   {isValidElement(footer) ? footer : createElement(footer)}
                 </View>
               </div>
@@ -892,7 +917,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             // definite height for the scroll container's flex:1 to fill.
             <div style={scrollableLayoutStyle}>
               {header && (
-                <View style={headerStyle}>
+                <View style={headerStyle} onLayout={handleHeaderLayout}>
                   {isValidElement(header) ? header : createElement(header)}
                 </View>
               )}
@@ -903,7 +928,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           ) : (
             <>
               {header && (
-                <View style={headerStyle}>
+                <View style={headerStyle} onLayout={handleHeaderLayout}>
                   {isValidElement(header) ? header : createElement(header)}
                 </View>
               )}

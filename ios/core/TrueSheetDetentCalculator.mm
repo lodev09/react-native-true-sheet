@@ -22,9 +22,17 @@
       CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue];
       return autoHeight / self.delegate.screenHeight;
     }
+    if (value == -2) {
+      return [self peekHeight] / self.delegate.screenHeight;
+    }
     return value;
   }
   return 0;
+}
+
+- (CGFloat)peekHeight {
+  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue];
+  return height > 0 ? height : 150;
 }
 
 - (void)learnOffsetForDetentIndex:(NSInteger)index {

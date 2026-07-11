@@ -136,7 +136,7 @@ export class TrueSheet
     // Warn for invalid detent fractions
     if (detents) {
       detents.forEach((detent, index) => {
-        if (detent !== 'auto' && typeof detent === 'number') {
+        if (typeof detent === 'number' && detent !== -1 && detent !== -2) {
           if (detent <= 0 || detent > 1) {
             console.warn(
               `TrueSheet: detent at index ${index} (${detent}) should be between 0 and 1. It will be clamped.`
@@ -474,6 +474,7 @@ export class TrueSheet
     // Trim to max 3 detents and clamp fractions
     const resolvedDetents = detents.slice(0, 3).map((detent) => {
       if (detent === 'auto' || detent === -1) return -1;
+      if (detent === 'peek' || detent === -2) return -2;
 
       // Default to 0.1 if zero or below
       if (detent <= 0) return 0.1;

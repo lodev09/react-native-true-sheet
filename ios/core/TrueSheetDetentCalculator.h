@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly) NSArray<NSNumber *> *detents;
 @property (nonatomic, strong, readonly, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, readonly, nullable) NSNumber *headerHeight;
+@property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
 
 @end
 
@@ -36,8 +37,16 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Returns the detent value (0-1 fraction) for a given index.
  For auto (-1) detents, calculates based on content + header height.
+ For peek (-2) detents, calculates based on header + footer height.
  */
 - (CGFloat)detentValueForIndex:(NSInteger)index;
+
+/**
+ Returns the height for peek (-2) detents: header + footer height.
+ Falls back to 150 when neither is present — matches the iOS 26
+ floating small-detent threshold.
+ */
+- (CGFloat)peekHeight;
 
 /**
  Learns the offset between resolver height and actual presented height for a detent.

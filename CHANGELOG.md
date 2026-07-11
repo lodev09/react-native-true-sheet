@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- New `peek` detent that collapses the sheet to the combined `header` and `footer` height, falling back to a fixed `150` when neither is provided. ([#728](https://github.com/lodev09/react-native-true-sheet/pull/728) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.3
 
 ### 🐛 Bug fixes

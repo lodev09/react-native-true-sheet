@@ -119,6 +119,10 @@ using namespace facebook::react;
   return _headerView ? _headerView.frame.size.height : 0;
 }
 
+- (CGFloat)footerHeight {
+  return _footerView ? _footerView.frame.size.height : 0;
+}
+
 - (void)layoutFooter {
   if (_footerView) {
     CGFloat height = _footerView.frame.size.height;
@@ -211,6 +215,7 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    [self footerViewDidChangeSize:_footerView.frame.size];
   }
 }
 
@@ -229,6 +234,7 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     _footerView.delegate = nil;
     _footerView = nil;
+    [self footerViewDidChangeSize:CGSizeZero];
   }
 
   [super unmountChildComponentView:childComponentView index:index];
