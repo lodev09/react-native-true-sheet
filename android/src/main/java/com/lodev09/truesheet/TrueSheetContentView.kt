@@ -297,6 +297,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     when {
       caretBottom + offset > visibleBottom ->
         scrollView.smoothScrollTo(0, caretBottom + offset - visibleHeight)
+
       caretTop - offset < visibleTop ->
         scrollView.smoothScrollTo(0, (caretTop - offset).coerceAtLeast(0))
     }

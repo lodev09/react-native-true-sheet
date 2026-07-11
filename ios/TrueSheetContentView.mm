@@ -335,9 +335,9 @@ using namespace facebook::react;
     if (selectedRange) {
       CGRect caretRect = [textInput caretRectForPosition:selectedRange.end];
       // caretRectForPosition: can return non-finite coordinates during layout/selection transitions
-      BOOL caretRectValid = !CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect) &&
-          isfinite(caretRect.origin.x) && isfinite(caretRect.origin.y) && isfinite(caretRect.size.width) &&
-          isfinite(caretRect.size.height);
+      BOOL caretRectValid = !CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect) && isfinite(caretRect.origin.x) &&
+                            isfinite(caretRect.origin.y) && isfinite(caretRect.size.width) &&
+                            isfinite(caretRect.size.height);
       if (caretRectValid) {
         targetRect = [firstResponder convertRect:caretRect toView:scrollView];
       }
