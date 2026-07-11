@@ -106,6 +106,10 @@ const App = () => {
 }
 ```
 
+:::warning
+Place `TrueSheetPeek` at the **top** of your content. Only its measured *height* is used for the peek detent — the sheet always reveals content from the top, so content rendered above it would occupy the collapsed area instead and the peek content would end up below the fold.
+:::
+
 ## Platform Support
 
 The `header` prop is supported on both **iOS** and **Android**.
