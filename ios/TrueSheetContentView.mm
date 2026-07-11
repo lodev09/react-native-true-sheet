@@ -28,6 +28,7 @@ using namespace facebook::react;
   CGFloat _bottomInset;
   CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
+  BOOL _observingTextChanges;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -38,16 +39,33 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TrueSheetContentViewProps>();
     _props = defaultProps;
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(focusedInputTextDidChange:)
-                                                 name:UITextViewTextDidChangeNotification
-                                               object:nil];
   }
   return self;
 }
 
 - (void)dealloc {
+  [self stopObservingTextChanges];
+}
+
+#pragma mark - Text Change Observing
+
+// The notification is app-wide (object:nil), so only observe while the keyboard is up
+- (void)startObservingTextChanges {
+  if (_observingTextChanges) {
+    return;
+  }
+  _observingTextChanges = YES;
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(focusedInputTextDidChange:)
+                                               name:UITextViewTextDidChangeNotification
+                                             object:nil];
+}
+
+- (void)stopObservingTextChanges {
+  if (!_observingTextChanges) {
+    return;
+  }
+  _observingTextChanges = NO;
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextViewTextDidChangeNotification object:nil];
 }
 
@@ -259,6 +277,8 @@ using namespace facebook::react;
     return;
   }
 
+  [self startObservingTextChanges];
+
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
@@ -314,7 +334,11 @@ using namespace facebook::react;
     UITextRange *selectedRange = textInput.selectedTextRange;
     if (selectedRange) {
       CGRect caretRect = [textInput caretRectForPosition:selectedRange.end];
-      if (!CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect)) {
+      // caretRectForPosition: can return non-finite coordinates during layout/selection transitions
+      BOOL caretRectValid = !CGRectIsNull(caretRect) && !CGRectIsInfinite(caretRect) &&
+          isfinite(caretRect.origin.x) && isfinite(caretRect.origin.y) && isfinite(caretRect.size.width) &&
+          isfinite(caretRect.size.height);
+      if (caretRectValid) {
         targetRect = [firstResponder convertRect:caretRect toView:scrollView];
       }
     }
@@ -325,6 +349,8 @@ using namespace facebook::react;
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self stopObservingTextChanges];
+
   if (!_pinnedScrollView) {
     return;
   }
@@ -343,6 +369,7 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+  [self stopObservingTextChanges];
   [self clearScrollable];
 }
 
