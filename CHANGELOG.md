@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.4
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed tvOS builds crashing at launch (`RCTThirdPartyComponentsProvider` nil class). The podspec now supports tvOS by compiling inert stub components — sheets remain unsupported on tvOS. ([#729](https://github.com/lodev09/react-native-true-sheet/pull/729) by [@lodev09](https://github.com/lodev09))
