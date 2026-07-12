@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: `onPositionChange` no longer emits a slightly fractional `index` during the present transition — the detent offset is now learned before positions are emitted, so the index lands exactly on the target detent instead of snapping after `didPresent`. ([#731](https://github.com/lodev09/react-native-true-sheet/pull/731) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.5
 
 ### 🎉 New features

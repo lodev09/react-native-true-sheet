@@ -123,9 +123,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text={`Add Content (${contentCount})`} onPress={addContent} />
       {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
       <ButtonGroup>
+        <Button text="Peek" onPress={() => resize(0)} />
+        <Button text="Auto" onPress={() => resize(1)} />
         <Button text="Large" onPress={() => resize(2)} />
-        <Button text="80%" onPress={() => resize(1)} />
-        <Button text="Auto" onPress={() => resize(0)} />
       </ButtonGroup>
       <TrueSheetPeek />
       <Spacer />

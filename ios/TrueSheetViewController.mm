@@ -261,14 +261,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = [self currentDetentIndex];
-      [self learnOffsetForDetentIndex:index];
-
       CGFloat detent = [self detentValueForIndex:index];
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
       [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"did present"];
+      [self settleAtDetentIndex:index debug:@"did present"];
     });
 
     [self setupGestureRecognizer];
@@ -473,18 +471,17 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   if (!_isTransitioning && !_isInteractiveDismiss) {
     _isTrackingPositionFromLayout = YES;
 
-    UIViewController *presented = self.presentedViewController;
-    BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-    BOOL realtime = !hasPresentedController;
-
     if (_pendingContentSizeChange || _pendingDetentsChange) {
       _pendingContentSizeChange = NO;
       _pendingDetentsChange = NO;
-      realtime = NO;
-      [self learnOffsetForDetentIndex:self.currentDetentIndex];
+      [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
+    } else {
+      UIViewController *presented = self.presentedViewController;
+      BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
+      [self emitChangePositionDelegateWithPosition:self.currentPosition
+                                          realtime:!hasPresentedController
+                                             debug:@"layout"];
     }
-
-    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
   }
 }
 
@@ -503,11 +500,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _pendingDetentIndex = -1;
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      [self learnOffsetForDetentIndex:pendingIndex];
       CGFloat detent = [self detentValueForIndex:pendingIndex];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"pending detent change"];
+      [self settleAtDetentIndex:pendingIndex debug:@"pending detent change"];
     });
   }
 
@@ -582,9 +578,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       if (!_isTransitioning) {
         dispatch_async(dispatch_get_main_queue(), ^{
           NSInteger index = self.currentDetentIndex;
-          [self learnOffsetForDetentIndex:index];
           [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
-          [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"drag end"];
+          [self settleAtDetentIndex:index debug:@"drag end"];
         });
       }
 
@@ -601,6 +596,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return;
 
   _isTransitioning = YES;
+
+  // Learn the resolver-vs-actual offset before emitting transition positions so
+  // the interpolated index lands exactly on the target detent. The presented
+  // frame is already final here (UIKit animates the layer, not the frame).
+  if (!self.isBeingDismissed) {
+    [self learnOffsetForDetentIndex:self.currentDetentIndex];
+  }
 
   CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
@@ -808,6 +810,16 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)learnOffsetForDetentIndex:(NSInteger)index {
   [_detentCalculator learnOffsetForDetentIndex:index];
+}
+
+/**
+ * Learn the resolver-vs-actual offset at a settled detent, then emit the corrected
+ * position. Only valid when presentedView's frame is final — never mid-drag or
+ * mid-animation, where learning would store a bogus offset.
+ */
+- (void)settleAtDetentIndex:(NSInteger)index debug:(NSString *)debug {
+  [self learnOffsetForDetentIndex:index];
+  [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
 }
 
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
