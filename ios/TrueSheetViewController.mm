@@ -602,6 +602,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   _isTransitioning = YES;
 
+  // Learn the resolver-vs-actual offset before emitting transition positions so
+  // the interpolated index lands exactly on the target detent. The presented
+  // frame is already final here (UIKit animates the layer, not the frame).
+  if (!self.isBeingDismissed) {
+    [self learnOffsetForDetentIndex:self.currentDetentIndex];
+  }
+
   CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
   CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
 
