@@ -91,3 +91,23 @@ When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pa
 :::note
 On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
 :::
+
+## Collapsing to the Footer
+
+The footer height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
+
+```tsx {4-4}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['peek', 0.9]}
+      initialDetentIndex={0}
+      footer={<SheetActions />}
+    >
+      <BookingDetails />
+    </TrueSheet>
+  )
+}
+```
+
+Since the footer floats, it stays visible at every detent. See [Peeking Content](peeking) for the full guide.

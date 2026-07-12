@@ -75,11 +75,8 @@ using namespace facebook::react;
 
   // Compare the whole frame — the peek's offset within the content affects
   // the peek detent, so position changes matter too.
-  CGRect newFrame = CGRectMake(
-    layoutMetrics.frame.origin.x,
-    layoutMetrics.frame.origin.y,
-    layoutMetrics.frame.size.width,
-    layoutMetrics.frame.size.height);
+  CGRect newFrame = CGRectMake(layoutMetrics.frame.origin.x, layoutMetrics.frame.origin.y,
+    layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
 
   if (!CGRectEqualToRect(newFrame, _lastFrame)) {
     _lastFrame = newFrame;

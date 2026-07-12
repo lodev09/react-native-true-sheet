@@ -20,7 +20,13 @@ interface TrueSheetPeekViewDelegate {
 class TrueSheetPeekView(context: ThemedReactContext) : ReactViewGroup(context) {
   var delegate: TrueSheetPeekViewDelegate? = null
 
-  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
     super.onLayout(changed, left, top, right, bottom)
 
     attachToContainerView()
