@@ -231,10 +231,6 @@ const MapScreenInner = ({
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}
       >
-        <TrueSheetPeek style={styles.heading}>
-          <Text style={styles.title}>True Sheet</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </TrueSheetPeek>
         <Button
           text="TrueSheet View"
           hint="Long press to stress test"
@@ -249,6 +245,10 @@ const MapScreenInner = ({
             <Button text="Center" onPress={() => setAnchorLeft(false)} />
           </ButtonGroup>
         )}
+        <TrueSheetPeek style={styles.heading}>
+          <Text style={styles.title}>True Sheet</Text>
+          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+        </TrueSheetPeek>
         <ButtonGroup>
           <Button text="Test Screen" onPress={onNavigateToTest} />
           <Button text="Test Stack" onPress={onNavigateToTestStack} />

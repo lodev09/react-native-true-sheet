@@ -245,8 +245,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     setFooterHeight(e.nativeEvent.layout.height);
   }, []);
 
-  // Measured height of a `TrueSheetPeek` rendered within the content
+  // Distance from the content top to the bottom of a `TrueSheetPeek` rendered
+  // within the content — measured by the peek against `contentRef`.
   const [peekContentHeight, setPeekContentHeight] = useState(0);
+  const contentRef = useRef<View>(null);
+  const peekContext = useMemo(() => ({ contentRef, setPeekContentHeight }), []);
 
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
@@ -873,7 +876,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   return (
-    <TrueSheetPeekContext.Provider value={setPeekContentHeight}>
+    <TrueSheetPeekContext.Provider value={peekContext}>
       <Drawer.Root
         open={isOpen}
         onOpenChange={handleOpenChange}
@@ -928,7 +931,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                   </View>
                 )}
                 <div style={scrollableContainerStyle}>
-                  <View style={style}>{children}</View>
+                  <View ref={contentRef} style={style}>
+                    {children}
+                  </View>
                 </div>
               </div>
             ) : (
@@ -938,7 +943,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <View style={style}>{children}</View>
+                <View ref={contentRef} style={style}>
+                  {children}
+                </View>
               </>
             )}
           </Drawer.Content>

@@ -14,7 +14,7 @@ interface TrueSheetPeekViewDelegate {
 
 /**
  * Peek view that marks part of the content as the sheet's peek content.
- * Its measured height is included in the peek detent height.
+ * The peek detent covers the content through this view's bottom edge.
  */
 @SuppressLint("ViewConstructor")
 class TrueSheetPeekView(context: ThemedReactContext) : ReactViewGroup(context) {

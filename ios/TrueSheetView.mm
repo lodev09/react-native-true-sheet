@@ -596,7 +596,9 @@ using namespace facebook::react;
 }
 
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize {
-  _controller.peekContentHeight = @(newSize.height);
+  // The size event is only a trigger; read the computed value which also
+  // accounts for the peek view's offset within the content.
+  _controller.peekContentHeight = @([_containerView peekContentHeight]);
   [self setupSheetDetentsForSizeChange];
 }
 

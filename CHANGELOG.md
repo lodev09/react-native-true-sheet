@@ -4,7 +4,7 @@
 
 ### 🎉 New features
 
-- New `TrueSheetPeek` component that marks part of the content as the sheet's peek content — its natively-measured height is included in the `peek` detent height along with the `header` and `footer` heights. ([#730](https://github.com/lodev09/react-native-true-sheet/pull/730) by [@lodev09](https://github.com/lodev09))
+- New `TrueSheetPeek` component that marks part of the content as the sheet's peek content — the `peek` detent height covers the content through its bottom edge (measured natively), along with the `header` and `footer` heights. ([#730](https://github.com/lodev09/react-native-true-sheet/pull/730) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.4
 

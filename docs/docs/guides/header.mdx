@@ -89,7 +89,7 @@ The peek height automatically follows the measured header and footer sizes — n
 
 ### Peeking Content
 
-To include part of the content in the peek height, wrap it with the `TrueSheetPeek` component. Its measured height is added to the header and footer heights.
+To include part of the content in the peek height, wrap it with the `TrueSheetPeek` component. The peek detent then reveals everything from the top of the sheet through the bottom of the peek content — content padding and anything rendered above it count toward the height, while content below it stays hidden until the sheet is expanded.
 
 ```tsx {8-10}
 import { TrueSheet, TrueSheetPeek } from '@lodev09/react-native-true-sheet'
@@ -106,8 +106,8 @@ const App = () => {
 }
 ```
 
-:::warning
-Place `TrueSheetPeek` at the **top** of your content. Only its measured *height* is used for the peek detent — the sheet always reveals content from the top, so content rendered above it would occupy the collapsed area instead and the peek content would end up below the fold.
+:::info
+`TrueSheetPeek` can be placed anywhere within the content — the collapsed sheet simply reveals everything above it, including itself.
 :::
 
 ## Platform Support

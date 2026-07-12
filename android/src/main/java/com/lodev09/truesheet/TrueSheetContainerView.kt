@@ -39,7 +39,26 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var contentHeight: Int = 0
   var headerHeight: Int = 0
   var footerHeight: Int = 0
-  var peekContentHeight: Int = 0
+
+  /**
+   * Distance from the top of the content view to the bottom of the peek view.
+   * Includes the peek view's offset within the content (padding, views above it)
+   * so the peek detent reveals everything down to the peek content's bottom edge.
+   */
+  val peekContentHeight: Int
+    get() {
+      val peek = peekView ?: return 0
+      val content = contentView ?: return peek.height
+
+      var bottom = peek.height
+      var view: View = peek
+      while (view !== content) {
+        bottom += view.top
+        view = view.parent as? View ?: return peek.height
+      }
+
+      return bottom
+    }
 
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
   var scrollViewBottomInset: Int = 0
@@ -178,7 +197,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   override fun peekViewDidChangeSize(width: Int, height: Int) {
-    peekContentHeight = height
     delegate?.containerViewPeekDidChangeSize(width, height)
   }
 
