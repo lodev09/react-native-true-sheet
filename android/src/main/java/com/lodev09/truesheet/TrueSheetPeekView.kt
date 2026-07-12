@@ -20,18 +20,15 @@ interface TrueSheetPeekViewDelegate {
 class TrueSheetPeekView(context: ThemedReactContext) : ReactViewGroup(context) {
   var delegate: TrueSheetPeekViewDelegate? = null
 
-  private var lastWidth = 0
-  private var lastHeight = 0
-
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    super.onLayout(changed, left, top, right, bottom)
 
     attachToContainerView()
 
-    if (w != lastWidth || h != lastHeight) {
-      lastWidth = w
-      lastHeight = h
-      delegate?.peekViewDidChangeSize(w, h)
+    // Position changes matter too — the peek's offset within the content
+    // affects the peek detent.
+    if (changed) {
+      delegate?.peekViewDidChangeSize(width, height)
     }
   }
 

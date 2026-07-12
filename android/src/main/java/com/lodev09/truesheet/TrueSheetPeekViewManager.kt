@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
@@ -9,6 +10,7 @@ import com.facebook.react.uimanager.annotations.ReactProp
  * ViewManager for TrueSheetPeekView
  * Marks part of the content as the sheet's peek content
  */
+@ReactModule(name = TrueSheetPeekViewManager.REACT_CLASS)
 class TrueSheetPeekViewManager : ViewGroupManager<TrueSheetPeekView>() {
 
   override fun getName(): String = REACT_CLASS

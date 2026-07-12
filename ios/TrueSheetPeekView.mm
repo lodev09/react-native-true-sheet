@@ -18,7 +18,7 @@
 using namespace facebook::react;
 
 @implementation TrueSheetPeekView {
-  CGSize _lastSize;
+  CGRect _lastFrame;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -30,7 +30,7 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const TrueSheetPeekViewProps>();
     _props = defaultProps;
 
-    _lastSize = CGSizeZero;
+    _lastFrame = CGRectZero;
   }
   return self;
 }
@@ -73,17 +73,23 @@ using namespace facebook::react;
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
+  // Compare the whole frame — the peek's offset within the content affects
+  // the peek detent, so position changes matter too.
+  CGRect newFrame = CGRectMake(
+    layoutMetrics.frame.origin.x,
+    layoutMetrics.frame.origin.y,
+    layoutMetrics.frame.size.width,
+    layoutMetrics.frame.size.height);
 
-  if (!CGSizeEqualToSize(newSize, _lastSize)) {
-    _lastSize = newSize;
-    [self.delegate peekViewDidChangeSize:newSize];
+  if (!CGRectEqualToRect(newFrame, _lastFrame)) {
+    _lastFrame = newFrame;
+    [self.delegate peekViewDidChangeSize:newFrame.size];
   }
 }
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  _lastSize = CGSizeZero;
+  _lastFrame = CGRectZero;
   [self.delegate peekViewWillDetach:self];
 }
 
