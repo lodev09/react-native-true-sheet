@@ -81,6 +81,17 @@ using namespace facebook::react;
 
 @end
 
+@interface TrueSheetPeekView : RCTViewComponentView
+@end
+
+@implementation TrueSheetPeekView
+
++ (ComponentDescriptorProvider)componentDescriptorProvider {
+  return concreteComponentDescriptorProvider<TrueSheetPeekViewComponentDescriptor>();
+}
+
+@end
+
 #pragma mark - Module
 
 @interface TrueSheetModule : NSObject <RCTBridgeModule, NativeTrueSheetModuleSpec>

@@ -398,6 +398,11 @@ using namespace facebook::react;
     _controller.footerHeight = @(footerHeight);
   }
 
+  CGFloat peekContentHeight = [_containerView peekContentHeight];
+  if (peekContentHeight > 0) {
+    _controller.peekContentHeight = @(peekContentHeight);
+  }
+
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   } else {
@@ -570,6 +575,9 @@ using namespace facebook::react;
     if (!self->_containerView)
       return;
 
+    // Refresh here (not just on peek size events) since the peek's offset
+    // within the content can change without its own size changing.
+    self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
     [self->_controller setupSheetDetentsForSizeChange];
   });
 }
@@ -588,6 +596,10 @@ using namespace facebook::react;
   _controller.footerHeight = @(newSize.height);
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
+}
+
+- (void)containerViewPeekDidChangeSize:(CGSize)newSize {
+  [self setupSheetDetentsForSizeChange];
 }
 
 // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.

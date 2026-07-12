@@ -1,6 +1,6 @@
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
-import { TrueSheet } from '../index';
+import { TrueSheet, TrueSheetPeek } from '../index';
 import type {
   DidDismissEvent,
   WillFocusEvent,
@@ -52,6 +52,19 @@ describe('TrueSheet', () => {
     );
     expect(getByText('Content')).toBeDefined();
     expect(getByText('Footer Content')).toBeDefined();
+  });
+
+  it('should render TrueSheetPeek within content', () => {
+    const { getByText } = render(
+      <TrueSheet name="test" detents={['peek', 1]} initialDetentIndex={0}>
+        <TrueSheetPeek>
+          <Text>Peek Content</Text>
+        </TrueSheetPeek>
+        <Text>Content</Text>
+      </TrueSheet>
+    );
+    expect(getByText('Peek Content')).toBeDefined();
+    expect(getByText('Content')).toBeDefined();
   });
 
   it('should render with detents prop', () => {

@@ -1,6 +1,11 @@
 import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'react';
 import { StyleSheet } from 'react-native';
-import { TrueSheet, useTrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import {
+  TrueSheet,
+  TrueSheetPeek,
+  useTrueSheet,
+  type TrueSheetProps,
+} from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
@@ -57,7 +62,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
   return (
     <TrueSheet
-      detents={['auto', 0.8, 1]}
+      detents={['peek', 'auto', 1]}
       name="basic"
       ref={sheetRef}
       detached
@@ -109,6 +114,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       backgroundColor={detentIndex > 0 ? BLUE : undefined}
       header={<Header />}
       footer={<Footer />}
+      insetAdjustment="never"
       {...rest}
     >
       {times(contentCount, (i) => (
@@ -121,6 +127,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <Button text="80%" onPress={() => resize(1)} />
         <Button text="Auto" onPress={() => resize(0)} />
       </ButtonGroup>
+      <TrueSheetPeek />
       <Spacer />
       <Input />
       <ButtonGroup>

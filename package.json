@@ -265,6 +265,9 @@
         },
         "TrueSheetFooterView": {
           "className": "TrueSheetFooterView"
+        },
+        "TrueSheetPeekView": {
+          "className": "TrueSheetPeekView"
         }
       }
     }
