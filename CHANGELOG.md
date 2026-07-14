@@ -5,7 +5,8 @@
 ### 💥 Breaking changes
 
 - Requires React Native 0.82+ (synchronous Fabric state updates).
-- The sheet container is now sized to the sheet's visible height per detent (previously the screen height / largest detent). Flex layouts (`flex: 1`, `justifyContent`, etc.) now track the sheet size and relayout on resize — plug a `ScrollView` with `flex: 1` directly without the `scrollable` prop. Layouts relying on the old full-height container may shift.
+- The sheet container is now sized to the sheet's visible height per detent (previously the screen height / largest detent). Flex layouts (`flex: 1`, `justifyContent`, etc.) now track the sheet size and relayout on resize. Layouts relying on the old full-height container may shift.
+- The content now fills the sheet by default (unless an `auto` detent is used, which still derives height from the content). `ScrollView`/`FlatList` work plugged in directly, like a regular view — insets, keyboard handling, and nested scrolling are wired automatically. The `scrollable` prop is deprecated and a no-op on native.
 
 ### 🎉 New features
 

@@ -203,7 +203,7 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "scrollable", defaultBoolean = false)
   override fun setScrollable(view: TrueSheetView, value: Boolean) {
-    view.setScrollable(value)
+    // Deprecated - scrollables are auto-detected
   }
 
   @ReactProp(name = "presentation")

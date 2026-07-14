@@ -26,7 +26,6 @@ using namespace facebook::react;
   RCTScrollViewComponentView *_pinnedScrollView;
   CGSize _lastSize;
   CGFloat _bottomInset;
-  CGFloat _originalScrollViewHeight;
   CGFloat _originalIndicatorBottomInset;
   BOOL _observingTextChanges;
 }
@@ -117,24 +116,14 @@ using namespace facebook::react;
 
 - (void)clearScrollable {
   if (_pinnedScrollView) {
-    CGRect frame = _pinnedScrollView.frame;
-    frame.size.height = _originalScrollViewHeight;
-    _pinnedScrollView.frame = frame;
-
     [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
   }
   _pinnedScrollView = nil;
   _bottomInset = 0;
-  _originalScrollViewHeight = 0;
   _originalIndicatorBottomInset = 0;
 }
 
-- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset {
-  if (!enabled) {
-    [self clearScrollable];
-    return;
-  }
-
+- (void)setupScrollableWithBottomInset:(CGFloat)bottomInset {
   // Check if pinned scroll view is still valid (still in view hierarchy)
   if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
     [self clearScrollable];
@@ -152,14 +141,11 @@ using namespace facebook::react;
 
   // Only capture originals on first pin
   if (!_pinnedScrollView) {
-    _originalScrollViewHeight = scrollView.frame.size.height;
     _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
   }
 
   _bottomInset = bottomInset;
-
-  [self updateScrollViewHeight];
 
   [self setScrollViewContentInset:_bottomInset indicatorInset:_originalIndicatorBottomInset];
 
@@ -167,33 +153,6 @@ using namespace facebook::react;
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
   if (keyboardHeight > 0) {
     [self setScrollViewContentInset:keyboardHeight indicatorInset:_originalIndicatorBottomInset + keyboardHeight];
-  }
-}
-
-- (void)updateScrollViewHeight {
-  if (!_pinnedScrollView) {
-    return;
-  }
-
-  UIView *containerView = self.superview;
-  if (!containerView) {
-    return;
-  }
-
-  CGRect scrollViewFrameInContainer = [_pinnedScrollView.superview convertRect:_pinnedScrollView.frame
-                                                                        toView:containerView];
-  CGFloat newHeight = containerView.bounds.size.height - scrollViewFrameInContainer.origin.y;
-
-  if (newHeight > 0) {
-    // Preserve contentOffset before changing frame to prevent scroll jump
-    CGPoint savedContentOffset = _pinnedScrollView.scrollView.contentOffset;
-
-    CGRect frame = _pinnedScrollView.frame;
-    frame.size.height = newHeight;
-    _pinnedScrollView.frame = frame;
-
-    // Restore contentOffset after frame change
-    _pinnedScrollView.scrollView.contentOffset = savedContentOffset;
   }
 }
 

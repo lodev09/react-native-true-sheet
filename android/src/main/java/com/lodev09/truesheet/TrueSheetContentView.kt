@@ -82,12 +82,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
-  fun setupScrollable(enabled: Boolean, bottomInset: Int) {
-    if (!enabled) {
-      clearScrollable()
-      return
-    }
-
+  fun setupScrollable(bottomInset: Int) {
     // Check if pinned scroll view is still valid (still in view hierarchy)
     if (pinnedScrollView != null && pinnedScrollView?.isDescendantOf(this) == false) {
       clearScrollable()

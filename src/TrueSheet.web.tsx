@@ -944,7 +944,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     </View>
                   </div>
                 ) : (
-                  <View ref={contentRef} style={style}>
+                  // Fill the sized layout so plugged ScrollViews/FlatLists have
+                  // a bounded height — mirrors native content fill.
+                  <View ref={contentRef} style={[contentFillStyle, style]}>
                     {children}
                   </View>
                 )}
@@ -993,6 +995,11 @@ const scrollableContainerStyle: React.CSSProperties = {
   overscrollBehavior: 'contain',
   touchAction: 'pan-y',
 };
+
+const contentFillStyle = {
+  flex: 1,
+  minHeight: 0,
+} as const;
 
 const visuallyHiddenStyle: React.CSSProperties = {
   position: 'absolute',

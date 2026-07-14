@@ -274,11 +274,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
   }
 
-  fun setScrollable(scrollable: Boolean) {
-    viewController.scrollable = scrollable
-    setupScrollable()
-  }
-
   fun setScrollableOptions(options: ScrollableOptions?) {
     viewController.scrollableOptions = options
     setupScrollable()
@@ -292,7 +287,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun setupScrollable() {
     viewController.containerView?.let {
       it.insetAdjustment = viewController.insetAdjustment
-      it.scrollableEnabled = viewController.scrollable
       it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
       it.setupScrollable()

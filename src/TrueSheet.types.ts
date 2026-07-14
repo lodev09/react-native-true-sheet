@@ -461,11 +461,10 @@ export interface TrueSheetProps extends ViewProps {
   footerStyle?: StyleProp<ViewStyle>;
 
   /**
-   * On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space.
-   * When enabled, the ScrollView's top edge will be pinned below any top sibling views,
-   * and its left, right, and bottom edges will be pinned to the container.
-   *
-   * On Android, it adds additional style to the content for scrollable to work.
+   * @deprecated ScrollViews and FlatLists are now auto-detected and wired up
+   * (insets, keyboard handling, nested scrolling) — plug them in directly like
+   * a regular view. This prop is a no-op on iOS/Android; on web it renders a
+   * legacy scroll container.
    *
    * @default false
    */

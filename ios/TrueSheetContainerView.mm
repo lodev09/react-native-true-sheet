@@ -55,7 +55,6 @@ using namespace facebook::react;
   TrueSheetFooterView *_footerView;
   TrueSheetPeekView *__weak _peekView;
   TrueSheetKeyboardObserver *_keyboardObserver;
-  BOOL _scrollableSet;
 }
 
 #pragma mark - Initialization
@@ -73,7 +72,6 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
-    _scrollableSet = NO;
     self.isAccessibilityElement = NO;
   }
   return self;
@@ -108,11 +106,6 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (void)layoutSubviews {
-  [super layoutSubviews];
-  [_contentView updateScrollViewHeight];
-}
-
 - (CGFloat)contentHeight {
   return _contentView ? _contentView.frame.size.height : 0;
 }
@@ -144,23 +137,18 @@ using namespace facebook::react;
   [_footerView applyKeyboardOffset];
 }
 
-- (void)setScrollableEnabled:(BOOL)scrollableEnabled {
-  _scrollableEnabled = scrollableEnabled;
-  _scrollableSet = YES;
-}
-
 - (void)setScrollableOptions:(ScrollableOptions *)scrollableOptions {
   _scrollableOptions = scrollableOptions;
   _contentView.keyboardScrollOffset = scrollableOptions ? scrollableOptions.keyboardScrollOffset : 0;
 }
 
 - (void)setupScrollable {
-  if (_scrollableSet && _contentView) {
+  if (_contentView) {
     CGFloat bottomInset = 0;
     if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
-    [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
+    [_contentView setupScrollableWithBottomInset:bottomInset];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {
       [self setupEdgeInteractions];

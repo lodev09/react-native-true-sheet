@@ -472,7 +472,7 @@ export class TrueSheet
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
-    const resolvedDetents = detents.slice(0, 3).map((detent) => {
+    const resolvedDetents: number[] = detents.slice(0, 3).map((detent) => {
       if (detent === 'auto' || detent === -1) return -1;
       if (detent === 'peek' || detent === -2) return -2;
 
@@ -482,6 +482,11 @@ export class TrueSheet
       // Clamp to maximum of 1
       return Math.min(1, detent);
     });
+
+    // `auto` detents derive the sheet height from the content's natural height,
+    // so the content can't fill the container. Otherwise fill so flex layouts
+    // and ScrollViews/FlatLists work as-is, like a regular bounded view.
+    const hasAutoDetent = resolvedDetents.includes(-1);
 
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
@@ -543,7 +548,7 @@ export class TrueSheet
               </TrueSheetHeaderViewNativeComponent>
             )}
             <TrueSheetContentViewNativeComponent
-              style={scrollable ? [style, styles.scrollableContent] : style}
+              style={hasAutoDetent ? style : [styles.contentFill, style]}
             >
               {children}
             </TrueSheetContentViewNativeComponent>
@@ -572,7 +577,7 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFill,
   },
-  scrollableContent: {
+  contentFill: {
     flex: 1,
   },
   header: {

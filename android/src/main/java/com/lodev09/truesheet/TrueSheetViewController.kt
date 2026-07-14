@@ -215,8 +215,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
-  var scrollable: Boolean = false
-
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
