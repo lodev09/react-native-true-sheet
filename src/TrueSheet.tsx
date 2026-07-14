@@ -578,10 +578,13 @@ const styles = StyleSheet.create({
   header: {
     pointerEvents: 'box-none',
   },
+  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
+  // sheet's visible height
   footer: {
     pointerEvents: 'box-none',
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
   },
 });

@@ -19,7 +19,6 @@
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
-#import "utils/LayoutUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -348,7 +347,6 @@ using namespace facebook::react;
 
   _containerView.delegate = nil;
   [_touchHandler detachFromView:_containerView];
-  [LayoutUtil unpinView:_containerView fromParentView:nil];
   [_containerView removeFromSuperview];
 
   _containerView = nil;
@@ -373,7 +371,6 @@ using namespace facebook::react;
 
   [_touchHandler attachToView:_containerView];
   [_controller.view addSubview:_containerView];
-  [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
   [_controller.view bringSubviewToFront:_containerView];
   _containerView.accessibilityViewIsModal = YES;
   _controller.accessibilityContentView = _containerView;

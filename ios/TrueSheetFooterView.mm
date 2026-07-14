@@ -14,16 +14,12 @@
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import "TrueSheetViewController.h"
-#import "utils/LayoutUtil.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
   CGFloat _lastHeight;
-  CGFloat _pendingHeight;
-  BOOL _didInitialLayout;
-  NSLayoutConstraint *_bottomConstraint;
   CGFloat _currentKeyboardOffset;
 }
 
@@ -40,9 +36,6 @@ using namespace facebook::react;
     self.isAccessibilityElement = NO;
 
     _lastHeight = 0;
-    _pendingHeight = 0;
-    _didInitialLayout = NO;
-    _bottomConstraint = nil;
     _currentKeyboardOffset = 0;
   }
   return self;
@@ -74,57 +67,13 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (void)setupConstraintsWithHeight:(CGFloat)height {
-  UIView *parentView = self.superview;
-  if (!parentView) {
-    // On recycled views, updateLayoutMetrics can fire before the view is
-    // reparented. Remember the desired height so didMoveToSuperview applies
-    // it instead of falling back to the stale self.frame from the previous
-    // present cycle.
-    _pendingHeight = height;
-    return;
-  }
-
-  [LayoutUtil unpinView:self fromParentView:parentView];
-  _bottomConstraint = nil;
-
-  self.translatesAutoresizingMaskIntoConstraints = NO;
-
-  [self.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor].active = YES;
-  [self.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor].active = YES;
-
-  _bottomConstraint = [self.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor
-                                                        constant:-_currentKeyboardOffset];
-  _bottomConstraint.active = YES;
-
-  if (height > 0) {
-    [self.heightAnchor constraintEqualToConstant:height].active = YES;
-  }
-
-  _lastHeight = height;
-  _pendingHeight = 0;
-}
-
-- (void)didMoveToSuperview {
-  [super didMoveToSuperview];
-
-  if (self.superview) {
-    CGFloat initialHeight = _pendingHeight > 0 ? _pendingHeight : self.frame.size.height;
-    [self setupConstraintsWithHeight:initialHeight];
-  }
-}
-
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
   CGFloat height = layoutMetrics.frame.size.height;
-
-  if (!_didInitialLayout) {
-    [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-    _didInitialLayout = YES;
-  }
-
   if (height != _lastHeight) {
-    [self setupConstraintsWithHeight:height];
+    _lastHeight = height;
     [self.delegate footerViewDidChangeSize:CGSizeMake(layoutMetrics.frame.size.width, height)];
   }
 }
@@ -132,25 +81,20 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  [LayoutUtil unpinView:self fromParentView:self.superview];
   if (@available(iOS 26.0, *)) {
     [self cleanupEdgeInteraction];
   }
 
+  self.transform = CGAffineTransformIdentity;
   _lastHeight = 0;
-  _pendingHeight = 0;
-  _didInitialLayout = NO;
-  _bottomConstraint = nil;
   _currentKeyboardOffset = 0;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
+// Yoga owns the footer's frame (pinned to the container's bottom edge), so the
+// keyboard slide is carried by a transform instead of layout.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
-  if (!_bottomConstraint) {
-    return;
-  }
-
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);
   _currentKeyboardOffset = slide;
@@ -159,40 +103,33 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     self->_bottomConstraint.constant = -slide;
-                     [self.superview layoutIfNeeded];
+                     self.transform = CGAffineTransformMakeTranslation(0, -slide);
                    }
                    completion:nil];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
-  if (!_bottomConstraint) {
-    return;
-  }
-
   _currentKeyboardOffset = 0;
 
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     self->_bottomConstraint.constant = 0;
-                     [self.superview layoutIfNeeded];
+                     self.transform = CGAffineTransformIdentity;
                    }
                    completion:nil];
 }
 
 - (void)applyKeyboardOffset {
   CGFloat height = self.keyboardObserver.currentHeight;
-  if (!_bottomConstraint || height <= 0) {
+  if (height <= 0) {
     return;
   }
 
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);
   _currentKeyboardOffset = slide;
-  _bottomConstraint.constant = -slide;
-  [self.superview layoutIfNeeded];
+  self.transform = CGAffineTransformMakeTranslation(0, -slide);
 }
 
 @end

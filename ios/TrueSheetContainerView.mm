@@ -26,7 +26,6 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
-#import <react/renderer/core/LayoutMetrics.h>
 
 using namespace facebook::react;
 
@@ -139,15 +138,6 @@ using namespace facebook::react;
   }
 
   return CGRectGetMaxY([_peekView convertRect:_peekView.bounds toView:_contentView]);
-}
-
-- (void)layoutFooter {
-  if (_footerView) {
-    CGFloat height = _footerView.frame.size.height;
-    if (height > 0) {
-      [_footerView setupConstraintsWithHeight:height];
-    }
-  }
 }
 
 - (void)updateFooterKeyboardOffset {
@@ -267,12 +257,6 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
-}
-
-#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
-- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
-           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
-  // Intentionally skip super - AutoLayout handles container's frame, not Yoga
 }
 
 #pragma mark - TrueSheetContentViewDelegate

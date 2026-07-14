@@ -9,7 +9,7 @@
 
 ### 🎉 New features
 
-- **iOS**: Sheet resizes now drive synchronous Yoga layout — the container relayouts within the same UIKit layout pass, animating with detent transitions.
+- **iOS**: Sheet resizes now drive synchronous Yoga layout — the container relayouts within the same UIKit layout pass, animating with detent transitions. AutoLayout constraints are gone; the container and footer are laid out purely by Yoga (footer keyboard avoidance uses a transform).
 - **Android**: The container resizes per detent (grows before the sheet expands, shrinks on settle), replacing the scroll-range padding workaround.
 - **Web**: Non-scrollable sheets now get a definite-height flex layout per detent, matching native (`auto` detents and form sheets keep content-fit sizing).
 
