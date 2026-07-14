@@ -702,6 +702,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, descendants.length]);
 
+  // Definite-height flex layout (per-detent sizing) unless content must be
+  // measured in natural flow: 'auto' detents and form-sheet content-fit sizing.
+  // `scrollable` always uses it — the scroll container needs a bounded height.
+  const hasAutoDetent = validDetents.includes('auto');
+  const useSizedLayout = scrollable || (!hasAutoDetent && !isFormSheet);
+
   const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
 
   // Shadow cast upward from the sheet's top edge toward the background. Matches
@@ -918,25 +924,34 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           >
             <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
-            {scrollable ? (
+            {useSizedLayout ? (
               // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
               // flow-root) which doesn't honor descendant flex layout. Use an
               // absolute fill sized to the visible portion (via vaul's
               // `--snap-point-height` var) so the inner flex column has a
-              // definite height for the scroll container's flex:1 to fill.
-              <div style={scrollableLayoutStyle}>
+              // definite height for flex layouts to fill — mirrors native, where
+              // the container is sized to the sheet's visible height per detent.
+              <div style={sizedLayoutStyle}>
                 {header && (
                   <View style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <div style={scrollableContainerStyle}>
+                {scrollable ? (
+                  <div style={scrollableContainerStyle}>
+                    <View ref={contentRef} style={style}>
+                      {children}
+                    </View>
+                  </div>
+                ) : (
                   <View ref={contentRef} style={style}>
                     {children}
                   </View>
-                </div>
+                )}
               </div>
             ) : (
+              // Natural flow so vaul can measure content height — required for
+              // 'auto' detents and form-sheet content-fit sizing.
               <>
                 {header && (
                   <View style={headerStyle} onLayout={handleHeaderLayout}>
@@ -961,7 +976,7 @@ const overlayStyle: React.CSSProperties = {
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
 
-const scrollableLayoutStyle: React.CSSProperties = {
+const sizedLayoutStyle: React.CSSProperties = {
   position: 'absolute',
   top: 0,
   left: 0,

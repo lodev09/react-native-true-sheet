@@ -536,9 +536,7 @@ export class TrueSheet
         onVisibilityChange={this.onVisibilityChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            style={scrollable ? styles.scrollableContainer : undefined}
-          >
+          <TrueSheetContainerViewNativeComponent style={styles.container}>
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
@@ -570,7 +568,8 @@ const styles = StyleSheet.create({
     zIndex: -9999,
     pointerEvents: 'box-none',
   },
-  scrollableContainer: {
+  // Fill the sheet so flex layouts track the sheet's size per detent
+  container: {
     ...StyleSheet.absoluteFill,
   },
   scrollableContent: {

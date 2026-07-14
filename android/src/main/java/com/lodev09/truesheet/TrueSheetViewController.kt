@@ -221,7 +221,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     set(value) {
       field = value
       behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
-      if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
     }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
@@ -561,7 +560,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
-    updateScrollExpansionPadding(sheetView.top)
     emitChangePositionDelegate(sheetView.top)
 
     // On older APIs, use onSlide for footer positioning during keyboard transitions
@@ -573,15 +571,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
-  }
-
-  private fun updateScrollExpansionPadding(sheetTop: Int) {
-    if (!scrollable) {
-      containerView?.contentView?.updateScrollExpansionPadding(0)
-      return
-    }
-    val expandedOffset = behavior?.expandedOffset ?: return
-    containerView?.contentView?.updateScrollExpansionPadding(maxOf(0, sheetTop - expandedOffset))
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
@@ -630,6 +619,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
       }
     }
+
+    // Settled — resize the container to the settled detent (applies deferred shrinks)
+    updateStateDimensions()
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
@@ -735,6 +727,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     pendingDetentIndex = detentIndex
+    updateStateDimensions(deferShrink = true)
     setupDimmedBackground()
     setStateForDetentIndex(detentIndex)
     resizePromise?.invoke()
@@ -880,7 +873,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       animate = isPresented
     )
 
-    updateStateDimensions(expandedOffset)
+    updateStateDimensions()
 
     if (isPresented && applyState) {
       // Prefer the pending target while a resize animation is in flight so a
@@ -1052,9 +1045,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
-          setupSheetDetents()
+          // Commit the target index first so the container grows before the sheet expands
           currentDetentIndex = detents.size - 1
-          setStateForDetentIndex(currentDetentIndex)
+          setupSheetDetents()
           updateDimAmount(animated = true)
         }
 
@@ -1241,13 +1234,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.maxWidth = newMaxWidth
   }
 
-  private fun updateStateDimensions(expandedOffset: Int? = null) {
-    val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
-    val topOffset = if (offset == 0) topInset else 0
-    val newHeight = realScreenHeight - offset - topOffset
+  /**
+   * Updates the Fabric state with the current/target detent size so Yoga sizes
+   * the container to the sheet's visible height.
+   *
+   * State updates are async on Android, so shrinking is deferred to settle
+   * ([deferShrink]) when a resize animation is about to run — growing applies
+   * immediately so content is laid out before the sheet reveals it.
+   */
+  private fun updateStateDimensions(deferShrink: Boolean = false) {
+    if (detents.isEmpty()) return
+
+    val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
+      .coerceIn(0, detents.size - 1)
+    val maxAvailableHeight = realScreenHeight - topInset
+    val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
     val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
     val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
     val newWidth = minOf(screenWidth, effectiveMaxWidth)
+
+    if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
 
     if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
       lastStateWidth = newWidth

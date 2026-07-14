@@ -33,7 +33,6 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
-#import <cxxreact/ReactNativeVersion.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -301,13 +300,10 @@ using namespace facebook::react;
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
 
-#if REACT_NATIVE_VERSION_MINOR >= 82
-  // TODO: RN 0.82+ processes state updates in the same layout pass (synchronous).
-  // Once stable, we can drop native layout constraints in favor of synchronous Yoga layout.
+  // RN 0.82+ processes immediate state updates in the same layout pass, so Yoga
+  // resizes the container synchronously with the sheet (e.g. inside UIKit's
+  // animation block during detent transitions).
   _state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
-#else
-  _state->updateState(std::move(stateData));
-#endif
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -681,10 +677,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  // TODO: Explicit screen height for now until synchronous layout is supported.
-  CGSize effectiveSize = CGSizeMake(size.width, _controller.screenHeight);
-
-  [self updateStateWithSize:effectiveSize];
+  [self updateStateWithSize:size];
 }
 
 - (void)viewControllerWillFocus {

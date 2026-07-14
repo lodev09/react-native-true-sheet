@@ -562,10 +562,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
-    // On android scrollable, we need the actual sheet height to get proper ScrollView height.
-    // Unlike IOS where ScrollView is pinned to the container.
-    val effectiveHeight = if (viewController.scrollable) height else viewController.screenHeight
-    updateState(width, effectiveHeight)
+    updateState(width, height)
   }
 
   override fun viewControllerWillFocus() {

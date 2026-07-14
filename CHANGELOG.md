@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### 💥 Breaking changes
+
+- Requires React Native 0.82+ (synchronous Fabric state updates).
+- The sheet container is now sized to the sheet's visible height per detent (previously the screen height / largest detent). Flex layouts (`flex: 1`, `justifyContent`, etc.) now track the sheet size and relayout on resize — plug a `ScrollView` with `flex: 1` directly without the `scrollable` prop. Layouts relying on the old full-height container may shift.
+
+### 🎉 New features
+
+- **iOS**: Sheet resizes now drive synchronous Yoga layout — the container relayouts within the same UIKit layout pass, animating with detent transitions.
+- **Android**: The container resizes per detent (grows before the sheet expands, shrinks on settle), replacing the scroll-range padding workaround.
+- **Web**: Non-scrollable sheets now get a definite-height flex layout per detent, matching native (`auto` detents and form sheets keep content-fit sizing).
+
 ## 3.11.6
 
 ### 🐛 Bug fixes
