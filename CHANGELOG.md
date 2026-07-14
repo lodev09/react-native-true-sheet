@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: The sheet can now be dragged from views overlaying a scrollable — e.g. a header (including a `TextInput` in it) positioned over a `FlatList` — previously the drag did nothing. ([#734](https://github.com/lodev09/react-native-true-sheet/pull/734) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.6
 
 ### 🐛 Bug fixes
