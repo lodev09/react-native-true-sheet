@@ -4,15 +4,15 @@
 
 ### 💥 Breaking changes
 
-- Requires React Native 0.82+ (synchronous Fabric state updates).
-- The sheet container is now sized to the sheet's visible height per detent (previously the screen height / largest detent). Flex layouts (`flex: 1`, `justifyContent`, etc.) now track the sheet size and relayout on resize. Layouts relying on the old full-height container may shift.
-- The content now fills the sheet by default (unless an `auto` detent is used, which still derives height from the content). `ScrollView`/`FlatList` work plugged in directly, like a regular view — insets, keyboard handling, and nested scrolling are wired automatically. The `scrollable` prop is deprecated and a no-op on native.
+- Requires React Native 0.82+ (synchronous Fabric state updates). ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- The sheet container is now sized to the sheet's visible height per detent (previously the screen height / largest detent). Flex layouts (`flex: 1`, `justifyContent`, etc.) now track the sheet size and relayout on resize. Layouts relying on the old full-height container may shift. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- The content now fills the sheet by default (unless an `auto` detent is used, which still derives height from the content). `ScrollView`/`FlatList` work plugged in directly, like a regular view — insets, keyboard handling, and nested scrolling are wired automatically. The `scrollable` prop is deprecated and a no-op on native. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 
 ### 🎉 New features
 
-- **iOS**: Sheet resizes now drive synchronous Yoga layout — the container relayouts within the same UIKit layout pass, animating with detent transitions. AutoLayout constraints are gone; the container and footer are laid out purely by Yoga (footer keyboard avoidance uses a transform).
-- **Android**: The container resizes per detent and tracks the sheet in realtime while dragging, driven by synchronous Fabric state updates (JNI) — replacing the scroll-range padding workaround.
-- **Web**: Non-scrollable sheets now get a definite-height flex layout per detent, matching native (`auto` detents and form sheets keep content-fit sizing).
+- **iOS**: Sheet resizes now drive synchronous Yoga layout — the container relayouts within the same UIKit layout pass, animating with detent transitions. AutoLayout constraints are gone; the container and footer are laid out purely by Yoga (footer keyboard avoidance uses a transform). ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- **Android**: The container resizes per detent and tracks the sheet in realtime while dragging, driven by synchronous Fabric state updates (JNI) — replacing the scroll-range padding workaround. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- **Web**: Non-scrollable sheets now get a definite-height flex layout per detent, matching native (`auto` detents and form sheets keep content-fit sizing). ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.6
 
