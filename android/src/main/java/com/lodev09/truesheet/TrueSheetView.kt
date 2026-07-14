@@ -330,9 +330,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     lastContainerHeight = height
 
     val sw = stateWrapper ?: return
+    val widthDp = width.toFloat().pxToDp()
+    val heightDp = height.toFloat().pxToDp()
+
+    // Synchronous update — commits and mounts within the same UI-thread frame
+    if (TrueSheetStateUpdater.updateState(sw, widthDp, heightDp)) return
+
+    // Fallback: async state update
     val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", width.toFloat().pxToDp().toDouble())
-    newStateData.putDouble("containerHeight", height.toFloat().pxToDp().toDouble())
+    newStateData.putDouble("containerWidth", widthDp.toDouble())
+    newStateData.putDouble("containerHeight", heightDp.toDouble())
     sw.updateState(newStateData)
   }
 

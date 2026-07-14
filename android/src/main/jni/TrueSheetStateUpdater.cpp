@@ -1,0 +1,56 @@
+//
+//  Created by Jovanni Lo (@lodev09)
+//  Copyright (c) 2024-present. All rights reserved.
+//
+//  This source code is licensed under the MIT license found in the
+//  LICENSE file in the root directory of this source tree.
+//
+
+#include <fbjni/fbjni.h>
+#include <react/fabric/StateWrapperImpl.h>
+#include <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
+#include <react/renderer/core/ConcreteState.h>
+
+namespace facebook::react {
+
+// Kotlin's StateWrapper.updateState is hardcoded async. This bridges to
+// ConcreteState::updateState with unstable_Immediate so the commit — and, when
+// called from the UI thread, the mount — run synchronously, letting Yoga resize
+// the container in the same frame as the sheet (parity with iOS).
+static jboolean updateStateImmediate(
+    jni::alias_ref<jclass> /*clazz*/,
+    jni::alias_ref<jobject> stateWrapper,
+    jfloat containerWidth,
+    jfloat containerHeight) {
+  static const auto stateWrapperImplClass =
+      jni::findClassStatic(StateWrapperImpl::StateWrapperImplJavaDescriptor);
+  if (!stateWrapper->isInstanceOf(stateWrapperImplClass)) {
+    return JNI_FALSE;
+  }
+
+  auto impl = jni::static_ref_cast<StateWrapperImpl::jhybridobject>(stateWrapper);
+  auto state = impl->cthis()->getState();
+  if (!state) {
+    return JNI_FALSE;
+  }
+
+  auto concreteState = std::static_pointer_cast<const ConcreteState<TrueSheetViewState>>(state);
+
+  TrueSheetViewState newState{};
+  newState.containerWidth = containerWidth;
+  newState.containerHeight = containerHeight;
+  concreteState->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
+
+  return JNI_TRUE;
+}
+
+} // namespace facebook::react
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/) {
+  return facebook::jni::initialize(vm, [] {
+    facebook::jni::findClassStatic("com/lodev09/truesheet/TrueSheetStateUpdater")
+        ->registerNatives({
+            makeNativeMethod("nativeUpdateState", facebook::react::updateStateImmediate),
+        });
+  });
+}

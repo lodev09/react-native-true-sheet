@@ -1243,9 +1243,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Updates the Fabric state with the current/target detent size so Yoga sizes
    * the container to the sheet's visible height.
    *
-   * State updates are async on Android, so shrinking is deferred to settle
-   * ([deferShrink]) when a resize animation is about to run — growing applies
-   * immediately so content is laid out before the sheet reveals it.
+   * Unlike iOS, resize animations run over multiple frames (ViewDragHelper), so
+   * shrinking is deferred to settle ([deferShrink]) when a resize animation is
+   * about to run — growing applies immediately so content is laid out before
+   * the sheet reveals it.
    */
   private fun updateStateDimensions(deferShrink: Boolean = false) {
     if (detents.isEmpty()) return
