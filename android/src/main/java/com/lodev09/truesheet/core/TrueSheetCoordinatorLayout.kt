@@ -12,6 +12,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
+import com.facebook.react.uimanager.TouchTargetHelper
 import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetCoordinatorLayoutDelegate {
@@ -54,6 +55,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
   // via childDidClaimNativeGesture) we yield the rest of the stream, mirroring iOS.
   private var streamHasGestureRoot = false
   private var streamGestureClaimed = false
+
+  // Whether the sheet owns vertical drags for this stream: the touch target is inside
+  // the sheet but outside the pinned scrollable (e.g. a header overlaying it), with
+  // nothing vertically scrollable along its chain. Such targets consume the stream
+  // natively (no nested scroll), and BottomSheetBehavior won't intercept because the
+  // scrollable's bounds still contain the point (touchingScrollingChild) — intercept
+  // manually.
+  private var streamSheetDraggable = false
+  private var streamDraggableEditText = false
 
   init {
     layoutParams = LayoutParams(
@@ -107,35 +117,51 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
-    // Swallow only that case — an EditText under the touch with nothing vertically scrollable
-    // (a pinned ScrollView or an overflowing multiline EditText still scrolls). Other children
-    // (maps, sliders, scrollables) keep the standard disallow contract.
-    if (disallowIntercept && touchedViewIsEditText() && !touchedViewCanScrollVertically()) return
+    // Swallow only that case — nothing between the touched EditText and the sheet scrolls
+    // (an overflowing multiline EditText or an input inside a scrollable still scrolls).
+    // Other children (maps, sliders, scrollables) keep the standard disallow contract.
+    if (disallowIntercept && streamDraggableEditText) return
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
 
-  private fun touchedViewIsEditText(): Boolean = findDescendantAt(this, streamInitialX.toInt(), streamInitialY.toInt()) { it is EditText }
+  /**
+   * Resolves the stream's touch target (respecting zIndex and pointerEvents) and
+   * decides whether the sheet may drag from it — inside the sheet, outside the pinned
+   * scrollable, and nothing along the target's chain scrolls vertically.
+   */
+  private fun updateStreamTargetFlags(ev: MotionEvent) {
+    streamSheetDraggable = false
+    streamDraggableEditText = false
 
-  private fun touchedViewCanScrollVertically(): Boolean {
-    delegate?.findScrollView()?.let {
-      if (it.canScrollVertically(1) || it.canScrollVertically(-1)) return true
+    val sheet = delegate?.findSheetView() ?: return
+    val target = TouchTargetHelper.findTargetPathAndCoordinatesForTouch(ev.x, ev.y, this, FloatArray(2))
+      .firstNotNullOfOrNull { it.getView() } ?: return
+    if (target !== sheet && !target.isDescendantOf(sheet)) return
+
+    val scrollView = delegate?.findScrollView()
+    if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) return
+
+    var view: View? = target
+    while (view != null && view !== this) {
+      if (view.canScrollVertically(1) || view.canScrollVertically(-1)) return
+      view = view.parent as? View
     }
-    return findDescendantAt(this, streamInitialX.toInt(), streamInitialY.toInt()) {
-      it.canScrollVertically(1) || it.canScrollVertically(-1)
-    }
+
+    streamSheetDraggable = true
+    streamDraggableEditText = target is EditText
   }
 
-  private fun findDescendantAt(view: View, rawX: Int, rawY: Int, predicate: (View) -> Boolean): Boolean {
+  private fun findDescendantViewAt(view: View, rawX: Int, rawY: Int, predicate: (View) -> Boolean): View? {
     val loc = IntArray(2)
     view.getLocationOnScreen(loc)
-    if (rawX < loc[0] || rawX > loc[0] + view.width || rawY < loc[1] || rawY > loc[1] + view.height) return false
-    if (predicate(view)) return true
+    if (rawX < loc[0] || rawX > loc[0] + view.width || rawY < loc[1] || rawY > loc[1] + view.height) return null
+    if (predicate(view)) return view
     if (view is ViewGroup) {
       for (i in 0 until view.childCount) {
-        if (findDescendantAt(view.getChildAt(i), rawX, rawY, predicate)) return true
+        findDescendantViewAt(view.getChildAt(i), rawX, rawY, predicate)?.let { return it }
       }
     }
-    return false
+    return null
   }
 
   /**
@@ -165,9 +191,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
       streamHorizontalLocked = false
       streamDirectionDecided = false
       streamGestureClaimed = false
-      streamHasGestureRoot = findDescendantAt(this, ev.rawX.toInt(), ev.rawY.toInt()) {
+      streamHasGestureRoot = findDescendantViewAt(this, ev.rawX.toInt(), ev.rawY.toInt()) {
         it.javaClass.name == GESTURE_HANDLER_ROOT_VIEW_CLASS
-      }
+      } != null
+      updateStreamTargetFlags(ev)
     }
 
     // Decide gesture direction on first significant movement of the stream.
@@ -213,7 +240,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
 
-    if (cannotScroll) {
+    if (cannotScroll || streamSheetDraggable) {
       when (ev.action and MotionEvent.ACTION_MASK) {
         MotionEvent.ACTION_DOWN -> {
           dragging = false

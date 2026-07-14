@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: The sheet can now be dragged from views overlaying a scrollable — e.g. a header (including a `TextInput` in it) positioned over a `FlatList` — previously the drag did nothing.
+
 ## 3.11.6
 
 ### 🐛 Bug fixes
