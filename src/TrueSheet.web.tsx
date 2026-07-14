@@ -293,11 +293,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     return { index, position, detent };
   }, []);
 
+  // Resolves a detent's pixel height under vaul's height ceiling. 'auto'
+  // resolves to the [data-vaul-auto-size-wrapper] element's measured
+  // offsetHeight — same signal vaul uses to compute its snap offset.
+  const resolveDetentHeight = useCallback(
+    (detent: SheetDetent, effectiveH: number, ceiling: number): number => {
+      if (typeof detent === 'number') return Math.min(detent * effectiveH, ceiling);
+      if (detent === 'peek') return Math.min(peekHeight, ceiling);
+      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
+        '[data-vaul-auto-size-wrapper]'
+      );
+      return Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
+    },
+    [peekHeight]
+  );
+
   // Mirror Android: interpolate fractional index and detent from the drawer's
   // top-Y so continuous position updates (drag, animation) carry smooth values
   // between detent boundaries. Numeric detent d → top-Y = (1 - d) * effectiveH.
-  // 'auto' resolves to the [data-vaul-auto-size-wrapper] element's measured
-  // offsetHeight — same signal vaul uses to compute its snap offset.
   const interpolateFromPosition = useCallback(
     (position: number): { index: number; detent: number } => {
       const snaps = validDetentsRef.current;
@@ -310,27 +323,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       const ceiling =
         maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
 
-      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
-        '[data-vaul-auto-size-wrapper]'
-      );
-      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
-
       const positions: number[] = [];
       const values: number[] = [];
       for (let i = 0; i < count; i++) {
-        const d = snaps[i];
-        if (typeof d === 'number') {
-          const h = Math.min(d * effectiveH, ceiling);
-          positions.push(effectiveH - h);
-          values.push(effectiveH > 0 ? h / effectiveH : 0);
-        } else if (d === 'peek') {
-          const h = Math.min(peekHeight, ceiling);
-          positions.push(effectiveH - h);
-          values.push(effectiveH > 0 ? h / effectiveH : 0);
-        } else {
-          positions.push(effectiveH - autoHeight);
-          values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
-        }
+        const h = resolveDetentHeight(snaps[i]!, effectiveH, ceiling);
+        positions.push(effectiveH - h);
+        values.push(effectiveH > 0 ? h / effectiveH : 0);
       }
 
       // Absorb subpixel drift from getBoundingClientRect so at-rest positions
@@ -378,17 +376,61 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [effectiveDetached, detachedOffset, maxContentHeight, peekHeight]
+    [effectiveDetached, detachedOffset, maxContentHeight, resolveDetentHeight]
+  );
+
+  // Mirror native synchronous layout: while dragging (and through the post-
+  // release settle) the sized layout tracks the sheet's visible height in
+  // realtime, clamped to the smallest detent — dragging below it slides the
+  // sheet out without resizing. Once settled, the inline height is cleared so
+  // the CSS calc() owns sizing again (adapts to viewport resizes at rest).
+  const sizedLayoutRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const isSettlingAfterDragRef = useRef(false);
+  const updateSizedLayoutHeight = useCallback(
+    (position: number) => {
+      const node = sizedLayoutRef.current;
+      if (!node) return;
+
+      const snaps = validDetentsRef.current;
+      if (snaps.length === 0) return;
+
+      const windowH = window.innerHeight;
+      const effectiveH = effectiveDetached ? windowH - detachedOffset : windowH;
+      const ceiling =
+        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
+
+      if (isSettlingAfterDragRef.current) {
+        const snap = activeSnapPointRef.current;
+        const target =
+          snap != null ? effectiveH - resolveDetentHeight(snap, effectiveH, ceiling) : null;
+        if (target != null && Math.abs(position - target) < 1) {
+          isSettlingAfterDragRef.current = false;
+          // Restore the calc — height is an inline style, so clearing it would
+          // leave the div unsized (React won't re-apply it without a render)
+          node.style.height = SIZED_LAYOUT_HEIGHT;
+          return;
+        }
+      }
+
+      const minHeight = resolveDetentHeight(snaps[0]!, effectiveH, ceiling);
+      const height = Math.min(Math.max(effectiveH - position, minHeight), ceiling);
+      node.style.height = `${height}px`;
+    },
+    [effectiveDetached, detachedOffset, maxContentHeight, resolveDetentHeight]
   );
 
   const handlePositionChange = useCallback(
     (position: number) => {
+      if (isDraggingRef.current || isSettlingAfterDragRef.current) {
+        updateSizedLayoutHeight(position);
+      }
       const { index, detent } = interpolateFromPosition(position);
       onPositionChangeRef.current?.({
         nativeEvent: { index, position, detent, realtime: true },
       } as PositionChangeEvent);
     },
-    [interpolateFromPosition]
+    [interpolateFromPosition, updateSizedLayoutHeight]
   );
 
   // Fire onMount once after first render. React-mount is the earliest point
@@ -500,7 +542,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.
-  const isDraggingRef = useRef(false);
   const handleDrag = useCallback(() => {
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
@@ -508,11 +549,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     }
     onDragChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DragChangeEvent);
   }, [computeDetentInfo]);
-  const handleRelease = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
-  }, [computeDetentInfo]);
+  const handleRelease = useCallback(
+    (_event: unknown, open: boolean) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      // Track the sized layout through the settle animation only when the sheet
+      // stays open — a dismissal slides out at the min-clamped height.
+      isSettlingAfterDragRef.current = open;
+      onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
+    },
+    [computeDetentInfo]
+  );
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
@@ -931,7 +978,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               // `--snap-point-height` var) so the inner flex column has a
               // definite height for flex layouts to fill — mirrors native, where
               // the container is sized to the sheet's visible height per detent.
-              <div style={sizedLayoutStyle}>
+              <div ref={sizedLayoutRef} style={sizedLayoutStyle}>
                 {header && (
                   <View style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
@@ -978,12 +1025,14 @@ const overlayStyle: React.CSSProperties = {
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
 
+const SIZED_LAYOUT_HEIGHT = 'calc(100% - var(--snap-point-height, 0px))';
+
 const sizedLayoutStyle: React.CSSProperties = {
   position: 'absolute',
   top: 0,
   left: 0,
   right: 0,
-  height: 'calc(100% - var(--snap-point-height, 0px))',
+  height: SIZED_LAYOUT_HEIGHT,
   display: 'flex',
   flexDirection: 'column',
 };
