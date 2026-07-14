@@ -901,6 +901,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
+    // Skip while dragging — the size change is driven by the drag itself (the
+    // container tracks the sheet's visible height), and reconfiguring resets
+    // behavior state, killing the gesture.
+    if (interactionState is InteractionState.Dragging) return
+
     setupSheetDetents()
     positionFooter()
   }
@@ -1164,6 +1169,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
 
+    updateStateDimensionsForDrag(sheetView.top)
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
@@ -1247,17 +1254,40 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       .coerceIn(0, detents.size - 1)
     val maxAvailableHeight = realScreenHeight - topInset
     val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
-    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
-    val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
-    val newWidth = minOf(screenWidth, effectiveMaxWidth)
+    val newWidth = getStateWidth()
 
     if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
 
-    if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
-      lastStateWidth = newWidth
-      lastStateHeight = newHeight
-      delegate?.viewControllerDidChangeSize(newWidth, newHeight)
-    }
+    setStateDimensions(newWidth, newHeight)
+  }
+
+  /**
+   * Tracks the sheet's visible height during drag (and the post-release settle
+   * animation) so the container resizes with the finger, like iOS. Clamped to the
+   * smallest detent — dragging below it slides the sheet out without resizing.
+   */
+  private fun updateStateDimensionsForDrag(sheetTop: Int) {
+    if (detents.isEmpty()) return
+
+    val maxAvailableHeight = realScreenHeight - topInset
+    val minHeight = minOf(detentCalculator.getDetentHeight(detents.first()), maxAvailableHeight)
+    val newHeight = detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight)
+
+    setStateDimensions(getStateWidth(), newHeight)
+  }
+
+  private fun getStateWidth(): Int {
+    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
+    val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    return minOf(screenWidth, effectiveMaxWidth)
+  }
+
+  private fun setStateDimensions(width: Int, height: Int) {
+    if (lastStateWidth == width && lastStateHeight == height) return
+
+    lastStateWidth = width
+    lastStateHeight = height
+    delegate?.viewControllerDidChangeSize(width, height)
   }
 
   fun translateSheet(translationY: Int, onEnd: (() -> Unit)? = null) {
