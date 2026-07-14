@@ -457,7 +457,6 @@ export class TrueSheet
       maxContentWidth,
       anchor = 'center',
       anchorOffset,
-      scrollable = false,
       scrollableOptions,
       footerOptions,
       presentation = 'page',
@@ -519,7 +518,6 @@ export class TrueSheet
         maxContentWidth={maxContentWidth}
         anchor={anchor}
         anchorOffset={anchorOffset}
-        scrollable={scrollable}
         scrollableOptions={scrollableOptions}
         footerOptions={footerOptions}
         presentation={presentation}

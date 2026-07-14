@@ -77,7 +77,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     headerStyle,
     footer,
     footerStyle,
-    scrollable = false,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -751,9 +750,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Definite-height flex layout (per-detent sizing) unless content must be
   // measured in natural flow: 'auto' detents and form-sheet content-fit sizing.
-  // `scrollable` always uses it — the scroll container needs a bounded height.
   const hasAutoDetent = validDetents.includes('auto');
-  const useSizedLayout = scrollable || (!hasAutoDetent && !isFormSheet);
+  const useSizedLayout = !hasAutoDetent && !isFormSheet;
 
   const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
 
@@ -984,19 +982,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                {scrollable ? (
-                  <div style={scrollableContainerStyle}>
-                    <View ref={contentRef} style={style}>
-                      {children}
-                    </View>
-                  </div>
-                ) : (
-                  // Fill the sized layout so plugged ScrollViews/FlatLists have
-                  // a bounded height — mirrors native content fill.
-                  <View ref={contentRef} style={[contentFillStyle, style]}>
-                    {children}
-                  </View>
-                )}
+                {/* Fill the sized layout so plugged ScrollViews/FlatLists have
+                    a bounded height — mirrors native content fill. */}
+                <View ref={contentRef} style={[contentFillStyle, style]}>
+                  {children}
+                </View>
               </div>
             ) : (
               // Natural flow so vaul can measure content height — required for
@@ -1035,14 +1025,6 @@ const sizedLayoutStyle: React.CSSProperties = {
   height: SIZED_LAYOUT_HEIGHT,
   display: 'flex',
   flexDirection: 'column',
-};
-
-const scrollableContainerStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  overflowY: 'auto',
-  overscrollBehavior: 'contain',
-  touchAction: 'pan-y',
 };
 
 const contentFillStyle = {

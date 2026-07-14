@@ -461,16 +461,6 @@ export interface TrueSheetProps extends ViewProps {
   footerStyle?: StyleProp<ViewStyle>;
 
   /**
-   * @deprecated ScrollViews and FlatLists are now auto-detected and wired up
-   * (insets, keyboard handling, nested scrolling) — plug them in directly like
-   * a regular view. This prop is a no-op on iOS/Android; on web it renders a
-   * legacy scroll container.
-   *
-   * @default false
-   */
-  scrollable?: boolean;
-
-  /**
    * Options for scrollable behavior.
    */
   scrollableOptions?: ScrollableOptions;

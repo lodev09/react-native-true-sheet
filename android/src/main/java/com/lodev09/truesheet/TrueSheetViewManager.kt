@@ -201,11 +201,6 @@ class TrueSheetViewManager :
     view.setInsetAdjustment(insetAdjustment ?: "automatic")
   }
 
-  @ReactProp(name = "scrollable", defaultBoolean = false)
-  override fun setScrollable(view: TrueSheetView, value: Boolean) {
-    // Deprecated - scrollables are auto-detected
-  }
-
   @ReactProp(name = "presentation")
   override fun setPresentation(view: TrueSheetView, value: String?) {
     // iOS/web-specific prop - no-op on Android
