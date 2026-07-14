@@ -14,6 +14,10 @@
 - **Android**: The container resizes per detent and tracks the sheet in realtime while dragging, driven by synchronous Fabric state updates (JNI) — replacing the scroll-range padding workaround. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 - **Web**: Non-scrollable sheets now get a definite-height flex layout per detent, matching native (`auto` detents and form sheets keep content-fit sizing). ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 
+### 🐛 Bug fixes
+
+- **Android**: The sheet can now be dragged from views overlaying a scrollable — e.g. a header (including a `TextInput` in it) positioned over a `FlatList` — previously the drag did nothing. ([#734](https://github.com/lodev09/react-native-true-sheet/pull/734) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.6
 
 ### 🐛 Bug fixes
