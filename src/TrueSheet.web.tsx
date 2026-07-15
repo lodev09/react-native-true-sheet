@@ -383,9 +383,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // measurable here; fall back to the state value when they're absent.
     const headerEl = headerElRef.current as unknown as HTMLElement | null;
     const footerEl = footerElRef.current as unknown as HTMLElement | null;
-    const peekHeight =
+    const livePeekHeight =
       headerEl || footerEl
-        ? (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) +
+        ? (headerEl?.offsetHeight ?? 0) +
+            (footerEl?.offsetHeight ?? 0) +
             inputs.peekContentHeight || DEFAULT_PEEK_HEIGHT
         : inputs.peekHeight;
 
@@ -396,7 +397,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         typeof d === 'number'
           ? Math.min(d * effectiveH, ceiling)
           : d === 'peek'
-            ? Math.min(peekHeight, ceiling)
+            ? Math.min(livePeekHeight, ceiling)
             : autoHeight;
       positions.push(effectiveH - h);
       values.push(effectiveH > 0 ? h / effectiveH : 0);
