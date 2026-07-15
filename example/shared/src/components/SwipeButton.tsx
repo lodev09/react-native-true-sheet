@@ -83,7 +83,7 @@ export const SwipeButton = ({
       completePromise = Promise.reject(error);
     }
 
-    void completePromise
+    completePromise
       .then(() => {
         if (mounted.current) setPresentationActive(false);
         if (resetOnComplete) resetTimeout.current = setTimeout(reset, resetDelay);

@@ -10,12 +10,9 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
+import { useColorScheme, useWindowDimensions, View } from 'react-native';
 
-import { Drawer } from './web/vaul';
-import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
-import { TrueSheetPeekContext } from './TrueSheetPeek.web';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -37,6 +34,7 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
+import { measurePeekContentHeight, TrueSheetPeekContext } from './TrueSheetPeek.web';
 import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
@@ -44,15 +42,17 @@ import {
   DEFAULT_ANCHOR_OFFSET,
   DEFAULT_CORNER_RADIUS,
   DEFAULT_DETACHED_OFFSET,
+  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
+  DEFAULT_FORM_SHEET_WIDTH,
   DEFAULT_GRABBER_COLOR_DARK,
   DEFAULT_GRABBER_COLOR_LIGHT,
   DEFAULT_GRABBER_HEIGHT,
   DEFAULT_GRABBER_TOP_MARGIN,
   DEFAULT_GRABBER_WIDTH,
-  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
-  DEFAULT_FORM_SHEET_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { Drawer } from './web/vaul';
+import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
 
 const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
@@ -244,15 +244,59 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     setFooterHeight(e.nativeEvent.layout.height);
   }, []);
 
+  // DOM refs for live 'peek' measurement in computeDetentGeometry — the
+  // state above (which drives vaul's `peekHeight` prop) comes from RN-web
+  // `onLayout`, which dispatches a frame after mount: too late for the first
+  // willPresent.
+  const headerElRef = useRef<View>(null);
+  const footerElRef = useRef<View>(null);
+
   // Distance from the content top to the bottom of a `TrueSheetPeek` rendered
   // within the content — measured by the peek against `contentRef`.
   const [peekContentHeight, setPeekContentHeight] = useState(0);
   const contentRef = useRef<View>(null);
-  const peekContext = useMemo(() => ({ contentRef, setPeekContentHeight }), []);
+  const peekElRef = useRef<View>(null);
+  const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
+
+  // Below the last detent a vertical touch pan moves the sheet, not the
+  // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
+  // the scroll container and everything inside it (see vaul/style.css).
+  const isScrollLocked =
+    validDetents.length > 0 && activeSnapPoint !== validDetents[validDetents.length - 1];
+
+  // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
+  // Track it here so the form sheet can size its card to fit content,
+  // clamped between a minimum ratio of the viewport and a maximum derived
+  // from `detachedOffset` (the breathing room left at top + bottom of the
+  // floating card).
+  const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
+
+  const effectiveMaxContentHeight = useMemo<number | undefined>(() => {
+    if (maxContentHeight !== undefined) return maxContentHeight;
+    if (!isFormSheet) return undefined;
+    const min = windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO;
+    const max = Math.max(min, windowHeight - 2 * detachedOffset);
+    if (measuredContentHeight <= 0) return min;
+    return Math.max(min, Math.min(measuredContentHeight, max));
+  }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
+
+  // Center the form sheet using the actual visible drawer height. Vaul
+  // auto-sizes to content (capped by `maxContentHeight`), so when content is
+  // shorter than `effectiveMaxContentHeight`'s min-clamped floor, using that
+  // for the offset would push a small sheet below the viewport center.
+  const effectiveDetachedOffset = useMemo(() => {
+    if (!isFormSheet) return detachedOffset;
+    const max = Math.max(0, windowHeight - 2 * detachedOffset);
+    const visibleHeight =
+      measuredContentHeight > 0
+        ? Math.min(measuredContentHeight, max)
+        : (effectiveMaxContentHeight ?? 0);
+    return Math.max(0, (windowHeight - visibleHeight) / 2);
+  }, [isFormSheet, windowHeight, detachedOffset, measuredContentHeight, effectiveMaxContentHeight]);
 
   // Present/dismiss events. The sheet settles via a CSS `transform` transition
   // on either the drawer (snap-points on autopresent) or the wrapper (whole-
@@ -284,51 +328,114 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     activeSnapPointRef.current = activeSnapPoint;
   });
 
-  const computeDetentInfo = useCallback((): DetentInfoEventPayload => {
-    const snap = activeSnapPointRef.current;
-    const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
-    const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
-    const detent = typeof snap === 'number' ? snap : 0;
-    return { index, position, detent };
+  // Detent geometry — target top-Y (`positions`) and height ratio (`values`)
+  // per detent. Mirrors vaul's snap-offset math exactly (same effective
+  // height, ceiling, and 'auto'/'peek' resolution) so computed targets match
+  // where the drawer actually settles. Numeric detent d → top-Y =
+  // (1 - d) * effectiveH. 'auto' and 'peek' are measured live from the DOM
+  // (see below). Inputs live in a render-synced ref so the compute callbacks
+  // stay referentially stable for the event effects.
+  const geometryInputsRef = useRef({
+    effectiveDetached,
+    effectiveDetachedOffset,
+    effectiveMaxContentHeight,
+    peekHeight,
+    peekContentHeight,
+    measuredContentHeight,
+  });
+  geometryInputsRef.current = {
+    effectiveDetached,
+    effectiveDetachedOffset,
+    effectiveMaxContentHeight,
+    peekHeight,
+    peekContentHeight,
+    measuredContentHeight,
+  };
+
+  const computeDetentGeometry = useCallback(() => {
+    const inputs = geometryInputsRef.current;
+    const windowH = window.innerHeight;
+    const effectiveH = inputs.effectiveDetached
+      ? windowH - inputs.effectiveDetachedOffset
+      : windowH;
+    // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
+    const ceiling =
+      inputs.effectiveMaxContentHeight !== undefined
+        ? Math.min(effectiveH, inputs.effectiveMaxContentHeight)
+        : effectiveH;
+    // 'auto' resolves to the auto-size wrapper's height. Read it live — the
+    // `measuredContentHeight` state lags mount by a frame (vaul's initial
+    // ref-callback measure runs while the portal subtree is still detached,
+    // so it reads 0 until the ResizeObserver fires). Falls back to the state
+    // value, then to vaul's pre-measure fallback (effectiveHeight / 2).
+    const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
+      '[data-vaul-auto-size-wrapper]'
+    );
+    const measuredHeight = autoWrapper?.offsetHeight || inputs.measuredContentHeight;
+    const autoHeight = Math.min(measuredHeight > 0 ? measuredHeight : effectiveH / 2, ceiling);
+
+    // 'peek' is measured live from the DOM (offsetHeight is layout-based, so
+    // in-flight transforms don't skew it): the state-driven `peekHeight` prop
+    // comes from RN-web onLayout, which dispatches a frame after mount — too
+    // late for the first willPresent on autopresent. Ref callbacks can't
+    // measure either: they fire while the portal subtree is still detached.
+    // Geometry only runs while the drawer is mounted, so the elements are
+    // measurable here; fall back to the state value when they're absent.
+    const headerEl = headerElRef.current as unknown as HTMLElement | null;
+    const footerEl = footerElRef.current as unknown as HTMLElement | null;
+    const peekEl = peekElRef.current as unknown as HTMLElement | null;
+    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    const livePeekContentHeight =
+      peekEl && contentEl ? measurePeekContentHeight(peekEl, contentEl) : inputs.peekContentHeight;
+    const livePeekHeight =
+      headerEl || footerEl || peekEl
+        ? (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + livePeekContentHeight ||
+          DEFAULT_PEEK_HEIGHT
+        : inputs.peekHeight;
+
+    const positions: number[] = [];
+    const values: number[] = [];
+    for (const d of validDetentsRef.current) {
+      const h =
+        typeof d === 'number'
+          ? Math.min(d * effectiveH, ceiling)
+          : d === 'peek'
+            ? Math.min(livePeekHeight, ceiling)
+            : autoHeight;
+      positions.push(effectiveH - h);
+      values.push(effectiveH > 0 ? h / effectiveH : 0);
+    }
+    return { windowH, effectiveH, ceiling, positions, values };
   }, []);
 
-  // Resolves a detent's pixel height under vaul's height ceiling. 'auto'
-  // resolves to the [data-vaul-auto-size-wrapper] element's measured
-  // offsetHeight — same signal vaul uses to compute its snap offset.
-  const resolveDetentHeight = useCallback(
-    (detent: SheetDetent, effectiveH: number, ceiling: number): number => {
-      if (typeof detent === 'number') return Math.min(detent * effectiveH, ceiling);
-      if (detent === 'peek') return Math.min(peekHeight, ceiling);
-      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
-        '[data-vaul-auto-size-wrapper]'
-      );
-      return Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
+  // Detent info for lifecycle events. Position/detent come from the active
+  // detent's target geometry — not the live DOM rect — so willPresent (drawer
+  // not mounted yet), detentChange (animation just started), and didPresent
+  // all emit the settled detent position, matching iOS/Android. Drag events
+  // pass `live: true` to report the in-flight rect position instead, also
+  // matching native.
+  const computeDetentInfo = useCallback(
+    (live = false): DetentInfoEventPayload => {
+      const snap = activeSnapPointRef.current;
+      const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+      const { windowH, positions, values } = computeDetentGeometry();
+      const target = index >= 0 ? positions[index] : undefined;
+      const position = live
+        ? (drawerContentRef.current?.getBoundingClientRect().top ?? target ?? windowH)
+        : (target ?? windowH);
+      return { index, position, detent: index >= 0 ? (values[index] ?? 0) : 0 };
     },
-    [peekHeight]
+    [computeDetentGeometry]
   );
 
   // Mirror Android: interpolate fractional index and detent from the drawer's
   // top-Y so continuous position updates (drag, animation) carry smooth values
-  // between detent boundaries. Numeric detent d → top-Y = (1 - d) * effectiveH.
+  // between detent boundaries.
   const interpolateFromPosition = useCallback(
     (position: number): { index: number; detent: number } => {
-      const snaps = validDetentsRef.current;
-      const count = snaps.length;
+      const { windowH, positions, values } = computeDetentGeometry();
+      const count = positions.length;
       if (count === 0) return { index: -1, detent: 0 };
-
-      const windowH = window.innerHeight;
-      const effectiveH = effectiveDetached ? windowH - detachedOffset : windowH;
-      // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
-      const ceiling =
-        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
-
-      const positions: number[] = [];
-      const values: number[] = [];
-      for (let i = 0; i < count; i++) {
-        const h = resolveDetentHeight(snaps[i]!, effectiveH, ceiling);
-        positions.push(effectiveH - h);
-        values.push(effectiveH > 0 ? h / effectiveH : 0);
-      }
 
       // Absorb subpixel drift from getBoundingClientRect so at-rest positions
       // don't sneak into the below-first branch and emit near-zero negatives
@@ -375,7 +482,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [effectiveDetached, detachedOffset, maxContentHeight, resolveDetentHeight]
+    [computeDetentGeometry]
   );
 
   // Mirror native synchronous layout: while dragging (and through the post-
@@ -391,18 +498,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       const node = sizedLayoutRef.current;
       if (!node) return;
 
-      const snaps = validDetentsRef.current;
-      if (snaps.length === 0) return;
-
-      const windowH = window.innerHeight;
-      const effectiveH = effectiveDetached ? windowH - detachedOffset : windowH;
-      const ceiling =
-        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
+      const { effectiveH, ceiling, positions } = computeDetentGeometry();
+      if (positions.length === 0) return;
 
       if (isSettlingAfterDragRef.current) {
         const snap = activeSnapPointRef.current;
-        const target =
-          snap != null ? effectiveH - resolveDetentHeight(snap, effectiveH, ceiling) : null;
+        const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+        const target = index >= 0 ? positions[index]! : null;
         if (target != null && Math.abs(position - target) < 1) {
           isSettlingAfterDragRef.current = false;
           // Restore the calc — height is an inline style, so clearing it would
@@ -412,11 +514,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         }
       }
 
-      const minHeight = resolveDetentHeight(snaps[0]!, effectiveH, ceiling);
+      // positions[0] is the smallest detent's top-Y — its height is the clamp floor.
+      const minHeight = effectiveH - positions[0]!;
       const height = Math.min(Math.max(effectiveH - position, minHeight), ceiling);
       node.style.height = `${height}px`;
     },
-    [effectiveDetached, detachedOffset, maxContentHeight, resolveDetentHeight]
+    [computeDetentGeometry]
   );
 
   const handlePositionChange = useCallback(
@@ -452,22 +555,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = isOpen;
 
-    if (!isOpen && !wasOpen) return undefined;
+    if (isOpen === wasOpen) return undefined;
 
-    const present = !wasOpen && isOpen;
-    if (present) {
-      // Pair willFocus with willPresent on initial present — mirrors native
-      // iOS where viewWillAppear dispatches both. The descendant-stack focus
-      // effect handles subsequent gained/lost transitions.
-      onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
-      onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
-    } else if (wasOpen && !isOpen) {
+    const present = isOpen;
+    if (!present) {
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
-      // emitWillDismissEvents (blur fires before dismiss).
+      // emitWillDismissEvents (blur fires before dismiss). willPresent is
+      // deferred to `start()` below (needs the mounted drawer's geometry).
       onWillBlurRef.current?.({ nativeEvent: null } as WillBlurEvent);
       onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
-    } else {
-      return undefined;
     }
 
     const fireDone = () => {
@@ -486,11 +582,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const start = () => {
       if (canceled) return;
       const drawer = drawerContentRef.current;
-      if (!drawer) {
+      if (!drawer || !drawer.isConnected) {
         // Drawer hasn't mounted yet (Radix Presence defers the portal mount
-        // past the first effect pass). Poll until the ref is populated.
+        // past the first effect pass), or its subtree isn't attached to the
+        // document yet (autopresent commits the portal before the app tree
+        // attaches, so nothing is measurable). Poll until it's live.
         rafId = window.requestAnimationFrame(start);
         return;
+      }
+      if (present) {
+        // Emit will-events only once the drawer is mounted and attached —
+        // detent geometry ('auto' height, 'peek', form-sheet sizing) is
+        // measurable from the DOM here; a synchronous emission would use the
+        // pre-measure fallbacks on first present. Pairing willFocus with
+        // willPresent mirrors native iOS where viewWillAppear dispatches
+        // both; the descendant-stack focus effect handles subsequent
+        // transitions.
+        onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
+        onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
       }
       const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]') ?? null;
       const targets = wrapper ? [drawer, wrapper] : [drawer];
@@ -544,9 +653,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const handleDrag = useCallback(() => {
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
-      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo() } as DragBeginEvent);
+      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragBeginEvent);
     }
-    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DragChangeEvent);
+    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragChangeEvent);
   }, [computeDetentInfo]);
   const handleRelease = useCallback(
     (_event: unknown, open: boolean) => {
@@ -555,7 +664,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Track the sized layout through the settle animation only when the sheet
       // stays open — a dismissal slides out at the min-clamped height.
       isSettlingAfterDragRef.current = open;
-      onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
+      onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
     },
     [computeDetentInfo]
   );
@@ -617,10 +726,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // own child didn't move (e.g., child skipped its cascade for a page
     // grandchild) — leaving a visible gap between this sheet and its child.
     const computeTargetY = () => {
-      const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      const parentSnap =
+        Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
       const node = descendants[0]?.nodeRef.current;
       if (!node) return parentSnap;
-      const childSnap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+      const childSnap = Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
       return Math.max(parentSnap, childSnap);
     };
 
@@ -639,9 +749,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       const childDrawer = form.nodeRef.current;
       const childWrapper = childDrawer?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
       if (!parentWrapper || !childDrawer || !childWrapper) return;
-      const snapY = parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
-      const childBottomGap = parseFloat(childWrapper.style.bottom) || 0;
-      const childMaxW = parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
+      const snapY =
+        Number.parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
+      const childBottomGap = Number.parseFloat(childWrapper.style.bottom) || 0;
+      const childMaxW = Number.parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
       const formLeft = (window.innerWidth - childMaxW) / 2;
       const formRight = (window.innerWidth + childMaxW) / 2;
       const formBottom = window.innerHeight - childBottomGap;
@@ -667,7 +778,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       }
       const targetY = computeTargetY();
       const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
-      const currentY = match ? parseFloat(match[1]!) : 0;
+      const currentY = match ? Number.parseFloat(match[1]!) : 0;
       if (Math.abs(currentY - targetY) < 0.5) return;
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
@@ -815,39 +926,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Form-sheet style (presentation='form'): centered floating card with a
   // default width and a height fit to content. We reuse the existing detached
   // mechanic so drag/snap math stays correct — the wrapper is bottom-attached
-  // with a computed offset that centers it vertically. `presentation` is
-  // absolute: when 'form', `maxContentWidth` is ignored and the card uses
-  // DEFAULT_FORM_SHEET_WIDTH.
-
-  // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
-  // Track it here so the form sheet can size its card to fit content,
-  // clamped between a minimum ratio of the viewport and a maximum derived
-  // from `detachedOffset` (the breathing room left at top + bottom of the
-  // floating card).
-  const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
-
-  const effectiveMaxContentHeight = useMemo<number | undefined>(() => {
-    if (maxContentHeight !== undefined) return maxContentHeight;
-    if (!isFormSheet) return undefined;
-    const min = windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO;
-    const max = Math.max(min, windowHeight - 2 * detachedOffset);
-    if (measuredContentHeight <= 0) return min;
-    return Math.max(min, Math.min(measuredContentHeight, max));
-  }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
-
-  // Center the form sheet using the actual visible drawer height. Vaul
-  // auto-sizes to content (capped by `maxContentHeight`), so when content is
-  // shorter than `effectiveMaxContentHeight`'s min-clamped floor, using that
-  // for the offset would push a small sheet below the viewport center.
-  const effectiveDetachedOffset = useMemo(() => {
-    if (!isFormSheet) return detachedOffset;
-    const max = Math.max(0, windowHeight - 2 * detachedOffset);
-    const visibleHeight =
-      measuredContentHeight > 0
-        ? Math.min(measuredContentHeight, max)
-        : (effectiveMaxContentHeight ?? 0);
-    return Math.max(0, (windowHeight - visibleHeight) / 2);
-  }, [isFormSheet, windowHeight, detachedOffset, measuredContentHeight, effectiveMaxContentHeight]);
+  // with a computed offset (`effectiveDetachedOffset`, declared above) that
+  // centers it vertically. `presentation` is absolute: when 'form',
+  // `maxContentWidth` is ignored and the card uses DEFAULT_FORM_SHEET_WIDTH.
 
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
@@ -960,7 +1041,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             detachedSiblings={
               footer ? (
                 <div style={footerFloatStyle}>
-                  <View style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 </div>
@@ -976,9 +1057,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               // `--snap-point-height` var) so the inner flex column has a
               // definite height for flex layouts to fill — mirrors native, where
               // the container is sized to the sheet's visible height per detent.
-              <div ref={sizedLayoutRef} style={sizedLayoutStyle}>
+              <div
+                ref={sizedLayoutRef}
+                style={sizedLayoutStyle}
+                data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
+              >
                 {header && (
-                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
@@ -993,7 +1078,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               // 'auto' detents and form-sheet content-fit sizing.
               <>
                 {header && (
-                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}

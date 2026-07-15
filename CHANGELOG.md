@@ -8,9 +8,26 @@
 - Synchronous per-detent container layout — the container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms. Previously it was sized to the screen height / largest detent; layouts relying on that may shift. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 - Removed the `scrollable` prop — scrollables are auto-detected. `ScrollView`/`FlatList` work plugged in directly, like a regular view; insets, keyboard handling, and nested scrolling are wired automatically. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 
+## 3.11.9
+
+### 🐛 Bug fixes
+
+- **Web**: The `peek` detent's `TrueSheetPeek` content offset is now measured live during initial presentation — previously the first `willPresent` on autopresent missed it (state lags mount by a frame) and reported only the header/footer height. ([#742](https://github.com/lodev09/react-native-true-sheet/pull/742) by [@lodev09](https://github.com/lodev09))
+
+## 3.11.8
+
+### 🐛 Bug fixes
+
+- **Web**: Initial presentation events now report accurate `auto` and `peek` detent geometry by waiting until the drawer is mounted and measurable. ([#740](https://github.com/lodev09/react-native-true-sheet/pull/740) by [@lodev09](https://github.com/lodev09))
+- **Web**: Scrollable sheets at the maximum detent now continue dragging after Chrome mobile cancels the pointer stream during scroll bounce. ([#741](https://github.com/lodev09/react-native-true-sheet/pull/741) by [@lodev09](https://github.com/lodev09))
+
+## 3.11.7
+
 ### 🐛 Bug fixes
 
 - **Android**: The sheet can now be dragged from views overlaying a scrollable — e.g. a header (including a `TextInput` in it) positioned over a `FlatList` — previously the drag did nothing. ([#734](https://github.com/lodev09/react-native-true-sheet/pull/734) by [@lodev09](https://github.com/lodev09))
+- **Web**: `onWillPresent`, `onDidPresent`, and `onDetentChange` now emit the target detent `position`/`detent` — consistent with iOS/Android. Previously `onWillPresent` emitted `0` on first present or the offscreen position on re-present, `onDetentChange` emitted the old position, and `detent` was `0` for `auto`/`peek` detents. ([#737](https://github.com/lodev09/react-native-true-sheet/pull/737) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fixed scrollable content cutting off mid-drag, scrolling along with the sheet drag on mobile, and delayed drag after Safari's scroll bounce. ([#739](https://github.com/lodev09/react-native-true-sheet/pull/739) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.6
 
