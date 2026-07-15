@@ -245,6 +245,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     setFooterHeight(e.nativeEvent.layout.height);
   }, []);
 
+  // DOM refs for live 'peek' measurement in computeDetentGeometry — the
+  // state above (which drives vaul's `peekHeight` prop) comes from RN-web
+  // `onLayout`, which dispatches a frame after mount: too late for the first
+  // willPresent.
+  const headerElRef = useRef<View>(null);
+  const footerElRef = useRef<View>(null);
+
   // Distance from the content top to the bottom of a `TrueSheetPeek` rendered
   // within the content — measured by the peek against `contentRef`.
   const [peekContentHeight, setPeekContentHeight] = useState(0);
@@ -325,15 +332,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // per detent. Mirrors vaul's snap-offset math exactly (same effective
   // height, ceiling, and 'auto'/'peek' resolution) so computed targets match
   // where the drawer actually settles. Numeric detent d → top-Y =
-  // (1 - d) * effectiveH. 'auto' resolves to the auto-size wrapper's measured
-  // height (tracked via vaul's `onContentHeightChange`) — same signal vaul
-  // uses to compute its snap offset. Inputs live in a render-synced ref so
-  // the compute callbacks stay referentially stable for the event effects.
+  // (1 - d) * effectiveH. 'auto' and 'peek' are measured live from the DOM
+  // (see below). Inputs live in a render-synced ref so the compute callbacks
+  // stay referentially stable for the event effects.
   const geometryInputsRef = useRef({
     effectiveDetached,
     effectiveDetachedOffset,
     effectiveMaxContentHeight,
     peekHeight,
+    peekContentHeight,
     measuredContentHeight,
   });
   geometryInputsRef.current = {
@@ -341,6 +348,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     effectiveDetachedOffset,
     effectiveMaxContentHeight,
     peekHeight,
+    peekContentHeight,
     measuredContentHeight,
   };
 
@@ -355,12 +363,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       inputs.effectiveMaxContentHeight !== undefined
         ? Math.min(effectiveH, inputs.effectiveMaxContentHeight)
         : effectiveH;
-    // Matches vaul's 'auto' fallback (effectiveHeight / 2) before content is
-    // measured — keeps targets consistent even before the drawer mounts.
-    const autoHeight = Math.min(
-      inputs.measuredContentHeight > 0 ? inputs.measuredContentHeight : effectiveH / 2,
-      ceiling
+    // 'auto' resolves to the auto-size wrapper's height. Read it live — the
+    // `measuredContentHeight` state lags mount by a frame (vaul's initial
+    // ref-callback measure runs while the portal subtree is still detached,
+    // so it reads 0 until the ResizeObserver fires). Falls back to the state
+    // value, then to vaul's pre-measure fallback (effectiveHeight / 2).
+    const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
+      '[data-vaul-auto-size-wrapper]'
     );
+    const measuredHeight = autoWrapper?.offsetHeight || inputs.measuredContentHeight;
+    const autoHeight = Math.min(measuredHeight > 0 ? measuredHeight : effectiveH / 2, ceiling);
+
+    // 'peek' is measured live from the DOM (offsetHeight is layout-based, so
+    // in-flight transforms don't skew it): the state-driven `peekHeight` prop
+    // comes from RN-web onLayout, which dispatches a frame after mount — too
+    // late for the first willPresent on autopresent. Ref callbacks can't
+    // measure either: they fire while the portal subtree is still detached.
+    // Geometry only runs while the drawer is mounted, so the elements are
+    // measurable here; fall back to the state value when they're absent.
+    const headerEl = headerElRef.current as unknown as HTMLElement | null;
+    const footerEl = footerElRef.current as unknown as HTMLElement | null;
+    const peekHeight =
+      headerEl || footerEl
+        ? (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) +
+            inputs.peekContentHeight || DEFAULT_PEEK_HEIGHT
+        : inputs.peekHeight;
 
     const positions: number[] = [];
     const values: number[] = [];
@@ -369,7 +396,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         typeof d === 'number'
           ? Math.min(d * effectiveH, ceiling)
           : d === 'peek'
-            ? Math.min(inputs.peekHeight, ceiling)
+            ? Math.min(peekHeight, ceiling)
             : autoHeight;
       positions.push(effectiveH - h);
       values.push(effectiveH > 0 ? h / effectiveH : 0);
@@ -484,22 +511,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = isOpen;
 
-    if (!isOpen && !wasOpen) return undefined;
+    if (isOpen === wasOpen) return undefined;
 
-    const present = !wasOpen && isOpen;
-    if (present) {
-      // Pair willFocus with willPresent on initial present — mirrors native
-      // iOS where viewWillAppear dispatches both. The descendant-stack focus
-      // effect handles subsequent gained/lost transitions.
-      onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
-      onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
-    } else if (wasOpen && !isOpen) {
+    const present = isOpen;
+    if (!present) {
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
-      // emitWillDismissEvents (blur fires before dismiss).
+      // emitWillDismissEvents (blur fires before dismiss). willPresent is
+      // deferred to `start()` below (needs the mounted drawer's geometry).
       onWillBlurRef.current?.({ nativeEvent: null } as WillBlurEvent);
       onWillDismissRef.current?.({ nativeEvent: null } as WillDismissEvent);
-    } else {
-      return undefined;
     }
 
     const fireDone = () => {
@@ -518,11 +538,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const start = () => {
       if (canceled) return;
       const drawer = drawerContentRef.current;
-      if (!drawer) {
+      if (!drawer || !drawer.isConnected) {
         // Drawer hasn't mounted yet (Radix Presence defers the portal mount
-        // past the first effect pass). Poll until the ref is populated.
+        // past the first effect pass), or its subtree isn't attached to the
+        // document yet (autopresent commits the portal before the app tree
+        // attaches, so nothing is measurable). Poll until it's live.
         rafId = window.requestAnimationFrame(start);
         return;
+      }
+      if (present) {
+        // Emit will-events only once the drawer is mounted and attached —
+        // detent geometry ('auto' height, 'peek', form-sheet sizing) is
+        // measurable from the DOM here; a synchronous emission would use the
+        // pre-measure fallbacks on first present. Pairing willFocus with
+        // willPresent mirrors native iOS where viewWillAppear dispatches
+        // both; the descendant-stack focus effect handles subsequent
+        // transitions.
+        onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
+        onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
       }
       const wrapper = drawer.closest<HTMLElement>('[data-vaul-detached-wrapper]') ?? null;
       const targets = wrapper ? [drawer, wrapper] : [drawer];
@@ -952,7 +985,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             detachedSiblings={
               footer ? (
                 <div style={footerFloatStyle}>
-                  <View style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 </div>
@@ -969,7 +1002,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               // definite height for the scroll container's flex:1 to fill.
               <div style={scrollableLayoutStyle}>
                 {header && (
-                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
@@ -985,7 +1018,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             ) : (
               <>
                 {header && (
-                  <View style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}

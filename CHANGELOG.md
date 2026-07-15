@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Web**: Initial presentation events now report accurate `auto` and `peek` detent geometry by waiting until the drawer is mounted and measurable. ([#740](https://github.com/lodev09/react-native-true-sheet/pull/740) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.7
 
 ### 🐛 Bug fixes
