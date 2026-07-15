@@ -198,13 +198,17 @@ export function useSnapPoints({
 
       const animateThisSnap = hasSnappedRef.current || initialAnimated;
       hasSnappedRef.current = true;
+      // `--snap-point-height` transitions alongside `transform` (registered via
+      // @property) so layouts derived from it (e.g. the scrollable fill) resize
+      // in sync with the drawer's slide instead of jumping to the target.
       set(drawerRef.current, {
-        transition: animateThisSnap
-          ? `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`
+        'transition': animateThisSnap
+          ? `transform ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')}), --snap-point-height ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`
           : 'none',
-        transform: isVertical(direction)
+        'transform': isVertical(direction)
           ? `translate3d(0, ${dimension}px, 0)`
           : `translate3d(${dimension}px, 0, 0)`,
+        '--snap-point-height': `${dimension}px`,
       });
 
       // Snapping implies drag overshoot (if any) should be undone.
@@ -360,19 +364,24 @@ export function useSnapPoints({
     if ((direction === 'bottom' || direction === 'right') && newValue > snapPointsOffset[0]) {
       const excess = newValue - snapPointsOffset[0];
       set(drawerRef.current, {
-        transform: isVertical(direction)
+        'transform': isVertical(direction)
           ? `translate3d(0, ${snapPointsOffset[0]}px, 0)`
           : `translate3d(${snapPointsOffset[0]}px, 0, 0)`,
+        '--snap-point-height': `${snapPointsOffset[0]}px`,
       });
       setDetachedWrapperTransform(excess, false);
       return;
     }
 
     setDetachedWrapperTransform(0, false);
+    // Keep `--snap-point-height` tracking the live drag position so layouts
+    // derived from it (e.g. the scrollable fill) resize with the drawer
+    // instead of staying cut off at the last detent's visible height.
     set(drawerRef.current, {
-      transform: isVertical(direction)
+      'transform': isVertical(direction)
         ? `translate3d(0, ${newValue}px, 0)`
         : `translate3d(${newValue}px, 0, 0)`,
+      '--snap-point-height': `${newValue}px`,
     });
   }
 

@@ -6,6 +6,7 @@
 
 - **Android**: The sheet can now be dragged from views overlaying a scrollable — e.g. a header (including a `TextInput` in it) positioned over a `FlatList` — previously the drag did nothing. ([#734](https://github.com/lodev09/react-native-true-sheet/pull/734) by [@lodev09](https://github.com/lodev09))
 - **Web**: `onWillPresent`, `onDidPresent`, and `onDetentChange` now emit the target detent `position`/`detent` — consistent with iOS/Android. Previously `onWillPresent` emitted `0` on first present or the offscreen position on re-present, `onDetentChange` emitted the old position, and `detent` was `0` for `auto`/`peek` detents. ([#737](https://github.com/lodev09/react-native-true-sheet/pull/737) by [@lodev09](https://github.com/lodev09))
+- **Web**: Fixed scrollable content cutting off mid-drag, scrolling along with the sheet drag on mobile, and delayed drag after Safari's scroll bounce. ([#739](https://github.com/lodev09/react-native-true-sheet/pull/739) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.6
 

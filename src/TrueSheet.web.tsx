@@ -255,6 +255,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
 
+  // Below the last detent a vertical touch pan moves the sheet, not the
+  // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
+  // the scroll container and everything inside it (see vaul/style.css).
+  const isScrollLocked =
+    validDetents.length > 0 && activeSnapPoint !== validDetents[validDetents.length - 1];
+
   // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
   // Track it here so the form sheet can size its card to fit content,
   // clamped between a minimum ratio of the viewport and a maximum derived
@@ -967,7 +973,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <div style={scrollableContainerStyle}>
+                <div
+                  style={scrollableContainerStyle}
+                  data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
+                >
                   <View ref={contentRef} style={style}>
                     {children}
                   </View>
