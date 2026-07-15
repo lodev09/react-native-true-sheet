@@ -5,7 +5,7 @@ import React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Presence } from '@radix-ui/react-presence';
 
-import { DrawerContext, useDrawerContext } from './context';
+import { DrawerContext, useDrawerContext, type DragEvent } from './context';
 import './style.css';
 
 import { isIOS, isMobileFirefox } from './browser';
@@ -491,7 +491,7 @@ export function Root({
     return true;
   }
 
-  function onDrag(event: React.PointerEvent<HTMLDivElement>) {
+  function drag(event: DragEvent, pointerEvent?: React.PointerEvent<HTMLDivElement>) {
     if (!drawerRef.current) {
       return;
     }
@@ -557,7 +557,7 @@ export function Root({
         transition: 'none',
       });
 
-      onDragProp?.(event, percentageDragged);
+      if (pointerEvent) onDragProp?.(pointerEvent, percentageDragged);
 
       if (snapPoints) {
         onDragSnapPoints({ draggedDistance });
@@ -761,7 +761,7 @@ export function Root({
     dragEndTime.current = new Date();
   }
 
-  function onRelease(event: React.PointerEvent<HTMLDivElement> | null) {
+  function release(event: DragEvent | null, pointerEvent?: React.PointerEvent<HTMLDivElement>) {
     if (!isDragging || !drawerRef.current) return;
 
     drawerRef.current.classList.remove(DRAG_CLASS);
@@ -797,20 +797,20 @@ export function Root({
         velocity,
         dismissible,
       });
-      onReleaseProp?.(event, true);
+      if (pointerEvent) onReleaseProp?.(pointerEvent, true);
       return;
     }
 
     // Moved upwards, don't do anything
     if (direction === 'bottom' || direction === 'right' ? distMoved > 0 : distMoved < 0) {
       resetDrawer();
-      onReleaseProp?.(event, true);
+      if (pointerEvent) onReleaseProp?.(pointerEvent, true);
       return;
     }
 
     if (velocity > VELOCITY_THRESHOLD) {
       closeDrawer();
-      onReleaseProp?.(event, false);
+      if (pointerEvent) onReleaseProp?.(pointerEvent, false);
       return;
     }
 
@@ -829,11 +829,11 @@ export function Root({
       (isHorizontalSwipe ? visibleDrawerWidth : visibleDrawerHeight) * closeThreshold
     ) {
       closeDrawer();
-      onReleaseProp?.(event, false);
+      if (pointerEvent) onReleaseProp?.(pointerEvent, false);
       return;
     }
 
-    onReleaseProp?.(event, true);
+    if (pointerEvent) onReleaseProp?.(pointerEvent, true);
     resetDrawer();
   }
 
@@ -943,8 +943,10 @@ export function Root({
           overlayRef,
           onOpenChange,
           onPress,
-          onRelease,
-          onDrag,
+          onRelease: (event) => release(event, event ?? undefined),
+          onDrag: (event) => drag(event, event),
+          onTouchDrag: (event, pointerEvent) => drag(event, pointerEvent),
+          onTouchRelease: (event, pointerEvent) => release(event, pointerEvent),
           dismissible,
           shouldAnimate,
           handleOnly,
@@ -1088,6 +1090,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       onPress,
       onRelease,
       onDrag,
+      onTouchDrag,
+      onTouchRelease,
       keyboardIsOpen,
       snapPointsOffset,
       activeSnapPointIndex,
@@ -1144,6 +1148,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
     const composedRef = useComposedRefs(ref, drawerRef);
     const pointerStartRef = React.useRef<{ x: number; y: number } | null>(null);
     const lastKnownPointerEventRef = React.useRef<React.PointerEvent<HTMLDivElement> | null>(null);
+    const continuingCanceledTouchRef = React.useRef(false);
     const wasBeyondThePointRef = React.useRef(false);
     const hasSnapPoints = snapPoints && snapPoints.length > 0;
     useScaleBackground();
@@ -1376,6 +1381,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         onPointerDown={(event) => {
           if (handleOnly) return;
           rest.onPointerDown?.(event);
+          continuingCanceledTouchRef.current = false;
           pointerStartRef.current = { x: event.pageX, y: event.pageY };
           onPress(event);
         }}
@@ -1462,13 +1468,67 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         }}
         onPointerUp={(event) => {
           rest.onPointerUp?.(event);
+          continuingCanceledTouchRef.current = false;
           pointerStartRef.current = null;
           wasBeyondThePointRef.current = false;
           onRelease(event);
         }}
+        onPointerCancel={(event) => {
+          rest.onPointerCancel?.(event);
+          if (
+            event.pointerType === 'touch' &&
+            snapPoints &&
+            activeSnapPointIndex === snapPoints.length - 1
+          ) {
+            continuingCanceledTouchRef.current = true;
+            return;
+          }
+          handleOnPointerUp(null);
+        }}
         onPointerOut={(event) => {
           rest.onPointerOut?.(event);
+          if (continuingCanceledTouchRef.current) return;
           handleOnPointerUp(lastKnownPointerEventRef.current);
+        }}
+        onTouchMove={(event) => {
+          rest.onTouchMove?.(event);
+          if (!continuingCanceledTouchRef.current) return;
+          const touch = event.touches[0];
+          if (!touch) return;
+          onTouchDrag(
+            {
+              target: event.target,
+              pageX: touch.pageX,
+              pageY: touch.pageY,
+              pointerType: 'touch',
+            },
+            lastKnownPointerEventRef.current ?? undefined
+          );
+        }}
+        onTouchEnd={(event) => {
+          rest.onTouchEnd?.(event);
+          if (!continuingCanceledTouchRef.current) return;
+          continuingCanceledTouchRef.current = false;
+          pointerStartRef.current = null;
+          wasBeyondThePointRef.current = false;
+          const touch = event.changedTouches[0];
+          onTouchRelease(
+            touch
+              ? {
+                  target: event.target,
+                  pageX: touch.pageX,
+                  pageY: touch.pageY,
+                  pointerType: 'touch',
+                }
+              : null,
+            lastKnownPointerEventRef.current ?? undefined
+          );
+        }}
+        onTouchCancel={(event) => {
+          rest.onTouchCancel?.(event);
+          if (!continuingCanceledTouchRef.current) return;
+          continuingCanceledTouchRef.current = false;
+          handleOnPointerUp(null);
         }}
         onContextMenu={(event) => {
           rest.onContextMenu?.(event);
