@@ -10,12 +10,9 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View, useColorScheme, useWindowDimensions } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
+import { useColorScheme, useWindowDimensions, View } from 'react-native';
 
-import { Drawer } from './web/vaul';
-import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
-import { TrueSheetPeekContext } from './TrueSheetPeek.web';
 import type {
   DetentChangeEvent,
   DetentInfoEventPayload,
@@ -37,6 +34,7 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
+import { measurePeekContentHeight, TrueSheetPeekContext } from './TrueSheetPeek.web';
 import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
@@ -44,15 +42,17 @@ import {
   DEFAULT_ANCHOR_OFFSET,
   DEFAULT_CORNER_RADIUS,
   DEFAULT_DETACHED_OFFSET,
+  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
+  DEFAULT_FORM_SHEET_WIDTH,
   DEFAULT_GRABBER_COLOR_DARK,
   DEFAULT_GRABBER_COLOR_LIGHT,
   DEFAULT_GRABBER_HEIGHT,
   DEFAULT_GRABBER_TOP_MARGIN,
   DEFAULT_GRABBER_WIDTH,
-  DEFAULT_FORM_SHEET_HEIGHT_RATIO,
-  DEFAULT_FORM_SHEET_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { Drawer } from './web/vaul';
+import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
 
 const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
@@ -256,7 +256,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // within the content — measured by the peek against `contentRef`.
   const [peekContentHeight, setPeekContentHeight] = useState(0);
   const contentRef = useRef<View>(null);
-  const peekContext = useMemo(() => ({ contentRef, setPeekContentHeight }), []);
+  const peekElRef = useRef<View>(null);
+  const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
@@ -383,11 +384,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // measurable here; fall back to the state value when they're absent.
     const headerEl = headerElRef.current as unknown as HTMLElement | null;
     const footerEl = footerElRef.current as unknown as HTMLElement | null;
+    const peekEl = peekElRef.current as unknown as HTMLElement | null;
+    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    const livePeekContentHeight =
+      peekEl && contentEl ? measurePeekContentHeight(peekEl, contentEl) : inputs.peekContentHeight;
     const livePeekHeight =
-      headerEl || footerEl
-        ? (headerEl?.offsetHeight ?? 0) +
-            (footerEl?.offsetHeight ?? 0) +
-            inputs.peekContentHeight || DEFAULT_PEEK_HEIGHT
+      headerEl || footerEl || peekEl
+        ? (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + livePeekContentHeight ||
+          DEFAULT_PEEK_HEIGHT
         : inputs.peekHeight;
 
     const positions: number[] = [];
@@ -678,10 +682,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // own child didn't move (e.g., child skipped its cascade for a page
     // grandchild) — leaving a visible gap between this sheet and its child.
     const computeTargetY = () => {
-      const parentSnap = parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      const parentSnap =
+        Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
       const node = descendants[0]?.nodeRef.current;
       if (!node) return parentSnap;
-      const childSnap = parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
+      const childSnap = Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
       return Math.max(parentSnap, childSnap);
     };
 
@@ -700,9 +705,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       const childDrawer = form.nodeRef.current;
       const childWrapper = childDrawer?.closest<HTMLElement>('[data-vaul-detached-wrapper]');
       if (!parentWrapper || !childDrawer || !childWrapper) return;
-      const snapY = parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
-      const childBottomGap = parseFloat(childWrapper.style.bottom) || 0;
-      const childMaxW = parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
+      const snapY =
+        Number.parseFloat(childDrawer.style.getPropertyValue('--snap-point-height')) || 0;
+      const childBottomGap = Number.parseFloat(childWrapper.style.bottom) || 0;
+      const childMaxW = Number.parseFloat(childWrapper.style.maxWidth) || window.innerWidth;
       const formLeft = (window.innerWidth - childMaxW) / 2;
       const formRight = (window.innerWidth + childMaxW) / 2;
       const formBottom = window.innerHeight - childBottomGap;
@@ -728,7 +734,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       }
       const targetY = computeTargetY();
       const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
-      const currentY = match ? parseFloat(match[1]!) : 0;
+      const currentY = match ? Number.parseFloat(match[1]!) : 0;
       if (Math.abs(currentY - targetY) < 0.5) return;
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
