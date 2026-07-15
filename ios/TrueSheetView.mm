@@ -19,7 +19,6 @@
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
-#import "utils/LayoutUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -33,7 +32,6 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
-#import <cxxreact/ReactNativeVersion.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -52,7 +50,6 @@ using namespace facebook::react;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
   TrueSheetViewInsetAdjustment _insetAdjustment;
-  BOOL _scrollable;
   ScrollableOptions *_scrollableOptions;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
@@ -86,7 +83,6 @@ using namespace facebook::react;
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
-    _scrollable = NO;
     _isSheetUpdatePending = NO;
 
     _screensEventObserver = [[RNScreensEventObserver alloc] init];
@@ -241,7 +237,6 @@ using namespace facebook::react;
 
   _initialDetentIndex = newProps.initialDetentIndex;
   _initialDetentAnimated = newProps.initialDetentAnimated;
-  _scrollable = newProps.scrollable;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
   BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
@@ -301,13 +296,10 @@ using namespace facebook::react;
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
 
-#if REACT_NATIVE_VERSION_MINOR >= 82
-  // TODO: RN 0.82+ processes state updates in the same layout pass (synchronous).
-  // Once stable, we can drop native layout constraints in favor of synchronous Yoga layout.
+  // RN 0.82+ processes immediate state updates in the same layout pass, so Yoga
+  // resizes the container synchronously with the sheet (e.g. inside UIKit's
+  // animation block during detent transitions).
   _state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
-#else
-  _state->updateState(std::move(stateData));
-#endif
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -352,7 +344,6 @@ using namespace facebook::react;
 
   _containerView.delegate = nil;
   [_touchHandler detachFromView:_containerView];
-  [LayoutUtil unpinView:_containerView fromParentView:nil];
   [_containerView removeFromSuperview];
 
   _containerView = nil;
@@ -377,7 +368,6 @@ using namespace facebook::react;
 
   [_touchHandler attachToView:_containerView];
   [_controller.view addSubview:_containerView];
-  [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
   [_controller.view bringSubviewToFront:_containerView];
   _containerView.accessibilityViewIsModal = YES;
   _controller.accessibilityContentView = _containerView;
@@ -681,10 +671,7 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  // TODO: Explicit screen height for now until synchronous layout is supported.
-  CGSize effectiveSize = CGSizeMake(size.width, _controller.screenHeight);
-
-  [self updateStateWithSize:effectiveSize];
+  [self updateStateWithSize:size];
 }
 
 - (void)viewControllerWillFocus {
@@ -752,7 +739,6 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
-  _containerView.scrollableEnabled = _scrollable;
   _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
   [_containerView setupScrollable];

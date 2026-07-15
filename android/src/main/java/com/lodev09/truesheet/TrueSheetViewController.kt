@@ -215,13 +215,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
-  var scrollable: Boolean = false
-
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
       behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
-      if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
     }
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
@@ -561,7 +558,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
-    updateScrollExpansionPadding(sheetView.top)
     emitChangePositionDelegate(sheetView.top)
 
     // On older APIs, use onSlide for footer positioning during keyboard transitions
@@ -573,15 +569,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
-  }
-
-  private fun updateScrollExpansionPadding(sheetTop: Int) {
-    if (!scrollable) {
-      containerView?.contentView?.updateScrollExpansionPadding(0)
-      return
-    }
-    val expandedOffset = behavior?.expandedOffset ?: return
-    containerView?.contentView?.updateScrollExpansionPadding(maxOf(0, sheetTop - expandedOffset))
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
@@ -630,6 +617,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
       }
     }
+
+    // Settled — resize the container to the settled detent (applies deferred shrinks)
+    updateStateDimensions()
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
@@ -735,6 +725,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     pendingDetentIndex = detentIndex
+    updateStateDimensions(deferShrink = true)
     setupDimmedBackground()
     setStateForDetentIndex(detentIndex)
     resizePromise?.invoke()
@@ -880,7 +871,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       animate = isPresented
     )
 
-    updateStateDimensions(expandedOffset)
+    updateStateDimensions()
 
     if (isPresented && applyState) {
       // Prefer the pending target while a resize animation is in flight so a
@@ -910,6 +901,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
+    // Skip while dragging — the size change is driven by the drag itself (the
+    // container tracks the sheet's visible height), and reconfiguring resets
+    // behavior state, killing the gesture.
+    if (interactionState is InteractionState.Dragging) return
+
     setupSheetDetents()
     positionFooter()
   }
@@ -1052,9 +1048,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
-          setupSheetDetents()
+          // Commit the target index first so the container grows before the sheet expands
           currentDetentIndex = detents.size - 1
-          setStateForDetentIndex(currentDetentIndex)
+          setupSheetDetents()
           updateDimAmount(animated = true)
         }
 
@@ -1173,6 +1169,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
 
+    updateStateDimensionsForDrag(sheetView.top)
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
@@ -1241,19 +1239,56 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.maxWidth = newMaxWidth
   }
 
-  private fun updateStateDimensions(expandedOffset: Int? = null) {
-    val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
-    val topOffset = if (offset == 0) topInset else 0
-    val newHeight = realScreenHeight - offset - topOffset
+  /**
+   * Updates the Fabric state with the current/target detent size so Yoga sizes
+   * the container to the sheet's visible height.
+   *
+   * Unlike iOS, resize animations run over multiple frames (ViewDragHelper), so
+   * shrinking is deferred to settle ([deferShrink]) when a resize animation is
+   * about to run — growing applies immediately so content is laid out before
+   * the sheet reveals it.
+   */
+  private fun updateStateDimensions(deferShrink: Boolean = false) {
+    if (detents.isEmpty()) return
+
+    val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
+      .coerceIn(0, detents.size - 1)
+    val maxAvailableHeight = realScreenHeight - topInset
+    val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
+    val newWidth = getStateWidth()
+
+    if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
+
+    setStateDimensions(newWidth, newHeight)
+  }
+
+  /**
+   * Tracks the sheet's visible height during drag (and the post-release settle
+   * animation) so the container resizes with the finger, like iOS. Clamped to the
+   * smallest detent — dragging below it slides the sheet out without resizing.
+   */
+  private fun updateStateDimensionsForDrag(sheetTop: Int) {
+    if (detents.isEmpty()) return
+
+    val maxAvailableHeight = realScreenHeight - topInset
+    val minHeight = minOf(detentCalculator.getDetentHeight(detents.first()), maxAvailableHeight)
+    val newHeight = detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight)
+
+    setStateDimensions(getStateWidth(), newHeight)
+  }
+
+  private fun getStateWidth(): Int {
     val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
     val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
-    val newWidth = minOf(screenWidth, effectiveMaxWidth)
+    return minOf(screenWidth, effectiveMaxWidth)
+  }
 
-    if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
-      lastStateWidth = newWidth
-      lastStateHeight = newHeight
-      delegate?.viewControllerDidChangeSize(newWidth, newHeight)
-    }
+  private fun setStateDimensions(width: Int, height: Int) {
+    if (lastStateWidth == width && lastStateHeight == height) return
+
+    lastStateWidth = width
+    lastStateHeight = height
+    delegate?.viewControllerDidChangeSize(width, height)
   }
 
   fun translateSheet(translationY: Int, onEnd: (() -> Unit)? = null) {

@@ -46,11 +46,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
- * Enable scrollable content
- */
-@property (nonatomic, assign) BOOL scrollableEnabled;
-
-/**
  * Inset adjustment mode for scrollable content
  */
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
@@ -84,11 +79,6 @@ NS_ASSUME_NONNULL_BEGIN
  * Registers a peek view found within the content subtree
  */
 - (void)attachPeekView:(TrueSheetPeekView *)peekView;
-
-/**
- * Updates footer layout constraints if needed
- */
-- (void)layoutFooter;
 
 /**
  * Re-applies the footer's keyboard slide to reflect a live `keyboardOffset` change.

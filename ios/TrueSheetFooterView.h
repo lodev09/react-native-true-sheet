@@ -27,8 +27,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 @property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;
 
-- (void)setupConstraintsWithHeight:(CGFloat)height;
-
 /**
  * Re-applies the footer's keyboard slide using the current keyboard height.
  * No-op when the keyboard is hidden. Used to reflect live `keyboardOffset` changes.

@@ -54,7 +54,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 @implementation TrueSheetViewController {
   TrueSheetPositionState _lastEmittedPositionState;
-  CGFloat _lastWidth;
+  CGSize _lastReportedSize;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -488,11 +488,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  // Update state on rotation (width change)
-  CGFloat width = self.view.frame.size.width;
-  if (_lastWidth != width) {
-    _lastWidth = width;
-    [self.delegate viewControllerDidChangeSize:self.view.frame.size];
+  // Report any size change (detent resize, keyboard, rotation) so Yoga
+  // relayouts the container synchronously with the sheet.
+  CGSize size = self.view.frame.size;
+  if (!CGSizeEqualToSize(_lastReportedSize, size)) {
+    _lastReportedSize = size;
+    [self.delegate viewControllerDidChangeSize:size];
   }
 
   if (_pendingDetentIndex >= 0) {

@@ -65,7 +65,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       ref={ref}
       detents={[0.8, 1]}
       name="scrollview"
-      scrollable
       scrollableOptions={{
         scrollingExpandsSheet: false,
         bottomScrollEdgeEffect: 'soft',

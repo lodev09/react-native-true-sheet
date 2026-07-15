@@ -457,7 +457,6 @@ export class TrueSheet
       maxContentWidth,
       anchor = 'center',
       anchorOffset,
-      scrollable = false,
       scrollableOptions,
       footerOptions,
       presentation = 'page',
@@ -472,7 +471,7 @@ export class TrueSheet
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
-    const resolvedDetents = detents.slice(0, 3).map((detent) => {
+    const resolvedDetents: number[] = detents.slice(0, 3).map((detent) => {
       if (detent === 'auto' || detent === -1) return -1;
       if (detent === 'peek' || detent === -2) return -2;
 
@@ -482,6 +481,11 @@ export class TrueSheet
       // Clamp to maximum of 1
       return Math.min(1, detent);
     });
+
+    // `auto` detents derive the sheet height from the content's natural height,
+    // so the content can't fill the container. Otherwise fill so flex layouts
+    // and ScrollViews/FlatLists work as-is, like a regular bounded view.
+    const hasAutoDetent = resolvedDetents.includes(-1);
 
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
@@ -514,7 +518,6 @@ export class TrueSheet
         maxContentWidth={maxContentWidth}
         anchor={anchor}
         anchorOffset={anchorOffset}
-        scrollable={scrollable}
         scrollableOptions={scrollableOptions}
         footerOptions={footerOptions}
         presentation={presentation}
@@ -536,16 +539,14 @@ export class TrueSheet
         onVisibilityChange={this.onVisibilityChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            style={scrollable ? styles.scrollableContainer : undefined}
-          >
+          <TrueSheetContainerViewNativeComponent style={styles.container}>
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
             <TrueSheetContentViewNativeComponent
-              style={scrollable ? [style, styles.scrollableContent] : style}
+              style={hasAutoDetent ? style : [styles.contentFill, style]}
             >
               {children}
             </TrueSheetContentViewNativeComponent>
@@ -570,19 +571,23 @@ const styles = StyleSheet.create({
     zIndex: -9999,
     pointerEvents: 'box-none',
   },
-  scrollableContainer: {
+  // Fill the sheet so flex layouts track the sheet's size per detent
+  container: {
     ...StyleSheet.absoluteFill,
   },
-  scrollableContent: {
+  contentFill: {
     flex: 1,
   },
   header: {
     pointerEvents: 'box-none',
   },
+  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
+  // sheet's visible height
   footer: {
     pointerEvents: 'box-none',
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
   },
 });

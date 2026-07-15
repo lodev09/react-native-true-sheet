@@ -20,7 +20,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       detents={[0.5, 1]}
       backgroundBlur="dark"
       backgroundColor={DARK}
-      scrollable
       scrollableOptions={{
         bottomScrollEdgeEffect: 'soft',
         topScrollEdgeEffect: 'soft',

@@ -274,11 +274,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
   }
 
-  fun setScrollable(scrollable: Boolean) {
-    viewController.scrollable = scrollable
-    setupScrollable()
-  }
-
   fun setScrollableOptions(options: ScrollableOptions?) {
     viewController.scrollableOptions = options
     setupScrollable()
@@ -292,7 +287,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun setupScrollable() {
     viewController.containerView?.let {
       it.insetAdjustment = viewController.insetAdjustment
-      it.scrollableEnabled = viewController.scrollable
       it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
       it.setupScrollable()
@@ -336,9 +330,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     lastContainerHeight = height
 
     val sw = stateWrapper ?: return
+    val widthDp = width.toFloat().pxToDp()
+    val heightDp = height.toFloat().pxToDp()
+
+    // Synchronous update — commits and mounts within the same UI-thread frame
+    if (TrueSheetStateUpdater.updateState(sw, widthDp, heightDp)) return
+
+    // Fallback: async state update
     val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", width.toFloat().pxToDp().toDouble())
-    newStateData.putDouble("containerHeight", height.toFloat().pxToDp().toDouble())
+    newStateData.putDouble("containerWidth", widthDp.toDouble())
+    newStateData.putDouble("containerHeight", heightDp.toDouble())
     sw.updateState(newStateData)
   }
 
@@ -562,10 +563,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
-    // On android scrollable, we need the actual sheet height to get proper ScrollView height.
-    // Unlike IOS where ScrollView is pinned to the container.
-    val effectiveHeight = if (viewController.scrollable) height else viewController.screenHeight
-    updateState(width, effectiveHeight)
+    updateState(width, height)
   }
 
   override fun viewControllerWillFocus() {

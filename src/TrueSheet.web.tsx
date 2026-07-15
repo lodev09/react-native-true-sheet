@@ -77,7 +77,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     headerStyle,
     footer,
     footerStyle,
-    scrollable = false,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -406,7 +405,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       positions.push(effectiveH - h);
       values.push(effectiveH > 0 ? h / effectiveH : 0);
     }
-    return { windowH, positions, values };
+    return { windowH, effectiveH, ceiling, positions, values };
   }, []);
 
   // Detent info for lifecycle events. Position/detent come from the active
@@ -486,14 +485,54 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     [computeDetentGeometry]
   );
 
+  // Mirror native synchronous layout: while dragging (and through the post-
+  // release settle) the sized layout tracks the sheet's visible height in
+  // realtime, clamped to the smallest detent — dragging below it slides the
+  // sheet out without resizing. Once settled, the inline height is cleared so
+  // the CSS calc() owns sizing again (adapts to viewport resizes at rest).
+  const sizedLayoutRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const isSettlingAfterDragRef = useRef(false);
+  const updateSizedLayoutHeight = useCallback(
+    (position: number) => {
+      const node = sizedLayoutRef.current;
+      if (!node) return;
+
+      const { effectiveH, ceiling, positions } = computeDetentGeometry();
+      if (positions.length === 0) return;
+
+      if (isSettlingAfterDragRef.current) {
+        const snap = activeSnapPointRef.current;
+        const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+        const target = index >= 0 ? positions[index]! : null;
+        if (target != null && Math.abs(position - target) < 1) {
+          isSettlingAfterDragRef.current = false;
+          // Restore the calc — height is an inline style, so clearing it would
+          // leave the div unsized (React won't re-apply it without a render)
+          node.style.height = SIZED_LAYOUT_HEIGHT;
+          return;
+        }
+      }
+
+      // positions[0] is the smallest detent's top-Y — its height is the clamp floor.
+      const minHeight = effectiveH - positions[0]!;
+      const height = Math.min(Math.max(effectiveH - position, minHeight), ceiling);
+      node.style.height = `${height}px`;
+    },
+    [computeDetentGeometry]
+  );
+
   const handlePositionChange = useCallback(
     (position: number) => {
+      if (isDraggingRef.current || isSettlingAfterDragRef.current) {
+        updateSizedLayoutHeight(position);
+      }
       const { index, detent } = interpolateFromPosition(position);
       onPositionChangeRef.current?.({
         nativeEvent: { index, position, detent, realtime: true },
       } as PositionChangeEvent);
     },
-    [interpolateFromPosition]
+    [interpolateFromPosition, updateSizedLayoutHeight]
   );
 
   // Fire onMount once after first render. React-mount is the earliest point
@@ -611,7 +650,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.
-  const isDraggingRef = useRef(false);
   const handleDrag = useCallback(() => {
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
@@ -619,11 +657,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     }
     onDragChangeRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragChangeEvent);
   }, [computeDetentInfo]);
-  const handleRelease = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
-  }, [computeDetentInfo]);
+  const handleRelease = useCallback(
+    (_event: unknown, open: boolean) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      // Track the sized layout through the settle animation only when the sheet
+      // stays open — a dismissal slides out at the min-clamped height.
+      isSettlingAfterDragRef.current = open;
+      onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
+    },
+    [computeDetentInfo]
+  );
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
@@ -815,6 +859,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, descendants.length]);
 
+  // Definite-height flex layout (per-detent sizing) unless content must be
+  // measured in natural flow: 'auto' detents and form-sheet content-fit sizing.
+  const hasAutoDetent = validDetents.includes('auto');
+  const useSizedLayout = !hasAutoDetent && !isFormSheet;
+
   const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
 
   // Shadow cast upward from the sheet's top edge toward the background. Matches
@@ -1001,28 +1050,32 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           >
             <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
-            {scrollable ? (
+            {useSizedLayout ? (
               // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
               // flow-root) which doesn't honor descendant flex layout. Use an
               // absolute fill sized to the visible portion (via vaul's
               // `--snap-point-height` var) so the inner flex column has a
-              // definite height for the scroll container's flex:1 to fill.
-              <div style={scrollableLayoutStyle}>
+              // definite height for flex layouts to fill — mirrors native, where
+              // the container is sized to the sheet's visible height per detent.
+              <div
+                ref={sizedLayoutRef}
+                style={sizedLayoutStyle}
+                data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
+              >
                 {header && (
                   <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <div
-                  style={scrollableContainerStyle}
-                  data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
-                >
-                  <View ref={contentRef} style={style}>
-                    {children}
-                  </View>
-                </div>
+                {/* Fill the sized layout so plugged ScrollViews/FlatLists have
+                    a bounded height — mirrors native content fill. */}
+                <View ref={contentRef} style={[contentFillStyle, style]}>
+                  {children}
+                </View>
               </div>
             ) : (
+              // Natural flow so vaul can measure content height — required for
+              // 'auto' detents and form-sheet content-fit sizing.
               <>
                 {header && (
                   <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
@@ -1047,23 +1100,22 @@ const overlayStyle: React.CSSProperties = {
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
 
-const scrollableLayoutStyle: React.CSSProperties = {
+const SIZED_LAYOUT_HEIGHT = 'calc(100% - var(--snap-point-height, 0px))';
+
+const sizedLayoutStyle: React.CSSProperties = {
   position: 'absolute',
   top: 0,
   left: 0,
   right: 0,
-  height: 'calc(100% - var(--snap-point-height, 0px))',
+  height: SIZED_LAYOUT_HEIGHT,
   display: 'flex',
   flexDirection: 'column',
 };
 
-const scrollableContainerStyle: React.CSSProperties = {
+const contentFillStyle = {
   flex: 1,
   minHeight: 0,
-  overflowY: 'auto',
-  overscrollBehavior: 'contain',
-  touchAction: 'pan-y',
-};
+} as const;
 
 const visuallyHiddenStyle: React.CSSProperties = {
   position: 'absolute',

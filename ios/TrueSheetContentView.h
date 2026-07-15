@@ -36,16 +36,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Setup scrollable content
- * @param enabled Whether scrollable is enabled
+ * Pin the first ScrollView found in the content, wiring insets and keyboard handling
  * @param bottomInset Bottom content inset for the scroll view
  */
-- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset;
-
-/**
- * Update the pinned scroll view's height to fill the container
- */
-- (void)updateScrollViewHeight;
+- (void)setupScrollableWithBottomInset:(CGFloat)bottomInset;
 
 /**
  * Apply scroll edge effects to the pinned scroll view (iOS 26+)

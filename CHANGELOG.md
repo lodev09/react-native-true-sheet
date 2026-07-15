@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 💥 Breaking changes
+
+- Requires React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- Synchronous per-detent container layout — the container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms. Previously it was sized to the screen height / largest detent; layouts relying on that may shift. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- Removed the `scrollable` prop — scrollables are auto-detected. `ScrollView`/`FlatList` work plugged in directly, like a regular view; insets, keyboard handling, and nested scrolling are wired automatically. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.9
 
 ### 🐛 Bug fixes
