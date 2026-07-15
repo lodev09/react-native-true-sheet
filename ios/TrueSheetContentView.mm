@@ -10,10 +10,11 @@
 
 #import "TrueSheetContentView.h"
 #import <React/RCTScrollViewComponentView.h>
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewShadowNode.h>
 #import "TrueSheetContainerView.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
@@ -22,12 +23,18 @@
 
 using namespace facebook::react;
 
+static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
+
 @implementation TrueSheetContentView {
+  TrueSheetContentViewShadowNode::ConcreteState::Shared _state;
   RCTScrollViewComponentView *_pinnedScrollView;
+  UIScrollView *_observedScrollView;
   CGSize _lastSize;
   CGFloat _bottomInset;
   CGFloat _originalIndicatorBottomInset;
   BOOL _observingTextChanges;
+  BOOL _scrollableBounded;
+  BOOL _isReportPending;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -44,6 +51,26 @@ using namespace facebook::react;
 
 - (void)dealloc {
   [self stopObservingTextChanges];
+  [self unobserveScrollViewContentSize];
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetContentViewShadowNode::ConcreteState const>(state);
+}
+
+// Tells the shadow node to fill the container (flexGrow/flexShrink) so the
+// pinned ScrollView's viewport is bounded to the visible space.
+- (void)setScrollableBounded:(BOOL)bounded {
+  if (_scrollableBounded == bounded) {
+    return;
+  }
+  _scrollableBounded = bounded;
+
+  if (_state) {
+    TrueSheetContentViewState newState;
+    newState.scrollableBounded = bounded;
+    _state->updateState(std::move(newState));
+  }
 }
 
 #pragma mark - Text Change Observing
@@ -70,15 +97,52 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
-           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
-  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+- (CGFloat)naturalHeight {
+  CGFloat height = self.frame.size.height;
+  if (_pinnedScrollView) {
+    height += _pinnedScrollView.scrollView.contentSize.height - _pinnedScrollView.frame.size.height;
+  }
+  return MAX(0, height);
+}
 
-  CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
+- (void)reportSizeIfChanged {
+  // naturalHeight mixes frames from different views; mid-transaction they're
+  // momentarily inconsistent (parent updates before the ScrollView), which
+  // feeds back into the auto detent and oscillates. Coalesce to the next
+  // main-queue tick so frames are settled before measuring.
+  if (_pinnedScrollView) {
+    if (_isReportPending) {
+      return;
+    }
+    _isReportPending = YES;
+
+    __weak __typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf) {
+        return;
+      }
+      strongSelf->_isReportPending = NO;
+      [strongSelf reportSizeNow];
+    });
+    return;
+  }
+
+  [self reportSizeNow];
+}
+
+- (void)reportSizeNow {
+  CGSize newSize = CGSizeMake(self.frame.size.width, self.naturalHeight);
   if (!CGSizeEqualToSize(newSize, _lastSize)) {
     _lastSize = newSize;
     [self.delegate contentViewDidChangeSize:newSize];
   }
+}
+
+- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+  [self reportSizeIfChanged];
 }
 
 #pragma mark - Child Mounting
@@ -118,9 +182,12 @@ using namespace facebook::react;
   if (_pinnedScrollView) {
     [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
   }
+  [self unobserveScrollViewContentSize];
+  [self setScrollableBounded:NO];
   _pinnedScrollView = nil;
   _bottomInset = 0;
   _originalIndicatorBottomInset = 0;
+  [self reportSizeIfChanged];
 }
 
 - (void)setupScrollableWithBottomInset:(CGFloat)bottomInset {
@@ -143,6 +210,10 @@ using namespace facebook::react;
   if (!_pinnedScrollView) {
     _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
+
+    [self observeScrollViewContentSize];
+    [self setScrollableBounded:YES];
+    [self reportSizeIfChanged];
   }
 
   _bottomInset = bottomInset;
@@ -154,6 +225,39 @@ using namespace facebook::react;
   if (keyboardHeight > 0) {
     [self setScrollViewContentInset:keyboardHeight indicatorInset:_originalIndicatorBottomInset + keyboardHeight];
   }
+}
+
+// Content growth is invisible to layout once the viewport is bounded, so track
+// the scroll content size directly to keep the auto detent height in sync.
+- (void)observeScrollViewContentSize {
+  UIScrollView *scrollView = _pinnedScrollView.scrollView;
+  if (_observedScrollView == scrollView) {
+    return;
+  }
+  [self unobserveScrollViewContentSize];
+  _observedScrollView = scrollView;
+  [scrollView addObserver:self
+               forKeyPath:@"contentSize"
+                  options:NSKeyValueObservingOptionNew
+                  context:TrueSheetContentSizeContext];
+}
+
+- (void)unobserveScrollViewContentSize {
+  if (_observedScrollView) {
+    [_observedScrollView removeObserver:self forKeyPath:@"contentSize" context:TrueSheetContentSizeContext];
+    _observedScrollView = nil;
+  }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context {
+  if (context == TrueSheetContentSizeContext) {
+    [self reportSizeIfChanged];
+    return;
+  }
+  [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
@@ -330,6 +434,9 @@ using namespace facebook::react;
   [super prepareForRecycle];
   [self stopObservingTextChanges];
   [self clearScrollable];
+  _state.reset();
+  _scrollableBounded = NO;
+  _lastSize = CGSizeZero;
 }
 
 @end

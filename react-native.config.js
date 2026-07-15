@@ -3,7 +3,10 @@ module.exports = {
     platforms: {
       ios: {},
       android: {
-        componentDescriptors: ['TrueSheetViewComponentDescriptor'],
+        componentDescriptors: [
+          'TrueSheetViewComponentDescriptor',
+          'TrueSheetContentViewComponentDescriptor',
+        ],
         cmakeListsPath: '../android/src/main/jni/CMakeLists.txt',
       },
     },

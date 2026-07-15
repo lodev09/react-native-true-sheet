@@ -17,7 +17,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
   return (
     <TrueSheet
       ref={ref}
-      detents={[0.5, 1]}
+      detents={['auto', 1]}
       backgroundBlur="dark"
       backgroundColor={DARK}
       scrollableOptions={{
@@ -40,7 +40,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       <View style={styles.wrapper}>
         <FlatList
           ref={scrollRef}
-          data={times(10, (i) => i)}
+          data={times(2, (i) => i)}
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           ItemSeparatorComponent={Spacer}

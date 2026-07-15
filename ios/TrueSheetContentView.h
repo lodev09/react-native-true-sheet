@@ -33,6 +33,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
+/**
+ * Content height with the pinned ScrollView's viewport replaced by its content
+ * size — the height the content wants regardless of container bounds.
+ * Falls back to the frame height when no ScrollView is pinned.
+ */
+@property (nonatomic, readonly) CGFloat naturalHeight;
+
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**

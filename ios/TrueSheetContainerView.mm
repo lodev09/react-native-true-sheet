@@ -107,7 +107,7 @@ using namespace facebook::react;
 #pragma mark - Layout
 
 - (CGFloat)contentHeight {
-  return _contentView ? _contentView.frame.size.height : 0;
+  return _contentView ? _contentView.naturalHeight : 0;
 }
 
 - (CGFloat)headerHeight {

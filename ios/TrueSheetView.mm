@@ -19,6 +19,7 @@
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
+#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
@@ -275,8 +276,15 @@ using namespace facebook::react;
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
 
   if (_controller) {
-    // Initialize with _controller size to set initial width
-    [self viewControllerDidChangeSize:_controller.view.frame.size];
+    CGSize size = _controller.view.frame.size;
+    if (size.width < 1 || size.height < 1) {
+      // Pre-present the controller has no layout yet. Seed with screen
+      // dimensions so content (e.g. a FlatList viewport) can lay out and
+      // measure before the sheet presents (parity with Android).
+      UIWindow *window = [WindowUtil keyWindow];
+      size = window ? window.bounds.size : UIScreen.mainScreen.bounds.size;
+    }
+    [self viewControllerDidChangeSize:size];
   }
 }
 
