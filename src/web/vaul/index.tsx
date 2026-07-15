@@ -443,13 +443,16 @@ export function Root({
       return false;
     }
 
-    // Disallow dragging if drawer was scrolled within `scrollLockTimeout`
+    // Disallow dragging if drawer was scrolled within `scrollLockTimeout`.
+    // Don't re-arm the timestamp here — a prevented drag attempt is not a
+    // scroll, and re-arming would keep the lock alive for as long as the
+    // finger moves, deadening the whole gesture instead of just the first
+    // `scrollLockTimeout` ms after the last real scroll.
     if (
       lastTimeDragPrevented.current &&
       date.getTime() - lastTimeDragPrevented.current.getTime() < scrollLockTimeout &&
       swipeAmount === 0
     ) {
-      lastTimeDragPrevented.current = date;
       return false;
     }
 
@@ -464,7 +467,11 @@ export function Root({
     while (element) {
       // Check if the element is scrollable
       if (element.scrollHeight > element.clientHeight) {
-        if (element.scrollTop !== 0) {
+        // `> 0`, not `!== 0`: Safari reports a negative scrollTop during the
+        // rubber-band bounce at the top — that's "at the top" for drag
+        // purposes, and treating it as scrolled would arm the scroll lock and
+        // delay the sheet drag until the bounce fully settles.
+        if (element.scrollTop > 0) {
           lastTimeDragPrevented.current = new Date();
 
           // The element is scrollable and not scrolled to the top, so don't drag
@@ -527,13 +534,21 @@ export function Root({
         return;
       }
 
-      if (!isAllowedToDrag.current && !shouldDrag(event.target, isDraggingInDirection)) return;
-      drawerRef.current.classList.add(DRAG_CLASS);
-      // If shouldDrag gave true once after pressing down on the drawer, we set isAllowedToDrag to true and it will remain true until we let go, there's no reason to disable dragging mid way, ever, and that's the solution to it
-      isAllowedToDrag.current = true;
-      // Touch pans latched onto a scroller would keep scrolling the content
-      // along with the sheet drag — freeze them for the drag's duration.
-      if (event.pointerType !== 'mouse') freezeScrollables(event.target);
+      if (!isAllowedToDrag.current) {
+        if (!shouldDrag(event.target, isDraggingInDirection)) return;
+        drawerRef.current.classList.add(DRAG_CLASS);
+        // If shouldDrag gave true once after pressing down on the drawer, we set isAllowedToDrag to true and it will remain true until we let go, there's no reason to disable dragging mid way, ever, and that's the solution to it
+        isAllowedToDrag.current = true;
+        // Touch pans latched onto a scroller would keep scrolling the content
+        // along with the sheet drag — freeze them for the drag's duration.
+        if (event.pointerType !== 'mouse') freezeScrollables(event.target);
+        // Drag can engage mid-gesture (content scrolled back to its top under
+        // the same finger, or the scroll lock expiring). Re-anchor and start
+        // moving on the next tick so the sheet tracks the finger from here
+        // instead of jumping by the distance the gesture already consumed.
+        pointerStart.current = isVertical(direction) ? event.pageY : event.pageX;
+        return;
+      }
       set(drawerRef.current, {
         transition: 'none',
       });
