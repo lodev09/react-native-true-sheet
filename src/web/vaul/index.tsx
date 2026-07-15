@@ -24,7 +24,7 @@ import type { DrawerDirection } from './types';
 import { useComposedRefs } from './use-composed-refs';
 import { useControllableState } from './use-controllable-state';
 import { usePositionFixed } from './use-position-fixed';
-import { isInput, usePreventScroll } from './use-prevent-scroll';
+import { isInput, isScrollable, usePreventScroll } from './use-prevent-scroll';
 import { useScaleBackground } from './use-scale-background';
 import { useSnapPoints } from './use-snap-points';
 
@@ -337,6 +337,44 @@ export function Root({
     noBodyStyles,
   });
 
+  // While the sheet itself is being dragged, scrollables in the touched chain
+  // are frozen (overflow: hidden). Touch browsers latch the scroll gesture at
+  // touchstart and ignore preventDefault once scrolling has started, so making
+  // the scroller non-scrollable mid-gesture is the only reliable way to keep
+  // the content from panning along with the sheet.
+  const frozenScrollablesRef = React.useRef<
+    { element: HTMLElement; overflowX: string; overflowY: string }[] | null
+  >(null);
+
+  function freezeScrollables(target: EventTarget) {
+    if (frozenScrollablesRef.current) return;
+    const frozen: { element: HTMLElement; overflowX: string; overflowY: string }[] = [];
+    let element = target instanceof HTMLElement ? target : null;
+    while (element && element !== drawerRef.current) {
+      if (isScrollable(element)) {
+        frozen.push({
+          element,
+          overflowX: element.style.overflowX,
+          overflowY: element.style.overflowY,
+        });
+        element.style.overflowX = 'hidden';
+        element.style.overflowY = 'hidden';
+      }
+      element = element.parentElement;
+    }
+    frozenScrollablesRef.current = frozen;
+  }
+
+  function unfreezeScrollables() {
+    const frozen = frozenScrollablesRef.current;
+    if (!frozen) return;
+    frozenScrollablesRef.current = null;
+    for (const { element, overflowX, overflowY } of frozen) {
+      element.style.overflowX = overflowX;
+      element.style.overflowY = overflowY;
+    }
+  }
+
   function getScale() {
     return (window.innerWidth - WINDOW_TOP_OFFSET) / window.innerWidth;
   }
@@ -386,7 +424,16 @@ export function Root({
     }
 
     if (swipeAmount !== null) {
-      if (direction === 'bottom' ? swipeAmount > 0 : swipeAmount < 0) {
+      // Translated past the drag threshold → keep dragging. Below the last
+      // snap point the threshold is 0, so the sheet always wins over content
+      // scrolling. At the last snap point the threshold is its resting
+      // translate — which can still be > 0 when the max detent < 1 — so an
+      // at-rest sheet falls through to the scroll checks and content
+      // scrolling wins, matching native. Mid-drag/mid-animation the sheet is
+      // displaced past rest and still wins.
+      const atLastSnapPoint = snapPoints && activeSnapPointIndex === snapPoints.length - 1;
+      const restOffset = atLastSnapPoint ? (snapPointsOffset?.[activeSnapPointIndex!] ?? 0) : 0;
+      if (direction === 'bottom' ? swipeAmount > restOffset + 1 : swipeAmount < restOffset - 1) {
         return true;
       }
     }
@@ -484,6 +531,9 @@ export function Root({
       drawerRef.current.classList.add(DRAG_CLASS);
       // If shouldDrag gave true once after pressing down on the drawer, we set isAllowedToDrag to true and it will remain true until we let go, there's no reason to disable dragging mid way, ever, and that's the solution to it
       isAllowedToDrag.current = true;
+      // Touch pans latched onto a scroller would keep scrolling the content
+      // along with the sheet drag — freeze them for the drag's duration.
+      if (event.pointerType !== 'mouse') freezeScrollables(event.target);
       set(drawerRef.current, {
         transition: 'none',
       });
@@ -691,6 +741,7 @@ export function Root({
 
     drawerRef.current.classList.remove(DRAG_CLASS);
     isAllowedToDrag.current = false;
+    unfreezeScrollables();
     setIsDragging(false);
     dragEndTime.current = new Date();
   }
@@ -700,6 +751,7 @@ export function Root({
 
     drawerRef.current.classList.remove(DRAG_CLASS);
     isAllowedToDrag.current = false;
+    unfreezeScrollables();
     setIsDragging(false);
     dragEndTime.current = new Date();
     const swipeAmount = getTranslate(drawerRef.current, direction);

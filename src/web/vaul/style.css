@@ -1,7 +1,19 @@
+/* Registered so it can transition in sync with `transform` during snaps.
+   Descendants derive their visible-height layout from it, so `inherits: true`
+   is required. Unsupported browsers ignore this and the value just jumps to
+   the snap target instead of animating. */
+@property --snap-point-height {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 [data-vaul-drawer] {
   touch-action: none;
   will-change: transform;
-  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  transition:
+    transform 0.5s cubic-bezier(0.32, 0.72, 0, 1),
+    --snap-point-height 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   animation-duration: 0.5s;
   animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -82,6 +94,17 @@
 
 [data-vaul-drawer][data-vaul-delayed-snap-points='true'][data-vaul-drawer-direction='right'] {
   transform: translate3d(var(--snap-point-height, 0), 0, 0);
+}
+
+/* Below the last snap point, vertical touch pans should move the sheet — not
+   scroll the content (matches native). touch-action is latched at gesture
+   start and ancestors above a scroller aren't consulted, so every descendant
+   (nested scrollers included) must opt out of vertical panning ahead of time.
+   pan-x keeps horizontal carousels inside the content working. Wheel/trackpad
+   scrolling is unaffected. */
+[data-vaul-scroll-locked],
+[data-vaul-scroll-locked] * {
+  touch-action: pan-x !important;
 }
 
 [data-vaul-overlay][data-vaul-snap-points='false'] {
