@@ -55,6 +55,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 @implementation TrueSheetViewController {
   TrueSheetPositionState _lastEmittedPositionState;
   CGSize _lastReportedSize;
+  CGFloat _autoDetentHeight;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -853,6 +854,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [self setupSheetDetents];
 }
 
+- (void)invalidateDetents {
+  _autoDetentHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  if (@available(iOS 16.0, *)) {
+    [self.sheet invalidateDetents];
+  }
+}
+
 - (void)setupSheetDetents {
   UISheetPresentationController *sheet = self.sheet;
   if (!sheet) {
@@ -863,13 +871,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  _autoDetentHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
-    UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
-                                                             withAutoHeight:autoHeight
-                                                                    atIndex:index];
+    UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent atIndex:index];
     [detents addObject:sheetDetent];
   }
 
@@ -896,9 +902,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   }
 }
 
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
-                                         withAutoHeight:(CGFloat)autoHeight
-                                                atIndex:(NSInteger)index {
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent atIndex:(NSInteger)index {
   if (![detent isKindOfClass:[NSNumber class]]) {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
@@ -907,7 +911,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight atIndex:index];
+      // Resolve from _autoDetentHeight — refreshed only in setupSheetDetents
+      // and invalidateDetents — so content measured mid-presentation is picked
+      // up on invalidation, while UIKit's spontaneous re-resolutions (e.g.
+      // while a child sheet dismisses) read a stable value.
+      return [self customDetentWithIdentifier:@"custom-auto"
+                                      atIndex:index
+                                  heightBlock:^CGFloat {
+                                    return self->_autoDetentHeight;
+                                  }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -940,13 +952,25 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
                                                              height:(CGFloat)height
                                                             atIndex:(NSInteger)index API_AVAILABLE(ios(16.0)) {
-  CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
+  return [self customDetentWithIdentifier:identifier
+                                  atIndex:index
+                              heightBlock:^CGFloat {
+                                return height;
+                              }];
+}
+
+- (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
+                                                            atIndex:(NSInteger)index
+                                                        heightBlock:(CGFloat (^)(void))heightBlock
+  API_AVAILABLE(ios(16.0)) {
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         self->_detentCalculator.maxDetentHeight = maxDetentValue;
 
+                        CGFloat height = heightBlock();
+                        CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
                         CGFloat maxValue = self.maxContentHeight
                                              ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
                                              : maxDetentValue;

@@ -563,6 +563,9 @@ using namespace facebook::react;
 
   if (_controller.isBeingPresented) {
     _pendingSizeChange = YES;
+    // The auto detent resolves contentHeight lazily — retarget the in-flight
+    // presentation now instead of visibly resizing after didPresent.
+    [_controller invalidateDetents];
     return;
   }
 
@@ -571,6 +574,11 @@ using namespace facebook::react;
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
     if (!self->_containerView)
+      return;
+
+    // Rebuilding detents mid-dismiss perturbs the presentation stack,
+    // visibly glitching the sheet behind. The sheet is going away — drop it.
+    if (self->_controller.isBeingDismissed)
       return;
 
     // Refresh here (not just on peek size events) since the peek's offset

@@ -91,6 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetDetents;
 - (void)setupSheetDetentsForSizeChange;
 - (void)setupSheetDetentsForDetentsChange;
+- (void)invalidateDetents;
 - (void)setupDraggable;
 - (void)setupAnchorViewInView:(UIView *)parentView;
 
