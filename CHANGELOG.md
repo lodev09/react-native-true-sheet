@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.9
+
 ### 🐛 Bug fixes
 
 - **Web**: The `peek` detent's `TrueSheetPeek` content offset is now measured live during initial presentation — previously the first `willPresent` on autopresent missed it (state lags mount by a frame) and reported only the header/footer height. ([#742](https://github.com/lodev09/react-native-true-sheet/pull/742) by [@lodev09](https://github.com/lodev09))
