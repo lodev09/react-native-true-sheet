@@ -255,6 +255,36 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
 
+  // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
+  // Track it here so the form sheet can size its card to fit content,
+  // clamped between a minimum ratio of the viewport and a maximum derived
+  // from `detachedOffset` (the breathing room left at top + bottom of the
+  // floating card).
+  const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
+
+  const effectiveMaxContentHeight = useMemo<number | undefined>(() => {
+    if (maxContentHeight !== undefined) return maxContentHeight;
+    if (!isFormSheet) return undefined;
+    const min = windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO;
+    const max = Math.max(min, windowHeight - 2 * detachedOffset);
+    if (measuredContentHeight <= 0) return min;
+    return Math.max(min, Math.min(measuredContentHeight, max));
+  }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
+
+  // Center the form sheet using the actual visible drawer height. Vaul
+  // auto-sizes to content (capped by `maxContentHeight`), so when content is
+  // shorter than `effectiveMaxContentHeight`'s min-clamped floor, using that
+  // for the offset would push a small sheet below the viewport center.
+  const effectiveDetachedOffset = useMemo(() => {
+    if (!isFormSheet) return detachedOffset;
+    const max = Math.max(0, windowHeight - 2 * detachedOffset);
+    const visibleHeight =
+      measuredContentHeight > 0
+        ? Math.min(measuredContentHeight, max)
+        : (effectiveMaxContentHeight ?? 0);
+    return Math.max(0, (windowHeight - visibleHeight) / 2);
+  }, [isFormSheet, windowHeight, detachedOffset, measuredContentHeight, effectiveMaxContentHeight]);
+
   // Present/dismiss events. The sheet settles via a CSS `transform` transition
   // on either the drawer (snap-points on autopresent) or the wrapper (whole-
   // card slide on reopen/dismiss). `Animation.finished` from the Web Animations
@@ -285,53 +315,90 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     activeSnapPointRef.current = activeSnapPoint;
   });
 
-  const computeDetentInfo = useCallback((): DetentInfoEventPayload => {
-    const snap = activeSnapPointRef.current;
-    const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
-    const position = drawerContentRef.current?.getBoundingClientRect().top ?? 0;
-    const detent = typeof snap === 'number' ? snap : 0;
-    return { index, position, detent };
+  // Detent geometry — target top-Y (`positions`) and height ratio (`values`)
+  // per detent. Mirrors vaul's snap-offset math exactly (same effective
+  // height, ceiling, and 'auto'/'peek' resolution) so computed targets match
+  // where the drawer actually settles. Numeric detent d → top-Y =
+  // (1 - d) * effectiveH. 'auto' resolves to the auto-size wrapper's measured
+  // height (tracked via vaul's `onContentHeightChange`) — same signal vaul
+  // uses to compute its snap offset. Inputs live in a render-synced ref so
+  // the compute callbacks stay referentially stable for the event effects.
+  const geometryInputsRef = useRef({
+    effectiveDetached,
+    effectiveDetachedOffset,
+    effectiveMaxContentHeight,
+    peekHeight,
+    measuredContentHeight,
+  });
+  geometryInputsRef.current = {
+    effectiveDetached,
+    effectiveDetachedOffset,
+    effectiveMaxContentHeight,
+    peekHeight,
+    measuredContentHeight,
+  };
+
+  const computeDetentGeometry = useCallback(() => {
+    const inputs = geometryInputsRef.current;
+    const windowH = window.innerHeight;
+    const effectiveH = inputs.effectiveDetached
+      ? windowH - inputs.effectiveDetachedOffset
+      : windowH;
+    // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
+    const ceiling =
+      inputs.effectiveMaxContentHeight !== undefined
+        ? Math.min(effectiveH, inputs.effectiveMaxContentHeight)
+        : effectiveH;
+    // Matches vaul's 'auto' fallback (effectiveHeight / 2) before content is
+    // measured — keeps targets consistent even before the drawer mounts.
+    const autoHeight = Math.min(
+      inputs.measuredContentHeight > 0 ? inputs.measuredContentHeight : effectiveH / 2,
+      ceiling
+    );
+
+    const positions: number[] = [];
+    const values: number[] = [];
+    for (const d of validDetentsRef.current) {
+      const h =
+        typeof d === 'number'
+          ? Math.min(d * effectiveH, ceiling)
+          : d === 'peek'
+            ? Math.min(inputs.peekHeight, ceiling)
+            : autoHeight;
+      positions.push(effectiveH - h);
+      values.push(effectiveH > 0 ? h / effectiveH : 0);
+    }
+    return { windowH, positions, values };
   }, []);
+
+  // Detent info for lifecycle events. Position/detent come from the active
+  // detent's target geometry — not the live DOM rect — so willPresent (drawer
+  // not mounted yet), detentChange (animation just started), and didPresent
+  // all emit the settled detent position, matching iOS/Android. Drag events
+  // pass `live: true` to report the in-flight rect position instead, also
+  // matching native.
+  const computeDetentInfo = useCallback(
+    (live = false): DetentInfoEventPayload => {
+      const snap = activeSnapPointRef.current;
+      const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+      const { windowH, positions, values } = computeDetentGeometry();
+      const target = index >= 0 ? positions[index] : undefined;
+      const position = live
+        ? (drawerContentRef.current?.getBoundingClientRect().top ?? target ?? windowH)
+        : (target ?? windowH);
+      return { index, position, detent: index >= 0 ? (values[index] ?? 0) : 0 };
+    },
+    [computeDetentGeometry]
+  );
 
   // Mirror Android: interpolate fractional index and detent from the drawer's
   // top-Y so continuous position updates (drag, animation) carry smooth values
-  // between detent boundaries. Numeric detent d → top-Y = (1 - d) * effectiveH.
-  // 'auto' resolves to the [data-vaul-auto-size-wrapper] element's measured
-  // offsetHeight — same signal vaul uses to compute its snap offset.
+  // between detent boundaries.
   const interpolateFromPosition = useCallback(
     (position: number): { index: number; detent: number } => {
-      const snaps = validDetentsRef.current;
-      const count = snaps.length;
+      const { windowH, positions, values } = computeDetentGeometry();
+      const count = positions.length;
       if (count === 0) return { index: -1, detent: 0 };
-
-      const windowH = window.innerHeight;
-      const effectiveH = effectiveDetached ? windowH - detachedOffset : windowH;
-      // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
-      const ceiling =
-        maxContentHeight !== undefined ? Math.min(effectiveH, maxContentHeight) : effectiveH;
-
-      const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
-        '[data-vaul-auto-size-wrapper]'
-      );
-      const autoHeight = Math.min(autoWrapper?.offsetHeight ?? ceiling / 2, ceiling);
-
-      const positions: number[] = [];
-      const values: number[] = [];
-      for (let i = 0; i < count; i++) {
-        const d = snaps[i];
-        if (typeof d === 'number') {
-          const h = Math.min(d * effectiveH, ceiling);
-          positions.push(effectiveH - h);
-          values.push(effectiveH > 0 ? h / effectiveH : 0);
-        } else if (d === 'peek') {
-          const h = Math.min(peekHeight, ceiling);
-          positions.push(effectiveH - h);
-          values.push(effectiveH > 0 ? h / effectiveH : 0);
-        } else {
-          positions.push(effectiveH - autoHeight);
-          values.push(effectiveH > 0 ? autoHeight / effectiveH : 0);
-        }
-      }
 
       // Absorb subpixel drift from getBoundingClientRect so at-rest positions
       // don't sneak into the below-first branch and emit near-zero negatives
@@ -378,7 +445,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       return { index: count - 1, detent: values[count - 1]! };
     },
-    [effectiveDetached, detachedOffset, maxContentHeight, peekHeight]
+    [computeDetentGeometry]
   );
 
   const handlePositionChange = useCallback(
@@ -504,14 +571,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const handleDrag = useCallback(() => {
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
-      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo() } as DragBeginEvent);
+      onDragBeginRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragBeginEvent);
     }
-    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DragChangeEvent);
+    onDragChangeRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragChangeEvent);
   }, [computeDetentInfo]);
   const handleRelease = useCallback(() => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    onDragEndRef.current?.({ nativeEvent: computeDetentInfo() } as DragEndEvent);
+    onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
   }, [computeDetentInfo]);
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
@@ -764,39 +831,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Form-sheet style (presentation='form'): centered floating card with a
   // default width and a height fit to content. We reuse the existing detached
   // mechanic so drag/snap math stays correct — the wrapper is bottom-attached
-  // with a computed offset that centers it vertically. `presentation` is
-  // absolute: when 'form', `maxContentWidth` is ignored and the card uses
-  // DEFAULT_FORM_SHEET_WIDTH.
-
-  // Vaul measures the auto-size wrapper's offsetHeight (always, post fork).
-  // Track it here so the form sheet can size its card to fit content,
-  // clamped between a minimum ratio of the viewport and a maximum derived
-  // from `detachedOffset` (the breathing room left at top + bottom of the
-  // floating card).
-  const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
-
-  const effectiveMaxContentHeight = useMemo<number | undefined>(() => {
-    if (maxContentHeight !== undefined) return maxContentHeight;
-    if (!isFormSheet) return undefined;
-    const min = windowHeight * DEFAULT_FORM_SHEET_HEIGHT_RATIO;
-    const max = Math.max(min, windowHeight - 2 * detachedOffset);
-    if (measuredContentHeight <= 0) return min;
-    return Math.max(min, Math.min(measuredContentHeight, max));
-  }, [maxContentHeight, isFormSheet, windowHeight, detachedOffset, measuredContentHeight]);
-
-  // Center the form sheet using the actual visible drawer height. Vaul
-  // auto-sizes to content (capped by `maxContentHeight`), so when content is
-  // shorter than `effectiveMaxContentHeight`'s min-clamped floor, using that
-  // for the offset would push a small sheet below the viewport center.
-  const effectiveDetachedOffset = useMemo(() => {
-    if (!isFormSheet) return detachedOffset;
-    const max = Math.max(0, windowHeight - 2 * detachedOffset);
-    const visibleHeight =
-      measuredContentHeight > 0
-        ? Math.min(measuredContentHeight, max)
-        : (effectiveMaxContentHeight ?? 0);
-    return Math.max(0, (windowHeight - visibleHeight) / 2);
-  }, [isFormSheet, windowHeight, detachedOffset, measuredContentHeight, effectiveMaxContentHeight]);
+  // with a computed offset (`effectiveDetachedOffset`, declared above) that
+  // centers it vertically. `presentation` is absolute: when 'form',
+  // `maxContentWidth` is ignored and the card uses DEFAULT_FORM_SHEET_WIDTH.
 
   // The wrapper holds all horizontal sizing/anchoring so its rounded-bottom
   // clip (when detached) aligns with the drawer's horizontal bounds on
