@@ -5,6 +5,7 @@
 ### 🐛 Bug fixes
 
 - **Web**: Initial presentation events now report accurate `auto` and `peek` detent geometry by waiting until the drawer is mounted and measurable. ([#740](https://github.com/lodev09/react-native-true-sheet/pull/740) by [@lodev09](https://github.com/lodev09))
+- **Web**: Scrollable sheets at the maximum detent now continue dragging after Chrome mobile cancels the pointer stream during scroll bounce. ([#741](https://github.com/lodev09/react-native-true-sheet/pull/741) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.7
 
