@@ -8,13 +8,14 @@ import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
+import { ButtonGroup } from '../ButtonGroup';
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
-  const [itemCount, setItemCount] = useState(10);
+  const [itemCount, setItemCount] = useState(3);
 
   return (
     <TrueSheet
@@ -51,7 +52,13 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           ListFooterComponent={
             <>
               <Spacer />
-              <Button text="Add Item" onPress={() => setItemCount((count) => count + 1)} />
+              <ButtonGroup>
+                <Button text="Add Item" onPress={() => setItemCount((count) => count + 1)} />
+                <Button
+                  text="Remove Item"
+                  onPress={() => setItemCount((count) => Math.max(0, count - 1))}
+                />
+              </ButtonGroup>
             </>
           }
         />
