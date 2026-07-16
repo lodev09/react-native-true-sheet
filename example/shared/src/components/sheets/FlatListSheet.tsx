@@ -1,4 +1,4 @@
-import { forwardRef, useRef } from 'react';
+import { forwardRef, useRef, useState } from 'react';
 import { StyleSheet, FlatList, View, Platform } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
@@ -7,12 +7,14 @@ import { DemoContent } from '../DemoContent';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 import { Footer } from '../Footer';
+import { Button } from '../Button';
 
 interface FlatListSheetProps extends TrueSheetProps {}
 
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
+  const [itemCount, setItemCount] = useState(2);
 
   return (
     <TrueSheet
@@ -40,12 +42,18 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       <View style={styles.wrapper}>
         <FlatList
           ref={scrollRef}
-          data={times(2, (i) => i)}
+          data={times(itemCount, (i) => i)}
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           ItemSeparatorComponent={Spacer}
           scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
+          ListFooterComponent={
+            <>
+              <Spacer />
+              <Button text="Add Item" onPress={() => setItemCount((count) => count + 1)} />
+            </>
+          }
         />
       </View>
       <TrueSheet detents={[0.3]} ref={testRef}>
