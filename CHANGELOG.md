@@ -6,10 +6,6 @@
 
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height and resizes as content grows or shrinks. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
 
-### 🐛 Bug fixes
-
-- **iOS**: Content size changes no longer rebuild the sheet's detents — auto/peek detents resolve lazily and are invalidated in place, fixing visible glitches on the sheet behind during rapid present/dismiss and presentations snapping without animation. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
-
 ### 💥 Breaking changes
 
 - Requires React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
