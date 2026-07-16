@@ -87,4 +87,6 @@ Add entry to `Unreleased` section in `CHANGELOG.md` for user-facing changes:
 
 Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`
 
+One entry per PR — summarize the PR's user-facing change in a single entry under its primary section.
+
 Sort entries by platform: **iOS** first, then **Android**, then **Web**, then cross-platform or unscoped entries last.
