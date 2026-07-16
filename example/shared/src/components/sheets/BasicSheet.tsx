@@ -114,7 +114,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       backgroundColor={detentIndex > 0 ? BLUE : undefined}
       header={<Header />}
       footer={<Footer />}
-      insetAdjustment="never"
       {...rest}
     >
       {times(contentCount, (i) => (
@@ -150,7 +149,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         name="basic-child"
         detents={['auto', 1]}
         backgroundColor={DARK}
-        style={styles.content}
+        style={styles.childContent}
         footer={<Footer />}
       >
         <DemoContent color={DARK_BLUE} />
@@ -166,10 +165,15 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING,
-    paddingTop: SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
+  childContent: {
+    paddingHorizontal: SPACING,
+    paddingTop: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
+    gap: GAP,
+  }
 });
 
 BasicSheet.displayName = 'BasicSheet';
