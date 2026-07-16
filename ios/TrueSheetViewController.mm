@@ -55,6 +55,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 @implementation TrueSheetViewController {
   TrueSheetPositionState _lastEmittedPositionState;
   CGSize _lastReportedSize;
+  CGFloat _autoDetentHeight;
+  CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -841,11 +843,31 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 #pragma mark - Sheet Configuration
 
+/**
+ * Applies a content/header/footer/peek size change to the already-built
+ * detents. Auto and peek detents resolve lazily from snapshots, so this only
+ * refreshes the snapshots and invalidates — never reassigns `sheet.detents`,
+ * which would force UIKit to re-layout the whole presentation stack (visibly
+ * perturbing a sheet behind this one).
+ */
 - (void)setupSheetDetentsForSizeChange {
-  [self.sheet animateChanges:^{
-    _pendingContentSizeChange = YES;
-    [self setupSheetDetents];
-  }];
+  if (@available(iOS 16.0, *)) {
+    CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+    CGFloat peekHeight = [_detentCalculator peekHeight];
+
+    if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
+      return;
+    }
+
+    _autoDetentHeight = autoHeight;
+    _peekDetentHeight = peekHeight;
+
+    [self.sheet animateChanges:^{
+      self->_pendingContentSizeChange = YES;
+      [self.sheet invalidateDetents];
+    }];
+  }
+  // iOS 15: detents are fixed medium/large — size changes can't affect them.
 }
 
 - (void)setupSheetDetentsForDetentsChange {
@@ -863,13 +885,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  _autoDetentHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  _peekDetentHeight = [_detentCalculator peekHeight];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
-    UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent
-                                                             withAutoHeight:autoHeight
-                                                                    atIndex:index];
+    UISheetPresentationControllerDetent *sheetDetent = [self detentForValue:detent atIndex:index];
     [detents addObject:sheetDetent];
   }
 
@@ -896,18 +917,24 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   }
 }
 
-- (UISheetPresentationControllerDetent *)detentForValue:(id)detent
-                                         withAutoHeight:(CGFloat)autoHeight
-                                                atIndex:(NSInteger)index {
+- (UISheetPresentationControllerDetent *)detentForValue:(id)detent atIndex:(NSInteger)index {
   if (![detent isKindOfClass:[NSNumber class]]) {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
 
   CGFloat value = [detent doubleValue];
 
+  // Auto/peek resolve from height snapshots — refreshed only in
+  // setupSheetDetents and setupSheetDetentsForSizeChange — so size changes are
+  // picked up on invalidation, while UIKit's spontaneous re-resolutions (e.g.
+  // while a child sheet dismisses) read a stable value.
   if (value == -1) {
     if (@available(iOS 16.0, *)) {
-      return [self customDetentWithIdentifier:@"custom-auto" height:autoHeight atIndex:index];
+      return [self customDetentWithIdentifier:@"custom-auto"
+                                      atIndex:index
+                                  heightBlock:^CGFloat {
+                                    return self->_autoDetentHeight;
+                                  }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -915,7 +942,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   if (value == -2) {
     if (@available(iOS 16.0, *)) {
-      return [self customDetentWithIdentifier:@"custom-peek" height:[_detentCalculator peekHeight] atIndex:index];
+      return [self customDetentWithIdentifier:@"custom-peek"
+                                      atIndex:index
+                                  heightBlock:^CGFloat {
+                                    return self->_peekDetentHeight;
+                                  }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
     }
@@ -940,13 +971,25 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
                                                              height:(CGFloat)height
                                                             atIndex:(NSInteger)index API_AVAILABLE(ios(16.0)) {
-  CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
+  return [self customDetentWithIdentifier:identifier
+                                  atIndex:index
+                              heightBlock:^CGFloat {
+                                return height;
+                              }];
+}
+
+- (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
+                                                            atIndex:(NSInteger)index
+                                                        heightBlock:(CGFloat (^)(void))heightBlock
+  API_AVAILABLE(ios(16.0)) {
   return [UISheetPresentationControllerDetent
     customDetentWithIdentifier:identifier
                       resolver:^CGFloat(id<UISheetPresentationControllerDetentResolutionContext> context) {
                         CGFloat maxDetentValue = context.maximumDetentValue;
                         self->_detentCalculator.maxDetentHeight = maxDetentValue;
 
+                        CGFloat height = heightBlock();
+                        CGFloat bottomAdjustment = [self detentBottomAdjustmentForHeight:height];
                         CGFloat maxValue = self.maxContentHeight
                                              ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
                                              : maxDetentValue;
