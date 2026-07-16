@@ -458,10 +458,23 @@ using namespace facebook::react;
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
   [_controller setupSheetProps];
+
+  // Pin before measuring so a first-time pin doesn't shift sizes mid-animation.
+  [self setupScrollable];
+
+  // Measure synchronously so the presentation starts at the right height —
+  // async size reports would otherwise land mid-animation and force a
+  // detent retarget that snaps the presentation stack.
+  if (_containerView) {
+    _controller.contentHeight = @([_containerView contentHeight]);
+    _controller.headerHeight = @([_containerView headerHeight]);
+    _controller.footerHeight = @([_containerView footerHeight]);
+    _controller.peekContentHeight = @([_containerView peekContentHeight]);
+  }
+  _pendingSizeChange = NO;
+
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
-
-  [self setupScrollable];
 
   [_screensEventObserver capturePresenterScreenFromView:self];
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
@@ -558,27 +571,28 @@ using namespace facebook::react;
  * Debounced sheet update to handle rapid content/header size changes.
  */
 - (void)setupSheetDetentsForSizeChange {
-  if (_isSheetUpdatePending)
-    return;
-
+  // Retargeting the in-flight presentation makes UIKit snap the whole stack
+  // (including the sheet behind) instead of animating. Defer to didPresent —
+  // presentAtIndex measured synchronously, so this is usually a no-op.
   if (_controller.isBeingPresented) {
     _pendingSizeChange = YES;
-    // The auto detent resolves contentHeight lazily — retarget the in-flight
-    // presentation now instead of visibly resizing after didPresent.
-    [_controller invalidateDetents];
     return;
   }
+
+  // Not presented: presentAtIndex measures at present time.
+  // Dismissing: the sheet is going away — touching detents perturbs the
+  // presentation stack, visibly glitching the sheet behind.
+  if (!_controller.isPresented || _controller.isBeingDismissed)
+    return;
+
+  if (_isSheetUpdatePending)
+    return;
 
   _isSheetUpdatePending = YES;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
-    if (!self->_containerView)
-      return;
-
-    // Rebuilding detents mid-dismiss perturbs the presentation stack,
-    // visibly glitching the sheet behind. The sheet is going away — drop it.
-    if (self->_controller.isBeingDismissed)
+    if (!self->_containerView || self->_controller.isBeingDismissed)
       return;
 
     // Refresh here (not just on peek size events) since the peek's offset
