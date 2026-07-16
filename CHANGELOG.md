@@ -10,6 +10,7 @@
 ### 💥 Breaking changes
 
 - Synchronous per-detent container layout — the container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms (previously sized to the screen height / largest detent). The `scrollable` prop is removed — scrollables are auto-detected and work plugged in directly. Requires React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- The `auto` detent now derives from the container's Yoga layout. The footer is in-flow by default — it sits below the content, counts toward `auto`, and pinned scrollables shrink to make room for it; float it via `footerStyle` (`position: 'absolute'`) to overlay the content instead. Floating headers/footers no longer inflate `auto`/`peek` heights. ([#745](https://github.com/lodev09/react-native-true-sheet/pull/745) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.9
 
