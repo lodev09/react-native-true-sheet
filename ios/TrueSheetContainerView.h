@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize;
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize;
+- (void)containerViewDidLayout;
 
 @end
 
@@ -56,14 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;
 
 /**
- * Returns the current content height
+ * Returns the container's Yoga-resolved natural extent for the auto detent.
+ * In-flow header/footer count; floating (absolute) ones don't.
  */
-- (CGFloat)contentHeight;
-
-/**
- * Returns the current header height
- */
-- (CGFloat)headerHeight;
+- (CGFloat)autoHeight;
 
 /**
  * Returns the current footer height
@@ -71,7 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)footerHeight;
 
 /**
- * Returns the current height of the peek view within the content
+ * Returns the distance from the top of the container to the bottom of the peek view
  */
 - (CGFloat)peekContentHeight;
 

@@ -29,6 +29,7 @@ interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
   fun contentViewDidScroll()
   fun contentViewScrollViewDidChange()
+  fun contentViewDidChangeScrollableBounded(bounded: Boolean)
 }
 
 /**
@@ -138,7 +139,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   /**
    * Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-   * pinned ScrollView's viewport is bounded to the visible space.
+   * pinned ScrollView's viewport is bounded to the visible space. The
+   * container mirrors this in its own state to fill the sheet (see delegate).
    */
   private fun setScrollableBounded(bounded: Boolean) {
     if (scrollableBounded == bounded) return
@@ -149,6 +151,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       newState.putBoolean("scrollableBounded", bounded)
       it.updateState(newState)
     }
+
+    delegate?.contentViewDidChangeScrollableBounded(bounded)
   }
 
   fun setupScrollable(bottomInset: Int) {

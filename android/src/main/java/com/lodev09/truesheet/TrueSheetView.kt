@@ -623,6 +623,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     updateSheetIfNeeded()
   }
 
+  // The container's natural layout is the auto detent height — any layout
+  // change re-evaluates it (values refresh inside the debounced update).
+  override fun containerViewDidLayout() {
+    updateSheetIfNeeded()
+  }
+
   // ==================== RNScreensEventObserverDelegate ====================
 
   override fun presenterScreenWillDisappear() {

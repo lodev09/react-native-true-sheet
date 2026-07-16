@@ -1,12 +1,18 @@
 ---
 title: Adding Footer
-description: Add a floating footer component to the bottom sheet.
+description: Add a footer component fixed to the bottom of the sheet.
 keywords: [bottom sheet footer, bottom sheet floating footer, bottom sheet sticky footer]
 ---
 
-Do you need a FAB (Floating Action Button) on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
+Do you need action buttons on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
 
-`TrueSheet` provides first-class support for a `Footer` component. This component will float at the bottom of the sheet.
+`TrueSheet` provides first-class support for a `Footer` component. It sits at the bottom of the sheet, below the content — the content area shrinks to make room for it, and its height counts toward the [`auto`](../reference/types#sheetdetent) detent. To overlay the content instead, float it with [`footerStyle`](../reference/configuration#footerstyle):
+
+```tsx
+<TrueSheet footer={SomeFooter} footerStyle={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+```
+
+A floating footer takes no layout space, so it doesn't count toward `auto` — exactly like a hand-rolled absolute-positioned view.
 
 ## How?
 
@@ -110,4 +116,4 @@ const App = () => {
 }
 ```
 
-Since the footer floats, it stays visible at every detent. See [Peeking Content](peeking) for the full guide.
+The footer stays visible at every detent since the content shrinks to make room for it. See [Peeking Content](peeking) for the full guide.

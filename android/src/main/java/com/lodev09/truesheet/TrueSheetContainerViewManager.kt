@@ -2,6 +2,8 @@ package com.lodev09.truesheet
 
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PointerEvents
+import com.facebook.react.uimanager.ReactStylesDiffMap
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -16,6 +18,11 @@ class TrueSheetContainerViewManager : ViewGroupManager<TrueSheetContainerView>()
   override fun getName(): String = REACT_CLASS
 
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContainerView = TrueSheetContainerView(reactContext)
+
+  override fun updateState(view: TrueSheetContainerView, props: ReactStylesDiffMap?, stateWrapper: StateWrapper?): Any? {
+    view.stateWrapper = stateWrapper
+    return null
+  }
 
   @ReactProp(name = "pointerEvents")
   fun setPointerEvents(view: TrueSheetContainerView, pointerEventsStr: String?) {

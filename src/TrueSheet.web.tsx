@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import { useColorScheme, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import type {
   DetentChangeEvent,
@@ -192,10 +192,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       e.preventDefault();
       return;
     }
-    // The footer is rendered via vaul's `detachedSiblings` as a sibling of
-    // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
-    // clicks on it as "outside" the content. Don't dismiss for clicks that
-    // landed inside the wrapper.
+    // Don't dismiss for clicks that landed inside the drawer's wrapper
+    // (Radix can treat portal-adjacent nodes as "outside" the content).
     if (target instanceof Element) {
       const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
       if (wrapper && wrapper.contains(target)) {
@@ -245,7 +243,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
 
   // Measured header/footer heights drive the 'peek' snap point — mirrors
-  // native, where the controller tracks headerHeight/footerHeight.
+  // native, where the peek height derives from the layout's peek extent
+  // plus the footer height.
   const [headerHeight, setHeaderHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
 
@@ -271,9 +270,23 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const peekElRef = useRef<View>(null);
   const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
+  // A floating (absolute-positioned) header/footer overlays the content
+  // instead of taking flow space, so it doesn't count toward 'auto'/'peek'
+  // heights — mirrors native, where the container's yoga-resolved layout is
+  // the measured value.
+  const headerFloating = useMemo(
+    () => StyleSheet.flatten(headerStyle)?.position === 'absolute',
+    [headerStyle]
+  );
+  const footerFloating = useMemo(
+    () => StyleSheet.flatten(footerStyle)?.position === 'absolute',
+    [footerStyle]
+  );
+
   const peekHeight =
-    (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
-    DEFAULT_PEEK_HEIGHT;
+    (header && !headerFloating ? headerHeight : 0) +
+      (footer ? footerHeight : 0) +
+      peekContentHeight || DEFAULT_PEEK_HEIGHT;
 
   // Web mirror of native's scrollable handling for 'auto' detents: a plugged
   // scrollable keeps the sized (bounded) layout so its viewport is capped to
@@ -291,14 +304,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const contentEl = contentRef.current as unknown as HTMLElement | null;
     if (!contentEl || !contentEl.isConnected) return 0;
     const headerEl = headerElRef.current as unknown as HTMLElement | null;
-    let height = (headerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
+    const footerEl = footerElRef.current as unknown as HTMLElement | null;
+    let height =
+      (headerFloating ? 0 : (headerEl?.offsetHeight ?? 0)) +
+      contentEl.offsetHeight +
+      (footerFloating ? 0 : (footerEl?.offsetHeight ?? 0));
     const scroller = pinnedScrollerRef.current;
     const scrollContent = scroller?.firstElementChild;
     if (scroller?.isConnected && scrollContent instanceof HTMLElement) {
       height += scrollContent.offsetHeight - scroller.clientHeight;
     }
     return Math.max(0, height);
-  }, []);
+  }, [headerFloating, footerFloating]);
 
   useEffect(() => {
     if (!isOpen || !hasAutoDetent) return undefined;
@@ -336,6 +353,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         if (contentEl?.isConnected) resizeObserver.observe(contentEl);
         const headerEl = headerElRef.current as unknown as HTMLElement | null;
         if (headerEl) resizeObserver.observe(headerEl);
+        const footerEl = footerElRef.current as unknown as HTMLElement | null;
+        if (footerEl) resizeObserver.observe(footerEl);
         if (scroller) {
           resizeObserver.observe(scroller);
           if (scroller.firstElementChild) resizeObserver.observe(scroller.firstElementChild);
@@ -485,8 +504,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       peekEl && contentEl ? measurePeekContentHeight(peekEl, contentEl) : inputs.peekContentHeight;
     const livePeekHeight =
       headerEl || footerEl || peekEl
-        ? (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + livePeekContentHeight ||
-          DEFAULT_PEEK_HEIGHT
+        ? (headerFloating ? 0 : (headerEl?.offsetHeight ?? 0)) +
+            (footerEl?.offsetHeight ?? 0) +
+            livePeekContentHeight || DEFAULT_PEEK_HEIGHT
         : inputs.peekHeight;
 
     const positions: number[] = [];
@@ -502,7 +522,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       values.push(effectiveH > 0 ? h / effectiveH : 0);
     }
     return { windowH, effectiveH, ceiling, positions, values };
-  }, [measureNaturalHeight]);
+  }, [measureNaturalHeight, headerFloating]);
 
   // Detent info for lifecycle events. Position/detent come from the active
   // detent's target geometry — not the live DOM rect — so willPresent (drawer
@@ -1006,22 +1026,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const grabberHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
 
-  // Footer is rendered inside the wrapper via `detachedSiblings`, so it
-  // follows the wrapper on dismiss and drag-overshoot. Positioning is
-  // relative to the wrapper (contain: paint creates the containing block).
-  const footerFloatStyle = useMemo<React.CSSProperties>(
-    () => ({
-      position: 'fixed',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      // Wrapper has `pointer-events: none` to let clicks fall through; the
-      // footer must opt back in.
-      pointerEvents: 'auto',
-    }),
-    []
-  );
-
   // Form-sheet style (presentation='form'): centered floating card with a
   // default width and a height fit to content. We reuse the existing detached
   // mechanic so drag/snap math stays correct — the wrapper is bottom-attached
@@ -1144,15 +1148,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             ref={drawerContentRef}
             style={mergedContentStyle}
             onPointerDownOutside={handlePointerDownOutside}
-            detachedSiblings={
-              footer ? (
-                <div style={footerFloatStyle}>
-                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
-                    {isValidElement(footer) ? footer : createElement(footer)}
-                  </View>
-                </div>
-              ) : undefined
-            }
           >
             <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
@@ -1178,6 +1173,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 <View ref={contentRef} style={[contentFillStyle, style]}>
                   {children}
                 </View>
+                {footer && (
+                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                )}
               </div>
             ) : (
               // Natural flow so vaul can measure content height — required for
@@ -1191,6 +1191,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 <View ref={contentRef} style={style}>
                   {children}
                 </View>
+                {footer && (
+                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                )}
               </>
             )}
           </Drawer.Content>

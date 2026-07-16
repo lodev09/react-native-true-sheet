@@ -482,9 +482,10 @@ export class TrueSheet
       return Math.min(1, detent);
     });
 
-    // `auto` detents derive the sheet height from the content's natural height,
-    // so the content can't fill the container. Otherwise fill so flex layouts
-    // and ScrollViews/FlatLists work as-is, like a regular bounded view.
+    // `auto` detents derive the sheet height from the container's natural
+    // layout (header + content + footer as resolved by Yoga), so the container
+    // can't fill the sheet. Otherwise fill so flex layouts and
+    // ScrollViews/FlatLists work as-is, like a regular bounded view.
     const hasAutoDetent = resolvedDetents.includes(-1);
 
     // Cache grabberOptions to avoid creating a new object every render
@@ -539,7 +540,9 @@ export class TrueSheet
         onVisibilityChange={this.onVisibilityChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent style={styles.container}>
+          <TrueSheetContainerViewNativeComponent
+            style={hasAutoDetent ? undefined : styles.container}
+          >
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
                 {isValidElement(header) ? header : createElement(header)}
@@ -571,7 +574,9 @@ const styles = StyleSheet.create({
     zIndex: -9999,
     pointerEvents: 'box-none',
   },
-  // Fill the sheet so flex layouts track the sheet's size per detent
+  // Fill the sheet so flex layouts track the sheet's size per detent.
+  // Skipped for auto detents, where the container's natural height IS the
+  // detent height.
   container: {
     ...StyleSheet.absoluteFill,
   },
@@ -581,13 +586,10 @@ const styles = StyleSheet.create({
   header: {
     pointerEvents: 'box-none',
   },
-  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
-  // sheet's visible height
+  // In flow below the content — content's flex:1 pushes it to the sheet's
+  // bottom edge when the container fills. Float it via `footerStyle`
+  // (position: 'absolute') to overlay the content instead.
   footer: {
     pointerEvents: 'box-none',
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
 });

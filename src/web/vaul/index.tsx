@@ -1576,7 +1576,11 @@ Content.displayName = 'Drawer.Content';
 // margin-top (e.g. a grabber) stays inside the wrapper instead of collapsing
 // out — otherwise `offsetHeight` under-reports and the drawer positions the
 // wrapper below where the content actually ends.
-const autoSizeWrapperStyle: React.CSSProperties = { display: 'flow-root' };
+// `position: relative` makes the wrapper the containing block for
+// absolute-positioned children (e.g. a floated footer), so they pin to the
+// content's natural extent — parity with native, where the container is the
+// measured layout box.
+const autoSizeWrapperStyle: React.CSSProperties = { display: 'flow-root', position: 'relative' };
 
 export type HandleProps = React.ComponentPropsWithoutRef<'div'> & {
   preventCycle?: boolean;

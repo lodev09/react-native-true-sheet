@@ -59,7 +59,8 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 }
 
 // Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-// pinned ScrollView's viewport is bounded to the visible space.
+// pinned ScrollView's viewport is bounded to the visible space. The container
+// mirrors this in its own state to fill the sheet (see delegate).
 - (void)setScrollableBounded:(BOOL)bounded {
   if (_scrollableBounded == bounded) {
     return;
@@ -71,6 +72,8 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
     newState.scrollableBounded = bounded;
     _state->updateState(std::move(newState));
   }
+
+  [self.delegate contentViewDidChangeScrollableBounded:bounded];
 }
 
 #pragma mark - Text Change Observing

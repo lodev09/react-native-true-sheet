@@ -381,14 +381,9 @@ using namespace facebook::react;
   _controller.accessibilityContentView = _containerView;
   [_controller setupAccessibilityContainer];
 
-  CGFloat contentHeight = [_containerView contentHeight];
-  if (contentHeight > 0) {
-    _controller.contentHeight = @(contentHeight);
-  }
-
-  CGFloat headerHeight = [_containerView headerHeight];
-  if (headerHeight > 0) {
-    _controller.headerHeight = @(headerHeight);
+  CGFloat autoHeight = [_containerView autoHeight];
+  if (autoHeight > 0) {
+    _controller.autoHeight = @(autoHeight);
   }
 
   CGFloat footerHeight = [_containerView footerHeight];
@@ -466,8 +461,7 @@ using namespace facebook::react;
   // async size reports would otherwise land mid-animation and force a
   // detent retarget that snaps the presentation stack.
   if (_containerView) {
-    _controller.contentHeight = @([_containerView contentHeight]);
-    _controller.headerHeight = @([_containerView headerHeight]);
+    _controller.autoHeight = @([_containerView autoHeight]);
     _controller.footerHeight = @([_containerView footerHeight]);
     _controller.peekContentHeight = @([_containerView peekContentHeight]);
   }
@@ -595,20 +589,26 @@ using namespace facebook::react;
     if (!self->_containerView || self->_controller.isBeingDismissed)
       return;
 
-    // Refresh here (not just on peek size events) since the peek's offset
-    // within the content can change without its own size changing.
+    // Refresh here (not just on the originating size events) since layout
+    // offsets can change without the reporting view's own size changing
+    // (e.g. a header resize shifts the content's origin).
+    self->_controller.autoHeight = @([self->_containerView autoHeight]);
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
     [self->_controller setupSheetDetentsForSizeChange];
   });
 }
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize {
-  _controller.contentHeight = @(newSize.height);
   [self setupSheetDetentsForSizeChange];
 }
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize {
-  _controller.headerHeight = @(newSize.height);
+  [self setupSheetDetentsForSizeChange];
+}
+
+// The container's natural layout is the auto detent height — any layout
+// change re-evaluates it (values refresh inside the debounced update).
+- (void)containerViewDidLayout {
   [self setupSheetDetentsForSizeChange];
 }
 

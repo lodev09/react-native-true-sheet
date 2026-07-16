@@ -55,8 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSArray<NSNumber *> *detents;
 @property (nonatomic, strong, nullable) NSNumber *maxContentHeight;
 @property (nonatomic, strong, nullable) NSNumber *maxContentWidth;
-@property (nonatomic, strong, nullable) NSNumber *contentHeight;
-@property (nonatomic, strong, nullable) NSNumber *headerHeight;
+@property (nonatomic, strong, nullable) NSNumber *autoHeight;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;

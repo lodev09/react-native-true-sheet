@@ -3,6 +3,8 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
@@ -16,6 +18,7 @@ interface TrueSheetContainerViewDelegate {
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
   fun containerViewPeekDidChangeSize(width: Int, height: Int)
+  fun containerViewDidLayout()
 }
 
 /**
@@ -31,29 +34,45 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   TrueSheetPeekViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
+  var stateWrapper: StateWrapper? = null
 
   var contentView: TrueSheetContentView? = null
   var headerView: TrueSheetHeaderView? = null
   var footerView: TrueSheetFooterView? = null
   var peekView: TrueSheetPeekView? = null
 
-  var contentHeight: Int = 0
-  var headerHeight: Int = 0
   var footerHeight: Int = 0
 
+  private var scrollableBounded = false
+
   /**
-   * Distance from the top of the content view to the bottom of the peek view.
-   * Includes the peek view's offset within the content (padding, views above it)
-   * so the peek detent reveals everything down to the peek content's bottom edge.
+   * The container's Yoga-resolved natural extent — the height the auto detent
+   * needs. In-flow header/footer count; floating (absolute-positioned) ones
+   * don't. When a pinned ScrollView bounds the layout, the viewport is
+   * replaced by the ScrollView's content size.
+   */
+  val autoHeight: Int
+    get() {
+      val scrollDelta = contentView?.let { it.naturalHeight - it.height } ?: 0
+      return maxOf(0, height + scrollDelta)
+    }
+
+  /**
+   * Distance from the top of the container to the bottom of the peek view.
+   * Includes the peek view's offset within the layout (in-flow header, padding,
+   * views above it) so the peek detent reveals everything down to the peek
+   * content's bottom edge. A floating (absolute) header doesn't offset the
+   * content, so it doesn't count.
    */
   val peekContentHeight: Int
     get() {
-      val peek = peekView ?: return 0
-      val content = contentView ?: return peek.height
+      // No peek view: collapse to the content's layout offset — the bottom of
+      // an in-flow header — so the peek detent reveals just the header.
+      val peek = peekView ?: return contentView?.top ?: 0
 
       var bottom = peek.height
       var view: View = peek
-      while (view !== content) {
+      while (view !== this) {
         bottom += view.top
         view = view.parent as? View ?: return peek.height
       }
@@ -81,6 +100,28 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   fun setupScrollable() {
     val bottomInset = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) scrollViewBottomInset else 0
     contentView?.setupScrollable(bottomInset)
+  }
+
+  /**
+   * Tells the shadow node to fill the sheet (flexGrow/flexShrink) instead of
+   * sizing naturally, so a pinned ScrollView's viewport is bounded.
+   */
+  private fun setScrollableBounded(bounded: Boolean) {
+    if (scrollableBounded == bounded) return
+    scrollableBounded = bounded
+
+    stateWrapper?.let {
+      val newState = WritableNativeMap()
+      newState.putBoolean("scrollableBounded", bounded)
+      it.updateState(newState)
+    }
+  }
+
+  // Any layout change here can move the auto detent height (the container's
+  // natural height IS the auto height) — let the sheet re-evaluate.
+  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    super.onSizeChanged(w, h, oldw, oldh)
+    delegate?.containerViewDidLayout()
   }
 
   fun setupKeyboardHandler() {
@@ -179,7 +220,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   // ==================== Delegate Implementations ====================
 
   override fun contentViewDidChangeSize(width: Int, height: Int) {
-    contentHeight = height
     delegate?.containerViewContentDidChangeSize(width, height)
   }
 
@@ -191,8 +231,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     delegate?.containerViewScrollViewDidChange()
   }
 
+  // The container mirrors the content's bounded state so both fill when a
+  // ScrollView is pinned (content bounds the viewport, container fills the sheet).
+  override fun contentViewDidChangeScrollableBounded(bounded: Boolean) {
+    setScrollableBounded(bounded)
+  }
+
   override fun headerViewDidChangeSize(width: Int, height: Int) {
-    headerHeight = height
     delegate?.containerViewHeaderDidChangeSize(width, height)
   }
 

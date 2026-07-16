@@ -270,16 +270,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Content Measurements
   // Cached values used during dismiss when container is unmounted
-  private var cachedContentHeight: Int = 0
-  private var cachedHeaderHeight: Int = 0
+  private var cachedAutoHeight: Int = 0
   private var cachedFooterHeight: Int = 0
   private var cachedPeekContentHeight: Int = 0
 
-  override val contentHeight: Int
-    get() = containerView?.contentHeight ?: cachedContentHeight
-
-  override val headerHeight: Int
-    get() = containerView?.headerHeight ?: cachedHeaderHeight
+  override val autoHeight: Int
+    get() = containerView?.autoHeight ?: cachedAutoHeight
 
   override val footerHeight: Int
     get() = containerView?.footerHeight ?: cachedFooterHeight
@@ -563,7 +559,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // On older APIs, use onSlide for footer positioning during keyboard transitions
     val useLegacyKeyboardHandling = Build.VERSION.SDK_INT < Build.VERSION_CODES.R
     if (!isKeyboardTransitioning || useLegacyKeyboardHandling) {
-      positionFooter(slideOffset)
+      positionFooter()
     }
 
     if (!isKeyboardTransitioning) {
@@ -833,8 +829,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     containerView?.let {
-      cachedContentHeight = it.contentHeight
-      cachedHeaderHeight = it.headerHeight
+      cachedAutoHeight = it.autoHeight
       cachedFooterHeight = it.footerHeight
       cachedPeekContentHeight = it.peekContentHeight
     }
@@ -906,6 +901,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // behavior state, killing the gesture.
     if (interactionState is InteractionState.Dragging) return
 
+    // Only auto (-1) and peek (-2) detents resolve from sizes — fractional
+    // detents can't change, so skip the churn (the container lays out on
+    // every sheet resize).
+    if (detents.none { it == -1.0 || it == -2.0 }) return
+
     setupSheetDetents()
     positionFooter()
   }
@@ -957,7 +957,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
-    if (contentHeight == 0) return
+    if (autoHeight == 0) return
 
     // While keyboard is active or transitioning, use the target detent position for dim
     val top = if (keyboardInset > 0 || isKeyboardTransitioning) {
@@ -985,26 +985,17 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var footerKeyboardOffset: Int = 0
 
-  fun positionFooter(slideOffset: Float? = null) {
+  /**
+   * Keyboard slide for the footer. Yoga owns the footer's frame (in flow, or
+   * floated via user styles), so the keyboard shift is carried by a
+   * translation instead of layout — parity with iOS.
+   */
+  fun positionFooter() {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
-    val sheet = sheetView ?: return
-
-    val footerHeight = footerView.height
-    val sheetHeight = sheet.height
-    val sheetTop = sheet.top
 
     val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
-    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
-
-    // Adjust during dismiss animation when slideOffset is negative
-    if (slideOffset != null && slideOffset < 0) {
-      footerY -= (footerHeight * slideOffset)
-    }
-
-    // Clamp to prevent footer going above safe area
-    val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
-    footerView.y = minOf(footerY, maxAllowedY)
+    footerView.translationY = -keyboardShift.toFloat()
   }
 
   // =============================================================================
@@ -1220,9 +1211,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Updates position emission, footer, and dim amount together.
    * This pattern is commonly used during animations and state changes.
    */
-  private fun updateSheetVisuals(effectiveTop: Int, slideOffset: Float? = null) {
+  private fun updateSheetVisuals(effectiveTop: Int) {
     emitChangePositionDelegate(effectiveTop)
-    positionFooter(slideOffset)
+    positionFooter()
     updateDimAmount(effectiveTop)
   }
 

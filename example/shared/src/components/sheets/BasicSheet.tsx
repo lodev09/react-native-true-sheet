@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     paddingTop: SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
-  }
+  },
 });
 
 BasicSheet.displayName = 'BasicSheet';

@@ -88,8 +88,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (instancetype)init {
   if (self = [super initWithNibName:nil bundle:nil]) {
     _detents = @[ @0.5, @1 ];
-    _contentHeight = @(0);
-    _headerHeight = @(0);
+    _autoHeight = @(0);
     _footerHeight = @(0);
     _peekContentHeight = @(0);
     _grabber = YES;
@@ -850,7 +849,22 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
  */
 - (void)setupSheetDetentsForSizeChange {
   if (@available(iOS 16.0, *)) {
-    CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+    // Only auto (-1) and peek (-2) detents resolve from sizes — fractional
+    // detents can't change, so skip the churn (the container lays out on
+    // every sheet resize).
+    BOOL hasSizeDetents = NO;
+    for (NSNumber *detent in self.detents) {
+      double value = [detent doubleValue];
+      if (value == -1 || value == -2) {
+        hasSizeDetents = YES;
+        break;
+      }
+    }
+    if (!hasSizeDetents) {
+      return;
+    }
+
+    CGFloat autoHeight = [self.autoHeight floatValue];
     CGFloat peekHeight = [_detentCalculator peekHeight];
 
     if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
@@ -885,7 +899,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  _autoDetentHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  _autoDetentHeight = [self.autoHeight floatValue];
   _peekDetentHeight = [_detentCalculator peekHeight];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {

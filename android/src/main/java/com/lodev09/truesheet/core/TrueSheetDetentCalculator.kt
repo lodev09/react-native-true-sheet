@@ -13,8 +13,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val screenHeight: Int
   val realScreenHeight: Int
   val detents: MutableList<Double>
-  val contentHeight: Int
-  val headerHeight: Int
+  val autoHeight: Int
   val footerHeight: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
@@ -32,8 +31,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val screenHeight: Int get() = delegate?.screenHeight ?: 0
   private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
-  private val contentHeight: Int get() = delegate?.contentHeight ?: 0
-  private val headerHeight: Int get() = delegate?.headerHeight ?: 0
+  private val autoHeight: Int get() = delegate?.autoHeight ?: 0
   private val footerHeight: Int get() = delegate?.footerHeight ?: 0
   private val peekContentHeight: Int get() = delegate?.peekContentHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
@@ -41,12 +39,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
-   * Height for peek (-2.0) detents: header + footer + peek content height.
+   * Height for peek (-2.0) detents: peek content + footer height.
    * Falls back to 150dp when none is present.
    */
   private val peekDetentHeight: Int
     get() {
-      val height = headerHeight + footerHeight + peekContentHeight
+      val height = peekContentHeight + footerHeight
       return if (height > 0) height else DEFAULT_PEEK_HEIGHT.dpToPx().toInt()
     }
 
@@ -56,7 +54,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset
+      autoHeight + contentBottomInset
     } else if (detent == -2.0) {
       peekDetentHeight + contentBottomInset
     } else {
@@ -99,7 +97,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     if (index < 0 || index >= detents.size) return 0f
     val value = detents[index]
     return if (value == -1.0) {
-      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+      autoHeight.toFloat() / screenHeight.toFloat()
     } else if (value == -2.0) {
       peekDetentHeight.toFloat() / screenHeight.toFloat()
     } else {

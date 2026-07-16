@@ -19,10 +19,11 @@
 #import "utils/UIView+ScrollEdgeInteraction.h"
 #import "utils/WindowUtil.h"
 
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewShadowNode.h>
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
@@ -50,11 +51,13 @@ using namespace facebook::react;
 @end
 
 @implementation TrueSheetContainerView {
+  TrueSheetContainerViewShadowNode::ConcreteState::Shared _state;
   TrueSheetContentView *_contentView;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
   TrueSheetPeekView *__weak _peekView;
   TrueSheetKeyboardObserver *_keyboardObserver;
+  BOOL _scrollableBounded;
 }
 
 #pragma mark - Initialization
@@ -72,9 +75,46 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
+    _scrollableBounded = NO;
     self.isAccessibilityElement = NO;
   }
   return self;
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetContainerViewShadowNode::ConcreteState const>(state);
+}
+
+// Tells the shadow node to fill the sheet (flexGrow/flexShrink) instead of
+// sizing naturally, so a pinned ScrollView's viewport is bounded.
+- (void)setScrollableBounded:(BOOL)bounded {
+  if (_scrollableBounded == bounded) {
+    return;
+  }
+  _scrollableBounded = bounded;
+
+  if (_state) {
+    TrueSheetContainerViewState newState;
+    newState.scrollableBounded = bounded;
+    _state->updateState(std::move(newState));
+  }
+}
+
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+  _state.reset();
+  _scrollableBounded = NO;
+}
+
+// Any layout change here can move the auto detent height (the container's
+// natural height IS the auto height) — let the sheet re-evaluate.
+- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
+  if ([self.delegate respondsToSelector:@selector(containerViewDidLayout)]) {
+    [self.delegate containerViewDidLayout];
+  }
 }
 
 #pragma mark - Accessibility
@@ -106,31 +146,38 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (CGFloat)contentHeight {
-  return _contentView ? _contentView.naturalHeight : 0;
-}
-
-- (CGFloat)headerHeight {
-  return _headerView ? _headerView.frame.size.height : 0;
+/**
+ * The container's Yoga-resolved natural extent — the height the auto detent
+ * needs. In-flow header/footer count; floating (absolute-positioned) ones
+ * don't. When a pinned ScrollView bounds the layout, the viewport is replaced
+ * by the ScrollView's content size.
+ */
+- (CGFloat)autoHeight {
+  CGFloat scrollDelta = _contentView ? _contentView.naturalHeight - _contentView.frame.size.height : 0;
+  return MAX(0, self.frame.size.height + scrollDelta);
 }
 
 - (CGFloat)footerHeight {
   return _footerView ? _footerView.frame.size.height : 0;
 }
 
-// Distance from the top of the content view to the bottom of the peek view.
-// Includes the peek view's offset within the content (padding, views above it)
-// so the peek detent reveals everything down to the peek content's bottom edge.
+// Distance from the top of the container to the bottom of the peek view.
+// Includes the peek view's offset within the layout (in-flow header, padding,
+// views above it) so the peek detent reveals everything down to the peek
+// content's bottom edge. A floating (absolute) header doesn't offset the
+// content, so it doesn't count.
 - (CGFloat)peekContentHeight {
   if (!_peekView) {
-    return 0;
+    // No peek view: collapse to the content's layout offset — the bottom of
+    // an in-flow header — so the peek detent reveals just the header.
+    return _contentView ? _contentView.frame.origin.y : 0;
   }
 
-  if (!_contentView || ![_peekView isDescendantOfView:_contentView]) {
+  if (![_peekView isDescendantOfView:self]) {
     return _peekView.frame.size.height;
   }
 
-  return CGRectGetMaxY([_peekView convertRect:_peekView.bounds toView:_contentView]);
+  return CGRectGetMaxY([_peekView convertRect:_peekView.bounds toView:self]);
 }
 
 - (void)updateFooterKeyboardOffset {
@@ -255,6 +302,12 @@ using namespace facebook::react;
 
 - (void)contentViewScrollViewDidChange {
   [self.delegate containerViewScrollViewDidChange];
+}
+
+// The container mirrors the content's bounded state so both fill when a
+// ScrollView is pinned (content bounds the viewport, container fills the sheet).
+- (void)contentViewDidChangeScrollableBounded:(BOOL)bounded {
+  [self setScrollableBounded:bounded];
 }
 
 #pragma mark - TrueSheetHeaderViewDelegate

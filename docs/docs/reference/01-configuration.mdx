@@ -266,7 +266,7 @@ A component that is fixed at the top of the sheet content. Useful for search bar
 
 ## `headerStyle`
 
-Style for the header container.
+Style for the header container. A floating header (`position: 'absolute'`) overlays the content instead of offsetting it, so it doesn't count toward `auto` and `peek` detent heights.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -274,7 +274,7 @@ Style for the header container.
 
 ## `footer`
 
-A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.
+A component fixed at the bottom of the sheet, below the content. Its height counts toward `auto` and `peek` detent heights, and pinned scrollables shrink to make room for it. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/footer) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -282,7 +282,7 @@ A component that floats at the bottom of the sheet. Accepts a functional `Compon
 
 ## `footerStyle`
 
-Style for the footer container.
+Style for the footer container. A floating footer (`position: 'absolute'`) overlays the content instead of taking layout space, so it doesn't count toward the `auto` detent height. It still counts toward `peek`, which reveals the footer over the peeking content.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |

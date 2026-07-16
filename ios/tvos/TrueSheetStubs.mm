@@ -18,6 +18,7 @@
 #import <React/RCTViewComponentView.h>
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContainerViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 

@@ -19,8 +19,7 @@
   if (index >= 0 && index < (NSInteger)detents.count) {
     CGFloat value = [detents[index] doubleValue];
     if (value == -1) {
-      CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue];
-      return autoHeight / self.delegate.screenHeight;
+      return [self.delegate.autoHeight floatValue] / self.delegate.screenHeight;
     }
     if (value == -2) {
       return [self peekHeight] / self.delegate.screenHeight;
@@ -31,8 +30,7 @@
 }
 
 - (CGFloat)peekHeight {
-  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue] +
-                   [self.delegate.peekContentHeight floatValue];
+  CGFloat height = [self.delegate.peekContentHeight floatValue] + [self.delegate.footerHeight floatValue];
   return height > 0 ? height : 150;
 }
 
