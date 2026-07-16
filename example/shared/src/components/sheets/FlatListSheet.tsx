@@ -14,7 +14,7 @@ interface FlatListSheetProps extends TrueSheetProps {}
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
-  const [itemCount, setItemCount] = useState(2);
+  const [itemCount, setItemCount] = useState(10);
 
   return (
     <TrueSheet
