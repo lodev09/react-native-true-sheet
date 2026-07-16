@@ -44,7 +44,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 - (void)endInteractiveDismissState;
-- (void)emitInteractivePosition;
 - (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
                                       duration:(NSTimeInterval)duration
                           allowUserInteraction:(BOOL)allowUserInteraction
@@ -58,21 +57,19 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _autoDetentHeight;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
-  BOOL _pendingContentSizeChange;
-  BOOL _pendingDetentsChange;
 
-  CADisplayLink *_transitioningTimer;
-  UIView *_transitionFakeView;
+  // Single source of truth for position: a display link that samples the
+  // presented view's on-screen position and settles (then stops) on its own.
+  CADisplayLink *_positionLink;
+  CGFloat _lastSampledPosition;
+  NSInteger _stableFrameCount;
+  BOOL _needsOffsetLearn;
   BOOL _isDragging;
-  BOOL _isTransitioning;
-  BOOL _isTransitionSnapping;
-  BOOL _isTrackingPositionFromLayout;
   BOOL _isWillDismissEmitted;
 
   BOOL _isInteractiveDismiss;
   CGFloat _interactiveStartPosition;
   UIView *_interactiveContainerView;
-  CADisplayLink *_interactivePositionLink;
   NSUInteger _interactiveGeneration;
 
   __weak TrueSheetViewController *_parentSheetController;
@@ -105,14 +102,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
     _isDragging = NO;
     _isPresented = NO;
-    _isTransitioning = NO;
     _isWillDismissEmitted = NO;
-    _pendingContentSizeChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
-
-    _transitionFakeView = [UIView new];
-    _isTrackingPositionFromLayout = NO;
 
     _blurInteraction = YES;
     _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
@@ -124,10 +116,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)dealloc {
   [self restoreWindowAccessibilityElements];
-  [_transitioningTimer invalidate];
-  _transitioningTimer = nil;
-  [_interactivePositionLink invalidate];
-  _interactivePositionLink = nil;
+  [_positionLink invalidate];
+  _positionLink = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -151,6 +141,48 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (CGFloat)currentPosition {
   UIView *presentedView = self.presentedView;
   return presentedView ? presentedView.frame.origin.y : 0.0;
+}
+
+// YES when any layer from the presented view up to the window has in-flight
+// animations (detent snap, present/dismiss transition, container settle).
+- (BOOL)isPresentedViewAnimating {
+  for (CALayer *layer = self.presentedView.layer; layer; layer = layer.superlayer) {
+    if (layer.animationKeys.count > 0) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+/**
+ * The sheet's live on-screen position. At rest and during drags (direct frame
+ * sets) this is the model position; during animations it adds the
+ * presentation-vs-model delta measured in window space, so ancestor animations
+ * compose and persistent transforms (e.g. floating-sheet inset) cancel out.
+ */
+- (CGFloat)livePosition {
+  UIView *presentedView = self.presentedView;
+  UIWindow *window = presentedView.window;
+  UIView *containerView = self.sheet.containerView;
+
+  // Direct (non-animated) translation applied during an interactive nav dismiss.
+  CGFloat containerTy = containerView ? containerView.transform.ty : 0;
+
+  if (!presentedView || !window || !self.isPresentedViewAnimating) {
+    return self.currentPosition + containerTy;
+  }
+
+  CALayer *modelLayer = presentedView.layer;
+  CALayer *presentationLayer = modelLayer.presentationLayer;
+  CALayer *rootModel = window.layer;
+  CALayer *rootPresentation = rootModel.presentationLayer;
+  if (!presentationLayer || !rootPresentation) {
+    return self.currentPosition + containerTy;
+  }
+
+  CGFloat modelY = [modelLayer convertPoint:CGPointZero toLayer:rootModel].y;
+  CGFloat presentationY = [presentationLayer convertPoint:CGPointZero toLayer:rootPresentation].y;
+  return self.currentPosition + (presentationY - modelY) + containerTy;
 }
 
 - (CGFloat)screenHeight {
@@ -251,7 +283,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     });
   }
 
-  [self setupTransitionTracker];
+  // Learn the resolver-vs-actual offset before emitting transition positions so
+  // the interpolated index lands exactly on the target detent. The presented
+  // frame is already final here (UIKit animates the layer, not the frame).
+  [self learnOffsetForDetentIndex:self.currentDetentIndex];
+  _needsOffsetLearn = YES;
+  [self kickPositionTracking];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -267,8 +304,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
-      [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
-      [self settleAtDetentIndex:index debug:@"did present"];
+      [self kickPositionTracking];
     });
 
     [self setupGestureRecognizer];
@@ -441,50 +477,36 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [self restoreWindowAccessibilityElements];
   [self setSheetAccessibilityElementsHidden:YES];
 
-  // Dispatch to allow pan gesture to set _isDragging before checking
-  // handleTransitionTracker will emit when sheet is transitioning to dismiss
+  // Dispatch to allow pan gesture to set _isDragging before checking;
+  // the position tick emits when the sheet is transitioning to dismiss
   dispatch_async(dispatch_get_main_queue(), ^{
     if (!self->_isDragging) {
       [self emitWillDismissEvents];
     }
   });
 
-  [self setupTransitionTracker];
+  [self kickPositionTracking];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
 
   // Backstop: if the sheet is torn down mid-gesture (e.g. owning view deallocated),
-  // the observer can't reach us through its weak delegate, so end here to invalidate
-  // _interactivePositionLink — which otherwise retains this controller indefinitely.
+  // the observer can't reach us through its weak delegate, so end here.
   if (_isInteractiveDismiss) {
     [self endInteractiveDismissState];
   }
 
   [self emitDidDismissEvents];
+  [self stopPositionTracking];
 }
 
 - (void)viewWillLayoutSubviews {
   [super viewWillLayoutSubviews];
 
-  // Skip during an interactive nav dismiss; emitInteractivePosition owns position then,
-  // and currentPosition (presentedView frame) stays at rest since we move the container.
-  if (!_isTransitioning && !_isInteractiveDismiss) {
-    _isTrackingPositionFromLayout = YES;
-
-    if (_pendingContentSizeChange || _pendingDetentsChange) {
-      _pendingContentSizeChange = NO;
-      _pendingDetentsChange = NO;
-      [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
-    } else {
-      UIViewController *presented = self.presentedViewController;
-      BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-      [self emitChangePositionDelegateWithPosition:self.currentPosition
-                                          realtime:!hasPresentedController
-                                             debug:@"layout"];
-    }
-  }
+  // Any layout can move the sheet (drag, keyboard, rotation, detent resize) —
+  // wake the position tracker; it emits per-frame and settles on its own.
+  [self kickPositionTracking];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -497,20 +519,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _lastReportedSize = size;
     [self.delegate viewControllerDidChangeSize:size];
   }
-
-  if (_pendingDetentIndex >= 0) {
-    NSInteger pendingIndex = _pendingDetentIndex;
-    _pendingDetentIndex = -1;
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      CGFloat detent = [self detentValueForIndex:pendingIndex];
-      [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-      [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
-      [self settleAtDetentIndex:pendingIndex debug:@"pending detent change"];
-    });
-  }
-
-  _isTrackingPositionFromLayout = NO;
 }
 
 #pragma mark - Position & Gesture Handling
@@ -570,115 +578,124 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   switch (gesture.state) {
     case UIGestureRecognizerStateBegan:
       _isDragging = YES;
+      [self kickPositionTracking];
       break;
     case UIGestureRecognizerStateChanged:
-      if (!_isTrackingPositionFromLayout) {
-        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
-      }
+      [self kickPositionTracking];
       break;
     case UIGestureRecognizerStateEnded:
-    case UIGestureRecognizerStateCancelled: {
-      if (!_isTransitioning) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-          NSInteger index = self.currentDetentIndex;
-          [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
-          [self settleAtDetentIndex:index debug:@"drag end"];
-        });
-      }
-
+    case UIGestureRecognizerStateCancelled:
       _isDragging = NO;
+      _needsOffsetLearn = YES;
+      [self kickPositionTracking];
       break;
-    }
     default:
       break;
   }
 }
 
-- (void)setupTransitionTracker {
-  if (!self.transitionCoordinator)
-    return;
+#pragma mark - Position Tracking
 
-  _isTransitioning = YES;
-
-  // Learn the resolver-vs-actual offset before emitting transition positions so
-  // the interpolated index lands exactly on the target detent. The presented
-  // frame is already final here (UIKit animates the layer, not the frame).
-  if (!self.isBeingDismissed) {
-    [self learnOffsetForDetentIndex:self.currentDetentIndex];
+/**
+ * Wakes the position tracker. Called from anything that can move the sheet
+ * (layout, drag, transitions, interactive dismiss, detent changes). The tick
+ * emits realtime positions while the sheet moves and settles + stops itself
+ * once it comes to rest, so kicks are cheap and idempotent.
+ */
+- (void)kickPositionTracking {
+  _stableFrameCount = 0;
+  if (!_positionLink) {
+    _lastSampledPosition = self.livePosition;
+    _positionLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handlePositionTick)];
+    [_positionLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
 
-  CGRect dismissedFrame = CGRectMake(0, self.screenHeight, 0, 0);
-  CGRect presentedFrame = CGRectMake(0, self.currentPosition, 0, 0);
-
-  _transitionFakeView.frame = self.isBeingDismissed ? presentedFrame : dismissedFrame;
-
-  __weak __typeof(self) weakSelf = self;
-
-  [self.transitionCoordinator
-    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-      __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf)
-        return;
-
-      [[context containerView] addSubview:strongSelf->_transitionFakeView];
-      strongSelf->_transitionFakeView.frame = strongSelf.isBeingDismissed ? dismissedFrame : presentedFrame;
-
-      strongSelf->_transitioningTimer = [CADisplayLink displayLinkWithTarget:strongSelf
-                                                                    selector:@selector(handleTransitionTracker)];
-      [strongSelf->_transitioningTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    }
-    completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-      __strong __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf)
-        return;
-
-      [strongSelf->_transitioningTimer setPaused:YES];
-      [strongSelf->_transitioningTimer invalidate];
-      strongSelf->_transitioningTimer = nil;
-      [strongSelf->_transitionFakeView removeFromSuperview];
-      strongSelf->_isTransitioning = NO;
-      strongSelf->_isTransitionSnapping = NO;
-
-      // Emit settled position after detent snap.
-      // Uses dispatch_after because presentedView frame isn't final until UIKit
-      // completes its layout pass after the transition animation.
-      if (strongSelf->_isPresented) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-          CGFloat position = strongSelf.currentPosition;
-          [strongSelf emitChangePositionDelegateWithPosition:position realtime:NO debug:@"transition end"];
-        });
-      }
-    }];
+  // Whatever moves this sheet can also move the sheets behind it (deck effect,
+  // detent re-resolution) without their own layout firing — wake the stack.
+  [_parentSheetController kickPositionTracking];
 }
 
-- (void)handleTransitionTracker {
-  if (!_isDragging && _transitionFakeView.layer) {
-    CALayer *layer = _transitionFakeView.layer;
-    CGFloat layerPosition = layer.presentationLayer.frame.origin.y;
+- (void)stopPositionTracking {
+  [_positionLink invalidate];
+  _positionLink = nil;
+}
 
-    if (self.currentPosition >= self.screenHeight) {
-      CGFloat position = fmax(_lastEmittedPositionState.position, layerPosition);
+- (void)handlePositionTick {
+  UIView *presentedView = self.presentedView;
+  if (!presentedView) {
+    // Nothing to track (e.g. torn down mid-animation) — stop so the link
+    // doesn't keep this controller alive.
+    if (++_stableFrameCount >= 90) {
+      [self stopPositionTracking];
+    }
+    return;
+  }
 
-      // Hide blur at the end of dismiss to prevent UIVisualEffectView
-      // from causing a flicker/flash at the bottom edge of the sheet.
-      if (self.screenHeight - position < 1) {
-        _blurView.alpha = 0;
-      }
+  CGFloat position = self.livePosition;
+  BOOL moved = fabs(position - _lastSampledPosition) > 0.01;
+  _lastSampledPosition = position;
 
-      [self emitWillDismissEvents];
-      [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition out"];
+  if (self.isBeingDismissed) {
+    [self emitWillDismissEvents];
 
-    } else {
-      CGFloat position = fmax(self.currentPosition, layerPosition);
-      // Detect drag → snap transition jump; stay non-realtime for the rest of the animation
-      if (!_isTransitionSnapping && _isPresented && _lastEmittedPositionState.position > 0 &&
-          fabs(_lastEmittedPositionState.position - position) > 20) {
-        _isTransitionSnapping = YES;
-      }
-      BOOL realtime = !_isTransitionSnapping;
-      [self emitChangePositionDelegateWithPosition:position realtime:realtime debug:@"transition in"];
+    // Hide blur at the end of dismiss to prevent UIVisualEffectView
+    // from causing a flicker/flash at the bottom edge of the sheet.
+    if (self.screenHeight - position < 1) {
+      _blurView.alpha = 0;
     }
   }
+
+  if (moved) {
+    _stableFrameCount = 0;
+
+    // Emit even when a child sheet sits on top — the parent moves behind it
+    // (deck effect, detent re-resolution) and consumers track that live.
+    [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"tick"];
+    return;
+  }
+
+  // Never settle mid-gesture or mid-transition — learning an offset there
+  // would store a bogus value.
+  if (_isDragging || _isInteractiveDismiss || self.isBeingPresented || self.isBeingDismissed ||
+      self.transitionCoordinator != nil) {
+    _stableFrameCount = 0;
+    return;
+  }
+
+  // Settle once the sheet has been still with no in-flight animations; the
+  // frame cap guards against leftover animations pinning the link forever.
+  _stableFrameCount++;
+  if (_stableFrameCount >= (self.isPresentedViewAnimating ? 90 : 3)) {
+    [self settlePosition];
+  }
+}
+
+/**
+ * The sheet came to rest: learn the resolver-vs-actual offset when a detent
+ * change requested it, flush any pending detent-change event, emit the final
+ * position, and stop the tracker.
+ */
+- (void)settlePosition {
+  NSInteger index = self.currentDetentIndex;
+
+  // Don't learn while a child sits on top — the deck transform skews the
+  // measured frame. Keep the flag so the next unobstructed settle learns.
+  if (_needsOffsetLearn && self.presentedViewController == nil) {
+    _needsOffsetLearn = NO;
+    [self learnOffsetForDetentIndex:index];
+  }
+
+  if (_pendingDetentIndex >= 0) {
+    NSInteger pendingIndex = _pendingDetentIndex;
+    _pendingDetentIndex = -1;
+
+    CGFloat detent = [self detentValueForIndex:pendingIndex];
+    [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
+  }
+
+  [_grabberView updateAccessibilityValueWithIndex:index detentCount:_detents.count];
+  [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:@"settle"];
+  [self stopPositionTracking];
 }
 
 #pragma mark - Interactive Navigation Dismiss
@@ -697,16 +714,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   _interactiveStartPosition = self.currentPosition;
   _interactiveContainerView = self.sheet.containerView;
 
-  // Emit position from the container's presentation layer for the whole gesture, so
-  // both the direct-set drag and the settle animation report a live, smooth position.
-  _interactivePositionLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(emitInteractivePosition)];
-  [_interactivePositionLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-}
-
-- (void)emitInteractivePosition {
-  CALayer *presentation = _interactiveContainerView.layer.presentationLayer;
-  CGFloat offset = presentation ? presentation.affineTransform.ty : 0;
-  [self emitChangePositionDelegateWithPosition:_interactiveStartPosition + offset realtime:YES debug:@"nav swipe"];
+  // The container translation doesn't trigger our layout, so wake the tracker
+  // explicitly; livePosition picks up the container transform.
+  [self kickPositionTracking];
 }
 
 // Translate the presentation container, not the sheet's presentedView (whose transform
@@ -781,8 +791,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   _isInteractiveDismiss = NO;
   _interactiveContainerView = nil;
   _interactiveStartPosition = 0;
-  [_interactivePositionLink invalidate];
-  _interactivePositionLink = nil;
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
@@ -813,16 +821,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)learnOffsetForDetentIndex:(NSInteger)index {
   [_detentCalculator learnOffsetForDetentIndex:index];
-}
-
-/**
- * Learn the resolver-vs-actual offset at a settled detent, then emit the corrected
- * position. Only valid when presentedView's frame is final — never mid-drag or
- * mid-animation, where learning would store a bogus offset.
- */
-- (void)settleAtDetentIndex:(NSInteger)index debug:(NSString *)debug {
-  [self learnOffsetForDetentIndex:index];
-  [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
 }
 
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
@@ -862,17 +860,19 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _autoDetentHeight = autoHeight;
     _peekDetentHeight = peekHeight;
 
+    _needsOffsetLearn = YES;
     [self.sheet animateChanges:^{
-      self->_pendingContentSizeChange = YES;
       [self.sheet invalidateDetents];
     }];
+    [self kickPositionTracking];
   }
   // iOS 15: detents are fixed medium/large — size changes can't affect them.
 }
 
 - (void)setupSheetDetentsForDetentsChange {
-  _pendingDetentsChange = YES;
+  _needsOffsetLearn = YES;
   [self setupSheetDetents];
+  [self kickPositionTracking];
 }
 
 - (void)setupSheetDetents {
@@ -1066,7 +1066,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   _pendingDetentIndex = index;
   _activeDetentIndex = index;
+  _needsOffsetLearn = YES;
   [self applyActiveDetent];
+  [self kickPositionTracking];
 }
 
 - (void)setupBackground {
@@ -1263,6 +1265,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
+  _needsOffsetLearn = YES;
+  [self kickPositionTracking];
+
   dispatch_async(dispatch_get_main_queue(), ^{
     NSInteger index = self.currentDetentIndex;
     if (index >= 0) {

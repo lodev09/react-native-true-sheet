@@ -4,6 +4,7 @@
 
 ### 🎉 New features
 
+- **iOS**: `onPositionChange` now tracks the sheet's actual on-screen position everywhere — detent snaps, programmatic resizes, and sheets moving behind a child sheet emit realtime frames from a single native tracker (previously approximated with a JS-side spring or only emitted once settled). `onDetentChange` for programmatic resizes now fires when the animation actually ends instead of after a fixed delay. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744) by [@lodev09](https://github.com/lodev09))
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height and resizes as content grows or shrinks. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
