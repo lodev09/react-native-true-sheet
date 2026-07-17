@@ -53,6 +53,13 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       (if (delegate?.absoluteFooter == true) 0 else footerHeight)
 
   /**
+   * Bottom inset for auto detents. A relative footer owns the sheet's bottom
+   * edge, so it absorbs the inset instead of adding it to the auto height.
+   */
+  private val autoDetentBottomInset: Int
+    get() = if (footerHeight > 0 && delegate?.absoluteFooter == false) 0 else contentBottomInset
+
+  /**
    * Height for peek (-2.0) detents: header + footer + peek content height.
    * A relative footer is pushed off-screen at peek, so it contributes no height.
    * Falls back to 150dp when none is present.
@@ -71,7 +78,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
-      autoDetentHeight + contentBottomInset
+      autoDetentHeight + autoDetentBottomInset
     } else if (detent == -2.0) {
       peekDetentHeight + contentBottomInset
     } else {

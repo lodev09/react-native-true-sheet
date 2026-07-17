@@ -195,6 +195,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return 0;
   }
 
+  return [self bottomSafeAreaForHeight:height];
+}
+
+- (CGFloat)bottomSafeAreaForHeight:(CGFloat)height {
   if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
     return 0;
   }
@@ -209,6 +213,24 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   UIWindow *window = [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
+}
+
+/**
+ * Bottom inset excluded from the auto detent. A relative footer owns the
+ * sheet's bottom edge, so it absorbs the inset — UIKit lays custom detents out
+ * above the safe area, which would otherwise gap the content from the footer.
+ */
+- (CGFloat)autoDetentBottomInsetForHeight:(CGFloat)height {
+  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
+    // 'none' already excludes the inset for every detent
+    return 0;
+  }
+
+  if (_absoluteFooter || [self.footerHeight floatValue] <= 0) {
+    return 0;
+  }
+
+  return [self bottomSafeAreaForHeight:height];
 }
 
 - (BOOL)isDesignCompatibilityMode {
@@ -933,7 +955,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       return [self customDetentWithIdentifier:@"custom-auto"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    return self->_autoDetentHeight;
+                                    CGFloat height = self->_autoDetentHeight;
+                                    return height - [self autoDetentBottomInsetForHeight:height];
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
