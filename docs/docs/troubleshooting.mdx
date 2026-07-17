@@ -61,7 +61,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 ```
 
 :::warning
-Use `flexGrow: 1` instead of `flex: 1` to avoid layout issues.
+Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural height by default, so a `flex: 1` child collapses to zero height. Alternatively, pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop to fill the sheet. See [Content Layout](usage#content-layout).
 :::
 
 [Learn more](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android) about gesture handler setup on Android.
@@ -106,9 +106,12 @@ function HomeScreen() {
 
 ## Weird layout render
 
-The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
+The sheet's content lays out naturally — like a regular view or a screen — wrapping its children's natural height. Common symptoms and fixes:
 
-Try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
+- **`flex: 1` children render with zero height** — the content isn't filled by default. Pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop so the content fills the sheet's visible height. See [Content Layout](usage#content-layout).
+- **Content taller than the sheet gets clipped** — use a `ScrollView` with `flex: 1` on the sheet's `style` (see [Scrolling Content](guides/scrolling)) or size your layout with `flexGrow`, `flexBasis`, or fixed heights.
+
+If layout still misbehaves, try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
 
 ## Xcode and EAS Build Issues
 

@@ -87,6 +87,20 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
     }
 
+  /**
+   * Whether the sheet has an `auto` detent. Deriving the sheet height from the
+   * scroll content is circular with natural layout, so the pinned ScrollView's
+   * viewport is force-bounded to the container only in this case.
+   */
+  var hasAutoDetent = false
+    set(value) {
+      if (field == value) return
+      field = value
+      if (pinnedScrollView != null) {
+        setScrollableBounded(value)
+      }
+    }
+
   override fun addView(child: View?, index: Int) {
     super.addView(child, index)
     checkScrollViewChanged()
@@ -138,7 +152,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   /**
    * Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-   * pinned ScrollView's viewport is bounded to the visible space.
+   * pinned ScrollView's viewport is bounded to the visible space. Only applied
+   * for auto detents — otherwise content lays out naturally like a regular view.
    */
   private fun setScrollableBounded(bounded: Boolean) {
     if (scrollableBounded == bounded) return
@@ -182,7 +197,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
         observedScrollChild = child
         child.addOnLayoutChangeListener(scrollChildLayoutListener)
       }
-      setScrollableBounded(true)
+      setScrollableBounded(hasAutoDetent)
       reportSizeIfChanged()
     }
 

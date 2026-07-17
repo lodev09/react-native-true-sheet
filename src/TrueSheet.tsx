@@ -482,11 +482,6 @@ export class TrueSheet
       return Math.min(1, detent);
     });
 
-    // `auto` detents derive the sheet height from the content's natural height,
-    // so the content can't fill the container. Otherwise fill so flex layouts
-    // and ScrollViews/FlatLists work as-is, like a regular bounded view.
-    const hasAutoDetent = resolvedDetents.includes(-1);
-
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
       this.cachedGrabberOptions = grabberOptions;
@@ -545,9 +540,7 @@ export class TrueSheet
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
-            <TrueSheetContentViewNativeComponent
-              style={hasAutoDetent ? style : [styles.contentFill, style]}
-            >
+            <TrueSheetContentViewNativeComponent style={style}>
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
@@ -574,9 +567,6 @@ const styles = StyleSheet.create({
   // Fill the sheet so flex layouts track the sheet's size per detent
   container: {
     ...StyleSheet.absoluteFill,
-  },
-  contentFill: {
-    flex: 1,
   },
   header: {
     pointerEvents: 'box-none',

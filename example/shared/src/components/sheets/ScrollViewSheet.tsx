@@ -65,6 +65,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       ref={ref}
       detents={[0.8, 1]}
       name="scrollview"
+      style={styles.sheet}
       scrollableOptions={{
         scrollingExpandsSheet: false,
         bottomScrollEdgeEffect: 'soft',
@@ -106,6 +107,9 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
 ScrollViewSheet.displayName = 'ScrollViewSheet';
 
 const styles = StyleSheet.create({
+  sheet: {
+    flex: 1,
+  },
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,

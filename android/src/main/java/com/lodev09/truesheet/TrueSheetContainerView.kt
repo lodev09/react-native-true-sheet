@@ -69,6 +69,12 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.scrollableOptions = value
     }
 
+  var hasAutoDetent = false
+    set(value) {
+      field = value
+      contentView?.hasAutoDetent = value
+    }
+
   override val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
 
@@ -98,6 +104,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       is TrueSheetContentView -> {
         child.delegate = this
         child.scrollableOptions = scrollableOptions
+        child.hasAutoDetent = hasAutoDetent
         contentView = child
 
         // Children mount bottom-up, so the content subtree is complete here.

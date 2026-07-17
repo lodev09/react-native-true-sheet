@@ -267,6 +267,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setDetents(newDetents: MutableList<Double>) {
     viewController.detents = newDetents
+    setupScrollable()
   }
 
   fun setInsetAdjustment(insetAdjustment: String) {
@@ -289,6 +290,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       it.insetAdjustment = viewController.insetAdjustment
       it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
+      it.hasAutoDetent = viewController.detents.contains(-1.0)
       it.setupScrollable()
     }
   }

@@ -6,7 +6,7 @@ keywords: [bottom sheet scrolling, bottom sheet scrollview, bottom sheet flatlis
 
 import scrolling from './assets/scrolling.gif'
 
-Scrolling content within the sheet works out of the box — plug a `ScrollView` or `FlatList` in directly, like a regular view.
+Scrolling content within the sheet works like a regular view — bound the scroll view's height with `flex: 1` and plug a `ScrollView` or `FlatList` in directly.
 
 <img alt="scrolling" src={scrolling} width="300"/>
 
@@ -14,12 +14,14 @@ Scrolling content within the sheet works out of the box — plug a `ScrollView` 
 
 Scroll views (including `ScrollView` and `FlatList`) are **automatically detected**. Insets, keyboard handling, and nested scrolling are all wired for you — no props needed.
 
+Like any scroll view in React Native, it needs a bounded height to scroll. Pass `flex: 1` via the sheet's [`style`](../reference/configuration#style) prop so the content fills the sheet's visible height per detent — resizing in realtime while dragging:
+
 ```tsx
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
 
   return (
-    <TrueSheet ref={sheet} detents={[0.5, 1]}>
+    <TrueSheet ref={sheet} style={{ flex: 1 }} detents={[0.5, 1]}>
       <ScrollView>
         <View />
       </ScrollView>
@@ -28,10 +30,10 @@ const App = () => {
 }
 ```
 
-The sheet container is sized to the sheet's visible height per detent — resizing in realtime while dragging — so flex layouts bound the scroll view naturally. Wrapping it in a container `View` works too:
+Wrapping it in a container `View` works too:
 
 ```tsx
-<TrueSheet detents={[0.5, 1]}>
+<TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
   <View style={{ flex: 1 }}>
     <View>{/* Header content */}</View>
     <FlatList data={data} renderItem={renderItem} />
@@ -43,8 +45,8 @@ The sheet container is sized to the sheet's visible height per detent — resizi
 On Android, nested scrolling is managed internally — any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored. `RefreshControl` is also fully supported.
 :::
 
-:::warning
-The [`auto`](../reference/types#sheetdetent) detent derives the sheet height from the content's natural height, so it doesn't work with scrolling content. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
+:::info
+The [`auto`](../reference/types#sheetdetent) detent works with scrolling content too — no `flex: 1` needed. The sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height.
 :::
 
 ## Preventing Scroll-to-Expand
