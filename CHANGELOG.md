@@ -7,6 +7,7 @@
 - **iOS**: `onPositionChange` now tracks the sheet's actual on-screen position everywhere — detent snaps, programmatic resizes, and sheets moving behind a child sheet emit realtime frames from a single native tracker (previously approximated with a JS-side spring or only emitted once settled). `onDetentChange` for programmatic resizes now fires when the animation actually ends instead of after a fixed delay. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744) by [@lodev09](https://github.com/lodev09))
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height and resizes as content grows or shrinks. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
 - New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content (pinned to the top edge) and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
+- A relative footer now owns the bottom safe-area inset at the `auto` detent — the inset is no longer added to the auto height, so the footer sits flush at the sheet's bottom edge (pad it yourself, e.g. for the home indicator). ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 

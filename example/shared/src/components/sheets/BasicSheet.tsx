@@ -7,7 +7,7 @@ import {
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_BLUE, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -165,12 +165,11 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING,
+    paddingBottom: SPACING,
     gap: GAP,
   },
   childContent: {
-    paddingHorizontal: SPACING,
-    paddingTop: SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
+    padding: SPACING,
     gap: GAP,
   },
 });
