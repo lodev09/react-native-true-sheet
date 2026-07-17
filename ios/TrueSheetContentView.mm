@@ -59,7 +59,8 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 }
 
 // Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-// pinned ScrollView's viewport is bounded to the visible space.
+// pinned ScrollView's viewport is bounded to the visible space. Only applied
+// for auto detents — otherwise content lays out naturally like a regular view.
 - (void)setScrollableBounded:(BOOL)bounded {
   if (_scrollableBounded == bounded) {
     return;
@@ -70,6 +71,17 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
     TrueSheetContentViewState newState;
     newState.scrollableBounded = bounded;
     _state->updateState(std::move(newState));
+  }
+}
+
+- (void)setHasAutoDetent:(BOOL)hasAutoDetent {
+  if (_hasAutoDetent == hasAutoDetent) {
+    return;
+  }
+  _hasAutoDetent = hasAutoDetent;
+
+  if (_pinnedScrollView) {
+    [self setScrollableBounded:hasAutoDetent];
   }
 }
 
@@ -212,7 +224,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
     _pinnedScrollView = scrollView;
 
     [self observeScrollViewContentSize];
-    [self setScrollableBounded:YES];
+    [self setScrollableBounded:_hasAutoDetent];
     [self reportSizeIfChanged];
   }
 
@@ -436,6 +448,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   [self clearScrollable];
   _state.reset();
   _scrollableBounded = NO;
+  _hasAutoDetent = NO;
   _lastSize = CGSizeZero;
 }
 

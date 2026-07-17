@@ -46,6 +46,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       ref={sheetRef}
       name="prompt-sheet"
       detents={[0.75, 1]}
+      style={styles.sheet}
       scrollableOptions={{
         keyboardScrollOffset: FOOTER_HEIGHT + SPACING,
         topScrollEdgeEffect: 'soft',
@@ -166,6 +167,9 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 });
 
 const styles = StyleSheet.create({
+  sheet: {
+    flex: 1,
+  },
   content: {
     padding: SPACING,
     gap: GAP,

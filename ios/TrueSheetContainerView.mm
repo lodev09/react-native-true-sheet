@@ -148,6 +148,7 @@ using namespace facebook::react;
     if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
       bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
     }
+    _contentView.hasAutoDetent = _hasAutoDetent;
     [_contentView setupScrollableWithBottomInset:bottomInset];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {

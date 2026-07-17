@@ -1173,9 +1173,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                {/* Fill the sized layout so plugged ScrollViews/FlatLists have
-                    a bounded height — mirrors native content fill. */}
-                <View ref={contentRef} style={[contentFillStyle, style]}>
+                {/* Content lays out naturally like native — fill only for auto
+                    detents with a plugged scrollable, where natural layout is
+                    circular (sheet height derives from the scroll content size).
+                    Mirrors the native shadow node's scrollableBounded behavior. */}
+                <View
+                  ref={contentRef}
+                  style={hasAutoDetent && hasBoundedScrollable ? [contentFillStyle, style] : style}
+                >
                   {children}
                 </View>
               </div>

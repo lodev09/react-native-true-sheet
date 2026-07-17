@@ -56,6 +56,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;
 
 /**
+ * Whether the sheet has an `auto` detent — bounds the pinned scrollable's
+ * viewport to the container so the sheet height can derive from its content size
+ */
+@property (nonatomic, assign) BOOL hasAutoDetent;
+
+/**
  * Returns the current content height
  */
 - (CGFloat)contentHeight;
