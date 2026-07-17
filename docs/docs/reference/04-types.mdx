@@ -100,6 +100,25 @@ Options for customizing scrollable behavior. Applies when the sheet contains a `
 | `topScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the top edge of the scroll view and header. iOS 26+ only. | `'hidden'` |
 | `bottomScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the bottom edge of the scroll view and footer. iOS 26+ only. | `'hidden'` |
 
+## `HeaderOptions`
+
+Options for customizing header behavior.
+
+```tsx
+<TrueSheet
+  header={<Header />}
+  headerOptions={{
+    position: 'absolute',
+  }}
+>
+  {/* ... */}
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `position` | `'relative' \| 'absolute'` | How the header participates in the sheet layout. `'relative'` takes up space above the content and is included in the `auto` detent height. `'absolute'` floats over the content, pinned to the top edge, and is excluded from the `auto` detent height. | `'relative'` |
+
 ## `FooterOptions`
 
 Options for customizing footer behavior.

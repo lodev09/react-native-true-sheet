@@ -65,6 +65,32 @@ const App = () => {
 When using `header` with `FlatList` or `ScrollView`, the content area height is automatically adjusted to account for the header height. This ensures proper scrolling behavior on both iOS and Android.
 :::
 
+## Floating Header
+
+By default, the header takes up space above the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `headerOptions.position` to `'absolute'` to float the header over the content instead — it gets pinned to the top edge and no longer adds to the `auto` detent height.
+
+```tsx {5-5}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto']}
+      headerOptions={{ position: 'absolute' }}
+      header={<SearchBar />}
+    >
+      <FlatList
+        data={items}
+        contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+Since the header overlaps the content, add top padding to your content (e.g. `contentContainerStyle`) so it starts below the header.
+:::
+
 ## Collapsing to the Header
 
 Use the [`"peek"`](../reference/types#sheetdetent) detent to collapse the sheet down to just the header (plus [`footer`](footer), if provided). Great for map-style sheets with a compact summary that expands into full content.
