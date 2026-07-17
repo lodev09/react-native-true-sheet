@@ -54,11 +54,14 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
 
   /**
    * Height for peek (-2.0) detents: header + footer + peek content height.
+   * A relative footer is pushed off-screen at peek, so it contributes no height.
    * Falls back to 150dp when none is present.
    */
   private val peekDetentHeight: Int
     get() {
-      val height = headerHeight + footerHeight + peekContentHeight
+      val height = headerHeight +
+        (if (delegate?.absoluteFooter == true) footerHeight else 0) +
+        peekContentHeight
       return if (height > 0) height else DEFAULT_PEEK_HEIGHT.dpToPx().toInt()
     }
 

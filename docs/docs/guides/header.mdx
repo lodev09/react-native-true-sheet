@@ -93,7 +93,7 @@ Since the header overlaps the content, add top padding to your content (e.g. `co
 
 ## Collapsing to the Header
 
-Use the [`"peek"`](../reference/types#sheetdetent) detent to collapse the sheet down to just the header (plus [`footer`](footer), if provided). Great for map-style sheets with a compact summary that expands into full content.
+Use the [`"peek"`](../reference/types#sheetdetent) detent to collapse the sheet down to just the header (plus an [absolute `footer`](footer#floating-footer), if provided). Great for map-style sheets with a compact summary that expands into full content.
 
 ```tsx {4-4}
 const App = () => {
@@ -103,6 +103,7 @@ const App = () => {
       initialDetentIndex={0}
       header={<BookingSummary />}
       footer={<SheetActions />}
+      footerOptions={{ position: 'absolute' }}
     >
       <BookingDetails />
     </TrueSheet>

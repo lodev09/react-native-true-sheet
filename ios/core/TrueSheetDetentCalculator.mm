@@ -37,8 +37,11 @@
 }
 
 - (CGFloat)peekHeight {
-  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue] +
-                   [self.delegate.peekContentHeight floatValue];
+  // A relative footer is laid out below the content, so it's pushed off-screen
+  // at the peek detent and contributes no height
+  CGFloat footerHeight = self.delegate.absoluteFooter ? [self.delegate.footerHeight floatValue] : 0;
+  CGFloat height =
+    [self.delegate.headerHeight floatValue] + footerHeight + [self.delegate.peekContentHeight floatValue];
   return height > 0 ? height : 150;
 }
 

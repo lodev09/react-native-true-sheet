@@ -78,6 +78,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
+      footerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       {...props}

@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Returns the height for peek (-2) detents: header + footer + peek content height.
+ A relative footer is pushed off-screen at peek, so it contributes no height.
  Falls back to 150 when none is present — matches the iOS 26
  floating small-detent threshold.
  */

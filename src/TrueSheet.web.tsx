@@ -287,9 +287,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const absoluteFooterRef = useRef(absoluteFooter);
   absoluteFooterRef.current = absoluteFooter;
 
+  // A relative footer is laid out below the content, so it's pushed off-screen
+  // at the peek detent and contributes no height.
   const peekHeight =
-    (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
-    DEFAULT_PEEK_HEIGHT;
+    (header ? headerHeight : 0) +
+      (footer && absoluteFooter ? footerHeight : 0) +
+      peekContentHeight || DEFAULT_PEEK_HEIGHT;
 
   // Web mirror of native's scrollable handling for 'auto' detents: a plugged
   // scrollable keeps the sized (bounded) layout so its viewport is capped to
@@ -500,7 +503,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // Geometry only runs while the drawer is mounted, so the elements are
     // measurable here; fall back to the state value when they're absent.
     const headerEl = headerElRef.current as unknown as HTMLElement | null;
-    const footerEl = footerElRef.current as unknown as HTMLElement | null;
+    // A relative footer is pushed off-screen at the peek detent — excluded
+    const footerEl = absoluteFooterRef.current
+      ? (footerElRef.current as unknown as HTMLElement | null)
+      : null;
     const peekEl = peekElRef.current as unknown as HTMLElement | null;
     const contentEl = contentRef.current as unknown as HTMLElement | null;
     const livePeekContentHeight =

@@ -124,15 +124,16 @@ A relative footer is laid out below the content — if your content is taller th
 
 ## Collapsing to the Footer
 
-The footer height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
+An **absolute** footer's height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
 
-```tsx {4-4}
+```tsx {4-6}
 const App = () => {
   return (
     <TrueSheet
       detents={['peek', 0.9]}
       initialDetentIndex={0}
       footer={<SheetActions />}
+      footerOptions={{ position: 'absolute' }}
     >
       <BookingDetails />
     </TrueSheet>
@@ -140,4 +141,4 @@ const App = () => {
 }
 ```
 
-Since the footer is pinned to the bottom edge, it stays visible at every detent. See [Peeking Content](peeking) for the full guide.
+Since an absolute footer floats over the content, it stays visible at every detent. A relative footer is laid out below the content, so it's pushed off-screen at the peek detent and is excluded from the peek height. See [Peeking Content](peeking) for the full guide.

@@ -157,9 +157,11 @@ export interface FooterOptions {
    * How the footer participates in the sheet layout.
    *
    * - `'relative'`: The footer takes up space below the content, pinned to the
-   *   bottom edge, and its height is included in the `auto` detent calculation.
+   *   bottom edge. Its height is included in the `auto` detent calculation but
+   *   excluded from the `peek` detent (it's pushed off-screen at peek).
    * - `'absolute'`: The footer floats over the content, pinned to the bottom
-   *   edge, and is excluded from the `auto` detent calculation.
+   *   edge. Its height is excluded from the `auto` detent calculation but
+   *   included in the `peek` detent.
    *
    * @default 'relative'
    */
