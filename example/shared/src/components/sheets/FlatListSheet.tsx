@@ -28,7 +28,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
         topScrollEdgeEffect: 'soft',
       }}
       header={<Header />}
-      headerStyle={styles.header}
+      headerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       footer={
@@ -81,12 +81,6 @@ const styles = StyleSheet.create({
       default: DARK_GRAY,
       ios: undefined,
     }),
-  },
-  header: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1,
   },
   content: {
     padding: SPACING,

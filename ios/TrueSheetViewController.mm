@@ -850,7 +850,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
  */
 - (void)setupSheetDetentsForSizeChange {
   if (@available(iOS 16.0, *)) {
-    CGFloat autoHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+    CGFloat autoHeight = [_detentCalculator autoHeight];
     CGFloat peekHeight = [_detentCalculator peekHeight];
 
     if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
@@ -885,7 +885,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  _autoDetentHeight = [self.contentHeight floatValue] + [self.headerHeight floatValue];
+  _autoDetentHeight = [_detentCalculator autoHeight];
   _peekDetentHeight = [_detentCalculator peekHeight];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {

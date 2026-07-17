@@ -464,6 +464,7 @@ export class TrueSheet
       style,
       header,
       headerStyle,
+      headerOptions,
       footer,
       footerStyle,
       insetAdjustment = 'automatic',
@@ -514,6 +515,7 @@ export class TrueSheet
         anchor={anchor}
         anchorOffset={anchorOffset}
         scrollableOptions={scrollableOptions}
+        headerOptions={headerOptions}
         footerOptions={footerOptions}
         presentation={presentation}
         insetAdjustment={insetAdjustment}
@@ -536,7 +538,13 @@ export class TrueSheet
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={styles.container}>
             {header && (
-              <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
+              <TrueSheetHeaderViewNativeComponent
+                style={[
+                  styles.header,
+                  headerOptions?.position === 'absolute' && styles.absoluteHeader,
+                  headerStyle,
+                ]}
+              >
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
@@ -570,6 +578,14 @@ const styles = StyleSheet.create({
   },
   header: {
     pointerEvents: 'box-none',
+  },
+  // Floats over the content so it doesn't take up layout space
+  absoluteHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
   },
   // Pinned to the sheet's bottom edge via Yoga since the container tracks the
   // sheet's visible height

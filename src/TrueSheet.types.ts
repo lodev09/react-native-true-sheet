@@ -133,6 +133,23 @@ export interface ScrollableOptions {
 }
 
 /**
+ * Options for header behavior
+ */
+export interface HeaderOptions {
+  /**
+   * How the header participates in the sheet layout.
+   *
+   * - `'relative'`: The header takes up space above the content, and its height
+   *   is included in the `auto` detent calculation.
+   * - `'absolute'`: The header floats over the content, pinned to the top edge,
+   *   and is excluded from the `auto` detent calculation.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+}
+
+/**
  * Options for footer behavior
  */
 export interface FooterOptions {
@@ -449,6 +466,11 @@ export interface TrueSheetProps extends ViewProps {
    * Style for the header container.
    */
   headerStyle?: StyleProp<ViewStyle>;
+
+  /**
+   * Options for header behavior.
+   */
+  headerOptions?: HeaderOptions;
 
   /**
    * A component that floats at the bottom of the Sheet.

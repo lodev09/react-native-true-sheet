@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly) NSArray<NSNumber *> *detents;
 @property (nonatomic, strong, readonly, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, readonly, nullable) NSNumber *headerHeight;
+@property (nonatomic, readonly) BOOL absoluteHeader;
 @property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
 @property (nonatomic, strong, readonly, nullable) NSNumber *peekContentHeight;
 
@@ -41,6 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
  For peek (-2) detents, calculates based on header + footer height.
  */
 - (CGFloat)detentValueForIndex:(NSInteger)index;
+
+/**
+ Returns the height for auto (-1) detents: content + header height.
+ An absolute (floating) header contributes no height.
+ */
+- (CGFloat)autoHeight;
 
 /**
  Returns the height for peek (-2) detents: header + footer + peek content height.

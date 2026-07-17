@@ -73,7 +73,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
-      headerStyle={styles.header}
+      headerOptions={{ position: 'absolute' }}
       footer={
         <Footer wrapperStyle={styles.footer}>
           <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
@@ -115,12 +115,6 @@ const styles = StyleSheet.create({
     paddingTop: HEADER_HEIGHT + SPACING,
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
-  },
-  header: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1,
   },
   footer: {
     backgroundColor: Platform.select({

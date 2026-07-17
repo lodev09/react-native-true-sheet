@@ -281,6 +281,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val headerHeight: Int
     get() = containerView?.headerHeight ?: cachedHeaderHeight
 
+  override var absoluteHeader: Boolean = false
+
   override val footerHeight: Int
     get() = containerView?.footerHeight ?: cachedFooterHeight
 
