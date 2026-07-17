@@ -34,6 +34,10 @@ type FooterOptionsType = Readonly<{
   keyboardOffset?: WithDefault<Double, 0>;
 }>;
 
+type HeaderOptionsType = Readonly<{
+  position?: WithDefault<'relative' | 'absolute', 'relative'>;
+}>;
+
 export interface DetentInfoEventPayload {
   index: Int32;
   position: Double;
@@ -104,6 +108,7 @@ export interface NativeProps extends ViewProps {
   dimmed?: WithDefault<boolean, true>;
   initialDetentAnimated?: WithDefault<boolean, true>;
   scrollableOptions?: ScrollableOptionsType;
+  headerOptions?: HeaderOptionsType;
   footerOptions?: FooterOptionsType;
   presentation?: WithDefault<'page' | 'form', 'page'>;
 

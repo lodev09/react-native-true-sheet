@@ -86,6 +86,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     initialDetentIndex = -1,
     header,
     headerStyle,
+    headerOptions,
     footer,
     footerStyle,
     presentation = 'page',
@@ -271,6 +272,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const peekElRef = useRef<View>(null);
   const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
+  // An absolute (floating) header overlaps the content, so it contributes no
+  // height to the 'auto' detent measurement.
+  const absoluteHeader = headerOptions?.position === 'absolute';
+  const absoluteHeaderRef = useRef(absoluteHeader);
+  absoluteHeaderRef.current = absoluteHeader;
+
+  const resolvedHeaderStyle = absoluteHeader ? [absoluteHeaderStyle, headerStyle] : headerStyle;
+
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
@@ -290,7 +299,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const measureNaturalHeight = useCallback(() => {
     const contentEl = contentRef.current as unknown as HTMLElement | null;
     if (!contentEl || !contentEl.isConnected) return 0;
-    const headerEl = headerElRef.current as unknown as HTMLElement | null;
+    const headerEl = absoluteHeaderRef.current
+      ? null
+      : (headerElRef.current as unknown as HTMLElement | null);
     let height = (headerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
     const scroller = pinnedScrollerRef.current;
     const scrollContent = scroller?.firstElementChild;
@@ -1169,7 +1180,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
               >
                 {header && (
-                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={resolvedHeaderStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
@@ -1189,7 +1200,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               // 'auto' detents and form-sheet content-fit sizing.
               <>
                 {header && (
-                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={resolvedHeaderStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
@@ -1210,6 +1221,15 @@ const overlayStyle: React.CSSProperties = {
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
+
+// Floats over the content so it doesn't take up layout space
+const absoluteHeaderStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1,
+} as const;
 
 const SIZED_LAYOUT_HEIGHT = 'calc(100% - var(--snap-point-height, 0px))';
 

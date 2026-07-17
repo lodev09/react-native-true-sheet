@@ -15,6 +15,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
+  val absoluteHeader: Boolean
   val footerHeight: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
@@ -33,12 +34,20 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
+
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
   private val footerHeight: Int get() = delegate?.footerHeight ?: 0
   private val peekContentHeight: Int get() = delegate?.peekContentHeight ?: 0
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
+
+  /**
+   * Height for auto (-1.0) detents: content + header height.
+   * An absolute (floating) header overlaps the content, so it contributes no height.
+   */
+  private val autoDetentHeight: Int
+    get() = contentHeight + if (delegate?.absoluteHeader == true) 0 else headerHeight
 
   /**
    * Height for peek (-2.0) detents: header + footer + peek content height.
@@ -56,7 +65,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset
+      autoDetentHeight + contentBottomInset
     } else if (detent == -2.0) {
       peekDetentHeight + contentBottomInset
     } else {
@@ -99,7 +108,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     if (index < 0 || index >= detents.size) return 0f
     val value = detents[index]
     return if (value == -1.0) {
-      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+      autoDetentHeight.toFloat() / screenHeight.toFloat()
     } else if (value == -2.0) {
       peekDetentHeight.toFloat() / screenHeight.toFloat()
     } else {

@@ -19,8 +19,7 @@
   if (index >= 0 && index < (NSInteger)detents.count) {
     CGFloat value = [detents[index] doubleValue];
     if (value == -1) {
-      CGFloat autoHeight = [self.delegate.contentHeight floatValue] + [self.delegate.headerHeight floatValue];
-      return autoHeight / self.delegate.screenHeight;
+      return [self autoHeight] / self.delegate.screenHeight;
     }
     if (value == -2) {
       return [self peekHeight] / self.delegate.screenHeight;
@@ -28,6 +27,12 @@
     return value;
   }
   return 0;
+}
+
+- (CGFloat)autoHeight {
+  // An absolute (floating) header overlaps the content, so it contributes no height
+  CGFloat headerHeight = self.delegate.absoluteHeader ? 0 : [self.delegate.headerHeight floatValue];
+  return [self.delegate.contentHeight floatValue] + headerHeight;
 }
 
 - (CGFloat)peekHeight {

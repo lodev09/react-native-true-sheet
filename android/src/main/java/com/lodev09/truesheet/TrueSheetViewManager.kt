@@ -225,6 +225,12 @@ class TrueSheetViewManager :
     view.setScrollableOptions(scrollableOptions)
   }
 
+  @ReactProp(name = "headerOptions")
+  override fun setHeaderOptions(view: TrueSheetView, options: ReadableMap?) {
+    val position = if (options != null && options.hasKey("position")) options.getString("position") else null
+    view.setAbsoluteHeader(position == "absolute")
+  }
+
   @ReactProp(name = "footerOptions")
   override fun setFooterOptions(view: TrueSheetView, options: ReadableMap?) {
     val keyboardOffset =
