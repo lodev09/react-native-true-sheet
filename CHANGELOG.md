@@ -9,6 +9,7 @@
 
 ### 💥 Breaking changes
 
+- Content now lays out naturally like a regular view or a react-navigation screen — it wraps its children's height by default instead of filling the sheet. Pass `flex: 1` via `style` to fill, and bound scrollables the same way (except `auto` detents, which stay auto-sized). ([#746](https://github.com/lodev09/react-native-true-sheet/pull/746) by [@lodev09](https://github.com/lodev09))
 - Synchronous per-detent container layout — the container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms (previously sized to the screen height / largest detent). The `scrollable` prop is removed — scrollables are auto-detected and work plugged in directly. Requires React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.9
