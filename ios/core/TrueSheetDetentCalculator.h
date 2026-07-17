@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly, nullable) NSNumber *headerHeight;
 @property (nonatomic, readonly) BOOL absoluteHeader;
 @property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
+@property (nonatomic, readonly) BOOL absoluteFooter;
 @property (nonatomic, strong, readonly, nullable) NSNumber *peekContentHeight;
 
 @end
@@ -44,8 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)detentValueForIndex:(NSInteger)index;
 
 /**
- Returns the height for auto (-1) detents: content + header height.
- An absolute (floating) header contributes no height.
+ Returns the height for auto (-1) detents: content + header + footer height.
+ An absolute (floating) header or footer contributes no height.
  */
 - (CGFloat)autoHeight;
 

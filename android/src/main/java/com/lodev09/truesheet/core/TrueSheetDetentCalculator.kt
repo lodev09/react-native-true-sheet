@@ -17,6 +17,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val headerHeight: Int
   val absoluteHeader: Boolean
   val footerHeight: Int
+  val absoluteFooter: Boolean
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -43,11 +44,13 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
 
   /**
-   * Height for auto (-1.0) detents: content + header height.
-   * An absolute (floating) header overlaps the content, so it contributes no height.
+   * Height for auto (-1.0) detents: content + header + footer height.
+   * An absolute (floating) header or footer overlaps the content, so it contributes no height.
    */
   private val autoDetentHeight: Int
-    get() = contentHeight + if (delegate?.absoluteHeader == true) 0 else headerHeight
+    get() = contentHeight +
+      (if (delegate?.absoluteHeader == true) 0 else headerHeight) +
+      (if (delegate?.absoluteFooter == true) 0 else footerHeight)
 
   /**
    * Height for peek (-2.0) detents: header + footer + peek content height.

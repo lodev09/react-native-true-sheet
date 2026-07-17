@@ -154,6 +154,18 @@ export interface HeaderOptions {
  */
 export interface FooterOptions {
   /**
+   * How the footer participates in the sheet layout.
+   *
+   * - `'relative'`: The footer takes up space below the content, pinned to the
+   *   bottom edge, and its height is included in the `auto` detent calculation.
+   * - `'absolute'`: The footer floats over the content, pinned to the bottom
+   *   edge, and is excluded from the `auto` detent calculation.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+
+  /**
    * Adjusts how far the footer rises when the keyboard opens.
    * Positive values raise it higher; negative values reduce the rise.
    * Pass `-insets.bottom` to tuck the footer's safe-area padding behind the keyboard.

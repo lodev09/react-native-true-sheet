@@ -89,6 +89,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     headerOptions,
     footer,
     footerStyle,
+    footerOptions,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -280,6 +281,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const resolvedHeaderStyle = absoluteHeader ? [absoluteHeaderStyle, headerStyle] : headerStyle;
 
+  // Same for an absolute (floating) footer — rendered via vaul's
+  // `detachedSiblings` instead of in the content flow.
+  const absoluteFooter = footerOptions?.position === 'absolute';
+  const absoluteFooterRef = useRef(absoluteFooter);
+  absoluteFooterRef.current = absoluteFooter;
+
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
@@ -293,16 +300,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const [scrollableAutoHeight, setScrollableAutoHeight] = useState(0);
   const pinnedScrollerRef = useRef<HTMLElement | null>(null);
 
-  // Natural content height (header + content, with a pinned scrollable's
-  // viewport replaced by its content size) — the height the content wants
-  // regardless of the sheet's bounds.
+  // Natural content height (header + content + footer, with a pinned
+  // scrollable's viewport replaced by its content size) — the height the
+  // content wants regardless of the sheet's bounds.
   const measureNaturalHeight = useCallback(() => {
     const contentEl = contentRef.current as unknown as HTMLElement | null;
     if (!contentEl || !contentEl.isConnected) return 0;
     const headerEl = absoluteHeaderRef.current
       ? null
       : (headerElRef.current as unknown as HTMLElement | null);
-    let height = (headerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
+    const footerEl = absoluteFooterRef.current
+      ? null
+      : (footerElRef.current as unknown as HTMLElement | null);
+    let height =
+      (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
     const scroller = pinnedScrollerRef.current;
     const scrollContent = scroller?.firstElementChild;
     if (scroller?.isConnected && scrollContent instanceof HTMLElement) {
@@ -1156,7 +1167,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             style={mergedContentStyle}
             onPointerDownOutside={handlePointerDownOutside}
             detachedSiblings={
-              footer ? (
+              footer && absoluteFooter ? (
                 <div style={footerFloatStyle}>
                   <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
@@ -1194,6 +1205,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 >
                   {children}
                 </View>
+                {footer && !absoluteFooter && (
+                  <View
+                    ref={footerElRef}
+                    style={[relativeFooterStyle, footerStyle]}
+                    onLayout={handleFooterLayout}
+                  >
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                )}
               </div>
             ) : (
               // Natural flow so vaul can measure content height — required for
@@ -1207,6 +1227,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 <View ref={contentRef} style={style}>
                   {children}
                 </View>
+                {footer && !absoluteFooter && (
+                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                )}
               </>
             )}
           </Drawer.Content>
@@ -1221,6 +1246,11 @@ const overlayStyle: React.CSSProperties = {
   inset: 0,
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
+
+// Pinned to the sheet's bottom edge — takes up layout space below the content
+const relativeFooterStyle = {
+  marginTop: 'auto',
+} as const;
 
 // Floats over the content so it doesn't take up layout space
 const absoluteHeaderStyle = {

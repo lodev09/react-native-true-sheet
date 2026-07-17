@@ -127,6 +127,7 @@ Options for customizing footer behavior.
 <TrueSheet
   footer={<Footer />}
   footerOptions={{
+    position: 'absolute',
     keyboardOffset: -insets.bottom,
   }}
 >
@@ -136,6 +137,7 @@ Options for customizing footer behavior.
 
 | Property | Type | Description | Default |
 | - | - | - | - |
+| `position` | `'relative' \| 'absolute'` | How the footer participates in the sheet layout. `'relative'` takes up space below the content, pinned to the bottom edge, and is included in the `auto` detent height. `'absolute'` floats over the content, pinned to the bottom edge, and is excluded from the `auto` detent height. | `'relative'` |
 | `keyboardOffset` | `number` | Adjusts how far the footer rises when the keyboard opens. Positive values raise it higher; pass `-insets.bottom` to tuck its safe-area padding behind the keyboard instead of leaving a gap. | `0` |
 
 ## `ScrollEdgeEffect`

@@ -516,7 +516,10 @@ export class TrueSheet
         anchorOffset={anchorOffset}
         scrollableOptions={scrollableOptions}
         headerOptions={headerOptions}
-        footerOptions={footerOptions}
+        footerOptions={{
+          footerPosition: footerOptions?.position,
+          keyboardOffset: footerOptions?.keyboardOffset,
+        }}
         presentation={presentation}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}
@@ -552,7 +555,15 @@ export class TrueSheet
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
-              <TrueSheetFooterViewNativeComponent style={[styles.footer, footerStyle]}>
+              <TrueSheetFooterViewNativeComponent
+                style={[
+                  styles.footer,
+                  footerOptions?.position === 'absolute'
+                    ? styles.absoluteFooter
+                    : styles.relativeFooter,
+                  footerStyle,
+                ]}
+              >
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
             )}
@@ -587,10 +598,16 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
   },
-  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
-  // sheet's visible height
   footer: {
     pointerEvents: 'box-none',
+  },
+  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
+  // sheet's visible height — takes up layout space below the content
+  relativeFooter: {
+    marginTop: 'auto',
+  },
+  // Floats over the content so it doesn't take up layout space
+  absoluteFooter: {
     position: 'absolute',
     left: 0,
     right: 0,

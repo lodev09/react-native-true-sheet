@@ -266,6 +266,7 @@ using namespace facebook::react;
   _controller.scrollingExpandsSheet = scrollingExpandsSheet;
 
   _controller.absoluteHeader = newProps.headerOptions.position == TrueSheetViewPosition::Absolute;
+  _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   if (_controller.footerKeyboardOffset != footerKeyboardOffset) {

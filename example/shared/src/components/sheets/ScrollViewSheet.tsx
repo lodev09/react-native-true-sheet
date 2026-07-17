@@ -15,7 +15,6 @@ import {
   BORDER_RADIUS,
   DARK,
   DARK_GRAY,
-  FOOTER_HEIGHT,
   GAP,
   HEADER_HEIGHT,
   LIGHT_GRAY,
@@ -87,7 +86,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
         <ScrollView
           contentContainerStyle={styles.content}
           indicatorStyle="black"
-          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
@@ -113,7 +111,6 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {
