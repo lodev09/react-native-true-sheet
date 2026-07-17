@@ -233,6 +233,9 @@ class TrueSheetViewManager :
 
   @ReactProp(name = "footerOptions")
   override fun setFooterOptions(view: TrueSheetView, options: ReadableMap?) {
+    val position = if (options != null && options.hasKey("footerPosition")) options.getString("footerPosition") else null
+    view.setAbsoluteFooter(position == "absolute")
+
     val keyboardOffset =
       if (options != null && options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f
     view.setFooterKeyboardOffset(keyboardOffset)

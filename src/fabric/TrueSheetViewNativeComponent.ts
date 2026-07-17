@@ -31,6 +31,9 @@ type ScrollableOptionsType = Readonly<{
 }>;
 
 type FooterOptionsType = Readonly<{
+  // Named uniquely across option structs — codegen derives the enum name from
+  // the field name, so a second `position` would redefine TrueSheetViewPosition
+  footerPosition?: WithDefault<'relative' | 'absolute', 'relative'>;
   keyboardOffset?: WithDefault<Double, 0>;
 }>;
 

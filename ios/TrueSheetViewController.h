@@ -59,6 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *headerHeight;
 @property (nonatomic, assign) BOOL absoluteHeader;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
+@property (nonatomic, assign) BOOL absoluteFooter;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;

@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly, nullable) NSNumber *headerHeight;
 @property (nonatomic, readonly) BOOL absoluteHeader;
 @property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
+@property (nonatomic, readonly) BOOL absoluteFooter;
 @property (nonatomic, strong, readonly, nullable) NSNumber *peekContentHeight;
 
 @end
@@ -44,13 +45,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)detentValueForIndex:(NSInteger)index;
 
 /**
- Returns the height for auto (-1) detents: content + header height.
- An absolute (floating) header contributes no height.
+ Returns the height for auto (-1) detents: content + header + footer height.
+ An absolute (floating) header or footer contributes no height.
  */
 - (CGFloat)autoHeight;
 
 /**
  Returns the height for peek (-2) detents: header + footer + peek content height.
+ A relative footer is pushed off-screen at peek, so it contributes no height.
  Falls back to 150 when none is present — matches the iOS 26
  floating small-detent threshold.
  */

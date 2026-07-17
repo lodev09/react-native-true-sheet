@@ -1,12 +1,12 @@
 ---
 title: Adding Footer
-description: Add a floating footer component to the bottom sheet.
+description: Add a footer component pinned to the bottom of the sheet.
 keywords: [bottom sheet footer, bottom sheet floating footer, bottom sheet sticky footer]
 ---
 
-Do you need a FAB (Floating Action Button) on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
+Do you need action buttons on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
 
-`TrueSheet` provides first-class support for a `Footer` component. This component will float at the bottom of the sheet.
+`TrueSheet` provides first-class support for a `Footer` component. The footer is pinned to the bottom of the sheet, takes up space below the content, and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation.
 
 ## How?
 
@@ -92,17 +92,48 @@ When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pa
 On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
 :::
 
+## Floating Footer
+
+By default, the footer takes up space below the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `footerOptions.position` to `'absolute'` to float the footer over the content instead — it stays pinned to the bottom edge but no longer adds to the `auto` detent height.
+
+```tsx {5-5}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto']}
+      footerOptions={{ position: 'absolute' }}
+      footer={<Fab />}
+    >
+      <FlatList
+        data={items}
+        contentContainerStyle={{ paddingBottom: FOOTER_HEIGHT }}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+Since the footer overlaps the content, add bottom padding to your content (e.g. `contentContainerStyle`) so it ends above the footer.
+:::
+
+:::info
+A relative footer is laid out below the content — if your content is taller than the sheet's visible height (e.g. fixed detents), bound it with `flex: 1` so the footer stays visible. Use `'absolute'` if you want the footer to float regardless of the content's height.
+:::
+
 ## Collapsing to the Footer
 
-The footer height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
+An **absolute** footer's height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
 
-```tsx {4-4}
+```tsx {4-6}
 const App = () => {
   return (
     <TrueSheet
       detents={['peek', 0.9]}
       initialDetentIndex={0}
       footer={<SheetActions />}
+      footerOptions={{ position: 'absolute' }}
     >
       <BookingDetails />
     </TrueSheet>
@@ -110,4 +141,4 @@ const App = () => {
 }
 ```
 
-Since the footer floats, it stays visible at every detent. See [Peeking Content](peeking) for the full guide.
+Since an absolute footer floats over the content, it stays visible at every detent. A relative footer is laid out below the content, so it's pushed off-screen at the peek detent and is excluded from the peek height. See [Peeking Content](peeking) for the full guide.

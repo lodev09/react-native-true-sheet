@@ -30,14 +30,18 @@
 }
 
 - (CGFloat)autoHeight {
-  // An absolute (floating) header overlaps the content, so it contributes no height
+  // An absolute (floating) header or footer overlaps the content, so it contributes no height
   CGFloat headerHeight = self.delegate.absoluteHeader ? 0 : [self.delegate.headerHeight floatValue];
-  return [self.delegate.contentHeight floatValue] + headerHeight;
+  CGFloat footerHeight = self.delegate.absoluteFooter ? 0 : [self.delegate.footerHeight floatValue];
+  return [self.delegate.contentHeight floatValue] + headerHeight + footerHeight;
 }
 
 - (CGFloat)peekHeight {
-  CGFloat height = [self.delegate.headerHeight floatValue] + [self.delegate.footerHeight floatValue] +
-                   [self.delegate.peekContentHeight floatValue];
+  // A relative footer is laid out below the content, so it's pushed off-screen
+  // at the peek detent and contributes no height
+  CGFloat footerHeight = self.delegate.absoluteFooter ? [self.delegate.footerHeight floatValue] : 0;
+  CGFloat height =
+    [self.delegate.headerHeight floatValue] + footerHeight + [self.delegate.peekContentHeight floatValue];
   return height > 0 ? height : 150;
 }
 

@@ -38,6 +38,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           onPress={() => testRef.current?.present()}
         />
       }
+      footerOptions={{ position: 'absolute' }}
       {...props}
     >
       <View style={styles.wrapper}>
@@ -47,7 +48,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           contentContainerStyle={styles.content}
           indicatorStyle="black"
           ItemSeparatorComponent={Spacer}
-          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
           ListFooterComponent={
             <>

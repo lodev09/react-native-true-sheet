@@ -165,7 +165,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   childContent: {

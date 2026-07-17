@@ -286,6 +286,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val footerHeight: Int
     get() = containerView?.footerHeight ?: cachedFooterHeight
 
+  override var absoluteFooter: Boolean = false
+
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
@@ -992,11 +994,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerView = containerView?.footerView ?: return
     val sheet = sheetView ?: return
 
+    val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
+
+    // A relative footer is laid out by Yoga (pinned to the container's bottom
+    // edge), so only the keyboard slide is carried via translation — like iOS
+    if (!absoluteFooter) {
+      footerView.translationY = -keyboardShift.toFloat()
+      return
+    }
+
     val footerHeight = footerView.height
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative
