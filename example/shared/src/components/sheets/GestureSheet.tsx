@@ -1,9 +1,8 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { Platform, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import Animated, { useAnimatedStyle, useSharedValue, withDecay } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BLUE, DARK, DARK_GRAY, FOOTER_HEIGHT, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { Button } from '../Button';
@@ -23,9 +22,6 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
 
   const scrollX = useSharedValue(0);
   const dimensions = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const isIPad = (Platform.OS === 'ios' && Platform.isPad) || Platform.OS === 'web';
-  const bottomInset = isIPad ? 0 : insets.bottom;
 
   const dismiss = async () => {
     await sheetRef.current?.dismiss();
@@ -87,7 +83,7 @@ export const GestureSheet = forwardRef((props: GestureSheetProps, ref: Ref<TrueS
         )
       }
       footer={
-        <GestureHandlerRootView style={[styles.footerRoot, { paddingBottom: bottomInset }]}>
+        <GestureHandlerRootView style={styles.footerRoot}>
           <SwipeButton onComplete={() => console.log('swipe completed!')}>
             Swipe to confirm
           </SwipeButton>

@@ -57,44 +57,34 @@ const App = () => {
 
 ## Safe Area Handling
 
-The footer is pinned to the bottom edge of the sheet. The sheet height automatically includes the bottom safe area on both iOS and Android. To ensure your footer extends properly into the safe area, add bottom padding:
+The footer owns the sheet's bottom edge, so it automatically absorbs the bottom safe-area inset as padding when [`insetAdjustment`](../reference/configuration#insetadjustment) is `"automatic"` (the default). Your footer content stays above the home indicator while its background fills the inset — no manual padding needed.
 
 ```tsx
-import { Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const isIPad = Platform.OS === 'ios' && Platform.isPad;
-
 const MyFooter = () => {
-  const insets = useSafeAreaInsets();
-  const bottomInset = isIPad ? 0 : insets.bottom;
-
   return (
-    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
-      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#fff' }}>Footer Content</Text>
-      </View>
+    <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Footer Content</Text>
     </View>
   );
 };
 
 // Usage
-<TrueSheet detents={['auto']} footer={<MyFooter />}>
+<TrueSheet detents={['auto']} footer={<MyFooter />} footerStyle={{ backgroundColor: '#333' }}>
   {/* content */}
 </TrueSheet>
 ```
 
-This ensures the footer background extends into the safe area while keeping the content above the home indicator.
+The inset is applied to the footer component itself, so set your background via [`footerStyle`](../reference/configuration#footerstyle) (or on your footer's root view) for it to fill the safe area.
 
-When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pass `-insets.bottom` to [`footerOptions.keyboardOffset`](../reference/configuration#footeroptions) to tuck it behind the keyboard — see [Keyboard Handling](./keyboard#footer-behavior).
+When the keyboard opens, the footer rises above it and the inset is skipped automatically — no gap above the keyboard. See [Keyboard Handling](./keyboard#footer-behavior).
 
 :::note
-On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
+On iPad, the sheet is displayed as a floating modal, so no inset is applied. Set `insetAdjustment="never"` to opt out entirely.
 :::
 
 ## Floating Footer
 
-By default, the footer takes up space below the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `footerOptions.position` to `'absolute'` to float the footer over the content instead — it stays pinned to the bottom edge but no longer adds to the `auto` detent height.
+By default, the footer takes up space below the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `footerOptions.position` to `'absolute'` to float the footer over the content instead — it stays pinned to the bottom edge but no longer adds to the `auto` detent height. An absolute footer absorbs the bottom safe-area inset the same way a relative one does — see [Safe Area Handling](#safe-area-handling).
 
 ```tsx {5-5}
 const App = () => {

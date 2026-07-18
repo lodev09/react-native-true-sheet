@@ -780,6 +780,7 @@ using namespace facebook::react;
   _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.hasAutoDetent = _hasAutoDetent;
+  _containerView.footerBottomInset = _controller.footerBottomInset;
   [_containerView setupScrollable];
 }
 

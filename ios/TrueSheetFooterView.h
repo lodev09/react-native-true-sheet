@@ -33,6 +33,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)applyKeyboardOffset;
 
+/**
+ * Bottom safe-area inset the footer absorbs as padding (via the shadow node)
+ * so its content clears the home indicator and the background fills the inset.
+ */
+- (void)setBottomInset:(CGFloat)bottomInset;
+
 @end
 
 NS_ASSUME_NONNULL_END

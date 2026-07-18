@@ -6,6 +6,7 @@ module.exports = {
         componentDescriptors: [
           'TrueSheetViewComponentDescriptor',
           'TrueSheetContentViewComponentDescriptor',
+          'TrueSheetFooterViewComponentDescriptor',
         ],
         cmakeListsPath: '../android/src/main/jni/CMakeLists.txt',
       },

@@ -56,17 +56,17 @@ This is especially useful for forms with multiple inputs — as the user taps be
 
 When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
 
-If your footer renders its own bottom inset (e.g. safe-area padding for the home indicator), that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass `-insets.bottom` to tuck the inset behind the keyboard:
+The footer's built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
+
+If your footer renders its own bottom padding, that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass a negative value to tuck it behind the keyboard:
 
 ```tsx
-const insets = useSafeAreaInsets()
-
-<TrueSheet footer={<Footer />} footerOptions={{ keyboardOffset: -insets.bottom }}>
+<TrueSheet footer={<Footer />} footerOptions={{ keyboardOffset: -16 }}>
   {/* ... */}
 </TrueSheet>
 ```
 
-The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the inset sits behind the keyboard; a positive value raises the footer higher.
+The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the padding sits behind the keyboard; a positive value raises the footer higher.
 
 ## Autofocus Limitation
 

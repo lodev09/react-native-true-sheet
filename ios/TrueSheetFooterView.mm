@@ -9,18 +9,22 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetFooterView.h"
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewShadowNode.h>
 #import "TrueSheetViewController.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
+  TrueSheetFooterViewShadowNode::ConcreteState::Shared _state;
   CGFloat _lastHeight;
   CGFloat _currentKeyboardOffset;
+  CGFloat _bottomInset;
+  BOOL _keyboardVisible;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -37,8 +41,45 @@ using namespace facebook::react;
 
     _lastHeight = 0;
     _currentKeyboardOffset = 0;
+    _bottomInset = 0;
+    _keyboardVisible = NO;
   }
   return self;
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetFooterViewShadowNode::ConcreteState const>(state);
+}
+
+// Tells the shadow node to pad the footer's bottom edge with the sheet's
+// bottom safe-area inset — the footer owns the sheet's bottom edge, so it
+// absorbs the inset and its background fills it.
+- (void)setBottomInset:(CGFloat)bottomInset {
+  if (_bottomInset == bottomInset) {
+    return;
+  }
+  _bottomInset = bottomInset;
+  [self pushBottomInsetState];
+}
+
+// Skipped while the keyboard is open — the footer rises above the keyboard,
+// so the inset would leave a gap.
+- (void)setKeyboardVisible:(BOOL)keyboardVisible {
+  if (_keyboardVisible == keyboardVisible) {
+    return;
+  }
+  _keyboardVisible = keyboardVisible;
+  [self pushBottomInsetState];
+}
+
+- (void)pushBottomInsetState {
+  if (!_state) {
+    return;
+  }
+
+  TrueSheetFooterViewState newState;
+  newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
+  _state->updateState(std::move(newState));
 }
 
 #pragma mark - Accessibility
@@ -86,8 +127,11 @@ using namespace facebook::react;
   }
 
   self.transform = CGAffineTransformIdentity;
+  _state = nullptr;
   _lastHeight = 0;
   _currentKeyboardOffset = 0;
+  _bottomInset = 0;
+  _keyboardVisible = NO;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
@@ -95,6 +139,8 @@ using namespace facebook::react;
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the
 // keyboard slide is carried by a transform instead of layout.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self setKeyboardVisible:YES];
+
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);
   _currentKeyboardOffset = slide;
@@ -109,6 +155,7 @@ using namespace facebook::react;
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self setKeyboardVisible:NO];
   _currentKeyboardOffset = 0;
 
   [UIView animateWithDuration:duration
@@ -125,6 +172,8 @@ using namespace facebook::react;
   if (height <= 0) {
     return;
   }
+
+  [self setKeyboardVisible:YES];
 
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);

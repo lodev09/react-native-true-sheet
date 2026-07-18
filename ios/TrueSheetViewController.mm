@@ -233,6 +233,34 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   return [self bottomSafeAreaForHeight:height];
 }
 
+// The inset the footer absorbs as padding. Uses the auto detent height when
+// available so it matches the auto detent's inset exclusion above.
+- (CGFloat)footerBottomInset {
+  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
+    return 0;
+  }
+
+  return [self bottomSafeAreaForHeight:_autoDetentHeight > 0 ? _autoDetentHeight : self.screenHeight];
+}
+
+/**
+ * Bottom inset excluded from the peek detent. An absolute footer counts
+ * toward the peek height and absorbs the inset as padding, but UIKit already
+ * lays custom detents out above the safe area — subtract it so the inset
+ * isn't doubled.
+ */
+- (CGFloat)peekDetentBottomInsetForHeight:(CGFloat)height {
+  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
+    return 0;
+  }
+
+  if (!_absoluteFooter || [self.footerHeight floatValue] <= 0) {
+    return 0;
+  }
+
+  return [self bottomSafeAreaForHeight:height];
+}
+
 - (BOOL)isDesignCompatibilityMode {
   if (@available(iOS 26.0, *)) {
     NSNumber *value = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"];
@@ -968,7 +996,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       return [self customDetentWithIdentifier:@"custom-peek"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    return self->_peekDetentHeight;
+                                    CGFloat height = self->_peekDetentHeight;
+                                    return height - [self peekDetentBottomInsetForHeight:height];
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];

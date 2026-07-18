@@ -10,8 +10,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
-import { useColorScheme, useWindowDimensions, View } from 'react-native';
+import type { LayoutChangeEvent, ViewStyle } from 'react-native';
+import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import type {
   DetentChangeEvent,
@@ -286,6 +286,25 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const absoluteFooter = footerOptions?.position === 'absolute';
   const absoluteFooterRef = useRef(absoluteFooter);
   absoluteFooterRef.current = absoluteFooter;
+
+  // The footer owns the sheet's bottom edge, so it absorbs the bottom
+  // safe-area inset as padding (on top of its own) — mirrors native, where the
+  // footer shadow node pads the inset so its background fills it.
+  const footerOwnsInset = Boolean(footer) && insetAdjustment === 'automatic';
+  const resolvedFooterStyle = useMemo(() => {
+    if (!footerOwnsInset) return footerStyle;
+
+    const flat = StyleSheet.flatten(footerStyle);
+    const base = flat?.paddingBottom ?? flat?.paddingVertical ?? flat?.padding;
+    const baseCss =
+      typeof base === 'number' ? `${base}px` : typeof base === 'string' ? base : '0px';
+    return [
+      footerStyle,
+      {
+        paddingBottom: `calc(${baseCss} + env(safe-area-inset-bottom, 0px))`,
+      } as unknown as ViewStyle,
+    ];
+  }, [footerOwnsInset, footerStyle]);
 
   // A relative footer is laid out below the content, so it's pushed off-screen
   // at the peek detent and contributes no height.
@@ -1024,9 +1043,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // shifting content and blocking vaul's shouldDrag walk (scrollTop > 0).
       overflow: 'clip',
       // Lift content above iOS home indicator / bottom safe area when enabled.
-      paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
+      // A relative footer owns the inset instead (see resolvedFooterStyle); an
+      // absolute footer floats over the content, so the content keeps its lift.
+      paddingBottom:
+        insetAdjustment === 'automatic' && !(footerOwnsInset && !absoluteFooter)
+          ? 'env(safe-area-inset-bottom, 0px)'
+          : 0,
     }),
-    [backgroundColor, effectiveCornerRadius, insetAdjustment]
+    [backgroundColor, effectiveCornerRadius, insetAdjustment, footerOwnsInset, absoluteFooter]
   );
 
   const defaultGrabberColor =
@@ -1175,7 +1199,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             detachedSiblings={
               footer && absoluteFooter ? (
                 <div style={footerFloatStyle}>
-                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={resolvedFooterStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 </div>
@@ -1214,7 +1238,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 {footer && !absoluteFooter && (
                   <View
                     ref={footerElRef}
-                    style={[relativeFooterStyle, footerStyle]}
+                    style={[relativeFooterStyle, resolvedFooterStyle]}
                     onLayout={handleFooterLayout}
                   >
                     {isValidElement(footer) ? footer : createElement(footer)}
@@ -1234,7 +1258,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                   {children}
                 </View>
                 {footer && !absoluteFooter && (
-                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={resolvedFooterStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 )}

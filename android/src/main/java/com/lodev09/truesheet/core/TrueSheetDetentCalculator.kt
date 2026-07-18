@@ -60,6 +60,13 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     get() = if (footerHeight > 0 && delegate?.absoluteFooter == false) 0 else contentBottomInset
 
   /**
+   * Bottom inset for peek detents. An absolute footer counts toward the peek
+   * height and absorbs the inset, so it isn't added again.
+   */
+  private val peekDetentBottomInset: Int
+    get() = if (footerHeight > 0 && delegate?.absoluteFooter == true) 0 else contentBottomInset
+
+  /**
    * Height for peek (-2.0) detents: header + footer + peek content height.
    * A relative footer is pushed off-screen at peek, so it contributes no height.
    * Falls back to 150dp when none is present.
@@ -80,7 +87,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val baseHeight = if (detent == -1.0) {
       autoDetentHeight + autoDetentBottomInset
     } else if (detent == -2.0) {
-      peekDetentHeight + contentBottomInset
+      peekDetentHeight + peekDetentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")

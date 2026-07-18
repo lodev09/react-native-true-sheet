@@ -31,13 +31,8 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       headerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
-      footer={
-        <Footer
-          text="OPEN BLANK SHEET"
-          wrapperStyle={styles.footer}
-          onPress={() => testRef.current?.present()}
-        />
-      }
+      footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
+      footerStyle={styles.footer}
       footerOptions={{ position: 'absolute' }}
       {...props}
     >

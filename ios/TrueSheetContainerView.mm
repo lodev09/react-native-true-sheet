@@ -137,6 +137,11 @@ using namespace facebook::react;
   [_footerView applyKeyboardOffset];
 }
 
+- (void)setFooterBottomInset:(CGFloat)footerBottomInset {
+  _footerBottomInset = footerBottomInset;
+  [_footerView setBottomInset:footerBottomInset];
+}
+
 - (void)setScrollableOptions:(ScrollableOptions *)scrollableOptions {
   _scrollableOptions = scrollableOptions;
   _contentView.keyboardScrollOffset = scrollableOptions ? scrollableOptions.keyboardScrollOffset : 0;
@@ -219,6 +224,7 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    [_footerView setBottomInset:_footerBottomInset];
     [self footerViewDidChangeSize:_footerView.frame.size];
   }
 }

@@ -1,6 +1,5 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, BUTTON_HEIGHT as FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
@@ -11,8 +10,6 @@ import { Header } from '../Header';
 interface PromptSheetProps extends TrueSheetProps {}
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
-  const { bottom } = useSafeAreaInsets();
-
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
@@ -73,12 +70,12 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       header={<Header />}
       footer={
-        <View style={[styles.footer, { paddingBottom: bottom + GAP }]}>
+        <View style={styles.footer}>
           <Button style={styles.button} text="Dismiss" onPress={handleDismissPress} />
           <Button style={styles.button} text="Submit" onPress={handleSubmitPress} />
         </View>
       }
-      footerOptions={{ keyboardOffset: -bottom }}
+      footerOptions={{ position: 'absolute' }}
       {...props}
     >
       <ScrollView
