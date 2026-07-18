@@ -168,11 +168,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {
     flexDirection: 'row',
-    paddingHorizontal: SPACING,
+    padding: SPACING,
     gap: GAP,
   },
   button: {

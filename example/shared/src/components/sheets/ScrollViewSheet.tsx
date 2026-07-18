@@ -15,6 +15,7 @@ import {
   BORDER_RADIUS,
   DARK,
   DARK_GRAY,
+  FOOTER_HEIGHT,
   GAP,
   HEADER_HEIGHT,
   LIGHT_GRAY,
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
+    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {
