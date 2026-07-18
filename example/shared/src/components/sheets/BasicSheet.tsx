@@ -7,7 +7,7 @@ import {
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -114,6 +114,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       backgroundColor={detentIndex > 0 ? BLUE : undefined}
       header={<Header />}
       footer={<Footer />}
+      footerStyle={styles.footer}
       {...rest}
     >
       {times(contentCount, (i) => (
@@ -151,6 +152,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         backgroundColor={DARK}
         style={styles.childContent}
         footer={<Footer />}
+        footerStyle={styles.footer}
       >
         <DemoContent color={DARK_BLUE} />
         {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
@@ -163,6 +165,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 });
 
 const styles = StyleSheet.create({
+  footer: {
+    backgroundColor: DARK_GRAY,
+  },
   content: {
     paddingHorizontal: SPACING,
     paddingBottom: SPACING,

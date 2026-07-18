@@ -74,10 +74,11 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       header={<Header />}
       headerOptions={{ position: 'absolute' }}
       footer={
-        <Footer wrapperStyle={styles.footer}>
+        <Footer>
           <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
+      footerStyle={styles.footer}
       footerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
