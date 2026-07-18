@@ -55,11 +55,17 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
     if (bottomInset == inset) return
     bottomInset = inset
 
-    stateWrapper?.let {
-      val newState = WritableNativeMap()
-      newState.putDouble("bottomInset", inset.toFloat().pxToDp().toDouble())
-      it.updateState(newState)
-    }
+    val sw = stateWrapper ?: return
+    val insetDp = inset.toFloat().pxToDp()
+
+    // Synchronous update — the footer must be padded before detents are
+    // configured, otherwise the auto detent is set up an inset short
+    if (TrueSheetStateUpdater.updateFooterState(sw, insetDp)) return
+
+    // Fallback: async state update
+    val newState = WritableNativeMap()
+    newState.putDouble("bottomInset", insetDp.toDouble())
+    sw.updateState(newState)
   }
 
   private val jsTouchDispatcher = JSTouchDispatcher(this)

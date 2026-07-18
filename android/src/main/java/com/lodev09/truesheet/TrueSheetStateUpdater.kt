@@ -22,6 +22,13 @@ object TrueSheetStateUpdater {
   fun updateState(stateWrapper: StateWrapper, widthDp: Float, heightDp: Float): Boolean =
     isAvailable && nativeUpdateState(stateWrapper, widthDp, heightDp)
 
+  /** Returns false when unavailable — caller should fall back to async updateState. */
+  fun updateFooterState(stateWrapper: StateWrapper, bottomInsetDp: Float): Boolean =
+    isAvailable && nativeUpdateFooterState(stateWrapper, bottomInsetDp)
+
   @JvmStatic
   private external fun nativeUpdateState(stateWrapper: Any, width: Float, height: Float): Boolean
+
+  @JvmStatic
+  private external fun nativeUpdateFooterState(stateWrapper: Any, bottomInset: Float): Boolean
 }
