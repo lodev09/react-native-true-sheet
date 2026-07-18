@@ -74,7 +74,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       header={<Header />}
       headerOptions={{ position: 'absolute' }}
       footer={
-        <Footer absolute wrapperStyle={styles.footer}>
+        <Footer wrapperStyle={styles.footer}>
           <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }

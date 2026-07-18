@@ -47,6 +47,17 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   private var bottomInset = 0
 
   /**
+   * Skips the inset while the keyboard is open — the footer rises above the
+   * keyboard, so the inset would leave a gap.
+   */
+  var keyboardVisible = false
+    set(value) {
+      if (field == value) return
+      field = value
+      pushBottomInsetState()
+    }
+
+  /**
    * Tells the shadow node to pad the footer's bottom edge with the sheet's
    * bottom safe-area inset — the footer owns the sheet's bottom edge, so it
    * absorbs the inset and its background fills it.
@@ -54,9 +65,12 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   fun setBottomInset(inset: Int) {
     if (bottomInset == inset) return
     bottomInset = inset
+    pushBottomInsetState()
+  }
 
+  private fun pushBottomInsetState() {
     val sw = stateWrapper ?: return
-    val insetDp = inset.toFloat().pxToDp()
+    val insetDp = (if (keyboardVisible) 0 else bottomInset).toFloat().pxToDp()
 
     // Synchronous update — the footer must be padded before detents are
     // configured, otherwise the auto detent is set up an inset short

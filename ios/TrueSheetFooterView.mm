@@ -24,6 +24,7 @@ using namespace facebook::react;
   CGFloat _lastHeight;
   CGFloat _currentKeyboardOffset;
   CGFloat _bottomInset;
+  BOOL _keyboardVisible;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -41,6 +42,7 @@ using namespace facebook::react;
     _lastHeight = 0;
     _currentKeyboardOffset = 0;
     _bottomInset = 0;
+    _keyboardVisible = NO;
   }
   return self;
 }
@@ -57,12 +59,27 @@ using namespace facebook::react;
     return;
   }
   _bottomInset = bottomInset;
+  [self pushBottomInsetState];
+}
 
-  if (_state) {
-    TrueSheetFooterViewState newState;
-    newState.bottomInset = bottomInset;
-    _state->updateState(std::move(newState));
+// Skipped while the keyboard is open — the footer rises above the keyboard,
+// so the inset would leave a gap.
+- (void)setKeyboardVisible:(BOOL)keyboardVisible {
+  if (_keyboardVisible == keyboardVisible) {
+    return;
   }
+  _keyboardVisible = keyboardVisible;
+  [self pushBottomInsetState];
+}
+
+- (void)pushBottomInsetState {
+  if (!_state) {
+    return;
+  }
+
+  TrueSheetFooterViewState newState;
+  newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
+  _state->updateState(std::move(newState));
 }
 
 #pragma mark - Accessibility
@@ -114,6 +131,7 @@ using namespace facebook::react;
   _lastHeight = 0;
   _currentKeyboardOffset = 0;
   _bottomInset = 0;
+  _keyboardVisible = NO;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
@@ -121,6 +139,8 @@ using namespace facebook::react;
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the
 // keyboard slide is carried by a transform instead of layout.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self setKeyboardVisible:YES];
+
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);
   _currentKeyboardOffset = slide;
@@ -135,6 +155,7 @@ using namespace facebook::react;
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  [self setKeyboardVisible:NO];
   _currentKeyboardOffset = 0;
 
   [UIView animateWithDuration:duration
@@ -151,6 +172,8 @@ using namespace facebook::react;
   if (height <= 0) {
     return;
   }
+
+  [self setKeyboardVisible:YES];
 
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
   CGFloat slide = MAX(0, height + keyboardOffset);

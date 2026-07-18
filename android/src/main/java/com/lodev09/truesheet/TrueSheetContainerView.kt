@@ -65,7 +65,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var scrollViewBottomInset: Int = 0
 
   /**
-   * Bottom safe-area inset a relative footer absorbs as padding — the footer
+   * Bottom safe-area inset the footer absorbs as padding — the footer
    * owns the sheet's bottom edge, so its background fills the inset.
    */
   var footerBottomInset: Int = 0

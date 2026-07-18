@@ -1,5 +1,4 @@
 import {
-  Platform,
   StyleSheet,
   Text,
   View,
@@ -8,33 +7,24 @@ import {
   type ViewStyle,
   type StyleProp,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DARK_GRAY, FOOTER_HEIGHT, SPACING } from '../utils';
-
-const isIPad = (Platform.OS === 'ios' && Platform.isPad) || Platform.OS === 'web';
 
 interface FooterProps extends PressableProps {
   wrapperStyle?: StyleProp<ViewStyle>;
   text?: string;
-  // A relative footer absorbs the bottom inset natively — only an absolute
-  // footer needs manual padding
-  absolute?: boolean;
 }
 
+// The footer absorbs the bottom safe-area inset natively — no manual padding needed
 export const Footer = ({
   children,
   text = 'FOOTER',
   onPress,
   wrapperStyle,
-  absolute = false,
   ...rest
 }: FooterProps) => {
-  const insets = useSafeAreaInsets();
-  const bottomInset = absolute && !isIPad ? insets.bottom : 0;
-
   return (
-    <View style={[styles.wrapper, { paddingBottom: bottomInset }, wrapperStyle]}>
+    <View style={[styles.wrapper, wrapperStyle]}>
       <Pressable
         style={({ pressed }) => [styles.container, onPress && pressed && styles.pressed]}
         onPress={onPress}

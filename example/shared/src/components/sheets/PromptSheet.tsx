@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     paddingHorizontal: SPACING,
-    paddingVertical: SPACING,
     gap: GAP,
   },
   button: {

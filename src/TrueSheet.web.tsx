@@ -287,10 +287,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const absoluteFooterRef = useRef(absoluteFooter);
   absoluteFooterRef.current = absoluteFooter;
 
-  // A relative footer owns the sheet's bottom edge, so it absorbs the bottom
+  // The footer owns the sheet's bottom edge, so it absorbs the bottom
   // safe-area inset as padding (on top of its own) — mirrors native, where the
   // footer shadow node pads the inset so its background fills it.
-  const footerOwnsInset = Boolean(footer) && !absoluteFooter && insetAdjustment === 'automatic';
+  const footerOwnsInset = Boolean(footer) && insetAdjustment === 'automatic';
   const resolvedFooterStyle = useMemo(() => {
     if (!footerOwnsInset) return footerStyle;
 
@@ -1043,13 +1043,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // shifting content and blocking vaul's shouldDrag walk (scrollTop > 0).
       overflow: 'clip',
       // Lift content above iOS home indicator / bottom safe area when enabled.
-      // A relative footer owns the inset instead (see resolvedFooterStyle).
+      // A relative footer owns the inset instead (see resolvedFooterStyle); an
+      // absolute footer floats over the content, so the content keeps its lift.
       paddingBottom:
-        insetAdjustment === 'automatic' && !footerOwnsInset
+        insetAdjustment === 'automatic' && !(footerOwnsInset && !absoluteFooter)
           ? 'env(safe-area-inset-bottom, 0px)'
           : 0,
     }),
-    [backgroundColor, effectiveCornerRadius, insetAdjustment, footerOwnsInset]
+    [backgroundColor, effectiveCornerRadius, insetAdjustment, footerOwnsInset, absoluteFooter]
   );
 
   const defaultGrabberColor =
@@ -1198,7 +1199,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             detachedSiblings={
               footer && absoluteFooter ? (
                 <div style={footerFloatStyle}>
-                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={resolvedFooterStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 </div>

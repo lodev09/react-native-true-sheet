@@ -85,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CGFloat screenHeight;
 
 /**
- * Bottom safe-area inset a relative footer absorbs as padding — the footer
+ * Bottom safe-area inset the footer absorbs as padding — the footer
  * owns the sheet's bottom edge, so its background fills the inset.
  */
 @property (nonatomic, readonly) CGFloat footerBottomInset;

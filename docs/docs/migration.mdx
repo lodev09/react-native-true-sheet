@@ -143,43 +143,29 @@ Both iOS and Android now handle bottom safe area insets natively for the sheet. 
 - The `position`, `index`, and `detent` values are calculated purely from the actual sheet position relative to screen height
 - A sheet at detent `0.5` will be taller than `0.5 * screenHeight` because the system adds the bottom safe area internally
 
-**Footer with auto detent:**
+**Footer:**
 
-The footer is pinned to the bottom edge of the sheet. When using an `auto` detent, the sheet height includes the safe area, so your footer needs to extend into it:
+The footer is pinned to the bottom edge of the sheet and automatically absorbs the bottom safe-area inset as padding — its content stays above the home indicator while its background fills the inset. Remove any manual safe-area padding from your footer:
 
 ```tsx
-import { Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const isIPad = Platform.OS === 'ios' && Platform.isPad;
-
+// ❌ v2 — manual safe-area padding
 const MyFooter = () => {
   const insets = useSafeAreaInsets();
-  const bottomInset = isIPad ? 0 : insets.bottom;
-
   return (
-    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
-      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Footer Content</Text>
-      </View>
+    <View style={{ paddingBottom: insets.bottom, backgroundColor: '#333' }}>
+      <FooterContent />
     </View>
   );
 };
 
-// Usage
-<TrueSheet detents={['auto']} footer={<MyFooter />}>
+// ✅ v3 — the footer absorbs the inset natively
+<TrueSheet footer={<FooterContent />} footerStyle={{ backgroundColor: '#333' }}>
   {/* content */}
 </TrueSheet>
 ```
 
-This ensures the footer background extends into the safe area while keeping the content above the home indicator.
-
-:::note
-On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
-:::
-
 :::tip
-See the [Footer guide](guides/footer) for more details.
+See the [Footer guide](guides/footer#safe-area-handling) for more details.
 :::
 
 ### 6. Background and Blur Behavior Changes

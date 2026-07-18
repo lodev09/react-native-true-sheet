@@ -128,7 +128,7 @@ Options for customizing footer behavior.
   footer={<Footer />}
   footerOptions={{
     position: 'absolute',
-    keyboardOffset: -insets.bottom,
+    keyboardOffset: -16,
   }}
 >
   {/* ... */}
@@ -138,7 +138,7 @@ Options for customizing footer behavior.
 | Property | Type | Description | Default |
 | - | - | - | - |
 | `position` | `'relative' \| 'absolute'` | How the footer participates in the sheet layout. `'relative'` takes up space below the content, pinned to the bottom edge — included in the `auto` detent height but excluded from the `peek` detent height (it's pushed off-screen at peek). `'absolute'` floats over the content, pinned to the bottom edge — excluded from the `auto` detent height but included in the `peek` detent height. | `'relative'` |
-| `keyboardOffset` | `number` | Adjusts how far the footer rises when the keyboard opens. Positive values raise it higher; pass `-insets.bottom` to tuck its safe-area padding behind the keyboard instead of leaving a gap. | `0` |
+| `keyboardOffset` | `number` | Adjusts how far the footer rises when the keyboard opens. Positive values raise it higher; negative values tuck the footer's own bottom padding behind the keyboard instead of leaving a gap. The built-in safe-area inset is skipped automatically while the keyboard is open. | `0` |
 
 ## `ScrollEdgeEffect`
 
