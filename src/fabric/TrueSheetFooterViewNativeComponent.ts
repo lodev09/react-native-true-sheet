@@ -5,4 +5,8 @@ export interface NativeProps extends ViewProps {
   // Footer-specific props can be added here if needed
 }
 
-export default codegenNativeComponent<NativeProps>('TrueSheetFooterView', {});
+// interfaceOnly: shadow node/state/descriptor are custom (common/cpp) so the
+// footer can absorb the sheet's bottom safe-area inset as padding
+export default codegenNativeComponent<NativeProps>('TrueSheetFooterView', {
+  interfaceOnly: true,
+});

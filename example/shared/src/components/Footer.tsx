@@ -17,6 +17,9 @@ const isIPad = (Platform.OS === 'ios' && Platform.isPad) || Platform.OS === 'web
 interface FooterProps extends PressableProps {
   wrapperStyle?: StyleProp<ViewStyle>;
   text?: string;
+  // A relative footer absorbs the bottom inset natively — only an absolute
+  // footer needs manual padding
+  absolute?: boolean;
 }
 
 export const Footer = ({
@@ -24,10 +27,11 @@ export const Footer = ({
   text = 'FOOTER',
   onPress,
   wrapperStyle,
+  absolute = false,
   ...rest
 }: FooterProps) => {
   const insets = useSafeAreaInsets();
-  const bottomInset = isIPad ? 0 : insets.bottom;
+  const bottomInset = absolute && !isIPad ? insets.bottom : 0;
 
   return (
     <View style={[styles.wrapper, { paddingBottom: bottomInset }, wrapperStyle]}>

@@ -63,6 +63,16 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
   var scrollViewBottomInset: Int = 0
+
+  /**
+   * Bottom safe-area inset a relative footer absorbs as padding — the footer
+   * owns the sheet's bottom edge, so its background fills the inset.
+   */
+  var footerBottomInset: Int = 0
+    set(value) {
+      field = value
+      footerView?.setBottomInset(value)
+    }
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
@@ -119,6 +129,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
       is TrueSheetFooterView -> {
         child.delegate = this
+        child.setBottomInset(footerBottomInset)
         footerView = child
       }
     }

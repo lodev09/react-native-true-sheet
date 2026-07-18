@@ -9,18 +9,21 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetFooterView.h"
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewShadowNode.h>
 #import "TrueSheetViewController.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
 
 @implementation TrueSheetFooterView {
+  TrueSheetFooterViewShadowNode::ConcreteState::Shared _state;
   CGFloat _lastHeight;
   CGFloat _currentKeyboardOffset;
+  CGFloat _bottomInset;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -37,8 +40,29 @@ using namespace facebook::react;
 
     _lastHeight = 0;
     _currentKeyboardOffset = 0;
+    _bottomInset = 0;
   }
   return self;
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetFooterViewShadowNode::ConcreteState const>(state);
+}
+
+// Tells the shadow node to pad the footer's bottom edge with the sheet's
+// bottom safe-area inset — the footer owns the sheet's bottom edge, so it
+// absorbs the inset and its background fills it.
+- (void)setBottomInset:(CGFloat)bottomInset {
+  if (_bottomInset == bottomInset) {
+    return;
+  }
+  _bottomInset = bottomInset;
+
+  if (_state) {
+    TrueSheetFooterViewState newState;
+    newState.bottomInset = bottomInset;
+    _state->updateState(std::move(newState));
+  }
 }
 
 #pragma mark - Accessibility
@@ -86,8 +110,10 @@ using namespace facebook::react;
   }
 
   self.transform = CGAffineTransformIdentity;
+  _state = nullptr;
   _lastHeight = 0;
   _currentKeyboardOffset = 0;
+  _bottomInset = 0;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate

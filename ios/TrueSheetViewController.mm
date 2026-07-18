@@ -233,6 +233,16 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   return [self bottomSafeAreaForHeight:height];
 }
 
+// The inset the footer absorbs as padding. Uses the auto detent height when
+// available so it matches the auto detent's inset exclusion above.
+- (CGFloat)footerBottomInset {
+  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic || _absoluteFooter) {
+    return 0;
+  }
+
+  return [self bottomSafeAreaForHeight:_autoDetentHeight > 0 ? _autoDetentHeight : self.screenHeight];
+}
+
 - (BOOL)isDesignCompatibilityMode {
   if (@available(iOS 26.0, *)) {
     NSNumber *value = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"];

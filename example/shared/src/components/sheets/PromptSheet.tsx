@@ -73,7 +73,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       header={<Header />}
       footer={
-        <View style={[styles.footer, { paddingBottom: bottom + GAP }]}>
+        <View style={styles.footer}>
           <Button style={styles.button} text="Dismiss" onPress={handleDismissPress} />
           <Button style={styles.button} text="Submit" onPress={handleSubmitPress} />
         </View>
@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     paddingHorizontal: SPACING,
+    paddingBottom: GAP,
     gap: GAP,
   },
   button: {
