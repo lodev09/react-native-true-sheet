@@ -198,6 +198,7 @@ using namespace facebook::react;
     }
     _contentView = (TrueSheetContentView *)childComponentView;
     _contentView.delegate = self;
+    _contentView.footerView = _footerView;
 
     // Children mount bottom-up, so the content subtree is complete here.
     // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
@@ -224,6 +225,7 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    _contentView.footerView = _footerView;
     [_footerView setBottomInset:_footerBottomInset];
     [self footerViewDidChangeSize:_footerView.frame.size];
   }
@@ -244,6 +246,7 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     _footerView.delegate = nil;
     _footerView = nil;
+    _contentView.footerView = nil;
     [self footerViewDidChangeSize:CGSizeZero];
   }
 

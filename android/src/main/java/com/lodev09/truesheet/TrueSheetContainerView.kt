@@ -63,6 +63,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
   var scrollViewBottomInset: Int = 0
+  var absoluteFooter: Boolean = false
 
   /**
    * Bottom safe-area inset the footer absorbs as padding — the footer
@@ -200,6 +201,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     contentHeight = height
     delegate?.containerViewContentDidChangeSize(width, height)
   }
+
+  override val footerKeyboardOcclusion: Int
+    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else 0
 
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()

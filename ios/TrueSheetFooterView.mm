@@ -79,7 +79,17 @@ using namespace facebook::react;
 
   TrueSheetFooterViewState newState;
   newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
-  _state->updateState(std::move(newState));
+  // Immediate so the inset lands before anything reads the footer's height —
+  // the async path races the keyboard caret scroll and detent setup, leaving
+  // them an inset stale (same reason Android bridges through
+  // TrueSheetStateUpdater).
+  _state->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
+}
+
+// Height the footer occupies above the keyboard — its layout height minus the
+// safe-area inset it drops while the keyboard is open.
+- (CGFloat)keyboardOcclusionHeight {
+  return MAX(0, _lastHeight - (_keyboardVisible ? 0 : _bottomInset));
 }
 
 #pragma mark - Accessibility

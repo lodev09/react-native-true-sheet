@@ -15,6 +15,7 @@
 #import "core/TrueSheetKeyboardObserver.h"
 
 @class TrueSheetViewController;
+@class TrueSheetFooterView;
 @class RCTScrollViewComponentView;
 @class ScrollableOptions;
 
@@ -32,6 +33,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
+
+/**
+ * Sibling footer view — an absolute footer rises above the keyboard and
+ * occludes the content's bottom edge, so it counts toward the keyboard inset.
+ */
+@property (nonatomic, weak, nullable) TrueSheetFooterView *footerView;
 
 /**
  * Whether the sheet has an `auto` detent. Deriving the sheet height from the
