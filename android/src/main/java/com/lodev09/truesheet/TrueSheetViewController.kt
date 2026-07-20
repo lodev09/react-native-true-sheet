@@ -564,11 +564,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     emitChangePositionDelegate(sheetView.top)
 
-    // On older APIs, use onSlide for footer positioning during keyboard transitions
-    val useLegacyKeyboardHandling = Build.VERSION.SDK_INT < Build.VERSION_CODES.R
-    if (!isKeyboardTransitioning || useLegacyKeyboardHandling) {
-      positionFooter(slideOffset)
-    }
+    // Position on every slide frame — during keyboard transitions the IME
+    // animation callbacks are sparser than the sheet's settle frames, and the
+    // footer rides the sheet between them, jittering against the keyboard.
+    // positionFooter derives from current state, so double-driving it with
+    // keyboardDidChangeHeight is harmless.
+    positionFooter(slideOffset)
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
@@ -1009,8 +1010,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
 
-    // Adjust during dismiss animation when slideOffset is negative
-    if (slideOffset != null && slideOffset < 0) {
+    // Adjust during dismiss animation when slideOffset is negative. Skipped
+    // while the keyboard is open — the detents collapse to the expanded
+    // position, so any downward drag reads as a negative slideOffset and the
+    // adjustment would sink the footer behind the keyboard, snapping back up
+    // when the keyboard detents reset on release.
+    if (slideOffset != null && slideOffset < 0 && keyboardShift == 0) {
       footerY -= (footerHeight * slideOffset)
     }
 
@@ -1066,6 +1071,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // Commit the target index first so the container grows before the sheet expands
           currentDetentIndex = detents.size - 1
           setupSheetDetents()
+          positionFooter()
           updateDimAmount(animated = true)
         }
 
@@ -1084,6 +1090,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             }
           }
 
+          // Same-frame reposition — the reconfigure above shrinks the container
+          // to the target detent, which yanks the bottom-pinned footer up until
+          // the next keyboard animation frame repositions it.
+          positionFooter()
           updateDimAmount(
             sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
             animated = true
@@ -1118,6 +1128,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()
+            positionFooter()
           }
         }
       }
