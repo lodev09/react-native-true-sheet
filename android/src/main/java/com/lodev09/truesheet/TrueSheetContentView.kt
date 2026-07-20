@@ -29,6 +29,12 @@ interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
   fun contentViewDidScroll()
   fun contentViewScrollViewDidChange()
+
+  /**
+   * Extra keyboard occlusion below the content — an absolute footer risen
+   * above the keyboard covers the content's bottom edge.
+   */
+  val footerKeyboardOcclusion: Int
 }
 
 /**
@@ -208,7 +214,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
     val keyboardHeight = keyboardObserver?.currentHeight ?: 0
     if (keyboardHeight > 0) {
-      setScrollViewPaddingBottom(originalScrollViewPaddingBottom + keyboardHeight)
+      updateScrollViewInsetForKeyboard(keyboardHeight)
     }
   }
 
@@ -324,7 +330,15 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
     val scrollView = pinnedScrollView ?: return
 
-    val totalBottomInset = if (keyboardHeight > 0) keyboardHeight else bottomInset
+    // An absolute footer rises above the keyboard and covers the content's
+    // bottom edge — include it so the caret clears the footer, not just the
+    // keyboard. A relative footer takes up layout space below the content,
+    // so the keyboard alone measures its occlusion.
+    val totalBottomInset = if (keyboardHeight > 0) {
+      keyboardHeight + (delegate?.footerKeyboardOcclusion ?: 0)
+    } else {
+      bottomInset
+    }
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
 
     scrollView.post { nudgeScrollView() }

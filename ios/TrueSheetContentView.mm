@@ -16,6 +16,7 @@
 #import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewShadowNode.h>
 #import "TrueSheetContainerView.h"
+#import "TrueSheetFooterView.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/PlatformUtil.h"
@@ -235,8 +236,20 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
   if (keyboardHeight > 0) {
-    [self setScrollViewContentInset:keyboardHeight indicatorInset:_originalIndicatorBottomInset + keyboardHeight];
+    CGFloat inset = [self keyboardInsetWithHeight:keyboardHeight];
+    [self setScrollViewContentInset:inset indicatorInset:_originalIndicatorBottomInset + inset];
   }
+}
+
+// An absolute footer rises above the keyboard and covers the content's bottom
+// edge — include it so the caret clears the footer, not just the keyboard.
+// A relative footer takes up layout space below the content, so the keyboard
+// alone measures its occlusion.
+- (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
+  if (_keyboardObserver.viewController.absoluteFooter && self.footerView) {
+    height += [self.footerView keyboardOcclusionHeight];
+  }
+  return height;
 }
 
 // Content growth is invisible to layout once the viewport is bounded, so track
@@ -357,12 +370,13 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
+  CGFloat inset = [self keyboardInsetWithHeight:height];
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:height
-                                      indicatorInset:self->_originalIndicatorBottomInset + height];
+                     [self setScrollViewContentInset:inset
+                                      indicatorInset:self->_originalIndicatorBottomInset + inset];
                    }
                    completion:nil];
 

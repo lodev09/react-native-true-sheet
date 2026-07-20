@@ -54,7 +54,7 @@ This is especially useful for forms with multiple inputs — as the user taps be
 
 ## Footer Behavior
 
-When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
+When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types. With an absolute footer, the automatic scroll accounts for the footer's height — focused inputs clear both the keyboard and the footer.
 
 The footer's built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
 

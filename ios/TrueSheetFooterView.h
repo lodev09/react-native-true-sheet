@@ -39,6 +39,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setBottomInset:(CGFloat)bottomInset;
 
+/**
+ * Height the footer occupies above the keyboard — its layout height minus
+ * the safe-area inset it drops while the keyboard is open.
+ */
+- (CGFloat)keyboardOcclusionHeight;
+
 @end
 
 NS_ASSUME_NONNULL_END
