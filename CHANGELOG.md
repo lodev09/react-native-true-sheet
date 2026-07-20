@@ -10,6 +10,10 @@
 - A relative footer now owns the bottom safe-area inset at the `auto` detent — the inset is no longer added to the auto height, so the footer sits flush at the sheet's bottom edge. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749) by [@lodev09](https://github.com/lodev09))
 - The footer now absorbs the bottom safe-area inset as padding when `insetAdjustment` is `automatic`, regardless of `footerOptions.position` — content stays above the home indicator while the footer's background fills the inset, so no manual safe-area padding is needed. The inset is skipped while the keyboard is open. ([#750](https://github.com/lodev09/react-native-true-sheet/pull/750) by [@lodev09](https://github.com/lodev09))
 
+### 🐛 Bug fixes
+
+- The keyboard-driven scroll inset now accounts for an absolute footer's height — focused inputs clear both the keyboard and the footer instead of hiding behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
+
 ### 💥 Breaking changes
 
 - The footer now lays out relative by default — it takes up space below the content (still pinned to the bottom edge) and its height is included in the `auto` detent calculation, but excluded from the `peek` detent (it's pushed off-screen at peek). Set the new `footerOptions.position` to `'absolute'` to restore the previous floating behavior. ([#748](https://github.com/lodev09/react-native-true-sheet/pull/748) by [@lodev09](https://github.com/lodev09))
