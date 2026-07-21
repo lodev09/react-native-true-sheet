@@ -203,7 +203,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   override val footerKeyboardOcclusion: Int
-    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else 0
+    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
 
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()

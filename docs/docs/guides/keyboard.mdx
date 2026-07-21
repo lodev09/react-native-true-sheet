@@ -54,14 +54,14 @@ This is especially useful for forms with multiple inputs — as the user taps be
 
 ## Footer Behavior
 
-When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types. With an absolute footer, the automatic scroll accounts for the footer's height — focused inputs clear both the keyboard and the footer.
+A relative [`footer`](../reference/configuration#footer) (the default) stays in the layout flow — it doesn't float above the keyboard. The keyboard simply covers it, and it's revealed again when the keyboard hides.
 
-The footer's built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
+An absolute footer automatically repositions above the keyboard, staying visible while the user types. The automatic scroll accounts for the footer's height — focused inputs clear both the keyboard and the footer. Its built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
 
-If your footer renders its own bottom padding, that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass a negative value to tuck it behind the keyboard:
+If your absolute footer renders its own bottom padding, that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass a negative value to tuck it behind the keyboard:
 
 ```tsx
-<TrueSheet footer={<Footer />} footerOptions={{ keyboardOffset: -16 }}>
+<TrueSheet footer={<Footer />} footerOptions={{ position: 'absolute', keyboardOffset: -16 }}>
   {/* ... */}
 </TrueSheet>
 ```

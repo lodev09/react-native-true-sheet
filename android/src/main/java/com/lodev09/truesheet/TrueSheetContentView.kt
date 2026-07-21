@@ -31,8 +31,9 @@ interface TrueSheetContentViewDelegate {
   fun contentViewScrollViewDidChange()
 
   /**
-   * Extra keyboard occlusion below the content — an absolute footer risen
-   * above the keyboard covers the content's bottom edge.
+   * Keyboard occlusion adjustment below the content — positive for an absolute
+   * footer risen above the keyboard covering the content's bottom edge,
+   * negative for a relative footer sitting behind the keyboard shielding it.
    */
   val footerKeyboardOcclusion: Int
 }
@@ -332,10 +333,10 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
     // An absolute footer rises above the keyboard and covers the content's
     // bottom edge — include it so the caret clears the footer, not just the
-    // keyboard. A relative footer takes up layout space below the content,
-    // so the keyboard alone measures its occlusion.
+    // keyboard. A relative footer stays behind the keyboard below the content,
+    // so its height shields that much of the keyboard's overlap.
     val totalBottomInset = if (keyboardHeight > 0) {
-      keyboardHeight + (delegate?.footerKeyboardOcclusion ?: 0)
+      maxOf(0, keyboardHeight + (delegate?.footerKeyboardOcclusion ?: 0))
     } else {
       bottomInset
     }
