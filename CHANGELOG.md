@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: A sheet stacked behind a child sheet no longer resizes its content in the background — UIKit's push-back scaling was reported as a size change, triggering spurious `onLayout`. ([#753](https://github.com/lodev09/react-native-true-sheet/pull/753) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for an absolute footer's height — focused inputs clear both the keyboard and the footer instead of hiding behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
