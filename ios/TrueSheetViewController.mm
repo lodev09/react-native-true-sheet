@@ -134,6 +134,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   return self.presentedViewController == nil;
 }
 
+// YES while a child controller is stacked on top (e.g. a nested sheet) —
+// UIKit's push-back scaling mutates the frame while the sheet is backgrounded.
+- (BOOL)isStackedBehindChild {
+  UIViewController *presented = self.presentedViewController;
+  return presented != nil && !presented.isBeingDismissed;
+}
+
 - (UIView *)presentedView {
   return self.sheet.presentedView;
 }
@@ -561,6 +568,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+
+  // Skip while backgrounded behind a stacked child — the push-back scaling
+  // changes the frame and would needlessly resize content. _lastReportedSize
+  // stays stale so the restore pass re-reports any real change.
+  if (self.isStackedBehindChild) {
+    return;
+  }
 
   // Report any size change (detent resize, keyboard, rotation) so Yoga
   // relayouts the container synchronously with the sheet.
