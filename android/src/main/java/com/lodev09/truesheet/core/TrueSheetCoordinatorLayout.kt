@@ -118,8 +118,9 @@ class TrueSheetCoordinatorLayout(context: Context) :
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
     // Swallow only that case — nothing between the touched EditText and the sheet scrolls
-    // (an overflowing multiline EditText or an input inside a scrollable still scrolls).
-    // Other children (maps, sliders, scrollables) keep the standard disallow contract.
+    // (an overflowing multiline EditText or an input inside a scrollable that can actually
+    // scroll still scrolls). Other children (maps, sliders, scrollables) keep the standard
+    // disallow contract.
     if (disallowIntercept && streamDraggableEditText) return
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
@@ -138,8 +139,16 @@ class TrueSheetCoordinatorLayout(context: Context) :
       .firstNotNullOfOrNull { it.getView() } ?: return
     if (target !== sheet && !target.isDescendantOf(sheet)) return
 
+    // A pinned scrollable that can scroll (or hosts pull-to-refresh) owns its
+    // touches — nested scrolling drags the sheet. When it can't scroll (e.g.
+    // the sheet is fully expanded and the content fits) it eats the gesture
+    // instead, so fall through and let the sheet drag from it — an EditText
+    // target needs the disallow-intercept swallow or its stream dies.
     val scrollView = delegate?.findScrollView()
-    if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) return
+    if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) {
+      val hasRefreshControl = scrollView.parent is SwipeRefreshLayout
+      if (hasRefreshControl || scrollView.scrollY > 0 || scrollView.canScrollVertically(1)) return
+    }
 
     var view: View? = target
     while (view != null && view !== this) {
