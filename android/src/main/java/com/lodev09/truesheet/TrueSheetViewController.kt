@@ -998,9 +998,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
 
     // A relative footer is laid out by Yoga (pinned to the container's bottom
-    // edge), so only the keyboard slide is carried via translation — like iOS
+    // edge) and stays in the layout flow behind the keyboard — only an
+    // absolute footer floats above it
     if (!absoluteFooter) {
-      footerView.translationY = -keyboardShift.toFloat()
+      footerView.translationY = 0f
       return
     }
 
@@ -1062,9 +1063,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
-          // The footer rises above the keyboard, so it drops the bottom inset
-          // padding — before detents are configured against its height
-          containerView?.footerView?.keyboardVisible = true
+          // An absolute footer rises above the keyboard, so it drops the bottom
+          // inset padding — before detents are configured against its height
+          if (absoluteFooter) containerView?.footerView?.keyboardVisible = true
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
@@ -1124,7 +1125,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // Handle case where keyboard is already visible and focus moves into the sheet
           if (!shouldHandleKeyboard()) return
           if (detentIndexBeforeKeyboard < 0 && (keyboardObserver?.currentHeight ?: 0) > 0) {
-            containerView?.footerView?.keyboardVisible = true
+            if (absoluteFooter) containerView?.footerView?.keyboardVisible = true
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()

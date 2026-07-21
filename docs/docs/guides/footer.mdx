@@ -76,7 +76,7 @@ const MyFooter = () => {
 
 The inset is applied to the footer component itself, so set your background via [`footerStyle`](../reference/configuration#footerstyle) (or on your footer's root view) for it to fill the safe area.
 
-When the keyboard opens, the footer rises above it and the inset is skipped automatically — no gap above the keyboard. See [Keyboard Handling](./keyboard#footer-behavior).
+When the keyboard opens, an absolute footer rises above it and the inset is skipped automatically — no gap above the keyboard. A relative footer stays in the layout flow and keeps its inset. See [Keyboard Handling](./keyboard#footer-behavior).
 
 :::note
 On iPad, the sheet is displayed as a floating modal, so no inset is applied. Set `insetAdjustment="never"` to opt out entirely.

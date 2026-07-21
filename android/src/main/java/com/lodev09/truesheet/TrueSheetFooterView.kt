@@ -47,8 +47,8 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   private var bottomInset = 0
 
   /**
-   * Skips the inset while the keyboard is open — the footer rises above the
-   * keyboard, so the inset would leave a gap.
+   * Skips the inset while the keyboard is open — an absolute footer rises
+   * above the keyboard, so the inset would leave a gap.
    */
   var keyboardVisible = false
     set(value) {

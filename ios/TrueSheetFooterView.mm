@@ -62,8 +62,8 @@ using namespace facebook::react;
   [self pushBottomInsetState];
 }
 
-// Skipped while the keyboard is open — the footer rises above the keyboard,
-// so the inset would leave a gap.
+// Skipped while the keyboard is open — an absolute footer rises above the
+// keyboard, so the inset would leave a gap.
 - (void)setKeyboardVisible:(BOOL)keyboardVisible {
   if (_keyboardVisible == keyboardVisible) {
     return;
@@ -147,8 +147,14 @@ using namespace facebook::react;
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the
-// keyboard slide is carried by a transform instead of layout.
+// keyboard slide is carried by a transform instead of layout. Only an absolute
+// footer floats above the keyboard — a relative footer stays in the layout
+// flow behind it.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
+  if (!self.keyboardObserver.viewController.absoluteFooter) {
+    return;
+  }
+
   [self setKeyboardVisible:YES];
 
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
@@ -179,7 +185,7 @@ using namespace facebook::react;
 
 - (void)applyKeyboardOffset {
   CGFloat height = self.keyboardObserver.currentHeight;
-  if (height <= 0) {
+  if (height <= 0 || !self.keyboardObserver.viewController.absoluteFooter) {
     return;
   }
 

@@ -168,9 +168,10 @@ export interface FooterOptions {
   position?: 'relative' | 'absolute';
 
   /**
-   * Adjusts how far the footer rises when the keyboard opens.
+   * Adjusts how far an `absolute` footer rises when the keyboard opens.
    * Positive values raise it higher; negative values reduce the rise.
    * Pass `-insets.bottom` to tuck the footer's safe-area padding behind the keyboard.
+   * A `relative` footer stays in the layout flow behind the keyboard, so this has no effect.
    *
    * @default 0
    */

@@ -243,13 +243,16 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 
 // An absolute footer rises above the keyboard and covers the content's bottom
 // edge — include it so the caret clears the footer, not just the keyboard.
-// A relative footer takes up layout space below the content, so the keyboard
-// alone measures its occlusion.
+// A relative footer stays behind the keyboard below the content, so its
+// height shields that much of the keyboard's overlap.
 - (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
-  if (_keyboardObserver.viewController.absoluteFooter && self.footerView) {
-    height += [self.footerView keyboardOcclusionHeight];
+  if (!self.footerView) {
+    return height;
   }
-  return height;
+  if (_keyboardObserver.viewController.absoluteFooter) {
+    return height + [self.footerView keyboardOcclusionHeight];
+  }
+  return MAX(0, height - self.footerView.frame.size.height);
 }
 
 // Content growth is invisible to layout once the viewport is bounded, so track
