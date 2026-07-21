@@ -283,7 +283,7 @@ using namespace facebook::react;
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
 
-  if (_controller) {
+  if (_controller && !_controller.isStackedBehindChild) {
     CGSize size = _controller.view.frame.size;
     if (size.width < 1 || size.height < 1) {
       // Pre-present the controller has no layout yet. Seed with screen
