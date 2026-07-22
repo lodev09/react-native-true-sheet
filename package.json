@@ -90,9 +90,9 @@
     "@evilmartians/lefthook": "^2.0.4",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-presence": "^1",
-    "@react-native/babel-preset": "^0.85.3",
-    "@react-native/eslint-config": "^0.85.3",
-    "@react-native/jest-preset": "^0.85.3",
+    "@react-native/babel-preset": "^0.86.0",
+    "@react-native/eslint-config": "^0.86.0",
+    "@react-native/jest-preset": "^0.86.0",
     "@react-navigation/core": "^7.13.7",
     "@react-navigation/native": "^7.1.6",
     "@release-it/conventional-changelog": "^11.0.0",
@@ -109,10 +109,10 @@
     "nanoid": "^5.1.5",
     "prettier": "^3.0.3",
     "react": "19.2.3",
-    "react-native": "0.85.3",
+    "react-native": "0.86.0",
     "react-native-builder-bob": "^0.41.0",
-    "react-native-reanimated": "4.3.1",
-    "react-native-worklets": "0.8.3",
+    "react-native-reanimated": "4.5.0",
+    "react-native-worklets": "0.10.0",
     "react-test-renderer": "19.2.3",
     "release-it": "^20.0.1",
     "turbo": "^2.5.6",
@@ -120,8 +120,8 @@
   },
   "resolutions": {
     "@types/react": "~19.2.14",
-    "react-native-reanimated": "4.3.1",
-    "react-native-worklets": "0.8.3"
+    "react-native-reanimated": "4.5.0",
+    "react-native-worklets": "0.10.0"
   },
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
