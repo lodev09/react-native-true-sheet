@@ -363,6 +363,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
       const measure = () => setScrollableAutoHeight(measureNaturalHeight());
 
+      let observed: {
+        contentEl: HTMLElement | null;
+        headerEl: HTMLElement | null;
+        scroller: HTMLElement;
+        scrollContent: Element | null;
+      } | null = null;
+
       // (Re)pin the first vertical scrollable and observe the nodes whose size
       // feeds the natural height — content growth inside a bounded scroller is
       // invisible to the sheet's own layout (mirrors native's contentSize
@@ -370,15 +377,35 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // (natural flow ↔ sized) remounts it.
       const observe = () => {
         const contentEl = contentRef.current as unknown as HTMLElement | null;
+        const headerEl = headerElRef.current as unknown as HTMLElement | null;
+
+        // Skip mutations that don't change the observed topology — e.g. a
+        // virtualized list mounting rows inside the pinned scroller, which
+        // would otherwise trigger a full-subtree rescan (findVerticalScroller
+        // resolves computed styles) on every scroll frame. Size changes are
+        // already covered by the ResizeObserver.
+        if (
+          observed &&
+          observed.contentEl === contentEl &&
+          contentEl?.isConnected &&
+          observed.headerEl === headerEl &&
+          observed.scroller.isConnected &&
+          observed.scrollContent === observed.scroller.firstElementChild
+        ) {
+          return;
+        }
+
         const scroller =
           contentEl && contentEl.isConnected ? findVerticalScroller(contentEl) : null;
         pinnedScrollerRef.current = scroller;
         setHasBoundedScrollable(scroller != null);
+        observed = scroller
+          ? { contentEl, headerEl, scroller, scrollContent: scroller.firstElementChild }
+          : null;
 
         resizeObserver?.disconnect();
         resizeObserver = new ResizeObserver(measure);
         if (contentEl?.isConnected) resizeObserver.observe(contentEl);
-        const headerEl = headerElRef.current as unknown as HTMLElement | null;
         if (headerEl) resizeObserver.observe(headerEl);
         if (scroller) {
           resizeObserver.observe(scroller);

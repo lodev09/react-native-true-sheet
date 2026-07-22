@@ -119,6 +119,13 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 }
 
 - (void)reportSizeIfChanged {
+  // A deep ScrollView unmount doesn't pass through this view's mount hooks —
+  // detect the stale pin here so it (and its contentSize observation) is
+  // released instead of lingering until the next explicit setup or recycle.
+  if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
+    [self.delegate contentViewScrollViewDidChange];
+  }
+
   // naturalHeight mixes frames from different views; mid-transaction they're
   // momentarily inconsistent (parent updates before the ScrollView), which
   // feeds back into the auto detent and oscillates. Coalesce to the next

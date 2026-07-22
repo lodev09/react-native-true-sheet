@@ -83,6 +83,7 @@ Add entry to `Unreleased` section in `CHANGELOG.md` for user-facing changes:
 
 - `🎉 New features` - New functionality
 - `🐛 Bug fixes` - Bug fixes
+- `💥 Breaking changes` - Changes requiring user action to upgrade
 - `💡 Others` - Refactors, internal changes
 
 Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`

@@ -41,7 +41,8 @@ static jboolean updateStateImmediate(
 
   auto concreteState = std::static_pointer_cast<const ConcreteState<TrueSheetViewState>>(state);
 
-  TrueSheetViewState newState{};
+  // Copy the latest data so fields this bridge doesn't set survive the update
+  TrueSheetViewState newState = concreteState->getData();
   newState.containerWidth = containerWidth;
   newState.containerHeight = containerHeight;
   concreteState->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
@@ -65,7 +66,8 @@ static jboolean updateFooterStateImmediate(
   auto concreteState =
       std::static_pointer_cast<const ConcreteState<TrueSheetFooterViewState>>(state);
 
-  TrueSheetFooterViewState newState{};
+  // Copy the latest data so fields this bridge doesn't set survive the update
+  TrueSheetFooterViewState newState = concreteState->getData();
   newState.bottomInset = bottomInset;
   concreteState->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
 
