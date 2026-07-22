@@ -65,9 +65,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CADisplayLink *_transitionLink;
   BOOL _isTransitioning;
 
-  // YES while a layout pass owns position emission this frame, so the pan
-  // handler doesn't double-emit.
-  BOOL _isTrackingPositionFromLayout;
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
   BOOL _isDragging;
@@ -111,7 +108,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _isPresented = NO;
     _isWillDismissEmitted = NO;
     _isTransitioning = NO;
-    _isTrackingPositionFromLayout = NO;
     _pendingContentSizeChange = NO;
     _pendingDetentsChange = NO;
     _activeDetentIndex = -1;
@@ -575,18 +571,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return;
   }
 
-  _isTrackingPositionFromLayout = YES;
-
   if (_pendingContentSizeChange || _pendingDetentsChange) {
     _pendingContentSizeChange = NO;
     _pendingDetentsChange = NO;
     [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
-  } else {
-    // Drag moves the frame directly and lays out on every touch move, so this
-    // emits at the touch rate. A child on top moves this sheet two ways: an
-    // animated collapse/restore step (presenting/dismissing) — emit the target
-    // non-realtime so JS animates to it — or direct per-frame re-layouts while
-    // the child drags, which stay realtime.
+  } else if (!_isDragging) {
+    // Drags emit from the pan handler. A child on top moves this sheet two
+    // ways: an animated collapse/restore step (presenting/dismissing) — emit
+    // the target non-realtime so JS animates to it — or direct per-frame
+    // re-layouts while the child drags, which stay realtime.
     BOOL realtime = self.presentedViewController == nil || !self.isPresentedViewAnimating;
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
   }
@@ -594,8 +587,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
-
-  _isTrackingPositionFromLayout = NO;
 
   // Skip size reports while backgrounded behind a stacked child — the push-back
   // scaling changes the frame and would needlessly resize content.
@@ -684,9 +675,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       _isDragging = YES;
       break;
     case UIGestureRecognizerStateChanged:
-      if (!_isTrackingPositionFromLayout) {
-        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
-      }
+      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
