@@ -42,7 +42,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (UIViewController *)accessibilityPresentingViewController;
 - (void)setupTransitionTracker;
 - (void)settleAtDetentIndex:(NSInteger)index debug:(NSString *)debug;
-- (void)emitDeckPosition;
 - (void)restoreWindowAccessibilityElements;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
@@ -584,11 +583,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
   } else {
     // Drag moves the frame directly and lays out on every touch move, so this
-    // emits at the touch rate. Non-realtime while a child controller sits on
-    // top — its own tracking owns realtime then.
-    UIViewController *presented = self.presentedViewController;
-    BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
-    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:!hasPresentedController debug:@"layout"];
+    // emits at the touch rate. Behind a child, the deck effect relayouts this
+    // sheet as it moves — sample the live on-screen position there since the
+    // push-back transform skews the model frame.
+    BOOL stacked = self.presentedViewController != nil;
+    [self emitChangePositionDelegateWithPosition:(stacked ? self.livePosition : self.currentPosition)
+                                        realtime:YES
+                                           debug:@"layout"];
   }
 }
 
@@ -792,14 +793,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
     [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition"];
   }
-
-  // The deck effect moves the parent behind this transition without its own
-  // layout firing — mirror its live position.
-  [_parentSheetController emitDeckPosition];
-}
-
-- (void)emitDeckPosition {
-  [self emitChangePositionDelegateWithPosition:self.livePosition realtime:YES debug:@"deck"];
 }
 
 /**
