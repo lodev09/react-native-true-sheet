@@ -700,7 +700,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   _lastSampledPosition = position;
 
   if (self.isBeingDismissed) {
-    [self emitWillDismissEvents];
+    // Emit only once the dismiss is committed: on release UIKit moves the
+    // model frame off-screen, while a cancelled drag rewinds it back to the
+    // detent (isBeingDismissed stays YES during the rewind).
+    if (!_isDragging && self.currentPosition >= self.screenHeight) {
+      [self emitWillDismissEvents];
+    }
 
     // Hide blur at the end of dismiss to prevent UIVisualEffectView
     // from causing a flicker/flash at the bottom edge of the sheet.
