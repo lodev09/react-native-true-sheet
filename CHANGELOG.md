@@ -4,7 +4,7 @@
 
 ### 🎉 New features
 
-- **iOS**: `onPositionChange` now tracks the sheet's actual on-screen position everywhere — detent snaps, programmatic resizes, and sheets moving behind a child sheet emit realtime frames from a single native tracker (previously approximated with a JS-side spring or only emitted once settled). `onDetentChange` for programmatic resizes now fires when the animation actually ends instead of after a fixed delay. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744) by [@lodev09](https://github.com/lodev09))
+- **iOS**: `onPositionChange` now reports a sheet's live position while it moves behind a dragging child sheet. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744) by [@lodev09](https://github.com/lodev09))
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height and resizes as content grows or shrinks. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
 - New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content (pinned to the top edge) and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
 - A relative footer now owns the bottom safe-area inset at the `auto` detent — the inset is no longer added to the auto height, so the footer sits flush at the sheet's bottom edge. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749) by [@lodev09](https://github.com/lodev09))
@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Smoother, more reliable `onPositionChange` — drags emit at the touch rate, transitions track at the display's native refresh rate (120Hz on ProMotion), and a sheet behind a presenting child animates to its collapsed position instead of jumping or going stale. `onWillDismiss` now fires only when a drag-to-dismiss is committed on release, not prematurely mid-drag. ([#756](https://github.com/lodev09/react-native-true-sheet/pull/756) by [@lodev09](https://github.com/lodev09))
 - **iOS**: A sheet stacked behind a child sheet no longer resizes its content in the background — UIKit's push-back scaling was reported as a size change, triggering spurious `onLayout`. ([#753](https://github.com/lodev09/react-native-true-sheet/pull/753) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for an absolute footer's height — focused inputs clear both the keyboard and the footer instead of hiding behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - A relative footer no longer floats above the keyboard — it stays in the layout flow behind it and keeps its safe-area inset. Only an absolute footer rises above the keyboard (`footerOptions.keyboardOffset` now only applies there). ([#754](https://github.com/lodev09/react-native-true-sheet/pull/754) by [@lodev09](https://github.com/lodev09))
