@@ -583,13 +583,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
   } else {
     // Drag moves the frame directly and lays out on every touch move, so this
-    // emits at the touch rate. Behind a child, the deck effect relayouts this
-    // sheet as it moves — sample the live on-screen position there since the
-    // push-back transform skews the model frame.
-    BOOL stacked = self.presentedViewController != nil;
-    [self emitChangePositionDelegateWithPosition:(stacked ? self.livePosition : self.currentPosition)
-                                        realtime:YES
-                                           debug:@"layout"];
+    // emits at the touch rate. A child on top moves this sheet two ways: an
+    // animated collapse/restore step (presenting/dismissing) — emit the target
+    // non-realtime so JS animates to it — or direct per-frame re-layouts while
+    // the child drags, which stay realtime.
+    BOOL realtime = self.presentedViewController == nil || !self.isPresentedViewAnimating;
+    [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
   }
 }
 
