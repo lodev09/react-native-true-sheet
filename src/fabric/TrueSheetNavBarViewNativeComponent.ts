@@ -7,7 +7,7 @@ type SearchOptionsType = Readonly<{
   cancelText?: string;
   hideWhenScrolling?: WithDefault<boolean, true>;
   // Named uniquely — codegen derives the enum name from the field name
-  searchPlacement?: WithDefault<'automatic' | 'inline' | 'stacked', 'automatic'>;
+  searchPlacement?: WithDefault<'automatic' | 'inline' | 'stacked', 'stacked'>;
 }>;
 
 export interface SearchTextEventPayload {

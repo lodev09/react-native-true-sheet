@@ -649,12 +649,13 @@ export interface TrueSheetNavBarSearchOptions {
   /**
    * Placement of the search field within the bar.
    *
-   * - `'automatic'`: The system decides based on context.
-   * - `'inline'`: Trailing edge of the bar, alongside the title.
    * - `'stacked'`: Below the title, spanning the bar's width.
+   * - `'inline'`: Trailing edge of the bar, alongside the title.
+   * - `'automatic'`: The system decides — on iOS 26+ this may anchor the
+   *   search field to the bottom edge of the sheet (integrated placement).
    *
    * @platform ios 16+
-   * @default 'automatic'
+   * @default 'stacked'
    */
   placement?: 'automatic' | 'inline' | 'stacked';
 }
