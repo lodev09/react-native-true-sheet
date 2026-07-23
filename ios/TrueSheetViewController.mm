@@ -1103,7 +1103,18 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
                         CGFloat maxValue = self.maxContentHeight
                                              ? fmin(maxDetentValue, [self.maxContentHeight floatValue])
                                              : maxDetentValue;
+
                         CGFloat adjustedHeight = height - bottomAdjustment;
+
+                        // Only the last detent may occupy the full maximum. Two detents
+                        // resolving to the same height (e.g. a capped auto and 1) make
+                        // UIKit skip the stack's deck animation when presenting a child
+                        // sheet and snap the sheet behind into place instead.
+                        NSInteger lastIndex = (NSInteger)self.detents.count - 1;
+                        if (adjustedHeight >= maxValue && index < lastIndex) {
+                          maxValue -= lastIndex - index;
+                        }
+
                         CGFloat resolved = fmin(adjustedHeight, maxValue);
 
                         NSMutableArray *heights = self->_detentCalculator.resolvedDetentHeights;
