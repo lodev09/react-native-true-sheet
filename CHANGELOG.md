@@ -9,6 +9,7 @@
 - New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content (pinned to the top edge) and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
 - A relative footer now owns the bottom safe-area inset at the `auto` detent — the inset is no longer added to the auto height, so the footer sits flush at the sheet's bottom edge. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749) by [@lodev09](https://github.com/lodev09))
 - The footer now absorbs the bottom safe-area inset as padding when `insetAdjustment` is `automatic`, regardless of `footerOptions.position` — content stays above the home indicator while the footer's background fills the inset, so no manual safe-area padding is needed. The inset is skipped while the keyboard is open. ([#750](https://github.com/lodev09/react-native-true-sheet/pull/750) by [@lodev09](https://github.com/lodev09))
+- New `TrueSheetNavBar` component — pass it to the `header` prop for a native navigation bar with title, large title (iOS), left/right/title bar items hosting React children, appearance options, and a native search field (`UISearchController` on iOS, collapsible `SearchView` on Android, styled bar on Web) with `onSearchChange`/`Submit`/`Focus`/`Blur`/`Cancel` events. Its height counts toward the `auto` and `peek` detents. ([#757](https://github.com/lodev09/react-native-true-sheet/pull/757) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
