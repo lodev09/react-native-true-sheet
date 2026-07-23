@@ -706,6 +706,9 @@ export interface TrueSheetNavBarProps {
   /**
    * Enables the native search field.
    * Pass `true` or an options object.
+   *
+   * On iOS, when the bar has no title and no items, a `stacked` search field
+   * renders inline in the bar row instead of below an empty row.
    */
   search?: boolean | TrueSheetNavBarSearchOptions;
 

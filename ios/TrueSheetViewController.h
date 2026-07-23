@@ -38,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
                                  detent:(CGFloat)detent
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
+- (void)viewControllerNavBarDidChangeHeight;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;

@@ -646,6 +646,13 @@ using namespace facebook::react;
   [self setupSheetDetentsForSizeChange];
 }
 
+// The bar's measured height changed as the navigation host laid out
+// (search bar attach, large title, margins) — the auto/peek detents track it
+- (void)viewControllerNavBarDidChangeHeight {
+  _controller.headerHeight = @([self measuredHeaderHeight]);
+  [self setupSheetDetentsForSizeChange];
+}
+
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
@@ -656,13 +663,6 @@ using namespace facebook::react;
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
-
-  // The bar has real metrics only after presentation (large title, search bar)
-  // — refresh the header height so auto/peek detents account for it.
-  if (_containerView.navBarView) {
-    _controller.headerHeight = @([self measuredHeaderHeight]);
-    [self setupSheetDetentsForSizeChange];
-  }
 
   if (_pendingPropsUpdate) {
     _pendingPropsUpdate = NO;

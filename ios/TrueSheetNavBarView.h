@@ -28,7 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
                contentViewController:(UIViewController *)contentViewController;
 
 /**
- * Clears the navigationItem and re-parents item children back into this view.
+ * Clears the navigationItem and releases the navigation host references.
+ * Item children stay owned by their bar button items for re-attachment.
  */
 - (void)detach;
 

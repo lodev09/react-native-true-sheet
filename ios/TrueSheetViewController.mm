@@ -90,6 +90,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   UINavigationController *_navHostController;
   TrueSheetNavContentViewController *_navContentController;
+  CGFloat _lastNavBarHeight;
 }
 
 #pragma mark - Initialization
@@ -975,13 +976,33 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return 0;
   }
 
-  UINavigationBar *navBar = _navHostController.navigationBar;
-  CGFloat height = navBar.frame.size.height;
-  if (height < 1) {
-    // Not laid out yet (pre-present) — the standard bar metric
-    height = [navBar sizeThatFits:CGSizeZero].height;
+  // The content controller lays out below the bar (edgesForExtendedLayout
+  // none) — its top edge is the full space the bar consumes, including the
+  // title row, a stacked search bar, and any bar margins. The bar's own frame
+  // misses those.
+  if (_navContentController.isViewLoaded && _navHostController.isViewLoaded) {
+    CGFloat contentTop = [_navContentController.view convertRect:_navContentController.view.bounds
+                                                          toView:_navHostController.view]
+                           .origin.y;
+    if (contentTop >= 1) {
+      return contentTop;
+    }
   }
-  return height;
+
+  // Not laid out yet (pre-present) — the standard bar metric
+  return [_navHostController.navigationBar sizeThatFits:CGSizeZero].height;
+}
+
+// The bar settles its real height only as the navigation host lays out
+// (search bar attach, large title, margins) — push changes to the detents
+- (void)notifyNavBarHeightIfChanged {
+  CGFloat height = [self navBarHeight];
+  if (fabs(height - _lastNavBarHeight) < 0.5) {
+    return;
+  }
+
+  _lastNavBarHeight = height;
+  [self.delegate viewControllerNavBarDidChangeHeight];
 }
 
 - (void)attachContainerView:(UIView *)containerView navBarView:(TrueSheetNavBarView *)navBarView {
@@ -1013,6 +1034,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   __weak __typeof(self) weakSelf = self;
   _navContentController.onLayoutSubviews = ^(CGSize size) {
     [weakSelf reportContentAreaSizeIfChanged];
+    [weakSelf notifyNavBarHeightIfChanged];
   };
 
   _navHostController = [[UINavigationController alloc] initWithRootViewController:_navContentController];
@@ -1037,6 +1059,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   [_navHostController removeFromParentViewController];
   _navHostController = nil;
   _navContentController = nil;
+  _lastNavBarHeight = 0;
 }
 
 - (void)setupNavContentScrollTracking {

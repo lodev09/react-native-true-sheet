@@ -32,6 +32,20 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) facebook::react::TrueSheetNavBarItemViewSlotType slotType;
 @property (nonatomic, readonly) CGSize contentSize;
 
+/**
+ * Whether Auto Layout owns this view's frame — iOS 26 lays bar button custom
+ * views out with constraints inside the glass backdrop; frame-based custom
+ * views collapse. Title views stay frame-based.
+ */
+@property (nonatomic, readonly) BOOL needsAutoLayout;
+
+/**
+ * Lazily-created bar button item hosting this view. On iOS 26 the custom view
+ * is a wrapper that centers this view with Auto Layout, sized to it via
+ * intrinsicContentSize.
+ */
+- (UIBarButtonItem *)barButtonItem;
+
 @end
 
 NS_ASSUME_NONNULL_END

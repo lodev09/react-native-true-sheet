@@ -10,6 +10,7 @@
 
 #import "TrueSheetNavBarView.h"
 #import "TrueSheetNavBarItemView.h"
+#import "utils/PlatformUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -33,8 +34,12 @@ using namespace facebook::react;
   // Item views live outside the React-managed subtree once re-parented into
   // the bar, so each hosts its own touch handler.
   NSMapTable<TrueSheetNavBarItemView *, RCTSurfaceTouchHandler *> *_touchHandlers;
+  TrueSheetNavBarItemView *__weak _titleItemView;
 
   UISearchController *_searchController;
+  // Standalone search bar hosted in the navigation row when the row is
+  // otherwise empty — a stacked search controller would leave a blank row above
+  UISearchBar *_titleSearchBar;
 }
 
 #pragma mark - Initialization
@@ -67,6 +72,9 @@ using namespace facebook::react;
 
   [self applyConfig];
   [self applyBarItems];
+  // Attaching while already visible (e.g. remount on reload) — the bar won't
+  // pick the config up until it lays out
+  [self layoutNavigationBar];
 }
 
 - (void)detach {
@@ -76,10 +84,6 @@ using namespace facebook::react;
     contentViewController.navigationItem.rightBarButtonItems = nil;
     contentViewController.navigationItem.titleView = nil;
     contentViewController.navigationItem.searchController = nil;
-  }
-
-  for (TrueSheetNavBarItemView *item in _items) {
-    [self addSubview:item];
   }
 
   _navigationController = nil;
@@ -130,6 +134,7 @@ using namespace facebook::react;
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
   [self applyConfig];
+  [self layoutNavigationBar];
 }
 
 - (void)applyConfig {
@@ -196,24 +201,43 @@ using namespace facebook::react;
   if (!props.searchable) {
     navItem.searchController = nil;
     _searchController = nil;
+    _titleSearchBar = nil;
+    navItem.titleView = _titleItemView;
     return;
   }
+
+  BOOL stacked = props.searchOptions.searchPlacement == TrueSheetNavBarViewSearchPlacement::Stacked;
+  if (stacked && ![self hasNavigationRowContent]) {
+    // Nothing else in the navigation row — host the search bar in it directly
+    // instead of stacking it below an empty row
+    navItem.searchController = nil;
+    _searchController = nil;
+
+    if (!_titleSearchBar) {
+      _titleSearchBar = [[UISearchBar alloc] init];
+      _titleSearchBar.searchBarStyle = UISearchBarStyleMinimal;
+      _titleSearchBar.delegate = self;
+    }
+    [self configureSearchBar:_titleSearchBar];
+    navItem.titleView = _titleSearchBar;
+    return;
+  }
+
+  if (navItem.titleView == _titleSearchBar) {
+    navItem.titleView = _titleItemView;
+  }
+  _titleSearchBar = nil;
 
   if (!_searchController) {
     _searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
     _searchController.obscuresBackgroundDuringPresentation = NO;
     _searchController.searchBar.delegate = self;
   }
+  [self configureSearchBar:_searchController.searchBar];
 
-  UISearchBar *searchBar = _searchController.searchBar;
-  searchBar.placeholder = RCTNSStringFromStringNilIfEmpty(props.searchOptions.placeholder);
-
-  NSString *cancelText = RCTNSStringFromStringNilIfEmpty(props.searchOptions.cancelText);
-  if (cancelText) {
-    [searchBar setValue:cancelText forKey:@"cancelButtonText"];
+  if (navItem.searchController != _searchController) {
+    navItem.searchController = _searchController;
   }
-
-  navItem.searchController = _searchController;
   navItem.hidesSearchBarWhenScrolling = props.searchOptions.hideWhenScrolling;
 
   if (@available(iOS 16.0, *)) {
@@ -229,6 +253,32 @@ using namespace facebook::react;
         break;
     }
   }
+
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+  if (@available(iOS 26.0, *)) {
+    // A stacked search bar can silently vanish when the navigation item is
+    // reconfigured repeatedly while toolbar integration is allowed
+    // (see react-native-screens #3168)
+    navItem.searchBarPlacementAllowsToolbarIntegration = !stacked;
+  }
+#endif
+}
+
+- (void)configureSearchBar:(UISearchBar *)searchBar {
+  const auto &props = [self navBarProps];
+  searchBar.placeholder = RCTNSStringFromStringNilIfEmpty(props.searchOptions.placeholder);
+
+  NSString *cancelText = RCTNSStringFromStringNilIfEmpty(props.searchOptions.cancelText);
+  if (cancelText) {
+    [searchBar setValue:cancelText forKey:@"cancelButtonText"];
+  }
+}
+
+// Whether the navigation row shows anything besides the bar background —
+// title text or any bar item
+- (BOOL)hasNavigationRowContent {
+  const auto &props = [self navBarProps];
+  return !props.title.empty() || _items.count > 0;
 }
 
 #pragma mark - Bar Items
@@ -245,10 +295,10 @@ using namespace facebook::react;
   for (TrueSheetNavBarItemView *item in _items) {
     switch (item.slotType) {
       case TrueSheetNavBarItemViewSlotType::Left:
-        [leftItems addObject:[[UIBarButtonItem alloc] initWithCustomView:item]];
+        [leftItems addObject:item.barButtonItem];
         break;
       case TrueSheetNavBarItemViewSlotType::Right:
-        [rightItems addObject:[[UIBarButtonItem alloc] initWithCustomView:item]];
+        [rightItems addObject:item.barButtonItem];
         break;
       case TrueSheetNavBarItemViewSlotType::Title:
         titleItem = item;
@@ -262,17 +312,35 @@ using namespace facebook::react;
   // left-to-right on screen in JSX order
   navItem.rightBarButtonItems = [[rightItems reverseObjectEnumerator] allObjects];
   navItem.titleView = titleItem;
+  _titleItemView = titleItem;
+
+  // Items count toward the navigation row — re-evaluate the search placement
+  [self applySearch];
+  [self layoutNavigationBar];
 }
 
 #pragma mark - TrueSheetNavBarItemViewDelegate
 
 - (void)navBarItemViewDidChangeSize:(TrueSheetNavBarItemView *)itemView {
+  if (!itemView.needsAutoLayout) {
+    itemView.frame = (CGRect){itemView.frame.origin, itemView.contentSize};
+  }
+  [self layoutNavigationBar];
+}
+
+// Forces the bar to lay out — config changes made while the bar is already
+// visible don't take effect until it does
+- (void)layoutNavigationBar {
   UINavigationController *navigationController = _navigationController;
   if (!navigationController)
     return;
 
-  itemView.frame = (CGRect){itemView.frame.origin, itemView.contentSize};
-  [navigationController.navigationBar setNeedsLayout];
+  UINavigationBar *navBar = navigationController.navigationBar;
+  if (navBar.window == nil)
+    return;
+
+  [navBar setNeedsLayout];
+  [navBar layoutIfNeeded];
 }
 
 #pragma mark - UISearchBarDelegate
@@ -300,18 +368,33 @@ using namespace facebook::react;
 }
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
+  // A standalone bar manages its own cancel button — UISearchController
+  // handles this for the stacked bar
+  if (searchBar == _titleSearchBar) {
+    [searchBar setShowsCancelButton:YES animated:YES];
+  }
+
   if (auto emitter = [self navBarEventEmitter]) {
     emitter->onSearchFocus({});
   }
 }
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
+  if (searchBar == _titleSearchBar) {
+    [searchBar setShowsCancelButton:NO animated:YES];
+  }
+
   if (auto emitter = [self navBarEventEmitter]) {
     emitter->onSearchBlur({});
   }
 }
 
 - (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
+  if (searchBar == _titleSearchBar) {
+    searchBar.text = @"";
+    [searchBar resignFirstResponder];
+  }
+
   if (auto emitter = [self navBarEventEmitter]) {
     emitter->onSearchCancel({});
   }
@@ -332,7 +415,9 @@ using namespace facebook::react;
   [_touchHandlers removeAllObjects];
   [_items removeAllObjects];
 
+  _titleItemView = nil;
   _searchController = nil;
+  _titleSearchBar = nil;
 }
 
 @end

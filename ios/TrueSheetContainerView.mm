@@ -233,9 +233,10 @@ using namespace facebook::react;
   }
 
   if ([childComponentView isKindOfClass:[TrueSheetNavBarView class]]) {
-    if (_navBarView != nil) {
-      RCTLogWarn(@"TrueSheet: Container can only have one nav bar component.");
-      return;
+    if (_navBarView != nil && _navBarView != childComponentView) {
+      // A remount (e.g. reload) can insert the replacement before the old
+      // config unmounts — hand over instead of dropping the new one
+      [_navBarView detach];
     }
     _navBarView = (TrueSheetNavBarView *)childComponentView;
     if ([self.delegate respondsToSelector:@selector(containerViewNavBarDidChange)]) {
