@@ -43,6 +43,7 @@ import {
   BasicSheet,
   FlatListSheet,
   GestureSheet,
+  NavBarSheet,
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
@@ -108,6 +109,7 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
+  const navBarSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -249,8 +251,11 @@ const MapScreenInner = ({
           onPress={() => presentBasicSheet(0)}
           onLongPress={rapidPresentDismiss}
         />
-        <Button text="Open Modal" onPress={onNavigateToModal} />
-        <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+        <Button text="Nav Bar" onPress={() => navBarSheet.current?.present()} />
+        <ButtonGroup>
+          <Button text="Open Modal" onPress={onNavigateToModal} />
+          <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+        </ButtonGroup>
         {isTablet && (
           <ButtonGroup>
             <Button text="Anchor Left" onPress={() => setAnchorLeft(true)} />
@@ -297,6 +302,7 @@ const MapScreenInner = ({
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
+        <NavBarSheet ref={navBarSheet} />
       </ReanimatedTrueSheet>
     </View>
   );
