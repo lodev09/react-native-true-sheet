@@ -1,4 +1,4 @@
-import type { ComponentType, ReactElement } from 'react';
+import type { ComponentType, ReactElement, ReactNode } from 'react';
 import type {
   ColorValue,
   NativeSyntheticEvent,
@@ -44,6 +44,19 @@ export type DidFocusEvent = NativeSyntheticEvent<null>;
 export type DidBlurEvent = NativeSyntheticEvent<null>;
 export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
+
+export interface SearchTextEventPayload {
+  /**
+   * The current search text.
+   */
+  text: string;
+}
+
+export type SearchChangeEvent = NativeSyntheticEvent<SearchTextEventPayload>;
+export type SearchSubmitEvent = NativeSyntheticEvent<SearchTextEventPayload>;
+export type SearchFocusEvent = NativeSyntheticEvent<null>;
+export type SearchBlurEvent = NativeSyntheticEvent<null>;
+export type SearchCancelEvent = NativeSyntheticEvent<null>;
 
 /**
  * Options for customizing the grabber (drag handle) appearance.
@@ -608,6 +621,123 @@ export interface TrueSheetProps extends ViewProps {
    * @platform android
    */
   onBackPress?: () => boolean | void;
+}
+
+/**
+ * Options for the nav bar's native search field.
+ */
+export interface TrueSheetNavBarSearchOptions {
+  /**
+   * Placeholder text for the search field.
+   */
+  placeholder?: string;
+
+  /**
+   * The cancel button label.
+   *
+   * @platform ios
+   */
+  cancelText?: string;
+
+  /**
+   * Whether the search field hides when the content scrolls.
+   *
+   * @default true
+   */
+  hideWhenScrolling?: boolean;
+
+  /**
+   * Placement of the search field within the bar.
+   *
+   * - `'automatic'`: The system decides based on context.
+   * - `'inline'`: Trailing edge of the bar, alongside the title.
+   * - `'stacked'`: Below the title, spanning the bar's width.
+   *
+   * @platform ios 16+
+   * @default 'automatic'
+   */
+  placement?: 'automatic' | 'inline' | 'stacked';
+}
+
+/**
+ * Props for the `TrueSheetNavBar` component.
+ * Pass it to the sheet's `header` prop to render a native navigation bar.
+ */
+export interface TrueSheetNavBarProps {
+  /**
+   * The bar title.
+   * Overridden by a `TrueSheetNavBar.Title` child when provided.
+   */
+  title?: string;
+
+  /**
+   * Displays the title using the large title style.
+   * Collapses to the standard title as the content scrolls.
+   *
+   * @platform ios
+   * @default false
+   */
+  largeTitle?: boolean;
+
+  /**
+   * Tint color applied to bar items (buttons).
+   */
+  tintColor?: ColorValue;
+
+  /**
+   * The title text color.
+   */
+  titleColor?: ColorValue;
+
+  /**
+   * The bar background color, visible when content scrolls behind the bar.
+   * Uses the native adaptive material when not provided.
+   */
+  backgroundColor?: ColorValue;
+
+  /**
+   * Hides the hairline separator shown when content scrolls behind the bar.
+   *
+   * @default false
+   */
+  separatorHidden?: boolean;
+
+  /**
+   * Enables the native search field.
+   * Pass `true` or an options object.
+   */
+  search?: boolean | TrueSheetNavBarSearchOptions;
+
+  /**
+   * Called when the search text changes.
+   */
+  onSearchChange?: (event: SearchChangeEvent) => void;
+
+  /**
+   * Called when the search is submitted (return key).
+   */
+  onSearchSubmit?: (event: SearchSubmitEvent) => void;
+
+  /**
+   * Called when the search field gains focus.
+   */
+  onSearchFocus?: (event: SearchFocusEvent) => void;
+
+  /**
+   * Called when the search field loses focus.
+   */
+  onSearchBlur?: (event: SearchBlurEvent) => void;
+
+  /**
+   * Called when the search is cancelled.
+   */
+  onSearchCancel?: (event: SearchCancelEvent) => void;
+
+  /**
+   * Bar item slots — `TrueSheetNavBar.Left`, `TrueSheetNavBar.Right`,
+   * and `TrueSheetNavBar.Title`.
+   */
+  children?: ReactNode;
 }
 
 /**

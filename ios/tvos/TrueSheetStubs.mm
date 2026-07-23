@@ -94,6 +94,28 @@ using namespace facebook::react;
 
 @end
 
+@interface TrueSheetNavBarView : RCTViewComponentView
+@end
+
+@implementation TrueSheetNavBarView
+
++ (ComponentDescriptorProvider)componentDescriptorProvider {
+  return concreteComponentDescriptorProvider<TrueSheetNavBarViewComponentDescriptor>();
+}
+
+@end
+
+@interface TrueSheetNavBarItemView : RCTViewComponentView
+@end
+
+@implementation TrueSheetNavBarItemView
+
++ (ComponentDescriptorProvider)componentDescriptorProvider {
+  return concreteComponentDescriptorProvider<TrueSheetNavBarItemViewComponentDescriptor>();
+}
+
+@end
+
 #pragma mark - Module
 
 @interface TrueSheetModule : NSObject <RCTBridgeModule, NativeTrueSheetModuleSpec>

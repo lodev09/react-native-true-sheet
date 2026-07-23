@@ -20,6 +20,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class TrueSheetNavBarView;
+
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
@@ -90,6 +92,34 @@ NS_ASSUME_NONNULL_BEGIN
  * owns the sheet's bottom edge, so its background fills the inset.
  */
 @property (nonatomic, readonly) CGFloat footerBottomInset;
+
+/**
+ * The embedded navigation controller backing the sheet's nav bar, if any.
+ */
+@property (nonatomic, readonly, nullable) UINavigationController *navHostController;
+
+/**
+ * Hosts the container view — inside the embedded navigation controller's
+ * content area when a nav bar config is present, directly otherwise.
+ */
+- (void)attachContainerView:(UIView *)containerView navBarView:(nullable TrueSheetNavBarView *)navBarView;
+
+/**
+ * The navigation bar's current height. 0 when no nav bar is embedded.
+ */
+- (CGFloat)navBarHeight;
+
+/**
+ * The area available to the container — the content area below the nav bar
+ * when one is embedded, the sheet's full bounds otherwise.
+ */
+- (CGSize)contentAreaSize;
+
+/**
+ * Associates the content's scroll view with the embedded navigation host to
+ * drive scroll-edge appearance and large title collapse.
+ */
+- (void)setupNavContentScrollTracking;
 
 - (void)setupAccessibilityContainer;
 - (void)applyActiveDetent;

@@ -34,6 +34,7 @@ import TrueSheetHeaderViewNativeComponent from './fabric/TrueSheetHeaderViewNati
 import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
+import { TrueSheetNavBar } from './TrueSheetNavBar';
 
 import {
   Platform,
@@ -483,6 +484,8 @@ export class TrueSheet
       return Math.min(1, detent);
     });
 
+    const headerElement = header ? (isValidElement(header) ? header : createElement(header)) : null;
+
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
       this.cachedGrabberOptions = grabberOptions;
@@ -540,17 +543,22 @@ export class TrueSheet
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={styles.container}>
-            {header && (
-              <TrueSheetHeaderViewNativeComponent
-                style={[
-                  styles.header,
-                  headerOptions?.position === 'absolute' && styles.absoluteHeader,
-                  headerStyle,
-                ]}
-              >
-                {isValidElement(header) ? header : createElement(header)}
-              </TrueSheetHeaderViewNativeComponent>
-            )}
+            {headerElement &&
+              // A nav bar renders as a config component — the native side
+              // re-parents it into the navigation bar, not the header slot
+              (headerElement.type === TrueSheetNavBar ? (
+                headerElement
+              ) : (
+                <TrueSheetHeaderViewNativeComponent
+                  style={[
+                    styles.header,
+                    headerOptions?.position === 'absolute' && styles.absoluteHeader,
+                    headerStyle,
+                  ]}
+                >
+                  {headerElement}
+                </TrueSheetHeaderViewNativeComponent>
+              ))}
             <TrueSheetContentViewNativeComponent style={style}>
               {children}
             </TrueSheetContentViewNativeComponent>

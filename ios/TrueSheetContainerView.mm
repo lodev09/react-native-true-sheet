@@ -13,6 +13,7 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetHeaderView.h"
+#import "TrueSheetNavBarView.h"
 #import "TrueSheetPeekView.h"
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
@@ -54,6 +55,7 @@ using namespace facebook::react;
   TrueSheetHeaderView *_headerView;
   TrueSheetFooterView *_footerView;
   TrueSheetPeekView *__weak _peekView;
+  TrueSheetNavBarView *__weak _navBarView;
   TrueSheetKeyboardObserver *_keyboardObserver;
 }
 
@@ -229,6 +231,17 @@ using namespace facebook::react;
     [_footerView setBottomInset:_footerBottomInset];
     [self footerViewDidChangeSize:_footerView.frame.size];
   }
+
+  if ([childComponentView isKindOfClass:[TrueSheetNavBarView class]]) {
+    if (_navBarView != nil) {
+      RCTLogWarn(@"TrueSheet: Container can only have one nav bar component.");
+      return;
+    }
+    _navBarView = (TrueSheetNavBarView *)childComponentView;
+    if ([self.delegate respondsToSelector:@selector(containerViewNavBarDidChange)]) {
+      [self.delegate containerViewNavBarDidChange];
+    }
+  }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -248,6 +261,14 @@ using namespace facebook::react;
     _footerView = nil;
     _contentView.footerView = nil;
     [self footerViewDidChangeSize:CGSizeZero];
+  }
+
+  if ([childComponentView isKindOfClass:[TrueSheetNavBarView class]] && _navBarView == childComponentView) {
+    [_navBarView detach];
+    _navBarView = nil;
+    if ([self.delegate respondsToSelector:@selector(containerViewNavBarDidChange)]) {
+      [self.delegate containerViewNavBarDidChange];
+    }
   }
 
   [super unmountChildComponentView:childComponentView index:index];

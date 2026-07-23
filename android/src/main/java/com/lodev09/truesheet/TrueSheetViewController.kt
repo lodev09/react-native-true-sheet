@@ -272,6 +272,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Cached values used during dismiss when container is unmounted
   private var cachedContentHeight: Int = 0
   private var cachedHeaderHeight: Int = 0
+  private var cachedNavBarHeight: Int = 0
   private var cachedFooterHeight: Int = 0
   private var cachedPeekContentHeight: Int = 0
 
@@ -280,6 +281,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override val headerHeight: Int
     get() = containerView?.headerHeight ?: cachedHeaderHeight
+
+  // Native nav bar toolbar height — counts toward detents (via headerHeight)
+  // but sits outside the RN-managed container, which is offset below it
+  private val navBarHeight: Int
+    get() = containerView?.navBarHeight ?: cachedNavBarHeight
 
   override var absoluteHeader: Boolean = false
 
@@ -392,6 +398,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     wasHiddenByScreen = false
     cachedContentHeight = 0
     cachedHeaderHeight = 0
+    cachedNavBarHeight = 0
     isPresentAnimating = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
@@ -840,6 +847,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     containerView?.let {
       cachedContentHeight = it.contentHeight
       cachedHeaderHeight = it.headerHeight
+      cachedNavBarHeight = it.navBarHeight
       cachedFooterHeight = it.footerHeight
       cachedPeekContentHeight = it.peekContentHeight
     }
@@ -1009,7 +1017,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
+    // Footer coordinates are relative to the container, which is offset below
+    // the nav bar toolbar when one is present
+    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift - navBarHeight).toFloat()
 
     // Adjust during dismiss animation when slideOffset is negative. Skipped
     // while the keyboard is open — the detents collapse to the expanded
@@ -1021,7 +1031,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     // Clamp to prevent footer going above safe area
-    val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
+    val maxAllowedY = (sheetHeight - topInset - footerHeight - navBarHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
   }
 
@@ -1284,7 +1294,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
       .coerceIn(0, detents.size - 1)
     val maxAvailableHeight = realScreenHeight - topInset
-    val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
+
+    // The nav bar toolbar sits above the container — the container only gets
+    // the remaining height below it
+    val newHeight = (minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight) - navBarHeight)
+      .coerceAtLeast(0)
     val newWidth = getStateWidth()
 
     if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
@@ -1302,7 +1316,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val maxAvailableHeight = realScreenHeight - topInset
     val minHeight = minOf(detentCalculator.getDetentHeight(detents.first()), maxAvailableHeight)
-    val newHeight = detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight)
+    val newHeight = (detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight) - navBarHeight)
+      .coerceAtLeast(0)
 
     setStateDimensions(getStateWidth(), newHeight)
   }

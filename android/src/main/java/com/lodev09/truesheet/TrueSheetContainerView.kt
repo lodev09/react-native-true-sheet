@@ -28,7 +28,8 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   TrueSheetContentViewDelegate,
   TrueSheetHeaderViewDelegate,
   TrueSheetFooterViewDelegate,
-  TrueSheetPeekViewDelegate {
+  TrueSheetPeekViewDelegate,
+  TrueSheetNavBarViewDelegate {
 
   var delegate: TrueSheetContainerViewDelegate? = null
 
@@ -36,10 +37,19 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   var headerView: TrueSheetHeaderView? = null
   var footerView: TrueSheetFooterView? = null
   var peekView: TrueSheetPeekView? = null
+  var navBarView: TrueSheetNavBarView? = null
 
   var contentHeight: Int = 0
   var headerHeight: Int = 0
   var footerHeight: Int = 0
+
+  /**
+   * Height of the native nav bar toolbar pinned above this container.
+   * Feeds the header channel for detents, but the container itself is offset
+   * below the toolbar since the bar isn't part of the RN layout.
+   */
+  val navBarHeight: Int
+    get() = if (navBarView != null) headerHeight else 0
 
   /**
    * Distance from the top of the content view to the bottom of the peek view.
@@ -128,6 +138,14 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         headerView = child
       }
 
+      is TrueSheetNavBarView -> {
+        child.delegate = this
+        navBarView = child
+        // No-op if this container isn't in the controller yet —
+        // TrueSheetView attaches it when the container mounts
+        child.attachToolbar()
+      }
+
       is TrueSheetFooterView -> {
         child.delegate = this
         child.setBottomInset(footerBottomInset)
@@ -148,6 +166,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         view.delegate = null
         headerView = null
         headerViewDidChangeSize(0, 0)
+      }
+
+      is TrueSheetNavBarView -> {
+        view.delegate = null
+        view.detachToolbar()
+        navBarView = null
+        navBarViewDidChangeHeight(0, 0)
       }
 
       is TrueSheetFooterView -> {
@@ -215,6 +240,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   override fun headerViewDidChangeSize(width: Int, height: Int) {
     headerHeight = height
+    delegate?.containerViewHeaderDidChangeSize(width, height)
+  }
+
+  override fun navBarViewDidChangeHeight(width: Int, height: Int) {
+    headerHeight = height
+    // The toolbar isn't part of the RN layout — shift the container below it
+    translationY = height.toFloat()
     delegate?.containerViewHeaderDidChangeSize(width, height)
   }
 

@@ -120,6 +120,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     if (child is TrueSheetContainerView) {
       child.delegate = this
+
+      // A nav bar mounts before its container reaches the controller —
+      // attach its toolbar now that the hierarchy is complete
+      child.navBarView?.attachToolbar()
+
       val surfaceId = UIManagerHelper.getSurfaceId(this)
       eventDispatcher?.dispatchEvent(MountEvent(surfaceId, id))
     }
@@ -141,6 +146,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
           dismiss(true) {}
         }
       }
+
+      // The nav bar toolbar lives in the controller, outside the container's
+      // subtree — detach it so the controller only holds React children
+      child.navBarView?.detachToolbar()
     }
     viewController.removeView(child)
   }

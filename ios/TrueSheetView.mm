@@ -13,6 +13,7 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
+#import "TrueSheetNavBarView.h"
 #import "TrueSheetViewController.h"
 #import "core/RNScreensEventObserver.h"
 #import "events/TrueSheetDragEvents.h"
@@ -284,7 +285,7 @@ using namespace facebook::react;
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
 
   if (_controller && !_controller.isStackedBehindChild) {
-    CGSize size = _controller.view.frame.size;
+    CGSize size = [_controller contentAreaSize];
     if (size.width < 1 || size.height < 1) {
       // Pre-present the controller has no layout yet. Seed with screen
       // dimensions so content (e.g. a FlatList viewport) can lay out and
@@ -383,8 +384,7 @@ using namespace facebook::react;
   _containerView.delegate = self;
 
   [_touchHandler attachToView:_containerView];
-  [_controller.view addSubview:_containerView];
-  [_controller.view bringSubviewToFront:_containerView];
+  [_controller attachContainerView:_containerView navBarView:_containerView.navBarView];
   _containerView.accessibilityViewIsModal = YES;
   _controller.accessibilityContentView = _containerView;
   [_controller setupAccessibilityContainer];
@@ -394,7 +394,7 @@ using namespace facebook::react;
     _controller.contentHeight = @(contentHeight);
   }
 
-  CGFloat headerHeight = [_containerView headerHeight];
+  CGFloat headerHeight = [self measuredHeaderHeight];
   if (headerHeight > 0) {
     _controller.headerHeight = @(headerHeight);
   }
@@ -475,7 +475,7 @@ using namespace facebook::react;
   // detent retarget that snaps the presentation stack.
   if (_containerView) {
     _controller.contentHeight = @([_containerView contentHeight]);
-    _controller.headerHeight = @([_containerView headerHeight]);
+    _controller.headerHeight = @([self measuredHeaderHeight]);
     _controller.footerHeight = @([_containerView footerHeight]);
     _controller.peekContentHeight = @([_containerView peekContentHeight]);
   }
@@ -635,6 +635,17 @@ using namespace facebook::react;
   [self setupScrollable];
 }
 
+// Nav bar config mounted or unmounted — re-host the container and refresh
+// the header height feeding the auto/peek detents.
+- (void)containerViewNavBarDidChange {
+  if (_containerView) {
+    [_controller attachContainerView:_containerView navBarView:_containerView.navBarView];
+  }
+
+  _controller.headerHeight = @([self measuredHeaderHeight]);
+  [self setupSheetDetentsForSizeChange];
+}
+
 #pragma mark - TrueSheetViewControllerDelegate
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
@@ -645,6 +656,13 @@ using namespace facebook::react;
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
+
+  // The bar has real metrics only after presentation (large title, search bar)
+  // — refresh the header height so auto/peek detents account for it.
+  if (_containerView.navBarView) {
+    _controller.headerHeight = @([self measuredHeaderHeight]);
+    [self setupSheetDetentsForSizeChange];
+  }
 
   if (_pendingPropsUpdate) {
     _pendingPropsUpdate = NO;
@@ -773,6 +791,14 @@ using namespace facebook::react;
 
 #pragma mark - Private Helpers
 
+// The nav bar replaces the header slot — its height feeds the same detent math
+- (CGFloat)measuredHeaderHeight {
+  if (_containerView.navBarView) {
+    return [_controller navBarHeight];
+  }
+  return [_containerView headerHeight];
+}
+
 - (void)setupScrollable {
   if (!_containerView)
     return;
@@ -782,6 +808,7 @@ using namespace facebook::react;
   _containerView.hasAutoDetent = _hasAutoDetent;
   _containerView.footerBottomInset = _controller.footerBottomInset;
   [_containerView setupScrollable];
+  [_controller setupNavContentScrollTracking];
 }
 
 - (void)applySheetPropsUpdate {

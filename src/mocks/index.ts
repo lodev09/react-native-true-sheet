@@ -67,6 +67,18 @@ export function TrueSheetPeek({ children, ...rest }: ViewProps) {
 }
 
 /**
+ * Mock TrueSheetNavBar component for testing.
+ */
+export const TrueSheetNavBar = Object.assign(
+  ({ children }: { children?: ReactNode }) => React.createElement(View, null, children),
+  {
+    Left: ({ children, ...rest }: ViewProps) => React.createElement(View, rest, children),
+    Right: ({ children, ...rest }: ViewProps) => React.createElement(View, rest, children),
+    Title: ({ children, ...rest }: ViewProps) => React.createElement(View, rest, children),
+  }
+);
+
+/**
  * Mock TrueSheetProvider for testing.
  */
 export function TrueSheetProvider({ children }: { children: React.ReactNode }) {

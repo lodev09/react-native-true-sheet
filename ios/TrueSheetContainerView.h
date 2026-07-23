@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @class TrueSheetPeekView;
+@class TrueSheetNavBarView;
 
 @protocol TrueSheetContainerViewDelegate <NSObject>
 
@@ -35,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize;
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize;
+- (void)containerViewNavBarDidChange;
 
 @end
 
@@ -66,6 +68,11 @@ NS_ASSUME_NONNULL_BEGIN
  * owns the sheet's bottom edge, so its background fills the inset
  */
 @property (nonatomic, assign) CGFloat footerBottomInset;
+
+/**
+ * The mounted nav bar config component, if any
+ */
+@property (nonatomic, weak, readonly, nullable) TrueSheetNavBarView *navBarView;
 
 /**
  * Returns the current content height

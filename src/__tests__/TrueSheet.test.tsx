@@ -1,6 +1,6 @@
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
-import { TrueSheet, TrueSheetPeek } from '../index';
+import { TrueSheet, TrueSheetNavBar, TrueSheetPeek } from '../index';
 import type {
   DidDismissEvent,
   WillFocusEvent,
@@ -52,6 +52,30 @@ describe('TrueSheet', () => {
     );
     expect(getByText('Content')).toBeDefined();
     expect(getByText('Footer Content')).toBeDefined();
+  });
+
+  it('should render TrueSheetNavBar as header', () => {
+    const { getByText } = render(
+      <TrueSheet
+        name="test"
+        initialDetentIndex={0}
+        header={
+          <TrueSheetNavBar title="Title">
+            <TrueSheetNavBar.Left>
+              <Text>Left Item</Text>
+            </TrueSheetNavBar.Left>
+            <TrueSheetNavBar.Right>
+              <Text>Right Item</Text>
+            </TrueSheetNavBar.Right>
+          </TrueSheetNavBar>
+        }
+      >
+        <Text>Content</Text>
+      </TrueSheet>
+    );
+    expect(getByText('Left Item')).toBeDefined();
+    expect(getByText('Right Item')).toBeDefined();
+    expect(getByText('Content')).toBeDefined();
   });
 
   it('should render TrueSheetPeek within content', () => {

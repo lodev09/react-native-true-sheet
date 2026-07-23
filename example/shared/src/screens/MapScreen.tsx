@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import {
   TrueSheet,
+  TrueSheetNavBar,
   type DetentChangeEvent,
   type DidPresentEvent,
   type DragBeginEvent,
   type DragEndEvent,
+  type SearchChangeEvent,
   type WillPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 import {
@@ -34,7 +36,7 @@ import Animated, {
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
-import { Button, ButtonGroup, DemoContent, Header, Spacer } from '../components';
+import { Button, ButtonGroup, DemoContent, Spacer } from '../components';
 import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
@@ -228,7 +230,14 @@ const MapScreenInner = ({
         // }}
         onWillDismiss={() => log('willDismiss')}
         onDidDismiss={() => log('didDismiss')}
-        header={<Header />}
+        header={
+          <TrueSheetNavBar
+            search={{ placeholder: 'Search maps', hideWhenScrolling: false }}
+            onSearchChange={(e: SearchChangeEvent) => log(`search: ${e.nativeEvent.text}`)}
+            onSearchFocus={() => sheetRef.current?.resize(2)}
+            onSearchCancel={() => sheetRef.current?.resize(0)}
+          />
+        }
       >
         <View style={styles.heading}>
           <Text style={styles.title}>True Sheet</Text>

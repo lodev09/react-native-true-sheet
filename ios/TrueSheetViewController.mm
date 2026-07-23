@@ -9,9 +9,11 @@
 #import "TrueSheetViewController.h"
 #import "TrueSheetContainerView.h"
 #import "TrueSheetContentView.h"
+#import "TrueSheetNavBarView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
 #import "core/TrueSheetGrabberView.h"
+#import "core/TrueSheetNavContentViewController.h"
 #import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
 #import "utils/PlatformUtil.h"
@@ -85,6 +87,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
+
+  UINavigationController *_navHostController;
+  TrueSheetNavContentViewController *_navContentController;
 }
 
 #pragma mark - Initialization
@@ -588,18 +593,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  // Skip size reports while backgrounded behind a stacked child — the push-back
-  // scaling changes the frame and would needlessly resize content.
-  // _lastReportedSize stays stale so the restore pass re-reports any real change.
-  if (!self.isStackedBehindChild) {
-    // Report any size change (detent resize, keyboard, rotation) so Yoga
-    // relayouts the container synchronously with the sheet.
-    CGSize size = self.view.frame.size;
-    if (!CGSizeEqualToSize(_lastReportedSize, size)) {
-      _lastReportedSize = size;
-      [self.delegate viewControllerDidChangeSize:size];
-    }
-  }
+  // Report any size change (detent resize, keyboard, rotation) so Yoga
+  // relayouts the container synchronously with the sheet. With a nav host,
+  // the content controller's own layout pass reports the fresher value.
+  [self reportContentAreaSizeIfChanged];
 
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
@@ -947,6 +944,113 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (CGFloat)detentValueForIndex:(NSInteger)index {
   return [_detentCalculator detentValueForIndex:index];
+}
+
+#pragma mark - Navigation Host
+
+// Skips size reports while backgrounded behind a stacked child — the push-back
+// scaling changes the frame and would needlessly resize content.
+// _lastReportedSize stays stale so the restore pass re-reports any real change.
+- (void)reportContentAreaSizeIfChanged {
+  if (self.isStackedBehindChild) {
+    return;
+  }
+
+  CGSize size = self.contentAreaSize;
+  if (!CGSizeEqualToSize(_lastReportedSize, size)) {
+    _lastReportedSize = size;
+    [self.delegate viewControllerDidChangeSize:size];
+  }
+}
+
+- (CGSize)contentAreaSize {
+  if (_navHostController && _navContentController.isViewLoaded) {
+    return _navContentController.view.frame.size;
+  }
+  return self.view.frame.size;
+}
+
+- (CGFloat)navBarHeight {
+  if (!_navHostController) {
+    return 0;
+  }
+
+  UINavigationBar *navBar = _navHostController.navigationBar;
+  CGFloat height = navBar.frame.size.height;
+  if (height < 1) {
+    // Not laid out yet (pre-present) — the standard bar metric
+    height = [navBar sizeThatFits:CGSizeZero].height;
+  }
+  return height;
+}
+
+- (void)attachContainerView:(UIView *)containerView navBarView:(TrueSheetNavBarView *)navBarView {
+  if (navBarView) {
+    [self embedNavigationHost];
+    [navBarView attachToNavigationController:_navHostController contentViewController:_navContentController];
+    [_navContentController.view addSubview:containerView];
+    [self setupNavContentScrollTracking];
+  } else {
+    [self removeNavigationHost];
+    [self.view addSubview:containerView];
+    [self.view bringSubviewToFront:containerView];
+  }
+
+  // Force a fresh report — the content area changed shape with the host
+  _lastReportedSize = CGSizeZero;
+  [self reportContentAreaSizeIfChanged];
+}
+
+- (void)embedNavigationHost {
+  if (_navHostController) {
+    return;
+  }
+
+  _navContentController = [[TrueSheetNavContentViewController alloc] init];
+  // Keeps the search controller's presentation inside the sheet
+  _navContentController.definesPresentationContext = YES;
+
+  __weak __typeof(self) weakSelf = self;
+  _navContentController.onLayoutSubviews = ^(CGSize size) {
+    [weakSelf reportContentAreaSizeIfChanged];
+  };
+
+  _navHostController = [[UINavigationController alloc] initWithRootViewController:_navContentController];
+  _navHostController.view.backgroundColor = [UIColor clearColor];
+
+  [self addChildViewController:_navHostController];
+  _navHostController.view.frame = self.view.bounds;
+  _navHostController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [self.view addSubview:_navHostController.view];
+  [_navHostController didMoveToParentViewController:self];
+
+  [self.view bringSubviewToFront:_grabberView];
+}
+
+- (void)removeNavigationHost {
+  if (!_navHostController) {
+    return;
+  }
+
+  [_navHostController willMoveToParentViewController:nil];
+  [_navHostController.view removeFromSuperview];
+  [_navHostController removeFromParentViewController];
+  _navHostController = nil;
+  _navContentController = nil;
+}
+
+- (void)setupNavContentScrollTracking {
+  if (!_navHostController) {
+    return;
+  }
+
+  if (@available(iOS 15.0, *)) {
+    TrueSheetContentView *contentView = [self findContentView:self.view];
+    RCTScrollViewComponentView *scrollViewComponent = contentView ? [contentView findScrollView] : nil;
+    // Drives scroll-edge appearance and large title collapse — the content
+    // sits below the bar, so UIKit can't discover the scroll view on its own
+    [_navContentController setContentScrollView:scrollViewComponent.scrollView forEdge:NSDirectionalRectEdgeTop];
+  }
 }
 
 #pragma mark - Sheet Configuration

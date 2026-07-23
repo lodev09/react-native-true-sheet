@@ -7,6 +7,7 @@ import {
   BlankSheet,
   FlatListSheet,
   GestureSheet,
+  NavBarSheet,
   NavigationSheet,
   PromptSheet,
   ScrollViewSheet,
@@ -32,6 +33,7 @@ export const StandardScreen = ({
   const gestureSheet = useRef<TrueSheet>(null);
   const blankSheet = useRef<TrueSheet>(null);
   const navigationSheet = useRef<TrueSheet>(null);
+  const navBarSheet = useRef<TrueSheet>(null);
 
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
@@ -57,6 +59,7 @@ export const StandardScreen = ({
         <Button text="TrueSheet FlatList" onPress={() => flatListSheet.current?.present()} />
         <Button text="TrueSheet Gestures" onPress={() => gestureSheet.current?.present()} />
         <Button text="Blank Sheet" onPress={() => blankSheet.current?.present()} />
+        <Button text="TrueSheet NavBar" onPress={() => navBarSheet.current?.present()} />
 
         <BasicSheet ref={basicSheet} onNavigateToTest={onNavigateToTest} />
         <PromptSheet ref={promptSheet} />
@@ -65,6 +68,7 @@ export const StandardScreen = ({
         <GestureSheet ref={gestureSheet} />
         <BlankSheet ref={blankSheet} />
         <NavigationSheet ref={navigationSheet} />
+        <NavBarSheet ref={navBarSheet} />
       </View>
     </TrueSheetProvider>
   );

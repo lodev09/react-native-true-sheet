@@ -39,6 +39,8 @@ class TrueSheetPackage : BaseReactPackage() {
       TrueSheetContainerViewManager(),
       TrueSheetContentViewManager(),
       TrueSheetHeaderViewManager(),
+      TrueSheetNavBarViewManager(),
+      TrueSheetNavBarItemViewManager(),
       TrueSheetFooterViewManager(),
       TrueSheetPeekViewManager()
     )
