@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Keyboard-driven sheet growth no longer corrupts `animatedIndex` — detent offset learning is skipped while the keyboard has the sheet grown, with a re-settle once it's away. Settle emits now learn at the final frame and bypass the dedupe, so presenting and settling land exactly on the detent index. ([#762](https://github.com/lodev09/react-native-true-sheet/pull/762) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.9
 
 ### 🐛 Bug fixes
