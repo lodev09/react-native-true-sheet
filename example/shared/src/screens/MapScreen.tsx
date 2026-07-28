@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-  type LayoutChangeEvent,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -180,11 +179,11 @@ const MapScreenInner = ({
         style={styles.content}
         detached
         dismissible={false}
-        onLayout={(e: LayoutChangeEvent) => {
-          log(
-            `layout ${Math.round(e.nativeEvent.layout.width)}×${Math.round(e.nativeEvent.layout.height)}`
-          );
-        }}
+        // onLayout={(e: LayoutChangeEvent) => {
+        //   log(
+        //     `layout ${Math.round(e.nativeEvent.layout.width)}×${Math.round(e.nativeEvent.layout.height)}`
+        //   );
+        // }}
         onWillPresent={(e: WillPresentEvent) => {
           log(
             `willPresent i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
