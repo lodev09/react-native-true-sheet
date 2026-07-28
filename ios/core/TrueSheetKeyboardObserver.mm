@@ -83,6 +83,21 @@
 
   _currentHeight = keyboardHeight;
 
+  if (keyboardHeight > 0) {
+    _viewController.keyboardSheetGrown = YES;
+  } else {
+    // The sheet stays grown until UIKit finishes the shrink-back animation —
+    // clear after it completes, unless the keyboard came back in the meantime.
+    __weak __typeof(self) weakSelf = self;
+    dispatch_after(
+      dispatch_time(DISPATCH_TIME_NOW, (int64_t)((duration + 0.1) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        if (strongSelf && strongSelf->_currentHeight == 0) {
+          strongSelf->_viewController.keyboardSheetGrown = NO;
+        }
+      });
+  }
+
   for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates) {
     if (keyboardHeight > 0) {
       [delegate keyboardWillShow:keyboardHeight duration:duration curve:curve];

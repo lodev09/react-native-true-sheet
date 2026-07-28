@@ -3,5 +3,7 @@ export * from './PromptSheet';
 export * from './ScrollViewSheet';
 export * from './FlatListSheet';
 export * from './GestureSheet';
+export * from './KeyboardOffsetSheet';
+export * from './ResizeSyncSheet';
 export * from './BlankSheet';
 export * from './NavigationSheet';
