@@ -310,7 +310,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val bottomInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
 
-  val topInset: Int
+  override val topInset: Int
     get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
 
   override val contentBottomInset: Int
@@ -1145,8 +1145,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // keyboard-expanded position and a non-keyboard detent position. If so, dismiss
     // keyboard and commit to that detent.
     val maxAvailableHeight = realScreenHeight - topInset
-    val keyboardHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
-    val keyboardTop = realScreenHeight - keyboardHeight
+    val keyboardTop = detentCalculator.getSheetTopForDetentIndex(detents.size - 1)
 
     for (i in detents.indices) {
       val nonKeyboardHeight = minOf(detentCalculator.getDetentHeight(detents[i], includeKeyboard = false), maxAvailableHeight)
