@@ -460,6 +460,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     [self endInteractiveDismissState];
   }
 
+  // Dismissing with the keyboard up skips the hide notification — don't let
+  // the stale flag block learning on the next present.
+  _keyboardSheetGrown = NO;
+
   [self emitDidDismissEvents];
 }
 
@@ -478,6 +482,21 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     } else {
       UIViewController *presented = self.presentedViewController;
       BOOL hasPresentedController = presented != nil && !presented.isBeingPresented && !presented.isBeingDismissed;
+
+      // A layout pass at rest can nudge the frame by a sub-pixel amount
+      // (pixel-grid snapping after present), leaving the interpolated index
+      // slightly off the whole number. Re-learn when the frame is effectively
+      // at the current detent so the drift is absorbed instead of emitted.
+      // The tight threshold keeps real movement from being absorbed.
+      if (presented == nil && !_isDragging) {
+        NSInteger index = self.currentDetentIndex;
+        CGFloat expectedHeight = [_detentCalculator resolvedHeightForIndex:index];
+        CGFloat actualHeight = self.screenHeight - self.currentPosition;
+        if (expectedHeight > 0 && fabs(actualHeight - expectedHeight) < 2) {
+          [self learnOffsetForDetentIndex:index];
+        }
+      }
+
       [self emitChangePositionDelegateWithPosition:self.currentPosition
                                           realtime:!hasPresentedController
                                              debug:@"layout"];
@@ -636,13 +655,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       strongSelf->_isTransitioning = NO;
       strongSelf->_isTransitionSnapping = NO;
 
-      // Emit settled position after detent snap.
+      // Settle after a present or detent-snap transition.
       // Uses dispatch_after because presentedView frame isn't final until UIKit
-      // completes its layout pass after the transition animation.
+      // completes its layout pass after the transition animation — learning
+      // here absorbs any sub-pixel drift since the earlier learns.
       if (strongSelf->_isPresented) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-          CGFloat position = strongSelf.currentPosition;
-          [strongSelf emitChangePositionDelegateWithPosition:position realtime:NO debug:@"transition end"];
+          [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
         });
       }
     }];
@@ -798,7 +817,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     .index = [self interpolatedIndexForPosition:position],
   };
 
-  if (!TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
+  // Settle (non-realtime) emits are authoritative and bypass the dedupe — a
+  // learn right before them can correct the interpolated index by less than
+  // the tolerance, and the corrected value must still reach JS.
+  if (!realtime || !TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
     _lastEmittedPositionState = state;
 
     [self.delegate viewControllerDidChangePosition:state.index
@@ -809,7 +831,22 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 - (void)learnOffsetForDetentIndex:(NSInteger)index {
+  if (_keyboardSheetGrown) {
+    return;
+  }
   [_detentCalculator learnOffsetForDetentIndex:index];
+}
+
+- (void)setKeyboardSheetGrown:(BOOL)keyboardSheetGrown {
+  BOOL wasGrown = _keyboardSheetGrown;
+  _keyboardSheetGrown = keyboardSheetGrown;
+
+  // Settles are skipped or measure a mid-animation frame while the keyboard
+  // has the sheet grown (e.g. a drag-end during the shrink-back) — re-settle
+  // at the resting detent once the keyboard is fully away.
+  if (wasGrown && !keyboardSheetGrown && self.isPresented && !_isDragging) {
+    [self settleAtDetentIndex:self.currentDetentIndex debug:@"keyboard settled"];
+  }
 }
 
 /**
