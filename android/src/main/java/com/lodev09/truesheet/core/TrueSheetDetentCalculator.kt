@@ -22,6 +22,7 @@ interface TrueSheetDetentCalculatorDelegate {
   val contentBottomInset: Int
   val maxContentHeight: Int?
   val keyboardInset: Int
+  val topInset: Int
 }
 
 /**
@@ -42,6 +43,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
+  private val topInset: Int get() = delegate?.topInset ?: 0
 
   /**
    * Height for auto (-1.0) detents: content + header + footer height.
@@ -108,7 +110,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
       return realScreenHeight
     }
-    return realScreenHeight - getDetentHeight(detents[index])
+    // Clamp to the space the sheet can actually occupy — matching
+    // setupSheetDetents. A keyboard-inflated detent height can exceed it,
+    // placing the expected top above the screen while the real sheet stops
+    // at the top inset.
+    val maxAvailableHeight = realScreenHeight - topInset
+    return realScreenHeight - minOf(getDetentHeight(detents[index]), maxAvailableHeight)
   }
 
   /**
@@ -215,6 +222,10 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     for (i in 0 until count - 1) {
       val pos = getSheetTopForDetentIndex(i)
       val nextPos = getSheetTopForDetentIndex(i + 1)
+
+      // Skip degenerate segments — keyboard growth can clamp adjacent detents
+      // to the same top; falling through reports the topmost detent
+      if (pos == nextPos) continue
 
       if (positionPx in nextPos..pos) {
         val range = pos - nextPos

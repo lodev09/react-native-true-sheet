@@ -65,6 +65,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)learnOffsetForDetentIndex:(NSInteger)index;
 
 /**
+ Returns the expected sheet height for a detent index: the UIKit-resolved
+ height plus the learned offset.
+ */
+- (CGFloat)resolvedHeightForIndex:(NSInteger)index;
+
+/**
  Finds the segment between detents for a given position.
  Returns YES if position is between two detents, NO if at edges.
  outIndex: The lower detent index of the segment (-1 if above first detent)

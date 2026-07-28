@@ -79,6 +79,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL dismissible;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
+
+/**
+ * YES while the keyboard has the sheet grown beyond its detent height.
+ * Offset learning is skipped in this state — the measured frame would bake
+ * ~keyboardHeight into the learned offset.
+ */
+@property (nonatomic, assign) BOOL keyboardSheetGrown;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;

@@ -16,6 +16,7 @@
 - **iOS**: A sheet stacked behind a child sheet no longer resizes its content in the background — UIKit's push-back scaling was reported as a size change, triggering spurious `onLayout`. ([#753](https://github.com/lodev09/react-native-true-sheet/pull/753) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for an absolute footer's height — focused inputs clear both the keyboard and the footer instead of hiding behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - A relative footer no longer floats above the keyboard — it stays in the layout flow behind it and keeps its safe-area inset. Only an absolute footer rises above the keyboard (`footerOptions.keyboardOffset` now only applies there). ([#754](https://github.com/lodev09/react-native-true-sheet/pull/754) by [@lodev09](https://github.com/lodev09))
+- Keyboard-driven sheet growth no longer corrupts `animatedIndex` — iOS skips detent offset learning while the keyboard has the sheet grown and re-settles once it's away; Android clamps expected detent tops to the available height. Settle emits now learn at the final frame and bypass the dedupe, so presenting and settling land exactly on the detent index. ([#761](https://github.com/lodev09/react-native-true-sheet/pull/761) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
