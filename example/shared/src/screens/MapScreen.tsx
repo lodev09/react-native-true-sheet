@@ -40,9 +40,7 @@ import {
   BasicSheet,
   FlatListSheet,
   GestureSheet,
-  KeyboardOffsetSheet,
   PromptSheet,
-  ResizeSyncSheet,
   ScrollViewSheet,
 } from '../components/sheets';
 
@@ -107,8 +105,6 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const keyboardOffsetSheet = useRef<TrueSheet>(null);
-  const resizeSyncSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -269,10 +265,6 @@ const MapScreenInner = ({
           />
           <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
         </ButtonGroup>
-        <ButtonGroup>
-          <Button text="Kbd Offset (#758)" onPress={() => keyboardOffsetSheet.current?.present()} />
-          <Button text="Resize Sync (#758)" onPress={() => resizeSyncSheet.current?.present(0)} />
-        </ButtonGroup>
         <Spacer />
         {showExtraContent && <DemoContent text="Extra content that changes height" />}
         <ButtonGroup>
@@ -295,8 +287,6 @@ const MapScreenInner = ({
         <ScrollViewSheet ref={scrollViewSheet} />
         <FlatListSheet ref={flatListSheet} />
         <GestureSheet ref={gestureSheet} />
-        <KeyboardOffsetSheet ref={keyboardOffsetSheet} />
-        <ResizeSyncSheet ref={resizeSyncSheet} />
       </ReanimatedTrueSheet>
     </View>
   );
