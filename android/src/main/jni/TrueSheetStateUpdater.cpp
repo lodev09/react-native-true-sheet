@@ -9,6 +9,7 @@
 #include <fbjni/fbjni.h>
 #include <react/fabric/StateWrapperImpl.h>
 #include <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewState.h>
+#include <react/renderer/components/TrueSheetSpec/TrueSheetInsets.h>
 #include <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
 #include <react/renderer/core/ConcreteState.h>
 
@@ -69,9 +70,16 @@ static jboolean updateFooterStateImmediate(
   // Copy the latest data so fields this bridge doesn't set survive the update
   TrueSheetFooterViewState newState = concreteState->getData();
   newState.bottomInset = bottomInset;
+  newState.initialized = true;
   concreteState->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
 
   return JNI_TRUE;
+}
+
+// Publishes the precalculated bottom safe-area inset so a late-mounted
+// footer's first layout is already padded (see TrueSheetFooterViewShadowNode).
+static void setBottomSafeArea(jni::alias_ref<jclass> /*clazz*/, jfloat insetDp) {
+  TrueSheetInsets::setBottomSafeArea(insetDp);
 }
 
 } // namespace facebook::react
@@ -82,6 +90,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/) {
         ->registerNatives({
             makeNativeMethod("nativeUpdateState", facebook::react::updateStateImmediate),
             makeNativeMethod("nativeUpdateFooterState", facebook::react::updateFooterStateImmediate),
+            makeNativeMethod("nativeSetBottomSafeArea", facebook::react::setBottomSafeArea),
         });
   });
 }

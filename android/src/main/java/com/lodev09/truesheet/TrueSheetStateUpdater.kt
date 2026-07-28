@@ -26,9 +26,20 @@ object TrueSheetStateUpdater {
   fun updateFooterState(stateWrapper: StateWrapper, bottomInsetDp: Float): Boolean =
     isAvailable && nativeUpdateFooterState(stateWrapper, bottomInsetDp)
 
+  /**
+   * Publishes the precalculated bottom safe-area inset so a late-mounted
+   * footer's first layout is already padded (see TrueSheetFooterViewShadowNode).
+   */
+  fun setBottomSafeArea(insetDp: Float) {
+    if (isAvailable) nativeSetBottomSafeArea(insetDp)
+  }
+
   @JvmStatic
   private external fun nativeUpdateState(stateWrapper: Any, width: Float, height: Float): Boolean
 
   @JvmStatic
   private external fun nativeUpdateFooterState(stateWrapper: Any, bottomInset: Float): Boolean
+
+  @JvmStatic
+  private external fun nativeSetBottomSafeArea(insetDp: Float)
 }

@@ -8,15 +8,7 @@ import {
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
 import { Button, DemoContent, Footer } from '@example/shared/components';
-import {
-  BLUE,
-  DARK,
-  DARK_BLUE,
-  FOOTER_HEIGHT,
-  GAP,
-  LIGHT_GRAY,
-  SPACING,
-} from '@example/shared/utils';
+import { BLUE, DARK, DARK_BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
 import {
   NotificationsSheetContent,
@@ -79,7 +71,7 @@ const DetailsSheet = () => {
   }, [navigation]);
 
   return (
-    <View style={[styles.sheetContent, { paddingBottom: FOOTER_HEIGHT + SPACING }]}>
+    <View style={styles.sheetContent}>
       <Text style={styles.sheetTitle}>Details Sheet</Text>
       <Text style={styles.sheetSubtitle}>This is a sheet screen using react-navigation.</Text>
       <DemoContent />

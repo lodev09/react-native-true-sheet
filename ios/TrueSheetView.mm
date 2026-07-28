@@ -24,6 +24,7 @@
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetInsets.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewShadowNode.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
@@ -782,6 +783,12 @@ using namespace facebook::react;
   _containerView.hasAutoDetent = _hasAutoDetent;
   _containerView.footerBottomInset = _controller.footerBottomInset;
   [_containerView setupScrollable];
+
+  // Publish the inset so a footer set later (e.g. navigation setOptions) is
+  // padded on its very first layout instead of resizing the sheet twice.
+  if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
+    TrueSheetInsets::setBottomSafeArea(_controller.footerBottomInset);
+  }
 }
 
 - (void)applySheetPropsUpdate {

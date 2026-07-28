@@ -556,6 +556,7 @@ export class TrueSheet
             </TrueSheetContentViewNativeComponent>
             {footer && (
               <TrueSheetFooterViewNativeComponent
+                autoBottomInset={insetAdjustment === 'automatic'}
                 style={[
                   styles.footer,
                   footerOptions?.position === 'absolute'

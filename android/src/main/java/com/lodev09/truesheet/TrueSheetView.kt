@@ -303,6 +303,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       it.absoluteFooter = viewController.absoluteFooter
       it.setupScrollable()
     }
+
+    // Publish the inset so a footer set later (e.g. navigation setOptions) is
+    // padded on its very first layout instead of resizing the sheet twice.
+    if (viewController.insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) {
+      TrueSheetStateUpdater.setBottomSafeArea(viewController.contentBottomInset.toFloat().pxToDp())
+    }
   }
 
   // ==================== Screen Event Observer ====================

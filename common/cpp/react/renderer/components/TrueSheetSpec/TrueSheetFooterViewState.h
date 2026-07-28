@@ -21,10 +21,14 @@ class TrueSheetFooterViewState final {
   TrueSheetFooterViewState(
       TrueSheetFooterViewState const &previousState,
       folly::dynamic data)
-      : bottomInset(static_cast<float>(data["bottomInset"].getDouble())) {}
+      : bottomInset(static_cast<float>(data["bottomInset"].getDouble())),
+        initialized(true) {}
 #endif
 
   float bottomInset{0};
+  // True once native has pushed a real inset — until then the shadow node
+  // seeds the layout from TrueSheetInsets (see TrueSheetFooterViewShadowNode)
+  bool initialized{false};
 
 #ifdef ANDROID
   folly::dynamic getDynamic() const;

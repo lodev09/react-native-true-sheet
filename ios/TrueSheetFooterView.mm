@@ -79,6 +79,7 @@ using namespace facebook::react;
 
   TrueSheetFooterViewState newState;
   newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
+  newState.initialized = true;
   // Immediate so the inset lands before anything reads the footer's height —
   // the async path races the keyboard caret scroll and detent setup, leaving
   // them an inset stale (same reason Android bridges through
