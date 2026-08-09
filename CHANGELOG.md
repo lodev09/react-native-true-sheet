@@ -28,6 +28,20 @@
 
 - Upgrade the examples to Expo SDK 57 and React Native 0.86. ([#755](https://github.com/lodev09/react-native-true-sheet/pull/755) by [@lodev09](https://github.com/lodev09))
 
+## 3.11.10
+
+### 🎉 New features
+
+- New `accessibilityOptions` prop for customizing (e.g. localizing) the accessibility strings announced by screen readers — grabber label/hint, detent state values (with `{index}`/`{count}` placeholders), Android expand/collapse action labels, and the sheet pane/dialog title on Android and Web. ([#770](https://github.com/lodev09/react-native-true-sheet/pull/770) by [@lodev09](https://github.com/lodev09))
+
+### 🐛 Bug fixes
+
+- **Android**: The first tap on a `Pressable` is no longer swallowed after a `TextInput` in the same sheet (or footer) is touched — the sheet's root views now forward `requestDisallowInterceptTouchEvent` up the tree (mirroring `ReactSurfaceView`) so the touch dispatcher sees the gesture end and the stale responder is released. ([#765](https://github.com/lodev09/react-native-true-sheet/pull/765), [#766](https://github.com/lodev09/react-native-true-sheet/pull/766) by [@lodev09](https://github.com/lodev09))
+- **Android**: TalkBack focus is now trapped within a modal (dimmed) sheet — background views are hidden from accessibility while presented and restored on dismiss, and focus moves into the sheet on present. The grabber announces as "Drag handle" and is read before sheet content. ([#768](https://github.com/lodev09/react-native-true-sheet/pull/768) by [@lodev09](https://github.com/lodev09))
+- **Android**: Hardware back press during sheet teardown no longer throws `Could not get native view tag` — when the native view is detached (e.g. host screen unmounted by navigation) before the back handler is removed, back press is now a no-op and propagates. ([#769](https://github.com/lodev09/react-native-true-sheet/pull/769) by [@lodev09](https://github.com/lodev09))
+- Keyboard-driven sheet growth no longer corrupts `animatedIndex` — iOS skips detent offset learning while the keyboard has the sheet grown and re-settles once it's away; Android clamps expected detent tops to the available height. Settle emits now learn at the final frame and bypass the dedupe, so presenting and settling land exactly on the detent index. ([#762](https://github.com/lodev09/react-native-true-sheet/pull/762) by [@lodev09](https://github.com/lodev09))
+- Touches on the sheet no longer leak to touchables outside it — tapping the sheet surface used to fire the `onPress` of a parent `Pressable` since unclaimed touches bubble up the React tree. The sheet container now claims them and stops touch propagation at the sheet boundary. ([#767](https://github.com/lodev09/react-native-true-sheet/pull/767) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.9
 
 ### 🐛 Bug fixes

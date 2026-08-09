@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.TrueSheetViewManagerDelegate
 import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
+import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.events.*
 
@@ -134,6 +135,25 @@ class TrueSheetViewManager :
       adaptive = if (options.hasKey("adaptive")) options.getBoolean("adaptive") else true
     )
     view.setGrabberOptions(grabberOptions)
+  }
+
+  @ReactProp(name = "accessibilityOptions")
+  override fun setAccessibilityOptions(view: TrueSheetView, options: ReadableMap?) {
+    if (options == null) {
+      view.setAccessibilityOptions(null)
+      return
+    }
+
+    val accessibilityOptions = AccessibilityOptions(
+      grabberLabel = if (options.hasKey("grabberLabel")) options.getString("grabberLabel") else null,
+      expandedValue = if (options.hasKey("expandedValue")) options.getString("expandedValue") else null,
+      collapsedValue = if (options.hasKey("collapsedValue")) options.getString("collapsedValue") else null,
+      detentValue = if (options.hasKey("detentValue")) options.getString("detentValue") else null,
+      expandActionLabel = if (options.hasKey("expandActionLabel")) options.getString("expandActionLabel") else null,
+      collapseActionLabel = if (options.hasKey("collapseActionLabel")) options.getString("collapseActionLabel") else null,
+      paneTitle = if (options.hasKey("paneTitle")) options.getString("paneTitle") else null
+    )
+    view.setAccessibilityOptions(accessibilityOptions)
   }
 
   @ReactProp(name = "dismissible", defaultBoolean = true)

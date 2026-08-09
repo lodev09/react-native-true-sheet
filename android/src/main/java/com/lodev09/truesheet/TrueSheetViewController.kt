@@ -6,6 +6,7 @@ import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -22,6 +23,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetBottomSheetBehavior
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
@@ -212,6 +214,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmedDetentIndex = 0
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
+  override var accessibilityOptions: AccessibilityOptions? = null
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
@@ -629,6 +632,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
     }
+
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   // =============================================================================
@@ -648,6 +653,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isSheetVisible = false
     wasHiddenByScreen = true
+    TrueSheetStackManager.updateBackgroundAccessibility()
     delegate?.viewControllerDidChangeVisibility(false)
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
@@ -668,6 +674,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setSheetVisibility(true)
     sheetView?.alpha = 1f
     updateDimAmount(animated = true)
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   /**
@@ -704,6 +711,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheet.setupBackground()
     sheet.setupElevation()
     sheet.setupGrabber()
+    sheet.setupAccessibility()
 
     if (shouldAnimatePresent) {
       isPresentAnimating = true
@@ -817,11 +825,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidFocus()
     sheetView?.updateGrabberAccessibilityValue(index, detents.size)
 
+    TrueSheetStackManager.updateBackgroundAccessibility()
+    // Move accessibility focus into the sheet
+    sheetView?.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+
     presentPromise?.invoke()
     presentPromise = null
   }
 
   private fun finishDismiss() {
+    TrueSheetStackManager.updateBackgroundAccessibility()
     restoreFocusedView()
     emitDidDismissEvents()
     cleanupSheet()
@@ -1410,6 +1423,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       jsPointerDispatcher.handleMotionEvent(event, it, true)
     }
     return super.onInterceptTouchEvent(event)
+  }
+
+  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+    // Mirrors ReactSurfaceView: keep receiving onInterceptTouchEvent so
+    // jsTouchDispatcher sees the gesture end, but forward the request up the tree.
+    parent?.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
 
   override fun onTouchEvent(event: MotionEvent): Boolean {

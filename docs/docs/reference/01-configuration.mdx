@@ -256,6 +256,30 @@ Options for customizing the grabber appearance. Only applies when [`grabber`](#g
 On iOS, when `grabberOptions` is not provided, the native system grabber is used. When any option is provided, a custom grabber view with vibrancy effect is rendered instead.
 :::
 
+## `accessibilityOptions`
+
+Options for customizing (e.g. localizing) the accessibility strings announced by screen readers.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`AccessibilityOptions`](types#accessibilityoptions) | | ✅ | ✅ | ✅ |
+
+```tsx
+<TrueSheet
+  accessibilityOptions={{
+    grabberLabel: 'Poignée de déplacement',
+    expandedValue: 'Développé',
+    collapsedValue: 'Réduit',
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+:::info
+On iOS, the grabber strings only apply when [`grabberOptions`](#grabberoptions) is provided. Without it, iOS uses the system grabber which is already localized by the system.
+:::
+
 ## `header`
 
 A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/header) for example.

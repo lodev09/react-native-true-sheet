@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useState } from 'react';
+import { forwardRef, useCallback, useRef, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  Pressable,
 } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
@@ -30,9 +31,10 @@ interface ScrollViewSheetProps extends TrueSheetProps {}
 
 const HeavyItem = ({ index }: { index: number }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const sheet = useRef<TrueSheet>(null);
 
   return (
-    <View style={styles.item}>
+    <Pressable style={styles.item} onPress={() => console.log(`HeavyItem #${index + 1} pressed!`)}>
       <View style={styles.imageContainer}>
         {!imageLoaded && <ActivityIndicator style={styles.loader} size="small" />}
         <Image
@@ -41,13 +43,18 @@ const HeavyItem = ({ index }: { index: number }) => {
           onLoad={() => setImageLoaded(true)}
         />
       </View>
-      <View style={styles.itemContent}>
+      <Pressable style={styles.itemContent} onPress={() => sheet.current?.present()}>
         <Text style={styles.itemTitle}>Item #{index + 1}</Text>
         <Text style={styles.itemDescription}>
           Complex component with images and text to test heavy rendering and lazy loading.
         </Text>
-      </View>
-    </View>
+      </Pressable>
+      <TrueSheet ref={sheet} detents={[0.5]} backgroundColor={Platform.select({ android: DARK })}>
+        <View style={styles.placeholder}>
+          <Text style={styles.placeholderText}>Sheet content</Text>
+        </View>
+      </TrueSheet>
+    </Pressable>
   );
 };
 

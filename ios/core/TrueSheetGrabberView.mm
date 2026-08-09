@@ -8,6 +8,10 @@
 
 #import "TrueSheetGrabberView.h"
 
+#import <React/RCTConversions.h>
+
+using namespace facebook::react;
+
 @implementation GrabberOptions
 
 - (instancetype)init {
@@ -66,9 +70,7 @@ static const CGFloat kHitPaddingVertical = 10.0;
 - (void)setupView {
   self.clipsToBounds = NO;
   self.isAccessibilityElement = YES;
-  self.accessibilityLabel = @"Sheet Grabber";
   self.accessibilityTraits = UIAccessibilityTraitAdjustable | UIAccessibilityTraitButton;
-  self.accessibilityHint = @"Double-tap to expand. Swipe up or down to resize the sheet";
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
   [self addGestureRecognizer:tap];
@@ -103,6 +105,12 @@ static const CGFloat kHitPaddingVertical = 10.0;
 
 #pragma mark - Public
 
+- (void)setAccessibilityOptions:(TrueSheetViewAccessibilityOptionsStruct)accessibilityOptions {
+  _accessibilityOptions = accessibilityOptions;
+  self.accessibilityLabel = RCTNSStringFromStringNilIfEmpty(accessibilityOptions.grabberLabel);
+  self.accessibilityHint = RCTNSStringFromStringNilIfEmpty(accessibilityOptions.grabberHint);
+}
+
 - (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count {
   if (index < 0 || count <= 0) {
     self.accessibilityValue = nil;
@@ -110,11 +118,13 @@ static const CGFloat kHitPaddingVertical = 10.0;
   }
 
   if (index >= count - 1) {
-    self.accessibilityValue = @"Expanded";
+    self.accessibilityValue = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.expandedValue);
   } else if (index == 0) {
-    self.accessibilityValue = @"Collapsed";
+    self.accessibilityValue = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.collapsedValue);
   } else {
-    self.accessibilityValue = [NSString stringWithFormat:@"Detent %ld of %ld", (long)(index + 1), (long)count];
+    NSString *value = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.detentValue);
+    value = [value stringByReplacingOccurrencesOfString:@"{index}" withString:@(index + 1).stringValue];
+    self.accessibilityValue = [value stringByReplacingOccurrencesOfString:@"{count}" withString:@(count).stringValue];
   }
 }
 

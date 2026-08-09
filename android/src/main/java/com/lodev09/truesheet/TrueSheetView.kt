@@ -15,6 +15,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
+import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensEventObserver
 import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
@@ -223,6 +224,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented) {
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
+      TrueSheetStackManager.updateBackgroundAccessibility()
     }
   }
 
@@ -232,6 +234,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented) {
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
+      TrueSheetStackManager.updateBackgroundAccessibility()
     }
   }
 
@@ -259,6 +262,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setGrabberOptions(options: GrabberOptions?) {
     viewController.grabberOptions = options
+  }
+
+  fun setAccessibilityOptions(options: AccessibilityOptions?) {
+    viewController.accessibilityOptions = options
   }
 
   fun setSheetElevation(elevation: Float) {

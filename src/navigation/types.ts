@@ -129,6 +129,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'draggable'
   | 'grabber'
   | 'grabberOptions'
+  | 'accessibilityOptions'
   | 'dimmed'
   | 'dimmedDetentIndex'
   | 'backgroundBlur'

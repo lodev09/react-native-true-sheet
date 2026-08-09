@@ -42,6 +42,7 @@ import {
   findNodeHandle,
   processColor,
   type NativeEventSubscription,
+  type GestureResponderEvent,
 } from 'react-native';
 
 const LINKING_ERROR =
@@ -56,6 +57,13 @@ if (!TrueSheetModule) {
 }
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
+
+// Claim touches that no descendant claimed so the responder negotiation
+// doesn't bubble up to touchables outside the sheet
+const absorbUnclaimedTouches = () => true;
+
+// Stop raw touch events from bubbling past the sheet to outside ancestors
+const stopTouchPropagation = (event: GestureResponderEvent) => event.stopPropagation();
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -357,12 +365,18 @@ export class TrueSheet
   private handleBackPress(): boolean {
     if (!this.isPresented || !this.isSheetVisible) return false;
 
+    // The native view can be detached (e.g. host screen unmounted by navigation)
+    // before onDidDismiss removes this subscription. Treat back press as a no-op
+    // instead of throwing from the handle getter.
+    const nodeHandle = findNodeHandle(this.nativeRef.current);
+    if (nodeHandle == null || nodeHandle === -1) return false;
+
     // When not dismissible, let back propagate (e.g. navigation goes back to the previous screen)
     if (this.props.dismissible === false) {
       return this.props.onBackPress?.() ?? false;
     }
 
-    TrueSheetModule?.handleBackPress(this.handle);
+    TrueSheetModule?.handleBackPress(nodeHandle);
     return this.props.onBackPress?.() ?? true;
   }
 
@@ -446,6 +460,7 @@ export class TrueSheet
       draggable = true,
       grabber = true,
       grabberOptions,
+      accessibilityOptions,
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
@@ -504,6 +519,7 @@ export class TrueSheet
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={this.resolvedGrabberOptions}
+        accessibilityOptions={accessibilityOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={initialDetentIndex}
@@ -539,7 +555,14 @@ export class TrueSheet
         onVisibilityChange={this.onVisibilityChange}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent style={styles.container}>
+          <TrueSheetContainerViewNativeComponent
+            style={styles.container}
+            onStartShouldSetResponder={absorbUnclaimedTouches}
+            onTouchStart={stopTouchPropagation}
+            onTouchMove={stopTouchPropagation}
+            onTouchEnd={stopTouchPropagation}
+            onTouchCancel={stopTouchPropagation}
+          >
             {header && (
               <TrueSheetHeaderViewNativeComponent
                 style={[

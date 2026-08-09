@@ -16,6 +16,17 @@ type GrabberOptionsType = Readonly<{
   adaptive?: WithDefault<boolean, true>;
 }>;
 
+type AccessibilityOptionsType = Readonly<{
+  grabberLabel?: WithDefault<string, 'Sheet Grabber'>;
+  grabberHint?: WithDefault<string, 'Double-tap to expand. Swipe up or down to resize the sheet'>;
+  expandedValue?: WithDefault<string, 'Expanded'>;
+  collapsedValue?: WithDefault<string, 'Collapsed'>;
+  detentValue?: WithDefault<string, 'Detent {index} of {count}'>;
+  expandActionLabel?: WithDefault<string, 'Expand'>;
+  collapseActionLabel?: WithDefault<string, 'Collapse'>;
+  paneTitle?: WithDefault<string, 'Bottom sheet'>;
+}>;
+
 type BlurOptionsType = Readonly<{
   intensity?: WithDefault<Double, -1>;
   interaction?: WithDefault<boolean, true>;
@@ -106,6 +117,7 @@ export interface NativeProps extends ViewProps {
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
   grabberOptions?: GrabberOptionsType;
+  accessibilityOptions?: AccessibilityOptionsType;
   dismissible?: WithDefault<boolean, true>;
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;

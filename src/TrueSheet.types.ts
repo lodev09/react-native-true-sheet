@@ -89,6 +89,71 @@ export interface GrabberOptions {
 }
 
 /**
+ * Options for customizing (e.g. localizing) the accessibility strings
+ * announced by screen readers.
+ *
+ * On iOS, the grabber strings only apply when `grabberOptions` is provided.
+ * Without it, iOS uses the system grabber which is already localized.
+ */
+export interface AccessibilityOptions {
+  /**
+   * The accessibility label of the grabber.
+   *
+   * @default iOS: 'Sheet Grabber', Android: 'Drag handle'
+   */
+  grabberLabel?: string;
+  /**
+   * The accessibility hint of the grabber.
+   *
+   * @platform ios
+   * @default 'Double-tap to expand. Swipe up or down to resize the sheet'
+   */
+  grabberHint?: string;
+  /**
+   * The value announced when the sheet is at the last detent.
+   *
+   * @default 'Expanded'
+   */
+  expandedValue?: string;
+  /**
+   * The value announced when the sheet is at the first detent.
+   *
+   * @default 'Collapsed'
+   */
+  collapsedValue?: string;
+  /**
+   * The value announced when the sheet is at an intermediate detent.
+   * Supports `{index}` and `{count}` placeholders.
+   *
+   * @default 'Detent {index} of {count}'
+   */
+  detentValue?: string;
+  /**
+   * The label of the expand accessibility action.
+   *
+   * @platform android
+   * @default 'Expand'
+   */
+  expandActionLabel?: string;
+  /**
+   * The label of the collapse accessibility action.
+   *
+   * @platform android
+   * @default 'Collapse'
+   */
+  collapseActionLabel?: string;
+  /**
+   * The title announced when the sheet appears.
+   * Sets the accessibility pane title on Android and the
+   * hidden dialog title on Web.
+   *
+   * @platform android, web
+   * @default Android: 'Bottom sheet', Web: 'Sheet'
+   */
+  paneTitle?: string;
+}
+
+/**
  * Scroll edge effect style for iOS 26+.
  * Controls the blur/gradient overlay applied to scroll view edges.
  *
@@ -385,6 +450,12 @@ export interface TrueSheetProps extends ViewProps {
    * Only applies when `grabber` is `true`.
    */
   grabberOptions?: GrabberOptions;
+
+  /**
+   * Options for customizing (e.g. localizing) the accessibility strings
+   * announced by screen readers.
+   */
+  accessibilityOptions?: AccessibilityOptions;
 
   /**
    * Controls the sheet presentation style on iPad and web (landscape/tablet).

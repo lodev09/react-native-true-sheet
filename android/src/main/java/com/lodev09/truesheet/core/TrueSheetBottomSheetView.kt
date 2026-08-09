@@ -31,6 +31,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val anchorOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
+  val accessibilityOptions: AccessibilityOptions?
   val draggable: Boolean
   fun bottomSheetViewDidTapGrabber()
   fun bottomSheetViewDidAccessibilityIncrement()
@@ -78,8 +79,6 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     // Allow content to extend beyond bounds (for footer positioning)
     clipChildren = false
     clipToPadding = false
-
-    ViewCompat.setAccessibilityPaneTitle(this, "Bottom sheet")
   }
 
   override fun setTranslationY(translationY: Float) {
@@ -195,21 +194,35 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   fun setupGrabber() {
     findViewWithTag<View>(GRABBER_TAG)?.let { removeView(it) }
 
+    // Content view is the controller, added before the grabber (delegate is the controller)
+    val contentView = delegate as? View
+
     val isEnabled = delegate?.grabber ?: true
     val isDraggable = delegate?.draggable ?: true
-    if (!isEnabled || !isDraggable) return
+    if (!isEnabled || !isDraggable) {
+      contentView?.accessibilityTraversalAfter = View.NO_ID
+      return
+    }
 
-    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
+    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions, delegate?.accessibilityOptions).apply {
       tag = GRABBER_TAG
+      id = View.generateViewId()
       onAccessibilityIncrement = { delegate?.bottomSheetViewDidAccessibilityIncrement() }
       onAccessibilityDecrement = { delegate?.bottomSheetViewDidAccessibilityDecrement() }
     }
 
     addView(grabberView)
+
+    // Grabber is added after content for z-ordering, but should be announced first
+    contentView?.accessibilityTraversalAfter = grabberView.id
   }
 
   fun updateGrabberAccessibilityValue(index: Int, detentCount: Int) {
     findViewWithTag<TrueSheetGrabberView>(GRABBER_TAG)?.updateAccessibilityValue(index, detentCount)
+  }
+
+  fun setupAccessibility() {
+    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle ?: "Bottom sheet")
   }
 
   // =============================================================================
