@@ -1347,6 +1347,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     return super.onInterceptTouchEvent(event)
   }
 
+  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+    // Mirrors ReactSurfaceView: keep receiving onInterceptTouchEvent so
+    // jsTouchDispatcher sees the gesture end, but forward the request up the tree.
+    parent?.requestDisallowInterceptTouchEvent(disallowIntercept)
+  }
+
   override fun onTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
       jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
