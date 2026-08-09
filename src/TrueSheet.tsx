@@ -365,12 +365,18 @@ export class TrueSheet
   private handleBackPress(): boolean {
     if (!this.isPresented || !this.isSheetVisible) return false;
 
+    // The native view can be detached (e.g. host screen unmounted by navigation)
+    // before onDidDismiss removes this subscription. Treat back press as a no-op
+    // instead of throwing from the handle getter.
+    const nodeHandle = findNodeHandle(this.nativeRef.current);
+    if (nodeHandle == null || nodeHandle === -1) return false;
+
     // When not dismissible, let back propagate (e.g. navigation goes back to the previous screen)
     if (this.props.dismissible === false) {
       return this.props.onBackPress?.() ?? false;
     }
 
-    TrueSheetModule?.handleBackPress(this.handle);
+    TrueSheetModule?.handleBackPress(nodeHandle);
     return this.props.onBackPress?.() ?? true;
   }
 
