@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
 import { Button, DemoContent } from '@example/shared/components';
 import { GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';

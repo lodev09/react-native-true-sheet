@@ -14,7 +14,7 @@
     "@example/shared": "*",
     "@lodev09/react-native-true-sheet": "workspace:*",
     "@lugg/maps": "1.0.0-beta.14",
-    "@react-navigation/native": "^7.2.2",
+    "@react-navigation/native": "^7.3.16",
     "@react-navigation/native-stack": "^7.14.10",
     "react": "19.2.3",
     "react-native": "0.86.0",

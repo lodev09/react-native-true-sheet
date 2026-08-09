@@ -124,6 +124,61 @@ const MyFooter = () => {
 See the [Footer guide](guides/footer#safe-area-handling) for more details.
 :::
 
+### 6. Sheet Navigator Requires `@react-navigation/native` 7.3+
+
+The navigator is now built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so one implementation works with both React Navigation and Expo Router. For React Navigation apps, the `/navigation` entry point now requires `@react-navigation/native` version `7.3.0` or higher (previously `@react-navigation/core`):
+
+```sh
+yarn add @react-navigation/native@^7.3.0
+```
+
+Your navigator code is unchanged — `createTrueSheetNavigator`, `useTrueSheetNavigation`, screen options, `navigation.resize()`, and listeners all keep the same API.
+
+### 7. Expo Router Uses the New `/navigation/expo-router` Entry Point
+
+The `withLayoutContext` recipe is replaced by a ready-to-use `Sheet` layout. Requires Expo SDK 57+ — no `@react-navigation/*` install needed.
+
+**Migration:**
+
+```tsx
+// ❌ v3 — manual withLayoutContext wrapper
+import { withLayoutContext } from 'expo-router';
+import {
+  createTrueSheetNavigator,
+  type TrueSheetNavigationEventMap,
+  type TrueSheetNavigationOptions,
+  type TrueSheetNavigationState,
+} from '@lodev09/react-native-true-sheet/navigation';
+
+type ParamListBase = Record<string, object | undefined>;
+
+const { Navigator } = createTrueSheetNavigator();
+
+const Sheet = withLayoutContext<
+  TrueSheetNavigationOptions,
+  typeof Navigator,
+  TrueSheetNavigationState<ParamListBase>,
+  TrueSheetNavigationEventMap
+>(Navigator);
+
+// ✅ v4 — import the Sheet layout directly
+import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+In sheet screens, import `useTrueSheetNavigation` from the same entry point:
+
+```tsx
+// ❌ v3
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
+
+// ✅ v4 — Expo Router apps only
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+:::tip
+See the [Navigation guide](guides/navigation#expo-router) for more details.
+:::
+
 ## New Features in v4
 
 ### 1. `auto` Detent with Scrollables
@@ -143,6 +198,26 @@ The new `headerOptions` prop mirrors `footerOptions` — set `position` to `'abs
 ### 3. Synchronous Per-Detent Layout
 
 The container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms. Flex layouts (e.g. a bottom-pinned button) follow the sheet's edge frame-by-frame instead of being sized to the largest detent.
+
+### 4. First-Class Expo Router Support
+
+The new `/navigation/expo-router` entry point exports a ready-to-use `Sheet` layout that integrates with Expo Router's built-in navigation directly. See the [Navigation guide](guides/navigation#expo-router).
+
+### 5. Static API with `createTrueSheetScreen`
+
+The navigator now supports React Navigation's [static API](https://reactnavigation.org/docs/static-configuration):
+
+```tsx
+const Sheet = createTrueSheetNavigator({
+  screens: {
+    Main: MainScreen,
+    Details: createTrueSheetScreen({
+      screen: DetailsSheet,
+      options: { detents: ['auto', 1] },
+    }),
+  },
+});
+```
 
 ## Step-by-Step Migration
 
@@ -172,6 +247,8 @@ The container is sized to the sheet's visible height per detent and tracks it in
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers
+   - If using the Sheet Navigator, update `@react-navigation/native` to 7.3+
+   - If using Expo Router, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router` and update `useTrueSheetNavigation` imports
 6. **Test your app:**
    ```sh
    npx react-native run-ios

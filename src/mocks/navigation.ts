@@ -13,6 +13,11 @@ export const createTrueSheetNavigator = jest.fn(() => ({
 }));
 
 /**
+ * Mock createTrueSheetScreen for testing the static API.
+ */
+export const createTrueSheetScreen = jest.fn((config: object) => config);
+
+/**
  * Mock TrueSheetActions for testing.
  */
 export const TrueSheetActions = {
@@ -60,7 +65,7 @@ export const useTrueSheetNavigation = jest.fn(
     }) as unknown as TrueSheetNavigationProp<T>
 );
 
-export type { TrueSheetActionType } from '../navigation/TrueSheetRouter';
+export type { TrueSheetActionType } from '../navigation/actions';
 export type { DetentInfoEventPayload, PositionChangeEventPayload } from '../TrueSheet.types';
 export type {
   TrueSheetNavigationEventMap,

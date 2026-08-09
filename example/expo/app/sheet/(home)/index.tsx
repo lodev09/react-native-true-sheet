@@ -12,7 +12,7 @@ export default function SheetHomeScreen() {
       <View style={styles.heading}>
         <Text style={styles.title}>Sheet Navigator</Text>
         <Text style={styles.subtitle}>
-          Using createTrueSheetNavigator with expo-router's withLayoutContext.
+          Using the Sheet layout from the expo-router entry point.
         </Text>
       </View>
       <Button text="Open Details Sheet" onPress={() => router.push('/sheet/details')} />

@@ -8,12 +8,14 @@ import type {
   RouteProp,
   StackActionHelpers,
 } from '@react-navigation/core';
+import type { NavigatorArgs } from 'standard-navigation';
 
 import type {
   DetentInfoEventPayload,
   PositionChangeEventPayload,
   TrueSheetProps,
 } from '../TrueSheet.types';
+import type { TrueSheetActionType } from './actions';
 
 export type PositionChangeHandler = (payload: PositionChangeEventPayload) => void;
 
@@ -83,6 +85,36 @@ export type TrueSheetNavigationState<ParamList extends ParamListBase> = Omit<
     closing?: boolean;
   })[];
 };
+
+/**
+ * `TrueSheetNavigationEventMap` in the `standard-navigation` event-map shape.
+ */
+export type TrueSheetStandardEventMap = {
+  [K in keyof TrueSheetNavigationEventMap]: {
+    data: TrueSheetNavigationEventMap[K]['data'];
+    canPreventDefault: false;
+  };
+};
+
+export type TrueSheetRoute = TrueSheetNavigationState<ParamListBase>['routes'][number];
+
+export type TrueSheetDispatch = (action: TrueSheetActionType) => void;
+
+export type TrueSheetEmitFn = NavigatorArgs<
+  TrueSheetNavigationOptions,
+  TrueSheetStandardEventMap
+>['emitter']['emit'];
+
+/**
+ * Props injected into the navigator content by each adapter
+ * (React Navigation's `mapper` / Expo Router's `createProps`).
+ * Raw routes carry the custom fields (`closing`, `resizeIndex`, `resizeKey`)
+ * that the standard state strips out.
+ */
+export interface TrueSheetNavigatorContentExtraProps {
+  routes: TrueSheetRoute[];
+  dispatch: TrueSheetDispatch;
+}
 
 export type TrueSheetActionHelpers<ParamList extends ParamListBase> =
   StackActionHelpers<ParamList> & {

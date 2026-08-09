@@ -16,11 +16,13 @@ You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets
 
 ## Sheet Navigator
 
-TrueSheet provides a custom navigator for React Navigation. The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
+TrueSheet provides a custom navigator built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so the same implementation works with both React Navigation and [Expo Router](#expo-router). The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
 
 ```bash
 npm install @react-navigation/native
 ```
+
+Requires `@react-navigation/native` version `7.3.0` or higher.
 
 ### Basic Usage
 
@@ -49,6 +51,27 @@ function App() {
     </NavigationContainer>
   );
 }
+```
+
+### Static API
+
+The navigator also supports React Navigation's [static API](https://reactnavigation.org/docs/static-configuration) via `createTrueSheetScreen`:
+
+```tsx
+import {
+  createTrueSheetNavigator,
+  createTrueSheetScreen,
+} from '@lodev09/react-native-true-sheet/navigation';
+
+const Sheet = createTrueSheetNavigator({
+  screens: {
+    Main: MainScreen,
+    Details: createTrueSheetScreen({
+      screen: DetailsSheet,
+      options: { detents: ['auto', 1], cornerRadius: 16 },
+    }),
+  },
+});
 ```
 
 ### Wrapping Existing Navigation
@@ -214,7 +237,9 @@ See [Lifecycle Events](../reference/events) for more details.
 
 ## Expo Router
 
-The [Sheet Navigator](#sheet-navigator) works with Expo Router using `withLayoutContext`. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
+TrueSheet ships a ready-to-use `Sheet` layout for Expo Router via the `/navigation/expo-router` entry point. It integrates with Expo Router's built-in navigation directly — no `@react-navigation/*` install needed. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
+
+Requires Expo SDK 57+ (`expo-router` version `57.0.0` or higher).
 
 ```
 app/
@@ -225,24 +250,7 @@ app/
 
 ```tsx
 // app/_layout.tsx
-import { withLayoutContext } from 'expo-router';
-import {
-  createTrueSheetNavigator,
-  type TrueSheetNavigationEventMap,
-  type TrueSheetNavigationOptions,
-  type TrueSheetNavigationState,
-} from '@lodev09/react-native-true-sheet/navigation';
-
-type ParamListBase = Record<string, object | undefined>;
-
-const { Navigator } = createTrueSheetNavigator();
-
-const Sheet = withLayoutContext<
-  TrueSheetNavigationOptions,
-  typeof Navigator,
-  TrueSheetNavigationState<ParamListBase>,
-  TrueSheetNavigationEventMap
->(Navigator);
+import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
 export default function SheetLayout() {
   return (
@@ -260,11 +268,13 @@ export default function SheetLayout() {
 }
 ```
 
-See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
+Inside sheet screens, import `useTrueSheetNavigation` from the same entry point:
 
-:::note
-The Sheet Navigator works with Expo Router SDK 56+ without installing `@react-navigation/native`. Under SDK 56, Expo Router no longer allows app code to import directly from `@react-navigation/*` — import navigation types/utilities from `expo-router` (or `expo-router/react-navigation`) instead. See the [Expo Router SDK 55 → 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/).
-:::
+```tsx
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
 
 ## Navigating from Sheets
 
