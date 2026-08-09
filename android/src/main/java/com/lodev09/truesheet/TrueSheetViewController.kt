@@ -6,6 +6,7 @@ import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -634,6 +635,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
     }
+
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   // =============================================================================
@@ -653,6 +656,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isSheetVisible = false
     wasHiddenByScreen = true
+    TrueSheetStackManager.updateBackgroundAccessibility()
     delegate?.viewControllerDidChangeVisibility(false)
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
@@ -673,6 +677,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setSheetVisibility(true)
     sheetView?.alpha = 1f
     updateDimAmount(animated = true)
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   /**
@@ -821,11 +826,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidFocus()
     sheetView?.updateGrabberAccessibilityValue(index, detents.size)
 
+    TrueSheetStackManager.updateBackgroundAccessibility()
+    // Move accessibility focus into the sheet
+    sheetView?.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+
     presentPromise?.invoke()
     presentPromise = null
   }
 
   private fun finishDismiss() {
+    TrueSheetStackManager.updateBackgroundAccessibility()
     restoreFocusedView()
     emitDidDismissEvents()
     cleanupSheet()
