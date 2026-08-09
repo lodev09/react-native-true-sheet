@@ -79,8 +79,6 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     // Allow content to extend beyond bounds (for footer positioning)
     clipChildren = false
     clipToPadding = false
-
-    ViewCompat.setAccessibilityPaneTitle(this, "Bottom sheet")
   }
 
   override fun setTranslationY(translationY: Float) {
@@ -224,7 +222,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   fun setupAccessibility() {
-    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle ?: "Bottom sheet")
+    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle)
   }
 
   // =============================================================================

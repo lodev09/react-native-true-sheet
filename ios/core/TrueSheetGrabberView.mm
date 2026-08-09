@@ -22,9 +22,6 @@
 @implementation AccessibilityOptions
 @end
 
-static NSString *const kDefaultAccessibilityLabel = @"Sheet Grabber";
-static NSString *const kDefaultAccessibilityHint = @"Double-tap to expand. Swipe up or down to resize the sheet";
-
 static const CGFloat kDefaultGrabberWidth = 36.0;
 static const CGFloat kDefaultGrabberHeight = 5.0;
 static const CGFloat kDefaultGrabberTopMargin = 5.0;
@@ -72,9 +69,7 @@ static const CGFloat kHitPaddingVertical = 10.0;
 - (void)setupView {
   self.clipsToBounds = NO;
   self.isAccessibilityElement = YES;
-  self.accessibilityLabel = kDefaultAccessibilityLabel;
   self.accessibilityTraits = UIAccessibilityTraitAdjustable | UIAccessibilityTraitButton;
-  self.accessibilityHint = kDefaultAccessibilityHint;
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
   [self addGestureRecognizer:tap];
@@ -111,8 +106,8 @@ static const CGFloat kHitPaddingVertical = 10.0;
 
 - (void)setAccessibilityOptions:(AccessibilityOptions *)accessibilityOptions {
   _accessibilityOptions = accessibilityOptions;
-  self.accessibilityLabel = accessibilityOptions.grabberLabel ?: kDefaultAccessibilityLabel;
-  self.accessibilityHint = accessibilityOptions.grabberHint ?: kDefaultAccessibilityHint;
+  self.accessibilityLabel = accessibilityOptions.grabberLabel;
+  self.accessibilityHint = accessibilityOptions.grabberHint;
 }
 
 - (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count {
@@ -122,15 +117,13 @@ static const CGFloat kHitPaddingVertical = 10.0;
   }
 
   if (index >= count - 1) {
-    self.accessibilityValue = _accessibilityOptions.expandedValue ?: @"Expanded";
+    self.accessibilityValue = _accessibilityOptions.expandedValue;
   } else if (index == 0) {
-    self.accessibilityValue = _accessibilityOptions.collapsedValue ?: @"Collapsed";
-  } else if (_accessibilityOptions.detentValue) {
+    self.accessibilityValue = _accessibilityOptions.collapsedValue;
+  } else {
     NSString *value = [_accessibilityOptions.detentValue stringByReplacingOccurrencesOfString:@"{index}"
                                                                                    withString:@(index + 1).stringValue];
     self.accessibilityValue = [value stringByReplacingOccurrencesOfString:@"{count}" withString:@(count).stringValue];
-  } else {
-    self.accessibilityValue = [NSString stringWithFormat:@"Detent %ld of %ld", (long)(index + 1), (long)count];
   }
 }
 

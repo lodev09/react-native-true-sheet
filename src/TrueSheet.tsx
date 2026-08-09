@@ -10,6 +10,7 @@ import {
 
 import type {
   TrueSheetProps,
+  AccessibilityOptions,
   TrueSheetMethods,
   TrueSheetStaticMethods,
   DragBeginEvent,
@@ -65,6 +66,17 @@ const absorbUnclaimedTouches = () => true;
 // Stop raw touch events from bubbling past the sheet to outside ancestors
 const stopTouchPropagation = (event: GestureResponderEvent) => event.stopPropagation();
 
+const DEFAULT_ACCESSIBILITY_OPTIONS: AccessibilityOptions = {
+  grabberLabel: Platform.select({ ios: 'Sheet Grabber', default: 'Drag handle' }),
+  grabberHint: 'Double-tap to expand. Swipe up or down to resize the sheet',
+  expandedValue: 'Expanded',
+  collapsedValue: 'Collapsed',
+  detentValue: 'Detent {index} of {count}',
+  expandActionLabel: 'Expand',
+  collapseActionLabel: 'Collapse',
+  paneTitle: 'Bottom sheet',
+};
+
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
 }
@@ -79,6 +91,8 @@ export class TrueSheet
 
   private cachedGrabberOptions: TrueSheetProps['grabberOptions'] | undefined;
   private resolvedGrabberOptions: Record<string, unknown> | undefined;
+  private cachedAccessibilityOptions: TrueSheetProps['accessibilityOptions'] | undefined;
+  private resolvedAccessibilityOptions: AccessibilityOptions = DEFAULT_ACCESSIBILITY_OPTIONS;
   private backHandlerSubscription: NativeEventSubscription | null = null;
   private isPresented: boolean = false;
   private isSheetVisible: boolean = true;
@@ -507,6 +521,15 @@ export class TrueSheet
       };
     }
 
+    // Merge with defaults so native always receives the full set of strings
+    if (accessibilityOptions !== this.cachedAccessibilityOptions) {
+      this.cachedAccessibilityOptions = accessibilityOptions;
+      this.resolvedAccessibilityOptions = {
+        ...DEFAULT_ACCESSIBILITY_OPTIONS,
+        ...accessibilityOptions,
+      };
+    }
+
     return (
       <TrueSheetViewNativeComponent
         {...rest}
@@ -519,7 +542,7 @@ export class TrueSheet
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={this.resolvedGrabberOptions}
-        accessibilityOptions={accessibilityOptions}
+        accessibilityOptions={this.resolvedAccessibilityOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={initialDetentIndex}

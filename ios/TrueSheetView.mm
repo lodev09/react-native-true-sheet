@@ -230,25 +230,16 @@ using namespace facebook::react;
     _controller.grabberOptions = nil;
   }
 
-  // Accessibility options - applied to the custom grabber
+  // Accessibility options - applied to the custom grabber.
+  // Defaults are merged in on the JS side, so all strings are always set.
   const auto &a11yOpts = newProps.accessibilityOptions;
-  NSString *grabberLabel = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberLabel);
-  NSString *grabberHint = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberHint);
-  NSString *expandedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.expandedValue);
-  NSString *collapsedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.collapsedValue);
-  NSString *detentValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.detentValue);
-
-  if (grabberLabel || grabberHint || expandedValue || collapsedValue || detentValue) {
-    AccessibilityOptions *options = [[AccessibilityOptions alloc] init];
-    options.grabberLabel = grabberLabel;
-    options.grabberHint = grabberHint;
-    options.expandedValue = expandedValue;
-    options.collapsedValue = collapsedValue;
-    options.detentValue = detentValue;
-    _controller.accessibilityOptions = options;
-  } else {
-    _controller.accessibilityOptions = nil;
-  }
+  AccessibilityOptions *accessibilityOptions = [[AccessibilityOptions alloc] init];
+  accessibilityOptions.grabberLabel = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberLabel);
+  accessibilityOptions.grabberHint = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberHint);
+  accessibilityOptions.expandedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.expandedValue);
+  accessibilityOptions.collapsedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.collapsedValue);
+  accessibilityOptions.detentValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.detentValue);
+  _controller.accessibilityOptions = accessibilityOptions;
 
   _controller.presentation = newProps.presentation;
   _controller.dismissible = newProps.dismissible;
