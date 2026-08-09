@@ -42,6 +42,7 @@ import {
   findNodeHandle,
   processColor,
   type NativeEventSubscription,
+  type GestureResponderEvent,
 } from 'react-native';
 
 const LINKING_ERROR =
@@ -56,6 +57,13 @@ if (!TrueSheetModule) {
 }
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
+
+// Claim touches that no descendant claimed so the responder negotiation
+// doesn't bubble up to touchables outside the sheet
+const absorbUnclaimedTouches = () => true;
+
+// Stop raw touch events from bubbling past the sheet to outside ancestors
+const stopTouchPropagation = (event: GestureResponderEvent) => event.stopPropagation();
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -538,6 +546,11 @@ export class TrueSheet
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent
             style={scrollable ? styles.scrollableContainer : undefined}
+            onStartShouldSetResponder={absorbUnclaimedTouches}
+            onTouchStart={stopTouchPropagation}
+            onTouchMove={stopTouchPropagation}
+            onTouchEnd={stopTouchPropagation}
+            onTouchCancel={stopTouchPropagation}
           >
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
