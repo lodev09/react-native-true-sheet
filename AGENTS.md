@@ -90,4 +90,6 @@ Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-n
 
 One entry per PR — summarize the PR's user-facing change in a single entry under its primary section.
 
+Be concise — one or two short sentences stating the change and what it means for the user. No implementation details.
+
 Sort entries by platform: **iOS** first, then **Android**, then **Web**, then cross-platform or unscoped entries last.
