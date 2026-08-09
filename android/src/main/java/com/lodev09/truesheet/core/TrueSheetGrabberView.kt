@@ -94,7 +94,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     addView(pillView)
 
     isFocusable = true
-    contentDescription = "Sheet Grabber"
+    contentDescription = "Drag handle"
 
     accessibilityDelegate = object : View.AccessibilityDelegate() {
       override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {

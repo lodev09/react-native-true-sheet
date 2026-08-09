@@ -195,17 +195,27 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   fun setupGrabber() {
     findViewWithTag<View>(GRABBER_TAG)?.let { removeView(it) }
 
+    // Content view is the controller, added before the grabber (delegate is the controller)
+    val contentView = delegate as? View
+
     val isEnabled = delegate?.grabber ?: true
     val isDraggable = delegate?.draggable ?: true
-    if (!isEnabled || !isDraggable) return
+    if (!isEnabled || !isDraggable) {
+      contentView?.accessibilityTraversalAfter = View.NO_ID
+      return
+    }
 
     val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
       tag = GRABBER_TAG
+      id = View.generateViewId()
       onAccessibilityIncrement = { delegate?.bottomSheetViewDidAccessibilityIncrement() }
       onAccessibilityDecrement = { delegate?.bottomSheetViewDidAccessibilityDecrement() }
     }
 
     addView(grabberView)
+
+    // Grabber is added after content for z-ordering, but should be announced first
+    contentView?.accessibilityTraversalAfter = grabberView.id
   }
 
   fun updateGrabberAccessibilityValue(index: Int, detentCount: Int) {
