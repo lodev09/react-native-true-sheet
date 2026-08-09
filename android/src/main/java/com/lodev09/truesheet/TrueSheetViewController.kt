@@ -23,6 +23,7 @@ import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.TrueSheetBottomSheetBehavior
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
@@ -213,6 +214,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmedDetentIndex = 0
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
+  override var accessibilityOptions: AccessibilityOptions? = null
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
@@ -714,6 +716,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheet.setupBackground()
     sheet.setupElevation()
     sheet.setupGrabber()
+    sheet.setupAccessibility()
 
     if (shouldAnimatePresent) {
       isPresentAnimating = true

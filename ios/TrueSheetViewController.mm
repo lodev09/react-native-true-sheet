@@ -1102,6 +1102,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     self.sheet.prefersGrabberVisible = NO;
 
     GrabberOptions *options = self.grabberOptions;
+    _grabberView.accessibilityOptions = self.accessibilityOptions;
     _grabberView.grabberWidth = options.width;
     _grabberView.grabberHeight = options.height;
     _grabberView.topMargin = options.topMargin;

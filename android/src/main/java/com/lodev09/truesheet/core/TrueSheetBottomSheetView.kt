@@ -31,6 +31,7 @@ interface TrueSheetBottomSheetViewDelegate {
   val anchorOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
+  val accessibilityOptions: AccessibilityOptions?
   val draggable: Boolean
   fun bottomSheetViewDidTapGrabber()
   fun bottomSheetViewDidAccessibilityIncrement()
@@ -205,7 +206,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
       return
     }
 
-    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions).apply {
+    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions, delegate?.accessibilityOptions).apply {
       tag = GRABBER_TAG
       id = View.generateViewId()
       onAccessibilityIncrement = { delegate?.bottomSheetViewDidAccessibilityIncrement() }
@@ -220,6 +221,10 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
   fun updateGrabberAccessibilityValue(index: Int, detentCount: Int) {
     findViewWithTag<TrueSheetGrabberView>(GRABBER_TAG)?.updateAccessibilityValue(index, detentCount)
+  }
+
+  fun setupAccessibility() {
+    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle ?: "Bottom sheet")
   }
 
   // =============================================================================

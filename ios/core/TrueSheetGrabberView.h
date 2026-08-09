@@ -21,6 +21,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface AccessibilityOptions : NSObject
+
+@property (nonatomic, copy, nullable) NSString *grabberLabel;
+@property (nonatomic, copy, nullable) NSString *grabberHint;
+@property (nonatomic, copy, nullable) NSString *expandedValue;
+@property (nonatomic, copy, nullable) NSString *collapsedValue;
+@property (nonatomic, copy, nullable) NSString *detentValue;
+
+@end
+
 /**
  * Native grabber (drag handle) view for the bottom sheet.
  * Uses UIVibrancyEffect to adapt color based on the background.
@@ -44,6 +54,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Whether the grabber color adapts to the background (default: YES)
 @property (nonatomic, strong, nullable) NSNumber *adaptive;
+
+/// Custom accessibility strings (uses built-in defaults when nil)
+@property (nonatomic, strong, nullable) AccessibilityOptions *accessibilityOptions;
 
 /// Called when the grabber is tapped
 @property (nonatomic, copy, nullable) void (^onTap)(void);

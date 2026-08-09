@@ -27,11 +27,28 @@ data class GrabberOptions(
 )
 
 /**
+ * Options for customizing (e.g. localizing) accessibility strings.
+ */
+data class AccessibilityOptions(
+  val grabberLabel: String? = null,
+  val expandedValue: String? = null,
+  val collapsedValue: String? = null,
+  val detentValue: String? = null,
+  val expandActionLabel: String? = null,
+  val collapseActionLabel: String? = null,
+  val paneTitle: String? = null
+)
+
+/**
  * Native grabber (drag handle) view for the bottom sheet.
  * Displays a small pill-shaped indicator at the top of the sheet with a tappable hitbox.
  */
 @SuppressLint("ViewConstructor")
-class TrueSheetGrabberView(context: Context, private val options: GrabberOptions? = null) : FrameLayout(context) {
+class TrueSheetGrabberView(
+  context: Context,
+  private val options: GrabberOptions? = null,
+  private val accessibilityOptions: AccessibilityOptions? = null
+) : FrameLayout(context) {
 
   companion object {
     private const val DEFAULT_WIDTH = 32f // dp
@@ -94,7 +111,7 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
     addView(pillView)
 
     isFocusable = true
-    contentDescription = "Drag handle"
+    contentDescription = accessibilityOptions?.grabberLabel ?: "Drag handle"
 
     accessibilityDelegate = object : View.AccessibilityDelegate() {
       override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
@@ -102,13 +119,13 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
         info.addAction(
           AccessibilityNodeInfo.AccessibilityAction(
             AccessibilityNodeInfo.ACTION_SCROLL_FORWARD,
-            "Expand"
+            accessibilityOptions?.expandActionLabel ?: "Expand"
           )
         )
         info.addAction(
           AccessibilityNodeInfo.AccessibilityAction(
             AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,
-            "Collapse"
+            accessibilityOptions?.collapseActionLabel ?: "Collapse"
           )
         )
         info.className = "android.widget.SeekBar"
@@ -134,9 +151,16 @@ class TrueSheetGrabberView(context: Context, private val options: GrabberOptions
   fun updateAccessibilityValue(index: Int, detentCount: Int) {
     val description: CharSequence? = when {
       index < 0 || detentCount <= 0 -> null
-      index >= detentCount - 1 -> "Expanded"
-      index == 0 -> "Collapsed"
-      else -> "Detent ${index + 1} of $detentCount"
+
+      index >= detentCount - 1 -> accessibilityOptions?.expandedValue ?: "Expanded"
+
+      index == 0 -> accessibilityOptions?.collapsedValue ?: "Collapsed"
+
+      else ->
+        accessibilityOptions?.detentValue
+          ?.replace("{index}", "${index + 1}")
+          ?.replace("{count}", "$detentCount")
+          ?: "Detent ${index + 1} of $detentCount"
     }
     ViewCompat.setStateDescription(this, description)
   }

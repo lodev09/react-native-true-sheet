@@ -16,6 +16,17 @@ type GrabberOptionsType = Readonly<{
   adaptive?: WithDefault<boolean, true>;
 }>;
 
+type AccessibilityOptionsType = Readonly<{
+  grabberLabel?: string;
+  grabberHint?: string;
+  expandedValue?: string;
+  collapsedValue?: string;
+  detentValue?: string;
+  expandActionLabel?: string;
+  collapseActionLabel?: string;
+  paneTitle?: string;
+}>;
+
 type BlurOptionsType = Readonly<{
   intensity?: WithDefault<Double, -1>;
   interaction?: WithDefault<boolean, true>;
@@ -99,6 +110,7 @@ export interface NativeProps extends ViewProps {
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;
   grabberOptions?: GrabberOptionsType;
+  accessibilityOptions?: AccessibilityOptionsType;
   dismissible?: WithDefault<boolean, true>;
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
