@@ -223,7 +223,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented) {
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
-      viewController.updateBackgroundAccessibility()
+      TrueSheetStackManager.updateBackgroundAccessibility()
     }
   }
 
@@ -233,7 +233,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isPresented) {
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
-      viewController.updateBackgroundAccessibility()
+      TrueSheetStackManager.updateBackgroundAccessibility()
     }
   }
 

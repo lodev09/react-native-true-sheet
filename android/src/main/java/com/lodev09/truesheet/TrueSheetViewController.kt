@@ -636,7 +636,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       updateDimAmount(animated = true)
     }
 
-    updateBackgroundAccessibility()
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   // =============================================================================
@@ -656,7 +656,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isSheetVisible = false
     wasHiddenByScreen = true
-    restoreBackgroundAccessibility()
+    TrueSheetStackManager.updateBackgroundAccessibility()
     delegate?.viewControllerDidChangeVisibility(false)
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
     sheet.animate()
@@ -677,7 +677,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setSheetVisibility(true)
     sheetView?.alpha = 1f
     updateDimAmount(animated = true)
-    updateBackgroundAccessibility()
+    TrueSheetStackManager.updateBackgroundAccessibility()
   }
 
   /**
@@ -826,7 +826,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidFocus()
     sheetView?.updateGrabberAccessibilityValue(index, detents.size)
 
-    updateBackgroundAccessibility()
+    TrueSheetStackManager.updateBackgroundAccessibility()
     // Move accessibility focus into the sheet
     sheetView?.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
 
@@ -835,7 +835,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishDismiss() {
-    restoreBackgroundAccessibility()
+    TrueSheetStackManager.updateBackgroundAccessibility()
     restoreFocusedView()
     emitDidDismissEvents()
     cleanupSheet()
@@ -991,43 +991,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     } else {
       dimViews.forEach { it.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex) }
     }
-  }
-
-  // =============================================================================
-  // MARK: - Accessibility
-  // =============================================================================
-
-  private val savedBackgroundImportance = HashMap<View, Int>()
-
-  /**
-   * Hides background views from accessibility while the sheet is modal (dimmed),
-   * mirroring BottomSheetDialog behavior. The sheet lives in the same window as
-   * the app content, so without this TalkBack can traverse behind the sheet.
-   */
-  internal fun updateBackgroundAccessibility() {
-    val shouldHide = isPresented && isSheetVisible && !isBeingDismissed && isDimmedAtCurrentDetent
-    if (!shouldHide) {
-      restoreBackgroundAccessibility()
-      return
-    }
-
-    val coordinator = coordinatorLayout ?: return
-    val root = coordinator.parent as? ViewGroup ?: return
-    for (i in 0 until root.childCount) {
-      val child = root.getChildAt(i)
-      if (child === coordinator) continue
-      if (!savedBackgroundImportance.containsKey(child)) {
-        savedBackgroundImportance[child] = child.importantForAccessibility
-      }
-      child.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-    }
-  }
-
-  internal fun restoreBackgroundAccessibility() {
-    savedBackgroundImportance.forEach { (view, importance) ->
-      view.importantForAccessibility = importance
-    }
-    savedBackgroundImportance.clear()
   }
 
   // =============================================================================

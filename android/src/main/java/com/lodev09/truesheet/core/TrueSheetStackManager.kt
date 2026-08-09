@@ -1,5 +1,6 @@
 package com.lodev09.truesheet.core
 
+import android.view.View
 import android.view.ViewGroup
 import com.lodev09.truesheet.TrueSheetView
 
@@ -141,6 +142,57 @@ object TrueSheetStackManager {
     synchronized(presentedSheetStack) {
       return findTopmostSheet()
     }
+  }
+
+  private val savedBackgroundImportance = HashMap<View, Int>()
+
+  /**
+   * Hides views behind the topmost dimmed (modal) sheet from accessibility,
+   * mirroring BottomSheetDialog behavior. Sheets live in the same window as
+   * the app content, so without this TalkBack can traverse behind the sheet.
+   *
+   * Derived from the current stack state and idempotent — call whenever a
+   * sheet presents, dismisses, settles, or changes its dim state.
+   */
+  @JvmStatic
+  fun updateBackgroundAccessibility() {
+    synchronized(presentedSheetStack) {
+      val topDimmedIndex = presentedSheetStack.indexOfLast {
+        it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed && isDimmedAtCurrentDetent }
+      }
+      val topDimmed = presentedSheetStack.getOrNull(topDimmedIndex)
+      val root = topDimmed?.viewController?.coordinatorLayout?.parent as? ViewGroup
+
+      if (root == null) {
+        restoreBackgroundAccessibility()
+        return
+      }
+
+      // The dimmed sheet and any sheets above it stay accessible
+      val accessibleCoordinators = presentedSheetStack
+        .subList(topDimmedIndex, presentedSheetStack.size)
+        .mapNotNull { it.viewController.coordinatorLayout }
+        .toSet()
+
+      for (i in 0 until root.childCount) {
+        val child = root.getChildAt(i)
+        if (child in accessibleCoordinators) {
+          savedBackgroundImportance.remove(child)?.let { child.importantForAccessibility = it }
+          continue
+        }
+        if (!savedBackgroundImportance.containsKey(child)) {
+          savedBackgroundImportance[child] = child.importantForAccessibility
+        }
+        child.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+      }
+    }
+  }
+
+  private fun restoreBackgroundAccessibility() {
+    savedBackgroundImportance.forEach { (view, importance) ->
+      view.importantForAccessibility = importance
+    }
+    savedBackgroundImportance.clear()
   }
 
   /**
