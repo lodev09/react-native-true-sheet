@@ -385,8 +385,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:inset
-                                      indicatorInset:self->_originalIndicatorBottomInset + inset];
+                     [self setScrollViewContentInset:inset indicatorInset:self->_originalIndicatorBottomInset + inset];
                    }
                    completion:nil];
 
