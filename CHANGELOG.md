@@ -4,7 +4,7 @@
 
 ### 🐛 Bug fixes
 
-- **Android**: The first tap on a `Pressable` is no longer swallowed after a `TextInput` in the same sheet is touched — the sheet's root view now forwards `requestDisallowInterceptTouchEvent` up the tree (mirroring `ReactSurfaceView`) so the touch dispatcher sees the gesture end and the stale responder is released. ([#765](https://github.com/lodev09/react-native-true-sheet/pull/765) by [@lodev09](https://github.com/lodev09))
+- **Android**: The first tap on a `Pressable` is no longer swallowed after a `TextInput` in the same sheet (or footer) is touched — the sheet's root views now forward `requestDisallowInterceptTouchEvent` up the tree (mirroring `ReactSurfaceView`) so the touch dispatcher sees the gesture end and the stale responder is released. ([#765](https://github.com/lodev09/react-native-true-sheet/pull/765), [#766](https://github.com/lodev09/react-native-true-sheet/pull/766) by [@lodev09](https://github.com/lodev09))
 - Keyboard-driven sheet growth no longer corrupts `animatedIndex` — iOS skips detent offset learning while the keyboard has the sheet grown and re-settles once it's away; Android clamps expected detent tops to the available height. Settle emits now learn at the final frame and bypass the dedupe, so presenting and settling land exactly on the detent index. ([#762](https://github.com/lodev09/react-native-true-sheet/pull/762) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.9
