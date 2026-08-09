@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.10
+
 ### 🎉 New features
 
 - New `accessibilityOptions` prop for customizing (e.g. localizing) the accessibility strings announced by screen readers — grabber label/hint, detent state values (with `{index}`/`{count}` placeholders), Android expand/collapse action labels, and the sheet pane/dialog title on Android and Web. ([#770](https://github.com/lodev09/react-native-true-sheet/pull/770) by [@lodev09](https://github.com/lodev09))

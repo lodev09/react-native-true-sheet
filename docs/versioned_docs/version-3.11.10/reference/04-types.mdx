@@ -160,6 +160,38 @@ Options for customizing the grabber (drag handle) appearance.
 | `color` | `ColorValue` | The color of the grabber. Uses native styling when not provided. | |
 | `adaptive` | `boolean` | Whether the grabber adapts to light/dark mode. Uses vibrancy on iOS and theme-based colors on Android. | `true` |
 
+## `AccessibilityOptions`
+
+Options for customizing (e.g. localizing) the accessibility strings announced by screen readers.
+
+```tsx
+<TrueSheet
+  accessibilityOptions={{
+    grabberLabel: 'Poignée de déplacement',
+    expandedValue: 'Développé',
+    collapsedValue: 'Réduit',
+    detentValue: 'Position {index} sur {count}',
+  }}
+>
+  <View />
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `grabberLabel` | `string` | The accessibility label of the grabber. | iOS: `'Sheet Grabber'`, Android: `'Drag handle'` |
+| `grabberHint` | `string` | The accessibility hint of the grabber. iOS only. | `'Double-tap to expand. Swipe up or down to resize the sheet'` |
+| `expandedValue` | `string` | The value announced when the sheet is at the last detent. | `'Expanded'` |
+| `collapsedValue` | `string` | The value announced when the sheet is at the first detent. | `'Collapsed'` |
+| `detentValue` | `string` | The value announced at intermediate detents. Supports `{index}` and `{count}` placeholders. | `'Detent {index} of {count}'` |
+| `expandActionLabel` | `string` | The label of the expand accessibility action. Android only. | `'Expand'` |
+| `collapseActionLabel` | `string` | The label of the collapse accessibility action. Android only. | `'Collapse'` |
+| `paneTitle` | `string` | The title announced when the sheet appears. Sets the accessibility pane title on Android and the hidden dialog title on Web. | Android: `'Bottom sheet'`, Web: `'Sheet'` |
+
+:::info
+On iOS, the grabber strings only apply when [`grabberOptions`](configuration#grabberoptions) is provided. Without it, iOS uses the system grabber which is already localized by the system.
+:::
+
 ## `InsetAdjustment`
 
 Controls how the bottom safe area inset affects detent heights.
