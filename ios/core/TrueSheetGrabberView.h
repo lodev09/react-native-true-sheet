@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <react/renderer/components/TrueSheetSpec/Props.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -18,16 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
 @property (nonatomic, strong, nullable) UIColor *color;
 @property (nonatomic, assign) BOOL adaptive;
-
-@end
-
-@interface AccessibilityOptions : NSObject
-
-@property (nonatomic, copy, nullable) NSString *grabberLabel;
-@property (nonatomic, copy, nullable) NSString *grabberHint;
-@property (nonatomic, copy, nullable) NSString *expandedValue;
-@property (nonatomic, copy, nullable) NSString *collapsedValue;
-@property (nonatomic, copy, nullable) NSString *detentValue;
 
 @end
 
@@ -55,8 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the grabber color adapts to the background (default: YES)
 @property (nonatomic, strong, nullable) NSNumber *adaptive;
 
-/// Custom accessibility strings (uses built-in defaults when nil)
-@property (nonatomic, strong, nullable) AccessibilityOptions *accessibilityOptions;
+/// Accessibility strings (defaults come from the codegen prop defaults)
+@property (nonatomic, assign) facebook::react::TrueSheetViewAccessibilityOptionsStruct accessibilityOptions;
 
 /// Called when the grabber is tapped
 @property (nonatomic, copy, nullable) void (^onTap)(void);

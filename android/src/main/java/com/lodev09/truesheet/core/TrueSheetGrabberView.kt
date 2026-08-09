@@ -111,7 +111,7 @@ class TrueSheetGrabberView(
     addView(pillView)
 
     isFocusable = true
-    contentDescription = accessibilityOptions?.grabberLabel
+    contentDescription = accessibilityOptions?.grabberLabel ?: "Drag handle"
 
     accessibilityDelegate = object : View.AccessibilityDelegate() {
       override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
@@ -119,13 +119,13 @@ class TrueSheetGrabberView(
         info.addAction(
           AccessibilityNodeInfo.AccessibilityAction(
             AccessibilityNodeInfo.ACTION_SCROLL_FORWARD,
-            accessibilityOptions?.expandActionLabel
+            accessibilityOptions?.expandActionLabel ?: "Expand"
           )
         )
         info.addAction(
           AccessibilityNodeInfo.AccessibilityAction(
             AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,
-            accessibilityOptions?.collapseActionLabel
+            accessibilityOptions?.collapseActionLabel ?: "Collapse"
           )
         )
         info.className = "android.widget.SeekBar"
@@ -152,14 +152,14 @@ class TrueSheetGrabberView(
     val description: CharSequence? = when {
       index < 0 || detentCount <= 0 -> null
 
-      index >= detentCount - 1 -> accessibilityOptions?.expandedValue
+      index >= detentCount - 1 -> accessibilityOptions?.expandedValue ?: "Expanded"
 
-      index == 0 -> accessibilityOptions?.collapsedValue
+      index == 0 -> accessibilityOptions?.collapsedValue ?: "Collapsed"
 
       else ->
-        accessibilityOptions?.detentValue
-          ?.replace("{index}", "${index + 1}")
-          ?.replace("{count}", "$detentCount")
+        (accessibilityOptions?.detentValue ?: "Detent {index} of {count}")
+          .replace("{index}", "${index + 1}")
+          .replace("{count}", "$detentCount")
     }
     ViewCompat.setStateDescription(this, description)
   }

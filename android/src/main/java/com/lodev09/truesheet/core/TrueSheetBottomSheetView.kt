@@ -222,7 +222,7 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   }
 
   fun setupAccessibility() {
-    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle)
+    ViewCompat.setAccessibilityPaneTitle(this, delegate?.accessibilityOptions?.paneTitle ?: "Bottom sheet")
   }
 
   // =============================================================================

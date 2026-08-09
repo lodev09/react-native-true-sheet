@@ -8,6 +8,10 @@
 
 #import "TrueSheetGrabberView.h"
 
+#import <React/RCTConversions.h>
+
+using namespace facebook::react;
+
 @implementation GrabberOptions
 
 - (instancetype)init {
@@ -17,9 +21,6 @@
   return self;
 }
 
-@end
-
-@implementation AccessibilityOptions
 @end
 
 static const CGFloat kDefaultGrabberWidth = 36.0;
@@ -104,10 +105,10 @@ static const CGFloat kHitPaddingVertical = 10.0;
 
 #pragma mark - Public
 
-- (void)setAccessibilityOptions:(AccessibilityOptions *)accessibilityOptions {
+- (void)setAccessibilityOptions:(TrueSheetViewAccessibilityOptionsStruct)accessibilityOptions {
   _accessibilityOptions = accessibilityOptions;
-  self.accessibilityLabel = accessibilityOptions.grabberLabel;
-  self.accessibilityHint = accessibilityOptions.grabberHint;
+  self.accessibilityLabel = RCTNSStringFromStringNilIfEmpty(accessibilityOptions.grabberLabel);
+  self.accessibilityHint = RCTNSStringFromStringNilIfEmpty(accessibilityOptions.grabberHint);
 }
 
 - (void)updateAccessibilityValueWithIndex:(NSInteger)index detentCount:(NSInteger)count {
@@ -117,12 +118,12 @@ static const CGFloat kHitPaddingVertical = 10.0;
   }
 
   if (index >= count - 1) {
-    self.accessibilityValue = _accessibilityOptions.expandedValue;
+    self.accessibilityValue = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.expandedValue);
   } else if (index == 0) {
-    self.accessibilityValue = _accessibilityOptions.collapsedValue;
+    self.accessibilityValue = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.collapsedValue);
   } else {
-    NSString *value = [_accessibilityOptions.detentValue stringByReplacingOccurrencesOfString:@"{index}"
-                                                                                   withString:@(index + 1).stringValue];
+    NSString *value = RCTNSStringFromStringNilIfEmpty(_accessibilityOptions.detentValue);
+    value = [value stringByReplacingOccurrencesOfString:@"{index}" withString:@(index + 1).stringValue];
     self.accessibilityValue = [value stringByReplacingOccurrencesOfString:@"{count}" withString:@(count).stringValue];
   }
 }

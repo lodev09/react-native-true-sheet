@@ -17,14 +17,14 @@ type GrabberOptionsType = Readonly<{
 }>;
 
 type AccessibilityOptionsType = Readonly<{
-  grabberLabel?: string;
-  grabberHint?: string;
-  expandedValue?: string;
-  collapsedValue?: string;
-  detentValue?: string;
-  expandActionLabel?: string;
-  collapseActionLabel?: string;
-  paneTitle?: string;
+  grabberLabel?: WithDefault<string, 'Sheet Grabber'>;
+  grabberHint?: WithDefault<string, 'Double-tap to expand. Swipe up or down to resize the sheet'>;
+  expandedValue?: WithDefault<string, 'Expanded'>;
+  collapsedValue?: WithDefault<string, 'Collapsed'>;
+  detentValue?: WithDefault<string, 'Detent {index} of {count}'>;
+  expandActionLabel?: WithDefault<string, 'Expand'>;
+  collapseActionLabel?: WithDefault<string, 'Collapse'>;
+  paneTitle?: WithDefault<string, 'Bottom sheet'>;
 }>;
 
 type BlurOptionsType = Readonly<{

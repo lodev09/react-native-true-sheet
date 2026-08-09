@@ -230,16 +230,8 @@ using namespace facebook::react;
     _controller.grabberOptions = nil;
   }
 
-  // Accessibility options - applied to the custom grabber.
-  // Defaults are merged in on the JS side, so all strings are always set.
-  const auto &a11yOpts = newProps.accessibilityOptions;
-  AccessibilityOptions *accessibilityOptions = [[AccessibilityOptions alloc] init];
-  accessibilityOptions.grabberLabel = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberLabel);
-  accessibilityOptions.grabberHint = RCTNSStringFromStringNilIfEmpty(a11yOpts.grabberHint);
-  accessibilityOptions.expandedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.expandedValue);
-  accessibilityOptions.collapsedValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.collapsedValue);
-  accessibilityOptions.detentValue = RCTNSStringFromStringNilIfEmpty(a11yOpts.detentValue);
-  _controller.accessibilityOptions = accessibilityOptions;
+  // Accessibility options - applied to the custom grabber
+  _controller.accessibilityOptions = newProps.accessibilityOptions;
 
   _controller.presentation = newProps.presentation;
   _controller.dismissible = newProps.dismissible;
