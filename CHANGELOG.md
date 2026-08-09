@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- New `accessibilityOptions` prop for customizing (e.g. localizing) the accessibility strings announced by screen readers — grabber label/hint, detent state values (with `{index}`/`{count}` placeholders), Android expand/collapse action labels, and the sheet pane/dialog title on Android and Web. ([#770](https://github.com/lodev09/react-native-true-sheet/pull/770) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **Android**: The first tap on a `Pressable` is no longer swallowed after a `TextInput` in the same sheet (or footer) is touched — the sheet's root views now forward `requestDisallowInterceptTouchEvent` up the tree (mirroring `ReactSurfaceView`) so the touch dispatcher sees the gesture end and the stale responder is released. ([#765](https://github.com/lodev09/react-native-true-sheet/pull/765), [#766](https://github.com/lodev09/react-native-true-sheet/pull/766) by [@lodev09](https://github.com/lodev09))

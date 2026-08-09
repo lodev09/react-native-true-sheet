@@ -460,6 +460,7 @@ export class TrueSheet
       draggable = true,
       grabber = true,
       grabberOptions,
+      accessibilityOptions,
       dimmed = true,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
@@ -518,6 +519,7 @@ export class TrueSheet
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={this.resolvedGrabberOptions}
+        accessibilityOptions={accessibilityOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={initialDetentIndex}

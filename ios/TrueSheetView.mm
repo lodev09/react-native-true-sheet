@@ -230,6 +230,9 @@ using namespace facebook::react;
     _controller.grabberOptions = nil;
   }
 
+  // Accessibility options - applied to the custom grabber
+  _controller.accessibilityOptions = newProps.accessibilityOptions;
+
   _controller.presentation = newProps.presentation;
   _controller.dismissible = newProps.dismissible;
   _controller.draggable = newProps.draggable;

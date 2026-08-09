@@ -69,6 +69,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
     grabber = true,
     grabberOptions,
+    accessibilityOptions,
     detents = [0.5, 1],
     dimmed = true,
     dimmedDetentIndex = 0,
@@ -999,7 +1000,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               ) : undefined
             }
           >
-            <Drawer.Title style={visuallyHiddenStyle}>Sheet</Drawer.Title>
+            <Drawer.Title style={visuallyHiddenStyle}>
+              {accessibilityOptions?.paneTitle ?? 'Sheet'}
+            </Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
             {scrollable ? (
               // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
