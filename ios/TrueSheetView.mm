@@ -413,6 +413,12 @@ using namespace facebook::react;
     _controller.peekContentHeight = @(peekContentHeight);
   }
 
+  // A lazily-rendered container (e.g. present() after mount) arrives in a
+  // children-only commit: updateProps ran with no container and
+  // finalizeUpdates skips children-only masks, so this is the first chance
+  // to push scrollable setup and the footer's bottom inset.
+  [self setupScrollable];
+
   if (_eventEmitter) {
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   } else {
@@ -626,6 +632,10 @@ using namespace facebook::react;
 
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize {
   _controller.footerHeight = @(newSize.height);
+  // A footer mounted via a children-only commit (e.g. navigation setOptions)
+  // never goes through finalizeUpdates, so push the inset it absorbs here
+  // instead of relying on a stale value cached by an earlier props commit.
+  _containerView.footerBottomInset = _controller.footerBottomInset;
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
 }
@@ -789,8 +799,14 @@ using namespace facebook::react;
 
   // Publish the inset so a footer set later (e.g. navigation setOptions) is
   // padded on its very first layout instead of resizing the sheet twice.
+  // Seed from the host view's own window — `footerBottomInset` can
+  // transiently read 0 (key window mid-transition, small auto detent height
+  // on iOS 26) and poison the seed for every later-mounted footer.
   if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
-    TrueSheetInsets::setBottomSafeArea(_controller.footerBottomInset);
+    UIWindow *window = self.window ?: [WindowUtil keyWindow];
+    if (window && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+      TrueSheetInsets::setBottomSafeArea(window.safeAreaInsets.bottom);
+    }
   }
 }
 

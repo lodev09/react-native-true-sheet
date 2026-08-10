@@ -37,6 +37,14 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
 
+  // Present imperatively instead of via `initialDetentIndex` so the present
+  // waits for the screen's mount effects — options set there (e.g. a footer
+  // via `setOptions`) are committed before the sheet measures its detents,
+  // otherwise the sheet visibly grows when the footer lands mid-presentation.
+  useEffect(() => {
+    ref.current?.present(initialDetentIndexRef.current);
+  }, []);
+
   useEffect(() => {
     if (closing && !isDismissedRef.current) {
       isDismissedRef.current = true;
@@ -93,7 +101,6 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
 
   return {
     ref,
-    initialDetentIndex: initialDetentIndexRef.current,
     emitEvent,
     eventHandlers,
   };

@@ -227,7 +227,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     }
   }
 
-  UIWindow *window = [WindowUtil keyWindow];
+  // Prefer the controller's own window — mid-presentation the key window can
+  // be a transition window whose bottom inset is 0.
+  UIWindow *window = self.view.window ?: [WindowUtil keyWindow];
   return window ? window.safeAreaInsets.bottom : 0;
 }
 
