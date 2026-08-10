@@ -13,6 +13,7 @@
     },
     "./mock": "./lib/module/mocks/index.js",
     "./navigation/mock": "./lib/module/mocks/navigation.js",
+    "./navigation/expo-router/mock": "./lib/module/mocks/navigationExpoRouter.js",
     "./reanimated/mock": "./lib/module/mocks/reanimated.js",
     "./reanimated": {
       "source": "./src/reanimated/index.ts",
@@ -23,6 +24,11 @@
       "source": "./src/navigation/index.ts",
       "types": "./lib/typescript/src/navigation/index.d.ts",
       "default": "./lib/module/navigation/index.js"
+    },
+    "./navigation/expo-router": {
+      "source": "./src/navigation/expo-router/index.ts",
+      "types": "./lib/typescript/src/navigation/expo-router/index.d.ts",
+      "default": "./lib/module/navigation/expo-router/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -93,8 +99,8 @@
     "@react-native/babel-preset": "^0.86.0",
     "@react-native/eslint-config": "^0.86.0",
     "@react-native/jest-preset": "^0.86.0",
-    "@react-navigation/core": "^7.13.7",
-    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/core": "^7.21.12",
+    "@react-navigation/native": "^7.3.16",
     "@release-it/conventional-changelog": "^11.0.0",
     "@testing-library/react-native": "^13.3.3",
     "@types/babel__core": "^7",
@@ -105,8 +111,8 @@
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "expo-router": "~57.0.7",
     "jest": "^29.7.0",
-    "nanoid": "^5.1.5",
     "prettier": "^3.0.3",
     "react": "19.2.3",
     "react-native": "0.86.0",
@@ -115,6 +121,7 @@
     "react-native-worklets": "0.10.0",
     "react-test-renderer": "19.2.3",
     "release-it": "^20.0.1",
+    "standard-navigation": "^0.0.9",
     "turbo": "^2.5.6",
     "typescript": "~6.0.3"
   },
@@ -126,11 +133,13 @@
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
     "@radix-ui/react-presence": ">=1",
-    "@react-navigation/core": ">=7",
+    "@react-navigation/native": ">=7.3.0",
+    "expo-router": ">=57.0.0",
     "react": "*",
     "react-native": ">=0.82.0",
     "react-native-reanimated": ">=4",
-    "react-native-worklets": "*"
+    "react-native-worklets": "*",
+    "standard-navigation": ">=0.0.9"
   },
   "peerDependenciesMeta": {
     "@radix-ui/react-dialog": {
@@ -139,13 +148,19 @@
     "@radix-ui/react-presence": {
       "optional": true
     },
-    "@react-navigation/core": {
+    "@react-navigation/native": {
+      "optional": true
+    },
+    "expo-router": {
       "optional": true
     },
     "react-native-reanimated": {
       "optional": true
     },
     "react-native-worklets": {
+      "optional": true
+    },
+    "standard-navigation": {
       "optional": true
     }
   },
@@ -162,7 +177,7 @@
       "<rootDir>/jest.setup.js"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-worklets|react-native-worklets-core)/)"
+      "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-reanimated|react-native-worklets|react-native-worklets-core|standard-navigation)/)"
     ],
     "modulePathIgnorePatterns": [
       "<rootDir>/example/bare/node_modules",

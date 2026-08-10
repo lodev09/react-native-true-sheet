@@ -1,6 +1,8 @@
 import { createContext, type RefObject, useContext, useEffect, useRef } from 'react';
 import { type LayoutChangeEvent, View, type ViewProps } from 'react-native';
 
+import { getDOMElement } from './web/dom';
+
 /**
  * Reports the measured peek content height to the owning TrueSheet.
  * @internal
@@ -44,9 +46,8 @@ export const TrueSheetPeek = ({ onLayout, ...rest }: ViewProps) => {
 
   const handleLayout = (event: LayoutChangeEvent) => {
     if (context) {
-      // On web, View refs resolve to the underlying DOM elements.
-      const peekElement = viewRef.current as unknown as HTMLElement | null;
-      const contentElement = context.contentRef.current as unknown as HTMLElement | null;
+      const peekElement = getDOMElement(viewRef.current);
+      const contentElement = getDOMElement(context.contentRef.current);
 
       const bottom =
         peekElement && contentElement

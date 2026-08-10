@@ -13,6 +13,11 @@ export const createTrueSheetNavigator = jest.fn(() => ({
 }));
 
 /**
+ * Mock createTrueSheetScreen for testing the static API.
+ */
+export const createTrueSheetScreen = jest.fn((config: object) => config);
+
+/**
  * Mock TrueSheetActions for testing.
  */
 export const TrueSheetActions = {
@@ -35,32 +40,34 @@ export const TrueSheetActions = {
 /**
  * Mock useTrueSheetNavigation hook for testing.
  */
-export const useTrueSheetNavigation = jest.fn(
-  <T extends ParamListBase = ParamListBase>() =>
-    ({
-      navigate: jest.fn(),
-      goBack: jest.fn(),
-      reset: jest.fn(),
-      setParams: jest.fn(),
-      dispatch: jest.fn(),
-      isFocused: jest.fn(() => true),
-      canGoBack: jest.fn(() => true),
-      getId: jest.fn(),
-      getParent: jest.fn(),
-      getState: jest.fn(),
-      addListener: jest.fn(() => jest.fn()),
-      removeListener: jest.fn(),
-      setOptions: jest.fn(),
-      push: jest.fn(),
-      pop: jest.fn(),
-      popTo: jest.fn(),
-      popToTop: jest.fn(),
-      replace: jest.fn(),
-      resize: jest.fn(),
-    }) as unknown as TrueSheetNavigationProp<T>
-);
+export const useTrueSheetNavigation = jest.fn(<T extends ParamListBase = ParamListBase>() => {
+  // Partial drops react-navigation's private-brand member (PrivateValueStore),
+  // which no mock can implement — the members themselves stay type-checked.
+  const navigation: Partial<TrueSheetNavigationProp<T>> = {
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    reset: jest.fn(),
+    setParams: jest.fn(),
+    dispatch: jest.fn(),
+    isFocused: jest.fn(() => true),
+    canGoBack: jest.fn(() => true),
+    getId: jest.fn(),
+    getParent: jest.fn(),
+    getState: jest.fn(),
+    addListener: jest.fn(() => jest.fn()),
+    removeListener: jest.fn(),
+    setOptions: jest.fn(),
+    push: jest.fn(),
+    pop: jest.fn(),
+    popTo: jest.fn(),
+    popToTop: jest.fn(),
+    replace: jest.fn(),
+    resize: jest.fn(),
+  };
+  return navigation as TrueSheetNavigationProp<T>;
+});
 
-export type { TrueSheetActionType } from '../navigation/TrueSheetRouter';
+export type { TrueSheetActionType } from '../navigation/actions';
 export type { DetentInfoEventPayload, PositionChangeEventPayload } from '../TrueSheet.types';
 export type {
   TrueSheetNavigationEventMap,

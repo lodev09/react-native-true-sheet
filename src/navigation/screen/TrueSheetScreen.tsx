@@ -8,7 +8,7 @@ import { useSheetScreenState } from './useSheetScreenState';
 export const TrueSheetScreen = ({
   detentIndex,
   resizeKey,
-  navigation,
+  dispatch,
   emit,
   routeKey,
   closing,
@@ -25,7 +25,7 @@ export const TrueSheetScreen = ({
     detentIndex,
     resizeKey,
     closing,
-    navigation,
+    dispatch,
     routeKey,
     emit,
   });

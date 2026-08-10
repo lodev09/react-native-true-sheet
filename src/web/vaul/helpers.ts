@@ -4,7 +4,12 @@ interface Style {
   [key: string]: string;
 }
 
-const cache = new WeakMap();
+// CSSStyleDeclaration has no string index signature, so dynamic camelCase
+// keys are assigned through this writable-record view. Values include
+// undefined: originals captured for unknown keys read back as undefined.
+type IndexableStyle = CSSStyleDeclaration & Record<string, string | undefined>;
+
+const cache = new WeakMap<HTMLElement, Record<string, string | undefined>>();
 
 export function isInView(el: HTMLElement): boolean {
   const rect = el.getBoundingClientRect();
@@ -26,7 +31,8 @@ export function set(
   ignoreCache = false
 ) {
   if (!el || !(el instanceof HTMLElement)) return;
-  let originalStyles: Style = {};
+  let originalStyles: Record<string, string | undefined> = {};
+  const style = el.style as IndexableStyle;
 
   Object.entries(styles).forEach(([key, value]: [string, string]) => {
     if (key.startsWith('--')) {
@@ -34,8 +40,8 @@ export function set(
       return;
     }
 
-    originalStyles[key] = (el.style as any)[key];
-    (el.style as any)[key] = value;
+    originalStyles[key] = style[key];
+    style[key] = value;
   });
 
   if (ignoreCache) return;
@@ -51,11 +57,12 @@ export function reset(el: Element | HTMLElement | null, prop?: string) {
     return;
   }
 
+  const style = el.style as IndexableStyle;
   if (prop) {
-    (el.style as any)[prop] = originalStyles[prop];
+    style[prop] = originalStyles[prop];
   } else {
     Object.entries(originalStyles).forEach(([key, value]) => {
-      (el.style as any)[key] = value;
+      style[key] = value;
     });
   }
 }

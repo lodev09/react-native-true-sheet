@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { LayoutChangeEvent, ViewStyle } from 'react-native';
+import type { DimensionValue, LayoutChangeEvent } from 'react-native';
 import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import type {
@@ -51,6 +51,7 @@ import {
   DEFAULT_GRABBER_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { getDOMElement } from './web/dom';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
 
@@ -302,8 +303,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     return [
       footerStyle,
       {
-        paddingBottom: `calc(${baseCss} + env(safe-area-inset-bottom, 0px))`,
-      } as unknown as ViewStyle,
+        // RN types don't model CSS calc(), but RN-web passes it through
+        paddingBottom: `calc(${baseCss} + env(safe-area-inset-bottom, 0px))` as DimensionValue,
+      },
     ];
   }, [footerOwnsInset, footerStyle]);
 
@@ -327,14 +329,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // scrollable's viewport replaced by its content size) — the height the
   // content wants regardless of the sheet's bounds.
   const measureNaturalHeight = useCallback(() => {
-    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    const contentEl = getDOMElement(contentRef.current);
     if (!contentEl || !contentEl.isConnected) return 0;
-    const headerEl = absoluteHeaderRef.current
-      ? null
-      : (headerElRef.current as unknown as HTMLElement | null);
-    const footerEl = absoluteFooterRef.current
-      ? null
-      : (footerElRef.current as unknown as HTMLElement | null);
+    const headerEl = absoluteHeaderRef.current ? null : getDOMElement(headerElRef.current);
+    const footerEl = absoluteFooterRef.current ? null : getDOMElement(footerElRef.current);
     let height =
       (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
     const scroller = pinnedScrollerRef.current;
@@ -377,8 +375,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // observation). Resolves the content node live: the layout-branch swap
       // (natural flow ↔ sized) remounts it.
       const observe = () => {
-        const contentEl = contentRef.current as unknown as HTMLElement | null;
-        const headerEl = headerElRef.current as unknown as HTMLElement | null;
+        const contentEl = getDOMElement(contentRef.current);
+        const headerEl = getDOMElement(headerElRef.current);
 
         // Skip mutations that don't change the observed topology — e.g. a
         // virtualized list mounting rows inside the pinned scroller, which
@@ -549,13 +547,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // measure either: they fire while the portal subtree is still detached.
     // Geometry only runs while the drawer is mounted, so the elements are
     // measurable here; fall back to the state value when they're absent.
-    const headerEl = headerElRef.current as unknown as HTMLElement | null;
+    const headerEl = getDOMElement(headerElRef.current);
     // A relative footer is pushed off-screen at the peek detent — excluded
-    const footerEl = absoluteFooterRef.current
-      ? (footerElRef.current as unknown as HTMLElement | null)
-      : null;
-    const peekEl = peekElRef.current as unknown as HTMLElement | null;
-    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    const footerEl = absoluteFooterRef.current ? getDOMElement(footerElRef.current) : null;
+    const peekEl = getDOMElement(peekElRef.current);
+    const contentEl = getDOMElement(contentRef.current);
     const livePeekContentHeight =
       peekEl && contentEl ? measurePeekContentHeight(peekEl, contentEl) : inputs.peekContentHeight;
     const livePeekHeight =
