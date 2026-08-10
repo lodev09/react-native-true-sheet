@@ -34,6 +34,7 @@ const HomeScreen = () => {
       </View>
       <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+      <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
     </View>
@@ -86,6 +87,33 @@ const DetailsSheet = () => {
           <Text style={styles.sheetSubtitle}>Presented from footer button!</Text>
         </View>
       </TrueSheet>
+    </View>
+  );
+};
+
+// Repro: on iOS 26 a small auto detent (<= 150) resolves the footer's bottom
+// inset to 0, but the late-mounted footer's first layout is seeded with the
+// full window inset — watch for the footer shrinking right after present.
+const SmallFooter = () => (
+  <View style={styles.smallFooter}>
+    <Text style={styles.smallFooterText}>SMALL FOOTER</Text>
+  </View>
+);
+
+const SmallFooterSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  useEffect(() => {
+    navigation.setOptions({
+      footer: <SmallFooter />,
+      footerStyle: { backgroundColor: 'red' },
+    });
+  }, [navigation]);
+
+  return (
+    <View style={styles.smallFooterSheetContent}>
+      <Text style={styles.sheetTitle}>Small Footer Sheet</Text>
+      <Text style={styles.sheetSubtitle}>Auto detent ≤ 150 + late footer</Text>
     </View>
   );
 };
@@ -220,6 +248,15 @@ export const SheetNavigator = () => {
           cornerRadius: 16,
         }}
       />
+      <SheetStack.Screen
+        name="SmallFooter"
+        component={SmallFooterSheet}
+        options={{
+          detents: ['auto'],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+        }}
+      />
     </SheetStack.Navigator>
   );
 };
@@ -262,5 +299,19 @@ const styles = StyleSheet.create({
   buttons: {
     gap: GAP,
     marginTop: SPACING,
+  },
+  smallFooterSheetContent: {
+    backgroundColor: 'yellow',
+    padding: SPACING,
+  },
+  smallFooter: {
+    backgroundColor: BLUE,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 0,
+  },
+  smallFooterText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

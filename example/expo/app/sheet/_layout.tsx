@@ -83,6 +83,14 @@ export default function SheetStackLayout() {
             cornerRadius: 16,
           }}
         />
+        <Sheet.Screen
+          name="small-footer"
+          options={{
+            detents: ['auto'],
+            backgroundColor: DARK,
+            cornerRadius: 16,
+          }}
+        />
       </Sheet>
     </TrueSheetProvider>
   );
