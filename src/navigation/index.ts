@@ -29,7 +29,7 @@ const { createNavigator, createScreen } = createStandardNavigationFactories<
   TrueSheetNavigatorContentExtraProps
 >(
   trueSheetNavigator,
-  createTrueSheetRouter(StackRouter as unknown as StackRouterFactory),
+  createTrueSheetRouter(StackRouter as StackRouterFactory),
   ({ state, navigation }) => ({ routes: state.routes, dispatch: navigation.dispatch })
 );
 

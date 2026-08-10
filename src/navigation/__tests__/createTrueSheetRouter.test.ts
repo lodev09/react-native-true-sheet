@@ -21,19 +21,22 @@ const makeRoute = (name: string, extra?: Partial<Route>): Route => ({
   ...extra,
 });
 
-const makeState = (routes: Route[], index = routes.length - 1): State =>
-  ({
-    stale: false,
-    type: 'true-sheet',
-    key: 'true-sheet-test',
-    index,
-    routeNames: ROUTE_NAMES,
-    routes,
-    preloadedRoutes: [],
-  }) as unknown as State;
+// StackRouter reads `preloadedRoutes` at runtime; TrueSheetNavigationState doesn't model it
+const makeState = (
+  routes: Route[],
+  index = routes.length - 1
+): State & { preloadedRoutes: Route[] } => ({
+  stale: false,
+  type: 'true-sheet',
+  key: 'true-sheet-test',
+  index,
+  routeNames: ROUTE_NAMES,
+  routes,
+  preloadedRoutes: [],
+});
 
 const createRouter = (initialRouteName?: string) =>
-  createTrueSheetRouter(StackRouter as unknown as StackRouterFactory)({ initialRouteName });
+  createTrueSheetRouter(StackRouter as StackRouterFactory)({ initialRouteName });
 
 describe('createTrueSheetRouter', () => {
   describe('getInitialState', () => {

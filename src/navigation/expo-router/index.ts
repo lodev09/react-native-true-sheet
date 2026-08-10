@@ -25,7 +25,7 @@ const SheetNavigator = unstable_integrateWithRouter<
 >(
   trueSheetNavigator,
   // expo-router's vendored StackRouter is structurally identical to @react-navigation's
-  createTrueSheetRouter(StackRouter as unknown as StackRouterFactory),
+  createTrueSheetRouter(StackRouter as StackRouterFactory),
   {
     createProps: ({ state, dispatch }) => ({
       routes: state.routes,
@@ -34,13 +34,15 @@ const SheetNavigator = unstable_integrateWithRouter<
   }
 );
 
-// Public props: `routes`/`dispatch` are injected by `createProps`, not passed by
-// users, and expo-router intersects the event map with an index signature which
-// breaks precisely typed `screenListeners` callbacks - replace it with the exact map
+// Public props: `routes`/`dispatch` are injected by `createProps` (optional here
+// so the navigator type stays comparable), and expo-router intersects the event
+// map with an index signature which breaks precisely typed `screenListeners`
+// callbacks - replace it with the exact map
 type SheetProps = Omit<
   React.ComponentProps<typeof SheetNavigator>,
   'screenListeners' | 'routes' | 'dispatch'
 > &
+  Partial<Pick<React.ComponentProps<typeof SheetNavigator>, 'routes' | 'dispatch'>> &
   Pick<TrueSheetNavigatorProps, 'screenListeners'>;
 
 /**
@@ -60,7 +62,7 @@ type SheetProps = Omit<
  * }
  * ```
  */
-export const Sheet = SheetNavigator as unknown as React.ComponentType<SheetProps> & {
+export const Sheet = SheetNavigator as React.ComponentType<SheetProps> & {
   Screen: typeof SheetNavigator.Screen;
   Protected: typeof SheetNavigator.Protected;
 };
