@@ -23,6 +23,7 @@ export const ReanimatedTrueSheetScreen = ({
 }: TrueSheetScreenProps) => {
   const {
     ref,
+    initialDetentIndex,
     eventHandlers: { onPositionChange, ...eventHandlers },
   } = useSheetScreenState({
     detentIndex,
@@ -48,6 +49,7 @@ export const ReanimatedTrueSheetScreen = ({
     <AnimatedTrueSheet
       ref={ref}
       name={`navigation-sheet-${routeKey}`}
+      initialDetentIndex={initialDetentIndex}
       detents={detents}
       onPositionChange={reanimatedPositionChangeHandler}
       {...sheetProps}
