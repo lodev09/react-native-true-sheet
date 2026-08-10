@@ -4817,6 +4817,7 @@ __metadata:
     react-native-safe-area-context: "npm:~5.7.0"
     react-native-screens: "patch:react-native-screens@npm%3A4.25.2#~/.yarn/patches/react-native-screens-npm-4.25.2.patch"
     react-native-worklets: "npm:0.10.0"
+    standard-navigation: "npm:^0.0.9"
   languageName: unknown
   linkType: soft
 
@@ -4849,6 +4850,7 @@ __metadata:
     react-native-screens: "patch:react-native-screens@npm%3A4.25.2#~/.yarn/patches/react-native-screens-npm-4.25.2.patch"
     react-native-web: "npm:~0.21.0"
     react-native-worklets: "npm:0.10.0"
+    standard-navigation: "npm:^0.0.9"
     typescript: "npm:~6.0.3"
   languageName: unknown
   linkType: soft
@@ -6247,6 +6249,7 @@ __metadata:
     react-native: ">=0.82.0"
     react-native-reanimated: ">=4"
     react-native-worklets: "*"
+    standard-navigation: ">=0.0.9"
   peerDependenciesMeta:
     "@radix-ui/react-dialog":
       optional: true
@@ -6259,6 +6262,8 @@ __metadata:
     react-native-reanimated:
       optional: true
     react-native-worklets:
+      optional: true
+    standard-navigation:
       optional: true
   languageName: unknown
   linkType: soft

@@ -121,6 +121,7 @@
     "react-native-worklets": "0.10.0",
     "react-test-renderer": "19.2.3",
     "release-it": "^20.0.1",
+    "standard-navigation": "^0.0.9",
     "turbo": "^2.5.6",
     "typescript": "~6.0.3"
   },
@@ -128,9 +129,6 @@
     "@types/react": "~19.2.14",
     "react-native-reanimated": "4.5.0",
     "react-native-worklets": "0.10.0"
-  },
-  "dependencies": {
-    "standard-navigation": "^0.0.9"
   },
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
@@ -140,7 +138,8 @@
     "react": "*",
     "react-native": ">=0.82.0",
     "react-native-reanimated": ">=4",
-    "react-native-worklets": "*"
+    "react-native-worklets": "*",
+    "standard-navigation": ">=0.0.9"
   },
   "peerDependenciesMeta": {
     "@radix-ui/react-dialog": {
@@ -159,6 +158,9 @@
       "optional": true
     },
     "react-native-worklets": {
+      "optional": true
+    },
+    "standard-navigation": {
       "optional": true
     }
   },

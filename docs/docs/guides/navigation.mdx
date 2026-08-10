@@ -18,11 +18,11 @@ You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets
 
 TrueSheet provides a custom navigator built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so the same implementation works with both React Navigation and [Expo Router](#expo-router). The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
 
-```bash
-npm install @react-navigation/native
-```
+Install `@react-navigation/native` (version `7.3.0` or higher) and `standard-navigation`. Both are declared as optional peer dependencies.
 
-Requires `@react-navigation/native` version `7.3.0` or higher.
+```bash
+npm install @react-navigation/native standard-navigation
+```
 
 ### Basic Usage
 
@@ -239,7 +239,11 @@ See [Lifecycle Events](../reference/events) for more details.
 
 TrueSheet ships a ready-to-use `Sheet` layout for Expo Router via the `/navigation/expo-router` entry point. It integrates with Expo Router's built-in navigation directly — no `@react-navigation/*` install needed. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
 
-Requires Expo SDK 57+ (`expo-router` version `57.0.0` or higher).
+Requires Expo SDK 57+ (`expo-router` version `57.0.0` or higher). Install `standard-navigation`, declared as an optional peer dependency:
+
+```bash
+npm install standard-navigation
+```
 
 ```
 app/
