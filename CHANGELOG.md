@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- Scrollable sheets scroll again when their content isn't wrapped in a touchable — [#767](https://github.com/lodev09/react-native-true-sheet/pull/767) claimed unclaimed touches on the sheet container, making an ancestor of the `ScrollView` the JS responder, which blocks scrolling on both platforms. The touch handlers moved to the sheet's host view, which is never a native ancestor of the content. ([#777](https://github.com/lodev09/react-native-true-sheet/pull/777) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.10
 
 ### 🎉 New features
