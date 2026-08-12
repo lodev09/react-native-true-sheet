@@ -1082,6 +1082,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     if (!self.isDesignCompatibilityMode) {
       if (self.backgroundColor) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
+        // Translucent colors blend with the glass through the effect alone;
+        // painting the view too would apply them twice.
+        if (CGColorGetAlpha(self.backgroundColor.CGColor) < 1) {
+          return;
+        }
       } else if (hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
       } else {
