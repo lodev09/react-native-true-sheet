@@ -550,15 +550,20 @@ export class TrueSheet
         onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
         onVisibilityChange={this.onVisibilityChange}
+        // These must stay on this host view, not on the container. The container is
+        // reparented into the native sheet, so this view is never a native ancestor of
+        // the sheet content. Claiming the responder here stops the negotiation at the
+        // sheet boundary without making an ancestor of the content the JS responder,
+        // which would block scrolling inside the sheet.
+        onStartShouldSetResponder={absorbUnclaimedTouches}
+        onTouchStart={stopTouchPropagation}
+        onTouchMove={stopTouchPropagation}
+        onTouchEnd={stopTouchPropagation}
+        onTouchCancel={stopTouchPropagation}
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent
             style={scrollable ? styles.scrollableContainer : undefined}
-            onStartShouldSetResponder={absorbUnclaimedTouches}
-            onTouchStart={stopTouchPropagation}
-            onTouchMove={stopTouchPropagation}
-            onTouchEnd={stopTouchPropagation}
-            onTouchCancel={stopTouchPropagation}
           >
             {header && (
               <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
