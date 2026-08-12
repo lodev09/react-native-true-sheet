@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
+import { BLUE, DARK, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '../utils';
 import { Button, Input, Spacer } from '../components';
 import {
   PromptSheet,
@@ -56,7 +56,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Spacer />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
-        <BasicSheet dimmedDetentIndex={1} ref={basicSheet} />
+        <BasicSheet dimmedDetentIndex={1} backgroundColor={DARK} ref={basicSheet} />
         <BlankSheet dimmed={false} ref={blankSheet} />
         <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
@@ -84,7 +84,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
               <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
               <Spacer />
 
-              <BasicSheet ref={modalBasicSheet} />
+              <BasicSheet backgroundColor={DARK} ref={modalBasicSheet} />
               <PromptSheet dimmed={false} ref={modalPromptSheet} />
               <FlatListSheet ref={modalFlatlistSheet} />
               <ScrollViewSheet ref={modalScrollViewSheet} />
