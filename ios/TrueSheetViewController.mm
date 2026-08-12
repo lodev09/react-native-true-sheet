@@ -1087,11 +1087,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       } else {
         self.sheet.backgroundEffect = nil;
       }
-      return;
     }
   }
 #endif
 
+  // UIColorEffect tints the glass rather than replacing it. Over a full-screen
+  // presenter this shifts dark, low-chroma colors, so paint the view as well
+  // to keep the background exact.
   self.view.backgroundColor = self.backgroundColor;
 }
 
