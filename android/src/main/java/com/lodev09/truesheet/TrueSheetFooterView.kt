@@ -12,6 +12,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
+import com.lodev09.truesheet.utils.TouchEventDeduper
 
 /**
  * Delegate interface for footer view size changes and event dispatching
@@ -43,6 +44,7 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
 
   private val jsTouchDispatcher = JSTouchDispatcher(this)
   private var jsPointerDispatcher: JSPointerDispatcher? = null
+  private val touchDeduper = TouchEventDeduper()
 
   init {
     jsPointerDispatcher = JSPointerDispatcher(this)
@@ -62,7 +64,9 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let { dispatcher ->
-      jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
+      if (touchDeduper.shouldDispatch(event)) {
+        jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
+      }
       jsPointerDispatcher?.handleMotionEvent(event, dispatcher, true)
     }
     return super.onInterceptTouchEvent(event)
@@ -80,7 +84,9 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
     }
 
     eventDispatcher?.let { dispatcher ->
-      jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
+      if (touchDeduper.shouldDispatch(event)) {
+        jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
+      }
       jsPointerDispatcher?.handleMotionEvent(event, dispatcher, false)
     }
     super.onTouchEvent(event)

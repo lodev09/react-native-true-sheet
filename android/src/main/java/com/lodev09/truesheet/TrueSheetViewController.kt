@@ -39,6 +39,7 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
+import com.lodev09.truesheet.utils.TouchEventDeduper
 
 // =============================================================================
 // MARK: - Data Types & Delegate Protocol
@@ -198,6 +199,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // ACTION_DOWN so subsequent MOVE events keep routing to the footer even if
   // the finger drifts outside the footer's rect mid-gesture.
   private var footerOwnsTouchStream = false
+
+  private val touchDeduper = TouchEventDeduper()
 
   private val eventDispatcher
     get() = delegate?.eventDispatcher
@@ -1354,7 +1357,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
-      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      if (touchDeduper.shouldDispatch(event)) {
+        jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      }
       jsPointerDispatcher.handleMotionEvent(event, it, true)
     }
     return super.onInterceptTouchEvent(event)
@@ -1368,7 +1373,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun onTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
-      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      if (touchDeduper.shouldDispatch(event)) {
+        jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      }
       jsPointerDispatcher.handleMotionEvent(event, it, false)
     }
     super.onTouchEvent(event)
