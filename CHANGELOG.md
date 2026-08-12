@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.11
+
 ### 🐛 Bug fixes
 
 - **iOS**: Opaque `backgroundColor` now renders exactly on iOS 26.1+ when the sheet is presented over a full-screen presenter (e.g. a `fullScreenModal` route or RN `Modal`) — `UIColorEffect` tints the liquid glass rather than replacing it, shifting dark low-chroma colors, so the controller view is now painted as well. ([#779](https://github.com/lodev09/react-native-true-sheet/pull/779) by [@lodev09](https://github.com/lodev09))
