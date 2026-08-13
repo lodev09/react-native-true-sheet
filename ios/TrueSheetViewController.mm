@@ -1246,14 +1246,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
     if (!self.isDesignCompatibilityMode) {
-      if (self.backgroundColor) {
-        self.sheet.backgroundEffect = [UIColorEffect effectWithColor:self.backgroundColor];
-      } else if (hasBlur) {
+      if (self.backgroundColor || hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
       } else {
         self.sheet.backgroundEffect = nil;
       }
-      return;
     }
   }
 #endif

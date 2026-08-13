@@ -24,6 +24,14 @@
 
 - Upgrade the examples to Expo SDK 57 and React Native 0.86. ([#755](https://github.com/lodev09/react-native-true-sheet/pull/755) by [@lodev09](https://github.com/lodev09))
 
+## 3.11.11
+
+### 🐛 Bug fixes
+
+- **iOS**: Opaque `backgroundColor` now renders exactly on iOS 26.1+ when the sheet is presented over a full-screen presenter (e.g. a `fullScreenModal` route or RN `Modal`) — `UIColorEffect` tints the liquid glass rather than replacing it, shifting dark low-chroma colors, so the controller view is now painted as well. ([#779](https://github.com/lodev09/react-native-true-sheet/pull/779) by [@lodev09](https://github.com/lodev09))
+- **Android**: Touches on the sheet no longer fire the `onPress` of a `Pressable` outside it — the fix in [#767](https://github.com/lodev09/react-native-true-sheet/pull/767) never took effect here. A touch that hit no React child was dispatched to JS twice (once from `onInterceptTouchEvent`, once from `onTouchEvent`), and the second stream found the sheet already holding the responder, so React only asked its ancestors. ([#777](https://github.com/lodev09/react-native-true-sheet/pull/777) by [@lodev09](https://github.com/lodev09))
+- Scrollable sheets scroll again when their content isn't wrapped in a touchable — [#767](https://github.com/lodev09/react-native-true-sheet/pull/767) claimed unclaimed touches on the sheet container, making an ancestor of the `ScrollView` the JS responder, which blocks scrolling on both platforms. The touch handlers moved to the sheet's host view, which is never a native ancestor of the content. ([#777](https://github.com/lodev09/react-native-true-sheet/pull/777) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.10
 
 ### 🎉 New features
