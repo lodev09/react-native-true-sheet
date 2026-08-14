@@ -14,7 +14,6 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewShadowNode.h>
-#import <react/renderer/components/TrueSheetSpec/TrueSheetInsets.h>
 #import "TrueSheetViewController.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
@@ -97,10 +96,9 @@ using namespace facebook::react;
   _didPushBottomInset = YES;
 }
 
-// The inset baked into the current layout by the shadow node — the state
-// value once initialized, otherwise the seeded value (see
-// TrueSheetFooterViewShadowNode). Refreshed in updateLayoutMetrics so it
-// always pairs with the measured height.
+// The inset baked into the current layout by the shadow node (pushed or
+// seeded — see TrueSheetFooterViewShadowNode). Refreshed in
+// updateLayoutMetrics so it always pairs with the measured height.
 - (CGFloat)appliedBottomInset {
   return _appliedBottomInset;
 }
@@ -142,19 +140,18 @@ using namespace facebook::react;
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
   // State lands before layout metrics within the same mount transaction, so
-  // this reflects the inset the shadow node baked into this frame.
+  // this reflects the inset the shadow node baked into this frame — seeded
+  // values are recorded back into the state at layout time (see
+  // TrueSheetFooterViewShadowNode).
+  CGFloat previousAppliedBottomInset = _appliedBottomInset;
   if (_state) {
-    const auto &data = _state->getData();
-    if (data.initialized) {
-      _appliedBottomInset = data.bottomInset;
-    } else {
-      const auto &props = static_cast<const TrueSheetFooterViewProps &>(*_props);
-      _appliedBottomInset = props.autoBottomInset ? TrueSheetInsets::bottomSafeArea() : 0;
-    }
+    _appliedBottomInset = _state->getData().bottomInset;
   }
 
   CGFloat height = layoutMetrics.frame.size.height;
-  if (height != _lastHeight) {
+  // An inset change alone (fixed-height footer: padding moves, frame doesn't)
+  // still changes what's baked in — report so the controller re-pairs.
+  if (height != _lastHeight || _appliedBottomInset != previousAppliedBottomInset) {
     _lastHeight = height;
     [self.delegate footerViewDidChangeSize:CGSizeMake(layoutMetrics.frame.size.width, height)];
   }

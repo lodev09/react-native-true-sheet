@@ -464,6 +464,19 @@ export class TrueSheet
     if (prevProps.detents !== this.props.detents) {
       this.validateDetents();
     }
+
+    // initialDetentIndex set at runtime on a lazily-mounted sheet: render the
+    // native tree so InitialPresentGate can deliver the index (constructor
+    // only computes this for the initial prop).
+    const prevInitialDetentIndex = prevProps.initialDetentIndex ?? -1;
+    const initialDetentIndex = this.props.initialDetentIndex ?? -1;
+    if (
+      prevInitialDetentIndex < 0 &&
+      initialDetentIndex >= 0 &&
+      !this.state.shouldRenderNativeView
+    ) {
+      this.setState({ shouldRenderNativeView: true });
+    }
   }
 
   componentWillUnmount(): void {

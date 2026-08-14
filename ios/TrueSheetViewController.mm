@@ -211,6 +211,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   return window ? window.bounds.size.height : UIScreen.mainScreen.bounds.size.height;
 }
 
+// Only phone sheets absorb the bottom safe-area inset — non-phone idioms
+// (iPad form sheets) are inset from the screen edge by UIKit.
+static BOOL TrueSheetIsPhoneIdiom(void) {
+  return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone;
+}
+
 - (CGFloat)detentBottomAdjustmentForHeight:(CGFloat)height {
   if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
     return 0;
@@ -220,7 +226,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 - (CGFloat)bottomSafeAreaForHeight:(CGFloat)height {
-  if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) {
+  if (!TrueSheetIsPhoneIdiom()) {
     return 0;
   }
 
@@ -279,19 +285,27 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return 0;
   }
 
+  // Early out so the maxNaturalDetentHeight fallback below doesn't run per
+  // layout pass on iPad only to be zeroed by bottomSafeAreaForHeight:.
+  if (!TrueSheetIsPhoneIdiom()) {
+    return 0;
+  }
+
   // Once laid out, the sheet's own safe area is the authority — it reflects
   // UIKit's actual float/anchored decision (a floating sheet gets 0), where
   // bottomSafeAreaForHeight: can only guess the float threshold. Guessing
   // wrong leaves the safe-area region unfilled (gap) or double-padded.
   UIView *view = self.viewIfLoaded;
-  if (view.window && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+  if (view.window) {
     _hasObservedBottomInset = YES;
     _observedBottomInset = view.safeAreaInsets.bottom;
     return _observedBottomInset;
   }
 
-  // Off-window (pre-present, re-present): the last observed value is this
-  // sheet's own truth — prefer it over the float-threshold guess.
+  // Off-window while presented (e.g. hidden behind a native screen): the last
+  // observed value is this sheet's own truth — prefer it over the
+  // float-threshold guess. Cleared on dismiss so a re-present observes fresh
+  // geometry (rotation or detent changes while dismissed would stale it).
   if (_hasObservedBottomInset) {
     return _observedBottomInset;
   }
@@ -569,6 +583,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     [self restoreWindowAccessibilityElements];
     _isPresented = NO;
     _isWillDismissEmitted = NO;
+    _hasObservedBottomInset = NO;
 
     [_anchorView removeFromSuperview];
     _anchorView = nil;
@@ -660,7 +675,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 // the footer pads/unpads in the same layout pass.
 - (void)viewSafeAreaInsetsDidChange {
   [super viewSafeAreaInsetsDidChange];
-  [self.delegate viewControllerSafeAreaInsetsDidChange];
+
+  // Mid-dismiss the frame moves off-screen and reports transient insets —
+  // don't let them pollute the observed value (matches viewDidLayoutSubviews).
+  if (!self.isBeingDismissed) {
+    [self.delegate viewControllerSafeAreaInsetsDidChange];
+  }
 }
 
 - (void)viewDidLayoutSubviews {

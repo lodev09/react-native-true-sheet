@@ -25,6 +25,13 @@ void TrueSheetFooterViewShadowNode::adjustLayoutWithState() {
   float bottomInset = stateData.bottomInset;
   if (!stateData.initialized && props.autoBottomInset) {
     bottomInset = TrueSheetInsets::bottomSafeArea();
+    if (bottomInset != stateData.bottomInset) {
+      // Record the seeded value so the mounted view reads exactly the inset
+      // baked into this layout — the global may change before mount.
+      auto seededData = stateData;
+      seededData.bottomInset = bottomInset;
+      setStateData(std::move(seededData));
+    }
   }
 
   // A footer pinned to the sheet's bottom edge owns the bottom safe-area

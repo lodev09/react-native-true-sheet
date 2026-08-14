@@ -143,7 +143,13 @@ using namespace facebook::react;
 
     [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
                       animated:strongSelf->_initialDetentAnimated
-                    completion:nil];
+                    completion:^(BOOL success, NSError *_Nullable error) {
+                      // Present can fail if the view detached during this turn —
+                      // reset so the next attach/prop update retries.
+                      if (!success) {
+                        strongSelf->_didInitiallyPresent = NO;
+                      }
+                    }];
   });
 }
 
@@ -429,10 +435,8 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  CGFloat footerHeight = [_containerView footerHeight];
-  if (footerHeight > 0) {
-    _controller.footerHeight = @(footerHeight);
-    _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
+  if ([_containerView footerHeight] > 0) {
+    [self syncFooterMetrics];
   }
 
   CGFloat peekContentHeight = [_containerView peekContentHeight];
@@ -507,8 +511,7 @@ using namespace facebook::react;
   if (_containerView) {
     _controller.contentHeight = @([_containerView contentHeight]);
     _controller.headerHeight = @([_containerView headerHeight]);
-    _controller.footerHeight = @([_containerView footerHeight]);
-    _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
+    [self syncFooterMetrics];
     _controller.peekContentHeight = @([_containerView peekContentHeight]);
   }
   _pendingSizeChange = NO;
@@ -659,8 +662,7 @@ using namespace facebook::react;
 }
 
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize {
-  _controller.footerHeight = @(newSize.height);
-  _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
+  [self syncFooterMetrics];
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
 }
@@ -825,6 +827,14 @@ using namespace facebook::react;
   _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];
+}
+
+// footerHeight and appliedFooterBottomInset must stay paired — detent math
+// subtracts exactly the inset baked into the measured footer height (see
+// autoDetentBottomInset/peekDetentBottomInset).
+- (void)syncFooterMetrics {
+  _controller.footerHeight = @([_containerView footerHeight]);
+  _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
 }
 
 // Recomputes the inset the footer absorbs and pushes it down. The inset

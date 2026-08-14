@@ -114,7 +114,19 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (initialDetentIndex < 0 || didInitiallyPresent || !isAttachedToWindow) return
 
     didInitiallyPresent = true
-    post { present(initialDetentIndex, initialDetentAnimated) { } }
+    post {
+      // The view may have been dropped (flag reset) or detached before this
+      // ran — roll back so a later attach retries instead of presenting a
+      // sheet with no live host.
+      if (!didInitiallyPresent) return@post
+      if (!isAttachedToWindow) {
+        didInitiallyPresent = false
+        return@post
+      }
+      if (!viewController.isPresented) {
+        present(initialDetentIndex, initialDetentAnimated) { }
+      }
+    }
   }
 
   override fun addView(child: View?, index: Int) {
