@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType }
 import {
   Platform,
   StyleSheet,
-  Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -33,8 +32,8 @@ import Animated, {
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
-import { Button, ButtonGroup, DemoContent, Header, Spacer } from '../components';
-import { BLUE, DARK, GAP, GRAY, HEADER_HEIGHT, SPACING } from '../utils';
+import { Button, ButtonGroup, DemoContent, Footer, Header, Spacer, Text } from '../components';
+import { BLUE, DARK, GAP, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
   BasicSheet,
@@ -172,6 +171,8 @@ const MapScreenInner = ({
         name="main"
         detents={['peek', 'auto', 1]}
         ref={sheetRef}
+        footer={<Footer />}
+        footerStyle={styles.footer}
         initialDetentIndex={0}
         anchor={anchorLeft ? 'left' : 'center'}
         maxContentWidth={maxContentWidth}
@@ -325,6 +326,9 @@ const styles = StyleSheet.create({
     padding: SPACING,
     gap: GAP,
   },
+  footer: {
+    backgroundColor: DARK,
+  },
   heading: {
     marginBottom: SPACING,
   },
@@ -332,11 +336,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 30,
     fontWeight: '500',
-    color: 'white',
   },
   subtitle: {
     lineHeight: 24,
-    color: GRAY,
+    opacity: 0.6,
   },
   logContainer: {
     position: 'absolute',
