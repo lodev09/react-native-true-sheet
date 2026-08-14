@@ -28,6 +28,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;
 
 /**
+ * Bottom inset currently baked into the footer's layout height — pairs with
+ * the measured frame so detent math can subtract exactly what's baked in.
+ */
+@property (nonatomic, readonly) CGFloat appliedBottomInset;
+
+/**
  * Re-applies the footer's keyboard slide using the current keyboard height.
  * No-op when the keyboard is hidden. Used to reflect live `keyboardOffset` changes.
  */

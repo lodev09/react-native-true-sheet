@@ -406,6 +406,7 @@ using namespace facebook::react;
   CGFloat footerHeight = [_containerView footerHeight];
   if (footerHeight > 0) {
     _controller.footerHeight = @(footerHeight);
+    _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
   }
 
   CGFloat peekContentHeight = [_containerView peekContentHeight];
@@ -481,6 +482,7 @@ using namespace facebook::react;
     _controller.contentHeight = @([_containerView contentHeight]);
     _controller.headerHeight = @([_containerView headerHeight]);
     _controller.footerHeight = @([_containerView footerHeight]);
+    _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
     _controller.peekContentHeight = @([_containerView peekContentHeight]);
   }
   _pendingSizeChange = NO;
@@ -632,6 +634,7 @@ using namespace facebook::react;
 
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize {
   _controller.footerHeight = @(newSize.height);
+  _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
 }
@@ -722,6 +725,10 @@ using namespace facebook::react;
   [self updateStateWithSize:size];
 }
 
+- (void)viewControllerSafeAreaInsetsDidChange {
+  [self refreshFooterBottomInset];
+}
+
 - (void)viewControllerWillFocus {
   [TrueSheetFocusEvents emitWillFocus:_eventEmitter];
 }
@@ -801,9 +808,12 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
+  // appliedFooterBottomInset is NOT set here — it tracks what's actually
+  // baked into the footer's measured height (reported with its layout), not
+  // what was just pushed. Setting it at push time desyncs the pair and lets
+  // a seeded inset read as natural content height (see maxNaturalDetentHeight).
   CGFloat inset = _controller.footerBottomInset;
   _containerView.footerBottomInset = inset;
-  _controller.appliedFooterBottomInset = inset;
 
   // Publish the inset so a footer set later (e.g. navigation setOptions) is
   // padded on its very first layout instead of resizing the sheet twice.

@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
                                  detent:(CGFloat)detent
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
+- (void)viewControllerSafeAreaInsetsDidChange;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;
@@ -100,9 +101,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CGFloat footerBottomInset;
 
 /**
- * The inset last pushed into the footer's layout (see footerBottomInset).
- * Detent resolution subtracts this exact value so the inset baked into the
- * footer's height is never double-counted.
+ * The inset currently baked into the footer's measured height, reported
+ * alongside its layout (see TrueSheetFooterView.appliedBottomInset). Detent
+ * resolution subtracts this exact value so the baked inset is never
+ * double-counted.
  */
 @property (nonatomic, assign) CGFloat appliedFooterBottomInset;
 

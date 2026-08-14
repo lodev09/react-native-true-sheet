@@ -118,6 +118,10 @@ using namespace facebook::react;
   return _footerView ? _footerView.frame.size.height : 0;
 }
 
+- (CGFloat)footerAppliedBottomInset {
+  return _footerView ? _footerView.appliedBottomInset : 0;
+}
+
 // Distance from the top of the content view to the bottom of the peek view.
 // Includes the peek view's offset within the content (padding, views above it)
 // so the peek detent reveals everything down to the peek content's bottom edge.

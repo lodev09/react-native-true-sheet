@@ -274,6 +274,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     return 0;
   }
 
+  // Once laid out, the sheet's own safe area is the authority — it reflects
+  // UIKit's actual float/anchored decision (a floating sheet gets 0), where
+  // bottomSafeAreaForHeight: can only guess the float threshold. Guessing
+  // wrong leaves the safe-area region unfilled (gap) or double-padded.
+  UIView *view = self.viewIfLoaded;
+  if (view.window && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+    return view.safeAreaInsets.bottom;
+  }
+
   return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
 }
 
@@ -630,6 +639,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
   }
+}
+
+// Fires when UIKit resolves the sheet's float/anchored placement (present,
+// detent resize crossing the float threshold, rotation). The footer's
+// absorbed inset follows the observed safe area — repush it right away so
+// the footer pads/unpads in the same layout pass.
+- (void)viewSafeAreaInsetsDidChange {
+  [super viewSafeAreaInsetsDidChange];
+  [self.delegate viewControllerSafeAreaInsetsDidChange];
 }
 
 - (void)viewDidLayoutSubviews {

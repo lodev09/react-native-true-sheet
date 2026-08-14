@@ -14,6 +14,7 @@
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewShadowNode.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetInsets.h>
 #import "TrueSheetViewController.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
@@ -25,6 +26,8 @@ using namespace facebook::react;
   CGFloat _currentKeyboardOffset;
   CGFloat _bottomInset;
   BOOL _keyboardVisible;
+  BOOL _didPushBottomInset;
+  CGFloat _appliedBottomInset;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -43,6 +46,8 @@ using namespace facebook::react;
     _currentKeyboardOffset = 0;
     _bottomInset = 0;
     _keyboardVisible = NO;
+    _didPushBottomInset = NO;
+    _appliedBottomInset = 0;
   }
   return self;
 }
@@ -55,7 +60,11 @@ using namespace facebook::react;
 // bottom safe-area inset — the footer owns the sheet's bottom edge, so it
 // absorbs the inset and its background fills it.
 - (void)setBottomInset:(CGFloat)bottomInset {
-  if (_bottomInset == bottomInset) {
+  // The first push must go through even when the value matches the ivar
+  // default (0) — it marks the state initialized so the shadow node stops
+  // seeding from the app-wide precalculated inset, which may belong to
+  // another sheet (e.g. a floating sheet whose real inset is 0).
+  if (_didPushBottomInset && _bottomInset == bottomInset) {
     return;
   }
   _bottomInset = bottomInset;
@@ -85,6 +94,15 @@ using namespace facebook::react;
   // them an inset stale (same reason Android bridges through
   // TrueSheetStateUpdater).
   _state->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
+  _didPushBottomInset = YES;
+}
+
+// The inset baked into the current layout by the shadow node — the state
+// value once initialized, otherwise the seeded value (see
+// TrueSheetFooterViewShadowNode). Refreshed in updateLayoutMetrics so it
+// always pairs with the measured height.
+- (CGFloat)appliedBottomInset {
+  return _appliedBottomInset;
 }
 
 // Height the footer occupies above the keyboard — its layout height minus the
@@ -123,6 +141,18 @@ using namespace facebook::react;
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
+  // State lands before layout metrics within the same mount transaction, so
+  // this reflects the inset the shadow node baked into this frame.
+  if (_state) {
+    const auto &data = _state->getData();
+    if (data.initialized) {
+      _appliedBottomInset = data.bottomInset;
+    } else {
+      const auto &props = static_cast<const TrueSheetFooterViewProps &>(*_props);
+      _appliedBottomInset = props.autoBottomInset ? TrueSheetInsets::bottomSafeArea() : 0;
+    }
+  }
+
   CGFloat height = layoutMetrics.frame.size.height;
   if (height != _lastHeight) {
     _lastHeight = height;
@@ -143,6 +173,8 @@ using namespace facebook::react;
   _currentKeyboardOffset = 0;
   _bottomInset = 0;
   _keyboardVisible = NO;
+  _didPushBottomInset = NO;
+  _appliedBottomInset = 0;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate

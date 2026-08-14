@@ -83,6 +83,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)footerHeight;
 
 /**
+ * Returns the bottom inset currently baked into the footer's height
+ */
+- (CGFloat)footerAppliedBottomInset;
+
+/**
  * Returns the current height of the peek view within the content
  */
 - (CGFloat)peekContentHeight;
