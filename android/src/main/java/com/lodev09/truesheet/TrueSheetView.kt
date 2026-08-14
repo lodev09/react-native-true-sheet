@@ -101,15 +101,20 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    presentInitialIfNeeded()
+  }
 
-    if (initialDetentIndex >= 0 && !didInitiallyPresent) {
-      didInitiallyPresent = true
-      if (initialDetentAnimated) {
-        present(initialDetentIndex, true) { }
-      } else {
-        post { present(initialDetentIndex, false) { } }
-      }
-    }
+  /**
+   * JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
+   * navigation footer set via setOptions) commits together with it. The prop then
+   * arrives after attach, so the ViewManager triggers this on prop update too.
+   * Posted so sibling mounts from the current transaction land before measuring.
+   */
+  fun presentInitialIfNeeded() {
+    if (initialDetentIndex < 0 || didInitiallyPresent || !isAttachedToWindow) return
+
+    didInitiallyPresent = true
+    post { present(initialDetentIndex, initialDetentAnimated) { } }
   }
 
   override fun addView(child: View?, index: Int) {

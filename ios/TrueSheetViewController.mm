@@ -70,6 +70,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   BOOL _isDragging;
   BOOL _isWillDismissEmitted;
 
+  // Last bottom safe area observed while presented — reused as the estimate
+  // for the next present (beats the float-threshold guess for re-presents).
+  BOOL _hasObservedBottomInset;
+  CGFloat _observedBottomInset;
+
   BOOL _isInteractiveDismiss;
   CGFloat _interactiveStartPosition;
   UIView *_interactiveContainerView;
@@ -280,7 +285,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   // wrong leaves the safe-area region unfilled (gap) or double-padded.
   UIView *view = self.viewIfLoaded;
   if (view.window && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-    return view.safeAreaInsets.bottom;
+    _hasObservedBottomInset = YES;
+    _observedBottomInset = view.safeAreaInsets.bottom;
+    return _observedBottomInset;
+  }
+
+  // Off-window (pre-present, re-present): the last observed value is this
+  // sheet's own truth — prefer it over the float-threshold guess.
+  if (_hasObservedBottomInset) {
+    return _observedBottomInset;
   }
 
   return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
@@ -652,6 +665,13 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
+
+  // viewSafeAreaInsetsDidChange doesn't fire on re-present when the observed
+  // inset matches the previous presentation's — refresh every layout pass
+  // instead (deduped downstream, so unchanged values are free).
+  if (!self.isBeingDismissed) {
+    [self.delegate viewControllerSafeAreaInsetsDidChange];
+  }
 
   // Skip size reports while backgrounded behind a stacked child — the push-back
   // scaling changes the frame and would needlessly resize content.

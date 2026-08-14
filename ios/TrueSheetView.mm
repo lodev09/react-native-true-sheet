@@ -110,18 +110,41 @@ using namespace facebook::react;
     return;
   }
 
-  if (_initialDetentIndex >= 0 && !_didInitiallyPresent) {
-    UIViewController *vc = [self findPresentingViewController];
+  [self presentInitialIfNeeded];
+}
 
-    // Only present if the view controller is in the same window and not being dismissed
-    if (vc && vc.view.window == self.window && !_controller.isBeingDismissed) {
-      _didInitiallyPresent = YES;
-      [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
-    } else {
-      // Animate next time when sheet finally moves to the correct window
-      _initialDetentAnimated = YES;
-    }
+// JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
+// navigation footer set via setOptions) commits together with it — by the time
+// the prop lands the tree is final and the sheet presents at its final height.
+// Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
+// arriving after attach, which didMoveToWindow won't re-fire for).
+- (void)presentInitialIfNeeded {
+  if (_initialDetentIndex < 0 || _didInitiallyPresent)
+    return;
+
+  UIViewController *vc = [self findPresentingViewController];
+
+  // Only present if the view controller is in the same window and not being dismissed
+  if (!vc || vc.view.window != self.window || _controller.isBeingDismissed) {
+    // Animate next time when sheet finally moves to the correct window
+    _initialDetentAnimated = YES;
+    return;
   }
+
+  _didInitiallyPresent = YES;
+
+  // Deferred a runloop turn so sibling mounts from the current transaction
+  // (e.g. a footer committed alongside the prop) land before measuring.
+  __weak __typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __typeof(self) strongSelf = weakSelf;
+    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+      return;
+
+    [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
+                      animated:strongSelf->_initialDetentAnimated
+                    completion:nil];
+  });
 }
 
 - (void)dealloc {
@@ -342,6 +365,9 @@ using namespace facebook::react;
     _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
+    if (self.window) {
+      [self presentInitialIfNeeded];
+    }
   }
 }
 

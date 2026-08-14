@@ -179,6 +179,7 @@ class TrueSheetViewManager :
   @ReactProp(name = "initialDetentIndex", defaultInt = -1)
   override fun setInitialDetentIndex(view: TrueSheetView, index: Int) {
     view.initialDetentIndex = index
+    view.presentInitialIfNeeded()
   }
 
   @ReactProp(name = "initialDetentAnimated", defaultBoolean = true)

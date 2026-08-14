@@ -6,6 +6,7 @@ import {
   type ComponentRef,
   isValidElement,
   createElement,
+  useEffect,
 } from 'react';
 
 import type {
@@ -67,7 +68,21 @@ const stopTouchPropagation = (event: GestureResponderEvent) => event.stopPropaga
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
+  initialPresentReady: boolean;
 }
+
+// Gates auto-present (initialDetentIndex) by one commit. Rendered last in the
+// sheet subtree so its mount effect runs after the content's mount effects —
+// updates they schedule (e.g. a navigation footer via setOptions) batch with
+// onReady's, so native receives initialDetentIndex together with the settled
+// tree and presents at the final height instead of resizing mid-flight.
+const InitialPresentGate = ({ onReady }: { onReady: () => void }) => {
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+
+  return null;
+};
 
 export class TrueSheet
   extends PureComponent<TrueSheetProps, TrueSheetState>
@@ -111,6 +126,7 @@ export class TrueSheet
 
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
+      initialPresentReady: false,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -129,6 +145,11 @@ export class TrueSheet
     this.onDidBlur = this.onDidBlur.bind(this);
     this.handleBackPress = this.handleBackPress.bind(this);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+    this.onInitialPresentReady = this.onInitialPresentReady.bind(this);
+  }
+
+  private onInitialPresentReady(): void {
+    this.setState({ initialPresentReady: true });
   }
 
   private validateDetents(): void {
@@ -498,6 +519,12 @@ export class TrueSheet
       return Math.min(1, detent);
     });
 
+    // Hold initialDetentIndex back from native until the gate's effect flushes
+    // (see InitialPresentGate) — native presents when the prop lands.
+    const autoPresent = initialDetentIndex >= 0;
+    const gatedInitialDetentIndex =
+      autoPresent && !this.state.initialPresentReady ? -1 : initialDetentIndex;
+
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
       this.cachedGrabberOptions = grabberOptions;
@@ -522,7 +549,7 @@ export class TrueSheet
         accessibilityOptions={accessibilityOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
-        initialDetentIndex={initialDetentIndex}
+        initialDetentIndex={gatedInitialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         draggable={draggable}
@@ -593,6 +620,9 @@ export class TrueSheet
               >
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
+            )}
+            {autoPresent && !this.state.initialPresentReady && (
+              <InitialPresentGate onReady={this.onInitialPresentReady} />
             )}
           </TrueSheetContainerViewNativeComponent>
         )}
