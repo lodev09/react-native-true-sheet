@@ -23,9 +23,9 @@ import {
   SPACING,
   times,
 } from '../../utils';
-import { Footer } from '../Footer';
+import { Footer, FooterPill } from '../Footer';
 import { Header } from '../Header';
-import { Button } from '../Button';
+import { Text as ThemedText } from '../Text';
 
 interface ScrollViewSheetProps extends TrueSheetProps {}
 
@@ -51,7 +51,7 @@ const HeavyItem = ({ index }: { index: number }) => {
       </Pressable>
       <TrueSheet ref={sheet} detents={[0.5]} backgroundColor={Platform.select({ android: DARK })}>
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>Sheet content</Text>
+          <ThemedText style={styles.placeholderText}>Sheet content</ThemedText>
         </View>
       </TrueSheet>
     </Pressable>
@@ -82,8 +82,9 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       header={<Header />}
       headerOptions={{ position: 'absolute' }}
       footer={
-        <Footer>
-          <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
+        // The footer background is transparent on iOS, so it follows the theme
+        <Footer themed={Platform.OS === 'ios'}>
+          <FooterPill text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
       footerStyle={styles.footer}
@@ -104,8 +105,8 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           ))}
         </ScrollView>
       ) : (
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>List is hidden</Text>
+        <View style={[styles.placeholder, styles.listPlaceholder]}>
+          <ThemedText style={styles.placeholderText}>List is hidden</ThemedText>
         </View>
       )}
     </TrueSheet>
@@ -169,8 +170,14 @@ const styles = StyleSheet.create({
     padding: SPACING,
     alignItems: 'center',
   },
+  // Clear the absolute header so the message sits in the visible area
+  listPlaceholder: {
+    paddingTop: HEADER_HEIGHT + SPACING * 2,
+  },
   placeholderText: {
-    color: 'rgba(255, 255, 255, 0.3)',
     fontSize: 14,
+    opacity: 0.5,
+    // The sheet background is fixed DARK on Android; themed elsewhere
+    ...Platform.select({ android: { color: LIGHT_GRAY } }),
   },
 });
