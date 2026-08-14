@@ -232,49 +232,76 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 /**
- * Bottom inset excluded from the auto detent. A relative footer owns the
- * sheet's bottom edge, so it absorbs the inset — UIKit lays custom detents out
- * above the safe area, which would otherwise gap the content from the footer.
+ * Largest height the sheet can reach across its configured detents, excluding
+ * the inset currently baked into the footer's height. Basis for the footer's
+ * inset absorption so it follows the same rule as bottomSafeAreaForHeight: —
+ * a sheet that only ever floats (small detents on iOS 26) keeps its footer
+ * unpadded.
  */
-- (CGFloat)autoDetentBottomInsetForHeight:(CGFloat)height {
-  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
-    // 'none' already excludes the inset for every detent
-    return 0;
+- (CGFloat)maxNaturalDetentHeight {
+  CGFloat applied = [self.footerHeight floatValue] > 0 ? _appliedFooterBottomInset : 0;
+  CGFloat maxHeight = 0;
+
+  for (id detent in self.detents) {
+    if (![detent isKindOfClass:[NSNumber class]]) {
+      continue;
+    }
+
+    CGFloat value = [detent doubleValue];
+    CGFloat height = 0;
+    if (value == -1) {
+      // Auto counts a relative footer's (padded) height
+      height = [_detentCalculator autoHeight] - (_absoluteFooter ? 0 : applied);
+    } else if (value == -2) {
+      // Peek counts an absolute footer's (padded) height
+      height = [_detentCalculator peekHeight] - (_absoluteFooter ? applied : 0);
+    } else if (value > 0 && value <= 1) {
+      height = value * self.screenHeight;
+    }
+    maxHeight = fmax(maxHeight, height);
   }
 
-  if (_absoluteFooter || [self.footerHeight floatValue] <= 0) {
-    return 0;
+  if (self.maxContentHeight) {
+    maxHeight = fmin(maxHeight, [self.maxContentHeight floatValue]);
   }
 
-  return [self bottomSafeAreaForHeight:height];
+  return maxHeight > 0 ? maxHeight : self.screenHeight;
 }
 
-// The inset the footer absorbs as padding. Uses the auto detent height when
-// available so it matches the auto detent's inset exclusion above.
+// The inset the footer absorbs as padding.
 - (CGFloat)footerBottomInset {
   if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
     return 0;
   }
 
-  return [self bottomSafeAreaForHeight:_autoDetentHeight > 0 ? _autoDetentHeight : self.screenHeight];
+  return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
+}
+
+/**
+ * Bottom inset excluded from the auto detent. A relative footer owns the
+ * sheet's bottom edge and carries the inset in its height (see
+ * footerBottomInset) — subtract exactly what was baked in so UIKit's own
+ * safe-area layout doesn't double it.
+ */
+- (CGFloat)autoDetentBottomInset {
+  if (_absoluteFooter || [self.footerHeight floatValue] <= 0) {
+    return 0;
+  }
+
+  return _appliedFooterBottomInset;
 }
 
 /**
  * Bottom inset excluded from the peek detent. An absolute footer counts
- * toward the peek height and absorbs the inset as padding, but UIKit already
- * lays custom detents out above the safe area — subtract it so the inset
- * isn't doubled.
+ * toward the peek height and carries the inset in its height — subtract
+ * exactly what was baked in so it isn't doubled.
  */
-- (CGFloat)peekDetentBottomInsetForHeight:(CGFloat)height {
-  if (_insetAdjustment != TrueSheetViewInsetAdjustment::Automatic) {
-    return 0;
-  }
-
+- (CGFloat)peekDetentBottomInset {
   if (!_absoluteFooter || [self.footerHeight floatValue] <= 0) {
     return 0;
   }
 
-  return [self bottomSafeAreaForHeight:height];
+  return _appliedFooterBottomInset;
 }
 
 - (BOOL)isDesignCompatibilityMode {
@@ -1079,8 +1106,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       return [self customDetentWithIdentifier:@"custom-auto"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    CGFloat height = self->_autoDetentHeight;
-                                    return height - [self autoDetentBottomInsetForHeight:height];
+                                    return self->_autoDetentHeight - [self autoDetentBottomInset];
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
@@ -1092,8 +1118,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
       return [self customDetentWithIdentifier:@"custom-peek"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    CGFloat height = self->_peekDetentHeight;
-                                    return height - [self peekDetentBottomInsetForHeight:height];
+                                    return self->_peekDetentHeight - [self peekDetentBottomInset];
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];

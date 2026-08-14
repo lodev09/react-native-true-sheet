@@ -99,6 +99,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) CGFloat footerBottomInset;
 
+/**
+ * The inset last pushed into the footer's layout (see footerBottomInset).
+ * Detent resolution subtracts this exact value so the inset baked into the
+ * footer's height is never double-counted.
+ */
+@property (nonatomic, assign) CGFloat appliedFooterBottomInset;
+
 - (void)setupAccessibilityContainer;
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;

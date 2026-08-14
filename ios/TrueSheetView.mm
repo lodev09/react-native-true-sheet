@@ -485,6 +485,7 @@ using namespace facebook::react;
   }
   _pendingSizeChange = NO;
 
+  [self refreshFooterBottomInset];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
 
@@ -583,6 +584,10 @@ using namespace facebook::react;
  * Debounced sheet update to handle rapid content/header size changes.
  */
 - (void)setupSheetDetentsForSizeChange {
+  // Keep the footer's absorbed inset in sync with the latest measured heights
+  // even before presenting, so the sheet presents at its final size.
+  [self refreshFooterBottomInset];
+
   // Retargeting the in-flight presentation makes UIKit snap the whole stack
   // (including the sheet behind) instead of animating. Defer to didPresent —
   // presentAtIndex measured synchronously, so this is usually a no-op.
@@ -610,6 +615,7 @@ using namespace facebook::react;
     // Refresh here (not just on peek size events) since the peek's offset
     // within the content can change without its own size changing.
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
+    [self refreshFooterBottomInset];
     [self->_controller setupSheetDetentsForSizeChange];
   });
 }
@@ -784,13 +790,25 @@ using namespace facebook::react;
   _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.hasAutoDetent = _hasAutoDetent;
-  _containerView.footerBottomInset = _controller.footerBottomInset;
+  [self refreshFooterBottomInset];
   [_containerView setupScrollable];
+}
+
+// Recomputes the inset the footer absorbs and pushes it down. The inset
+// depends on measured heights and detents (see maxNaturalDetentHeight), so
+// this runs on size and detent changes — not just prop updates.
+- (void)refreshFooterBottomInset {
+  if (!_containerView)
+    return;
+
+  CGFloat inset = _controller.footerBottomInset;
+  _containerView.footerBottomInset = inset;
+  _controller.appliedFooterBottomInset = inset;
 
   // Publish the inset so a footer set later (e.g. navigation setOptions) is
   // padded on its very first layout instead of resizing the sheet twice.
   if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
-    TrueSheetInsets::setBottomSafeArea(_controller.footerBottomInset);
+    TrueSheetInsets::setBottomSafeArea(inset);
   }
 }
 
@@ -801,6 +819,7 @@ using namespace facebook::react;
   if (_pendingDetents) {
     _controller.detents = _pendingDetents;
     _pendingDetents = nil;
+    [self refreshFooterBottomInset];
   }
 
   UIView *presenterView = _controller.presentingViewController.view;
