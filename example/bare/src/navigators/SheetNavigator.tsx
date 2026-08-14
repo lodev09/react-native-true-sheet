@@ -106,14 +106,14 @@ const SmallFooterSheet = () => {
   useEffect(() => {
     navigation.setOptions({
       footer: <SmallFooter />,
-      footerStyle: { backgroundColor: 'red' },
+      footerStyle: { backgroundColor: DARK_BLUE },
     });
   }, [navigation]);
 
   return (
-    <View style={styles.smallFooterSheetContent}>
+    <View style={styles.sheetContent}>
       <Text style={styles.sheetTitle}>Small Footer Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Auto detent ≤ 150 + late footer</Text>
+      <Text style={styles.sheetSubtitle}>Small auto detent with a late-mounted footer.</Text>
     </View>
   );
 };
@@ -300,18 +300,15 @@ const styles = StyleSheet.create({
     gap: GAP,
     marginTop: SPACING,
   },
-  smallFooterSheetContent: {
-    backgroundColor: 'yellow',
-    padding: SPACING,
-  },
   smallFooter: {
-    backgroundColor: BLUE,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 0,
+    paddingVertical: SPACING / 2,
   },
   smallFooterText: {
-    color: 'white',
+    fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 1,
+    color: 'white',
   },
 });

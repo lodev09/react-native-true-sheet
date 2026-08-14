@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
-import { BLUE, LIGHT_GRAY, SPACING } from '@example/shared/utils';
+import { DARK_BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 
 // Repro: on iOS 26 a small auto detent (<= 150) resolves the footer's bottom
 // inset to 0, but the late-mounted footer's first layout is seeded with the
@@ -19,23 +19,22 @@ export default function SmallFooterSheet() {
   useEffect(() => {
     navigation.setOptions({
       footer: <SmallFooter />,
-      footerStyle: { backgroundColor: 'red' },
+      footerStyle: { backgroundColor: DARK_BLUE },
     });
   }, [navigation]);
 
   return (
     <View style={styles.sheetContent}>
       <Text style={styles.sheetTitle}>Small Footer Sheet</Text>
-      <Text style={styles.sheetSubtitle}>Auto detent ≤ 150 + late footer</Text>
+      <Text style={styles.sheetSubtitle}>Small auto detent with a late-mounted footer.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   sheetContent: {
-    backgroundColor: 'yellow',
-    height: 120,
     padding: SPACING,
+    gap: GAP,
   },
   sheetTitle: {
     fontSize: 20,
@@ -43,17 +42,19 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   sheetSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: LIGHT_GRAY,
+    marginBottom: SPACING,
   },
   footer: {
-    backgroundColor: BLUE,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 0,
+    paddingVertical: SPACING / 2,
   },
   footerText: {
-    color: 'white',
+    fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 1,
+    color: 'white',
   },
 });
