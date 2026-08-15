@@ -96,7 +96,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       {showList ? (
         <ScrollView
           contentContainerStyle={styles.content}
-          indicatorStyle="black"
           keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
