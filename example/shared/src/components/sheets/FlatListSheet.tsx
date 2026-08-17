@@ -36,28 +36,26 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       footerOptions={{ position: 'absolute' }}
       {...props}
     >
-      <View style={styles.wrapper}>
-        <FlatList
-          ref={scrollRef}
-          data={times(itemCount, (i) => i)}
-          contentContainerStyle={styles.content}
-          indicatorStyle="black"
-          ItemSeparatorComponent={Spacer}
-          renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
-          ListFooterComponent={
-            <>
-              <Spacer />
-              <ButtonGroup>
-                <Button text="Add Item" onPress={() => setItemCount((count) => count + 1)} />
-                <Button
-                  text="Remove Item"
-                  onPress={() => setItemCount((count) => Math.max(0, count - 1))}
-                />
-              </ButtonGroup>
-            </>
-          }
-        />
-      </View>
+      <FlatList
+        ref={scrollRef}
+        data={times(itemCount, (i) => i)}
+        contentContainerStyle={styles.content}
+        indicatorStyle="black"
+        ItemSeparatorComponent={Spacer}
+        renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
+        ListFooterComponent={
+          <>
+            <Spacer />
+            <ButtonGroup>
+              <Button text="Add Item" onPress={() => setItemCount((count) => count + 1)} />
+              <Button
+                text="Remove Item"
+                onPress={() => setItemCount((count) => Math.max(0, count - 1))}
+              />
+            </ButtonGroup>
+          </>
+        }
+      />
       <TrueSheet detents={[0.3]} ref={testRef}>
         <DemoContent />
       </TrueSheet>
@@ -68,9 +66,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
 FlatListSheet.displayName = 'FlatListSheet';
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
   footer: {
     backgroundColor: Platform.select({
       default: DARK_GRAY,

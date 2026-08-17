@@ -48,9 +48,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL hasAutoDetent;
 
 /**
- * Content height with the pinned ScrollView's viewport replaced by its content
- * size — the height the content wants regardless of container bounds.
- * Falls back to the frame height when no ScrollView is pinned.
+ * Content height measured unconstrained by the shadow node — the height the
+ * content wants regardless of container bounds (see
+ * TrueSheetContentViewShadowNode). Falls back to the frame height before the
+ * first state update.
  */
 @property (nonatomic, readonly) CGFloat naturalHeight;
 
