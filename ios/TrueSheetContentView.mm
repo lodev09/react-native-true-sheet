@@ -24,18 +24,14 @@
 
 using namespace facebook::react;
 
-static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
-
 @implementation TrueSheetContentView {
   TrueSheetContentViewShadowNode::ConcreteState::Shared _state;
   RCTScrollViewComponentView *_pinnedScrollView;
-  UIScrollView *_observedScrollView;
-  CGSize _lastSize;
+  CGFloat _lastReportedNaturalHeight;
   CGFloat _bottomInset;
   CGFloat _originalIndicatorBottomInset;
   BOOL _observingTextChanges;
   BOOL _scrollableBounded;
-  BOOL _isReportPending;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -52,11 +48,16 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 
 - (void)dealloc {
   [self stopObservingTextChanges];
-  [self unobserveScrollViewContentSize];
 }
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetContentViewShadowNode::ConcreteState const>(state);
+
+  CGFloat naturalHeight = _state->getData().naturalHeight;
+  if (naturalHeight != _lastReportedNaturalHeight) {
+    _lastReportedNaturalHeight = naturalHeight;
+    [self.delegate contentViewDidChangeSize:CGSizeMake(self.frame.size.width, naturalHeight)];
+  }
 }
 
 // Tells the shadow node to fill the container (flexGrow/flexShrink) so the
@@ -69,7 +70,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   _scrollableBounded = bounded;
 
   if (_state) {
-    TrueSheetContentViewState newState;
+    auto newState = _state->getData();
     newState.scrollableBounded = bounded;
     _state->updateState(std::move(newState));
   }
@@ -111,58 +112,25 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
 #pragma mark - Layout
 
 - (CGFloat)naturalHeight {
-  CGFloat height = self.frame.size.height;
-  if (_pinnedScrollView) {
-    height += _pinnedScrollView.scrollView.contentSize.height - _pinnedScrollView.frame.size.height;
-  }
-  return MAX(0, height);
-}
-
-- (void)reportSizeIfChanged {
-  // A deep ScrollView unmount doesn't pass through this view's mount hooks —
-  // detect the stale pin here so it (and its contentSize observation) is
-  // released instead of lingering until the next explicit setup or recycle.
-  if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
-    [self.delegate contentViewScrollViewDidChange];
-  }
-
-  // naturalHeight mixes frames from different views; mid-transaction they're
-  // momentarily inconsistent (parent updates before the ScrollView), which
-  // feeds back into the auto detent and oscillates. Coalesce to the next
-  // main-queue tick so frames are settled before measuring.
-  if (_pinnedScrollView) {
-    if (_isReportPending) {
-      return;
+  if (_state) {
+    CGFloat height = _state->getData().naturalHeight;
+    if (height > 0) {
+      return height;
     }
-    _isReportPending = YES;
-
-    __weak __typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      __typeof(self) strongSelf = weakSelf;
-      if (!strongSelf) {
-        return;
-      }
-      strongSelf->_isReportPending = NO;
-      [strongSelf reportSizeNow];
-    });
-    return;
   }
-
-  [self reportSizeNow];
-}
-
-- (void)reportSizeNow {
-  CGSize newSize = CGSizeMake(self.frame.size.width, self.naturalHeight);
-  if (!CGSizeEqualToSize(newSize, _lastSize)) {
-    _lastSize = newSize;
-    [self.delegate contentViewDidChangeSize:newSize];
-  }
+  return self.frame.size.height;
 }
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
-  [self reportSizeIfChanged];
+
+  // A deep ScrollView unmount doesn't pass through this view's mount hooks —
+  // detect the stale pin here so it's released instead of lingering until the
+  // next explicit setup or recycle.
+  if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
+    [self.delegate contentViewScrollViewDidChange];
+  }
 }
 
 #pragma mark - Child Mounting
@@ -202,12 +170,10 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   if (_pinnedScrollView) {
     [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
   }
-  [self unobserveScrollViewContentSize];
   [self setScrollableBounded:NO];
   _pinnedScrollView = nil;
   _bottomInset = 0;
   _originalIndicatorBottomInset = 0;
-  [self reportSizeIfChanged];
 }
 
 - (void)setupScrollableWithBottomInset:(CGFloat)bottomInset {
@@ -231,9 +197,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
     _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
     _pinnedScrollView = scrollView;
 
-    [self observeScrollViewContentSize];
     [self setScrollableBounded:_hasAutoDetent];
-    [self reportSizeIfChanged];
   }
 
   _bottomInset = bottomInset;
@@ -260,39 +224,6 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
     return height + [self.footerView keyboardOcclusionHeight];
   }
   return MAX(0, height - self.footerView.frame.size.height);
-}
-
-// Content growth is invisible to layout once the viewport is bounded, so track
-// the scroll content size directly to keep the auto detent height in sync.
-- (void)observeScrollViewContentSize {
-  UIScrollView *scrollView = _pinnedScrollView.scrollView;
-  if (_observedScrollView == scrollView) {
-    return;
-  }
-  [self unobserveScrollViewContentSize];
-  _observedScrollView = scrollView;
-  [scrollView addObserver:self
-               forKeyPath:@"contentSize"
-                  options:NSKeyValueObservingOptionNew
-                  context:TrueSheetContentSizeContext];
-}
-
-- (void)unobserveScrollViewContentSize {
-  if (_observedScrollView) {
-    [_observedScrollView removeObserver:self forKeyPath:@"contentSize" context:TrueSheetContentSizeContext];
-    _observedScrollView = nil;
-  }
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary *)change
-                       context:(void *)context {
-  if (context == TrueSheetContentSizeContext) {
-    [self reportSizeIfChanged];
-    return;
-  }
-  [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
@@ -472,7 +403,7 @@ static void *TrueSheetContentSizeContext = &TrueSheetContentSizeContext;
   _state.reset();
   _scrollableBounded = NO;
   _hasAutoDetent = NO;
-  _lastSize = CGSizeZero;
+  _lastReportedNaturalHeight = 0;
 }
 
 @end

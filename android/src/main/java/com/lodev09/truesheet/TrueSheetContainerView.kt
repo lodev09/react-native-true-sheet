@@ -118,6 +118,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         child.hasAutoDetent = hasAutoDetent
         contentView = child
 
+        // State lands before the view is attached, so pull the current value
+        contentHeight = child.naturalHeight
+
         // Children mount bottom-up, so the content subtree is complete here.
         // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
         findPeekView(child)?.let { attachPeekView(it) }

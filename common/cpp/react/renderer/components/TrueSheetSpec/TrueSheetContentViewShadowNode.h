@@ -23,6 +23,13 @@ class JSI_EXPORT TrueSheetContentViewShadowNode final
 
  public:
   void adjustLayoutWithState();
+
+#pragma mark - LayoutableShadowNode
+
+  void layout(LayoutContext layoutContext) override;
+
+ private:
+  void updateNaturalHeightIfNeeded(const LayoutContext &layoutContext);
 };
 
 } // namespace facebook::react

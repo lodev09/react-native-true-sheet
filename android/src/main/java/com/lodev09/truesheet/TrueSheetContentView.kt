@@ -47,40 +47,28 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   var delegate: TrueSheetContentViewDelegate? = null
   var stateWrapper: StateWrapper? = null
 
-  private var lastWidth = 0
-  private var lastHeight = 0
-
   private var pinnedScrollView: ViewGroup? = null
-  private var observedScrollChild: View? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var bottomInset: Int = 0
   private var scrollableBounded = false
-  private var isReportPending = false
-
-  // Content growth is invisible to layout once the viewport is bounded, so track
-  // the scroll content size directly to keep the auto detent height in sync.
-  private val scrollChildLayoutListener =
-    View.OnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
-      if (bottom - top != oldBottom - oldTop) {
-        reportSizeIfChanged()
-      }
-    }
 
   /**
-   * Content height with the pinned ScrollView's viewport replaced by its content
-   * size — the height the content wants regardless of container bounds.
-   * Falls back to the view height when no ScrollView is pinned.
+   * Content height measured unconstrained by the shadow node — the height the
+   * content wants regardless of container bounds (see
+   * TrueSheetContentViewShadowNode). Falls back to the view height before the
+   * first state update.
    */
   val naturalHeight: Int
-    get() {
-      var naturalHeight = height
-      pinnedScrollView?.let { scrollView ->
-        scrollView.getChildAt(0)?.let { child ->
-          naturalHeight += child.height - scrollView.height
-        }
-      }
-      return maxOf(0, naturalHeight)
-    }
+    get() = if (lastNaturalHeight > 0) lastNaturalHeight else height
+
+  private var lastNaturalHeight = 0
+
+  fun updateNaturalHeight(heightDp: Double) {
+    val heightPx = heightDp.toFloat().dpToPx().toInt()
+    if (heightPx == lastNaturalHeight) return
+    lastNaturalHeight = heightPx
+    delegate?.contentViewDidChangeSize(width, heightPx)
+  }
 
   private var keyboardScrollOffset: Float = 0f
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
@@ -121,39 +109,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun checkScrollViewChanged() {
     if (pinnedScrollView == null || pinnedScrollView?.isDescendantOf(this) == false) {
       delegate?.contentViewScrollViewDidChange()
-    }
-  }
-
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
-    reportSizeIfChanged()
-  }
-
-  private fun reportSizeIfChanged() {
-    // naturalHeight mixes sizes from different views; mid-layout they're
-    // momentarily inconsistent (parent resizes before its children), which
-    // feeds back into the auto detent and oscillates. Coalesce to the next
-    // frame so sizes are settled before measuring.
-    if (pinnedScrollView != null) {
-      if (isReportPending) return
-      isReportPending = true
-
-      post {
-        isReportPending = false
-        reportSizeNow()
-      }
-      return
-    }
-
-    reportSizeNow()
-  }
-
-  private fun reportSizeNow() {
-    val newHeight = naturalHeight
-    if (width != lastWidth || newHeight != lastHeight) {
-      lastWidth = width
-      lastHeight = newHeight
-      delegate?.contentViewDidChangeSize(width, newHeight)
     }
   }
 
@@ -200,12 +155,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
         }
       }
 
-      scrollView.getChildAt(0)?.let { child ->
-        observedScrollChild = child
-        child.addOnLayoutChangeListener(scrollChildLayoutListener)
-      }
       setScrollableBounded(hasAutoDetent)
-      reportSizeIfChanged()
     }
 
     this.bottomInset = bottomInset
@@ -235,13 +185,10 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     pinnedScrollView?.isNestedScrollingEnabled = false
     (pinnedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
-    observedScrollChild?.removeOnLayoutChangeListener(scrollChildLayoutListener)
-    observedScrollChild = null
     setScrollableBounded(false)
     pinnedScrollView = null
     originalScrollViewPaddingBottom = 0
     bottomInset = 0
-    reportSizeIfChanged()
   }
 
   fun findScrollView(): ViewGroup? {
