@@ -3,12 +3,16 @@ import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK, BUTTON_HEIGHT as FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
+import { BUTTON_HEIGHT, DARK, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
 
 interface PromptSheetProps extends TrueSheetProps {}
+
+// Buttons + the footer's own vertical padding; the footer absorbs the
+// safe-area inset itself, so it's added separately in paddingBottom
+const FOOTER_HEIGHT = BUTTON_HEIGHT + SPACING * 2;
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
