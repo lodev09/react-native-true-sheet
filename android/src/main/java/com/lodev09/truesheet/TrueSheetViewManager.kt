@@ -5,6 +5,7 @@ import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PixelUtil.dpToPx
+import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactStylesDiffMap
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
@@ -54,6 +55,20 @@ class TrueSheetViewManager :
   }
 
   override fun getDelegate(): ViewManagerDelegate<TrueSheetView> = delegate
+
+  // The codegen delegate drops props outside the spec (pointerEvents comes from the
+  // host's style), so apply it here after the delegate pass.
+  override fun updateProperties(viewToUpdate: TrueSheetView, props: ReactStylesDiffMap) {
+    super.updateProperties(viewToUpdate, props)
+    if (props.hasKey("pointerEvents")) {
+      setPointerEvents(viewToUpdate, props.getString("pointerEvents"))
+    }
+  }
+
+  @ReactProp(name = "pointerEvents")
+  fun setPointerEvents(view: TrueSheetView, pointerEventsStr: String?) {
+    view.pointerEvents = PointerEvents.parsePointerEvents(pointerEventsStr)
+  }
 
   /**
    * Export custom direct event types for Fabric

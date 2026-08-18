@@ -15,6 +15,10 @@ fi
 # Tidy up
 yarn tidy
 
+# Regenerate the bare example's Podfile.lock with the bumped pod version
+echo "Installing pods for example/bare..."
+(cd example/bare/ios && pod install)
+
 # Skip changelog and docs versioning for pre-releases (beta, alpha, rc)
 if echo "$VERSION" | grep -q '-'; then
   echo "Pre-release detected, skipping changelog and docs versioning."
