@@ -52,6 +52,18 @@ You can use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configu
 
 This is especially useful for forms with multiple inputs — as the user taps between fields, the scroll view adjusts automatically to keep the active input in view.
 
+While the keyboard is open, the scrollable gets a bottom inset matching the keyboard height. If your content already renders its own bottom padding (e.g. safe-area padding via `paddingBottom`), that padding stacks on top of the inset and leaves a gap above the keyboard. Use `keyboardOffset` to adjust the inset — pass a negative value to cancel out the padding:
+
+```tsx
+const insets = useSafeAreaInsets()
+
+<TrueSheet scrollableOptions={{ keyboardOffset: -insets.bottom }}>
+  <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    <TextInput placeholder="Input 1" />
+  </ScrollView>
+</TrueSheet>
+```
+
 ## Footer Behavior
 
 A relative [`footer`](../reference/configuration#footer) (the default) stays in the layout flow — it doesn't float above the keyboard. The keyboard simply covers it, and it's revealed again when the keyboard hides.

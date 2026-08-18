@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ScrollableOptions : NSObject
 
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
+@property (nonatomic, assign) CGFloat keyboardOffset;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) facebook::react::TrueSheetViewTopScrollEdgeEffect topScrollEdgeEffect;
 @property (nonatomic, assign) facebook::react::TrueSheetViewBottomScrollEdgeEffect bottomScrollEdgeEffect;

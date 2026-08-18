@@ -33,6 +33,7 @@ using namespace facebook::react;
 - (instancetype)init {
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
+    _keyboardOffset = 0;
     _scrollingExpandsSheet = YES;
     _topScrollEdgeEffect = TrueSheetViewTopScrollEdgeEffect::Hidden;
     _bottomScrollEdgeEffect = TrueSheetViewBottomScrollEdgeEffect::Hidden;
@@ -148,6 +149,7 @@ using namespace facebook::react;
 - (void)setScrollableOptions:(ScrollableOptions *)scrollableOptions {
   _scrollableOptions = scrollableOptions;
   _contentView.keyboardScrollOffset = scrollableOptions ? scrollableOptions.keyboardScrollOffset : 0;
+  _contentView.keyboardOffset = scrollableOptions ? scrollableOptions.keyboardOffset : 0;
 }
 
 - (void)setupScrollable {

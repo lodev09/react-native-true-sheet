@@ -173,6 +173,18 @@ export interface ScrollableOptions {
   keyboardScrollOffset?: number;
 
   /**
+   * Adjusts the bottom inset applied to the scrollable when the keyboard is shown.
+   * Positive values increase the inset; negative values reduce it.
+   * Pass `-insets.bottom` to cancel out safe-area padding already included in
+   * the content's `paddingBottom`.
+   * Does not affect the auto scroll of the focused input — it always targets
+   * the keyboard edge.
+   *
+   * @default 0
+   */
+  keyboardOffset?: number;
+
+  /**
    * Whether scrolling the content expands the sheet to the next detent.
    * When `false`, only the grabber can expand the sheet.
    *

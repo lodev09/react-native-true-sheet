@@ -241,6 +241,7 @@ class TrueSheetViewManager :
 
     val scrollableOptions = ScrollableOptions(
       keyboardScrollOffset = if (options.hasKey("keyboardScrollOffset")) options.getDouble("keyboardScrollOffset").toFloat() else 0f,
+      keyboardOffset = if (options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f,
       scrollingExpandsSheet = if (options.hasKey("scrollingExpandsSheet")) options.getBoolean("scrollingExpandsSheet") else true
     )
     view.setScrollableOptions(scrollableOptions)

@@ -97,6 +97,7 @@ Options for customizing scrollable behavior. Applies when the sheet contains a `
 | - | - | - | - |
 | `scrollingExpandsSheet` | `boolean` | When `false`, scrolling the content does not expand the sheet to the next detent. Only dragging the grabber or sheet background expands it. Useful for YouTube-style comments sheets. | `true` |
 | `keyboardScrollOffset` | `number` | Additional offset when scrolling to a focused input above the keyboard. | `0` |
+| `keyboardOffset` | `number` | Adjusts the bottom inset applied to the scrollable when the keyboard is shown. Negative values reduce it — pass `-insets.bottom` to cancel out safe-area padding already included in the content's `paddingBottom`. | `0` |
 | `topScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the top edge of the scroll view and header. iOS 26+ only. | `'hidden'` |
 | `bottomScrollEdgeEffect` | [`ScrollEdgeEffect`](#scrolledgeeffect) | The scroll edge effect applied to the bottom edge of the scroll view and footer. iOS 26+ only. | `'hidden'` |
 

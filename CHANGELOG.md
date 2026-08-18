@@ -8,6 +8,7 @@
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
 - New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
 - The footer now absorbs the bottom safe-area inset as padding when `insetAdjustment` is `automatic` — no manual safe-area padding needed. Skipped while the keyboard is open. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749), [#750](https://github.com/lodev09/react-native-true-sheet/pull/750) by [@lodev09](https://github.com/lodev09))
+- New `keyboardOffset` option in `scrollableOptions` — adjusts the scrollable's keyboard bottom inset. Pass `-insets.bottom` to cancel out safe-area padding already in your content's `paddingBottom`. ([#785](https://github.com/lodev09/react-native-true-sheet/pull/785) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

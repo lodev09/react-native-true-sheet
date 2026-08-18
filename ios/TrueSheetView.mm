@@ -281,13 +281,14 @@ using namespace facebook::react;
   BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
   auto topEdgeEffect = scrollableOpts.topScrollEdgeEffect;
   auto bottomEdgeEffect = scrollableOpts.bottomScrollEdgeEffect;
-  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || !scrollingExpandsSheet ||
-                              topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
+  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || scrollableOpts.keyboardOffset != 0 ||
+                              !scrollingExpandsSheet || topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
                               bottomEdgeEffect != TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   if (hasScrollableOptions) {
     ScrollableOptions *options = [[ScrollableOptions alloc] init];
     options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
+    options.keyboardOffset = scrollableOpts.keyboardOffset;
     options.scrollingExpandsSheet = scrollingExpandsSheet;
     options.topScrollEdgeEffect = topEdgeEffect;
     options.bottomScrollEdgeEffect = bottomEdgeEffect;

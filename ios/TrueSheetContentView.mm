@@ -28,6 +28,7 @@ using namespace facebook::react;
   TrueSheetContentViewShadowNode::ConcreteState::Shared _state;
   RCTScrollViewComponentView *_detectedScrollView;
   CGFloat _lastReportedNaturalHeight;
+  CGFloat _appliedKeyboardOffset;
   BOOL _observingTextChanges;
   BOOL _scrollableBounded;
 }
@@ -164,6 +165,7 @@ using namespace facebook::react;
 
 - (void)clearScrollable {
   [self setKeyboardInset:0];
+  _appliedKeyboardOffset = 0;
   [self setScrollableBounded:NO];
   _detectedScrollView = nil;
 }
@@ -204,14 +206,20 @@ using namespace facebook::react;
     inset = MAX(0, height - self.footerView.frame.size.height);
   }
 
+  // Track how much of keyboardOffset actually lands in the inset so the caret
+  // reveal can compensate — the offset shifts the inset, not the keyboard edge.
+  CGFloat adjustedInset = MAX(0, inset + self.keyboardOffset);
+  _appliedKeyboardOffset = adjustedInset - inset;
+
   // Content that already fits above the keyboard has nothing to reveal — the
   // inset would only open blank scroll range below it (huge gap at the bottom).
   UIScrollView *scrollView = _detectedScrollView.scrollView;
-  if (scrollView.contentSize.height <= scrollView.bounds.size.height - inset) {
+  if (scrollView.contentSize.height <= scrollView.bounds.size.height - adjustedInset) {
+    _appliedKeyboardOffset = 0;
     return 0;
   }
 
-  return inset;
+  return adjustedInset;
 }
 
 // An absolute footer floats over the viewport's bottom edge — extend the
@@ -373,7 +381,7 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion];
+  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion] - _appliedKeyboardOffset;
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
