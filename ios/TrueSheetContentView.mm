@@ -151,7 +151,19 @@ using namespace facebook::react;
 
 #pragma mark - Scrollable
 
+// The scroll indicator follows automatically — UIKit derives its insets from
+// the content inset while `automaticallyAdjustsScrollIndicatorInsets` is set.
+- (void)setKeyboardInset:(CGFloat)inset {
+  if (!_detectedScrollView)
+    return;
+
+  UIEdgeInsets contentInset = _detectedScrollView.scrollView.contentInset;
+  contentInset.bottom = inset;
+  _detectedScrollView.scrollView.contentInset = contentInset;
+}
+
 - (void)clearScrollable {
+  [self setKeyboardInset:0];
   [self setScrollableBounded:NO];
   _detectedScrollView = nil;
 }
@@ -174,15 +186,36 @@ using namespace facebook::react;
   _detectedScrollView = scrollView;
 
   [self setScrollableBounded:_hasAutoDetent];
+
+  // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
+  CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
+  if (keyboardHeight > 0) {
+    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
+  }
 }
 
-// An absolute footer floats over the viewport's bottom edge — extend the
-// caret target so it clears the footer, not just the viewport.
-- (CGFloat)footerOcclusion {
-  if (self.footerView && _keyboardObserver.viewController.absoluteFooter) {
-    return [self.footerView keyboardOcclusionHeight];
+// An absolute footer rises above the keyboard and covers the content's bottom
+// edge — include it so the caret clears the footer, not just the keyboard.
+// A relative footer stays behind the keyboard below the content, so its
+// height shields that much of the keyboard's overlap.
+- (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
+  CGFloat inset = height;
+  if (self.footerView) {
+    if (_keyboardObserver.viewController.absoluteFooter) {
+      inset = height + [self.footerView keyboardOcclusionHeight];
+    } else {
+      inset = MAX(0, height - self.footerView.frame.size.height);
+    }
   }
-  return 0;
+
+  // Content that already fits above the keyboard has nothing to reveal — the
+  // inset would only open blank scroll range below it (huge gap at the bottom).
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  if (scrollView.contentSize.height <= scrollView.bounds.size.height - inset) {
+    return 0;
+  }
+
+  return inset;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
@@ -260,9 +293,6 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
-// No content inset here — UIKit keeps the sheet above the keyboard and the
-// container rebounds to the sheet's visible size (see viewDidLayoutSubviews),
-// so the viewport is never behind the keyboard. Only the caret needs revealing.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_detectedScrollView) {
     return;
@@ -273,7 +303,16 @@ using namespace facebook::react;
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
-  // Defer scroll until the next run loop so the keyboard-driven sheet resize lands first
+  CGFloat inset = [self keyboardInsetWithHeight:height];
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     [self setKeyboardInset:inset];
+                   }
+                   completion:nil];
+
+  // Defer scroll until the next run loop so content insets are applied first
   if (firstResponder) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [self scrollToFocusedCaretAnimated:YES];
@@ -293,6 +332,9 @@ using namespace facebook::react;
   }
 
   dispatch_async(dispatch_get_main_queue(), ^{
+    // Typing can grow the content (e.g. a multiline input) past the fits-above-
+    // the-keyboard threshold — keep the inset in sync before revealing the caret.
+    [self setKeyboardInset:[self keyboardInsetWithHeight:self->_keyboardObserver.currentHeight]];
     [self scrollToFocusedCaretAnimated:YES];
   });
 }
@@ -326,12 +368,24 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion];
+  targetRect.size.height += self.keyboardScrollOffset;
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   [self stopObservingTextChanges];
+
+  if (!_detectedScrollView) {
+    return;
+  }
+
+  [UIView animateWithDuration:duration
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     [self setKeyboardInset:0];
+                   }
+                   completion:nil];
 }
 
 #pragma mark - Lifecycle
