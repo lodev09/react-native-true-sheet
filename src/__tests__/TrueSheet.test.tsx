@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetPeek } from '../index';
@@ -128,7 +129,7 @@ describe('TrueSheet', () => {
       expect(queryByText('Present Content')).toBeNull();
 
       // Get the sheet instance
-      const sheetRef = (TrueSheet as any).instances['present-test'];
+      const sheetRef = TrueSheet['instances']['present-test']!;
       expect(sheetRef).toBeDefined();
 
       // Trigger state change to render native view
@@ -152,12 +153,12 @@ describe('TrueSheet', () => {
       expect(getByText('Dismiss Content')).toBeDefined();
 
       // Get the sheet instance and trigger dismiss
-      const sheetRef = (TrueSheet as any).instances['dismiss-test'];
+      const sheetRef = TrueSheet['instances']['dismiss-test']!;
       expect(sheetRef).toBeDefined();
 
       // Simulate dismiss event
       await act(async () => {
-        sheetRef.onDidDismiss({} as DidDismissEvent);
+        sheetRef['onDidDismiss']({} as DidDismissEvent);
       });
 
       // Content should be cleaned up after dismiss
@@ -204,7 +205,7 @@ describe('TrueSheet', () => {
       expect(queryByText('Lifecycle Content')).toBeNull();
 
       // Get the sheet instance
-      const sheetRef = (TrueSheet as any).instances['lifecycle-test'];
+      const sheetRef = TrueSheet['instances']['lifecycle-test']!;
       expect(sheetRef).toBeDefined();
 
       // Simulate state change that would happen during present()
@@ -226,11 +227,11 @@ describe('TrueSheet', () => {
         </TrueSheet>
       );
 
-      const sheetRef = (TrueSheet as any).instances['will-focus-test'];
+      const sheetRef = TrueSheet['instances']['will-focus-test']!;
       expect(sheetRef).toBeDefined();
 
       await act(async () => {
-        sheetRef.onWillFocus({} as WillFocusEvent);
+        sheetRef['onWillFocus']({} as WillFocusEvent);
       });
 
       expect(onWillFocusMock).toHaveBeenCalled();
@@ -244,11 +245,11 @@ describe('TrueSheet', () => {
         </TrueSheet>
       );
 
-      const sheetRef = (TrueSheet as any).instances['did-focus-test'];
+      const sheetRef = TrueSheet['instances']['did-focus-test']!;
       expect(sheetRef).toBeDefined();
 
       await act(async () => {
-        sheetRef.onDidFocus({} as DidFocusEvent);
+        sheetRef['onDidFocus']({} as DidFocusEvent);
       });
 
       expect(onDidFocusMock).toHaveBeenCalled();
@@ -262,11 +263,11 @@ describe('TrueSheet', () => {
         </TrueSheet>
       );
 
-      const sheetRef = (TrueSheet as any).instances['will-blur-test'];
+      const sheetRef = TrueSheet['instances']['will-blur-test']!;
       expect(sheetRef).toBeDefined();
 
       await act(async () => {
-        sheetRef.onWillBlur({} as WillBlurEvent);
+        sheetRef['onWillBlur']({} as WillBlurEvent);
       });
 
       expect(onWillBlurMock).toHaveBeenCalled();
@@ -280,11 +281,11 @@ describe('TrueSheet', () => {
         </TrueSheet>
       );
 
-      const sheetRef = (TrueSheet as any).instances['did-blur-test'];
+      const sheetRef = TrueSheet['instances']['did-blur-test']!;
       expect(sheetRef).toBeDefined();
 
       await act(async () => {
-        sheetRef.onDidBlur({} as DidBlurEvent);
+        sheetRef['onDidBlur']({} as DidBlurEvent);
       });
 
       expect(onDidBlurMock).toHaveBeenCalled();

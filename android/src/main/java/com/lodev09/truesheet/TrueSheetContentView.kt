@@ -9,7 +9,9 @@ import android.widget.EditText
 import android.widget.ScrollView
 import androidx.core.widget.NestedScrollView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -18,7 +20,11 @@ import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollBy
 import com.lodev09.truesheet.utils.smoothScrollTo
 
-data class ScrollableOptions(val keyboardScrollOffset: Float = 0f, val scrollingExpandsSheet: Boolean = true)
+data class ScrollableOptions(
+  val keyboardScrollOffset: Float = 0f,
+  val keyboardOffset: Float = 0f,
+  val scrollingExpandsSheet: Boolean = true
+)
 
 /**
  * Delegate interface for content view size changes
@@ -27,6 +33,14 @@ interface TrueSheetContentViewDelegate {
   fun contentViewDidChangeSize(width: Int, height: Int)
   fun contentViewDidScroll()
   fun contentViewScrollViewDidChange()
+
+  /**
+   * Keyboard occlusion adjustment below the content — positive for an absolute
+   * footer floating over the viewport's bottom edge (extends the caret reveal),
+   * negative for a relative footer sitting behind the keyboard shielding that
+   * much of its overlap (reduces the keyboard padding).
+   */
+  val footerKeyboardOcclusion: Int
 }
 
 /**
@@ -36,16 +50,45 @@ interface TrueSheetContentViewDelegate {
 @SuppressLint("ViewConstructor")
 class TrueSheetContentView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
   var delegate: TrueSheetContentViewDelegate? = null
+  var stateWrapper: StateWrapper? = null
 
-  private var lastWidth = 0
-  private var lastHeight = 0
-
-  private var pinnedScrollView: ViewGroup? = null
+  private var detectedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
-  private var bottomInset: Int = 0
-  private var scrollExpansionPadding: Int = 0
+  private var scrollableBounded = false
+
+  /**
+   * Content height measured unconstrained by the shadow node — the height the
+   * content wants regardless of container bounds (see
+   * TrueSheetContentViewShadowNode). Falls back to the view height before the
+   * first state update.
+   */
+  val naturalHeight: Int
+    get() = if (lastNaturalHeight > 0) lastNaturalHeight else height
+
+  private var lastNaturalHeight = 0
+
+  fun updateNaturalHeight(heightDp: Double) {
+    val heightPx = heightDp.toFloat().dpToPx().toInt()
+    if (heightPx == lastNaturalHeight) return
+    lastNaturalHeight = heightPx
+    delegate?.contentViewDidChangeSize(width, heightPx)
+  }
 
   private var keyboardScrollOffset: Float = 0f
+
+  /**
+   * Adjustment added to the keyboard bottom inset applied to the detected
+   * scrollable — negative values reduce the inset (e.g. to cancel out safe-area
+   * padding already baked into the content's paddingBottom).
+   */
+  private var keyboardOffset: Float = 0f
+
+  /**
+   * How much of keyboardOffset actually landed in the applied padding — the
+   * caret reveal compensates by this so it still targets the real keyboard edge.
+   */
+  private var appliedKeyboardOffset = 0
+
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
   private var watchedEditText: EditText? = null
@@ -55,6 +98,21 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     set(value) {
       field = value
       keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
+      keyboardOffset = value?.keyboardOffset?.dpToPx() ?: 0f
+    }
+
+  /**
+   * Whether the sheet has an `auto` detent. Deriving the sheet height from the
+   * scroll content is circular with natural layout, so the detected ScrollView's
+   * viewport is force-bounded to the container only in this case.
+   */
+  var hasAutoDetent = false
+    set(value) {
+      if (field == value) return
+      field = value
+      if (detectedScrollView != null) {
+        setScrollableBounded(value)
+      }
     }
 
   override fun addView(child: View?, index: Int) {
@@ -68,102 +126,84 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun checkScrollViewChanged() {
-    if (pinnedScrollView == null || pinnedScrollView?.isDescendantOf(this) == false) {
+    if (detectedScrollView == null || detectedScrollView?.isDescendantOf(this) == false) {
       delegate?.contentViewScrollViewDidChange()
     }
   }
 
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
+  /**
+   * Tells the shadow node to fill the container (flexGrow/flexShrink) so the
+   * detected ScrollView's viewport is bounded to the visible space. Only applied
+   * for auto detents — otherwise content lays out naturally like a regular view.
+   */
+  private fun setScrollableBounded(bounded: Boolean) {
+    if (scrollableBounded == bounded) return
+    scrollableBounded = bounded
 
-    if (w != lastWidth || h != lastHeight) {
-      lastWidth = w
-      lastHeight = h
-      delegate?.contentViewDidChangeSize(w, h)
+    stateWrapper?.let {
+      val newState = WritableNativeMap()
+      newState.putBoolean("scrollableBounded", bounded)
+      it.updateState(newState)
     }
   }
 
-  fun setupScrollable(enabled: Boolean, bottomInset: Int) {
-    if (!enabled) {
-      clearScrollable()
-      return
-    }
-
-    // Check if pinned scroll view is still valid (still in view hierarchy)
-    if (pinnedScrollView != null && pinnedScrollView?.isDescendantOf(this) == false) {
+  fun setupScrollable() {
+    // Check if the detected scroll view is still valid (still in view hierarchy)
+    if (detectedScrollView != null && detectedScrollView?.isDescendantOf(this) == false) {
       clearScrollable()
     }
 
-    // Already set up with same inset and valid scroll view
-    if (pinnedScrollView != null && this.bottomInset == bottomInset) {
+    if (detectedScrollView != null) {
       return
     }
 
     val scrollView = findScrollView(this) ?: return
 
-    // Only capture originals on first pin
-    if (pinnedScrollView == null) {
-      originalScrollViewPaddingBottom = scrollView.paddingBottom
-      pinnedScrollView = scrollView
+    originalScrollViewPaddingBottom = scrollView.paddingBottom
+    detectedScrollView = scrollView
 
-      scrollView.isNestedScrollingEnabled = true
-      (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
+    scrollView.isNestedScrollingEnabled = true
+    (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
 
-      scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
-        if (scrollY != oldScrollY) {
-          delegate?.contentViewDidScroll()
-        }
+    scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+      if (scrollY != oldScrollY) {
+        delegate?.contentViewDidScroll()
       }
     }
 
-    this.bottomInset = bottomInset
-
-    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + bottomInset)
+    setScrollableBounded(hasAutoDetent)
 
     // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
     val keyboardHeight = keyboardObserver?.currentHeight ?: 0
     if (keyboardHeight > 0) {
-      setScrollViewPaddingBottom(originalScrollViewPaddingBottom + keyboardHeight)
+      updateScrollViewInsetForKeyboard(keyboardHeight)
     }
   }
 
-  // TODO: Replace this workaround with synchronous state layout updates on every sheet resize.
-  // The container is currently sized to the largest detent, so at smaller detents the ScrollView
-  // viewport extends beyond the visible area, reducing the effective scroll range. This padding
-  // compensates for that difference until we can resize the container per-detent synchronously.
-  fun updateScrollExpansionPadding(padding: Int) {
-    if (scrollExpansionPadding == padding) return
-    scrollExpansionPadding = padding
-    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
-    val basePadding = if (keyboardHeight > 0) keyboardHeight else bottomInset
-    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + basePadding)
-    nudgeScrollView()
-  }
-
   private fun setScrollViewPaddingBottom(paddingBottom: Int) {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
     scrollView.clipToPadding = false
     scrollView.setPadding(
       scrollView.paddingLeft,
       scrollView.paddingTop,
       scrollView.paddingRight,
-      paddingBottom + scrollExpansionPadding
+      paddingBottom
     )
   }
 
   fun clearScrollable() {
-    pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
-    pinnedScrollView?.isNestedScrollingEnabled = false
-    (pinnedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
-    scrollExpansionPadding = 0
+    detectedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
+    detectedScrollView?.isNestedScrollingEnabled = false
+    (detectedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
-    pinnedScrollView = null
+    setScrollableBounded(false)
+    detectedScrollView = null
     originalScrollViewPaddingBottom = 0
-    bottomInset = 0
+    appliedKeyboardOffset = 0
   }
 
   fun findScrollView(): ViewGroup? {
-    if (pinnedScrollView != null) return pinnedScrollView
+    if (detectedScrollView != null) return detectedScrollView
     return findScrollView(this as View)
   }
 
@@ -247,22 +287,34 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
 
-    val totalBottomInset = if (keyboardHeight > 0) keyboardHeight else bottomInset
+    // A relative footer stays behind the keyboard below the content, so its
+    // height shields that much of the keyboard's overlap. An absolute footer
+    // floats within the viewport — its clearance is the content padding's job
+    // (the caret reveal accounts for it, see scrollToFocusedInput).
+    val totalBottomInset = if (keyboardHeight > 0) {
+      val baseInset = maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
+      val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
+      appliedKeyboardOffset = adjustedInset - baseInset
+      adjustedInset
+    } else {
+      appliedKeyboardOffset = 0
+      0
+    }
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
 
     scrollView.post { nudgeScrollView() }
   }
 
   private fun nudgeScrollView() {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
     scrollView.smoothScrollBy(0, 1)
     scrollView.smoothScrollBy(0, -1)
   }
 
   private fun scrollToFocusedInput() {
-    val scrollView = pinnedScrollView ?: findScrollView() ?: return
+    val scrollView = detectedScrollView ?: findScrollView() ?: return
     val focusedView = findFocus() ?: return
 
     val focusedLocation = IntArray(2)
@@ -289,14 +341,18 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       caretBottom = viewTop + focusedView.height
     }
 
+    // An absolute footer floats over the viewport's bottom edge — extend the
+    // caret target so it clears the footer, not just the keyboard.
+    val footerOcclusion = maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
+
     val offset = keyboardScrollOffset.toInt()
-    val visibleHeight = scrollView.height - scrollView.paddingBottom
+    val visibleHeight = scrollView.height - scrollView.paddingBottom + appliedKeyboardOffset
     val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
 
     when {
-      caretBottom + offset > visibleBottom ->
-        scrollView.smoothScrollTo(0, caretBottom + offset - visibleHeight)
+      caretBottom + offset + footerOcclusion > visibleBottom ->
+        scrollView.smoothScrollTo(0, caretBottom + offset + footerOcclusion - visibleHeight)
 
       caretTop - offset < visibleTop ->
         scrollView.smoothScrollTo(0, (caretTop - offset).coerceAtLeast(0))

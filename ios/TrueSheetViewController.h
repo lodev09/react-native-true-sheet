@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
                                  detent:(CGFloat)detent
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
+- (void)viewControllerSafeAreaInsetsDidChange;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;
@@ -57,7 +58,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *maxContentWidth;
 @property (nonatomic, strong, nullable) NSNumber *contentHeight;
 @property (nonatomic, strong, nullable) NSNumber *headerHeight;
+@property (nonatomic, assign) BOOL absoluteHeader;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
+@property (nonatomic, assign) BOOL absoluteFooter;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
@@ -86,9 +89,24 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) BOOL keyboardSheetGrown;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;
+@property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
 @property (nonatomic, readonly) CGFloat screenHeight;
+
+/**
+ * Bottom safe-area inset the footer absorbs as padding — the footer
+ * owns the sheet's bottom edge, so its background fills the inset.
+ */
+@property (nonatomic, readonly) CGFloat footerBottomInset;
+
+/**
+ * The inset currently baked into the footer's measured height, reported
+ * alongside its layout (see TrueSheetFooterView.appliedBottomInset). Detent
+ * resolution subtracts this exact value so the baked inset is never
+ * double-counted.
+ */
+@property (nonatomic, assign) CGFloat appliedFooterBottomInset;
 
 - (void)setupAccessibilityContainer;
 - (void)applyActiveDetent;

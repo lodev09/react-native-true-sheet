@@ -173,6 +173,18 @@ export interface ScrollableOptions {
   keyboardScrollOffset?: number;
 
   /**
+   * Adjusts the bottom inset applied to the scrollable when the keyboard is shown.
+   * Positive values increase the inset; negative values reduce it.
+   * Pass `-insets.bottom` to cancel out safe-area padding already included in
+   * the content's `paddingBottom`.
+   * Does not affect the auto scroll of the focused input — it always targets
+   * the keyboard edge.
+   *
+   * @default 0
+   */
+  keyboardOffset?: number;
+
+  /**
    * Whether scrolling the content expands the sheet to the next detent.
    * When `false`, only the grabber can expand the sheet.
    *
@@ -198,13 +210,45 @@ export interface ScrollableOptions {
 }
 
 /**
+ * Options for header behavior
+ */
+export interface HeaderOptions {
+  /**
+   * How the header participates in the sheet layout.
+   *
+   * - `'relative'`: The header takes up space above the content, and its height
+   *   is included in the `auto` detent calculation.
+   * - `'absolute'`: The header floats over the content, pinned to the top edge,
+   *   and is excluded from the `auto` detent calculation.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+}
+
+/**
  * Options for footer behavior
  */
 export interface FooterOptions {
   /**
-   * Adjusts how far the footer rises when the keyboard opens.
+   * How the footer participates in the sheet layout.
+   *
+   * - `'relative'`: The footer takes up space below the content, pinned to the
+   *   bottom edge. Its height is included in the `auto` detent calculation but
+   *   excluded from the `peek` detent (it's pushed off-screen at peek).
+   * - `'absolute'`: The footer floats over the content, pinned to the bottom
+   *   edge. Its height is excluded from the `auto` detent calculation but
+   *   included in the `peek` detent.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+
+  /**
+   * Adjusts how far an `absolute` footer rises when the keyboard opens.
    * Positive values raise it higher; negative values reduce the rise.
    * Pass `-insets.bottom` to tuck the footer's safe-area padding behind the keyboard.
+   * A `relative` footer stays in the layout flow behind the keyboard, so this has no effect.
    *
    * @default 0
    */
@@ -522,6 +566,11 @@ export interface TrueSheetProps extends ViewProps {
   headerStyle?: StyleProp<ViewStyle>;
 
   /**
+   * Options for header behavior.
+   */
+  headerOptions?: HeaderOptions;
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   footer?: ComponentType<unknown> | ReactElement;
@@ -530,17 +579,6 @@ export interface TrueSheetProps extends ViewProps {
    * Style for the footer container.
    */
   footerStyle?: StyleProp<ViewStyle>;
-
-  /**
-   * On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space.
-   * When enabled, the ScrollView's top edge will be pinned below any top sibling views,
-   * and its left, right, and bottom edges will be pinned to the container.
-   *
-   * On Android, it adds additional style to the content for scrollable to work.
-   *
-   * @default false
-   */
-  scrollable?: boolean;
 
   /**
    * Options for scrollable behavior.

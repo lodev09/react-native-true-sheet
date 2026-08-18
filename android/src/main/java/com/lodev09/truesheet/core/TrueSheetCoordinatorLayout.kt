@@ -57,7 +57,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var streamGestureClaimed = false
 
   // Whether the sheet owns vertical drags for this stream: the touch target is inside
-  // the sheet but outside the pinned scrollable (e.g. a header overlaying it), with
+  // the sheet but outside the detected scrollable (e.g. a header overlaying it), with
   // nothing vertically scrollable along its chain. Such targets consume the stream
   // natively (no nested scroll), and BottomSheetBehavior won't intercept because the
   // scrollable's bounds still contain the point (touchingScrollingChild) — intercept
@@ -118,15 +118,16 @@ class TrueSheetCoordinatorLayout(context: Context) :
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
     // Swallow only that case — nothing between the touched EditText and the sheet scrolls
-    // (an overflowing multiline EditText or an input inside a scrollable still scrolls).
-    // Other children (maps, sliders, scrollables) keep the standard disallow contract.
+    // (an overflowing multiline EditText or an input inside a scrollable that can actually
+    // scroll still scrolls). Other children (maps, sliders, scrollables) keep the standard
+    // disallow contract.
     if (disallowIntercept && streamDraggableEditText) return
     super.requestDisallowInterceptTouchEvent(disallowIntercept)
   }
 
   /**
    * Resolves the stream's touch target (respecting zIndex and pointerEvents) and
-   * decides whether the sheet may drag from it — inside the sheet, outside the pinned
+   * decides whether the sheet may drag from it — inside the sheet, outside the detected
    * scrollable, and nothing along the target's chain scrolls vertically.
    */
   private fun updateStreamTargetFlags(ev: MotionEvent) {
@@ -138,8 +139,16 @@ class TrueSheetCoordinatorLayout(context: Context) :
       .firstNotNullOfOrNull { it.getView() } ?: return
     if (target !== sheet && !target.isDescendantOf(sheet)) return
 
+    // A detected scrollable that can scroll (or hosts pull-to-refresh) owns its
+    // touches — nested scrolling drags the sheet. When it can't scroll (e.g.
+    // the sheet is fully expanded and the content fits) it eats the gesture
+    // instead, so fall through and let the sheet drag from it — an EditText
+    // target needs the disallow-intercept swallow or its stream dies.
     val scrollView = delegate?.findScrollView()
-    if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) return
+    if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) {
+      val hasRefreshControl = scrollView.parent is SwipeRefreshLayout
+      if (hasRefreshControl || scrollView.scrollY > 0 || scrollView.canScrollVertically(1)) return
+    }
 
     var view: View? = target
     while (view != null && view !== this) {

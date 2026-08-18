@@ -14,15 +14,14 @@ interface MockReanimatedTrueSheetContextValue {
   animatedDetent: SharedValue<number>;
 }
 
-const createMockSharedValue = <T>(initialValue: T): SharedValue<T> =>
-  ({
-    value: initialValue,
-    get: () => initialValue,
-    set: () => {},
-    addListener: () => () => {},
-    removeListener: () => {},
-    modify: () => {},
-  }) as unknown as SharedValue<T>;
+const createMockSharedValue = <T>(initialValue: T): SharedValue<T> => ({
+  value: initialValue,
+  get: () => initialValue,
+  set: () => {},
+  addListener: () => {},
+  removeListener: () => {},
+  modify: () => {},
+});
 
 /**
  * Mock ReanimatedTrueSheet component for testing.

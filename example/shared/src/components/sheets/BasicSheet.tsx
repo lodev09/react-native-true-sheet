@@ -7,7 +7,7 @@ import {
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, FOOTER_HEIGHT, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -114,7 +114,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       backgroundColor={detentIndex > 0 ? BLUE : undefined}
       header={<Header />}
       footer={<Footer />}
-      insetAdjustment="never"
+      footerStyle={styles.footer}
       {...rest}
     >
       {times(contentCount, (i) => (
@@ -150,8 +150,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         name="basic-child"
         detents={['auto', 1]}
         backgroundColor={DARK}
-        style={styles.content}
+        style={styles.childContent}
         footer={<Footer />}
+        footerStyle={styles.footer}
       >
         <DemoContent color={DARK_BLUE} />
         {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
@@ -164,10 +165,16 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 });
 
 const styles = StyleSheet.create({
+  footer: {
+    backgroundColor: DARK_GRAY,
+  },
   content: {
     paddingHorizontal: SPACING,
-    paddingTop: SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
+    paddingBottom: SPACING,
+    gap: GAP,
+  },
+  childContent: {
+    padding: SPACING,
     gap: GAP,
   },
 });

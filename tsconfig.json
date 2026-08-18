@@ -4,7 +4,8 @@
     "paths": {
       "@lodev09/react-native-true-sheet": ["./src/index"],
       "@lodev09/react-native-true-sheet/reanimated": ["./src/reanimated/index"],
-      "@lodev09/react-native-true-sheet/navigation": ["./src/navigation/index"]
+      "@lodev09/react-native-true-sheet/navigation": ["./src/navigation/index"],
+      "@lodev09/react-native-true-sheet/navigation/expo-router": ["./src/navigation/expo-router/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

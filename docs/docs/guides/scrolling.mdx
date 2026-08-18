@@ -6,23 +6,22 @@ keywords: [bottom sheet scrolling, bottom sheet scrollview, bottom sheet flatlis
 
 import scrolling from './assets/scrolling.gif'
 
-Scrolling content within the sheet requires some special configuration on both iOS and Android. Let's admit, some things just don't work out of the box.
-
-Follow the guide below so you can scroll your content using `TrueSheet`.
+Scrolling content within the sheet works like a regular view — bound the scroll view's height with `flex: 1` and plug a `ScrollView` or `FlatList` in directly.
 
 <img alt="scrolling" src={scrolling} width="300"/>
 
 ## How?
 
-Enable the [`scrollable`](../reference/configuration#scrollable) prop on your `TrueSheet` to properly handle scrolling within the sheet.
+Scroll views (including `ScrollView` and `FlatList`) are **automatically detected**. Keyboard handling and nested scrolling are wired for you — no props needed.
 
-```tsx {5-7}
+Like any scroll view in React Native, it needs a bounded height to scroll. Pass `flex: 1` via the sheet's [`style`](../reference/configuration#style) prop so the content fills the sheet's visible height per detent — resizing in realtime while dragging:
+
+```tsx
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
 
   return (
-    <TrueSheet ref={sheet} scrollable>
-      <View>{/* Header content */}</View>
+    <TrueSheet ref={sheet} style={{ flex: 1 }} detents={[0.5, 1]}>
       <ScrollView>
         <View />
       </ScrollView>
@@ -31,22 +30,10 @@ const App = () => {
 }
 ```
 
-:::info
-By default, `scrollable` is `false`. Set it to `true` to enable automatic ScrollView fitting.
-:::
-
-:::warning
-The [`auto`](../reference/types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
-:::
-
-### iOS
-
-On iOS, `scrollable` automatically pins scroll views (including `ScrollView` and `FlatList`) to fit within the sheet's available space. The ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container.
-
-The scroll view detection supports up to 2 levels deep in the view hierarchy, so you can wrap your `ScrollView` or `FlatList` in a container `View` if needed:
+Wrapping it in a container `View` works too:
 
 ```tsx
-<TrueSheet scrollable>
+<TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
   <View style={{ flex: 1 }}>
     <View>{/* Header content */}</View>
     <FlatList data={data} renderItem={renderItem} />
@@ -54,12 +41,12 @@ The scroll view detection supports up to 2 levels deep in the view hierarchy, so
 </TrueSheet>
 ```
 
-### Android
-
-On Android, `scrollable` ensures the scroll view fills the available sheet space. Nested scrolling is automatically enabled on the detected scroll view, so you don't need to set `nestedScrollEnabled` manually.
+:::info
+On Android, nested scrolling is managed internally — any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored. `RefreshControl` is also fully supported.
+:::
 
 :::info
-When `scrollable` is enabled, any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored — TrueSheet manages nested scrolling internally. `RefreshControl` is also fully supported.
+The [`auto`](../reference/types#sheetdetent) detent works with scrolling content too — no `flex: 1` needed. The sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height.
 :::
 
 ## Preventing Scroll-to-Expand
@@ -68,7 +55,6 @@ By default, scrolling content to the top edge expands the sheet to the next dete
 
 ```tsx
 <TrueSheet
-  scrollable
   scrollableOptions={{ scrollingExpandsSheet: false }}
   detents={[0.5, 1]}
 >
@@ -88,7 +74,6 @@ Set [`topScrollEdgeEffect`](../reference/types#scrollableoptions) and/or [`botto
 
 ```tsx
 <TrueSheet
-  scrollable
   scrollableOptions={{
     topScrollEdgeEffect: 'automatic',
     bottomScrollEdgeEffect: 'soft',
@@ -111,24 +96,3 @@ This also controls the scroll view's own edge effects ([`UIScrollEdgeEffect`](ht
 :::note
 This feature requires iOS 26 or later. On older versions, these options are ignored.
 :::
-
-## Using `scrollToEnd`
-
-When using `scrollable`, the native scroll view frame is modified to fit within the sheet container. This can cause `scrollToEnd()` on `FlatList` or `ScrollView` to not work as expected because React Native's JS-side scroll metrics may not reflect the actual native dimensions.
-
-**Workaround:** Use `scrollToOffset` with a large value instead:
-
-```tsx
-const scrollRef = useRef<FlatList>(null);
-
-const scrollToEnd = () => {
-  // Large offset will be clamped to max scrollable position
-  scrollRef.current?.scrollToOffset({ offset: 99999, animated: true });
-};
-
-return (
-  <TrueSheet scrollable onDidPresent={scrollToEnd}>
-    <FlatList ref={scrollRef} data={data} renderItem={renderItem} />
-  </TrueSheet>
-);
-```

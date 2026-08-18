@@ -19,11 +19,12 @@
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
-#import "utils/LayoutUtil.h"
+#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetInsets.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewShadowNode.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
@@ -33,7 +34,6 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
-#import <cxxreact/ReactNativeVersion.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -52,8 +52,8 @@ using namespace facebook::react;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
   TrueSheetViewInsetAdjustment _insetAdjustment;
-  BOOL _scrollable;
   ScrollableOptions *_scrollableOptions;
+  BOOL _hasAutoDetent;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
@@ -86,7 +86,6 @@ using namespace facebook::react;
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
-    _scrollable = NO;
     _isSheetUpdatePending = NO;
 
     _screensEventObserver = [[RNScreensEventObserver alloc] init];
@@ -111,18 +110,47 @@ using namespace facebook::react;
     return;
   }
 
-  if (_initialDetentIndex >= 0 && !_didInitiallyPresent) {
-    UIViewController *vc = [self findPresentingViewController];
+  [self presentInitialIfNeeded];
+}
 
-    // Only present if the view controller is in the same window and not being dismissed
-    if (vc && vc.view.window == self.window && !_controller.isBeingDismissed) {
-      _didInitiallyPresent = YES;
-      [self presentAtIndex:_initialDetentIndex animated:_initialDetentAnimated completion:nil];
-    } else {
-      // Animate next time when sheet finally moves to the correct window
-      _initialDetentAnimated = YES;
-    }
+// JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
+// navigation footer set via setOptions) commits together with it — by the time
+// the prop lands the tree is final and the sheet presents at its final height.
+// Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
+// arriving after attach, which didMoveToWindow won't re-fire for).
+- (void)presentInitialIfNeeded {
+  if (_initialDetentIndex < 0 || _didInitiallyPresent)
+    return;
+
+  UIViewController *vc = [self findPresentingViewController];
+
+  // Only present if the view controller is in the same window and not being dismissed
+  if (!vc || vc.view.window != self.window || _controller.isBeingDismissed) {
+    // Animate next time when sheet finally moves to the correct window
+    _initialDetentAnimated = YES;
+    return;
   }
+
+  _didInitiallyPresent = YES;
+
+  // Deferred a runloop turn so sibling mounts from the current transaction
+  // (e.g. a footer committed alongside the prop) land before measuring.
+  __weak __typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __typeof(self) strongSelf = weakSelf;
+    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+      return;
+
+    [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
+                      animated:strongSelf->_initialDetentAnimated
+                    completion:^(BOOL success, NSError *_Nullable error) {
+                      // Present can fail if the view detached during this turn —
+                      // reset so the next attach/prop update retries.
+                      if (!success) {
+                        strongSelf->_didInitiallyPresent = NO;
+                      }
+                    }];
+  });
 }
 
 - (void)dealloc {
@@ -164,8 +192,12 @@ using namespace facebook::react;
 
   // Detents (-1 represents "auto")
   NSMutableArray *detents = [NSMutableArray new];
+  _hasAutoDetent = NO;
   for (const auto &detent : newProps.detents) {
     [detents addObject:@(detent)];
+    if (detent == -1) {
+      _hasAutoDetent = YES;
+    }
   }
 
   if (oldProps) {
@@ -244,19 +276,19 @@ using namespace facebook::react;
 
   _initialDetentIndex = newProps.initialDetentIndex;
   _initialDetentAnimated = newProps.initialDetentAnimated;
-  _scrollable = newProps.scrollable;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
   BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
   auto topEdgeEffect = scrollableOpts.topScrollEdgeEffect;
   auto bottomEdgeEffect = scrollableOpts.bottomScrollEdgeEffect;
-  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || !scrollingExpandsSheet ||
-                              topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
+  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || scrollableOpts.keyboardOffset != 0 ||
+                              !scrollingExpandsSheet || topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
                               bottomEdgeEffect != TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   if (hasScrollableOptions) {
     ScrollableOptions *options = [[ScrollableOptions alloc] init];
     options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
+    options.keyboardOffset = scrollableOpts.keyboardOffset;
     options.scrollingExpandsSheet = scrollingExpandsSheet;
     options.topScrollEdgeEffect = topEdgeEffect;
     options.bottomScrollEdgeEffect = bottomEdgeEffect;
@@ -266,6 +298,9 @@ using namespace facebook::react;
   }
 
   _controller.scrollingExpandsSheet = scrollingExpandsSheet;
+
+  _controller.absoluteHeader = newProps.headerOptions.position == TrueSheetViewPosition::Absolute;
+  _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   if (_controller.footerKeyboardOffset != footerKeyboardOffset) {
@@ -282,9 +317,16 @@ using namespace facebook::react;
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
   _state = std::static_pointer_cast<TrueSheetViewShadowNode::ConcreteState const>(state);
 
-  if (_controller) {
-    // Initialize with _controller size to set initial width
-    [self viewControllerDidChangeSize:_controller.view.frame.size];
+  if (_controller && !_controller.isStackedBehindChild) {
+    CGSize size = _controller.view.frame.size;
+    if (size.width < 1 || size.height < 1) {
+      // Pre-present the controller has no layout yet. Seed with screen
+      // dimensions so content (e.g. a FlatList viewport) can lay out and
+      // measure before the sheet presents (parity with Android).
+      UIWindow *window = [WindowUtil keyWindow];
+      size = window ? window.bounds.size : UIScreen.mainScreen.bounds.size;
+    }
+    [self viewControllerDidChangeSize:size];
   }
 }
 
@@ -304,13 +346,10 @@ using namespace facebook::react;
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
 
-#if REACT_NATIVE_VERSION_MINOR >= 82
-  // TODO: RN 0.82+ processes state updates in the same layout pass (synchronous).
-  // Once stable, we can drop native layout constraints in favor of synchronous Yoga layout.
+  // RN 0.82+ processes immediate state updates in the same layout pass, so Yoga
+  // resizes the container synchronously with the sheet (e.g. inside UIKit's
+  // animation block during detent transitions).
   _state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
-#else
-  _state->updateState(std::move(stateData));
-#endif
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -333,6 +372,9 @@ using namespace facebook::react;
     _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
+    if (self.window) {
+      [self presentInitialIfNeeded];
+    }
   }
 }
 
@@ -355,7 +397,6 @@ using namespace facebook::react;
 
   _containerView.delegate = nil;
   [_touchHandler detachFromView:_containerView];
-  [LayoutUtil unpinView:_containerView fromParentView:nil];
   [_containerView removeFromSuperview];
 
   _containerView = nil;
@@ -380,7 +421,6 @@ using namespace facebook::react;
 
   [_touchHandler attachToView:_containerView];
   [_controller.view addSubview:_containerView];
-  [LayoutUtil pinView:_containerView toParentView:_controller.view edges:UIRectEdgeAll];
   [_controller.view bringSubviewToFront:_containerView];
   _containerView.accessibilityViewIsModal = YES;
   _controller.accessibilityContentView = _containerView;
@@ -396,9 +436,8 @@ using namespace facebook::react;
     _controller.headerHeight = @(headerHeight);
   }
 
-  CGFloat footerHeight = [_containerView footerHeight];
-  if (footerHeight > 0) {
-    _controller.footerHeight = @(footerHeight);
+  if ([_containerView footerHeight] > 0) {
+    [self syncFooterMetrics];
   }
 
   CGFloat peekContentHeight = [_containerView peekContentHeight];
@@ -463,10 +502,24 @@ using namespace facebook::react;
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
   [_controller setupSheetProps];
+
+  // Detect before measuring so a first-time detection doesn't shift sizes mid-animation.
+  [self setupScrollable];
+
+  // Measure synchronously so the presentation starts at the right height —
+  // async size reports would otherwise land mid-animation and force a
+  // detent retarget that snaps the presentation stack.
+  if (_containerView) {
+    _controller.contentHeight = @([_containerView contentHeight]);
+    _controller.headerHeight = @([_containerView headerHeight]);
+    [self syncFooterMetrics];
+    _controller.peekContentHeight = @([_containerView peekContentHeight]);
+  }
+  _pendingSizeChange = NO;
+
+  [self refreshFooterBottomInset];
   [_controller setupSheetDetents];
   [_controller setupActiveDetentWithIndex:index];
-
-  [self setupScrollable];
 
   [_screensEventObserver capturePresenterScreenFromView:self];
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
@@ -563,24 +616,38 @@ using namespace facebook::react;
  * Debounced sheet update to handle rapid content/header size changes.
  */
 - (void)setupSheetDetentsForSizeChange {
-  if (_isSheetUpdatePending)
-    return;
+  // Keep the footer's absorbed inset in sync with the latest measured heights
+  // even before presenting, so the sheet presents at its final size.
+  [self refreshFooterBottomInset];
 
+  // Retargeting the in-flight presentation makes UIKit snap the whole stack
+  // (including the sheet behind) instead of animating. Defer to didPresent —
+  // presentAtIndex measured synchronously, so this is usually a no-op.
   if (_controller.isBeingPresented) {
     _pendingSizeChange = YES;
     return;
   }
 
+  // Not presented: presentAtIndex measures at present time.
+  // Dismissing: the sheet is going away — touching detents perturbs the
+  // presentation stack, visibly glitching the sheet behind.
+  if (!_controller.isPresented || _controller.isBeingDismissed)
+    return;
+
+  if (_isSheetUpdatePending)
+    return;
+
   _isSheetUpdatePending = YES;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
-    if (!self->_containerView)
+    if (!self->_containerView || self->_controller.isBeingDismissed)
       return;
 
     // Refresh here (not just on peek size events) since the peek's offset
     // within the content can change without its own size changing.
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
+    [self refreshFooterBottomInset];
     [self->_controller setupSheetDetentsForSizeChange];
   });
 }
@@ -596,7 +663,7 @@ using namespace facebook::react;
 }
 
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize {
-  _controller.footerHeight = @(newSize.height);
+  [self syncFooterMetrics];
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
 }
@@ -605,7 +672,7 @@ using namespace facebook::react;
   [self setupSheetDetentsForSizeChange];
 }
 
-// When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.
+// When the ScrollView changes (e.g. conditional remount), re-detect the new ScrollView.
 - (void)containerViewScrollViewDidChange {
   [self setupScrollable];
 }
@@ -684,10 +751,11 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
-  // TODO: Explicit screen height for now until synchronous layout is supported.
-  CGSize effectiveSize = CGSizeMake(size.width, _controller.screenHeight);
+  [self updateStateWithSize:size];
+}
 
-  [self updateStateWithSize:effectiveSize];
+- (void)viewControllerSafeAreaInsetsDidChange {
+  [self refreshFooterBottomInset];
 }
 
 - (void)viewControllerWillFocus {
@@ -755,10 +823,39 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
-  _containerView.scrollableEnabled = _scrollable;
-  _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
+  _containerView.hasAutoDetent = _hasAutoDetent;
+  [self refreshFooterBottomInset];
   [_containerView setupScrollable];
+}
+
+// footerHeight and appliedFooterBottomInset must stay paired — detent math
+// subtracts exactly the inset baked into the measured footer height (see
+// autoDetentBottomInset/peekDetentBottomInset).
+- (void)syncFooterMetrics {
+  _controller.footerHeight = @([_containerView footerHeight]);
+  _controller.appliedFooterBottomInset = [_containerView footerAppliedBottomInset];
+}
+
+// Recomputes the inset the footer absorbs and pushes it down. The inset
+// depends on measured heights and detents (see maxNaturalDetentHeight), so
+// this runs on size and detent changes — not just prop updates.
+- (void)refreshFooterBottomInset {
+  if (!_containerView)
+    return;
+
+  // appliedFooterBottomInset is NOT set here — it tracks what's actually
+  // baked into the footer's measured height (reported with its layout), not
+  // what was just pushed. Setting it at push time desyncs the pair and lets
+  // a seeded inset read as natural content height (see maxNaturalDetentHeight).
+  CGFloat inset = _controller.footerBottomInset;
+  _containerView.footerBottomInset = inset;
+
+  // Publish the inset so a footer set later (e.g. navigation setOptions) is
+  // padded on its very first layout instead of resizing the sheet twice.
+  if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
+    TrueSheetInsets::setBottomSafeArea(inset);
+  }
 }
 
 - (void)applySheetPropsUpdate {
@@ -768,6 +865,7 @@ using namespace facebook::react;
   if (_pendingDetents) {
     _controller.detents = _pendingDetents;
     _pendingDetents = nil;
+    [self refreshFooterBottomInset];
   }
 
   UIView *presenterView = _controller.presentingViewController.view;

@@ -12,7 +12,7 @@ const AnimatedTrueSheet = Animated.createAnimatedComponent(TrueSheet);
 export const ReanimatedTrueSheetScreen = ({
   detentIndex,
   resizeKey,
-  navigation,
+  dispatch,
   emit,
   routeKey,
   closing,
@@ -29,7 +29,7 @@ export const ReanimatedTrueSheetScreen = ({
     detentIndex,
     resizeKey,
     closing,
-    navigation,
+    dispatch,
     routeKey,
     emit,
   });

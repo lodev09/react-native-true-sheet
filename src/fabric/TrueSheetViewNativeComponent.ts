@@ -36,13 +36,21 @@ type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
 
 type ScrollableOptionsType = Readonly<{
   keyboardScrollOffset?: WithDefault<Double, 0>;
+  keyboardOffset?: WithDefault<Double, 0>;
   scrollingExpandsSheet?: WithDefault<boolean, true>;
   topScrollEdgeEffect?: WithDefault<ScrollEdgeEffect, 'hidden'>;
   bottomScrollEdgeEffect?: WithDefault<ScrollEdgeEffect, 'hidden'>;
 }>;
 
 type FooterOptionsType = Readonly<{
+  // Named uniquely across option structs — codegen derives the enum name from
+  // the field name, so a second `position` would redefine TrueSheetViewPosition
+  footerPosition?: WithDefault<'relative' | 'absolute', 'relative'>;
   keyboardOffset?: WithDefault<Double, 0>;
+}>;
+
+type HeaderOptionsType = Readonly<{
+  position?: WithDefault<'relative' | 'absolute', 'relative'>;
 }>;
 
 export interface DetentInfoEventPayload {
@@ -115,8 +123,8 @@ export interface NativeProps extends ViewProps {
   draggable?: WithDefault<boolean, true>;
   dimmed?: WithDefault<boolean, true>;
   initialDetentAnimated?: WithDefault<boolean, true>;
-  scrollable?: WithDefault<boolean, false>;
   scrollableOptions?: ScrollableOptionsType;
+  headerOptions?: HeaderOptionsType;
   footerOptions?: FooterOptionsType;
   presentation?: WithDefault<'page' | 'form', 'page'>;
 

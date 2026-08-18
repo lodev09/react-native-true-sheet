@@ -1,18 +1,20 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK, BUTTON_HEIGHT as FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
+import { BUTTON_HEIGHT, DARK, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
 
 interface PromptSheetProps extends TrueSheetProps {}
 
-export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
-  const { bottom } = useSafeAreaInsets();
+// Buttons + the footer's own vertical padding; the footer absorbs the
+// safe-area inset itself, so it's added separately in paddingBottom
+const FOOTER_HEIGHT = BUTTON_HEIGHT + SPACING * 2;
 
+export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
@@ -25,6 +27,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const input9Ref = useRef<TextInput>(null);
   const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
+  const insets = useSafeAreaInsets();
 
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
@@ -46,9 +49,10 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       ref={sheetRef}
       name="prompt-sheet"
       detents={[0.75, 1]}
-      scrollable
+      style={styles.sheet}
       scrollableOptions={{
-        keyboardScrollOffset: FOOTER_HEIGHT + SPACING,
+        keyboardScrollOffset: SPACING,
+        keyboardOffset: -insets.bottom,
         topScrollEdgeEffect: 'soft',
         bottomScrollEdgeEffect: 'soft',
       }}
@@ -73,19 +77,22 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       header={<Header />}
       footer={
-        <View style={[styles.footer, { paddingBottom: bottom + GAP }]}>
+        <>
           <Button style={styles.button} text="Dismiss" onPress={handleDismissPress} />
           <Button style={styles.button} text="Submit" onPress={handleSubmitPress} />
-        </View>
+        </>
       }
-      footerOptions={{ keyboardOffset: -bottom }}
+      footerStyle={styles.footer}
+      footerOptions={{ position: 'absolute' }}
       {...props}
     >
       <ScrollView
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { paddingBottom: FOOTER_HEIGHT + GAP + SPACING }]}
-        scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT + GAP }}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
+        ]}
       >
         <Input
           ref={input1Ref}
@@ -167,13 +174,16 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
 });
 
 const styles = StyleSheet.create({
+  sheet: {
+    flex: 1,
+  },
   content: {
     padding: SPACING,
     gap: GAP,
   },
   footer: {
     flexDirection: 'row',
-    paddingHorizontal: SPACING,
+    padding: SPACING,
     gap: GAP,
   },
   button: {

@@ -15,6 +15,7 @@
 #import "core/TrueSheetKeyboardObserver.h"
 
 @class TrueSheetViewController;
+@class TrueSheetFooterView;
 @class RCTScrollViewComponentView;
 @class ScrollableOptions;
 
@@ -31,24 +32,46 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
+
+/**
+ * Adjustment added to the keyboard bottom inset applied to the detected
+ * scrollable — negative values reduce the inset (e.g. to cancel out safe-area
+ * padding already baked into the content's paddingBottom).
+ */
+@property (nonatomic, assign) CGFloat keyboardOffset;
+
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
+
+/**
+ * Sibling footer view — a relative footer shields part of the keyboard's
+ * overlap from the inset; an absolute footer extends the caret reveal target.
+ */
+@property (nonatomic, weak, nullable) TrueSheetFooterView *footerView;
+
+/**
+ * Whether the sheet has an `auto` detent. Deriving the sheet height from the
+ * scroll content is circular with natural layout, so the detected ScrollView's
+ * viewport is force-bounded to the container only in this case.
+ */
+@property (nonatomic, assign) BOOL hasAutoDetent;
+
+/**
+ * Content height measured unconstrained by the shadow node — the height the
+ * content wants regardless of container bounds (see
+ * TrueSheetContentViewShadowNode). Falls back to the frame height before the
+ * first state update.
+ */
+@property (nonatomic, readonly) CGFloat naturalHeight;
 
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Setup scrollable content
- * @param enabled Whether scrollable is enabled
- * @param bottomInset Bottom content inset for the scroll view
+ * Detect the first ScrollView in the content, wiring keyboard handling
  */
-- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset;
+- (void)setupScrollable;
 
 /**
- * Update the pinned scroll view's height to fill the container
- */
-- (void)updateScrollViewHeight;
-
-/**
- * Apply scroll edge effects to the pinned scroll view (iOS 26+)
+ * Apply scroll edge effects to the detected scroll view (iOS 26+)
  */
 - (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options;
 

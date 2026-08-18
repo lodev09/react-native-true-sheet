@@ -197,6 +197,13 @@ export type DialogProps = {
    * content (e.g. iPad-style form sheets).
    */
   onContentHeightChange?: (height: number) => void;
+  /**
+   * Overrides the measured content height used to resolve the 'auto' snap
+   * point. Used when the caller bounds the content to the visible sheet
+   * (e.g. a plugged scrollable) so the auto-size wrapper can't be measured
+   * from natural flow.
+   */
+  contentHeight?: number;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -239,6 +246,7 @@ export function Root({
   peekHeight,
   initialAnimated = true,
   onContentHeightChange,
+  contentHeight: contentHeightProp,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -273,15 +281,16 @@ export function Root({
   const drawerHeightRef = React.useRef(drawerRef.current?.getBoundingClientRect().height || 0);
   const drawerWidthRef = React.useRef(drawerRef.current?.getBoundingClientRect().width || 0);
   const initialDrawerHeight = React.useRef(0);
-  const [contentHeight, setContentHeight] = React.useState(0);
+  const [measuredContentHeight, setContentHeight] = React.useState(0);
+  const contentHeight = contentHeightProp ?? measuredContentHeight;
 
   const onContentHeightChangeRef = React.useRef(onContentHeightChange);
   React.useEffect(() => {
     onContentHeightChangeRef.current = onContentHeightChange;
   });
   React.useEffect(() => {
-    onContentHeightChangeRef.current?.(contentHeight);
-  }, [contentHeight]);
+    onContentHeightChangeRef.current?.(measuredContentHeight);
+  }, [measuredContentHeight]);
 
   const onSnapPointChange = React.useCallback((activeSnapPointIndex: number) => {
     // Change openTime ref when we reach the last snap point to prevent dragging for 500ms incase it's scrollable.
@@ -771,7 +780,16 @@ export function Root({
     dragEndTime.current = new Date();
     const swipeAmount = getTranslate(drawerRef.current, direction);
 
-    if (!event || !shouldDrag(event.target, false) || !swipeAmount || Number.isNaN(swipeAmount))
+    // Drag overshoot below the lowest snap point translates the detached
+    // wrapper while the drawer stays pinned (see onDrag in use-snap-points) —
+    // common when a clamped 'auto' puts the lowest snap point at 0. Count the
+    // wrapper's translation as movement, or the release is swallowed and the
+    // sheet is left stuck at the overshoot position.
+    const wrapper = drawerRef.current.closest<HTMLElement>('[data-vaul-detached-wrapper]');
+    const wrapperSwipeAmount = wrapper ? getTranslate(wrapper, direction) : null;
+    const hasMoved = Boolean(swipeAmount) || Boolean(wrapperSwipeAmount);
+
+    if (!event || !shouldDrag(event.target, false) || !hasMoved || Number.isNaN(swipeAmount))
       return;
 
     if (dragStartTime.current === null) return;
@@ -825,7 +843,7 @@ export function Root({
 
     const isHorizontalSwipe = direction === 'left' || direction === 'right';
     if (
-      Math.abs(swipeAmount) >=
+      Math.abs(swipeAmount ?? 0) >=
       (isHorizontalSwipe ? visibleDrawerWidth : visibleDrawerHeight) * closeThreshold
     ) {
       closeDrawer();

@@ -194,6 +194,7 @@ class TrueSheetViewManager :
   @ReactProp(name = "initialDetentIndex", defaultInt = -1)
   override fun setInitialDetentIndex(view: TrueSheetView, index: Int) {
     view.initialDetentIndex = index
+    view.presentInitialIfNeeded()
   }
 
   @ReactProp(name = "initialDetentAnimated", defaultBoolean = true)
@@ -236,11 +237,6 @@ class TrueSheetViewManager :
     view.setInsetAdjustment(insetAdjustment ?: "automatic")
   }
 
-  @ReactProp(name = "scrollable", defaultBoolean = false)
-  override fun setScrollable(view: TrueSheetView, value: Boolean) {
-    view.setScrollable(value)
-  }
-
   @ReactProp(name = "presentation")
   override fun setPresentation(view: TrueSheetView, value: String?) {
     // iOS/web-specific prop - no-op on Android
@@ -260,13 +256,23 @@ class TrueSheetViewManager :
 
     val scrollableOptions = ScrollableOptions(
       keyboardScrollOffset = if (options.hasKey("keyboardScrollOffset")) options.getDouble("keyboardScrollOffset").toFloat() else 0f,
+      keyboardOffset = if (options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f,
       scrollingExpandsSheet = if (options.hasKey("scrollingExpandsSheet")) options.getBoolean("scrollingExpandsSheet") else true
     )
     view.setScrollableOptions(scrollableOptions)
   }
 
+  @ReactProp(name = "headerOptions")
+  override fun setHeaderOptions(view: TrueSheetView, options: ReadableMap?) {
+    val position = if (options != null && options.hasKey("position")) options.getString("position") else null
+    view.setAbsoluteHeader(position == "absolute")
+  }
+
   @ReactProp(name = "footerOptions")
   override fun setFooterOptions(view: TrueSheetView, options: ReadableMap?) {
+    val position = if (options != null && options.hasKey("footerPosition")) options.getString("footerPosition") else null
+    view.setAbsoluteFooter(position == "absolute")
+
     val keyboardOffset =
       if (options != null && options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f
     view.setFooterKeyboardOffset(keyboardOffset)

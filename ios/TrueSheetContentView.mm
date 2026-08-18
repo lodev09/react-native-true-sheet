@@ -10,11 +10,13 @@
 
 #import "TrueSheetContentView.h"
 #import <React/RCTScrollViewComponentView.h>
-#import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewShadowNode.h>
 #import "TrueSheetContainerView.h"
+#import "TrueSheetFooterView.h"
 #import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/PlatformUtil.h"
@@ -23,12 +25,12 @@
 using namespace facebook::react;
 
 @implementation TrueSheetContentView {
-  RCTScrollViewComponentView *_pinnedScrollView;
-  CGSize _lastSize;
-  CGFloat _bottomInset;
-  CGFloat _originalScrollViewHeight;
-  CGFloat _originalIndicatorBottomInset;
+  TrueSheetContentViewShadowNode::ConcreteState::Shared _state;
+  RCTScrollViewComponentView *_detectedScrollView;
+  CGFloat _lastReportedNaturalHeight;
+  CGFloat _appliedKeyboardOffset;
   BOOL _observingTextChanges;
+  BOOL _scrollableBounded;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -45,6 +47,43 @@ using namespace facebook::react;
 
 - (void)dealloc {
   [self stopObservingTextChanges];
+}
+
+- (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState {
+  _state = std::static_pointer_cast<TrueSheetContentViewShadowNode::ConcreteState const>(state);
+
+  CGFloat naturalHeight = _state->getData().naturalHeight;
+  if (naturalHeight != _lastReportedNaturalHeight) {
+    _lastReportedNaturalHeight = naturalHeight;
+    [self.delegate contentViewDidChangeSize:CGSizeMake(self.frame.size.width, naturalHeight)];
+  }
+}
+
+// Tells the shadow node to fill the container (flexGrow/flexShrink) so the
+// detected ScrollView's viewport is bounded to the visible space. Only applied
+// for auto detents — otherwise content lays out naturally like a regular view.
+- (void)setScrollableBounded:(BOOL)bounded {
+  if (_scrollableBounded == bounded) {
+    return;
+  }
+  _scrollableBounded = bounded;
+
+  if (_state) {
+    auto newState = _state->getData();
+    newState.scrollableBounded = bounded;
+    _state->updateState(std::move(newState));
+  }
+}
+
+- (void)setHasAutoDetent:(BOOL)hasAutoDetent {
+  if (_hasAutoDetent == hasAutoDetent) {
+    return;
+  }
+  _hasAutoDetent = hasAutoDetent;
+
+  if (_detectedScrollView) {
+    [self setScrollableBounded:hasAutoDetent];
+  }
 }
 
 #pragma mark - Text Change Observing
@@ -71,14 +110,25 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
+- (CGFloat)naturalHeight {
+  if (_state) {
+    CGFloat height = _state->getData().naturalHeight;
+    if (height > 0) {
+      return height;
+    }
+  }
+  return self.frame.size.height;
+}
+
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  CGSize newSize = CGSizeMake(layoutMetrics.frame.size.width, layoutMetrics.frame.size.height);
-  if (!CGSizeEqualToSize(newSize, _lastSize)) {
-    _lastSize = newSize;
-    [self.delegate contentViewDidChangeSize:newSize];
+  // A deep ScrollView unmount doesn't pass through this view's mount hooks —
+  // detect the stale reference here so it's released instead of lingering until the
+  // next explicit setup or recycle.
+  if (_detectedScrollView && ![_detectedScrollView isDescendantOfView:self]) {
+    [self.delegate contentViewScrollViewDidChange];
   }
 }
 
@@ -95,53 +145,38 @@ using namespace facebook::react;
 }
 
 - (void)checkScrollViewChanged {
-  if (!_pinnedScrollView || ![_pinnedScrollView isDescendantOfView:self]) {
+  if (!_detectedScrollView || ![_detectedScrollView isDescendantOfView:self]) {
     [self.delegate contentViewScrollViewDidChange];
   }
 }
 
 #pragma mark - Scrollable
 
-- (void)setScrollViewContentInset:(CGFloat)contentBottom indicatorInset:(CGFloat)indicatorBottom {
-  if (!_pinnedScrollView)
+// The scroll indicator follows automatically — UIKit derives its insets from
+// the content inset while `automaticallyAdjustsScrollIndicatorInsets` is set.
+- (void)setKeyboardInset:(CGFloat)inset {
+  if (!_detectedScrollView)
     return;
 
-  UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
-  contentInset.bottom = contentBottom;
-  _pinnedScrollView.scrollView.contentInset = contentInset;
-
-  UIEdgeInsets indicatorInsets = _pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-  indicatorInsets.bottom = indicatorBottom;
-  _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
+  UIEdgeInsets contentInset = _detectedScrollView.scrollView.contentInset;
+  contentInset.bottom = inset;
+  _detectedScrollView.scrollView.contentInset = contentInset;
 }
 
 - (void)clearScrollable {
-  if (_pinnedScrollView) {
-    CGRect frame = _pinnedScrollView.frame;
-    frame.size.height = _originalScrollViewHeight;
-    _pinnedScrollView.frame = frame;
-
-    [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
-  }
-  _pinnedScrollView = nil;
-  _bottomInset = 0;
-  _originalScrollViewHeight = 0;
-  _originalIndicatorBottomInset = 0;
+  [self setKeyboardInset:0];
+  _appliedKeyboardOffset = 0;
+  [self setScrollableBounded:NO];
+  _detectedScrollView = nil;
 }
 
-- (void)setupScrollable:(BOOL)enabled bottomInset:(CGFloat)bottomInset {
-  if (!enabled) {
-    [self clearScrollable];
-    return;
-  }
-
-  // Check if pinned scroll view is still valid (still in view hierarchy)
-  if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
+- (void)setupScrollable {
+  // Check if the detected scroll view is still valid (still in view hierarchy)
+  if (_detectedScrollView && ![_detectedScrollView isDescendantOfView:self]) {
     [self clearScrollable];
   }
 
-  // Already set up with same inset and valid scroll view
-  if (_pinnedScrollView && _bottomInset == bottomInset) {
+  if (_detectedScrollView) {
     return;
   }
 
@@ -150,56 +185,55 @@ using namespace facebook::react;
     return;
   }
 
-  // Only capture originals on first pin
-  if (!_pinnedScrollView) {
-    _originalScrollViewHeight = scrollView.frame.size.height;
-    _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
-    _pinnedScrollView = scrollView;
-  }
+  _detectedScrollView = scrollView;
 
-  _bottomInset = bottomInset;
-
-  [self updateScrollViewHeight];
-
-  [self setScrollViewContentInset:_bottomInset indicatorInset:_originalIndicatorBottomInset];
+  [self setScrollableBounded:_hasAutoDetent];
 
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
   if (keyboardHeight > 0) {
-    [self setScrollViewContentInset:keyboardHeight indicatorInset:_originalIndicatorBottomInset + keyboardHeight];
+    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
   }
 }
 
-- (void)updateScrollViewHeight {
-  if (!_pinnedScrollView) {
-    return;
+// A relative footer stays behind the keyboard below the content, so its
+// height shields that much of the keyboard's overlap. An absolute footer
+// floats within the viewport — its clearance is the content padding's job
+// (the caret reveal accounts for it, see footerOcclusion).
+- (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
+  CGFloat inset = height;
+  if (self.footerView && !_keyboardObserver.viewController.absoluteFooter) {
+    inset = MAX(0, height - self.footerView.frame.size.height);
   }
 
-  UIView *containerView = self.superview;
-  if (!containerView) {
-    return;
+  // Track how much of keyboardOffset actually lands in the inset so the caret
+  // reveal can compensate — the offset shifts the inset, not the keyboard edge.
+  CGFloat adjustedInset = MAX(0, inset + self.keyboardOffset);
+  _appliedKeyboardOffset = adjustedInset - inset;
+
+  // Content that already fits above the keyboard has nothing to reveal — the
+  // inset would only open blank scroll range below it (huge gap at the bottom).
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  if (scrollView.contentSize.height <= scrollView.bounds.size.height - adjustedInset) {
+    _appliedKeyboardOffset = 0;
+    return 0;
   }
 
-  CGRect scrollViewFrameInContainer = [_pinnedScrollView.superview convertRect:_pinnedScrollView.frame
-                                                                        toView:containerView];
-  CGFloat newHeight = containerView.bounds.size.height - scrollViewFrameInContainer.origin.y;
+  return adjustedInset;
+}
 
-  if (newHeight > 0) {
-    // Preserve contentOffset before changing frame to prevent scroll jump
-    CGPoint savedContentOffset = _pinnedScrollView.scrollView.contentOffset;
-
-    CGRect frame = _pinnedScrollView.frame;
-    frame.size.height = newHeight;
-    _pinnedScrollView.frame = frame;
-
-    // Restore contentOffset after frame change
-    _pinnedScrollView.scrollView.contentOffset = savedContentOffset;
+// An absolute footer floats over the viewport's bottom edge — extend the
+// caret target so it clears the footer, not just the keyboard.
+- (CGFloat)footerOcclusion {
+  if (self.footerView && _keyboardObserver.viewController.absoluteFooter) {
+    return [self.footerView keyboardOcclusionHeight];
   }
+  return 0;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
-  if (_pinnedScrollView) {
-    return _pinnedScrollView;
+  if (_detectedScrollView) {
+    return _detectedScrollView;
   }
 
   if (self.subviews.count == 0) {
@@ -233,11 +267,11 @@ using namespace facebook::react;
 
 - (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
-  if (!_pinnedScrollView)
+  if (!_detectedScrollView)
     return;
 
   if (@available(iOS 26.0, *)) {
-    UIScrollView *scrollView = _pinnedScrollView.scrollView;
+    UIScrollView *scrollView = _detectedScrollView.scrollView;
     auto topEffect = options ? options.topScrollEdgeEffect : TrueSheetViewTopScrollEdgeEffect::Hidden;
     auto bottomEffect = options ? options.bottomScrollEdgeEffect : TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
@@ -273,7 +307,7 @@ using namespace facebook::react;
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
-  if (!_pinnedScrollView) {
+  if (!_detectedScrollView) {
     return;
   }
 
@@ -282,12 +316,12 @@ using namespace facebook::react;
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
+  CGFloat inset = [self keyboardInsetWithHeight:height];
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:height
-                                      indicatorInset:self->_originalIndicatorBottomInset + height];
+                     [self setKeyboardInset:inset];
                    }
                    completion:nil];
 
@@ -300,7 +334,7 @@ using namespace facebook::react;
 }
 
 - (void)focusedInputTextDidChange:(NSNotification *)notification {
-  if (!_pinnedScrollView || !_keyboardObserver || _keyboardObserver.currentHeight <= 0) {
+  if (!_detectedScrollView || !_keyboardObserver || _keyboardObserver.currentHeight <= 0) {
     return;
   }
 
@@ -311,12 +345,15 @@ using namespace facebook::react;
   }
 
   dispatch_async(dispatch_get_main_queue(), ^{
+    // Typing can grow the content (e.g. a multiline input) past the fits-above-
+    // the-keyboard threshold — keep the inset in sync before revealing the caret.
+    [self setKeyboardInset:[self keyboardInsetWithHeight:self->_keyboardObserver.currentHeight]];
     [self scrollToFocusedCaretAnimated:YES];
   });
 }
 
 - (void)scrollToFocusedCaretAnimated:(BOOL)animated {
-  if (!_pinnedScrollView) {
+  if (!_detectedScrollView) {
     return;
   }
 
@@ -326,7 +363,7 @@ using namespace facebook::react;
     return;
   }
 
-  UIScrollView *scrollView = _pinnedScrollView.scrollView;
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
   CGRect targetRect = [firstResponder convertRect:firstResponder.bounds toView:scrollView];
 
   if ([firstResponder conformsToProtocol:@protocol(UITextInput)]) {
@@ -344,14 +381,14 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset;
+  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion] - _appliedKeyboardOffset;
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   [self stopObservingTextChanges];
 
-  if (!_pinnedScrollView) {
+  if (!_detectedScrollView) {
     return;
   }
 
@@ -359,8 +396,7 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:self->_bottomInset
-                                      indicatorInset:self->_originalIndicatorBottomInset];
+                     [self setKeyboardInset:0];
                    }
                    completion:nil];
 }
@@ -371,6 +407,10 @@ using namespace facebook::react;
   [super prepareForRecycle];
   [self stopObservingTextChanges];
   [self clearScrollable];
+  _state.reset();
+  _scrollableBounded = NO;
+  _hasAutoDetent = NO;
+  _lastReportedNaturalHeight = 0;
 }
 
 @end

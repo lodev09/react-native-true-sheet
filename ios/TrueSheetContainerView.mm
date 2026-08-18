@@ -17,7 +17,6 @@
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
-#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -26,7 +25,6 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTLog.h>
-#import <react/renderer/core/LayoutMetrics.h>
 
 using namespace facebook::react;
 
@@ -35,6 +33,7 @@ using namespace facebook::react;
 - (instancetype)init {
   if (self = [super init]) {
     _keyboardScrollOffset = 0;
+    _keyboardOffset = 0;
     _scrollingExpandsSheet = YES;
     _topScrollEdgeEffect = TrueSheetViewTopScrollEdgeEffect::Hidden;
     _bottomScrollEdgeEffect = TrueSheetViewBottomScrollEdgeEffect::Hidden;
@@ -56,7 +55,6 @@ using namespace facebook::react;
   TrueSheetFooterView *_footerView;
   TrueSheetPeekView *__weak _peekView;
   TrueSheetKeyboardObserver *_keyboardObserver;
-  BOOL _scrollableSet;
 }
 
 #pragma mark - Initialization
@@ -74,7 +72,6 @@ using namespace facebook::react;
     _contentView = nil;
     _headerView = nil;
     _footerView = nil;
-    _scrollableSet = NO;
     self.isAccessibilityElement = NO;
   }
   return self;
@@ -109,13 +106,8 @@ using namespace facebook::react;
 
 #pragma mark - Layout
 
-- (void)layoutSubviews {
-  [super layoutSubviews];
-  [_contentView updateScrollViewHeight];
-}
-
 - (CGFloat)contentHeight {
-  return _contentView ? _contentView.frame.size.height : 0;
+  return _contentView ? _contentView.naturalHeight : 0;
 }
 
 - (CGFloat)headerHeight {
@@ -124,6 +116,10 @@ using namespace facebook::react;
 
 - (CGFloat)footerHeight {
   return _footerView ? _footerView.frame.size.height : 0;
+}
+
+- (CGFloat)footerAppliedBottomInset {
+  return _footerView ? _footerView.appliedBottomInset : 0;
 }
 
 // Distance from the top of the content view to the bottom of the peek view.
@@ -141,36 +137,25 @@ using namespace facebook::react;
   return CGRectGetMaxY([_peekView convertRect:_peekView.bounds toView:_contentView]);
 }
 
-- (void)layoutFooter {
-  if (_footerView) {
-    CGFloat height = _footerView.frame.size.height;
-    if (height > 0) {
-      [_footerView setupConstraintsWithHeight:height];
-    }
-  }
-}
-
 - (void)updateFooterKeyboardOffset {
   [_footerView applyKeyboardOffset];
 }
 
-- (void)setScrollableEnabled:(BOOL)scrollableEnabled {
-  _scrollableEnabled = scrollableEnabled;
-  _scrollableSet = YES;
+- (void)setFooterBottomInset:(CGFloat)footerBottomInset {
+  _footerBottomInset = footerBottomInset;
+  [_footerView setBottomInset:footerBottomInset];
 }
 
 - (void)setScrollableOptions:(ScrollableOptions *)scrollableOptions {
   _scrollableOptions = scrollableOptions;
   _contentView.keyboardScrollOffset = scrollableOptions ? scrollableOptions.keyboardScrollOffset : 0;
+  _contentView.keyboardOffset = scrollableOptions ? scrollableOptions.keyboardOffset : 0;
 }
 
 - (void)setupScrollable {
-  if (_scrollableSet && _contentView) {
-    CGFloat bottomInset = 0;
-    if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
-      bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
-    }
-    [_contentView setupScrollable:_scrollableEnabled bottomInset:bottomInset];
+  if (_contentView) {
+    _contentView.hasAutoDetent = _hasAutoDetent;
+    [_contentView setupScrollable];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {
       [self setupEdgeInteractions];
@@ -214,6 +199,7 @@ using namespace facebook::react;
     }
     _contentView = (TrueSheetContentView *)childComponentView;
     _contentView.delegate = self;
+    _contentView.footerView = _footerView;
 
     // Children mount bottom-up, so the content subtree is complete here.
     // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
@@ -240,6 +226,8 @@ using namespace facebook::react;
     }
     _footerView = (TrueSheetFooterView *)childComponentView;
     _footerView.delegate = self;
+    _contentView.footerView = _footerView;
+    [_footerView setBottomInset:_footerBottomInset];
     [self footerViewDidChangeSize:_footerView.frame.size];
   }
 }
@@ -259,6 +247,7 @@ using namespace facebook::react;
   if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
     _footerView.delegate = nil;
     _footerView = nil;
+    _contentView.footerView = nil;
     [self footerViewDidChangeSize:CGSizeZero];
   }
 
@@ -267,12 +256,6 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
-}
-
-#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
-- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
-           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
-  // Intentionally skip super - AutoLayout handles container's frame, not Yoga
 }
 
 #pragma mark - TrueSheetContentViewDelegate

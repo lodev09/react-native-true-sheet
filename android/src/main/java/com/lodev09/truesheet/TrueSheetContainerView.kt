@@ -61,13 +61,27 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       return bottom
     }
 
-  var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
-  var scrollViewBottomInset: Int = 0
-  var scrollableEnabled: Boolean = false
+  var absoluteFooter: Boolean = false
+
+  /**
+   * Bottom safe-area inset the footer absorbs as padding — the footer
+   * owns the sheet's bottom edge, so its background fills the inset.
+   */
+  var footerBottomInset: Int = 0
+    set(value) {
+      field = value
+      footerView?.setBottomInset(value)
+    }
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
       contentView?.scrollableOptions = value
+    }
+
+  var hasAutoDetent = false
+    set(value) {
+      field = value
+      contentView?.hasAutoDetent = value
     }
 
   override val eventDispatcher: EventDispatcher?
@@ -80,8 +94,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupScrollable() {
-    val bottomInset = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) scrollViewBottomInset else 0
-    contentView?.setupScrollable(scrollableEnabled, bottomInset)
+    contentView?.setupScrollable()
   }
 
   fun setupKeyboardHandler() {
@@ -99,7 +112,11 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       is TrueSheetContentView -> {
         child.delegate = this
         child.scrollableOptions = scrollableOptions
+        child.hasAutoDetent = hasAutoDetent
         contentView = child
+
+        // State lands before the view is attached, so pull the current value
+        contentHeight = child.naturalHeight
 
         // Children mount bottom-up, so the content subtree is complete here.
         // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
@@ -113,6 +130,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
       is TrueSheetFooterView -> {
         child.delegate = this
+        child.setBottomInset(footerBottomInset)
         footerView = child
       }
     }
@@ -183,6 +201,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     contentHeight = height
     delegate?.containerViewContentDidChangeSize(width, height)
   }
+
+  override val footerKeyboardOcclusion: Int
+    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
 
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()

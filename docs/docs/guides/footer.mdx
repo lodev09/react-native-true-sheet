@@ -1,12 +1,12 @@
 ---
 title: Adding Footer
-description: Add a floating footer component to the bottom sheet.
+description: Add a footer component pinned to the bottom of the sheet.
 keywords: [bottom sheet footer, bottom sheet floating footer, bottom sheet sticky footer]
 ---
 
-Do you need a FAB (Floating Action Button) on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
+Do you need action buttons on the sheet? Or perhaps a small banner at the bottom? We've got you covered!
 
-`TrueSheet` provides first-class support for a `Footer` component. This component will float at the bottom of the sheet.
+`TrueSheet` provides first-class support for a `Footer` component. The footer is pinned to the bottom of the sheet, takes up space below the content, and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation.
 
 ## How?
 
@@ -57,52 +57,73 @@ const App = () => {
 
 ## Safe Area Handling
 
-The footer is pinned to the bottom edge of the sheet. The sheet height automatically includes the bottom safe area on both iOS and Android. To ensure your footer extends properly into the safe area, add bottom padding:
+The footer owns the sheet's bottom edge, so it automatically absorbs the bottom safe-area inset as padding when [`insetAdjustment`](../reference/configuration#insetadjustment) is `"automatic"` (the default). Your footer content stays above the home indicator while its background fills the inset — no manual padding needed.
 
 ```tsx
-import { Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const isIPad = Platform.OS === 'ios' && Platform.isPad;
-
 const MyFooter = () => {
-  const insets = useSafeAreaInsets();
-  const bottomInset = isIPad ? 0 : insets.bottom;
-
   return (
-    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
-      <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#fff' }}>Footer Content</Text>
-      </View>
+    <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Footer Content</Text>
     </View>
   );
 };
 
 // Usage
-<TrueSheet detents={['auto']} footer={<MyFooter />}>
+<TrueSheet detents={['auto']} footer={<MyFooter />} footerStyle={{ backgroundColor: '#333' }}>
   {/* content */}
 </TrueSheet>
 ```
 
-This ensures the footer background extends into the safe area while keeping the content above the home indicator.
+The inset is applied to the footer component itself, so set your background via [`footerStyle`](../reference/configuration#footerstyle) (or on your footer's root view) for it to fill the safe area.
 
-When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pass `-insets.bottom` to [`footerOptions.keyboardOffset`](../reference/configuration#footeroptions) to tuck it behind the keyboard — see [Keyboard Handling](./keyboard#footer-behavior).
+When the keyboard opens, an absolute footer rises above it and the inset is skipped automatically — no gap above the keyboard. A relative footer stays in the layout flow and keeps its inset. See [Keyboard Handling](./keyboard#footer-behavior).
 
 :::note
-On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
+On iPad, the sheet is displayed as a floating modal, so no inset is applied. Set `insetAdjustment="never"` to opt out entirely.
+:::
+
+## Floating Footer
+
+By default, the footer takes up space below the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `footerOptions.position` to `'absolute'` to float the footer over the content instead — it stays pinned to the bottom edge but no longer adds to the `auto` detent height. An absolute footer absorbs the bottom safe-area inset the same way a relative one does — see [Safe Area Handling](#safe-area-handling).
+
+```tsx {5-5}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto']}
+      footerOptions={{ position: 'absolute' }}
+      footer={<Fab />}
+    >
+      <FlatList
+        data={items}
+        contentContainerStyle={{ paddingBottom: FOOTER_HEIGHT }}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+Since the footer overlaps the content, add bottom padding to your content (e.g. `contentContainerStyle`) so it ends above the footer.
+:::
+
+:::info
+A relative footer is laid out below the content — if your content is taller than the sheet's visible height (e.g. fixed detents), bound it with `flex: 1` so the footer stays visible. Use `'absolute'` if you want the footer to float regardless of the content's height.
 :::
 
 ## Collapsing to the Footer
 
-The footer height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
+An **absolute** footer's height counts toward the [`"peek"`](../reference/types#sheetdetent) detent — collapse the sheet down to just the [`header`](header), footer, and any peeking content.
 
-```tsx {4-4}
+```tsx {4-6}
 const App = () => {
   return (
     <TrueSheet
       detents={['peek', 0.9]}
       initialDetentIndex={0}
       footer={<SheetActions />}
+      footerOptions={{ position: 'absolute' }}
     >
       <BookingDetails />
     </TrueSheet>
@@ -110,4 +131,4 @@ const App = () => {
 }
 ```
 
-Since the footer floats, it stays visible at every detent. See [Peeking Content](peeking) for the full guide.
+Since an absolute footer floats over the content, it stays visible at every detent. A relative footer is laid out below the content, so it's pushed off-screen at the peek detent and is excluded from the peek height. See [Peeking Content](peeking) for the full guide.

@@ -296,9 +296,17 @@ Style for the header container.
 | - | - | - | - | - |
 | `StyleProp<ViewStyle>` | | ✅ | ✅ | ✅ |
 
+## `headerOptions`
+
+Options for customizing header behavior.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`HeaderOptions`](types#headeroptions) | | ✅ | ✅ | ✅ |
+
 ## `footer`
 
-A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.
+A component that is pinned at the bottom of the sheet. The footer height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/footer) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -318,25 +326,11 @@ Options for customizing footer behavior.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`FooterOptions`](types#footeroptions) | | ✅ | ✅ | |
-
-## `scrollable`
-
-On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](../guides/scrolling) for example.
-
-On Android, it ensures the scroll view fills the available sheet space and automatically manages nested scrolling. Any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored when `scrollable` is enabled.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| `boolean` | `false` | ✅ | ✅ | |
-
-:::warning
-The [`auto`](types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
-:::
+| [`FooterOptions`](types#footeroptions) | | ✅ | ✅ | ✅ |
 
 ## `scrollableOptions`
 
-Options for customizing scrollable behavior. Only applies when `scrollable` is `true`.
+Options for customizing scrollable behavior. Applies when the sheet contains a `ScrollView` or `FlatList` (auto-detected). See [this guide](../guides/scrolling) for more information.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -381,7 +375,9 @@ The offset from the bottom edge when [`detached`](#detached) is enabled.
 
 ## `style`
 
-The sheet's container style override.
+The sheet's content style override.
+
+Content lays out naturally by default — like a regular view or a screen. Pass `flex: 1` to fill the sheet's visible height per detent.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |

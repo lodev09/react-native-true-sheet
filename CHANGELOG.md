@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- **iOS**: Smoother `onPositionChange` — drags emit at the touch rate, transitions at the display's refresh rate, and a sheet behind a child sheet reports its live position. `onWillDismiss` now fires only when a drag-to-dismiss is committed. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744), [#756](https://github.com/lodev09/react-native-true-sheet/pull/756) by [@lodev09](https://github.com/lodev09))
+- The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
+- New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
+- The footer now absorbs the bottom safe-area inset as padding when `insetAdjustment` is `automatic` — no manual safe-area padding needed. Skipped while the keyboard is open. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749), [#750](https://github.com/lodev09/react-native-true-sheet/pull/750) by [@lodev09](https://github.com/lodev09))
+- New `keyboardOffset` option in `scrollableOptions` — adjusts the scrollable's keyboard bottom inset. Pass `-insets.bottom` to cancel out safe-area padding already in your content's `paddingBottom`. ([#785](https://github.com/lodev09/react-native-true-sheet/pull/785) by [@lodev09](https://github.com/lodev09))
+
+### 🐛 Bug fixes
+
+- The keyboard-driven scroll inset now accounts for a floating footer's height — focused inputs no longer hide behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
+- Auto detents now measure scrollable content in the shared layout tree, correctly sizing explicit-height and deeply nested scrollables on iOS and Android. ([#783](https://github.com/lodev09/react-native-true-sheet/pull/783) by [@lodev09](https://github.com/lodev09))
+
+### 💥 Breaking changes
+
+- The footer now lays out relative by default — it takes up space below the content, is included in the `auto` detent height (excluded from `peek`), and stays behind the keyboard. Set `footerOptions.position` to `'absolute'` to restore the previous floating behavior (`keyboardOffset` only applies there). ([#748](https://github.com/lodev09/react-native-true-sheet/pull/748), [#754](https://github.com/lodev09/react-native-true-sheet/pull/754) by [@lodev09](https://github.com/lodev09))
+- Content now wraps its children's height by default instead of filling the sheet — like a regular view. Pass `flex: 1` via `style` to fill. ([#746](https://github.com/lodev09/react-native-true-sheet/pull/746) by [@lodev09](https://github.com/lodev09))
+- The container is now sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms. The `scrollable` prop is removed — scrollables are auto-detected. Requires React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
+- Scrollables no longer get the bottom safe-area inset applied natively — only keyboard handling stays automatic. Pad the scroll content yourself via `contentContainerStyle` (or `contentInsetAdjustmentBehavior` on iOS). ([#784](https://github.com/lodev09/react-native-true-sheet/pull/784) by [@lodev09](https://github.com/lodev09))
+- The sheet navigator is now built on `standard-navigation` with first-class Expo Router support — import the ready-made `Sheet` layout from the new `/navigation/expo-router` entry point instead of wrapping with `withLayoutContext`. Requires the new `standard-navigation` peer dependency; React Navigation apps also need `@react-navigation/native` 7.3+ (same API otherwise, plus a new `createTrueSheetScreen` for the static API). ([#772](https://github.com/lodev09/react-native-true-sheet/pull/772) by [@lodev09](https://github.com/lodev09))
+
+### 💡 Others
+
+- Upgrade the examples to Expo SDK 57 and React Native 0.86. ([#755](https://github.com/lodev09/react-native-true-sheet/pull/755) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.12
 
 ### 🐛 Bug fixes

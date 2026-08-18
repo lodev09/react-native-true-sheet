@@ -6,6 +6,7 @@ import {
   type ComponentRef,
   isValidElement,
   createElement,
+  useEffect,
 } from 'react';
 
 import type {
@@ -76,7 +77,21 @@ const stopResponderNegotiation = (event: GestureResponderEvent) => {
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
+  initialPresentReady: boolean;
 }
+
+// Gates auto-present (initialDetentIndex) by one commit. Rendered last in the
+// sheet subtree so its mount effect runs after the content's mount effects —
+// updates they schedule (e.g. a navigation footer via setOptions) batch with
+// onReady's, so native receives initialDetentIndex together with the settled
+// tree and presents at the final height instead of resizing mid-flight.
+const InitialPresentGate = ({ onReady }: { onReady: () => void }) => {
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+
+  return null;
+};
 
 export class TrueSheet
   extends PureComponent<TrueSheetProps, TrueSheetState>
@@ -120,6 +135,7 @@ export class TrueSheet
 
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
+      initialPresentReady: false,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -138,6 +154,11 @@ export class TrueSheet
     this.onDidBlur = this.onDidBlur.bind(this);
     this.handleBackPress = this.handleBackPress.bind(this);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+    this.onInitialPresentReady = this.onInitialPresentReady.bind(this);
+  }
+
+  private onInitialPresentReady(): void {
+    this.setState({ initialPresentReady: true });
   }
 
   private validateDetents(): void {
@@ -452,6 +473,19 @@ export class TrueSheet
     if (prevProps.detents !== this.props.detents) {
       this.validateDetents();
     }
+
+    // initialDetentIndex set at runtime on a lazily-mounted sheet: render the
+    // native tree so InitialPresentGate can deliver the index (constructor
+    // only computes this for the initial prop).
+    const prevInitialDetentIndex = prevProps.initialDetentIndex ?? -1;
+    const initialDetentIndex = this.props.initialDetentIndex ?? -1;
+    if (
+      prevInitialDetentIndex < 0 &&
+      initialDetentIndex >= 0 &&
+      !this.state.shouldRenderNativeView
+    ) {
+      this.setState({ shouldRenderNativeView: true });
+    }
   }
 
   componentWillUnmount(): void {
@@ -481,7 +515,6 @@ export class TrueSheet
       maxContentWidth,
       anchor = 'center',
       anchorOffset,
-      scrollable = false,
       scrollableOptions,
       footerOptions,
       presentation = 'page',
@@ -489,6 +522,7 @@ export class TrueSheet
       style,
       header,
       headerStyle,
+      headerOptions,
       footer,
       footerStyle,
       insetAdjustment = 'automatic',
@@ -496,7 +530,7 @@ export class TrueSheet
     } = this.props;
 
     // Trim to max 3 detents and clamp fractions
-    const resolvedDetents = detents.slice(0, 3).map((detent) => {
+    const resolvedDetents: number[] = detents.slice(0, 3).map((detent) => {
       if (detent === 'auto' || detent === -1) return -1;
       if (detent === 'peek' || detent === -2) return -2;
 
@@ -506,6 +540,12 @@ export class TrueSheet
       // Clamp to maximum of 1
       return Math.min(1, detent);
     });
+
+    // Hold initialDetentIndex back from native until the gate's effect flushes
+    // (see InitialPresentGate) — native presents when the prop lands.
+    const autoPresent = initialDetentIndex >= 0;
+    const gatedInitialDetentIndex =
+      autoPresent && !this.state.initialPresentReady ? -1 : initialDetentIndex;
 
     // Cache grabberOptions to avoid creating a new object every render
     if (grabberOptions !== this.cachedGrabberOptions) {
@@ -531,7 +571,7 @@ export class TrueSheet
         accessibilityOptions={accessibilityOptions}
         dimmed={dimmed}
         dimmedDetentIndex={dimmedDetentIndex}
-        initialDetentIndex={initialDetentIndex}
+        initialDetentIndex={gatedInitialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         draggable={draggable}
@@ -539,9 +579,12 @@ export class TrueSheet
         maxContentWidth={maxContentWidth}
         anchor={anchor}
         anchorOffset={anchorOffset}
-        scrollable={scrollable}
         scrollableOptions={scrollableOptions}
-        footerOptions={footerOptions}
+        headerOptions={headerOptions}
+        footerOptions={{
+          footerPosition: footerOptions?.position,
+          keyboardOffset: footerOptions?.keyboardOffset,
+        }}
         presentation={presentation}
         insetAdjustment={insetAdjustment}
         onMount={this.onMount}
@@ -572,23 +615,37 @@ export class TrueSheet
         onTouchCancel={stopTouchPropagation}
       >
         {this.state.shouldRenderNativeView && (
-          <TrueSheetContainerViewNativeComponent
-            style={scrollable ? styles.scrollableContainer : undefined}
-          >
+          <TrueSheetContainerViewNativeComponent style={styles.container}>
             {header && (
-              <TrueSheetHeaderViewNativeComponent style={[styles.header, headerStyle]}>
+              <TrueSheetHeaderViewNativeComponent
+                style={[
+                  styles.header,
+                  headerOptions?.position === 'absolute' && styles.absoluteHeader,
+                  headerStyle,
+                ]}
+              >
                 {isValidElement(header) ? header : createElement(header)}
               </TrueSheetHeaderViewNativeComponent>
             )}
-            <TrueSheetContentViewNativeComponent
-              style={scrollable ? [style, styles.scrollableContent] : style}
-            >
+            <TrueSheetContentViewNativeComponent style={style}>
               {children}
             </TrueSheetContentViewNativeComponent>
             {footer && (
-              <TrueSheetFooterViewNativeComponent style={[styles.footer, footerStyle]}>
+              <TrueSheetFooterViewNativeComponent
+                autoBottomInset={insetAdjustment === 'automatic'}
+                style={[
+                  styles.footer,
+                  footerOptions?.position === 'absolute'
+                    ? styles.absoluteFooter
+                    : styles.relativeFooter,
+                  footerStyle,
+                ]}
+              >
                 {isValidElement(footer) ? footer : createElement(footer)}
               </TrueSheetFooterViewNativeComponent>
+            )}
+            {autoPresent && !this.state.initialPresentReady && (
+              <InitialPresentGate onReady={this.onInitialPresentReady} />
             )}
           </TrueSheetContainerViewNativeComponent>
         )}
@@ -606,19 +663,34 @@ const styles = StyleSheet.create({
     zIndex: -9999,
     pointerEvents: 'box-none',
   },
-  scrollableContainer: {
+  // Fill the sheet so flex layouts track the sheet's size per detent
+  container: {
     ...StyleSheet.absoluteFill,
-  },
-  scrollableContent: {
-    flex: 1,
   },
   header: {
     pointerEvents: 'box-none',
   },
+  // Floats over the content so it doesn't take up layout space
+  absoluteHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
   footer: {
     pointerEvents: 'box-none',
+  },
+  // Pinned to the sheet's bottom edge via Yoga since the container tracks the
+  // sheet's visible height — takes up layout space below the content
+  relativeFooter: {
+    marginTop: 'auto',
+  },
+  // Floats over the content so it doesn't take up layout space
+  absoluteFooter: {
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
   },
 });

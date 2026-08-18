@@ -101,13 +101,30 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    presentInitialIfNeeded()
+  }
 
-    if (initialDetentIndex >= 0 && !didInitiallyPresent) {
-      didInitiallyPresent = true
-      if (initialDetentAnimated) {
-        present(initialDetentIndex, true) { }
-      } else {
-        post { present(initialDetentIndex, false) { } }
+  /**
+   * JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
+   * navigation footer set via setOptions) commits together with it. The prop then
+   * arrives after attach, so the ViewManager triggers this on prop update too.
+   * Posted so sibling mounts from the current transaction land before measuring.
+   */
+  fun presentInitialIfNeeded() {
+    if (initialDetentIndex < 0 || didInitiallyPresent || !isAttachedToWindow) return
+
+    didInitiallyPresent = true
+    post {
+      // The view may have been dropped (flag reset) or detached before this
+      // ran — roll back so a later attach retries instead of presenting a
+      // sheet with no live host.
+      if (!didInitiallyPresent) return@post
+      if (!isAttachedToWindow) {
+        didInitiallyPresent = false
+        return@post
+      }
+      if (!viewController.isPresented) {
+        present(initialDetentIndex, initialDetentAnimated) { }
       }
     }
   }
@@ -274,6 +291,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setDetents(newDetents: MutableList<Double>) {
     viewController.detents = newDetents
+    setupScrollable()
   }
 
   fun setInsetAdjustment(insetAdjustment: String) {
@@ -281,14 +299,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
   }
 
-  fun setScrollable(scrollable: Boolean) {
-    viewController.scrollable = scrollable
-    setupScrollable()
-  }
-
   fun setScrollableOptions(options: ScrollableOptions?) {
     viewController.scrollableOptions = options
     setupScrollable()
+  }
+
+  fun setAbsoluteHeader(absolute: Boolean) {
+    viewController.absoluteHeader = absolute
+  }
+
+  fun setAbsoluteFooter(absolute: Boolean) {
+    viewController.absoluteFooter = absolute
   }
 
   fun setFooterKeyboardOffset(offset: Float) {
@@ -298,11 +319,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   private fun setupScrollable() {
     viewController.containerView?.let {
-      it.insetAdjustment = viewController.insetAdjustment
-      it.scrollableEnabled = viewController.scrollable
-      it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
+      it.hasAutoDetent = viewController.detents.contains(-1.0)
+      it.footerBottomInset = viewController.contentBottomInset
+      it.absoluteFooter = viewController.absoluteFooter
       it.setupScrollable()
+    }
+
+    // Publish the inset so a footer set later (e.g. navigation setOptions) is
+    // padded on its very first layout instead of resizing the sheet twice.
+    if (viewController.insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) {
+      TrueSheetStateUpdater.setBottomSafeArea(viewController.contentBottomInset.toFloat().pxToDp())
     }
   }
 
@@ -343,9 +370,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     lastContainerHeight = height
 
     val sw = stateWrapper ?: return
+    val widthDp = width.toFloat().pxToDp()
+    val heightDp = height.toFloat().pxToDp()
+
+    // Synchronous update — commits and mounts within the same UI-thread frame
+    if (TrueSheetStateUpdater.updateState(sw, widthDp, heightDp)) return
+
+    // Fallback: async state update
     val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", width.toFloat().pxToDp().toDouble())
-    newStateData.putDouble("containerHeight", height.toFloat().pxToDp().toDouble())
+    newStateData.putDouble("containerWidth", widthDp.toDouble())
+    newStateData.putDouble("containerHeight", heightDp.toDouble())
     sw.updateState(newStateData)
   }
 
@@ -569,10 +603,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidChangeSize(width: Int, height: Int) {
-    // On android scrollable, we need the actual sheet height to get proper ScrollView height.
-    // Unlike IOS where ScrollView is pinned to the container.
-    val effectiveHeight = if (viewController.scrollable) height else viewController.screenHeight
-    updateState(width, effectiveHeight)
+    updateState(width, height)
   }
 
   override fun viewControllerWillFocus() {
@@ -610,7 +641,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.commitKeyboardDetent()
   }
 
-  // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView
+  // When the ScrollView changes (e.g. conditional remount), re-detect the new ScrollView
   // and request layout so BottomSheetBehavior re-discovers the nested scrolling child.
   override fun containerViewScrollViewDidChange() {
     setupScrollable()
