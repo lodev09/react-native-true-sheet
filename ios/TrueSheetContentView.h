@@ -35,8 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 /**
- * Sibling footer view — an absolute footer rises above the keyboard and
- * occludes the content's bottom edge, so it counts toward the keyboard inset.
+ * Sibling footer view — an absolute footer floats over the viewport's bottom
+ * edge, so the caret auto-scroll extends its target past it.
  */
 @property (nonatomic, weak, nullable) TrueSheetFooterView *footerView;
 

@@ -151,19 +151,7 @@ using namespace facebook::react;
 
 #pragma mark - Scrollable
 
-// The scroll indicator follows automatically — UIKit derives its insets from
-// the content inset while `automaticallyAdjustsScrollIndicatorInsets` is set.
-- (void)setKeyboardInset:(CGFloat)inset {
-  if (!_detectedScrollView)
-    return;
-
-  UIEdgeInsets contentInset = _detectedScrollView.scrollView.contentInset;
-  contentInset.bottom = inset;
-  _detectedScrollView.scrollView.contentInset = contentInset;
-}
-
 - (void)clearScrollable {
-  [self setKeyboardInset:0];
   [self setScrollableBounded:NO];
   _detectedScrollView = nil;
 }
@@ -186,26 +174,15 @@ using namespace facebook::react;
   _detectedScrollView = scrollView;
 
   [self setScrollableBounded:_hasAutoDetent];
-
-  // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
-  CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
-  if (keyboardHeight > 0) {
-    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
-  }
 }
 
-// An absolute footer rises above the keyboard and covers the content's bottom
-// edge — include it so the caret clears the footer, not just the keyboard.
-// A relative footer stays behind the keyboard below the content, so its
-// height shields that much of the keyboard's overlap.
-- (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
-  if (!self.footerView) {
-    return height;
+// An absolute footer floats over the viewport's bottom edge — extend the
+// caret target so it clears the footer, not just the viewport.
+- (CGFloat)footerOcclusion {
+  if (self.footerView && _keyboardObserver.viewController.absoluteFooter) {
+    return [self.footerView keyboardOcclusionHeight];
   }
-  if (_keyboardObserver.viewController.absoluteFooter) {
-    return height + [self.footerView keyboardOcclusionHeight];
-  }
-  return MAX(0, height - self.footerView.frame.size.height);
+  return 0;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
@@ -283,6 +260,9 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
+// No content inset here — UIKit keeps the sheet above the keyboard and the
+// container rebounds to the sheet's visible size (see viewDidLayoutSubviews),
+// so the viewport is never behind the keyboard. Only the caret needs revealing.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_detectedScrollView) {
     return;
@@ -293,16 +273,7 @@ using namespace facebook::react;
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
-  CGFloat inset = [self keyboardInsetWithHeight:height];
-  [UIView animateWithDuration:duration
-                        delay:0
-                      options:curve | UIViewAnimationOptionBeginFromCurrentState
-                   animations:^{
-                     [self setKeyboardInset:inset];
-                   }
-                   completion:nil];
-
-  // Defer scroll until the next run loop so content insets are applied first
+  // Defer scroll until the next run loop so the keyboard-driven sheet resize lands first
   if (firstResponder) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [self scrollToFocusedCaretAnimated:YES];
@@ -355,24 +326,12 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset;
+  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion];
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   [self stopObservingTextChanges];
-
-  if (!_detectedScrollView) {
-    return;
-  }
-
-  [UIView animateWithDuration:duration
-                        delay:0
-                      options:curve | UIViewAnimationOptionBeginFromCurrentState
-                   animations:^{
-                     [self setKeyboardInset:0];
-                   }
-                   completion:nil];
 }
 
 #pragma mark - Lifecycle
