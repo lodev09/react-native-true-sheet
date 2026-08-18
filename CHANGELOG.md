@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: Touchables rendered after a `View` with `zIndex > 0` that contains a `TrueSheet` respond again — the host view's `pointerEvents` (`box-none`) was silently dropped by the codegen delegate, so hit-testing could target the full-screen hidden host and swallow touches behind it. ([#787](https://github.com/lodev09/react-native-true-sheet/pull/787) by [@lodev09](https://github.com/lodev09))
 - Touchables inside a sheet fire their `onPress` again when the sheet content contains a nested native-stack screen (or a second finger touches the sheet mid-press) — since [#767](https://github.com/lodev09/react-native-true-sheet/pull/767), the sheet claimed the responder whenever the negotiation re-ran mid-gesture, stealing it from the pressed touchable. The sheet now stops the negotiation at its boundary without claiming, which also keeps the touch-leak fix without any `setJSResponder` side effects. ([#786](https://github.com/lodev09/react-native-true-sheet/pull/786) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.11
