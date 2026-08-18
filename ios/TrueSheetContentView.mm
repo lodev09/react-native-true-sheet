@@ -194,18 +194,14 @@ using namespace facebook::react;
   }
 }
 
-// An absolute footer rises above the keyboard and covers the content's bottom
-// edge — include it so the caret clears the footer, not just the keyboard.
 // A relative footer stays behind the keyboard below the content, so its
-// height shields that much of the keyboard's overlap.
+// height shields that much of the keyboard's overlap. An absolute footer
+// floats within the viewport — its clearance is the content padding's job
+// (the caret reveal accounts for it, see footerOcclusion).
 - (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
   CGFloat inset = height;
-  if (self.footerView) {
-    if (_keyboardObserver.viewController.absoluteFooter) {
-      inset = height + [self.footerView keyboardOcclusionHeight];
-    } else {
-      inset = MAX(0, height - self.footerView.frame.size.height);
-    }
+  if (self.footerView && !_keyboardObserver.viewController.absoluteFooter) {
+    inset = MAX(0, height - self.footerView.frame.size.height);
   }
 
   // Content that already fits above the keyboard has nothing to reveal — the
@@ -216,6 +212,15 @@ using namespace facebook::react;
   }
 
   return inset;
+}
+
+// An absolute footer floats over the viewport's bottom edge — extend the
+// caret target so it clears the footer, not just the keyboard.
+- (CGFloat)footerOcclusion {
+  if (self.footerView && _keyboardObserver.viewController.absoluteFooter) {
+    return [self.footerView keyboardOcclusionHeight];
+  }
+  return 0;
 }
 
 - (RCTScrollViewComponentView *)findScrollView {
@@ -368,7 +373,7 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset;
+  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion];
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 

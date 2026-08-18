@@ -32,8 +32,9 @@ interface TrueSheetContentViewDelegate {
 
   /**
    * Keyboard occlusion adjustment below the content — positive for an absolute
-   * footer risen above the keyboard covering the content's bottom edge,
-   * negative for a relative footer sitting behind the keyboard shielding it.
+   * footer floating over the viewport's bottom edge (extends the caret reveal),
+   * negative for a relative footer sitting behind the keyboard shielding that
+   * much of its overlap (reduces the keyboard padding).
    */
   val footerKeyboardOcclusion: Int
 }
@@ -268,12 +269,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
     val scrollView = detectedScrollView ?: return
 
-    // An absolute footer rises above the keyboard and covers the content's
-    // bottom edge — include it so the caret clears the footer, not just the
-    // keyboard. A relative footer stays behind the keyboard below the content,
-    // so its height shields that much of the keyboard's overlap.
+    // A relative footer stays behind the keyboard below the content, so its
+    // height shields that much of the keyboard's overlap. An absolute footer
+    // floats within the viewport — its clearance is the content padding's job
+    // (the caret reveal accounts for it, see scrollToFocusedInput).
     val totalBottomInset = if (keyboardHeight > 0) {
-      maxOf(0, keyboardHeight + (delegate?.footerKeyboardOcclusion ?: 0))
+      maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
     } else {
       0
     }
@@ -316,14 +317,18 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       caretBottom = viewTop + focusedView.height
     }
 
+    // An absolute footer floats over the viewport's bottom edge — extend the
+    // caret target so it clears the footer, not just the keyboard.
+    val footerOcclusion = maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
+
     val offset = keyboardScrollOffset.toInt()
     val visibleHeight = scrollView.height - scrollView.paddingBottom
     val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
 
     when {
-      caretBottom + offset > visibleBottom ->
-        scrollView.smoothScrollTo(0, caretBottom + offset - visibleHeight)
+      caretBottom + offset + footerOcclusion > visibleBottom ->
+        scrollView.smoothScrollTo(0, caretBottom + offset + footerOcclusion - visibleHeight)
 
       caretTop - offset < visibleTop ->
         scrollView.smoothScrollTo(0, (caretTop - offset).coerceAtLeast(0))
