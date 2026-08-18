@@ -58,12 +58,21 @@ if (!TrueSheetModule) {
 
 type NativeRef = ComponentRef<typeof TrueSheetViewNativeComponent>;
 
-// Claim touches that no descendant claimed so the responder negotiation
-// doesn't bubble up to touchables outside the sheet
-const absorbUnclaimedTouches = () => true;
-
 // Stop raw touch events from bubbling past the sheet to outside ancestors
 const stopTouchPropagation = (event: GestureResponderEvent) => event.stopPropagation();
+
+// Stop the responder negotiation at the sheet boundary without claiming the
+// responder. Views inside the sheet are asked before this one, so in-sheet
+// touchables work normally; views outside are asked after, so stopping here
+// keeps unclaimed touches from leaking to touchables behind the sheet.
+// Claiming instead (returning true) would steal the responder from a pressed
+// touchable whenever the negotiation re-runs mid-gesture — e.g. a second
+// finger, or the duplicate touch stream from a nested react-native-screens
+// screen that attaches its own touch handler inside the sheet.
+const stopResponderNegotiation = (event: GestureResponderEvent) => {
+  event.stopPropagation();
+  return false;
+};
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -552,10 +561,11 @@ export class TrueSheet
         onVisibilityChange={this.onVisibilityChange}
         // These must stay on this host view, not on the container. The container is
         // reparented into the native sheet, so this view is never a native ancestor of
-        // the sheet content. Claiming the responder here stops the negotiation at the
-        // sheet boundary without making an ancestor of the content the JS responder,
-        // which would block scrolling inside the sheet.
-        onStartShouldSetResponder={absorbUnclaimedTouches}
+        // the sheet content — this is the React-tree boundary between the sheet and
+        // the presenting screen, where both the responder negotiation and raw touch
+        // bubbling must stop.
+        onStartShouldSetResponder={stopResponderNegotiation}
+        onMoveShouldSetResponder={stopResponderNegotiation}
         onTouchStart={stopTouchPropagation}
         onTouchMove={stopTouchPropagation}
         onTouchEnd={stopTouchPropagation}
