@@ -6,7 +6,7 @@ export interface NativeProps extends ViewProps {
 }
 
 // interfaceOnly: shadow node/state/descriptor are custom (common/cpp) so the
-// content can be bounded to the container when a ScrollView is pinned
+// content can be bounded to the container when a ScrollView is detected
 export default codegenNativeComponent<NativeProps>('TrueSheetContentView', {
   interfaceOnly: true,
 });

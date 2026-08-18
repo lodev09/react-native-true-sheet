@@ -47,7 +47,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   var delegate: TrueSheetContentViewDelegate? = null
   var stateWrapper: StateWrapper? = null
 
-  private var pinnedScrollView: ViewGroup? = null
+  private var detectedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
   private var scrollableBounded = false
 
@@ -83,14 +83,14 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   /**
    * Whether the sheet has an `auto` detent. Deriving the sheet height from the
-   * scroll content is circular with natural layout, so the pinned ScrollView's
+   * scroll content is circular with natural layout, so the detected ScrollView's
    * viewport is force-bounded to the container only in this case.
    */
   var hasAutoDetent = false
     set(value) {
       if (field == value) return
       field = value
-      if (pinnedScrollView != null) {
+      if (detectedScrollView != null) {
         setScrollableBounded(value)
       }
     }
@@ -106,14 +106,14 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun checkScrollViewChanged() {
-    if (pinnedScrollView == null || pinnedScrollView?.isDescendantOf(this) == false) {
+    if (detectedScrollView == null || detectedScrollView?.isDescendantOf(this) == false) {
       delegate?.contentViewScrollViewDidChange()
     }
   }
 
   /**
    * Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-   * pinned ScrollView's viewport is bounded to the visible space. Only applied
+   * detected ScrollView's viewport is bounded to the visible space. Only applied
    * for auto detents — otherwise content lays out naturally like a regular view.
    */
   private fun setScrollableBounded(bounded: Boolean) {
@@ -128,19 +128,19 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   fun setupScrollable() {
-    // Check if pinned scroll view is still valid (still in view hierarchy)
-    if (pinnedScrollView != null && pinnedScrollView?.isDescendantOf(this) == false) {
+    // Check if the detected scroll view is still valid (still in view hierarchy)
+    if (detectedScrollView != null && detectedScrollView?.isDescendantOf(this) == false) {
       clearScrollable()
     }
 
-    if (pinnedScrollView != null) {
+    if (detectedScrollView != null) {
       return
     }
 
     val scrollView = findScrollView(this) ?: return
 
     originalScrollViewPaddingBottom = scrollView.paddingBottom
-    pinnedScrollView = scrollView
+    detectedScrollView = scrollView
 
     scrollView.isNestedScrollingEnabled = true
     (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
@@ -161,7 +161,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun setScrollViewPaddingBottom(paddingBottom: Int) {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
     scrollView.clipToPadding = false
     scrollView.setPadding(
       scrollView.paddingLeft,
@@ -172,17 +172,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   fun clearScrollable() {
-    pinnedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
-    pinnedScrollView?.isNestedScrollingEnabled = false
-    (pinnedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
+    detectedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
+    detectedScrollView?.isNestedScrollingEnabled = false
+    (detectedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     setScrollableBounded(false)
-    pinnedScrollView = null
+    detectedScrollView = null
     originalScrollViewPaddingBottom = 0
   }
 
   fun findScrollView(): ViewGroup? {
-    if (pinnedScrollView != null) return pinnedScrollView
+    if (detectedScrollView != null) return detectedScrollView
     return findScrollView(this as View)
   }
 
@@ -266,7 +266,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
 
     // An absolute footer rises above the keyboard and covers the content's
     // bottom edge — include it so the caret clears the footer, not just the
@@ -283,13 +283,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun nudgeScrollView() {
-    val scrollView = pinnedScrollView ?: return
+    val scrollView = detectedScrollView ?: return
     scrollView.smoothScrollBy(0, 1)
     scrollView.smoothScrollBy(0, -1)
   }
 
   private fun scrollToFocusedInput() {
-    val scrollView = pinnedScrollView ?: findScrollView() ?: return
+    val scrollView = detectedScrollView ?: findScrollView() ?: return
     val focusedView = findFocus() ?: return
 
     val focusedLocation = IntArray(2)

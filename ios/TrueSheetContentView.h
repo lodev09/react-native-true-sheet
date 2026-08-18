@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Whether the sheet has an `auto` detent. Deriving the sheet height from the
- * scroll content is circular with natural layout, so the pinned ScrollView's
+ * scroll content is circular with natural layout, so the detected ScrollView's
  * viewport is force-bounded to the container only in this case.
  */
 @property (nonatomic, assign) BOOL hasAutoDetent;
@@ -58,12 +58,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Pin the first ScrollView found in the content, wiring keyboard handling
+ * Detect the first ScrollView in the content, wiring keyboard handling
  */
 - (void)setupScrollable;
 
 /**
- * Apply scroll edge effects to the pinned scroll view (iOS 26+)
+ * Apply scroll edge effects to the detected scroll view (iOS 26+)
  */
 - (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options;
 

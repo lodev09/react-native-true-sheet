@@ -12,7 +12,7 @@ namespace facebook::react {
 
 /*
  * State for <TrueSheetContentView> component.
- * `scrollableBounded` is set from native when a ScrollView is pinned so the
+ * `scrollableBounded` is set from native when a ScrollView is detected so the
  * shadow node bounds the content to the container via flexShrink.
  * `naturalHeight` is measured by the shadow node during layout — the height
  * the content wants when unbounded (see TrueSheetContentViewShadowNode).
