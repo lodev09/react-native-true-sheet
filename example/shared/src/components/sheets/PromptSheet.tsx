@@ -1,13 +1,18 @@
 import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
 import { ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DARK, BUTTON_HEIGHT as FOOTER_HEIGHT, GAP, SPACING } from '../../utils';
+import { BUTTON_HEIGHT, DARK, GAP, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
 
 interface PromptSheetProps extends TrueSheetProps {}
+
+// Buttons + the footer's own vertical padding; the footer absorbs the
+// safe-area inset itself, so it's added separately in paddingBottom
+const FOOTER_HEIGHT = BUTTON_HEIGHT + SPACING * 2;
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
@@ -22,6 +27,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const input9Ref = useRef<TextInput>(null);
   const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
+  const insets = useSafeAreaInsets();
 
   const handleDismiss = () => {
     console.log('Sheet prompt dismissed!');
@@ -82,7 +88,10 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       <ScrollView
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
+        ]}
       >
         <Input
           ref={input1Ref}
@@ -169,7 +178,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {

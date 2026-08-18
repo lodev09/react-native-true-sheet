@@ -25,7 +25,7 @@ void TrueSheetContentViewShadowNode::adjustLayoutWithState() {
 
   auto &props = getConcreteProps();
 
-  // When a ScrollView is pinned under an auto detent, fill the container so
+  // When a ScrollView is detected under an auto detent, fill the container so
   // descendant flex layouts (flex:1 wrappers, the ScrollView itself) resolve
   // against a definite height and the viewport is bounded — natural layout is
   // circular there since the sheet height derives from the content's natural

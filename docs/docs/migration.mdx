@@ -124,7 +124,33 @@ const MyFooter = () => {
 See the [Footer guide](guides/footer#safe-area-handling) for more details.
 :::
 
-### 6. Sheet Navigator Requires `@react-navigation/native` 7.3+
+### 6. Scrollables No Longer Auto-Inset
+
+A plugged scrollable no longer gets the bottom safe-area inset applied natively. Only keyboard handling stays automatic. Pad the scroll content yourself:
+
+```tsx
+// ❌ v3 — the inset was applied natively
+<ScrollView>{/* ... */}</ScrollView>
+
+// ✅ v4 — pad the content yourself
+const insets = useSafeAreaInsets();
+
+<ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
+  {/* ... */}
+</ScrollView>
+```
+
+On iOS, you can let UIKit apply it instead with React Native's [`contentInsetAdjustmentBehavior`](https://reactnative.dev/docs/scrollview#contentinsetadjustmentbehavior-ios) (iOS only, defaults to `"never"`):
+
+```tsx
+<ScrollView contentInsetAdjustmentBehavior="automatic">{/* ... */}</ScrollView>
+```
+
+:::info
+If your sheet has a footer, it already absorbs the bottom inset (see above) — pad for the footer's height instead of the safe area.
+:::
+
+### 7. Sheet Navigator Requires `@react-navigation/native` 7.3+
 
 The navigator is now built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so one implementation works with both React Navigation and Expo Router. For React Navigation apps, the `/navigation` entry point now requires `@react-navigation/native` version `7.3.0` or higher (previously `@react-navigation/core`), plus the new `standard-navigation` peer dependency:
 
@@ -134,7 +160,7 @@ yarn add @react-navigation/native@^7.3.0 standard-navigation
 
 Your navigator code is unchanged — `createTrueSheetNavigator`, `useTrueSheetNavigation`, screen options, `navigation.resize()`, and listeners all keep the same API.
 
-### 7. Expo Router Uses the New `/navigation/expo-router` Entry Point
+### 8. Expo Router Uses the New `/navigation/expo-router` Entry Point
 
 The `withLayoutContext` recipe is replaced by a ready-to-use `Sheet` layout. Requires Expo SDK 57+ and the new `standard-navigation` peer dependency — no `@react-navigation/*` install needed.
 
@@ -251,6 +277,7 @@ const Sheet = createTrueSheetNavigator({
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers
+   - Add bottom safe-area padding to scrollables — it's no longer applied natively
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

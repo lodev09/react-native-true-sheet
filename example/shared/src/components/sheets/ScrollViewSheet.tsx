@@ -11,6 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   BORDER_RADIUS,
@@ -61,6 +62,7 @@ const HeavyItem = ({ index }: { index: number }) => {
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
   const [showList, setShowList] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -95,7 +97,10 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     >
       {showList ? (
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
+          ]}
           keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
@@ -121,7 +126,6 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {

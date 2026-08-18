@@ -319,8 +319,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   private fun setupScrollable() {
     viewController.containerView?.let {
-      it.insetAdjustment = viewController.insetAdjustment
-      it.scrollViewBottomInset = viewController.contentBottomInset
       it.scrollableOptions = viewController.scrollableOptions
       it.hasAutoDetent = viewController.detents.contains(-1.0)
       it.footerBottomInset = viewController.contentBottomInset
@@ -643,7 +641,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.commitKeyboardDetent()
   }
 
-  // When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView
+  // When the ScrollView changes (e.g. conditional remount), re-detect the new ScrollView
   // and request layout so BottomSheetBehavior re-discovers the nested scrolling child.
   override fun containerViewScrollViewDidChange() {
     setupScrollable()

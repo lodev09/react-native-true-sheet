@@ -35,14 +35,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 /**
- * Sibling footer view — an absolute footer rises above the keyboard and
- * occludes the content's bottom edge, so it counts toward the keyboard inset.
+ * Sibling footer view — a relative footer shields part of the keyboard's
+ * overlap from the inset; an absolute footer extends the caret reveal target.
  */
 @property (nonatomic, weak, nullable) TrueSheetFooterView *footerView;
 
 /**
  * Whether the sheet has an `auto` detent. Deriving the sheet height from the
- * scroll content is circular with natural layout, so the pinned ScrollView's
+ * scroll content is circular with natural layout, so the detected ScrollView's
  * viewport is force-bounded to the container only in this case.
  */
 @property (nonatomic, assign) BOOL hasAutoDetent;
@@ -58,13 +58,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Pin the first ScrollView found in the content, wiring insets and keyboard handling
- * @param bottomInset Bottom content inset for the scroll view
+ * Detect the first ScrollView in the content, wiring keyboard handling
  */
-- (void)setupScrollableWithBottomInset:(CGFloat)bottomInset;
+- (void)setupScrollable;
 
 /**
- * Apply scroll edge effects to the pinned scroll view (iOS 26+)
+ * Apply scroll edge effects to the detected scroll view (iOS 26+)
  */
 - (void)applyScrollEdgeEffects:(nullable ScrollableOptions *)options;
 

@@ -502,7 +502,7 @@ using namespace facebook::react;
   [_controller setupSheetSizing];
   [_controller setupSheetProps];
 
-  // Pin before measuring so a first-time pin doesn't shift sizes mid-animation.
+  // Detect before measuring so a first-time detection doesn't shift sizes mid-animation.
   [self setupScrollable];
 
   // Measure synchronously so the presentation starts at the right height —
@@ -671,7 +671,7 @@ using namespace facebook::react;
   [self setupSheetDetentsForSizeChange];
 }
 
-// When the ScrollView changes (e.g. conditional remount), re-pin the new ScrollView.
+// When the ScrollView changes (e.g. conditional remount), re-detect the new ScrollView.
 - (void)containerViewScrollViewDidChange {
   [self setupScrollable];
 }
@@ -822,7 +822,6 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
-  _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];

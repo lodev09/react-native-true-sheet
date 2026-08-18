@@ -323,9 +323,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // `naturalHeight`.
   const [hasBoundedScrollable, setHasBoundedScrollable] = useState(false);
   const [scrollableAutoHeight, setScrollableAutoHeight] = useState(0);
-  const pinnedScrollerRef = useRef<HTMLElement | null>(null);
+  const detectedScrollerRef = useRef<HTMLElement | null>(null);
 
-  // Natural content height (header + content + footer, with a pinned
+  // Natural content height (header + content + footer, with a detected
   // scrollable's viewport replaced by its content size) — the height the
   // content wants regardless of the sheet's bounds.
   const measureNaturalHeight = useCallback(() => {
@@ -335,7 +335,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const footerEl = absoluteFooterRef.current ? null : getDOMElement(footerElRef.current);
     let height =
       (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
-    const scroller = pinnedScrollerRef.current;
+    const scroller = detectedScrollerRef.current;
     const scrollContent = scroller?.firstElementChild;
     if (scroller?.isConnected && scrollContent instanceof HTMLElement) {
       height += scrollContent.offsetHeight - scroller.clientHeight;
@@ -369,7 +369,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         scrollContent: Element | null;
       } | null = null;
 
-      // (Re)pin the first vertical scrollable and observe the nodes whose size
+      // (Re)detect the first vertical scrollable and observe the nodes whose size
       // feeds the natural height — content growth inside a bounded scroller is
       // invisible to the sheet's own layout (mirrors native's contentSize
       // observation). Resolves the content node live: the layout-branch swap
@@ -379,7 +379,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         const headerEl = getDOMElement(headerElRef.current);
 
         // Skip mutations that don't change the observed topology — e.g. a
-        // virtualized list mounting rows inside the pinned scroller, which
+        // virtualized list mounting rows inside the detected scroller, which
         // would otherwise trigger a full-subtree rescan (findVerticalScroller
         // resolves computed styles) on every scroll frame. Size changes are
         // already covered by the ResizeObserver.
@@ -396,7 +396,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
         const scroller =
           contentEl && contentEl.isConnected ? findVerticalScroller(contentEl) : null;
-        pinnedScrollerRef.current = scroller;
+        detectedScrollerRef.current = scroller;
         setHasBoundedScrollable(scroller != null);
         observed = scroller
           ? { contentEl, headerEl, scroller, scrollContent: scroller.firstElementChild }
@@ -1069,12 +1069,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Lift content above iOS home indicator / bottom safe area when enabled.
       // A relative footer owns the inset instead (see resolvedFooterStyle); an
       // absolute footer floats over the content, so the content keeps its lift.
+      // A detected scrollable scrolls edge-to-edge behind the indicator with
+      // user-applied content padding — mirrors native, which no longer insets
+      // scroll content.
       paddingBottom:
-        insetAdjustment === 'automatic' && !(footerOwnsInset && !absoluteFooter)
+        insetAdjustment === 'automatic' &&
+        !(footerOwnsInset && !absoluteFooter) &&
+        !hasBoundedScrollable
           ? 'env(safe-area-inset-bottom, 0px)'
           : 0,
     }),
-    [backgroundColor, effectiveCornerRadius, insetAdjustment, footerOwnsInset, absoluteFooter]
+    [
+      backgroundColor,
+      effectiveCornerRadius,
+      insetAdjustment,
+      footerOwnsInset,
+      absoluteFooter,
+      hasBoundedScrollable,
+    ]
   );
 
   const defaultGrabberColor =

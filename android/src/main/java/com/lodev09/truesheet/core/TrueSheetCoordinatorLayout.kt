@@ -57,7 +57,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var streamGestureClaimed = false
 
   // Whether the sheet owns vertical drags for this stream: the touch target is inside
-  // the sheet but outside the pinned scrollable (e.g. a header overlaying it), with
+  // the sheet but outside the detected scrollable (e.g. a header overlaying it), with
   // nothing vertically scrollable along its chain. Such targets consume the stream
   // natively (no nested scroll), and BottomSheetBehavior won't intercept because the
   // scrollable's bounds still contain the point (touchingScrollingChild) — intercept
@@ -127,7 +127,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
   /**
    * Resolves the stream's touch target (respecting zIndex and pointerEvents) and
-   * decides whether the sheet may drag from it — inside the sheet, outside the pinned
+   * decides whether the sheet may drag from it — inside the sheet, outside the detected
    * scrollable, and nothing along the target's chain scrolls vertically.
    */
   private fun updateStreamTargetFlags(ev: MotionEvent) {
@@ -139,7 +139,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
       .firstNotNullOfOrNull { it.getView() } ?: return
     if (target !== sheet && !target.isDescendantOf(sheet)) return
 
-    // A pinned scrollable that can scroll (or hosts pull-to-refresh) owns its
+    // A detected scrollable that can scroll (or hosts pull-to-refresh) owns its
     // touches — nested scrolling drags the sheet. When it can't scroll (e.g.
     // the sheet is fully expanded and the content fits) it eats the gesture
     // instead, so fall through and let the sheet drag from it — an EditText

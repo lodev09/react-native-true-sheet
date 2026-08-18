@@ -12,7 +12,7 @@ Scrolling content within the sheet works like a regular view — bound the scrol
 
 ## How?
 
-Scroll views (including `ScrollView` and `FlatList`) are **automatically detected**. Insets, keyboard handling, and nested scrolling are all wired for you — no props needed.
+Scroll views (including `ScrollView` and `FlatList`) are **automatically detected**. Keyboard handling and nested scrolling are wired for you — no props needed.
 
 Like any scroll view in React Native, it needs a bounded height to scroll. Pass `flex: 1` via the sheet's [`style`](../reference/configuration#style) prop so the content fills the sheet's visible height per detent — resizing in realtime while dragging:
 

@@ -61,8 +61,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       return bottom
     }
 
-  var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
-  var scrollViewBottomInset: Int = 0
   var absoluteFooter: Boolean = false
 
   /**
@@ -96,8 +94,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupScrollable() {
-    val bottomInset = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) scrollViewBottomInset else 0
-    contentView?.setupScrollable(bottomInset)
+    contentView?.setupScrollable()
   }
 
   fun setupKeyboardHandler() {

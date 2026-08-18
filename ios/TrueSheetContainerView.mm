@@ -17,7 +17,6 @@
 #import "TrueSheetViewController.h"
 #import "core/TrueSheetKeyboardObserver.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
-#import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -153,12 +152,8 @@ using namespace facebook::react;
 
 - (void)setupScrollable {
   if (_contentView) {
-    CGFloat bottomInset = 0;
-    if (_insetAdjustment == TrueSheetViewInsetAdjustment::Automatic) {
-      bottomInset = [WindowUtil keyWindow].safeAreaInsets.bottom;
-    }
     _contentView.hasAutoDetent = _hasAutoDetent;
-    [_contentView setupScrollableWithBottomInset:bottomInset];
+    [_contentView setupScrollable];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {
       [self setupEdgeInteractions];
