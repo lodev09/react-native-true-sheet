@@ -46,11 +46,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
- * Inset adjustment mode for scrollable content
- */
-@property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
-
-/**
  * Options for scrollable behavior
  */
 @property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;

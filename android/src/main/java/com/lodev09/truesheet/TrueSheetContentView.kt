@@ -49,7 +49,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var pinnedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
-  private var bottomInset: Int = 0
   private var scrollableBounded = false
 
   /**
@@ -128,39 +127,31 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
   }
 
-  fun setupScrollable(bottomInset: Int) {
+  fun setupScrollable() {
     // Check if pinned scroll view is still valid (still in view hierarchy)
     if (pinnedScrollView != null && pinnedScrollView?.isDescendantOf(this) == false) {
       clearScrollable()
     }
 
-    // Already set up with same inset and valid scroll view
-    if (pinnedScrollView != null && this.bottomInset == bottomInset) {
+    if (pinnedScrollView != null) {
       return
     }
 
     val scrollView = findScrollView(this) ?: return
 
-    // Only capture originals on first pin
-    if (pinnedScrollView == null) {
-      originalScrollViewPaddingBottom = scrollView.paddingBottom
-      pinnedScrollView = scrollView
+    originalScrollViewPaddingBottom = scrollView.paddingBottom
+    pinnedScrollView = scrollView
 
-      scrollView.isNestedScrollingEnabled = true
-      (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
+    scrollView.isNestedScrollingEnabled = true
+    (scrollView.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = false
 
-      scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
-        if (scrollY != oldScrollY) {
-          delegate?.contentViewDidScroll()
-        }
+    scrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+      if (scrollY != oldScrollY) {
+        delegate?.contentViewDidScroll()
       }
-
-      setScrollableBounded(hasAutoDetent)
     }
 
-    this.bottomInset = bottomInset
-
-    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + bottomInset)
+    setScrollableBounded(hasAutoDetent)
 
     // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
     val keyboardHeight = keyboardObserver?.currentHeight ?: 0
@@ -188,7 +179,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     setScrollableBounded(false)
     pinnedScrollView = null
     originalScrollViewPaddingBottom = 0
-    bottomInset = 0
   }
 
   fun findScrollView(): ViewGroup? {
@@ -285,7 +275,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val totalBottomInset = if (keyboardHeight > 0) {
       maxOf(0, keyboardHeight + (delegate?.footerKeyboardOcclusion ?: 0))
     } else {
-      bottomInset
+      0
     }
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
 

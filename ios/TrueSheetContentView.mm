@@ -28,8 +28,6 @@ using namespace facebook::react;
   TrueSheetContentViewShadowNode::ConcreteState::Shared _state;
   RCTScrollViewComponentView *_pinnedScrollView;
   CGFloat _lastReportedNaturalHeight;
-  CGFloat _bottomInset;
-  CGFloat _originalIndicatorBottomInset;
   BOOL _observingTextChanges;
   BOOL _scrollableBounded;
 }
@@ -153,37 +151,30 @@ using namespace facebook::react;
 
 #pragma mark - Scrollable
 
-- (void)setScrollViewContentInset:(CGFloat)contentBottom indicatorInset:(CGFloat)indicatorBottom {
+// The scroll indicator follows automatically — UIKit derives its insets from
+// the content inset while `automaticallyAdjustsScrollIndicatorInsets` is set.
+- (void)setKeyboardInset:(CGFloat)inset {
   if (!_pinnedScrollView)
     return;
 
   UIEdgeInsets contentInset = _pinnedScrollView.scrollView.contentInset;
-  contentInset.bottom = contentBottom;
+  contentInset.bottom = inset;
   _pinnedScrollView.scrollView.contentInset = contentInset;
-
-  UIEdgeInsets indicatorInsets = _pinnedScrollView.scrollView.verticalScrollIndicatorInsets;
-  indicatorInsets.bottom = indicatorBottom;
-  _pinnedScrollView.scrollView.verticalScrollIndicatorInsets = indicatorInsets;
 }
 
 - (void)clearScrollable {
-  if (_pinnedScrollView) {
-    [self setScrollViewContentInset:0 indicatorInset:_originalIndicatorBottomInset];
-  }
+  [self setKeyboardInset:0];
   [self setScrollableBounded:NO];
   _pinnedScrollView = nil;
-  _bottomInset = 0;
-  _originalIndicatorBottomInset = 0;
 }
 
-- (void)setupScrollableWithBottomInset:(CGFloat)bottomInset {
+- (void)setupScrollable {
   // Check if pinned scroll view is still valid (still in view hierarchy)
   if (_pinnedScrollView && ![_pinnedScrollView isDescendantOfView:self]) {
     [self clearScrollable];
   }
 
-  // Already set up with same inset and valid scroll view
-  if (_pinnedScrollView && _bottomInset == bottomInset) {
+  if (_pinnedScrollView) {
     return;
   }
 
@@ -192,23 +183,14 @@ using namespace facebook::react;
     return;
   }
 
-  // Only capture originals on first pin
-  if (!_pinnedScrollView) {
-    _originalIndicatorBottomInset = scrollView.scrollView.verticalScrollIndicatorInsets.bottom;
-    _pinnedScrollView = scrollView;
+  _pinnedScrollView = scrollView;
 
-    [self setScrollableBounded:_hasAutoDetent];
-  }
-
-  _bottomInset = bottomInset;
-
-  [self setScrollViewContentInset:_bottomInset indicatorInset:_originalIndicatorBottomInset];
+  [self setScrollableBounded:_hasAutoDetent];
 
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
   if (keyboardHeight > 0) {
-    CGFloat inset = [self keyboardInsetWithHeight:keyboardHeight];
-    [self setScrollViewContentInset:inset indicatorInset:_originalIndicatorBottomInset + inset];
+    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
   }
 }
 
@@ -316,7 +298,7 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:inset indicatorInset:self->_originalIndicatorBottomInset + inset];
+                     [self setKeyboardInset:inset];
                    }
                    completion:nil];
 
@@ -388,8 +370,7 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setScrollViewContentInset:self->_bottomInset
-                                      indicatorInset:self->_originalIndicatorBottomInset];
+                     [self setKeyboardInset:0];
                    }
                    completion:nil];
 }

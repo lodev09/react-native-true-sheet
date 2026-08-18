@@ -822,7 +822,6 @@ using namespace facebook::react;
   if (!_containerView)
     return;
 
-  _containerView.insetAdjustment = _insetAdjustment;
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];
