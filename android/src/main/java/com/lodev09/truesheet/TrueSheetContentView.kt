@@ -20,7 +20,11 @@ import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollBy
 import com.lodev09.truesheet.utils.smoothScrollTo
 
-data class ScrollableOptions(val keyboardScrollOffset: Float = 0f, val scrollingExpandsSheet: Boolean = true)
+data class ScrollableOptions(
+  val keyboardScrollOffset: Float = 0f,
+  val keyboardOffset: Float = 0f,
+  val scrollingExpandsSheet: Boolean = true
+)
 
 /**
  * Delegate interface for content view size changes
@@ -71,6 +75,20 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private var keyboardScrollOffset: Float = 0f
+
+  /**
+   * Adjustment added to the keyboard bottom inset applied to the detected
+   * scrollable — negative values reduce the inset (e.g. to cancel out safe-area
+   * padding already baked into the content's paddingBottom).
+   */
+  private var keyboardOffset: Float = 0f
+
+  /**
+   * How much of keyboardOffset actually landed in the applied padding — the
+   * caret reveal compensates by this so it still targets the real keyboard edge.
+   */
+  private var appliedKeyboardOffset = 0
+
   private var keyboardObserver: TrueSheetKeyboardObserver? = null
 
   private var watchedEditText: EditText? = null
@@ -80,6 +98,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     set(value) {
       field = value
       keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
+      keyboardOffset = value?.keyboardOffset?.dpToPx() ?: 0f
     }
 
   /**
@@ -180,6 +199,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     setScrollableBounded(false)
     detectedScrollView = null
     originalScrollViewPaddingBottom = 0
+    appliedKeyboardOffset = 0
   }
 
   fun findScrollView(): ViewGroup? {
@@ -274,8 +294,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     // floats within the viewport — its clearance is the content padding's job
     // (the caret reveal accounts for it, see scrollToFocusedInput).
     val totalBottomInset = if (keyboardHeight > 0) {
-      maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
+      val baseInset = maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
+      val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
+      appliedKeyboardOffset = adjustedInset - baseInset
+      adjustedInset
     } else {
+      appliedKeyboardOffset = 0
       0
     }
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
@@ -322,7 +346,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val footerOcclusion = maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
 
     val offset = keyboardScrollOffset.toInt()
-    val visibleHeight = scrollView.height - scrollView.paddingBottom
+    val visibleHeight = scrollView.height - scrollView.paddingBottom + appliedKeyboardOffset
     val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
 

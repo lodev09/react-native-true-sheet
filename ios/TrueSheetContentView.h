@@ -32,6 +32,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
+
+/**
+ * Adjustment added to the keyboard bottom inset applied to the detected
+ * scrollable — negative values reduce the inset (e.g. to cancel out safe-area
+ * padding already baked into the content's paddingBottom).
+ */
+@property (nonatomic, assign) CGFloat keyboardOffset;
+
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 
 /**

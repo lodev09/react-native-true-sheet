@@ -52,6 +52,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       style={styles.sheet}
       scrollableOptions={{
         keyboardScrollOffset: SPACING,
+        keyboardOffset: -insets.bottom,
         topScrollEdgeEffect: 'soft',
         bottomScrollEdgeEffect: 'soft',
       }}
