@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- Touchables inside a sheet fire their `onPress` again when the sheet content contains a nested native-stack screen (or a second finger touches the sheet mid-press) — since [#767](https://github.com/lodev09/react-native-true-sheet/pull/767), the sheet claimed the responder whenever the negotiation re-ran mid-gesture, stealing it from the pressed touchable. The sheet now stops the negotiation at its boundary without claiming, which also keeps the touch-leak fix without any `setJSResponder` side effects. ([#786](https://github.com/lodev09/react-native-true-sheet/pull/786) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.11
 
 ### 🐛 Bug fixes
