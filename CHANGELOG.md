@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.12
+
 ### 🐛 Bug fixes
 
 - **Android**: Touchables rendered after a `View` with `zIndex > 0` that contains a `TrueSheet` respond again — the host view's `pointerEvents` (`box-none`) was silently dropped by the codegen delegate, so hit-testing could target the full-screen hidden host and swallow touches behind it. ([#787](https://github.com/lodev09/react-native-true-sheet/pull/787) by [@lodev09](https://github.com/lodev09))
