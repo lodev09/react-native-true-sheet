@@ -432,6 +432,20 @@ export interface TrueSheetProps extends ViewProps {
   initialDetentAnimated?: boolean;
 
   /**
+   * Mounts the sheet content before presentation without presenting the sheet.
+   * Use this when content is not ready on the first render, then call `present()`
+   * after your readiness signal so auto detents measure the settled content.
+   *
+   * Content that requires window attachment to measure, such as SwiftUI-hosted views,
+   * still only measures during presentation.
+   *
+   * @platform android
+   * @platform ios
+   * @default false
+   */
+  prewarm?: boolean;
+
+  /**
    * The detent index that the sheet should start to dim the background.
    * This is ignored if `dimmed` is set to `false`.
    *
