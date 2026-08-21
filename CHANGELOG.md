@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- Added a JS-only `prewarm` prop to mount sheet content before presentation, allowing `auto` detents to measure settled content before the sheet opens. ([#792](https://github.com/lodev09/react-native-true-sheet/pull/792) by [@maxlapides](https://github.com/maxlapides))
+
 ## 3.11.12
 
 ### 🐛 Bug fixes

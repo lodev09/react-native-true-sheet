@@ -17,7 +17,8 @@ jest.mock('./src/fabric/TrueSheetViewNativeComponent', () => {
   return {
     __esModule: true,
     default: React.forwardRef((props, ref) => {
-      return React.createElement(View, { ...props, ref });
+      React.useImperativeHandle(ref, () => ({ _nativeTag: 1 }));
+      return React.createElement(View, props);
     }),
   };
 });
