@@ -114,9 +114,10 @@ export class TrueSheet
 
     this.validateDetents();
 
-    // Lazy load by default, except when initialDetentIndex is set (for auto-presentation)
+    // Lazy load by default, except when auto-presenting or prewarming content
     const shouldRenderImmediately =
-      props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0;
+      (props.initialDetentIndex !== undefined && props.initialDetentIndex >= 0) ||
+      props.prewarm === true;
 
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
@@ -316,9 +317,8 @@ export class TrueSheet
     this.backHandlerSubscription?.remove();
     this.backHandlerSubscription = null;
 
-    // Clean up native view after dismiss for lazy loading.
-    // Skip unmount if a present is in progress to avoid race condition.
-    if (!this.isPresenting) {
+    // Keep prewarmed content mounted; otherwise clean it up unless another presentation is active.
+    if (!this.isPresenting && this.props.prewarm !== true) {
       this.setState({ shouldRenderNativeView: false });
     }
 
@@ -448,6 +448,14 @@ export class TrueSheet
   componentDidUpdate(prevProps: TrueSheetProps): void {
     this.registerInstance();
 
+    if (
+      prevProps.prewarm !== true &&
+      this.props.prewarm === true &&
+      !this.state.shouldRenderNativeView
+    ) {
+      this.setState({ shouldRenderNativeView: true });
+    }
+
     // Validate when detents prop changes
     if (prevProps.detents !== this.props.detents) {
       this.validateDetents();
@@ -494,6 +502,7 @@ export class TrueSheet
       insetAdjustment = 'automatic',
       ...rest
     } = this.props;
+    delete rest.prewarm;
 
     // Trim to max 3 detents and clamp fractions
     const resolvedDetents = detents.slice(0, 3).map((detent) => {

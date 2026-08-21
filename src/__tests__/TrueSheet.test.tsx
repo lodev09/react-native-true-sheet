@@ -1,6 +1,8 @@
+import { createRef } from 'react';
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetPeek } from '../index';
+import TrueSheetModule from '../specs/NativeTrueSheetModule';
 import type {
   DidDismissEvent,
   WillFocusEvent,
@@ -114,6 +116,67 @@ describe('TrueSheet', () => {
       );
       // Content should be rendered immediately
       expect(getByText('Eager Content')).toBeDefined();
+    });
+
+    it('should render native view content without presentation when prewarm is enabled', () => {
+      const { getByText, getByTestId } = render(
+        <TrueSheet name="prewarm-test" prewarm testID="prewarm-host">
+          <Text>Prewarmed Content</Text>
+        </TrueSheet>
+      );
+
+      expect(getByText('Prewarmed Content')).toBeDefined();
+      expect(getByTestId('prewarm-host').props.prewarm).toBeUndefined();
+    });
+
+    it('should render native view content when prewarm becomes enabled', () => {
+      const sheet = (
+        <TrueSheet name="deferred-prewarm-test">
+          <Text>Deferred Prewarmed Content</Text>
+        </TrueSheet>
+      );
+      const { queryByText, rerender } = render(sheet);
+
+      expect(queryByText('Deferred Prewarmed Content')).toBeNull();
+
+      rerender(<TrueSheet {...sheet.props} prewarm />);
+
+      expect(queryByText('Deferred Prewarmed Content')).not.toBeNull();
+
+      rerender(sheet);
+
+      expect(queryByText('Deferred Prewarmed Content')).not.toBeNull();
+    });
+
+    it('should keep prewarmed native view content mounted after dismiss', () => {
+      const { getByTestId, queryByText } = render(
+        <TrueSheet name="prewarm-dismiss-test" prewarm testID="prewarm-dismiss-host">
+          <Text>Persistent Prewarmed Content</Text>
+        </TrueSheet>
+      );
+
+      act(() => {
+        getByTestId('prewarm-dismiss-host').props.onDidDismiss({ nativeEvent: null });
+      });
+
+      expect(queryByText('Persistent Prewarmed Content')).not.toBeNull();
+    });
+
+    it('should present prewarmed content without waiting for another mount', async () => {
+      const sheetRef = createRef<TrueSheet>();
+      const onMountMock = jest.fn();
+      render(
+        <TrueSheet ref={sheetRef} name="prewarm-present-test" prewarm onMount={onMountMock}>
+          <Text>Ready Prewarmed Content</Text>
+        </TrueSheet>
+      );
+
+      await act(async () => {
+        await sheetRef.current?.present();
+      });
+
+      expect(onMountMock).not.toHaveBeenCalled();
+      expect(TrueSheetModule?.presentByRef).toHaveBeenCalledTimes(1);
     });
 
     it('should render native view content when present is called', async () => {
