@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Fast dismiss/re-present cycles no longer strand an `initialDetentIndex` auto-present when the host is recycled while its controller is still dismissing — blocked attempts now retry, and teardown and lifecycle events from the recycled controller session stay scoped to its original mount. ([#793](https://github.com/lodev09/react-native-true-sheet/pull/793) by [@maxlapides](https://github.com/maxlapides))
+
 ## 3.11.12
 
 ### 🐛 Bug fixes
