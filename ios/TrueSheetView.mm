@@ -53,6 +53,7 @@ using namespace facebook::react;
   NSInteger _initialDetentIndex;
   TrueSheetViewInsetAdjustment _insetAdjustment;
   ScrollableOptions *_scrollableOptions;
+  NSInteger _scrollableHandle;
   BOOL _hasAutoDetent;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
@@ -276,6 +277,8 @@ using namespace facebook::react;
 
   _initialDetentIndex = newProps.initialDetentIndex;
   _initialDetentAnimated = newProps.initialDetentAnimated;
+
+  _scrollableHandle = newProps.scrollableHandle;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
   BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
@@ -824,6 +827,7 @@ using namespace facebook::react;
     return;
 
   _containerView.scrollableOptions = _scrollableOptions;
+  _containerView.scrollableHandle = _scrollableHandle;
   _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];

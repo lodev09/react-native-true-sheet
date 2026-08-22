@@ -60,6 +60,7 @@ const HeavyItem = ({ index }: { index: number }) => {
 };
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
+  const scrollViewRef = useRef<ScrollView>(null);
   const [showList, setShowList] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
@@ -75,6 +76,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       detents={[0.8, 1]}
       name="scrollview"
       style={styles.sheet}
+      scrollableRef={scrollViewRef}
       scrollableOptions={{
         scrollingExpandsSheet: false,
         bottomScrollEdgeEffect: 'soft',
@@ -97,6 +99,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     >
       {showList ? (
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={[
             styles.content,
             { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },

@@ -17,7 +17,6 @@
 #import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewShadowNode.h>
 #import "TrueSheetContainerView.h"
 #import "TrueSheetFooterView.h"
-#import "TrueSheetView.h"
 #import "TrueSheetViewController.h"
 #import "utils/PlatformUtil.h"
 #import "utils/UIView+FirstResponder.h"
@@ -73,6 +72,16 @@ using namespace facebook::react;
     newState.scrollableBounded = bounded;
     _state->updateState(std::move(newState));
   }
+}
+
+- (void)setScrollableHandle:(NSInteger)scrollableHandle {
+  if (_scrollableHandle == scrollableHandle) {
+    return;
+  }
+  _scrollableHandle = scrollableHandle;
+
+  // Release the previously resolved ScrollView — setupScrollable re-resolves
+  [self clearScrollable];
 }
 
 - (void)setHasAutoDetent:(BOOL)hasAutoDetent {
@@ -231,35 +240,22 @@ using namespace facebook::react;
   return 0;
 }
 
+// Resolves the user-provided `scrollableHandle` within the content subtree —
+// Fabric component views carry their React tag as `UIView.tag`.
 - (RCTScrollViewComponentView *)findScrollView {
   if (_detectedScrollView) {
     return _detectedScrollView;
   }
 
-  if (self.subviews.count == 0) {
+  if (_scrollableHandle <= 0) {
     return nil;
   }
 
-  RCTScrollViewComponentView *scrollView = [self findScrollViewInSubviews:self.subviews];
-
-  if (!scrollView) {
-    for (UIView *subview in self.subviews) {
-      scrollView = [self findScrollViewInSubviews:subview.subviews];
-      if (scrollView) {
-        break;
-      }
-    }
+  UIView *view = [self viewWithTag:_scrollableHandle];
+  if ([view isKindOfClass:RCTScrollViewComponentView.class]) {
+    return (RCTScrollViewComponentView *)view;
   }
 
-  return scrollView;
-}
-
-- (RCTScrollViewComponentView *)findScrollViewInSubviews:(NSArray<UIView *> *)subviews {
-  for (UIView *subview in subviews) {
-    if ([subview isKindOfClass:RCTScrollViewComponentView.class] && ![subview isKindOfClass:TrueSheetView.class]) {
-      return (RCTScrollViewComponentView *)subview;
-    }
-  }
   return nil;
 }
 
@@ -409,6 +405,7 @@ using namespace facebook::react;
   [self clearScrollable];
   _state.reset();
   _scrollableBounded = NO;
+  _scrollableHandle = 0;
   _hasAutoDetent = NO;
   _lastReportedNaturalHeight = 0;
 }

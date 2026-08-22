@@ -52,6 +52,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;
 
 /**
+ * React tag of the user-provided scrollable within the content (see the `scrollableRef` prop)
+ */
+@property (nonatomic, assign) NSInteger scrollableHandle;
+
+/**
  * Whether the sheet has an `auto` detent — bounds the detected scrollable's
  * viewport to the container so the sheet height can derive from its content size
  */

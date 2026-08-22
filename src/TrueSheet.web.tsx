@@ -55,15 +55,15 @@ import { getDOMElement } from './web/dom';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
 
-// First vertically scrollable descendant — web mirror of native's
-// findScrollView (RN-web ScrollView/FlatList render a node with
-// `overflow-y: auto`; its first child is the content container).
-const findVerticalScroller = (root: HTMLElement): HTMLElement | null => {
-  for (const el of root.querySelectorAll<HTMLElement>('*')) {
-    const { overflowY } = window.getComputedStyle(el);
-    if (overflowY === 'auto' || overflowY === 'scroll') return el;
-  }
-  return null;
+// Resolves the user's `scrollableRef` to its scrollable DOM element — RN-web
+// ScrollView refs expose the scroll node directly (with helpers attached);
+// list refs (e.g. FlatList) expose it via getScrollableNode(). The node's
+// first child is the content container.
+const getScrollableElement = (scrollable: unknown): HTMLElement | null => {
+  if (!scrollable) return null;
+  if (scrollable instanceof HTMLElement) return scrollable;
+  const node = (scrollable as { getScrollableNode?: () => unknown }).getScrollableNode?.();
+  return node instanceof HTMLElement ? node : null;
 };
 
 const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
@@ -79,6 +79,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     maxContentWidth,
     anchor = 'center',
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
+    scrollableRef,
     grabber = true,
     grabberOptions,
     accessibilityOptions,
@@ -369,7 +370,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         scrollContent: Element | null;
       } | null = null;
 
-      // (Re)detect the first vertical scrollable and observe the nodes whose size
+      // (Re)resolve the plugged scrollable and observe the nodes whose size
       // feeds the natural height — content growth inside a bounded scroller is
       // invisible to the sheet's own layout (mirrors native's contentSize
       // observation). Resolves the content node live: the layout-branch swap
@@ -379,10 +380,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         const headerEl = getDOMElement(headerElRef.current);
 
         // Skip mutations that don't change the observed topology — e.g. a
-        // virtualized list mounting rows inside the detected scroller, which
-        // would otherwise trigger a full-subtree rescan (findVerticalScroller
-        // resolves computed styles) on every scroll frame. Size changes are
-        // already covered by the ResizeObserver.
+        // virtualized list mounting rows inside the plugged scroller. Size
+        // changes are already covered by the ResizeObserver.
         if (
           observed &&
           observed.contentEl === contentEl &&
@@ -394,8 +393,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           return;
         }
 
-        const scroller =
-          contentEl && contentEl.isConnected ? findVerticalScroller(contentEl) : null;
+        const resolved =
+          contentEl && contentEl.isConnected ? getScrollableElement(scrollableRef?.current) : null;
+        const scroller = resolved?.isConnected ? resolved : null;
         detectedScrollerRef.current = scroller;
         setHasBoundedScrollable(scroller != null);
         observed = scroller
@@ -429,7 +429,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       mutationObserver?.disconnect();
       resizeObserver?.disconnect();
     };
-  }, [isOpen, hasAutoDetent, measureNaturalHeight]);
+  }, [isOpen, hasAutoDetent, measureNaturalHeight, scrollableRef]);
 
   // Below the last detent a vertical touch pan moves the sheet, not the
   // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
@@ -1069,7 +1069,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Lift content above iOS home indicator / bottom safe area when enabled.
       // A relative footer owns the inset instead (see resolvedFooterStyle); an
       // absolute footer floats over the content, so the content keeps its lift.
-      // A detected scrollable scrolls edge-to-edge behind the indicator with
+      // A plugged scrollable scrolls edge-to-edge behind the indicator with
       // user-applied content padding — mirrors native, which no longer insets
       // scroll content.
       paddingBottom:

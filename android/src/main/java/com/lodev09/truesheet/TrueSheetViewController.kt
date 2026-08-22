@@ -227,6 +227,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
     }
 
+  // React tag of the user-provided scrollable within the content (see the scrollableRef prop)
+  var scrollableHandle: Int = -1
+
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
       field = if (value < 0) DEFAULT_CORNER_RADIUS.dpToPx() else value

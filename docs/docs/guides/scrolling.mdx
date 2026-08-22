@@ -6,23 +6,24 @@ keywords: [bottom sheet scrolling, bottom sheet scrollview, bottom sheet flatlis
 
 import scrolling from './assets/scrolling.gif'
 
-Scrolling content within the sheet works like a regular view — bound the scroll view's height with `flex: 1` and plug a `ScrollView` or `FlatList` in directly.
+Scrolling content within the sheet works like a regular view — bound the scroll view's height with `flex: 1`, plug a `ScrollView` or `FlatList` in, and point the sheet at it with [`scrollableRef`](../reference/configuration#scrollableref).
 
 <img alt="scrolling" src={scrolling} width="300"/>
 
 ## How?
 
-Scroll views (including `ScrollView` and `FlatList`) are **automatically detected**. Keyboard handling and nested scrolling are wired for you — no props needed.
+Pass a ref of your scroll view (including `ScrollView` and `FlatList`) to the sheet via the [`scrollableRef`](../reference/configuration#scrollableref) prop. Keyboard handling and nested scrolling are then wired for you.
 
 Like any scroll view in React Native, it needs a bounded height to scroll. Pass `flex: 1` via the sheet's [`style`](../reference/configuration#style) prop so the content fills the sheet's visible height per detent — resizing in realtime while dragging:
 
 ```tsx
 const App = () => {
   const sheet = useRef<TrueSheet>(null)
+  const scrollableRef = useRef<ScrollView>(null)
 
   return (
-    <TrueSheet ref={sheet} style={{ flex: 1 }} detents={[0.5, 1]}>
-      <ScrollView>
+    <TrueSheet ref={sheet} scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+      <ScrollView ref={scrollableRef}>
         <View />
       </ScrollView>
     </TrueSheet>
@@ -30,13 +31,13 @@ const App = () => {
 }
 ```
 
-Wrapping it in a container `View` works too:
+The scroll view doesn't have to be a direct child — wrapping it in a container `View` works too:
 
 ```tsx
-<TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
   <View style={{ flex: 1 }}>
     <View>{/* Header content */}</View>
-    <FlatList data={data} renderItem={renderItem} />
+    <FlatList ref={scrollableRef} data={data} renderItem={renderItem} />
   </View>
 </TrueSheet>
 ```
@@ -55,10 +56,11 @@ By default, scrolling content to the top edge expands the sheet to the next dete
 
 ```tsx
 <TrueSheet
+  scrollableRef={scrollableRef}
   scrollableOptions={{ scrollingExpandsSheet: false }}
   detents={[0.5, 1]}
 >
-  <ScrollView>
+  <ScrollView ref={scrollableRef}>
     <View />
   </ScrollView>
 </TrueSheet>
@@ -74,6 +76,7 @@ Set [`topScrollEdgeEffect`](../reference/types#scrollableoptions) and/or [`botto
 
 ```tsx
 <TrueSheet
+  scrollableRef={scrollableRef}
   scrollableOptions={{
     topScrollEdgeEffect: 'automatic',
     bottomScrollEdgeEffect: 'soft',
@@ -81,7 +84,7 @@ Set [`topScrollEdgeEffect`](../reference/types#scrollableoptions) and/or [`botto
   header={<Header />}
   footer={<Footer />}
 >
-  <ScrollView>
+  <ScrollView ref={scrollableRef}>
     <View />
   </ScrollView>
 </TrueSheet>

@@ -304,6 +304,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
   }
 
+  fun setScrollableHandle(handle: Int) {
+    if (viewController.scrollableHandle == handle) return
+    viewController.scrollableHandle = handle
+    setupScrollable()
+  }
+
   fun setAbsoluteHeader(absolute: Boolean) {
     viewController.absoluteHeader = absolute
   }
@@ -320,6 +326,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   private fun setupScrollable() {
     viewController.containerView?.let {
       it.scrollableOptions = viewController.scrollableOptions
+      it.scrollableHandle = viewController.scrollableHandle
       it.hasAutoDetent = viewController.detents.contains(-1.0)
       it.footerBottomInset = viewController.contentBottomInset
       it.absoluteFooter = viewController.absoluteFooter

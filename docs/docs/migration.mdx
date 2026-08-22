@@ -22,9 +22,9 @@ Version 4 relies on synchronous Fabric state updates (available since React Nati
 - React Native >= 0.82 (Expo SDK 55+)
 - New Architecture enabled
 
-### 2. `scrollable` Prop Removed
+### 2. `scrollable` Prop Replaced by `scrollableRef`
 
-Scroll views (including `ScrollView` and `FlatList`) are now **automatically detected** — plug them in directly. Like any scroll view in React Native, they need a bounded height to scroll, so pass `flex: 1` via the sheet's `style` prop for fixed detents. With an `auto` detent, no `flex: 1` is needed — the sheet sizes to the scroll content and bounds the viewport automatically.
+Point the sheet at your scroll view (including `ScrollView` and `FlatList`) with the `scrollableRef` prop. Like any scroll view in React Native, it needs a bounded height to scroll, so pass `flex: 1` via the sheet's `style` prop for fixed detents. With an `auto` detent, no `flex: 1` is needed — the sheet sizes to the scroll content and bounds the viewport automatically.
 
 **Migration:**
 
@@ -34,14 +34,14 @@ Scroll views (including `ScrollView` and `FlatList`) are now **automatically det
   <ScrollView>{/* ... */}</ScrollView>
 </TrueSheet>
 
-// ✅ v4 — auto-detected, bound the content with flex: 1
-<TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
-  <ScrollView>{/* ... */}</ScrollView>
+// ✅ v4 — plug the scroll view via scrollableRef, bound the content with flex: 1
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
 </TrueSheet>
 
 // ✅ v4 — 'auto' detent sizes to the scroll content, no flex needed
-<TrueSheet detents={['auto']}>
-  <ScrollView>{/* ... */}</ScrollView>
+<TrueSheet scrollableRef={scrollableRef} detents={['auto']}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
 </TrueSheet>
 ```
 
@@ -273,7 +273,7 @@ const Sheet = createTrueSheetNavigator({
    cd ..
    ```
 5. **Update your code:**
-   - Remove the `scrollable` prop — scrollables are auto-detected
+   - Replace the `scrollable` prop with `scrollableRef`, passing a ref of your scroll view
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers

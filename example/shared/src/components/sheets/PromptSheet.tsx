@@ -16,6 +16,7 @@ const FOOTER_HEIGHT = BUTTON_HEIGHT + SPACING * 2;
 
 export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueSheet>) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const input1Ref = useRef<TextInput>(null);
   const input2Ref = useRef<TextInput>(null);
   const input3Ref = useRef<TextInput>(null);
@@ -50,6 +51,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       name="prompt-sheet"
       detents={[0.75, 1]}
       style={styles.sheet}
+      scrollableRef={scrollViewRef}
       scrollableOptions={{
         keyboardScrollOffset: SPACING,
         keyboardOffset: -insets.bottom,
@@ -87,6 +89,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       {...props}
     >
       <ScrollView
+        ref={scrollViewRef}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[

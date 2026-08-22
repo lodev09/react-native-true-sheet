@@ -247,6 +247,11 @@ class TrueSheetViewManager :
     view.setSheetElevation(elevation.toFloat())
   }
 
+  @ReactProp(name = "scrollableHandle", defaultInt = -1)
+  override fun setScrollableHandle(view: TrueSheetView, handle: Int) {
+    view.setScrollableHandle(handle)
+  }
+
   @ReactProp(name = "scrollableOptions")
   override fun setScrollableOptions(view: TrueSheetView, options: ReadableMap?) {
     if (options == null) {

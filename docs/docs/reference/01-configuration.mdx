@@ -328,9 +328,17 @@ Options for customizing footer behavior.
 | - | - | - | - | - |
 | [`FooterOptions`](types#footeroptions) | | ✅ | ✅ | ✅ |
 
+## `scrollableRef`
+
+A ref to the scrollable component (e.g. `ScrollView`, `FlatList`) rendered within the sheet content. Required for scrollable handling — nested scrolling, keyboard insets, and `auto` detent sizing are wired to this scrollable. See [this guide](../guides/scrolling) for more information.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `RefObject<Component>` | | ✅ | ✅ | ✅ |
+
 ## `scrollableOptions`
 
-Options for customizing scrollable behavior. Applies when the sheet contains a `ScrollView` or `FlatList` (auto-detected). See [this guide](../guides/scrolling) for more information.
+Options for customizing scrollable behavior. Applies to the scrollable provided via [`scrollableRef`](#scrollableref). See [this guide](../guides/scrolling) for more information.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
