@@ -1,4 +1,4 @@
-import type { ComponentType, ReactElement } from 'react';
+import type { Component, ComponentType, ReactElement, RefObject } from 'react';
 import type {
   ColorValue,
   NativeSyntheticEvent,
@@ -581,7 +581,25 @@ export interface TrueSheetProps extends ViewProps {
   footerStyle?: StyleProp<ViewStyle>;
 
   /**
+   * A ref to the scrollable component (e.g. `ScrollView`, `FlatList`)
+   * rendered within the sheet content.
+   * Required for scrollable handling — nested scrolling, keyboard insets,
+   * and `auto` detent sizing are wired to this scrollable.
+   *
+   * Example:
+   * ```tsx
+   * const scrollableRef = useRef<ScrollView>(null)
+   *
+   * <TrueSheet scrollableRef={scrollableRef}>
+   *   <ScrollView ref={scrollableRef} />
+   * </TrueSheet>
+   * ```
+   */
+  scrollableRef?: RefObject<Component<unknown> | null>;
+
+  /**
    * Options for scrollable behavior.
+   * Applies to the scrollable provided via `scrollableRef`.
    */
   scrollableOptions?: ScrollableOptions;
 

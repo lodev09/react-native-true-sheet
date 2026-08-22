@@ -78,6 +78,7 @@ const stopResponderNegotiation = (event: GestureResponderEvent) => {
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
   initialPresentReady: boolean;
+  scrollableHandle: number | null;
 }
 
 // Gates auto-present (initialDetentIndex) by one commit. Rendered last in the
@@ -136,6 +137,7 @@ export class TrueSheet
     this.state = {
       shouldRenderNativeView: shouldRenderImmediately,
       initialPresentReady: false,
+      scrollableHandle: null,
     };
 
     this.onMount = this.onMount.bind(this);
@@ -159,6 +161,17 @@ export class TrueSheet
 
   private onInitialPresentReady(): void {
     this.setState({ initialPresentReady: true });
+  }
+
+  // Resolves after commit (didMount/didUpdate) — the scrollable mounts with the
+  // sheet content, so its ref is only populated once the native tree renders.
+  private updateScrollableHandle(): void {
+    const { scrollableRef } = this.props;
+    const scrollableHandle = scrollableRef?.current ? findNodeHandle(scrollableRef.current) : null;
+
+    if (scrollableHandle !== this.state.scrollableHandle) {
+      this.setState({ scrollableHandle });
+    }
   }
 
   private validateDetents(): void {
@@ -464,10 +477,12 @@ export class TrueSheet
 
   componentDidMount(): void {
     this.registerInstance();
+    this.updateScrollableHandle();
   }
 
   componentDidUpdate(prevProps: TrueSheetProps): void {
     this.registerInstance();
+    this.updateScrollableHandle();
 
     // Validate when detents prop changes
     if (prevProps.detents !== this.props.detents) {
@@ -579,6 +594,7 @@ export class TrueSheet
         maxContentWidth={maxContentWidth}
         anchor={anchor}
         anchorOffset={anchorOffset}
+        scrollableHandle={this.state.scrollableHandle ?? -1}
         scrollableOptions={scrollableOptions}
         headerOptions={headerOptions}
         footerOptions={{

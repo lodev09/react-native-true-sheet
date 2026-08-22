@@ -6,8 +6,6 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ScrollView
-import androidx.core.widget.NestedScrollView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -102,6 +100,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
 
   /**
+   * React tag of the user-provided scrollable (see the `scrollableRef` prop).
+   * Setting a new handle clears the currently resolved ScrollView.
+   */
+  var scrollableHandle: Int = -1
+    set(value) {
+      if (field == value) return
+      field = value
+      clearScrollable()
+    }
+
+  /**
    * Whether the sheet has an `auto` detent. Deriving the sheet height from the
    * scroll content is circular with natural layout, so the detected ScrollView's
    * viewport is force-bounded to the container only in this case.
@@ -157,7 +166,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       return
     }
 
-    val scrollView = findScrollView(this) ?: return
+    val scrollView = findScrollView() ?: return
 
     originalScrollViewPaddingBottom = scrollView.paddingBottom
     detectedScrollView = scrollView
@@ -202,26 +211,14 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     appliedKeyboardOffset = 0
   }
 
+  /**
+   * Resolves the user-provided `scrollableHandle` within the content subtree —
+   * React tags are view ids on Android.
+   */
   fun findScrollView(): ViewGroup? {
     if (detectedScrollView != null) return detectedScrollView
-    return findScrollView(this as View)
-  }
-
-  private fun findScrollView(view: View): ViewGroup? {
-    if (view is ScrollView || view is NestedScrollView) {
-      return view as ViewGroup
-    }
-
-    if (view is ViewGroup) {
-      for (i in 0 until view.childCount) {
-        val scrollView = findScrollView(view.getChildAt(i))
-        if (scrollView != null) {
-          return scrollView
-        }
-      }
-    }
-
-    return null
+    if (scrollableHandle <= 0) return null
+    return findViewById<View>(scrollableHandle) as? ViewGroup
   }
 
   // ==================== Keyboard Handling ====================

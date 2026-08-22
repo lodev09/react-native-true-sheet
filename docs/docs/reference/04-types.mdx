@@ -79,15 +79,16 @@ Options for customizing the blur effect. Only applies when `backgroundBlur` is s
 
 ## `ScrollableOptions`
 
-Options for customizing scrollable behavior. Applies when the sheet contains a `ScrollView` or `FlatList` (auto-detected).
+Options for customizing scrollable behavior. Applies to the scrollable provided via [`scrollableRef`](configuration#scrollableref).
 
 ```tsx
 <TrueSheet
+  scrollableRef={scrollableRef}
   scrollableOptions={{
     scrollingExpandsSheet: false,
   }}
 >
-  <ScrollView>
+  <ScrollView ref={scrollableRef}>
     <View />
   </ScrollView>
 </TrueSheet>

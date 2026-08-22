@@ -176,6 +176,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'footer'
   | 'footerStyle'
   | 'footerOptions'
+  | 'scrollableRef'
   | 'scrollableOptions'
   | 'insetAdjustment'
   | 'anchor'

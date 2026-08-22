@@ -78,6 +78,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.scrollableOptions = value
     }
 
+  // React tag of the user-provided scrollable within the content (see the scrollableRef prop)
+  var scrollableHandle: Int = -1
+    set(value) {
+      field = value
+      contentView?.scrollableHandle = value
+    }
+
   var hasAutoDetent = false
     set(value) {
       field = value
@@ -112,6 +119,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       is TrueSheetContentView -> {
         child.delegate = this
         child.scrollableOptions = scrollableOptions
+        child.scrollableHandle = scrollableHandle
         child.hasAutoDetent = hasAutoDetent
         contentView = child
 

@@ -63,10 +63,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) CGFloat naturalHeight;
 
+/**
+ * React tag of the user-provided scrollable (see the `scrollableRef` prop).
+ * Setting a new handle clears the currently resolved ScrollView.
+ */
+@property (nonatomic, assign) NSInteger scrollableHandle;
+
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**
- * Detect the first ScrollView in the content, wiring keyboard handling
+ * Resolve the ScrollView from `scrollableHandle`, wiring keyboard handling
  */
 - (void)setupScrollable;
 
