@@ -11,7 +11,6 @@ import {
   Pressable,
 } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   BORDER_RADIUS,
@@ -63,7 +62,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
   const scrollViewRef = useRef<ScrollView>(null);
   const [showList, setShowList] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const insets = useSafeAreaInsets();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -100,10 +98,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       {showList ? (
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
-          ]}
+          contentContainerStyle={styles.content}
           keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
@@ -129,6 +124,8 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
+    // The safe-area inset is applied natively (contentInsetAdjustmentBehavior)
+    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   footer: {

@@ -80,6 +80,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     anchor = 'center',
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
     scrollableRef,
+    scrollableOptions,
     grabber = true,
     grabberOptions,
     accessibilityOptions,
@@ -1069,13 +1070,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Lift content above iOS home indicator / bottom safe area when enabled.
       // A relative footer owns the inset instead (see resolvedFooterStyle); an
       // absolute footer floats over the content, so the content keeps its lift.
-      // A plugged scrollable scrolls edge-to-edge behind the indicator with
-      // user-applied content padding — mirrors native, which no longer insets
-      // scroll content.
+      // A plugged scrollable keeps the lift too (contentInsetAdjustmentBehavior,
+      // default on) — disable it to scroll edge-to-edge behind the indicator
+      // with user-applied content padding.
       paddingBottom:
         insetAdjustment === 'automatic' &&
         !(footerOwnsInset && !absoluteFooter) &&
-        !hasBoundedScrollable
+        (!scrollableRef || (scrollableOptions?.contentInsetAdjustmentBehavior ?? true))
           ? 'env(safe-area-inset-bottom, 0px)'
           : 0,
     }),
@@ -1085,7 +1086,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       insetAdjustment,
       footerOwnsInset,
       absoluteFooter,
-      hasBoundedScrollable,
+      scrollableRef,
+      scrollableOptions,
     ]
   );
 

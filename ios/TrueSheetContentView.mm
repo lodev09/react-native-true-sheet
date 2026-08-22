@@ -30,6 +30,8 @@ using namespace facebook::react;
   CGFloat _appliedKeyboardOffset;
   BOOL _observingTextChanges;
   BOOL _scrollableBounded;
+  UIScrollViewContentInsetAdjustmentBehavior _originalInsetAdjustmentBehavior;
+  BOOL _appliedContentInsetAdjustment;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -82,6 +84,32 @@ using namespace facebook::react;
 
   // Release the previously resolved ScrollView — setupScrollable re-resolves
   [self clearScrollable];
+}
+
+- (void)setContentInsetAdjustment:(BOOL)contentInsetAdjustment {
+  if (_contentInsetAdjustment == contentInsetAdjustment) {
+    return;
+  }
+  _contentInsetAdjustment = contentInsetAdjustment;
+  [self applyContentInsetAdjustment];
+}
+
+// Hands the bottom safe-area inset to UIKit — `automatic` only insets while
+// the content can scroll, which the Android counterpart mirrors manually.
+- (void)applyContentInsetAdjustment {
+  if (!_detectedScrollView) {
+    return;
+  }
+
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  if (_contentInsetAdjustment && !_appliedContentInsetAdjustment) {
+    _originalInsetAdjustmentBehavior = scrollView.contentInsetAdjustmentBehavior;
+    scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAutomatic;
+    _appliedContentInsetAdjustment = YES;
+  } else if (!_contentInsetAdjustment && _appliedContentInsetAdjustment) {
+    scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
+    _appliedContentInsetAdjustment = NO;
+  }
 }
 
 - (void)setHasAutoDetent:(BOOL)hasAutoDetent {
@@ -175,6 +203,10 @@ using namespace facebook::react;
 - (void)clearScrollable {
   [self setKeyboardInset:0];
   _appliedKeyboardOffset = 0;
+  if (_appliedContentInsetAdjustment) {
+    _detectedScrollView.scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
+    _appliedContentInsetAdjustment = NO;
+  }
   [self setScrollableBounded:NO];
   _detectedScrollView = nil;
 }
@@ -196,6 +228,7 @@ using namespace facebook::react;
 
   _detectedScrollView = scrollView;
 
+  [self applyContentInsetAdjustment];
   [self setScrollableBounded:_hasAutoDetent];
 
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
@@ -213,6 +246,12 @@ using namespace facebook::react;
   CGFloat inset = height;
   if (self.footerView && !_keyboardObserver.viewController.absoluteFooter) {
     inset = MAX(0, height - self.footerView.frame.size.height);
+  }
+
+  // UIKit stacks the safe area on top of contentInset while the adjustment
+  // behavior is automatic — take it out so the total lands on the keyboard edge.
+  if (_appliedContentInsetAdjustment) {
+    inset = MAX(0, inset - _detectedScrollView.scrollView.safeAreaInsets.bottom);
   }
 
   // Track how much of keyboardOffset actually lands in the inset so the caret
@@ -406,6 +445,7 @@ using namespace facebook::react;
   _state.reset();
   _scrollableBounded = NO;
   _scrollableHandle = 0;
+  _contentInsetAdjustment = NO;
   _hasAutoDetent = NO;
   _lastReportedNaturalHeight = 0;
 }

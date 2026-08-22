@@ -50,6 +50,33 @@ On Android, nested scrolling is managed internally — any `nestedScrollEnabled`
 The [`auto`](../reference/types#sheetdetent) detent works with scrolling content too — no `flex: 1` needed. The sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height.
 :::
 
+## Bottom Safe-Area Inset
+
+The sheet applies the bottom safe-area inset to your scroll content automatically while the content can scroll — the last item clears the home indicator (iOS) and navigation bar (Android):
+
+- **iOS**: The scroll view's native [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) is set to `automatic` while it's plugged into the sheet — no need to set React Native's iOS-only prop yourself.
+- **Android**: The inset is applied as content padding, mirroring iOS's `automatic` behavior — parity React Native's iOS-only prop can't provide.
+- **Web**: The content is lifted above the safe area (`env(safe-area-inset-bottom)`).
+
+To opt out and manage the padding yourself, set `contentInsetAdjustmentBehavior` to `false` in [`scrollableOptions`](../reference/configuration#scrollableoptions):
+
+```tsx
+const insets = useSafeAreaInsets()
+
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+>
+  <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+:::info
+This only applies while the sheet's [`insetAdjustment`](../reference/configuration#insetadjustment) is `'automatic'`. If the sheet has a relative [`footer`](footer), the footer absorbs the bottom inset instead — pad your content for the footer's height, not the safe area.
+:::
+
 ## Preventing Scroll-to-Expand
 
 By default, scrolling content to the top edge expands the sheet to the next detent. To disable this (e.g., for YouTube-style comments sheets where only the grabber should expand the sheet), set `scrollingExpandsSheet` to `false`:

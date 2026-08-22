@@ -124,30 +124,31 @@ const MyFooter = () => {
 See the [Footer guide](guides/footer#safe-area-handling) for more details.
 :::
 
-### 6. Scrollables No Longer Auto-Inset
+### 6. Scrollable Bottom Inset via `contentInsetAdjustmentBehavior`
 
-A plugged scrollable no longer gets the bottom safe-area inset applied natively. Only keyboard handling stays automatic. Pad the scroll content yourself:
+A plugged scrollable still gets the bottom safe-area inset applied natively, now only while the content can actually scroll — mirroring iOS's [`contentInsetAdjustmentBehavior="automatic"`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) on all platforms. Remove any manual safe-area padding from your scroll content, or opt out with the new `scrollableOptions.contentInsetAdjustmentBehavior` and pad it yourself:
 
 ```tsx
-// ❌ v3 — the inset was applied natively
-<ScrollView>{/* ... */}</ScrollView>
+// ✅ v4 — the inset is applied natively while the content can scroll
+<TrueSheet scrollableRef={scrollableRef}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
 
-// ✅ v4 — pad the content yourself
+// ✅ v4 — opt out and pad the content yourself
 const insets = useSafeAreaInsets();
 
-<ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
-  {/* ... */}
-</ScrollView>
-```
-
-On iOS, you can let UIKit apply it instead with React Native's [`contentInsetAdjustmentBehavior`](https://reactnative.dev/docs/scrollview#contentinsetadjustmentbehavior-ios) (iOS only, defaults to `"never"`):
-
-```tsx
-<ScrollView contentInsetAdjustmentBehavior="automatic">{/* ... */}</ScrollView>
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+>
+  <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    {/* ... */}
+  </ScrollView>
+</TrueSheet>
 ```
 
 :::info
-If your sheet has a footer, it already absorbs the bottom inset (see above) — pad for the footer's height instead of the safe area.
+If your sheet has a relative footer, it absorbs the bottom inset instead (see above) — pad for the footer's height, not the safe area.
 :::
 
 ### 7. Sheet Navigator Requires `@react-navigation/native` 7.3+
@@ -276,8 +277,7 @@ const Sheet = createTrueSheetNavigator({
    - Replace the `scrollable` prop with `scrollableRef`, passing a ref of your scroll view
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
-   - Remove manual safe-area padding from footers
-   - Add bottom safe-area padding to scrollables — it's no longer applied natively
+   - Remove manual safe-area padding from footers and scroll content — both are handled natively
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

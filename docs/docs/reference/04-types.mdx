@@ -96,6 +96,7 @@ Options for customizing scrollable behavior. Applies to the scrollable provided 
 
 | Property | Type | Description | Default |
 | - | - | - | - |
+| `contentInsetAdjustmentBehavior` | `boolean` | Applies the bottom safe-area inset to the scroll content automatically while the content can scroll. On iOS, sets the scroll view's native [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) to `automatic`; on Android and Web, the sheet applies the inset itself — parity React Native's iOS-only prop can't provide. Only applies while the sheet's [`insetAdjustment`](configuration#insetadjustment) is `'automatic'`; a relative footer absorbs the inset instead. | `true` |
 | `scrollingExpandsSheet` | `boolean` | When `false`, scrolling the content does not expand the sheet to the next detent. Only dragging the grabber or sheet background expands it. Useful for YouTube-style comments sheets. | `true` |
 | `keyboardScrollOffset` | `number` | Additional offset when scrolling to a focused input above the keyboard. | `0` |
 | `keyboardOffset` | `number` | Adjusts the bottom inset applied to the scrollable when the keyboard is shown. Negative values reduce it — pass `-insets.bottom` to cancel out safe-area padding already included in the content's `paddingBottom`. | `0` |

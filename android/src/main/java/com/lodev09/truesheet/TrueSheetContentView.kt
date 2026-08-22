@@ -21,7 +21,8 @@ import com.lodev09.truesheet.utils.smoothScrollTo
 data class ScrollableOptions(
   val keyboardScrollOffset: Float = 0f,
   val keyboardOffset: Float = 0f,
-  val scrollingExpandsSheet: Boolean = true
+  val scrollingExpandsSheet: Boolean = true,
+  val contentInsetAdjustment: Boolean = true
 )
 
 /**
@@ -39,6 +40,14 @@ interface TrueSheetContentViewDelegate {
    * much of its overlap (reduces the keyboard padding).
    */
   val footerKeyboardOcclusion: Int
+
+  /**
+   * A relative footer sits below the content and absorbs the bottom safe-area
+   * inset — the scrollable doesn't reach the sheet's bottom edge, so no
+   * content inset is applied (mirrors iOS, where UIKit resolves this
+   * geometrically via the scroll view's safe area).
+   */
+  val hasRelativeFooter: Boolean
 }
 
 /**
@@ -97,6 +106,28 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       field = value
       keyboardScrollOffset = value?.keyboardScrollOffset?.dpToPx() ?: 0f
       keyboardOffset = value?.keyboardOffset?.dpToPx() ?: 0f
+      updateContentInset()
+    }
+
+  /**
+   * Bottom safe-area inset applied to the scrollable's content padding while
+   * the content can scroll — Android counterpart of iOS's
+   * `contentInsetAdjustmentBehavior="automatic"`. Already zero when the
+   * sheet's `insetAdjustment` is `'never'`.
+   */
+  var bottomInset: Int = 0
+    set(value) {
+      if (field == value) return
+      field = value
+      updateContentInset()
+    }
+
+  private var baseBottomInset = 0
+  private var keyboardBottomInset = 0
+
+  private val scrollableLayoutListener =
+    View.OnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+      if (bottom - top != oldBottom - oldTop) updateContentInset()
     }
 
   /**
@@ -180,13 +211,49 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       }
     }
 
+    // Track viewport and content size changes — the content inset only applies
+    // while the content can scroll (mirrors iOS's automatic behavior)
+    scrollView.addOnLayoutChangeListener(scrollableLayoutListener)
+    scrollView.getChildAt(0)?.addOnLayoutChangeListener(scrollableLayoutListener)
+
     setScrollableBounded(hasAutoDetent)
+    updateContentInset()
 
     // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
     val keyboardHeight = keyboardObserver?.currentHeight ?: 0
     if (keyboardHeight > 0) {
       updateScrollViewInsetForKeyboard(keyboardHeight)
     }
+  }
+
+  /**
+   * Re-applies the base content inset — the bottom safe-area inset while the
+   * content can scroll, no relative footer absorbs it, and
+   * `contentInsetAdjustmentBehavior` isn't disabled.
+   */
+  fun updateContentInset() {
+    val scrollView = detectedScrollView ?: return
+
+    val enabled = scrollableOptions?.contentInsetAdjustment ?: true
+    baseBottomInset = if (enabled && delegate?.hasRelativeFooter != true && canScrollContent(scrollView)) {
+      bottomInset
+    } else {
+      0
+    }
+
+    applyBottomPadding()
+  }
+
+  // Measured against the original padding so the applied inset doesn't feed
+  // back into the check
+  private fun canScrollContent(scrollView: ViewGroup): Boolean {
+    val child = scrollView.getChildAt(0) ?: return false
+    return child.height > scrollView.height - scrollView.paddingTop - originalScrollViewPaddingBottom
+  }
+
+  // The keyboard covers the safe-area region, so the larger inset wins over a sum
+  private fun applyBottomPadding() {
+    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + maxOf(baseBottomInset, keyboardBottomInset))
   }
 
   private fun setScrollViewPaddingBottom(paddingBottom: Int) {
@@ -202,12 +269,16 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   fun clearScrollable() {
     detectedScrollView?.setOnScrollChangeListener(null as View.OnScrollChangeListener?)
+    detectedScrollView?.removeOnLayoutChangeListener(scrollableLayoutListener)
+    detectedScrollView?.getChildAt(0)?.removeOnLayoutChangeListener(scrollableLayoutListener)
     detectedScrollView?.isNestedScrollingEnabled = false
     (detectedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
     setScrollableBounded(false)
     detectedScrollView = null
     originalScrollViewPaddingBottom = 0
+    baseBottomInset = 0
+    keyboardBottomInset = 0
     appliedKeyboardOffset = 0
   }
 
@@ -290,7 +361,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     // height shields that much of the keyboard's overlap. An absolute footer
     // floats within the viewport — its clearance is the content padding's job
     // (the caret reveal accounts for it, see scrollToFocusedInput).
-    val totalBottomInset = if (keyboardHeight > 0) {
+    keyboardBottomInset = if (keyboardHeight > 0) {
       val baseInset = maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
       val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
       appliedKeyboardOffset = adjustedInset - baseInset
@@ -299,7 +370,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       appliedKeyboardOffset = 0
       0
     }
-    setScrollViewPaddingBottom(originalScrollViewPaddingBottom + totalBottomInset)
+    applyBottomPadding()
 
     scrollView.post { nudgeScrollView() }
   }
