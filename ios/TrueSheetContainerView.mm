@@ -32,6 +32,7 @@ using namespace facebook::react;
 
 - (instancetype)init {
   if (self = [super init]) {
+    _contentInsetAdjustment = YES;
     _keyboardScrollOffset = 0;
     _keyboardOffset = 0;
     _scrollingExpandsSheet = YES;
@@ -155,6 +156,7 @@ using namespace facebook::react;
 - (void)setupScrollable {
   if (_contentView) {
     _contentView.scrollableHandle = _scrollableHandle;
+    _contentView.contentInsetAdjustment = _contentInsetAdjustment;
     _contentView.hasAutoDetent = _hasAutoDetent;
     [_contentView setupScrollable];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];

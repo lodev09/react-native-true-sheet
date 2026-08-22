@@ -85,6 +85,16 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.scrollableHandle = value
     }
 
+  /**
+   * Bottom safe-area inset the plugged scrollable applies as content padding
+   * while it can scroll (see ScrollableOptions.contentInsetAdjustment)
+   */
+  var scrollableBottomInset: Int = 0
+    set(value) {
+      field = value
+      contentView?.bottomInset = value
+    }
+
   var hasAutoDetent = false
     set(value) {
       field = value
@@ -120,6 +130,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         child.delegate = this
         child.scrollableOptions = scrollableOptions
         child.scrollableHandle = scrollableHandle
+        child.bottomInset = scrollableBottomInset
         child.hasAutoDetent = hasAutoDetent
         contentView = child
 
@@ -213,6 +224,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override val footerKeyboardOcclusion: Int
     get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
 
+  override val hasRelativeFooter: Boolean
+    get() = footerView != null && !absoluteFooter
+
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()
   }
@@ -229,6 +243,8 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override fun footerViewDidChangeSize(width: Int, height: Int) {
     footerHeight = height
     delegate?.containerViewFooterDidChangeSize(width, height)
+    // A relative footer takes over the bottom inset — drop the scrollable's
+    contentView?.updateContentInset()
   }
 
   override fun peekViewDidChangeSize(width: Int, height: Int) {

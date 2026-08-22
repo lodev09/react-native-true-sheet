@@ -282,14 +282,17 @@ using namespace facebook::react;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
   BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
+  BOOL contentInsetAdjustment = scrollableOpts.contentInsetAdjustmentBehavior;
   auto topEdgeEffect = scrollableOpts.topScrollEdgeEffect;
   auto bottomEdgeEffect = scrollableOpts.bottomScrollEdgeEffect;
   BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || scrollableOpts.keyboardOffset != 0 ||
-                              !scrollingExpandsSheet || topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
+                              !scrollingExpandsSheet || !contentInsetAdjustment ||
+                              topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
                               bottomEdgeEffect != TrueSheetViewBottomScrollEdgeEffect::Hidden;
 
   if (hasScrollableOptions) {
     ScrollableOptions *options = [[ScrollableOptions alloc] init];
+    options.contentInsetAdjustment = contentInsetAdjustment;
     options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
     options.keyboardOffset = scrollableOpts.keyboardOffset;
     options.scrollingExpandsSheet = scrollingExpandsSheet;
@@ -828,6 +831,8 @@ using namespace facebook::react;
 
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.scrollableHandle = _scrollableHandle;
+  _containerView.contentInsetAdjustment = (_scrollableOptions ? _scrollableOptions.contentInsetAdjustment : YES) &&
+                                          _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
   _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];

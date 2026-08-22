@@ -166,6 +166,28 @@ export type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
  */
 export interface ScrollableOptions {
   /**
+   * Applies the bottom safe-area inset to the scroll content automatically
+   * while the content can scroll, so the last item clears the home indicator
+   * (iOS) and navigation bar (Android).
+   *
+   * - **iOS**: Sets the scroll view's native
+   * [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior)
+   * to `automatic` while it's plugged into the sheet — no need to set React
+   * Native's iOS-only prop yourself.
+   * - **Android**: Pads the scroll content with the bottom window inset,
+   * mirroring iOS's `automatic` behavior — parity React Native's iOS-only
+   * prop can't provide.
+   * - **Web**: Lifts the content above the safe area
+   * (`env(safe-area-inset-bottom)`).
+   *
+   * Only applies while the sheet's `insetAdjustment` is `'automatic'`. When
+   * the sheet has a relative footer, the footer absorbs the inset instead.
+   *
+   * @default true
+   */
+  contentInsetAdjustmentBehavior?: boolean;
+
+  /**
    * Extra offset when scrolling to the focused input when keyboard appears.
    *
    * @default 0

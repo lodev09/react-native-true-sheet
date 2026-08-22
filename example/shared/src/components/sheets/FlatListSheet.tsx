@@ -1,7 +1,6 @@
 import { forwardRef, useRef, useState } from 'react';
 import { StyleSheet, FlatList, Platform } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DARK, DARK_GRAY, FOOTER_HEIGHT, HEADER_HEIGHT, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
@@ -17,7 +16,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
   const [itemCount, setItemCount] = useState(3);
-  const insets = useSafeAreaInsets();
 
   return (
     <TrueSheet
@@ -42,10 +40,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       <FlatList
         ref={scrollRef}
         data={times(itemCount, (i) => i)}
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: FOOTER_HEIGHT + SPACING + insets.bottom },
-        ]}
+        contentContainerStyle={styles.content}
         indicatorStyle="black"
         ItemSeparatorComponent={Spacer}
         renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
@@ -75,11 +70,13 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: Platform.select({
       default: DARK_GRAY,
-      ios: undefined,
+      ios: DARK_GRAY,
     }),
   },
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
+    // The safe-area inset is applied natively (contentInsetAdjustmentBehavior)
+    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
 });

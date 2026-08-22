@@ -69,6 +69,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) NSInteger scrollableHandle;
 
+/**
+ * Sets the resolved ScrollView's `contentInsetAdjustmentBehavior` to
+ * `automatic` while plugged so UIKit applies the bottom safe-area inset to
+ * the scroll content. The previous behavior is restored on clear.
+ */
+@property (nonatomic, assign) BOOL contentInsetAdjustment;
+
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
 
 /**

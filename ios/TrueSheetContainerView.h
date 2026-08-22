@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ScrollableOptions : NSObject
 
+@property (nonatomic, assign) BOOL contentInsetAdjustment;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, assign) CGFloat keyboardOffset;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
@@ -55,6 +56,12 @@ NS_ASSUME_NONNULL_BEGIN
  * React tag of the user-provided scrollable within the content (see the `scrollableRef` prop)
  */
 @property (nonatomic, assign) NSInteger scrollableHandle;
+
+/**
+ * Whether the resolved scrollable's `contentInsetAdjustmentBehavior` is set to
+ * `automatic` — already gated by the sheet's `insetAdjustment`
+ */
+@property (nonatomic, assign) BOOL contentInsetAdjustment;
 
 /**
  * Whether the sheet has an `auto` detent — bounds the detected scrollable's
