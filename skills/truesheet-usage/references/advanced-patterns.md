@@ -13,13 +13,21 @@ Deeper integration guides for Navigation, Reanimated, Web, Side sheets, Liquid G
 - [Overlays on sheets](#overlays-on-sheets)
 - [Edge-to-edge (Android)](#edge-to-edge-android)
 - [Jest testing](#jest-testing)
-- [Migration v2 → v3](#migration-v2--v3)
+- [Migration v3 → v4](#migration-v3--v4)
 
 ---
 
 ## React Navigation
 
-Use `createTrueSheetNavigator()` to treat sheets as screens in your navigation tree.
+Use `createTrueSheetNavigator()` to treat sheets as screens in your navigation tree. The first screen (or `initialRouteName`) is the base content; other screens present as sheets.
+
+### Requirements
+
+The navigator is built on `standard-navigation`, so one implementation works with both React Navigation and Expo Router. Install the optional peers:
+
+```sh
+yarn add @react-navigation/native@^7.3.0 standard-navigation
+```
 
 ### Setup
 
@@ -51,6 +59,29 @@ function App() {
 }
 ```
 
+To present sheets from anywhere, wrap your root stack: `<Sheet.Screen name="Root" component={RootStack} />` plus sheet screens as siblings.
+
+### Static API
+
+React Navigation's [static configuration](https://reactnavigation.org/docs/static-configuration) is supported via `createTrueSheetScreen`:
+
+```tsx
+import {
+  createTrueSheetNavigator,
+  createTrueSheetScreen,
+} from '@lodev09/react-native-true-sheet/navigation'
+
+const Sheet = createTrueSheetNavigator({
+  screens: {
+    Main: MainScreen,
+    Details: createTrueSheetScreen({
+      screen: DetailsSheet,
+      options: { detents: ['auto', 1] },
+    }),
+  },
+})
+```
+
 ### Screen options
 
 All TrueSheet props are available as screen `options`, plus:
@@ -58,8 +89,10 @@ All TrueSheet props are available as screen `options`, plus:
 | Option | Type | Description |
 |--------|------|-------------|
 | `detentIndex` | `number` | Initial detent when the sheet presents (default: `0`) |
-| `reanimated` | `boolean` | Enable worklet-based position tracking |
-| `positionChangeHandler` | `worklet` | Worklet called on position changes (requires `reanimated: true`) |
+| `reanimated` | `boolean` | Enable worklet-based position events for this screen |
+| `positionChangeHandler` | `function` | Callback for position change events. Must be a worklet when `reanimated: true` |
+
+The reanimated integration is lazy-loaded — screens without `reanimated: true` don't require `react-native-reanimated`.
 
 ### `useTrueSheetNavigation()` hook
 
@@ -69,7 +102,7 @@ const navigation = useTrueSheetNavigation()
 navigation.resize(1)         // resize to a detent
 navigation.goBack()          // dismiss current sheet
 
-// Dynamic options
+// Dynamic options — any TrueSheet prop (header, footer, grabber, dismissible, ...)
 navigation.setOptions({
   footer: <UpdatedFooter />,
 })
@@ -78,29 +111,34 @@ navigation.setOptions({
 ### Screen event listeners
 
 ```tsx
-navigation.addListener('sheetDidPresent', (e) => {})
-navigation.addListener('sheetDetentChange', (e) => {})
+navigation.addListener('sheetDidPresent', (e) => {
+  console.log(e.data.index)
+})
 ```
 
-Available events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`.
+Also available as `screenListeners` on the navigator or `listeners` on a screen. Events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`.
+
+### Navigating from sheets
+
+Sheets remain visible when presenting screens on top — `navigation.navigate('SomeScreen')` works directly, no dismissing first. This requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.25.2.patch) (see [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415)). On Expo SDK 56+ EAS builds the patch is silently dropped — see [Troubleshooting](./troubleshooting.md#patched-react-native-screens-not-applied-on-eas).
 
 ### Web caveat
 
-On web, navigation-based sheets need `useFocusEffect` to trigger present/dismiss since the native lifecycle differs.
+Sheet visibility during navigation relies on `react-native-screens` detection, which isn't supported on web. Use `useFocusEffect` to present/dismiss manually when the screen gains/loses focus.
 
 ---
 
 ## Expo Router
 
-Use `withLayoutContext` to create an Expo Router-compatible layout:
+v4 ships a ready-to-use `Sheet` layout via the `/navigation/expo-router` entry point — no `withLayoutContext` wrapper and no `@react-navigation/*` install needed. Requires Expo SDK 57+ and the `standard-navigation` optional peer:
+
+```sh
+yarn add standard-navigation
+```
 
 ```tsx
-// app/sheet/_layout.tsx
-import { withLayoutContext } from 'expo-router'
-import { createTrueSheetNavigator } from '@lodev09/react-native-true-sheet/navigation'
-
-const { Navigator } = createTrueSheetNavigator()
-const Sheet = withLayoutContext(Navigator)
+// app/_layout.tsx
+import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router'
 
 export default function SheetLayout() {
   return (
@@ -114,6 +152,14 @@ export default function SheetLayout() {
   )
 }
 ```
+
+Inside sheet screens, import the hook from the **same entry point**:
+
+```tsx
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router'
+```
+
+All navigator features (screen options, reanimated, dynamic header/footer via `setOptions`, listeners) apply here too.
 
 ---
 
@@ -145,6 +191,8 @@ import { ReanimatedTrueSheet } from '@lodev09/react-native-true-sheet/reanimated
 </ReanimatedTrueSheet>
 ```
 
+Note: `onPositionChange` on `ReanimatedTrueSheet` runs on the UI thread — if you override it, add the `'worklet'` directive to your handler.
+
 ### Animated values
 
 Access shared values from anywhere inside the provider:
@@ -173,6 +221,14 @@ function AnimatedBackdrop() {
 
 ## Web
 
+### Installation
+
+Web needs the underlying dialog primitives, declared as optional peer dependencies:
+
+```sh
+yarn add @radix-ui/react-dialog @radix-ui/react-presence
+```
+
 ### Provider (required on web, pass-through on native)
 
 ```tsx
@@ -189,7 +245,7 @@ function App() {
 
 ### Control via hook
 
-Static methods (`TrueSheet.present`, etc.) don't work on web. Use the hook:
+Static methods (`TrueSheet.present`, etc.) don't work on web. Use refs, or the hook:
 
 ```tsx
 const { present, dismiss, dismissAll, dismissStack, resize } = useTrueSheet()
@@ -235,7 +291,7 @@ Liquid Glass is the frosted glass visual effect introduced in iOS 26. It's autom
 
 **When it activates:** iOS 26+ with no `backgroundColor` and no `backgroundBlur` set.
 
-**Disable per-sheet:**
+**Disable per-sheet (iOS 26.1+):** set `backgroundColor` and/or `backgroundBlur`:
 ```tsx
 <TrueSheet backgroundColor="#ffffff">
 ```
@@ -245,6 +301,8 @@ Liquid Glass is the frosted glass visual effect introduced in iOS 26. It's autom
 <key>UIDesignRequiresCompatibility</key>
 <true/>
 ```
+
+Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. This disables Liquid Glass for the entire app, not just sheets.
 
 ---
 
@@ -297,6 +355,10 @@ jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
   require('@lodev09/react-native-true-sheet/navigation/mock')
 )
 
+jest.mock('@lodev09/react-native-true-sheet/navigation/expo-router', () =>
+  require('@lodev09/react-native-true-sheet/navigation/expo-router/mock')
+)
+
 jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
   require('@lodev09/react-native-true-sheet/reanimated/mock')
 )
@@ -306,18 +368,21 @@ jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
 
 ```json
 {
-  "setupFilesAfterSetup": ["<rootDir>/jest.setup.js"],
+  "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
   "transformIgnorePatterns": [
     "node_modules/(?!(react-native|@react-native|@lodev09/react-native-true-sheet)/)"
   ]
 }
 ```
 
+`transformIgnorePatterns` is required because the mock files use ESM syntax.
+
 ### Available mocks
 
-- `TrueSheet`, `TrueSheetProvider`, `useTrueSheet`
-- `createTrueSheetNavigator`, `useTrueSheetNavigation`
-- `ReanimatedTrueSheet`, `ReanimatedTrueSheetProvider`, `useReanimatedTrueSheet`
+- `/mock`: `TrueSheet` (mocked `present`/`dismiss`/`resize`), `TrueSheetProvider`, `useTrueSheet`
+- `/navigation/mock`: `createTrueSheetNavigator`, `createTrueSheetScreen`, `TrueSheetActions`, `useTrueSheetNavigation`
+- `/navigation/expo-router/mock`: `Sheet` (pass-through with `Screen` and `Protected`), `TrueSheetActions`, `useTrueSheetNavigation`
+- `/reanimated/mock`: `ReanimatedTrueSheet`, `ReanimatedTrueSheetProvider`, `useReanimatedTrueSheet`, `useReanimatedPositionChangeHandler`
 
 Static methods are jest mocks, so you can assert on them:
 
@@ -325,50 +390,67 @@ Static methods are jest mocks, so you can assert on them:
 expect(TrueSheet.present).toHaveBeenCalledWith('my-sheet', 0)
 ```
 
+All mocked methods return resolved Promises — `await` them in tests, and `jest.clearAllMocks()` between tests.
+
 ---
 
-## Migration v2 → v3
+## Migration v3 → v4
+
+v4 rewrites the layout engine — the sheet lays out synchronously per detent with Yoga owning all frames. Upgrading from v2? Migrate to v3 first (prop renames: `sizes`→`detents`, `onPresent`→`onDidPresent`, `onSizeChange`→`onDetentChange`, `FooterComponent`→`footer`, percentage strings→fractions).
 
 ### Requirements
 
-- React Native >= 0.76 (Expo SDK 52+)
-- New Architecture enabled (default in RN 0.76+)
+- React Native >= 0.82 (Expo SDK 55+), New Architecture enabled
+- Sheet Navigator: `@react-navigation/native` 7.3+ and `standard-navigation`
+- Expo Router: Expo SDK 57+ and `standard-navigation`
 
-### Prop renames
-
-| v2 | v3 |
-|----|----|
-| `sizes` | `detents` |
-| `initialIndex` | `initialDetentIndex` |
-| `initialIndexAnimated` | `initialDetentAnimated` |
-| `FooterComponent` | `footer` |
-| `onPresent` | `onDidPresent` |
-| `onDismiss` | `onDidDismiss` |
-| `onSizeChange` | `onDetentChange` |
-| `dimmedIndex` | `dimmedDetentIndex` |
-
-### Removed props
-
-| v2 prop | What to do in v3 |
-|---------|-----------------|
-| `grabberProps` | Use `grabber: true` with `grabberOptions` |
-| `scrollRef` | Use `scrollable: true` — auto-detected |
-| `contentContainerStyle` | No longer needed |
-| `edgeToEdge` | Auto-detected on Android |
-
-### Detent value format
+### 1. `scrollable` → `scrollableRef`
 
 ```tsx
-// v2
-sizes={["50%", "80%", "100%"]}
+// ❌ v3
+<TrueSheet scrollable detents={[0.5, 1]}>
+  <ScrollView>{/* ... */}</ScrollView>
+</TrueSheet>
 
-// v3
-detents={[0.5, 0.8, 1]}
+// ✅ v4 — plug the scroll view, bound it with flex: 1
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
+
+// ✅ v4 — 'auto' now works with scrollables, no flex needed
+<TrueSheet scrollableRef={scrollableRef} detents={['auto']}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
 ```
 
-### Behavioral changes
+### 2. Content lays out naturally
 
-- **`backgroundColor`** defaults to system (transparent on iOS) instead of white
-- **`backgroundBlur`** now applies over `backgroundColor` instead of replacing it
-- **Safe area** is handled natively — the sheet is taller than the detent fraction to account for the bottom inset. Footer components should add bottom safe area padding themselves
-- **Event system** expanded: lifecycle events now have will/did pairs, plus focus/blur events for stacking
+Content wraps its children's height instead of filling the sheet. If your layout relied on filling (spacers, centered content, bounded scroll views), pass `flex: 1` via the sheet's `style` prop.
+
+### 3. Footer is relative by default
+
+The footer now takes space below the content (still pinned to the bottom edge) and counts toward the `'auto'` detent. To restore the v3 floating behavior:
+
+```tsx
+<TrueSheet footer={<MyFooter />} footerOptions={{ position: 'absolute' }}>
+```
+
+`footerOptions.keyboardOffset` only applies to absolute footers — a relative footer stays behind the keyboard.
+
+### 4. Safe-area padding is now native
+
+- The footer absorbs the bottom safe-area inset — remove manual `useSafeAreaInsets()` padding from footers.
+- A plugged scrollable gets the bottom inset natively while it can scroll — remove manual padding, or opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}`.
+
+### 5. Navigation entry points
+
+- React Navigation: install `standard-navigation`, bump `@react-navigation/native` to 7.3+. API is unchanged. Static API now available via `createTrueSheetScreen`.
+- Expo Router: replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and import `useTrueSheetNavigation` from that entry point.
+
+### New in v4
+
+- `'auto'` detent works with scrollables
+- `'peek'` detent + `TrueSheetPeek` component
+- `headerOptions` (floating header)
+- `accessibilityOptions`
+- Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
