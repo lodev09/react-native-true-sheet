@@ -5,15 +5,17 @@ description: >-
   Use this skill whenever the user wants to add, configure, control, or debug a bottom sheet using TrueSheet —
   including ref-based sheets, named global sheets, web support with TrueSheetProvider/useTrueSheet,
   React Navigation or Expo Router sheet flows, Reanimated-driven animations, scrolling content,
-  stacking, headers/footers, detents, side sheets, keyboard handling, dimming, liquid glass,
-  and Jest testing. Also use when the user is migrating from v2 to v3, troubleshooting layout or
+  stacking, headers/footers, detents, peeking, side sheets, keyboard handling, dimming, liquid glass,
+  and Jest testing. Also use when the user is migrating from v3 to v4, troubleshooting layout or
   gesture issues, or asking about any TrueSheet prop, event, or method — even if they don't
   mention "TrueSheet" by name but describe a bottom sheet in a React Native context.
 ---
 
 # TrueSheet Consumer Guide
 
-Use this skill to produce correct, idiomatic code for apps that consume `@lodev09/react-native-true-sheet`. It covers choosing the right integration pattern, applying the public API correctly, and avoiding platform-specific pitfalls.
+Use this skill to produce correct, idiomatic code for apps that consume `@lodev09/react-native-true-sheet` (v4). It covers choosing the right integration pattern, applying the public API correctly, and avoiding platform-specific pitfalls.
+
+Requires React Native >= 0.82 (Expo SDK 55+) with the New Architecture.
 
 ## Quick Start
 
@@ -41,6 +43,23 @@ export function App() {
 }
 ```
 
+## Content Layout (v4)
+
+The sheet's content lays out **naturally** — it wraps its children's height like a regular view or a React Navigation screen. It does **not** fill the sheet by default. Consequences:
+
+- A `flex: 1` child collapses to zero height unless the content is filled.
+- To fill the sheet's visible height per detent (spacers, centered content, bounded scroll views), pass `flex: 1` via the sheet's `style` prop:
+
+```tsx
+<TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
+  <View style={{ flex: 1, justifyContent: 'center' }}>
+    <Text>Centered</Text>
+  </View>
+</TrueSheet>
+```
+
+The content is sized to the sheet's visible height per detent and tracks it in realtime while dragging, so flex layouts follow the sheet's edge frame-by-frame.
+
 ## Choose the Right Control Pattern
 
 Pick one based on where the trigger lives relative to the sheet and which platforms you target.
@@ -50,7 +69,7 @@ Pick one based on where the trigger lives relative to the sheet and which platfo
 | **Ref** | Trigger and sheet in the same component | All |
 | **Named + global methods** | Trigger is far from the sheet (different screen, deep in tree) | Native only |
 | **`TrueSheetProvider` + `useTrueSheet()`** | Web support needed, or you want hook-based control | All (required on web) |
-| **`createTrueSheetNavigator()`** | Sheets are part of a navigation flow | All |
+| **`createTrueSheetNavigator()` / Expo Router `Sheet`** | Sheets are part of a navigation flow | All |
 | **`ReanimatedTrueSheet`** | You need animated values synced to sheet position | All |
 
 ### Ref-based
@@ -78,7 +97,7 @@ Every `name` must be unique. Static methods don't exist on web — use the provi
 
 ### Web control with provider
 
-Wrap your app with `TrueSheetProvider` (on native this is a pass-through with zero overhead):
+Wrap your app with `TrueSheetProvider` (on native this is a pass-through with zero overhead). Web also needs `@radix-ui/react-dialog` and `@radix-ui/react-presence` installed (optional peer deps):
 
 ```tsx
 import { TrueSheet, TrueSheetProvider, useTrueSheet } from '@lodev09/react-native-true-sheet'
@@ -102,7 +121,7 @@ export function App() {
 
 ### Navigation (React Navigation / Expo Router)
 
-See [advanced patterns reference](./references/advanced-patterns.md#react-navigation) for full setup with `createTrueSheetNavigator`, Expo Router layouts, screen options, and `useTrueSheetNavigation`.
+See [advanced patterns reference](./references/advanced-patterns.md#react-navigation) for full setup with `createTrueSheetNavigator`, the static API (`createTrueSheetScreen`), the Expo Router `Sheet` layout from `/navigation/expo-router`, screen options, and `useTrueSheetNavigation`.
 
 ### Reanimated
 
@@ -110,11 +129,12 @@ See [advanced patterns reference](./references/advanced-patterns.md#reanimated) 
 
 ## Detents
 
-Detents define the heights the sheet can snap to. You get up to **3 detents**, sorted smallest to largest.
+Detents define the heights the sheet can snap to. You get up to **3 detents**, sorted smallest to largest. Default: `[0.5, 1]`.
 
 | Value | Meaning |
 |-------|---------|
-| `'auto'` | Size to fit the content (iOS 16+, Android, Web) |
+| `'auto'` | Size to fit the content (iOS 16+, Android, Web). Works with scrollables — sizes to the scroll content and resizes as it grows/shrinks |
+| `'peek'` | Collapsed height from the measured `header` + absolute `footer` + content through a `TrueSheetPeek` marker (iOS 16+, Android, Web). Falls back to `150` when none provided |
 | `0` – `1` | Fraction of the screen height |
 
 ```tsx
@@ -124,34 +144,39 @@ Detents define the heights the sheet can snap to. You get up to **3 detents**, s
 // Half and full screen
 <TrueSheet detents={[0.5, 1]} />
 
-// Three stops: peek, half, full
-<TrueSheet detents={[0.25, 0.5, 1]} />
+// Collapsed summary that expands to near-full
+<TrueSheet detents={['peek', 0.9]} />
 ```
-
-**The one rule you can't break:** never combine `'auto'` with `scrollable`. Auto-sizing needs to measure the full content, but a scrollable sheet clips it — they're fundamentally incompatible. Use fractional detents for scrollable sheets.
 
 ## Common Recipes
 
 ### Scrollable content
 
+Point the sheet at your scroll view with `scrollableRef`. For fixed detents, bound the scroll view with `flex: 1` on the sheet's `style`:
+
 ```tsx
-<TrueSheet detents={[0.5, 1]} scrollable cornerRadius={24} grabber>
-  <ScrollView>
+const scrollableRef = useRef<ScrollView>(null)
+
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]} grabber>
+  <ScrollView ref={scrollableRef}>
     {items.map(item => <ItemRow key={item.id} item={item} />)}
   </ScrollView>
 </TrueSheet>
 ```
 
-- The `scrollable` prop auto-detects ScrollView/FlatList up to 2 levels deep
-- On iOS, scrolling to top expands to next detent — disable with `scrollableOptions={{ scrollingExpandsSheet: false }}`
-- On Android, nested scrolling is handled automatically
+- With `detents={['auto']}` no `flex: 1` is needed — the sheet sizes to the scroll content and bounds the viewport automatically
+- The scroll view doesn't have to be a direct child — a wrapping `View` works
+- Keyboard handling, nested scrolling (Android), and the bottom safe-area inset are wired automatically
+- Scrolling to top expands to the next detent — disable with `scrollableOptions={{ scrollingExpandsSheet: false }}` (YouTube-style comments)
+- The bottom safe-area inset is applied natively while content can scroll — don't add manual safe-area padding, or opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}`
 
 ### Fixed header and footer
 
 ```tsx
 <TrueSheet
   detents={[0.5, 1]}
-  scrollable
+  scrollableRef={scrollableRef}
+  style={{ flex: 1 }}
   header={
     <View style={{ padding: 16 }}>
       <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Title</Text>
@@ -159,11 +184,30 @@ Detents define the heights the sheet can snap to. You get up to **3 detents**, s
   }
   footer={<BottomActions />}
 >
-  <ScrollView>{/* ... */}</ScrollView>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
 </TrueSheet>
 ```
 
-Use the `header` and `footer` props — they render in native container views, so the layout math is handled for you. Don't fake it with absolute positioning.
+- Use the `header` and `footer` props — they render in native container views, so the layout math is handled for you. Don't fake it with absolute positioning.
+- Both are **relative** by default: header takes space above the content, footer below it, and both count toward the `'auto'` detent.
+- The footer **absorbs the bottom safe-area inset** natively — remove manual `paddingBottom: insets.bottom` from footer content or it doubles up. Set the footer background via `footerStyle` so it fills the inset.
+- A relative footer is laid out below the content — with fixed detents, bound the content with `flex: 1` (sheet `style`) so the footer stays visible.
+- To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard; a relative one stays in the layout flow behind it.
+
+### Peeking (map-style collapsed sheet)
+
+```tsx
+import { TrueSheet, TrueSheetPeek } from '@lodev09/react-native-true-sheet'
+
+<TrueSheet detents={['peek', 0.9]} initialDetentIndex={0} header={<Summary />}>
+  <TrueSheetPeek>
+    <QuickActions />
+  </TrueSheetPeek>
+  <FullDetails />
+</TrueSheet>
+```
+
+Collapsed, the sheet shows everything from the top through the **bottom edge** of `TrueSheetPeek`; content below stays hidden until expanded. An empty `<TrueSheetPeek />` works as a fold marker between existing views. One peek component per sheet. Absolute footers count toward the peek height; relative footers don't (pushed off-screen at peek).
 
 ### Non-dismissible confirmation
 
@@ -228,31 +272,37 @@ await sheet.current?.resize(2) // expands to full (index 2)
 ## Rules That Save Debugging Time
 
 1. **Max 3 detents**, sorted smallest → largest.
-2. **Never `'auto'` + `scrollable`** — they're incompatible.
-3. **`resize()` takes an index**, not a fraction. `resize(1)` means "go to the second detent."
-4. **Sheet names must be unique** across your entire app.
-5. **Static methods are native-only** — use `useTrueSheet()` on web.
-6. **Don't use `autoFocus` on TextInputs** inside sheets. Focus in `onDidPresent` instead:
+2. **Content doesn't fill the sheet by default** — pass `style={{ flex: 1 }}` on the sheet when children use `flex: 1`, or they render with zero height.
+3. **`scrollableRef` replaces the v3 `scrollable` prop** — pass a ref of the ScrollView/FlatList. Bound it with `flex: 1` on the sheet `style` for fixed detents; `'auto'` needs no flex.
+4. **`resize()` takes an index**, not a fraction. `resize(1)` means "go to the second detent."
+5. **Sheet names must be unique** across your entire app.
+6. **Static methods are native-only** — use `useTrueSheet()` on web.
+7. **Don't add manual safe-area padding** to footers or plugged scroll content — the footer absorbs the bottom inset and the scrollable gets it natively. Doubling up is the most common v4 layout bug.
+8. **Don't use `autoFocus` on TextInputs** inside sheets. Focus in `onDidPresent` instead:
    ```tsx
    <TrueSheet onDidPresent={() => inputRef.current?.focus()}>
    ```
-7. **Use `flexGrow: 1`** (not `flex: 1`) inside `GestureHandlerRootView` on Android.
-8. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.
-9. **Use `header`/`footer` props** for fixed chrome — don't reach for absolute positioning.
-10. **Liquid Glass** is automatic on iOS 26+. Set `backgroundColor` to disable it per-sheet, or add `UIDesignRequiresCompatibility` to Info.plist to disable app-wide.
+9. **Use `flexGrow: 1`** (not `flex: 1`) on `GestureHandlerRootView` inside the sheet on Android — unless the sheet itself has `style={{ flex: 1 }}`.
+10. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.
+11. **Use `header`/`footer` props** for fixed chrome — don't reach for absolute positioning. Float them with `headerOptions`/`footerOptions` `position: 'absolute'` when they should overlay content.
+12. **Liquid Glass** is automatic on iOS 26+. Set `backgroundColor` or `backgroundBlur` to disable it per-sheet (iOS 26.1+), or add `UIDesignRequiresCompatibility` to Info.plist to disable app-wide.
 
 ## Platform Differences at a Glance
 
 | Feature | iOS | Android | Web |
 |---------|-----|---------|-----|
 | `'auto'` detent | iOS 16+ | Yes | Yes |
+| `'peek'` detent / `TrueSheetPeek` | iOS 16+ | Yes | Yes |
 | `backgroundBlur` | Yes | No | No |
 | Liquid Glass | iOS 26+ | No | No |
 | Static global methods | Yes | Yes | No (use provider) |
-| `scrollable` | Yes | Yes | No |
+| `scrollableRef` | Yes | Yes | Yes |
+| Scroll edge effects | iOS 26+ | No | No |
+| `grabberOptions` | Yes | Yes | No |
 | `anchor` / side sheets | System-controlled margins | `anchorOffset` prop | `anchorOffset` prop |
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
+| `insetAdjustment` | Yes | Yes | No |
 | Edge-to-edge | N/A | Auto-detected | N/A |
 | Keyboard handling | Built-in | Built-in | N/A |
 
@@ -306,5 +356,5 @@ When you need the full picture, load these reference files:
 |-----------|--------------|
 | [Configuration](./references/configuration.md) | Every prop with type, default, platform support, and notes |
 | [API](./references/api.md) | Complete events and methods reference with payload types |
-| [Advanced Patterns](./references/advanced-patterns.md) | Navigation, Reanimated, Web, Side sheets, Liquid Glass, Jest mocking, Migration v2→v3 |
+| [Advanced Patterns](./references/advanced-patterns.md) | Navigation, Reanimated, Web, Side sheets, Liquid Glass, Jest mocking, Migration v3→v4 |
 | [Troubleshooting](./references/troubleshooting.md) | Common issues and fixes by platform |

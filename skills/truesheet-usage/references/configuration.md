@@ -11,6 +11,7 @@ Every TrueSheet prop with type, default value, and platform support.
 - [Appearance](#appearance)
 - [Blur](#blur)
 - [Grabber](#grabber)
+- [Accessibility](#accessibility)
 - [Interaction](#interaction)
 - [Dimming](#dimming)
 - [Header and Footer](#header-and-footer)
@@ -32,24 +33,32 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `detents` | `SheetDetent[]` | — | 🍎🤖🌐 | Up to 3 snap heights, sorted smallest → largest. Values: `'auto'` or `0`–`1` |
+| `detents` | `SheetDetent[]` | `[0.5, 1]` | 🍎🤖🌐 | Up to 3 snap heights, sorted smallest → largest. Values: `'auto'`, `'peek'`, or `0`–`1` |
 | `maxContentHeight` | `number` | — | 🍎🤖🌐 | Absolute max height in dp |
-| `maxContentWidth` | `number` | 640 | 🤖🌐 | Max width. On Android/Web defaults to 640dp |
+| `maxContentWidth` | `number` | — | 🍎🤖🌐 | Max width. Android/Web default to 640dp; iOS uses the system width. Ignored on phones in portrait |
+
+**`SheetDetent` values:**
+
+| Value | Platforms | Description |
+|-------|-----------|-------------|
+| `'auto'` | 🍎 16+ 🤖🌐 | Size to the content's natural height. With a plugged scrollable, sizes to the scroll content and resizes as it grows/shrinks |
+| `'peek'` | 🍎 16+ 🤖🌐 | Collapsed height from the measured `header` + absolute `footer` + content through the bottom edge of a `TrueSheetPeek` component. Falls back to `150` when none provided |
+| `number` | 🍎🤖🌐 | Fraction (0–1) of the screen height |
 
 ## Appearance
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26+, setting this disables Liquid Glass |
-| `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius of the sheet |
+| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26.1+, setting this overrides Liquid Glass. Android default is Material 3 `colorSurfaceContainerLow` (adapts to light/dark) |
+| `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius. iOS uses the device's native radius; Android defaults to `16` (Material 3) |
 | `elevation` | `number` | 4 | 🤖🌐 | Shadow depth |
-| `style` | `ViewStyle` | — | 🍎🤖🌐 | Container style override |
+| `style` | `ViewStyle` | — | 🍎🤖🌐 | Content style override. Content wraps its children's height by default — pass `flex: 1` to fill the sheet's visible height per detent |
 
 ## Blur
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `backgroundBlur` | `BackgroundBlur` | — | 🍎 | iOS blur effect applied to the sheet background |
+| `backgroundBlur` | `BackgroundBlur` | — | 🍎 | iOS blur effect applied over `backgroundColor`. On iOS 26.1+, setting this overrides Liquid Glass |
 | `blurOptions` | `BlurOptions` | — | 🍎 | Fine-tune blur intensity and interaction |
 
 **`BackgroundBlur` values:** `'light'`, `'dark'`, `'default'`, `'extra-light'`, `'regular'`, `'prominent'`, `'system-ultra-thin-material'`, `'system-thin-material'`, `'system-material'`, `'system-thick-material'`, `'system-chrome-material'`, plus `-light` and `-dark` variants of each system material.
@@ -57,8 +66,8 @@ Every TrueSheet prop with type, default value, and platform support.
 **`BlurOptions`:**
 ```tsx
 {
-  intensity?: number   // 0–100 (default: system)
-  interaction?: boolean // allow touches through blur (default: true)
+  intensity?: number    // 0–100 (default: system)
+  interaction?: boolean // allow touches through blur (default: true). Disabling can help with visual artifacts on iOS 18+
 }
 ```
 
@@ -66,8 +75,8 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `grabber` | `boolean` | `true` | 🍎🤖🌐 | Show the native drag handle |
-| `grabberOptions` | `GrabberOptions` | — | 🍎🤖🌐 | Customize grabber appearance |
+| `grabber` | `boolean` | `true` | 🍎🤖🌐 | Show the native drag handle. Auto-hidden when `draggable` is `false` |
+| `grabberOptions` | `GrabberOptions` | — | 🍎🤖 | Customize grabber appearance. On iOS, providing any option replaces the system grabber with a custom vibrancy view |
 
 **`GrabberOptions`:**
 ```tsx
@@ -77,16 +86,38 @@ Every TrueSheet prop with type, default value, and platform support.
   topMargin?: number    // iOS: 5, Android: 16
   cornerRadius?: number // default: height / 2
   color?: ColorValue
-  adaptive?: boolean    // auto-contrast against background (default: true)
+  adaptive?: boolean    // auto-contrast against light/dark mode (default: true)
 }
 ```
+
+## Accessibility
+
+| Prop | Type | Default | Platforms | Description |
+|------|------|---------|-----------|-------------|
+| `accessibilityOptions` | `AccessibilityOptions` | — | 🍎🤖🌐 | Customize/localize screen-reader strings |
+
+**`AccessibilityOptions`:**
+```tsx
+{
+  grabberLabel?: string        // iOS: 'Sheet Grabber', Android: 'Drag handle'
+  grabberHint?: string         // iOS only
+  expandedValue?: string       // announced at the last detent (default: 'Expanded')
+  collapsedValue?: string      // announced at the first detent (default: 'Collapsed')
+  detentValue?: string         // intermediate detents; supports {index} and {count} (default: 'Detent {index} of {count}')
+  expandActionLabel?: string   // Android only (default: 'Expand')
+  collapseActionLabel?: string // Android only (default: 'Collapse')
+  paneTitle?: string           // Android pane title / Web hidden dialog title
+}
+```
+
+On iOS, grabber strings only apply when `grabberOptions` is provided (the system grabber is already localized).
 
 ## Interaction
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `dismissible` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can swipe to dismiss |
-| `draggable` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can drag to resize |
+| `dismissible` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can swipe to dismiss or tap outside |
+| `draggable` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can drag to resize. When `false`, the grabber is hidden |
 
 ## Dimming
 
@@ -99,31 +130,57 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `header` | `ReactElement` | — | 🍎🤖🌐 | Fixed header rendered above content in a native container. Height is auto-deducted from available space |
+| `header` | `ReactElement \| ComponentType` | — | 🍎🤖🌐 | Fixed header rendered in a native container. Prefer passing an element over a component for perf |
 | `headerStyle` | `ViewStyle` | — | 🍎🤖🌐 | Style for header container |
-| `footer` | `ReactElement \| ComponentType` | — | 🍎🤖🌐 | Fixed footer below content. Prefer passing an element over a component for perf |
-| `footerStyle` | `ViewStyle` | — | 🍎🤖🌐 | Style for footer container |
+| `headerOptions` | `HeaderOptions` | — | 🍎🤖🌐 | Header layout behavior |
+| `footer` | `ReactElement \| ComponentType` | — | 🍎🤖🌐 | Fixed footer pinned to the sheet's bottom edge. Prefer passing an element over a component for perf |
+| `footerStyle` | `ViewStyle` | — | 🍎🤖🌐 | Style for footer container. Set the background here so it fills the safe-area inset |
+| `footerOptions` | `FooterOptions` | — | 🍎🤖🌐 | Footer layout and keyboard behavior |
+
+**`HeaderOptions`:**
+```tsx
+{
+  position?: 'relative' | 'absolute' // default: 'relative'
+}
+```
+- `'relative'`: takes space above the content, included in the `'auto'` detent height.
+- `'absolute'`: floats over the content, pinned to the top edge, excluded from `'auto'`. Add top padding to your content so it starts below the header.
+
+**`FooterOptions`:**
+```tsx
+{
+  position?: 'relative' | 'absolute' // default: 'relative'
+  keyboardOffset?: number            // default: 0 — absolute footers only
+}
+```
+- `'relative'`: takes space below the content, included in `'auto'` but **excluded from `'peek'`** (pushed off-screen at peek). Stays in the layout flow behind the keyboard. If content is taller than the sheet (fixed detents), bound it with `flex: 1` on the sheet `style` so the footer stays visible.
+- `'absolute'`: floats over the content, excluded from `'auto'` but **included in `'peek'`**, and rises above the keyboard. Add bottom padding to your content so it ends above the footer.
+- `keyboardOffset` adjusts how far an absolute footer rises with the keyboard. Negative values tuck the footer's own bottom padding behind the keyboard.
+
+**Safe area:** the footer absorbs the bottom safe-area inset as padding when `insetAdjustment` is `'automatic'` — don't add manual `paddingBottom: insets.bottom` or it doubles up. While the keyboard is open, an absolute footer skips the inset (no gap above the keyboard).
 
 ## Scrolling
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `scrollable` | `boolean` | — | 🍎🤖 | Auto-pins ScrollView/FlatList to fit available space. Cannot be used with `'auto'` detent |
-| `scrollableOptions` | `ScrollableOptions` | — | 🍎🤖 | Fine-tune scroll behavior |
+| `scrollableRef` | `RefObject<Component>` | — | 🍎🤖🌐 | Ref to the ScrollView/FlatList inside the content. Wires nested scrolling, keyboard insets, and `'auto'` detent sizing. Replaces the v3 `scrollable` prop |
+| `scrollableOptions` | `ScrollableOptions` | — | 🍎🤖🌐 | Fine-tune scrollable behavior |
 
 **`ScrollableOptions`:**
 ```tsx
 {
-  scrollingExpandsSheet?: boolean       // Scrolling to top expands sheet (default: true)
-  keyboardScrollOffset?: number         // Extra spacing above keyboard (default: 0)
-  topScrollEdgeEffect?: ScrollEdgeEffect   // iOS 26+
-  bottomScrollEdgeEffect?: ScrollEdgeEffect // iOS 26+
+  contentInsetAdjustmentBehavior?: boolean  // apply bottom safe-area inset to scroll content while it can scroll (default: true)
+  scrollingExpandsSheet?: boolean           // scrolling to top expands the sheet (default: true)
+  keyboardScrollOffset?: number             // extra spacing above keyboard when scrolling to a focused input (default: 0)
+  keyboardOffset?: number                   // adjust the keyboard bottom inset; pass -insets.bottom to cancel manual padding (default: 0)
+  topScrollEdgeEffect?: ScrollEdgeEffect    // iOS 26+, applies to header + scroll top edge
+  bottomScrollEdgeEffect?: ScrollEdgeEffect // iOS 26+, applies to footer + scroll bottom edge
 }
 ```
 
-**`ScrollEdgeEffect`:** `'automatic'` | `'hard'` | `'soft'` | `'hidden'` (default: `'hidden'`)
+**`ScrollEdgeEffect`:** `'automatic'` | `'hard'` | `'soft'` | `'hidden'` (default: `'hidden'`). iOS 26+ only.
 
-**Web scrolling:** The `scrollable` prop is currently native-only. On web, wrap content in a standard scrollable container.
+Like any scroll view, a plugged scrollable needs a bounded height for fixed detents — pass `flex: 1` via the sheet's `style`. With an `'auto'` detent no flex is needed. On Android, nested scrolling is managed internally (`nestedScrollEnabled` is ignored) and `RefreshControl` is supported.
 
 ## Layout and positioning
 
@@ -132,7 +189,7 @@ Every TrueSheet prop with type, default value, and platform support.
 | `anchor` | `'left' \| 'center' \| 'right'` | `'center'` | 🍎🤖🌐 | Horizontal positioning. Ignored on phones in portrait |
 | `anchorOffset` | `number` | `16` | 🤖🌐 | Edge margin when anchored left/right |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
-| `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖🌐 | Bottom safe area handling |
+| `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
 
 ## Initial presentation
 
@@ -145,5 +202,5 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `detached` | `boolean` | — | 🌐 | Render as a floating card instead of bottom-attached |
+| `detached` | `boolean` | `false` | 🌐 | Render as a floating card instead of bottom-attached |
 | `detachedOffset` | `number` | `16` | 🌐 | Gap from bottom edge for detached sheets |
