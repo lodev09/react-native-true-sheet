@@ -169,8 +169,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   private fun getDetentStateMap(): Map<Int, Int>? =
     when (detents.size) {
+      // With one detent halfExpandedRatio matches the peek height, so the
+      // behavior can settle HALF_EXPANDED at the same position (e.g. an upward
+      // drag release) — map it too, or the settle is unmappable
       1 -> mapOf(
         BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_HALF_EXPANDED to 0,
         BottomSheetBehavior.STATE_EXPANDED to 0
       )
 

@@ -162,6 +162,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var pendingDetentIndex: Int = -1
 
   private var interactionState: InteractionState = InteractionState.Idle
+
+  // A content/header/footer size change arrived mid-drag — reconfiguring then
+  // would reset behavior state and kill the gesture, so it's applied on settle.
+  private var hasPendingSizeChange = false
   internal var isBeingDismissed = false
     private set
   var wasHiddenByScreen = false
@@ -395,6 +399,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView = null
 
     interactionState = InteractionState.Idle
+    hasPendingSizeChange = false
     isBeingDismissed = false
     isPresented = false
     isSheetVisible = false
@@ -592,7 +597,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // whether settled at the target, interrupted by drag, or superseded.
     pendingDetentIndex = -1
 
-    val index = detentCalculator.getDetentIndexForState(newState) ?: return
+    val index = detentCalculator.getDetentIndexForState(newState) ?: run {
+      // Unmapped settle — end any drag anyway so deferred size changes aren't
+      // dropped forever (a leaked Dragging state skips every reconfigure)
+      if (interactionState is InteractionState.Dragging) {
+        interactionState = InteractionState.Idle
+      }
+      flushPendingSizeChange()
+      return
+    }
     val position = getPositionDpForView(sheetView)
     val detentInfo = DetentInfo(index, position)
 
@@ -640,6 +653,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     TrueSheetStackManager.updateBackgroundAccessibility()
+
+    flushPendingSizeChange()
+  }
+
+  private fun flushPendingSizeChange() {
+    if (!hasPendingSizeChange) return
+    hasPendingSizeChange = false
+    setupSheetDetentsForSizeChange()
   }
 
   // =============================================================================
@@ -925,10 +946,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
-    // Skip while dragging — the size change is driven by the drag itself (the
+    // Defer while dragging — the size change is driven by the drag itself (the
     // container tracks the sheet's visible height), and reconfiguring resets
-    // behavior state, killing the gesture.
-    if (interactionState is InteractionState.Dragging) return
+    // behavior state, killing the gesture. Applied on settle so a real content
+    // change mid-drag (e.g. items removed from a list) isn't lost.
+    if (interactionState is InteractionState.Dragging) {
+      hasPendingSizeChange = true
+      return
+    }
+    hasPendingSizeChange = false
 
     setupSheetDetents()
     positionFooter()
