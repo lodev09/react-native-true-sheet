@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupEdgeInteractionWithScrollView:(nullable UIScrollView *)scrollView
                                       edge:(UIRectEdge)edge API_AVAILABLE(ios(26.0));
 - (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0));
+- (nullable UIScrollView *)edgeInteractionScrollView API_AVAILABLE(ios(26.0));
 
 @end
 

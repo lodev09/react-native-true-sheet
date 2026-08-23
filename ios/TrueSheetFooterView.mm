@@ -196,6 +196,7 @@ using namespace facebook::react;
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
                      self.transform = CGAffineTransformMakeTranslation(0, -slide);
+                     [self syncEdgeEffect];
                    }
                    completion:nil];
 }
@@ -209,8 +210,24 @@ using namespace facebook::react;
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
                      self.transform = CGAffineTransformIdentity;
+                     [self syncEdgeEffect];
                    }
                    completion:nil];
+}
+
+// UIKit derives the edge effect region from model geometry at commit time,
+// outside our animation context — the blur snaps to the footer's final
+// position while the footer is still animating. Re-evaluating the scroll
+// view's layout inside the animation block makes the region change inherit
+// the keyboard curve.
+- (void)syncEdgeEffect {
+  if (@available(iOS 26.0, *)) {
+    UIScrollView *scrollView = [self edgeInteractionScrollView];
+    if (scrollView) {
+      [scrollView setNeedsLayout];
+      [scrollView layoutIfNeeded];
+    }
+  }
 }
 
 - (void)applyKeyboardOffset {
