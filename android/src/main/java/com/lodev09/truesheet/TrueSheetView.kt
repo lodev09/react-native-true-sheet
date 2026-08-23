@@ -492,7 +492,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       if (viewController.containerView == null) return@post
 
       viewController.setupSheetDetentsForSizeChange()
-      TrueSheetStackManager.updateParentTranslation(this)
+      // While settling, onSlide drives the parent translation in realtime —
+      // an animated update here would race it frame-by-frame, staggering the
+      // emitted position
+      if (!viewController.isSettling) {
+        TrueSheetStackManager.updateParentTranslation(this)
+      }
     }
   }
 

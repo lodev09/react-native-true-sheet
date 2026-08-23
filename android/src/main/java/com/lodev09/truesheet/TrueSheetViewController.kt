@@ -37,6 +37,7 @@ import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
+import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
@@ -277,9 +278,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val screenWidth: Int
     get() = ScreenUtils.getScreenWidth(reactContext)
 
+  // Cached per layout/configuration pass — the WindowManager and
+  // rootWindowInsets queries behind these allocate, and they're read many
+  // times per animation frame (position emission, detent interpolation,
+  // stacked sheet sync)
+  private var cachedRealScreenHeight: Int = 0
+  private var cachedInsets: Insets? = null
+
+  private fun invalidateScreenMetrics() {
+    cachedRealScreenHeight = 0
+    cachedInsets = null
+  }
+
   // Includes system bars for accurate positioning
   override val realScreenHeight: Int
-    get() = ScreenUtils.getRealScreenHeight(reactContext)
+    get() {
+      if (cachedRealScreenHeight == 0) {
+        cachedRealScreenHeight = ScreenUtils.getRealScreenHeight(reactContext)
+      }
+      return cachedRealScreenHeight
+    }
+
+  private val insets: Insets
+    get() = cachedInsets ?: ScreenUtils.getInsets(reactContext).also { cachedInsets = it }
 
   // Content Measurements
   // Cached values used during dismiss when container is unmounted
@@ -322,10 +343,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   val bottomInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
+    get() = if (edgeToEdgeEnabled) insets.bottom else 0
 
   override val topInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
+    get() = if (edgeToEdgeEnabled) insets.top else 0
 
   override val contentBottomInset: Int
     get() = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) bottomInset else 0
@@ -338,6 +359,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   // Sheet State
+  val isSettling: Boolean
+    get() = behavior?.state == BottomSheetBehavior.STATE_SETTLING
+
   val isExpanded: Boolean
     get() {
       val sheetTop = sheetView?.top ?: return false
@@ -448,6 +472,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun coordinatorLayoutDidLayout(changed: Boolean) {
+    if (changed) invalidateScreenMetrics()
+
     // Reposition footer when layout changes
     if (isPresented && changed) {
       positionFooter()
@@ -455,6 +481,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   override fun coordinatorLayoutDidChangeConfiguration() {
+    invalidateScreenMetrics()
     if (!isPresented) return
 
     sheetView?.updateGravity()
@@ -730,6 +757,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheet = this.sheetView ?: return
     if (isPresented) return
 
+    invalidateScreenMetrics()
     shouldAnimatePresent = animated
     currentDetentIndex = detentIndex
     interactionState = InteractionState.Idle
@@ -1293,8 +1321,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     lastEmittedPositionPx = currentTop
     val visibleHeight = realScreenHeight - currentTop
     val position = detentCalculator.getPositionDp(visibleHeight)
-    val interpolatedIndex = detentCalculator.getInterpolatedIndexForPosition(currentTop)
-    val detent = detentCalculator.getInterpolatedDetentForPosition(currentTop)
+    val (interpolatedIndex, detent) = detentCalculator.getInterpolatedPositionInfo(currentTop)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 

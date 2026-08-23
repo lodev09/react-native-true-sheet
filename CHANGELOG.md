@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: A stacked parent sheet now follows its child frame-by-frame when the child resizes (e.g. `auto` detent content changes) instead of lagging behind and peeking out above it. Also fixes the sheet getting stuck at stale detents after a half-expanded settle, and reduces per-frame work during position emission. ([#797](https://github.com/lodev09/react-native-true-sheet/pull/797) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for a floating footer's height — focused inputs no longer hide behind it. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - Auto detents now measure scrollable content in the shared layout tree, correctly sizing explicit-height and deeply nested scrollables on iOS and Android. ([#783](https://github.com/lodev09/react-native-true-sheet/pull/783) by [@lodev09](https://github.com/lodev09))
 
