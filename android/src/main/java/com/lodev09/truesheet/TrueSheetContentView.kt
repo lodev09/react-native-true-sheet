@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -15,7 +16,6 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.isDescendantOf
-import com.lodev09.truesheet.utils.smoothScrollBy
 import com.lodev09.truesheet.utils.smoothScrollTo
 
 data class ScrollableOptions(
@@ -299,8 +299,19 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
     keyboardObserver = TrueSheetKeyboardObserver(this, reactContext).apply {
       delegate = object : TrueSheetKeyboardObserverDelegate {
-        override fun keyboardWillShow(height: Int) {
+        // Drive the inset per keyboard animation frame so the content tracks
+        // the keyboard edge instead of jumping to the final inset up front.
+        // On hide, the shrinking inset gradually clamps the scroll position
+        // back in sync with the keyboard.
+        override fun keyboardDidChangeHeight(height: Int) {
           updateScrollViewInsetForKeyboard(height)
+
+          // Follow the caret frame-by-frame — only API 30+ delivers
+          // incremental heights; legacy fires once after the keyboard is
+          // already up, where keyboardDidShow's smooth reveal takes over
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !isHiding) {
+            scrollToFocusedInput(smooth = false)
+          }
         }
 
         override fun keyboardDidShow(height: Int) {
@@ -310,7 +321,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
         override fun keyboardWillHide() {
           detachCaretListener()
-          updateScrollViewInsetForKeyboard(0)
         }
 
         override fun focusDidChange(newFocus: View) {
@@ -371,17 +381,22 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       0
     }
     applyBottomPadding()
-
-    scrollView.post { nudgeScrollView() }
+    clampScrollPosition()
   }
 
-  private fun nudgeScrollView() {
+  // Padding changes don't re-clamp the scroll position until the next layout
+  // pass — clamp synchronously so the content follows the shrinking inset on
+  // every keyboard frame instead of snapping afterwards
+  private fun clampScrollPosition() {
     val scrollView = detectedScrollView ?: return
-    scrollView.smoothScrollBy(0, 1)
-    scrollView.smoothScrollBy(0, -1)
+    val child = scrollView.getChildAt(0) ?: return
+    val maxScrollY = maxOf(0, child.height - (scrollView.height - scrollView.paddingTop - scrollView.paddingBottom))
+    if (scrollView.scrollY > maxScrollY) {
+      scrollView.scrollTo(scrollView.scrollX, maxScrollY)
+    }
   }
 
-  private fun scrollToFocusedInput() {
+  private fun scrollToFocusedInput(smooth: Boolean = true) {
     val scrollView = detectedScrollView ?: findScrollView() ?: return
     val focusedView = findFocus() ?: return
 
@@ -418,12 +433,20 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
 
-    when {
+    val targetY = when {
       caretBottom + offset + footerOcclusion > visibleBottom ->
-        scrollView.smoothScrollTo(0, caretBottom + offset + footerOcclusion - visibleHeight)
+        caretBottom + offset + footerOcclusion - visibleHeight
 
       caretTop - offset < visibleTop ->
-        scrollView.smoothScrollTo(0, (caretTop - offset).coerceAtLeast(0))
+        (caretTop - offset).coerceAtLeast(0)
+
+      else -> return
+    }
+
+    if (smooth) {
+      scrollView.smoothScrollTo(0, targetY)
+    } else {
+      scrollView.scrollTo(0, targetY)
     }
   }
 
