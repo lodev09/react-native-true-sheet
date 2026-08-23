@@ -201,7 +201,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    * Find which segment the position falls into for interpolation.
    * @return Triple(fromIndex, toIndex, progress) where progress is 0-1, or null if no detents
    */
-  fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
+  private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
     val count = detents.size
     if (count == 0) return null
 
@@ -242,37 +242,23 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   }
 
   /**
-   * Returns continuous index (e.g., 0.5 = halfway between detent 0 and 1).
+   * Returns interpolated continuous index (e.g., 0.5 = halfway between detent
+   * 0 and 1) and screen fraction for a position, sharing a single segment
+   * lookup — this runs on every position frame.
    */
-  fun getInterpolatedIndexForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return -1f
+  fun getInterpolatedPositionInfo(positionPx: Int): Pair<Float, Float> {
+    if (detents.isEmpty()) return Pair(-1f, 0f)
 
-    val segment = findSegmentForPosition(positionPx) ?: return 0f
-    val (fromIndex, _, progress) = segment
-
-    if (fromIndex == -1) return -progress
-    return fromIndex + progress
-  }
-
-  /**
-   * Returns interpolated screen fraction for position.
-   */
-  fun getInterpolatedDetentForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return 0f
-
-    val segment = findSegmentForPosition(positionPx) ?: return getDetentValueForIndex(0)
-    val (fromIndex, toIndex, progress) = segment
+    val (fromIndex, toIndex, progress) = findSegmentForPosition(positionPx)
+      ?: return Pair(0f, getDetentValueForIndex(0))
 
     if (fromIndex == -1) {
-      val firstDetent = getDetentValueForIndex(0)
-      return maxOf(0f, firstDetent * (1 - progress))
+      return Pair(-progress, maxOf(0f, getDetentValueForIndex(0) * (1 - progress)))
     }
 
     val fromDetent = getDetentValueForIndex(fromIndex)
     val toDetent = getDetentValueForIndex(toIndex)
-    return fromDetent + progress * (toDetent - fromDetent)
+    return Pair(fromIndex + progress, fromDetent + progress * (toDetent - fromDetent))
   }
 
   companion object {
