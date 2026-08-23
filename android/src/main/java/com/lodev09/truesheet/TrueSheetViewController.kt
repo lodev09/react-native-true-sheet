@@ -1076,14 +1076,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerView = containerView?.footerView ?: return
     val sheet = sheetView ?: return
 
-    val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
-
     // A relative footer is laid out by Yoga (pinned to the container's bottom
     // edge) and stays in the layout flow behind the keyboard — only an
     // absolute footer floats above it
     if (!absoluteFooter) {
       footerView.translationY = 0f
       return
+    }
+
+    // The footer's absorbed safe-area inset rides below the keyboard's top
+    // edge — its content stays flush with the keyboard without dropping the
+    // inset padding from the layout, which would jump at the transition edges
+    val keyboardShift = if (currentKeyboardInset > 0) {
+      maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
+    } else {
+      0
     }
 
     val footerHeight = footerView.height
@@ -1144,9 +1151,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
-          // An absolute footer rises above the keyboard, so it drops the bottom
-          // inset padding — before detents are configured against its height
-          if (absoluteFooter) containerView?.footerView?.keyboardVisible = true
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
@@ -1159,7 +1163,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardWillHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-          containerView?.footerView?.keyboardVisible = false
           val restoring = !isBeingDismissed && detentIndexBeforeKeyboard >= 0
 
           // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
@@ -1184,7 +1187,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardDidHide() {
           if (!shouldHandleKeyboard(checkFocus = false)) return
-          containerView?.footerView?.keyboardVisible = false
           detentIndexBeforeKeyboard = -1
           isKeyboardDismissProgrammatic = false
           setupSheetDetents(applyState = false)
@@ -1206,7 +1208,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // Handle case where keyboard is already visible and focus moves into the sheet
           if (!shouldHandleKeyboard()) return
           if (detentIndexBeforeKeyboard < 0 && (keyboardObserver?.currentHeight ?: 0) > 0) {
-            if (absoluteFooter) containerView?.footerView?.keyboardVisible = true
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()
