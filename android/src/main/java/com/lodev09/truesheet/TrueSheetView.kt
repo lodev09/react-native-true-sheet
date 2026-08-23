@@ -521,13 +521,45 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   /**
+   * Realtime counterpart of updateTranslationForChild, driven by the child's
+   * onSlide frames so stacked sheets move in lockstep instead of on
+   * independently-timed animations.
+   */
+  fun syncTranslationForChild(childSheetTop: Int, childMinSheetTop: Int) {
+    if (!viewController.isSheetVisible || viewController.isExpanded) return
+
+    val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
+    val targetTranslation = maxOf(0, childMinSheetTop - mySheetTop)
+    val actualTranslation = maxOf(0, childSheetTop - mySheetTop)
+    val currentTranslation = viewController.currentTranslationY
+
+    // Ride the child's actual position, but only between the current
+    // translation and the settled target — tracks the child frame-by-frame
+    // when the alignment changes (auto detent resize) while staying put when
+    // the child moves between detents above its minimum. Returning early on
+    // no-ops avoids cancelling an in-flight realign animation.
+    val newTranslation = actualTranslation.coerceIn(
+      minOf(currentTranslation, targetTranslation),
+      maxOf(currentTranslation, targetTranslation)
+    )
+    if (newTranslation == currentTranslation) return
+
+    viewController.translateSheet(newTranslation, animated = false)
+
+    val additionalTranslation = newTranslation - currentTranslation
+    if (additionalTranslation > 0) {
+      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation, animated = false)
+    }
+  }
+
+  /**
    * Recursively adds translation to this sheet and all parent sheets.
    */
-  private fun addTranslation(amount: Int) {
+  private fun addTranslation(amount: Int, animated: Boolean = true) {
     if (viewController.isExpanded) return
 
-    viewController.translateSheet(viewController.currentTranslationY + amount)
-    TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount)
+    viewController.translateSheet(viewController.currentTranslationY + amount, animated)
+    TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount, animated)
   }
 
   /**

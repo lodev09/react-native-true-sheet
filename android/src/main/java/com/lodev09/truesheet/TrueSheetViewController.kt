@@ -578,6 +578,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     emitChangePositionDelegate(sheetView.top)
 
+    // Drive the parent's stack translation from our actual frame position —
+    // an independently-timed animation lags behind (e.g. auto detent shrink)
+    // and reveals the parent above this sheet's top edge. Skipped while
+    // dragging so the parent stays put during drag-to-dismiss.
+    if (!isPresentAnimating && interactionState !is InteractionState.Dragging) {
+      syncParentTranslation(sheetView.top)
+    }
+
     // Position on every slide frame — during keyboard transitions the IME
     // animation callbacks are sparser than the sheet's settle frames, and the
     // footer rides the sheet between them, jittering against the keyboard.
@@ -1365,8 +1373,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerDidChangeSize(width, height)
   }
 
-  fun translateSheet(translationY: Int, onEnd: (() -> Unit)? = null) {
+  /**
+   * Realtime (non-animated) counterpart of TrueSheetStackManager.updateParentTranslation,
+   * driven by onSlide so the parent tracks this sheet's actual position.
+   */
+  private fun syncParentTranslation(sheetTop: Int) {
+    val parent = parentSheetView ?: return
+    val minSheetTop = detentCalculator.getSheetTopForDetentIndex(0)
+    parent.syncTranslationForChild(sheetTop, minSheetTop)
+  }
+
+  fun translateSheet(translationY: Int, animated: Boolean = true, onEnd: (() -> Unit)? = null) {
     val sheet = sheetView ?: return
+
+    if (!animated) {
+      sheet.animate().cancel()
+      sheet.translationY = translationY.toFloat()
+      emitChangePositionDelegate(sheet.top + translationY)
+      onEnd?.invoke()
+      return
+    }
 
     sheet.animate()
       .translationY(translationY.toFloat())
