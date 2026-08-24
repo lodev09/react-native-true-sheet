@@ -52,6 +52,7 @@ using namespace facebook::react;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
   UIView *_snapshotView;
   CGSize _lastStateSize;
+  NSInteger _registeredTag;
   NSInteger _initialDetentIndex;
   NSUInteger _initialPresentGeneration;
   NSUInteger _mountGeneration;
@@ -91,6 +92,7 @@ using namespace facebook::react;
     _containerView = nil;
     _snapshotView = nil;
     _lastStateSize = CGSizeZero;
+    _registeredTag = 0;
     _initialDetentIndex = -1;
     _initialPresentGeneration = 0;
     _mountGeneration = 0;
@@ -112,6 +114,7 @@ using namespace facebook::react;
     return;
 
   if (self.tag > 0) {
+    _registeredTag = self.tag;
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
 
@@ -208,7 +211,10 @@ using namespace facebook::react;
   [_snapshotView removeFromSuperview];
   _snapshotView = nil;
 
-  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+  if (_registeredTag > 0) {
+    [TrueSheetModule unregisterViewWithTag:@(_registeredTag)];
+    _registeredTag = 0;
+  }
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -429,7 +435,10 @@ using namespace facebook::react;
     [self dismissAnimated:NO completion:nil];
   }
 
-  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+  if (_registeredTag > 0) {
+    [TrueSheetModule unregisterViewWithTag:@(_registeredTag)];
+    _registeredTag = 0;
+  }
 
   [self cleanupContainerView];
 
