@@ -36,12 +36,12 @@ const App = () => {
 
 ## Scrollable + Keyboard
 
-When using [`scrollable`](../reference/configuration#scrollable), keyboard handling works out of the box. If a `TextInput` inside a `ScrollView` is focused, the sheet automatically scrolls to keep the input visible above the keyboard — no extra setup needed.
+When your sheet contains a `ScrollView` or `FlatList` (provided via [`scrollableRef`](../reference/configuration#scrollableref)), keyboard handling works out of the box. If a `TextInput` inside a `ScrollView` is focused, the sheet automatically scrolls to keep the input visible above the keyboard — no extra setup needed.
 
 You can use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configuration#scrollableoptions) to add extra spacing between the focused input and the keyboard:
 
 ```tsx
-<TrueSheet scrollable scrollableOptions={{ keyboardScrollOffset: 16 }}>
+<TrueSheet scrollableOptions={{ keyboardScrollOffset: 16 }}>
   <ScrollView>
     <TextInput placeholder="Input 1" />
     <TextInput placeholder="Input 2" />
@@ -52,21 +52,33 @@ You can use `keyboardScrollOffset` in [`scrollableOptions`](../reference/configu
 
 This is especially useful for forms with multiple inputs — as the user taps between fields, the scroll view adjusts automatically to keep the active input in view.
 
-## Footer Behavior
-
-When using a [`footer`](../reference/configuration#footer) component, it automatically repositions above the keyboard, staying visible while the user types.
-
-If your footer renders its own bottom inset (e.g. safe-area padding for the home indicator), that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass `-insets.bottom` to tuck the inset behind the keyboard:
+While the keyboard is open, the scrollable gets a bottom inset matching the keyboard height. If your content renders its own bottom padding (e.g. you opted out of [`contentInsetAdjustmentBehavior`](../guides/scrolling#bottom-safe-area-inset) and applied safe-area padding via `paddingBottom`), that padding stacks on top of the inset and leaves a gap above the keyboard. Use `keyboardOffset` to adjust the inset — pass a negative value to cancel out the padding:
 
 ```tsx
 const insets = useSafeAreaInsets()
 
-<TrueSheet footer={<Footer />} footerOptions={{ keyboardOffset: -insets.bottom }}>
+<TrueSheet scrollableOptions={{ keyboardOffset: -insets.bottom }}>
+  <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    <TextInput placeholder="Input 1" />
+  </ScrollView>
+</TrueSheet>
+```
+
+## Footer Behavior
+
+A relative [`footer`](../reference/configuration#footer) (the default) stays in the layout flow — it doesn't float above the keyboard. The keyboard simply covers it, and it's revealed again when the keyboard hides.
+
+An absolute footer automatically repositions above the keyboard, staying visible while the user types. The automatic scroll accounts for the footer's height — focused inputs clear both the keyboard and the footer. Its built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
+
+If your absolute footer renders its own bottom padding, that padding leaves a gap above the keyboard. Use `keyboardOffset` in [`footerOptions`](../reference/configuration#footeroptions) to adjust the rise — pass a negative value to tuck it behind the keyboard:
+
+```tsx
+<TrueSheet footer={<Footer />} footerOptions={{ position: 'absolute', keyboardOffset: -16 }}>
   {/* ... */}
 </TrueSheet>
 ```
 
-The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the inset sits behind the keyboard; a positive value raises the footer higher.
+The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the padding sits behind the keyboard; a positive value raises the footer higher.
 
 ## Autofocus Limitation
 

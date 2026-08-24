@@ -15,7 +15,9 @@ interface TrueSheetDetentCalculatorDelegate {
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
+  val absoluteHeader: Boolean
   val footerHeight: Int
+  val absoluteFooter: Boolean
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -34,6 +36,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
+
   private val headerHeight: Int get() = delegate?.headerHeight ?: 0
   private val footerHeight: Int get() = delegate?.footerHeight ?: 0
   private val peekContentHeight: Int get() = delegate?.peekContentHeight ?: 0
@@ -43,12 +46,38 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val topInset: Int get() = delegate?.topInset ?: 0
 
   /**
+   * Height for auto (-1.0) detents: content + header + footer height.
+   * An absolute (floating) header or footer overlaps the content, so it contributes no height.
+   */
+  private val autoDetentHeight: Int
+    get() = contentHeight +
+      (if (delegate?.absoluteHeader == true) 0 else headerHeight) +
+      (if (delegate?.absoluteFooter == true) 0 else footerHeight)
+
+  /**
+   * Bottom inset for auto detents. A relative footer owns the sheet's bottom
+   * edge, so it absorbs the inset instead of adding it to the auto height.
+   */
+  private val autoDetentBottomInset: Int
+    get() = if (footerHeight > 0 && delegate?.absoluteFooter == false) 0 else contentBottomInset
+
+  /**
+   * Bottom inset for peek detents. An absolute footer counts toward the peek
+   * height and absorbs the inset, so it isn't added again.
+   */
+  private val peekDetentBottomInset: Int
+    get() = if (footerHeight > 0 && delegate?.absoluteFooter == true) 0 else contentBottomInset
+
+  /**
    * Height for peek (-2.0) detents: header + footer + peek content height.
+   * A relative footer is pushed off-screen at peek, so it contributes no height.
    * Falls back to 150dp when none is present.
    */
   private val peekDetentHeight: Int
     get() {
-      val height = headerHeight + footerHeight + peekContentHeight
+      val height = headerHeight +
+        (if (delegate?.absoluteFooter == true) footerHeight else 0) +
+        peekContentHeight
       return if (height > 0) height else DEFAULT_PEEK_HEIGHT.dpToPx().toInt()
     }
 
@@ -58,9 +87,9 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getDetentHeight(detent: Double, includeKeyboard: Boolean = true): Int {
     val baseHeight = if (detent == -1.0) {
-      contentHeight + headerHeight + contentBottomInset
+      autoDetentHeight + autoDetentBottomInset
     } else if (detent == -2.0) {
-      peekDetentHeight + contentBottomInset
+      peekDetentHeight + peekDetentBottomInset
     } else {
       if (detent <= 0.0 || detent > 1.0) {
         throw IllegalArgumentException("TrueSheet: detent fraction ($detent) must be between 0 and 1")
@@ -106,7 +135,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     if (index < 0 || index >= detents.size) return 0f
     val value = detents[index]
     return if (value == -1.0) {
-      (contentHeight + headerHeight).toFloat() / screenHeight.toFloat()
+      autoDetentHeight.toFloat() / screenHeight.toFloat()
     } else if (value == -2.0) {
       peekDetentHeight.toFloat() / screenHeight.toFloat()
     } else {
@@ -140,8 +169,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   private fun getDetentStateMap(): Map<Int, Int>? =
     when (detents.size) {
+      // With one detent halfExpandedRatio matches the peek height, so the
+      // behavior can settle HALF_EXPANDED at the same position (e.g. an upward
+      // drag release) — map it too, or the settle is unmappable
       1 -> mapOf(
         BottomSheetBehavior.STATE_COLLAPSED to 0,
+        BottomSheetBehavior.STATE_HALF_EXPANDED to 0,
         BottomSheetBehavior.STATE_EXPANDED to 0
       )
 
@@ -168,7 +201,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    * Find which segment the position falls into for interpolation.
    * @return Triple(fromIndex, toIndex, progress) where progress is 0-1, or null if no detents
    */
-  fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
+  private fun findSegmentForPosition(positionPx: Int): Triple<Int, Int, Float>? {
     val count = detents.size
     if (count == 0) return null
 
@@ -209,37 +242,23 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   }
 
   /**
-   * Returns continuous index (e.g., 0.5 = halfway between detent 0 and 1).
+   * Returns interpolated continuous index (e.g., 0.5 = halfway between detent
+   * 0 and 1) and screen fraction for a position, sharing a single segment
+   * lookup — this runs on every position frame.
    */
-  fun getInterpolatedIndexForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return -1f
+  fun getInterpolatedPositionInfo(positionPx: Int): Pair<Float, Float> {
+    if (detents.isEmpty()) return Pair(-1f, 0f)
 
-    val segment = findSegmentForPosition(positionPx) ?: return 0f
-    val (fromIndex, _, progress) = segment
-
-    if (fromIndex == -1) return -progress
-    return fromIndex + progress
-  }
-
-  /**
-   * Returns interpolated screen fraction for position.
-   */
-  fun getInterpolatedDetentForPosition(positionPx: Int): Float {
-    val count = detents.size
-    if (count == 0) return 0f
-
-    val segment = findSegmentForPosition(positionPx) ?: return getDetentValueForIndex(0)
-    val (fromIndex, toIndex, progress) = segment
+    val (fromIndex, toIndex, progress) = findSegmentForPosition(positionPx)
+      ?: return Pair(0f, getDetentValueForIndex(0))
 
     if (fromIndex == -1) {
-      val firstDetent = getDetentValueForIndex(0)
-      return maxOf(0f, firstDetent * (1 - progress))
+      return Pair(-progress, maxOf(0f, getDetentValueForIndex(0) * (1 - progress)))
     }
 
     val fromDetent = getDetentValueForIndex(fromIndex)
     val toDetent = getDetentValueForIndex(toIndex)
-    return fromDetent + progress * (toDetent - fromDetent)
+    return Pair(fromIndex + progress, fromDetent + progress * (toDetent - fromDetent))
   }
 
   companion object {

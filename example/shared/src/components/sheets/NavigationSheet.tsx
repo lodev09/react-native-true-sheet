@@ -1,9 +1,10 @@
 import { forwardRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import type { TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { Button } from '../Button';
+import { Text } from '../Text';
 import { GAP, SPACING } from '../../utils';
 
 interface NavigationSheetProps extends TrueSheetProps {
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    opacity: 0.6,
     marginBottom: SPACING,
   },
 });

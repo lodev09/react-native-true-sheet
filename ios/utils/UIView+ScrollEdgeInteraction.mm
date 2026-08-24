@@ -31,15 +31,37 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   objc_setAssociatedObject(self, kEdgeEffectHintKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+- (nullable UIScrollView *)edgeInteractionScrollView API_AVAILABLE(ios(26.0)) {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+  for (id<UIInteraction> interaction in self.interactions) {
+    if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
+      return ((UIScrollEdgeElementContainerInteraction *)interaction).scrollView;
+    }
+  }
+#endif
+  return nil;
+}
+
 - (void)setupEdgeInteractionWithScrollView:(nullable UIScrollView *)scrollView
                                       edge:(UIRectEdge)edge API_AVAILABLE(ios(26.0)) {
-  [self cleanupEdgeInteraction];
-
   if (!scrollView) {
+    [self cleanupEdgeInteraction];
     return;
   }
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+  // Update in place — this re-runs on every footer/header size change, and
+  // tearing the interaction down mid keyboard animation flashes the edge
+  // effect at the footer's final position.
+  for (id<UIInteraction> interaction in self.interactions) {
+    if ([interaction isKindOfClass:[UIScrollEdgeElementContainerInteraction class]]) {
+      UIScrollEdgeElementContainerInteraction *existing = (UIScrollEdgeElementContainerInteraction *)interaction;
+      existing.scrollView = scrollView;
+      existing.edge = edge;
+      return;
+    }
+  }
+
   // UIScrollEdgeElementContainerInteraction requires standard UIKit element
   // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
   // RCTViewComponentView subviews are not recognized, so we add a

@@ -61,13 +61,44 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       return bottom
     }
 
-  var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
-  var scrollViewBottomInset: Int = 0
-  var scrollableEnabled: Boolean = false
+  var absoluteFooter: Boolean = false
+
+  /**
+   * Bottom safe-area inset the footer absorbs as padding — the footer
+   * owns the sheet's bottom edge, so its background fills the inset.
+   */
+  var footerBottomInset: Int = 0
+    set(value) {
+      field = value
+      footerView?.setBottomInset(value)
+    }
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
       contentView?.scrollableOptions = value
+    }
+
+  // React tag of the user-provided scrollable within the content (see the scrollableRef prop)
+  var scrollableHandle: Int = -1
+    set(value) {
+      field = value
+      contentView?.scrollableHandle = value
+    }
+
+  /**
+   * Bottom safe-area inset the plugged scrollable applies as content padding
+   * while it can scroll (see ScrollableOptions.contentInsetAdjustment)
+   */
+  var scrollableBottomInset: Int = 0
+    set(value) {
+      field = value
+      contentView?.bottomInset = value
+    }
+
+  var hasAutoDetent = false
+    set(value) {
+      field = value
+      contentView?.hasAutoDetent = value
     }
 
   override val eventDispatcher: EventDispatcher?
@@ -80,8 +111,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   }
 
   fun setupScrollable() {
-    val bottomInset = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) scrollViewBottomInset else 0
-    contentView?.setupScrollable(scrollableEnabled, bottomInset)
+    contentView?.setupScrollable()
   }
 
   fun setupKeyboardHandler() {
@@ -99,7 +129,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       is TrueSheetContentView -> {
         child.delegate = this
         child.scrollableOptions = scrollableOptions
+        child.scrollableHandle = scrollableHandle
+        child.bottomInset = scrollableBottomInset
+        child.hasAutoDetent = hasAutoDetent
         contentView = child
+
+        // State lands before the view is attached, so pull the current value
+        contentHeight = child.naturalHeight
 
         // Children mount bottom-up, so the content subtree is complete here.
         // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
@@ -113,6 +149,7 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
       is TrueSheetFooterView -> {
         child.delegate = this
+        child.setBottomInset(footerBottomInset)
         footerView = child
       }
     }
@@ -184,6 +221,12 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     delegate?.containerViewContentDidChangeSize(width, height)
   }
 
+  override val footerKeyboardOcclusion: Int
+    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
+
+  override val hasRelativeFooter: Boolean
+    get() = footerView != null && !absoluteFooter
+
   override fun contentViewDidScroll() {
     delegate?.containerViewContentDidScroll()
   }
@@ -200,6 +243,8 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override fun footerViewDidChangeSize(width: Int, height: Int) {
     footerHeight = height
     delegate?.containerViewFooterDidChangeSize(width, height)
+    // A relative footer takes over the bottom inset — drop the scrollable's
+    contentView?.updateContentInset()
   }
 
   override fun peekViewDidChangeSize(width: Int, height: Int) {

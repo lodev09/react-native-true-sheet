@@ -15,13 +15,6 @@ fun View.isDescendantOf(ancestor: View): Boolean {
   return false
 }
 
-fun ViewGroup.smoothScrollBy(dx: Int, dy: Int) {
-  when (this) {
-    is ScrollView -> smoothScrollBy(dx, dy)
-    is NestedScrollView -> smoothScrollBy(dx, dy)
-  }
-}
-
 fun ViewGroup.smoothScrollTo(x: Int, y: Int) {
   when (this) {
     is ScrollView -> smoothScrollTo(x, y)

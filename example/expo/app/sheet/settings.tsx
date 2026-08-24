@@ -1,4 +1,4 @@
-import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 import { useRouter } from 'expo-router';
 
 import { SettingsSheetContent } from '@example/shared/screens';

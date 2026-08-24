@@ -61,16 +61,13 @@ The footer is pinned to the bottom edge of the sheet. The sheet height automatic
 
 ```tsx
 import { Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const isIPad = Platform.OS === 'ios' && Platform.isPad;
 
 const MyFooter = () => {
-  const insets = useSafeAreaInsets();
-  const bottomInset = isIPad ? 0 : insets.bottom;
 
   return (
-    <View style={{ paddingBottom: bottomInset, backgroundColor: '#333' }}>
+    <View style={{ backgroundColor: '#333' }}>
       <View style={{ height: 60, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ color: '#fff' }}>Footer Content</Text>
       </View>
@@ -85,12 +82,6 @@ const MyFooter = () => {
 ```
 
 This ensures the footer background extends into the safe area while keeping the content above the home indicator.
-
-When the keyboard opens, that bottom padding leaves a gap above the keyboard. Pass `-insets.bottom` to [`footerOptions.keyboardOffset`](../reference/configuration#footeroptions) to tuck it behind the keyboard — see [Keyboard Handling](./keyboard#footer-behavior).
-
-:::note
-On iPad, the sheet is displayed as a floating modal, so bottom padding is not needed.
-:::
 
 ## Collapsing to the Footer
 

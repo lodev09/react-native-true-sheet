@@ -18,6 +18,7 @@ export type SheetStackParamList = {
   Settings: undefined;
   Profile: undefined;
   Notifications: undefined;
+  SmallFooter: undefined;
 };
 
 export type SheetHomeStackParamList = {

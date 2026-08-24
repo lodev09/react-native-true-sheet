@@ -23,9 +23,9 @@ import {
   SPACING,
   times,
 } from '../../utils';
-import { Footer } from '../Footer';
+import { Footer, FooterPill } from '../Footer';
 import { Header } from '../Header';
-import { Button } from '../Button';
+import { Text as ThemedText } from '../Text';
 
 interface ScrollViewSheetProps extends TrueSheetProps {}
 
@@ -51,7 +51,7 @@ const HeavyItem = ({ index }: { index: number }) => {
       </Pressable>
       <TrueSheet ref={sheet} detents={[0.5]} backgroundColor={Platform.select({ android: DARK })}>
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>Sheet content</Text>
+          <ThemedText style={styles.placeholderText}>Sheet content</ThemedText>
         </View>
       </TrueSheet>
     </Pressable>
@@ -59,6 +59,7 @@ const HeavyItem = ({ index }: { index: number }) => {
 };
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
+  const scrollViewRef = useRef<ScrollView>(null);
   const [showList, setShowList] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -72,7 +73,8 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       ref={ref}
       detents={[0.8, 1]}
       name="scrollview"
-      scrollable
+      style={styles.sheet}
+      scrollableRef={scrollViewRef}
       scrollableOptions={{
         scrollingExpandsSheet: false,
         bottomScrollEdgeEffect: 'soft',
@@ -80,21 +82,23 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
-      headerStyle={styles.header}
+      headerOptions={{ position: 'absolute' }}
       footer={
-        <Footer wrapperStyle={styles.footer}>
-          <Button text="Toggle ListView" onPress={() => setShowList(!showList)} />
+        // The footer background is transparent on iOS, so it follows the theme
+        <Footer themed={Platform.OS === 'ios'}>
+          <FooterPill text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
+      footerStyle={styles.footer}
+      footerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       {...props}
     >
       {showList ? (
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={styles.content}
-          indicatorStyle="black"
-          scrollIndicatorInsets={{ bottom: FOOTER_HEIGHT }}
           keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
@@ -103,8 +107,8 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           ))}
         </ScrollView>
       ) : (
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>List is hidden</Text>
+        <View style={[styles.placeholder, styles.listPlaceholder]}>
+          <ThemedText style={styles.placeholderText}>List is hidden</ThemedText>
         </View>
       )}
     </TrueSheet>
@@ -114,17 +118,15 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
 ScrollViewSheet.displayName = 'ScrollViewSheet';
 
 const styles = StyleSheet.create({
+  sheet: {
+    flex: 1,
+  },
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
+    // The safe-area inset is applied natively (contentInsetAdjustmentBehavior)
     paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
-  },
-  header: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1,
   },
   footer: {
     backgroundColor: Platform.select({
@@ -171,8 +173,14 @@ const styles = StyleSheet.create({
     padding: SPACING,
     alignItems: 'center',
   },
+  // Clear the absolute header so the message sits in the visible area
+  listPlaceholder: {
+    paddingTop: HEADER_HEIGHT + SPACING * 2,
+  },
   placeholderText: {
-    color: 'rgba(255, 255, 255, 0.3)',
     fontSize: 14,
+    opacity: 0.5,
+    // The sheet background is fixed DARK on Android; themed elsewhere
+    ...Platform.select({ android: { color: LIGHT_GRAY } }),
   },
 });

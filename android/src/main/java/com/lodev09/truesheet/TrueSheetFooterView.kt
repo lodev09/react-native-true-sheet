@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
+import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
+import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.RootView
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
@@ -35,12 +38,46 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   RootView {
 
   var delegate: TrueSheetFooterViewDelegate? = null
+  var stateWrapper: StateWrapper? = null
 
   private val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
 
   private var lastWidth = 0
   private var lastHeight = 0
+
+  var bottomInset = 0
+    private set
+
+  /**
+   * Height the footer occupies above the keyboard — its layout height minus
+   * the safe-area inset, which rides below the keyboard's top edge while the
+   * keyboard is open (see positionFooter).
+   */
+  val keyboardOcclusionHeight: Int
+    get() = maxOf(0, height - bottomInset)
+
+  /**
+   * Tells the shadow node to pad the footer's bottom edge with the sheet's
+   * bottom safe-area inset — the footer owns the sheet's bottom edge, so it
+   * absorbs the inset and its background fills it.
+   */
+  fun setBottomInset(inset: Int) {
+    if (bottomInset == inset) return
+    bottomInset = inset
+
+    val sw = stateWrapper ?: return
+    val insetDp = bottomInset.toFloat().pxToDp()
+
+    // Synchronous update — the footer must be padded before detents are
+    // configured, otherwise the auto detent is set up an inset short
+    if (TrueSheetStateUpdater.updateFooterState(sw, insetDp)) return
+
+    // Fallback: async state update
+    val newState = WritableNativeMap()
+    newState.putDouble("bottomInset", insetDp.toDouble())
+    sw.updateState(newState)
+  }
 
   private val jsTouchDispatcher = JSTouchDispatcher(this)
   private var jsPointerDispatcher: JSPointerDispatcher? = null

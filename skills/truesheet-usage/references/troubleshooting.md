@@ -4,23 +4,43 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 
 ## Table of Contents
 
+- [Content renders with zero height or gets clipped](#content-renders-with-zero-height-or-gets-clipped)
 - [Blank screen after modal dismiss (iOS)](#blank-screen-after-modal-dismiss-ios)
+- [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
 - [Gesture handler not working (Android)](#gesture-handler-not-working-android)
 - [initialDetentIndex not working from deep link (iOS)](#initialdetentindex-not-working-from-deep-link-ios)
-- [Weird layout or render glitches](#weird-layout-or-render-glitches)
-- [FlatList scrollToEnd not working](#flatlist-scrolltoend-not-working)
+- [Gap above the keyboard](#gap-above-the-keyboard)
+- [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Overlays render behind the sheet (Android)](#overlays-render-behind-the-sheet-android)
 - [Keyboard hides input](#keyboard-hides-input)
 - [Sheet doesn't build (Xcode version)](#sheet-doesnt-build-xcode-version)
 - [EAS Build fails](#eas-build-fails)
+- [Patched react-native-screens not applied on EAS](#patched-react-native-screens-not-applied-on-eas)
 
 ---
+
+## Content renders with zero height or gets clipped
+
+**Symptom:** `flex: 1` children render with zero height, or content taller than the sheet gets clipped.
+
+**Cause:** In v4, the sheet's content lays out naturally — it wraps its children's height like a regular view, instead of filling the sheet.
+
+**Fixes:**
+
+1. **`flex: 1` children collapse** — pass `flex: 1` via the sheet's `style` prop so the content fills the sheet's visible height:
+   ```tsx
+   <TrueSheet style={{ flex: 1 }} detents={[0.5, 1]}>
+     <View style={{ flex: 1 }}>{/* now fills */}</View>
+   </TrueSheet>
+   ```
+2. **Content taller than the sheet gets clipped** — use a ScrollView plugged via `scrollableRef` with `flex: 1` on the sheet's `style`, or size your layout with `flexGrow`, `flexBasis`, or fixed heights.
+3. **Still misbehaving?** Move the sheet higher in the component tree — a container may interfere with the sheet's content rendering.
 
 ## Blank screen after modal dismiss (iOS)
 
 **Symptom:** Screen goes blank after dismissing a React Native `Modal` when a sheet is also visible.
 
-**Cause:** React Native bug — dismissing a Modal while a sheet is on top can blank the underlying view.
+**Cause:** React Native bug — dismissing a Modal with another view controller presented on top only dismisses the topmost one, leaving the Modal inconsistent. A fix is pending upstream ([PR #55005](https://github.com/facebook/react-native/pull/55005)).
 
 **Fix:** Dismiss the sheet first, then dismiss the Modal:
 
@@ -29,11 +49,19 @@ await sheet.current?.dismiss()
 setModalVisible(false)
 ```
 
+## Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)
+
+**Symptom:** On React Native 0.83–0.85, the sheet snaps back to its detent without animation when the keyboard is dismissed.
+
+**Cause:** RN 0.83 made `canBecomeFirstResponder` return `YES` on every `RCTViewComponentView`, disrupting `UISheetPresentationController`'s keyboard avoidance animation. Fixed upstream in RN 0.86.
+
+**Fix:** Apply the [react-native patch](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-npm-0.85.3.patch) that gates it behind the `enableImperativeFocus` feature flag. Remove the patch once on 0.86+.
+
 ## Gesture handler not working (Android)
 
 **Symptom:** Gestures (swipe, tap) from `react-native-gesture-handler` don't fire inside the sheet.
 
-**Fix:** Wrap sheet content in `GestureHandlerRootView` with `flexGrow: 1` (not `flex: 1`):
+**Fix:** Wrap sheet content in `GestureHandlerRootView` with `flexGrow: 1`:
 
 ```tsx
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -45,47 +73,50 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 </TrueSheet>
 ```
 
-The Android sheet renders in its own `CoordinatorLayout`, which needs a fresh gesture root.
+Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural height by default, so a `flex: 1` child collapses to zero height. Alternatively, pass `flex: 1` via the sheet's `style` prop to fill the sheet.
 
 ## initialDetentIndex not working from deep link (iOS)
 
-**Symptom:** `initialDetentIndex` has no effect when the app is opened via a deep link from a cold start.
+**Symptom:** `initialDetentIndex` has no effect when the app is opened via a deep link to a modal screen from a cold start.
 
-**Cause:** On iOS, the sheet component may mount before the navigation tree is ready. `initialDetentIndex` fires too early.
+**Cause:** The view wasn't attached to the correct window during the initial render.
 
-**Fix:** Use `useFocusEffect` to present the sheet when the screen actually gains focus:
+**Fix:** Use `useFocusEffect` to present when the screen gains focus, conditioned on whether the initial present succeeded:
 
 ```tsx
 import { useFocusEffect } from '@react-navigation/native'
 
+const [didPresent, setDidPresent] = useState(false)
+
 useFocusEffect(
   useCallback(() => {
-    sheet.current?.present(1)
-  }, [])
+    if (!didPresent) {
+      sheet.current?.present()
+    }
+  }, [didPresent])
 )
+
+<TrueSheet ref={sheet} initialDetentIndex={0} onDidPresent={() => setDidPresent(true)}>
 ```
 
-## Weird layout or render glitches
+## Gap above the keyboard
 
-**Symptom:** Content appears squished, overlapping, or sized incorrectly inside the sheet.
+**Symptom:** A gap appears between the keyboard and the scroll content or footer.
+
+**Cause:** Your content or footer renders its own bottom padding, which stacks on top of the sheet's keyboard inset.
 
 **Fixes:**
 
-1. **Minimize `flex: 1`** — Sheets have a defined height from detents. `flex: 1` inside a sheet can cause unexpected stretching. Use `flexGrow` or fixed `height` instead.
-2. **Move the sheet higher in the component tree** — If the sheet is deeply nested, it may inherit layout constraints that interfere with its sizing.
-3. **Use `header` and `footer` props** — Don't manually position fixed elements with `position: 'absolute'`. The native header/footer system handles layout math correctly.
+- Scroll content: pass a negative `keyboardOffset` in `scrollableOptions` to cancel the padding, e.g. `scrollableOptions={{ keyboardOffset: -insets.bottom }}`.
+- Absolute footer: pass a negative `keyboardOffset` in `footerOptions` to tuck the padding behind the keyboard, e.g. `footerOptions={{ position: 'absolute', keyboardOffset: -16 }}`.
 
-## FlatList scrollToEnd not working
+## Doubled bottom padding in footer or scroll content
 
-**Symptom:** `scrollToEnd()` on a FlatList inside a `scrollable` TrueSheet doesn't scroll to the true end.
+**Symptom:** Extra spacing at the bottom of the footer or the last scroll item.
 
-**Cause:** The native scroll container modifies the frame, and `scrollToEnd()` uses JS-side content metrics that don't account for this.
+**Cause:** v4 handles the bottom safe-area inset natively — the footer absorbs it as padding, and a plugged scrollable gets it while the content can scroll. Manual `useSafeAreaInsets()` padding gets applied twice.
 
-**Fix:** Use `scrollToOffset` with a large value:
-
-```tsx
-flatListRef.current?.scrollToOffset({ offset: 99999, animated: true })
-```
+**Fix:** Remove manual safe-area padding from the footer and scroll content. To manage it yourself instead, opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}` (scrollable) or `insetAdjustment="never"` (whole sheet).
 
 ## Overlays render behind the sheet (Android)
 
@@ -102,11 +133,11 @@ flatListRef.current?.scrollToOffset({ offset: 99999, animated: true })
 TrueSheet has built-in keyboard avoidance — this usually means something else is wrong:
 
 1. **Don't use `autoFocus`** on TextInputs. Focus the input in `onDidPresent` instead.
-2. **For scrollable sheets**, add `keyboardScrollOffset` for extra padding:
+2. **Plug the scroll view via `scrollableRef`** — the sheet auto-scrolls to keep the focused input visible. Add `keyboardScrollOffset` for extra spacing:
    ```tsx
-   <TrueSheet scrollable scrollableOptions={{ keyboardScrollOffset: 16 }}>
+   <TrueSheet scrollableRef={scrollableRef} scrollableOptions={{ keyboardScrollOffset: 16 }}>
    ```
-3. **Footer repositions automatically** above the keyboard — no extra work needed.
+3. **Footer behavior**: an **absolute** footer (`footerOptions={{ position: 'absolute' }}`) rises above the keyboard automatically; a **relative** footer (default) stays in the layout flow and is covered by the keyboard until it hides.
 
 ## Sheet doesn't build (Xcode version)
 
@@ -116,7 +147,7 @@ Check your Xcode version: `xcodebuild -version`
 
 ## EAS Build fails
 
-For Expo EAS builds, ensure you're using a recent enough build image:
+For Expo EAS builds, ensure you're using a build image with Xcode 26.1+:
 
 ```json
 // eas.json
@@ -131,4 +162,33 @@ For Expo EAS builds, ensure you're using a recent enough build image:
 }
 ```
 
-This ensures Xcode 26.1+ is available during the build.
+## Patched react-native-screens not applied on EAS
+
+**Symptom:** On Expo SDK 56+ EAS builds, the sheet dismisses when navigating (or a full-screen modal fails to present over it), even though it works locally with the [react-native-screens patch](./advanced-patterns.md#navigating-from-sheets) applied.
+
+**Cause:** Expo SDK 56+ ships `react-native-screens` as a precompiled XCFramework on EAS — patches applied via `patch-package`/`pnpm patch`/Yarn `patches` are silently ignored, while local builds compile from source.
+
+**Fix:** Build from source. Either disable precompiled modules per profile in `eas.json`:
+
+```json
+{
+  "build": {
+    "development": { "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" } },
+    "production": { "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" } }
+  }
+}
+```
+
+Or opt out only `react-native-screens` in `package.json` (keeps everything else precompiled):
+
+```json
+{
+  "expo": {
+    "autolinking": {
+      "ios": { "buildFromSource": ["react-native-screens"] }
+    }
+  }
+}
+```
+
+Avoid `ios.buildReactNativeFromSource: true` — it rebuilds RN core and is much slower.

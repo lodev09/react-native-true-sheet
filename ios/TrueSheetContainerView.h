@@ -16,7 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ScrollableOptions : NSObject
 
+@property (nonatomic, assign) BOOL contentInsetAdjustment;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
+@property (nonatomic, assign) CGFloat keyboardOffset;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) facebook::react::TrueSheetViewTopScrollEdgeEffect topScrollEdgeEffect;
 @property (nonatomic, assign) facebook::react::TrueSheetViewBottomScrollEdgeEffect bottomScrollEdgeEffect;
@@ -46,19 +48,32 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<TrueSheetContainerViewDelegate> delegate;
 
 /**
- * Enable scrollable content
- */
-@property (nonatomic, assign) BOOL scrollableEnabled;
-
-/**
- * Inset adjustment mode for scrollable content
- */
-@property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
-
-/**
  * Options for scrollable behavior
  */
 @property (nonatomic, strong, nullable) ScrollableOptions *scrollableOptions;
+
+/**
+ * React tag of the user-provided scrollable within the content (see the `scrollableRef` prop)
+ */
+@property (nonatomic, assign) NSInteger scrollableHandle;
+
+/**
+ * Whether the resolved scrollable's `contentInsetAdjustmentBehavior` is set to
+ * `automatic` — already gated by the sheet's `insetAdjustment`
+ */
+@property (nonatomic, assign) BOOL contentInsetAdjustment;
+
+/**
+ * Whether the sheet has an `auto` detent — bounds the detected scrollable's
+ * viewport to the container so the sheet height can derive from its content size
+ */
+@property (nonatomic, assign) BOOL hasAutoDetent;
+
+/**
+ * Bottom safe-area inset the footer absorbs as padding — the footer
+ * owns the sheet's bottom edge, so its background fills the inset
+ */
+@property (nonatomic, assign) CGFloat footerBottomInset;
 
 /**
  * Returns the current content height
@@ -76,6 +91,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)footerHeight;
 
 /**
+ * Returns the bottom inset currently baked into the footer's height
+ */
+- (CGFloat)footerAppliedBottomInset;
+
+/**
  * Returns the current height of the peek view within the content
  */
 - (CGFloat)peekContentHeight;
@@ -84,11 +104,6 @@ NS_ASSUME_NONNULL_BEGIN
  * Registers a peek view found within the content subtree
  */
 - (void)attachPeekView:(TrueSheetPeekView *)peekView;
-
-/**
- * Updates footer layout constraints if needed
- */
-- (void)layoutFooter;
 
 /**
  * Re-applies the footer's keyboard slide to reflect a live `keyboardOffset` change.

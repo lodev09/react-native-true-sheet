@@ -1,9 +1,9 @@
-import type { ParamListBase } from '@react-navigation/core';
+import type { NavigatorArgs } from 'standard-navigation';
 
 import type {
-  TrueSheetDescriptorMap,
-  TrueSheetNavigationHelpers,
-  TrueSheetNavigationState,
+  TrueSheetNavigationOptions,
+  TrueSheetNavigatorContentExtraProps,
+  TrueSheetStandardEventMap,
 } from './types';
 import { TrueSheetScreen, type TrueSheetScreenProps } from './screen';
 
@@ -22,15 +22,22 @@ const DEFAULT_DETENTS: ('auto' | number)[] = ['auto'];
 const clampDetentIndex = (index: number, detentsLength: number): number =>
   Math.min(index, Math.max(detentsLength - 1, 0));
 
-interface TrueSheetViewProps {
-  state: TrueSheetNavigationState<ParamListBase>;
-  navigation: TrueSheetNavigationHelpers;
-  descriptors: TrueSheetDescriptorMap;
-}
+export type TrueSheetNavigatorContentProps = NavigatorArgs<
+  TrueSheetNavigationOptions,
+  TrueSheetStandardEventMap
+> &
+  TrueSheetNavigatorContentExtraProps;
 
-export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewProps) => {
-  // First route is the base screen, rest are sheets
-  const [baseRoute, ...sheetRoutes] = state.routes;
+export const TrueSheetNavigatorContent = ({
+  routes,
+  dispatch,
+  descriptors,
+  emitter,
+}: TrueSheetNavigatorContentProps) => {
+  // First route is the base screen, rest are sheets.
+  // Rendered from the raw routes (not the standard state) so custom fields are
+  // available and preloaded routes never present as sheets.
+  const [baseRoute, ...sheetRoutes] = routes;
 
   const baseDescriptor = baseRoute ? descriptors[baseRoute.key] : null;
 
@@ -47,7 +54,7 @@ export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewP
           return null;
         }
 
-        const { options, navigation: screenNavigation, render } = descriptor;
+        const { options, render } = descriptor;
         const {
           detentIndex = 0,
           detents = DEFAULT_DETENTS,
@@ -67,8 +74,8 @@ export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewP
               detentIndex={resolvedIndex}
               resizeKey={route.resizeKey}
               detents={detents}
-              navigation={screenNavigation}
-              emit={navigation.emit}
+              dispatch={dispatch}
+              emit={emitter.emit}
               positionChangeHandler={positionChangeHandler}
               {...sheetProps}
             >
@@ -85,8 +92,8 @@ export const TrueSheetView = ({ state, navigation, descriptors }: TrueSheetViewP
             detentIndex={resolvedIndex}
             resizeKey={route.resizeKey}
             detents={detents}
-            navigation={screenNavigation}
-            emit={navigation.emit}
+            dispatch={dispatch}
+            emit={emitter.emit}
             positionChangeHandler={positionChangeHandler}
             {...sheetProps}
           >

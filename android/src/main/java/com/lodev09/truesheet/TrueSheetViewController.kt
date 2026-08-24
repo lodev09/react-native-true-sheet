@@ -37,6 +37,7 @@ import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
+import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
@@ -162,6 +163,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var pendingDetentIndex: Int = -1
 
   private var interactionState: InteractionState = InteractionState.Idle
+
+  // A content/header/footer size change arrived mid-drag — reconfiguring then
+  // would reset behavior state and kill the gesture, so it's applied on settle.
+  private var hasPendingSizeChange = false
   internal var isBeingDismissed = false
     private set
   var wasHiddenByScreen = false
@@ -221,14 +226,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var sheetBackgroundColor: Int? = null
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
-  var scrollable: Boolean = false
-
   var scrollableOptions: ScrollableOptions? = null
     set(value) {
       field = value
       behavior?.scrollingExpandsSheet = value?.scrollingExpandsSheet ?: true
-      if (isPresented) sheetView?.let { updateScrollExpansionPadding(it.top) }
     }
+
+  // React tag of the user-provided scrollable within the content (see the scrollableRef prop)
+  var scrollableHandle: Int = -1
 
   override var sheetCornerRadius: Float = DEFAULT_CORNER_RADIUS.dpToPx()
     set(value) {
@@ -273,9 +278,29 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val screenWidth: Int
     get() = ScreenUtils.getScreenWidth(reactContext)
 
+  // Cached per layout/configuration pass — the WindowManager and
+  // rootWindowInsets queries behind these allocate, and they're read many
+  // times per animation frame (position emission, detent interpolation,
+  // stacked sheet sync)
+  private var cachedRealScreenHeight: Int = 0
+  private var cachedInsets: Insets? = null
+
+  private fun invalidateScreenMetrics() {
+    cachedRealScreenHeight = 0
+    cachedInsets = null
+  }
+
   // Includes system bars for accurate positioning
   override val realScreenHeight: Int
-    get() = ScreenUtils.getRealScreenHeight(reactContext)
+    get() {
+      if (cachedRealScreenHeight == 0) {
+        cachedRealScreenHeight = ScreenUtils.getRealScreenHeight(reactContext)
+      }
+      return cachedRealScreenHeight
+    }
+
+  private val insets: Insets
+    get() = cachedInsets ?: ScreenUtils.getInsets(reactContext).also { cachedInsets = it }
 
   // Content Measurements
   // Cached values used during dismiss when container is unmounted
@@ -290,8 +315,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val headerHeight: Int
     get() = containerView?.headerHeight ?: cachedHeaderHeight
 
+  override var absoluteHeader: Boolean = false
+
   override val footerHeight: Int
     get() = containerView?.footerHeight ?: cachedFooterHeight
+
+  override var absoluteFooter: Boolean = false
 
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
@@ -314,10 +343,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   val bottomInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).bottom else 0
+    get() = if (edgeToEdgeEnabled) insets.bottom else 0
 
   override val topInset: Int
-    get() = if (edgeToEdgeEnabled) ScreenUtils.getInsets(reactContext).top else 0
+    get() = if (edgeToEdgeEnabled) insets.top else 0
 
   override val contentBottomInset: Int
     get() = if (insetAdjustment == TrueSheetInsetAdjustment.AUTOMATIC) bottomInset else 0
@@ -330,6 +359,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
   // Sheet State
+  val isSettling: Boolean
+    get() = behavior?.state == BottomSheetBehavior.STATE_SETTLING
+
   val isExpanded: Boolean
     get() {
       val sheetTop = sheetView?.top ?: return false
@@ -391,6 +423,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView = null
 
     interactionState = InteractionState.Idle
+    hasPendingSizeChange = false
     isBeingDismissed = false
     isPresented = false
     isSheetVisible = false
@@ -439,6 +472,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
 
   override fun coordinatorLayoutDidLayout(changed: Boolean) {
+    if (changed) invalidateScreenMetrics()
+
     // Reposition footer when layout changes
     if (isPresented && changed) {
       positionFooter()
@@ -446,6 +481,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   override fun coordinatorLayoutDidChangeConfiguration() {
+    invalidateScreenMetrics()
     if (!isPresented) return
 
     sheetView?.updateGravity()
@@ -567,27 +603,26 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       else -> { }
     }
 
-    updateScrollExpansionPadding(sheetView.top)
     emitChangePositionDelegate(sheetView.top)
 
-    // On older APIs, use onSlide for footer positioning during keyboard transitions
-    val useLegacyKeyboardHandling = Build.VERSION.SDK_INT < Build.VERSION_CODES.R
-    if (!isKeyboardTransitioning || useLegacyKeyboardHandling) {
-      positionFooter(slideOffset)
+    // Drive the parent's stack translation from our actual frame position —
+    // an independently-timed animation lags behind (e.g. auto detent shrink)
+    // and reveals the parent above this sheet's top edge. Skipped while
+    // dragging so the parent stays put during drag-to-dismiss.
+    if (!isPresentAnimating && interactionState !is InteractionState.Dragging) {
+      syncParentTranslation(sheetView.top)
     }
+
+    // Position on every slide frame — during keyboard transitions the IME
+    // animation callbacks are sparser than the sheet's settle frames, and the
+    // footer rides the sheet between them, jittering against the keyboard.
+    // positionFooter derives from current state, so double-driving it with
+    // keyboardDidChangeHeight is harmless.
+    positionFooter(slideOffset)
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
     }
-  }
-
-  private fun updateScrollExpansionPadding(sheetTop: Int) {
-    if (!scrollable) {
-      containerView?.contentView?.updateScrollExpansionPadding(0)
-      return
-    }
-    val expandedOffset = behavior?.expandedOffset ?: return
-    containerView?.contentView?.updateScrollExpansionPadding(maxOf(0, sheetTop - expandedOffset))
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
@@ -597,7 +632,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // whether settled at the target, interrupted by drag, or superseded.
     pendingDetentIndex = -1
 
-    val index = detentCalculator.getDetentIndexForState(newState) ?: return
+    val index = detentCalculator.getDetentIndexForState(newState) ?: run {
+      // Unmapped settle — end any drag anyway so deferred size changes aren't
+      // dropped forever (a leaked Dragging state skips every reconfigure)
+      if (interactionState is InteractionState.Dragging) {
+        interactionState = InteractionState.Idle
+      }
+      flushPendingSizeChange()
+      return
+    }
     val position = getPositionDpForView(sheetView)
     val detentInfo = DetentInfo(index, position)
 
@@ -637,11 +680,22 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
+    // Settled — resize the container to the settled detent (applies deferred shrinks)
+    updateStateDimensions()
+
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
     }
 
     TrueSheetStackManager.updateBackgroundAccessibility()
+
+    flushPendingSizeChange()
+  }
+
+  private fun flushPendingSizeChange() {
+    if (!hasPendingSizeChange) return
+    hasPendingSizeChange = false
+    setupSheetDetentsForSizeChange()
   }
 
   // =============================================================================
@@ -703,6 +757,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheet = this.sheetView ?: return
     if (isPresented) return
 
+    invalidateScreenMetrics()
     shouldAnimatePresent = animated
     currentDetentIndex = detentIndex
     interactionState = InteractionState.Idle
@@ -746,6 +801,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     pendingDetentIndex = detentIndex
+    updateStateDimensions(deferShrink = true)
     setupDimmedBackground()
     setStateForDetentIndex(detentIndex)
     resizePromise?.invoke()
@@ -896,7 +952,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       animate = isPresented
     )
 
-    updateStateDimensions(expandedOffset)
+    updateStateDimensions()
 
     if (isPresented && applyState) {
       // Prefer the pending target while a resize animation is in flight so a
@@ -926,6 +982,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
+    // Defer while dragging — the size change is driven by the drag itself (the
+    // container tracks the sheet's visible height), and reconfiguring resets
+    // behavior state, killing the gesture. Applied on settle so a real content
+    // change mid-drag (e.g. items removed from a list) isn't lost.
+    if (interactionState is InteractionState.Dragging) {
+      hasPendingSizeChange = true
+      return
+    }
+    hasPendingSizeChange = false
+
     setupSheetDetents()
     positionFooter()
   }
@@ -1010,15 +1076,35 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val footerView = containerView?.footerView ?: return
     val sheet = sheetView ?: return
 
+    // A relative footer is laid out by Yoga (pinned to the container's bottom
+    // edge) and stays in the layout flow behind the keyboard — only an
+    // absolute footer floats above it
+    if (!absoluteFooter) {
+      footerView.translationY = 0f
+      return
+    }
+
+    // The footer's absorbed safe-area inset rides below the keyboard's top
+    // edge — its content stays flush with the keyboard without dropping the
+    // inset padding from the layout, which would jump at the transition edges
+    val keyboardShift = if (currentKeyboardInset > 0) {
+      maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
+    } else {
+      0
+    }
+
     val footerHeight = footerView.height
     val sheetHeight = sheet.height
     val sheetTop = sheet.top
 
-    val keyboardShift = if (currentKeyboardInset > 0) maxOf(0, currentKeyboardInset + footerKeyboardOffset) else 0
     var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
 
-    // Adjust during dismiss animation when slideOffset is negative
-    if (slideOffset != null && slideOffset < 0) {
+    // Adjust during dismiss animation when slideOffset is negative. Skipped
+    // while the keyboard is open — the detents collapse to the expanded
+    // position, so any downward drag reads as a negative slideOffset and the
+    // adjustment would sink the footer behind the keyboard, snapping back up
+    // when the keyboard detents reset on release.
+    if (slideOffset != null && slideOffset < 0 && keyboardShift == 0) {
       footerY -= (footerHeight * slideOffset)
     }
 
@@ -1068,9 +1154,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
-          setupSheetDetents()
+          // Commit the target index first so the container grows before the sheet expands
           currentDetentIndex = detents.size - 1
-          setStateForDetentIndex(currentDetentIndex)
+          setupSheetDetents()
+          positionFooter()
           updateDimAmount(animated = true)
         }
 
@@ -1088,6 +1175,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             }
           }
 
+          // Same-frame reposition — the reconfigure above shrinks the container
+          // to the target detent, which yanks the bottom-pinned footer up until
+          // the next keyboard animation frame repositions it.
+          positionFooter()
           updateDimAmount(
             sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
             animated = true
@@ -1120,6 +1211,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()
+            positionFooter()
           }
         }
       }
@@ -1188,6 +1280,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
 
+    updateStateDimensionsForDrag(sheetView.top)
+
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
@@ -1228,8 +1322,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     lastEmittedPositionPx = currentTop
     val visibleHeight = realScreenHeight - currentTop
     val position = detentCalculator.getPositionDp(visibleHeight)
-    val interpolatedIndex = detentCalculator.getInterpolatedIndexForPosition(currentTop)
-    val detent = detentCalculator.getInterpolatedDetentForPosition(currentTop)
+    val (interpolatedIndex, detent) = detentCalculator.getInterpolatedPositionInfo(currentTop)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
   }
 
@@ -1256,23 +1349,78 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.maxWidth = newMaxWidth
   }
 
-  private fun updateStateDimensions(expandedOffset: Int? = null) {
-    val offset = expandedOffset ?: (realScreenHeight - detentCalculator.getDetentHeight(detents.last()))
-    val topOffset = if (offset == 0) topInset else 0
-    val newHeight = realScreenHeight - offset - topOffset
-    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
-    val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
-    val newWidth = minOf(screenWidth, effectiveMaxWidth)
+  /**
+   * Updates the Fabric state with the current/target detent size so Yoga sizes
+   * the container to the sheet's visible height.
+   *
+   * Unlike iOS, resize animations run over multiple frames (ViewDragHelper), so
+   * shrinking is deferred to settle ([deferShrink]) when a resize animation is
+   * about to run — growing applies immediately so content is laid out before
+   * the sheet reveals it.
+   */
+  private fun updateStateDimensions(deferShrink: Boolean = false) {
+    if (detents.isEmpty()) return
 
-    if (lastStateWidth != newWidth || lastStateHeight != newHeight) {
-      lastStateWidth = newWidth
-      lastStateHeight = newHeight
-      delegate?.viewControllerDidChangeSize(newWidth, newHeight)
-    }
+    val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
+      .coerceIn(0, detents.size - 1)
+    val maxAvailableHeight = realScreenHeight - topInset
+    val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
+    val newWidth = getStateWidth()
+
+    if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
+
+    setStateDimensions(newWidth, newHeight)
   }
 
-  fun translateSheet(translationY: Int, onEnd: (() -> Unit)? = null) {
+  /**
+   * Tracks the sheet's visible height during drag (and the post-release settle
+   * animation) so the container resizes with the finger, like iOS. Clamped to the
+   * smallest detent — dragging below it slides the sheet out without resizing.
+   */
+  private fun updateStateDimensionsForDrag(sheetTop: Int) {
+    if (detents.isEmpty()) return
+
+    val maxAvailableHeight = realScreenHeight - topInset
+    val minHeight = minOf(detentCalculator.getDetentHeight(detents.first()), maxAvailableHeight)
+    val newHeight = detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight)
+
+    setStateDimensions(getStateWidth(), newHeight)
+  }
+
+  private fun getStateWidth(): Int {
+    val applyMaxWidth = maxContentWidth != null && !ScreenUtils.isPortraitPhone(reactContext)
+    val effectiveMaxWidth = if (applyMaxWidth) maxContentWidth!! else DEFAULT_MAX_WIDTH.dpToPx().toInt()
+    return minOf(screenWidth, effectiveMaxWidth)
+  }
+
+  private fun setStateDimensions(width: Int, height: Int) {
+    if (lastStateWidth == width && lastStateHeight == height) return
+
+    lastStateWidth = width
+    lastStateHeight = height
+    delegate?.viewControllerDidChangeSize(width, height)
+  }
+
+  /**
+   * Realtime (non-animated) counterpart of TrueSheetStackManager.updateParentTranslation,
+   * driven by onSlide so the parent tracks this sheet's actual position.
+   */
+  private fun syncParentTranslation(sheetTop: Int) {
+    val parent = parentSheetView ?: return
+    val minSheetTop = detentCalculator.getSheetTopForDetentIndex(0)
+    parent.syncTranslationForChild(sheetTop, minSheetTop)
+  }
+
+  fun translateSheet(translationY: Int, animated: Boolean = true, onEnd: (() -> Unit)? = null) {
     val sheet = sheetView ?: return
+
+    if (!animated) {
+      sheet.animate().cancel()
+      sheet.translationY = translationY.toFloat()
+      emitChangePositionDelegate(sheet.top + translationY)
+      onEnd?.invoke()
+      return
+    }
 
     sheet.animate()
       .translationY(translationY.toFloat())

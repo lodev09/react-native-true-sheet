@@ -10,8 +10,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
-import { useColorScheme, useWindowDimensions, View } from 'react-native';
+import type { DimensionValue, LayoutChangeEvent } from 'react-native';
+import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import type {
   DetentChangeEvent,
@@ -51,8 +51,20 @@ import {
   DEFAULT_GRABBER_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { getDOMElement } from './web/dom';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
+
+// Resolves the user's `scrollableRef` to its scrollable DOM element — RN-web
+// ScrollView refs expose the scroll node directly (with helpers attached);
+// list refs (e.g. FlatList) expose it via getScrollableNode(). The node's
+// first child is the content container.
+const getScrollableElement = (scrollable: unknown): HTMLElement | null => {
+  if (!scrollable) return null;
+  if (scrollable instanceof HTMLElement) return scrollable;
+  const node = (scrollable as { getScrollableNode?: () => unknown }).getScrollableNode?.();
+  return node instanceof HTMLElement ? node : null;
+};
 
 const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
@@ -67,6 +79,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     maxContentWidth,
     anchor = 'center',
     anchorOffset = DEFAULT_ANCHOR_OFFSET,
+    scrollableRef,
+    scrollableOptions,
     grabber = true,
     grabberOptions,
     accessibilityOptions,
@@ -76,9 +90,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     initialDetentIndex = -1,
     header,
     headerStyle,
+    headerOptions,
     footer,
     footerStyle,
-    scrollable = false,
+    footerOptions,
     presentation = 'page',
     detached = false,
     detachedOffset = DEFAULT_DETACHED_OFFSET,
@@ -150,6 +165,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const validDetentsRef = useRef(validDetents);
   validDetentsRef.current = validDetents;
+
+  const hasAutoDetent = validDetents.includes('auto');
 
   const handleSetActiveSnapPoint = useCallback((snapPoint: number | string | null) => {
     setActiveSnapPoint(
@@ -260,9 +277,160 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const peekElRef = useRef<View>(null);
   const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
+  // An absolute (floating) header overlaps the content, so it contributes no
+  // height to the 'auto' detent measurement.
+  const absoluteHeader = headerOptions?.position === 'absolute';
+  const absoluteHeaderRef = useRef(absoluteHeader);
+  absoluteHeaderRef.current = absoluteHeader;
+
+  const resolvedHeaderStyle = absoluteHeader ? [absoluteHeaderStyle, headerStyle] : headerStyle;
+
+  // Same for an absolute (floating) footer — rendered via vaul's
+  // `detachedSiblings` instead of in the content flow.
+  const absoluteFooter = footerOptions?.position === 'absolute';
+  const absoluteFooterRef = useRef(absoluteFooter);
+  absoluteFooterRef.current = absoluteFooter;
+
+  // The footer owns the sheet's bottom edge, so it absorbs the bottom
+  // safe-area inset as padding (on top of its own) — mirrors native, where the
+  // footer shadow node pads the inset so its background fills it.
+  const footerOwnsInset = Boolean(footer) && insetAdjustment === 'automatic';
+  const resolvedFooterStyle = useMemo(() => {
+    if (!footerOwnsInset) return footerStyle;
+
+    const flat = StyleSheet.flatten(footerStyle);
+    const base = flat?.paddingBottom ?? flat?.paddingVertical ?? flat?.padding;
+    const baseCss =
+      typeof base === 'number' ? `${base}px` : typeof base === 'string' ? base : '0px';
+    return [
+      footerStyle,
+      {
+        // RN types don't model CSS calc(), but RN-web passes it through
+        paddingBottom: `calc(${baseCss} + env(safe-area-inset-bottom, 0px))` as DimensionValue,
+      },
+    ];
+  }, [footerOwnsInset, footerStyle]);
+
+  // A relative footer is laid out below the content, so it's pushed off-screen
+  // at the peek detent and contributes no height.
   const peekHeight =
-    (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
-    DEFAULT_PEEK_HEIGHT;
+    (header ? headerHeight : 0) +
+      (footer && absoluteFooter ? footerHeight : 0) +
+      peekContentHeight || DEFAULT_PEEK_HEIGHT;
+
+  // Web mirror of native's scrollable handling for 'auto' detents: a plugged
+  // scrollable keeps the sized (bounded) layout so its viewport is capped to
+  // the visible sheet and can scroll, while the 'auto' height is measured with
+  // the viewport replaced by the scrollable's content size — mirrors native
+  // `naturalHeight`.
+  const [hasBoundedScrollable, setHasBoundedScrollable] = useState(false);
+  const [scrollableAutoHeight, setScrollableAutoHeight] = useState(0);
+  const detectedScrollerRef = useRef<HTMLElement | null>(null);
+
+  // Natural content height (header + content + footer, with a detected
+  // scrollable's viewport replaced by its content size) — the height the
+  // content wants regardless of the sheet's bounds.
+  const measureNaturalHeight = useCallback(() => {
+    const contentEl = getDOMElement(contentRef.current);
+    if (!contentEl || !contentEl.isConnected) return 0;
+    const headerEl = absoluteHeaderRef.current ? null : getDOMElement(headerElRef.current);
+    const footerEl = absoluteFooterRef.current ? null : getDOMElement(footerElRef.current);
+    let height =
+      (headerEl?.offsetHeight ?? 0) + (footerEl?.offsetHeight ?? 0) + contentEl.offsetHeight;
+    const scroller = detectedScrollerRef.current;
+    const scrollContent = scroller?.firstElementChild;
+    if (scroller?.isConnected && scrollContent instanceof HTMLElement) {
+      height += scrollContent.offsetHeight - scroller.clientHeight;
+    }
+    return Math.max(0, height);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || !hasAutoDetent) return undefined;
+
+    let canceled = false;
+    let rafId = 0;
+    let mutationObserver: MutationObserver | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const attach = () => {
+      if (canceled) return;
+      const drawerEl = drawerContentRef.current;
+      if (!drawerEl || !drawerEl.isConnected) {
+        // Radix Presence defers the portal mount; poll until the drawer is live.
+        rafId = window.requestAnimationFrame(attach);
+        return;
+      }
+
+      const measure = () => setScrollableAutoHeight(measureNaturalHeight());
+
+      let observed: {
+        contentEl: HTMLElement | null;
+        headerEl: HTMLElement | null;
+        scroller: HTMLElement;
+        scrollContent: Element | null;
+      } | null = null;
+
+      // (Re)resolve the plugged scrollable and observe the nodes whose size
+      // feeds the natural height — content growth inside a bounded scroller is
+      // invisible to the sheet's own layout (mirrors native's contentSize
+      // observation). Resolves the content node live: the layout-branch swap
+      // (natural flow ↔ sized) remounts it.
+      const observe = () => {
+        const contentEl = getDOMElement(contentRef.current);
+        const headerEl = getDOMElement(headerElRef.current);
+
+        // Skip mutations that don't change the observed topology — e.g. a
+        // virtualized list mounting rows inside the plugged scroller. Size
+        // changes are already covered by the ResizeObserver.
+        if (
+          observed &&
+          observed.contentEl === contentEl &&
+          contentEl?.isConnected &&
+          observed.headerEl === headerEl &&
+          observed.scroller.isConnected &&
+          observed.scrollContent === observed.scroller.firstElementChild
+        ) {
+          return;
+        }
+
+        const resolved =
+          contentEl && contentEl.isConnected ? getScrollableElement(scrollableRef?.current) : null;
+        const scroller = resolved?.isConnected ? resolved : null;
+        detectedScrollerRef.current = scroller;
+        setHasBoundedScrollable(scroller != null);
+        observed = scroller
+          ? { contentEl, headerEl, scroller, scrollContent: scroller.firstElementChild }
+          : null;
+
+        resizeObserver?.disconnect();
+        resizeObserver = new ResizeObserver(measure);
+        if (contentEl?.isConnected) resizeObserver.observe(contentEl);
+        if (headerEl) resizeObserver.observe(headerEl);
+        if (scroller) {
+          resizeObserver.observe(scroller);
+          if (scroller.firstElementChild) resizeObserver.observe(scroller.firstElementChild);
+        }
+        measure();
+      };
+
+      observe();
+      // Watch the whole drawer subtree — catches the scrollable mounting/
+      // unmounting AND the layout-branch swap, which remounts the content node
+      // (a content-scoped observer would go stale after the swap).
+      mutationObserver = new MutationObserver(observe);
+      mutationObserver.observe(drawerEl, { childList: true, subtree: true });
+    };
+
+    rafId = window.requestAnimationFrame(attach);
+
+    return () => {
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
+      mutationObserver?.disconnect();
+      resizeObserver?.disconnect();
+    };
+  }, [isOpen, hasAutoDetent, measureNaturalHeight, scrollableRef]);
 
   // Below the last detent a vertical touch pan moves the sheet, not the
   // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
@@ -365,15 +533,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       inputs.effectiveMaxContentHeight !== undefined
         ? Math.min(effectiveH, inputs.effectiveMaxContentHeight)
         : effectiveH;
-    // 'auto' resolves to the auto-size wrapper's height. Read it live — the
+    // 'auto' resolves to the content's natural height. Read it live — the
     // `measuredContentHeight` state lags mount by a frame (vaul's initial
     // ref-callback measure runs while the portal subtree is still detached,
     // so it reads 0 until the ResizeObserver fires). Falls back to the state
     // value, then to vaul's pre-measure fallback (effectiveHeight / 2).
-    const autoWrapper = drawerContentRef.current?.querySelector<HTMLElement>(
-      '[data-vaul-auto-size-wrapper]'
-    );
-    const measuredHeight = autoWrapper?.offsetHeight || inputs.measuredContentHeight;
+    const measuredHeight = measureNaturalHeight() || inputs.measuredContentHeight;
     const autoHeight = Math.min(measuredHeight > 0 ? measuredHeight : effectiveH / 2, ceiling);
 
     // 'peek' is measured live from the DOM (offsetHeight is layout-based, so
@@ -383,10 +548,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // measure either: they fire while the portal subtree is still detached.
     // Geometry only runs while the drawer is mounted, so the elements are
     // measurable here; fall back to the state value when they're absent.
-    const headerEl = headerElRef.current as unknown as HTMLElement | null;
-    const footerEl = footerElRef.current as unknown as HTMLElement | null;
-    const peekEl = peekElRef.current as unknown as HTMLElement | null;
-    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    const headerEl = getDOMElement(headerElRef.current);
+    // A relative footer is pushed off-screen at the peek detent — excluded
+    const footerEl = absoluteFooterRef.current ? getDOMElement(footerElRef.current) : null;
+    const peekEl = getDOMElement(peekElRef.current);
+    const contentEl = getDOMElement(contentRef.current);
     const livePeekContentHeight =
       peekEl && contentEl ? measurePeekContentHeight(peekEl, contentEl) : inputs.peekContentHeight;
     const livePeekHeight =
@@ -407,8 +573,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       positions.push(effectiveH - h);
       values.push(effectiveH > 0 ? h / effectiveH : 0);
     }
-    return { windowH, positions, values };
-  }, []);
+    return { windowH, effectiveH, ceiling, positions, values };
+  }, [measureNaturalHeight]);
 
   // Detent info for lifecycle events. Position/detent come from the active
   // detent's target geometry — not the live DOM rect — so willPresent (drawer
@@ -487,14 +653,54 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     [computeDetentGeometry]
   );
 
+  // Mirror native synchronous layout: while dragging (and through the post-
+  // release settle) the sized layout tracks the sheet's visible height in
+  // realtime, clamped to the smallest detent — dragging below it slides the
+  // sheet out without resizing. Once settled, the inline height is cleared so
+  // the CSS calc() owns sizing again (adapts to viewport resizes at rest).
+  const sizedLayoutRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const isSettlingAfterDragRef = useRef(false);
+  const updateSizedLayoutHeight = useCallback(
+    (position: number) => {
+      const node = sizedLayoutRef.current;
+      if (!node) return;
+
+      const { effectiveH, ceiling, positions } = computeDetentGeometry();
+      if (positions.length === 0) return;
+
+      if (isSettlingAfterDragRef.current) {
+        const snap = activeSnapPointRef.current;
+        const index = snap != null ? validDetentsRef.current.indexOf(snap) : -1;
+        const target = index >= 0 ? positions[index]! : null;
+        if (target != null && Math.abs(position - target) < 1) {
+          isSettlingAfterDragRef.current = false;
+          // Restore the calc — height is an inline style, so clearing it would
+          // leave the div unsized (React won't re-apply it without a render)
+          node.style.height = SIZED_LAYOUT_HEIGHT;
+          return;
+        }
+      }
+
+      // positions[0] is the smallest detent's top-Y — its height is the clamp floor.
+      const minHeight = effectiveH - positions[0]!;
+      const height = Math.min(Math.max(effectiveH - position, minHeight), ceiling);
+      node.style.height = `${height}px`;
+    },
+    [computeDetentGeometry]
+  );
+
   const handlePositionChange = useCallback(
     (position: number) => {
+      if (isDraggingRef.current || isSettlingAfterDragRef.current) {
+        updateSizedLayoutHeight(position);
+      }
       const { index, detent } = interpolateFromPosition(position);
       onPositionChangeRef.current?.({
         nativeEvent: { index, position, detent, realtime: true },
       } as PositionChangeEvent);
     },
-    [interpolateFromPosition]
+    [interpolateFromPosition, updateSizedLayoutHeight]
   );
 
   // Fire onMount once after first render. React-mount is the earliest point
@@ -612,7 +818,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.
-  const isDraggingRef = useRef(false);
   const handleDrag = useCallback(() => {
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
@@ -620,11 +825,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     }
     onDragChangeRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragChangeEvent);
   }, [computeDetentInfo]);
-  const handleRelease = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
-  }, [computeDetentInfo]);
+  const handleRelease = useCallback(
+    (_event: unknown, open: boolean) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      // Track the sized layout through the settle animation only when the sheet
+      // stays open — a dismissal slides out at the min-clamped height.
+      isSettlingAfterDragRef.current = open;
+      onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
+    },
+    [computeDetentInfo]
+  );
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
     methodsRef,
@@ -816,6 +1027,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, descendants.length]);
 
+  // Definite-height flex layout (per-detent sizing) unless content must be
+  // measured in natural flow: 'auto' detents (without a plugged scrollable —
+  // those measure via `measureNaturalHeight`) and form-sheet content-fit sizing.
+  const useSizedLayout = (!hasAutoDetent || hasBoundedScrollable) && !isFormSheet;
+
   const effectiveCornerRadius = cornerRadius ?? DEFAULT_CORNER_RADIUS;
 
   // Shadow cast upward from the sheet's top edge toward the background. Matches
@@ -846,12 +1062,33 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       borderTopRightRadius: effectiveCornerRadius,
       backgroundColor: backgroundColor as string,
       // Clip children to the rounded top so headers/content with their own
-      // background don't bleed past the corners.
-      overflow: 'hidden',
+      // background don't bleed past the corners. `clip` (not `hidden`): a
+      // hidden box is still a scroll container, so browser focus-reveal (e.g.
+      // tapping a button near the sheet bottom) can scroll-offset the drawer —
+      // shifting content and blocking vaul's shouldDrag walk (scrollTop > 0).
+      overflow: 'clip',
       // Lift content above iOS home indicator / bottom safe area when enabled.
-      paddingBottom: insetAdjustment === 'automatic' ? 'env(safe-area-inset-bottom, 0px)' : 0,
+      // A relative footer owns the inset instead (see resolvedFooterStyle); an
+      // absolute footer floats over the content, so the content keeps its lift.
+      // A plugged scrollable keeps the lift too (contentInsetAdjustmentBehavior,
+      // default on) — disable it to scroll edge-to-edge behind the indicator
+      // with user-applied content padding.
+      paddingBottom:
+        insetAdjustment === 'automatic' &&
+        !(footerOwnsInset && !absoluteFooter) &&
+        (!scrollableRef || (scrollableOptions?.contentInsetAdjustmentBehavior ?? true))
+          ? 'env(safe-area-inset-bottom, 0px)'
+          : 0,
     }),
-    [backgroundColor, effectiveCornerRadius, insetAdjustment]
+    [
+      backgroundColor,
+      effectiveCornerRadius,
+      insetAdjustment,
+      footerOwnsInset,
+      absoluteFooter,
+      scrollableRef,
+      scrollableOptions,
+    ]
   );
 
   const defaultGrabberColor =
@@ -980,6 +1217,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         initialAnimated={initialDetentAnimated}
         detachedWrapperStyle={wrapperStyle}
         onContentHeightChange={setMeasuredContentHeight}
+        contentHeight={
+          // Bounded scrollable → the auto-size wrapper measures 0 (sized
+          // layout is absolute), so feed vaul the natural height instead.
+          hasAutoDetent && hasBoundedScrollable && scrollableAutoHeight > 0
+            ? scrollableAutoHeight
+            : undefined
+        }
         activeSnapPoint={activeSnapPoint}
         setActiveSnapPoint={handleSetActiveSnapPoint}
         {...snapPointsProps}
@@ -991,9 +1235,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             style={mergedContentStyle}
             onPointerDownOutside={handlePointerDownOutside}
             detachedSiblings={
-              footer ? (
+              footer && absoluteFooter ? (
                 <div style={footerFloatStyle}>
-                  <View ref={footerElRef} style={footerStyle} onLayout={handleFooterLayout}>
+                  <View ref={footerElRef} style={resolvedFooterStyle} onLayout={handleFooterLayout}>
                     {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
                 </div>
@@ -1004,37 +1248,60 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               {accessibilityOptions?.paneTitle ?? 'Sheet'}
             </Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
-            {scrollable ? (
+            {useSizedLayout ? (
               // vaul wraps children in `[data-vaul-auto-size-wrapper]` (display:
               // flow-root) which doesn't honor descendant flex layout. Use an
               // absolute fill sized to the visible portion (via vaul's
               // `--snap-point-height` var) so the inner flex column has a
-              // definite height for the scroll container's flex:1 to fill.
-              <div style={scrollableLayoutStyle}>
+              // definite height for flex layouts to fill — mirrors native, where
+              // the container is sized to the sheet's visible height per detent.
+              <div
+                ref={sizedLayoutRef}
+                style={sizedLayoutStyle}
+                data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
+              >
                 {header && (
-                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={resolvedHeaderStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <div
-                  style={scrollableContainerStyle}
-                  data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
+                {/* Content lays out naturally like native — fill only for auto
+                    detents with a plugged scrollable, where natural layout is
+                    circular (sheet height derives from the scroll content size).
+                    Mirrors the native shadow node's scrollableBounded behavior. */}
+                <View
+                  ref={contentRef}
+                  style={hasAutoDetent && hasBoundedScrollable ? [contentFillStyle, style] : style}
                 >
-                  <View ref={contentRef} style={style}>
-                    {children}
+                  {children}
+                </View>
+                {footer && !absoluteFooter && (
+                  <View
+                    ref={footerElRef}
+                    style={[relativeFooterStyle, resolvedFooterStyle]}
+                    onLayout={handleFooterLayout}
+                  >
+                    {isValidElement(footer) ? footer : createElement(footer)}
                   </View>
-                </div>
+                )}
               </div>
             ) : (
+              // Natural flow so vaul can measure content height — required for
+              // 'auto' detents and form-sheet content-fit sizing.
               <>
                 {header && (
-                  <View ref={headerElRef} style={headerStyle} onLayout={handleHeaderLayout}>
+                  <View ref={headerElRef} style={resolvedHeaderStyle} onLayout={handleHeaderLayout}>
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
                 <View ref={contentRef} style={style}>
                   {children}
                 </View>
+                {footer && !absoluteFooter && (
+                  <View ref={footerElRef} style={resolvedFooterStyle} onLayout={handleFooterLayout}>
+                    {isValidElement(footer) ? footer : createElement(footer)}
+                  </View>
+                )}
               </>
             )}
           </Drawer.Content>
@@ -1050,23 +1317,36 @@ const overlayStyle: React.CSSProperties = {
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
 };
 
-const scrollableLayoutStyle: React.CSSProperties = {
+// Pinned to the sheet's bottom edge — takes up layout space below the content
+const relativeFooterStyle = {
+  marginTop: 'auto',
+} as const;
+
+// Floats over the content so it doesn't take up layout space
+const absoluteHeaderStyle = {
   position: 'absolute',
   top: 0,
   left: 0,
   right: 0,
-  height: 'calc(100% - var(--snap-point-height, 0px))',
+  zIndex: 1,
+} as const;
+
+const SIZED_LAYOUT_HEIGHT = 'calc(100% - var(--snap-point-height, 0px))';
+
+const sizedLayoutStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: SIZED_LAYOUT_HEIGHT,
   display: 'flex',
   flexDirection: 'column',
 };
 
-const scrollableContainerStyle: React.CSSProperties = {
+const contentFillStyle = {
   flex: 1,
   minHeight: 0,
-  overflowY: 'auto',
-  overscrollBehavior: 'contain',
-  touchAction: 'pan-y',
-};
+} as const;
 
 const visuallyHiddenStyle: React.CSSProperties = {
   position: 'absolute',

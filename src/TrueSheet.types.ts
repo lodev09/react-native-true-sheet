@@ -1,4 +1,4 @@
-import type { ComponentType, ReactElement } from 'react';
+import type { Component, ComponentType, ReactElement, RefObject } from 'react';
 import type {
   ColorValue,
   NativeSyntheticEvent,
@@ -166,11 +166,45 @@ export type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
  */
 export interface ScrollableOptions {
   /**
+   * Applies the bottom safe-area inset to the scroll content automatically
+   * while the content can scroll, so the last item clears the home indicator
+   * (iOS) and navigation bar (Android).
+   *
+   * - **iOS**: Sets the scroll view's native
+   * [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior)
+   * to `automatic` while it's plugged into the sheet — no need to set React
+   * Native's iOS-only prop yourself.
+   * - **Android**: Pads the scroll content with the bottom window inset,
+   * mirroring iOS's `automatic` behavior — parity React Native's iOS-only
+   * prop can't provide.
+   * - **Web**: Lifts the content above the safe area
+   * (`env(safe-area-inset-bottom)`).
+   *
+   * Only applies while the sheet's `insetAdjustment` is `'automatic'`. When
+   * the sheet has a relative footer, the footer absorbs the inset instead.
+   *
+   * @default true
+   */
+  contentInsetAdjustmentBehavior?: boolean;
+
+  /**
    * Extra offset when scrolling to the focused input when keyboard appears.
    *
    * @default 0
    */
   keyboardScrollOffset?: number;
+
+  /**
+   * Adjusts the bottom inset applied to the scrollable when the keyboard is shown.
+   * Positive values increase the inset; negative values reduce it.
+   * Pass `-insets.bottom` to cancel out safe-area padding already included in
+   * the content's `paddingBottom`.
+   * Does not affect the auto scroll of the focused input — it always targets
+   * the keyboard edge.
+   *
+   * @default 0
+   */
+  keyboardOffset?: number;
 
   /**
    * Whether scrolling the content expands the sheet to the next detent.
@@ -198,13 +232,45 @@ export interface ScrollableOptions {
 }
 
 /**
+ * Options for header behavior
+ */
+export interface HeaderOptions {
+  /**
+   * How the header participates in the sheet layout.
+   *
+   * - `'relative'`: The header takes up space above the content, and its height
+   *   is included in the `auto` detent calculation.
+   * - `'absolute'`: The header floats over the content, pinned to the top edge,
+   *   and is excluded from the `auto` detent calculation.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+}
+
+/**
  * Options for footer behavior
  */
 export interface FooterOptions {
   /**
-   * Adjusts how far the footer rises when the keyboard opens.
+   * How the footer participates in the sheet layout.
+   *
+   * - `'relative'`: The footer takes up space below the content, pinned to the
+   *   bottom edge. Its height is included in the `auto` detent calculation but
+   *   excluded from the `peek` detent (it's pushed off-screen at peek).
+   * - `'absolute'`: The footer floats over the content, pinned to the bottom
+   *   edge. Its height is excluded from the `auto` detent calculation but
+   *   included in the `peek` detent.
+   *
+   * @default 'relative'
+   */
+  position?: 'relative' | 'absolute';
+
+  /**
+   * Adjusts how far an `absolute` footer rises when the keyboard opens.
    * Positive values raise it higher; negative values reduce the rise.
    * Pass `-insets.bottom` to tuck the footer's safe-area padding behind the keyboard.
+   * A `relative` footer stays in the layout flow behind the keyboard, so this has no effect.
    *
    * @default 0
    */
@@ -522,6 +588,11 @@ export interface TrueSheetProps extends ViewProps {
   headerStyle?: StyleProp<ViewStyle>;
 
   /**
+   * Options for header behavior.
+   */
+  headerOptions?: HeaderOptions;
+
+  /**
    * A component that floats at the bottom of the Sheet.
    */
   footer?: ComponentType<unknown> | ReactElement;
@@ -532,18 +603,25 @@ export interface TrueSheetProps extends ViewProps {
   footerStyle?: StyleProp<ViewStyle>;
 
   /**
-   * On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space.
-   * When enabled, the ScrollView's top edge will be pinned below any top sibling views,
-   * and its left, right, and bottom edges will be pinned to the container.
+   * A ref to the scrollable component (e.g. `ScrollView`, `FlatList`)
+   * rendered within the sheet content.
+   * Required for scrollable handling — nested scrolling, keyboard insets,
+   * and `auto` detent sizing are wired to this scrollable.
    *
-   * On Android, it adds additional style to the content for scrollable to work.
+   * Example:
+   * ```tsx
+   * const scrollableRef = useRef<ScrollView>(null)
    *
-   * @default false
+   * <TrueSheet scrollableRef={scrollableRef}>
+   *   <ScrollView ref={scrollableRef} />
+   * </TrueSheet>
+   * ```
    */
-  scrollable?: boolean;
+  scrollableRef?: RefObject<Component<unknown> | null>;
 
   /**
    * Options for scrollable behavior.
+   * Applies to the scrollable provided via `scrollableRef`.
    */
   scrollableOptions?: ScrollableOptions;
 
