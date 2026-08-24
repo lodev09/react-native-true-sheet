@@ -69,6 +69,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   BOOL _pendingDetentsChange;
   BOOL _isDragging;
   BOOL _isWillDismissEmitted;
+  NSUInteger _presentationSessionGeneration;
 
   // Last bottom safe area observed while presented — reused as the estimate
   // for the next present (beats the float-threshold guess for re-presents).
@@ -112,6 +113,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _isDragging = NO;
     _isPresented = NO;
     _isWillDismissEmitted = NO;
+    _presentationSessionGeneration = 0;
     _isTransitioning = NO;
     _pendingContentSizeChange = NO;
     _pendingDetentsChange = NO;
@@ -395,6 +397,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _blurView.alpha = 1;
 
   if (!_isPresented) {
+    _presentationSessionGeneration += 1;
     UIViewController *presenter = self.presentingViewController;
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
@@ -580,6 +583,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)emitDidDismissEvents {
   if (self.isBeingDismissed) {
+    _presentationSessionGeneration += 1;
     [self restoreWindowAccessibilityElements];
     _isPresented = NO;
     _isWillDismissEmitted = NO;
@@ -709,10 +713,14 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
     _pendingDetentIndex = -1;
+    NSUInteger generation = _presentationSessionGeneration;
 
     // The presentedView frame isn't final until UIKit finishes the resize
     // animation — no completion hook exists for it, hence the delay.
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if (self->_presentationSessionGeneration != generation)
+        return;
+
       CGFloat detent = [self detentValueForIndex:pendingIndex];
       [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
       [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
@@ -785,9 +793,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
       if (!_isTransitioning) {
+        NSUInteger generation = _presentationSessionGeneration;
         // Dispatch so UIKit picks the target detent first; the settle emit is
         // non-realtime and JS animates alongside UIKit's snap spring.
         dispatch_async(dispatch_get_main_queue(), ^{
+          if (self->_presentationSessionGeneration != generation)
+            return;
+
           NSInteger endIndex = self.currentDetentIndex;
           [self->_grabberView updateAccessibilityValueWithIndex:endIndex detentCount:self->_detents.count];
           [self settleAtDetentIndex:endIndex debug:@"drag end"];
@@ -857,7 +869,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       // completes its layout pass after the transition animation — learning
       // here absorbs any sub-pixel drift since the earlier learns.
       if (strongSelf->_isPresented && !strongSelf.isBeingDismissed) {
+        NSUInteger generation = strongSelf->_presentationSessionGeneration;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+          if (strongSelf->_presentationSessionGeneration != generation)
+            return;
+
           [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
         });
       }
@@ -1503,7 +1519,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:
   (UISheetPresentationController *)sheetPresentationController {
+  NSUInteger generation = _presentationSessionGeneration;
   dispatch_async(dispatch_get_main_queue(), ^{
+    if (self->_presentationSessionGeneration != generation)
+      return;
+
     NSInteger index = self.currentDetentIndex;
     if (index >= 0) {
       CGFloat detent = [self detentValueForIndex:index];

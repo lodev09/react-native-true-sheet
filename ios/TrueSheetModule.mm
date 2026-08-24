@@ -152,7 +152,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
       TrueSheetView *rootSheet = nil;
 
       for (TrueSheetView *view in viewRegistry.allValues) {
-        if (!view.viewController.isPresented) {
+        if (view.controllerSessionOwnedByPreviousMount || !view.viewController.isPresented) {
           continue;
         }
 

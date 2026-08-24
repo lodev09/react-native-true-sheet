@@ -41,6 +41,8 @@ using namespace facebook::react;
 @interface TrueSheetView () <TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate,
   RNScreensEventObserverDelegate>
+- (facebook::react::SharedViewEventEmitter)activeEventEmitter;
+- (void)clearStaleControllerSessionOwnershipIfNeeded;
 @end
 
 @implementation TrueSheetView {
@@ -51,14 +53,18 @@ using namespace facebook::react;
   UIView *_snapshotView;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
+  NSUInteger _initialPresentGeneration;
+  NSUInteger _mountGeneration;
   TrueSheetViewInsetAdjustment _insetAdjustment;
   ScrollableOptions *_scrollableOptions;
   NSInteger _scrollableHandle;
   BOOL _hasAutoDetent;
   BOOL _initialDetentAnimated;
+  BOOL _forceInitialPresentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  BOOL _controllerSessionOwnedByPreviousMount;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
@@ -86,8 +92,12 @@ using namespace facebook::react;
     _snapshotView = nil;
     _lastStateSize = CGSizeZero;
     _initialDetentIndex = -1;
+    _initialPresentGeneration = 0;
+    _mountGeneration = 0;
     _initialDetentAnimated = YES;
+    _forceInitialPresentAnimated = NO;
     _isSheetUpdatePending = NO;
+    _controllerSessionOwnedByPreviousMount = NO;
 
     _screensEventObserver = [[RNScreensEventObserver alloc] init];
     _screensEventObserver.delegate = self;
@@ -120,35 +130,56 @@ using namespace facebook::react;
 // Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
 // arriving after attach, which didMoveToWindow won't re-fire for).
 - (void)presentInitialIfNeeded {
+  [self clearStaleControllerSessionOwnershipIfNeeded];
+
   if (_initialDetentIndex < 0 || _didInitiallyPresent)
     return;
 
   UIViewController *vc = [self findPresentingViewController];
 
-  // Only present if the view controller is in the same window and not being dismissed
-  if (!vc || vc.view.window != self.window || _controller.isBeingDismissed) {
-    // Animate next time when sheet finally moves to the correct window
-    _initialDetentAnimated = YES;
+  // Wait for the retained controller session to finish before presenting into this window.
+  if (!vc || vc.view.window != self.window || _controllerSessionOwnedByPreviousMount || _controller.isPresented ||
+      _controller.isBeingDismissed) {
+    _forceInitialPresentAnimated = YES;
     return;
   }
 
   _didInitiallyPresent = YES;
+  NSUInteger generation = _initialPresentGeneration;
+  NSInteger initialDetentIndex = _initialDetentIndex;
+  BOOL initialDetentAnimated = _initialDetentAnimated || _forceInitialPresentAnimated;
 
   // Deferred a runloop turn so sibling mounts from the current transaction
   // (e.g. a footer committed alongside the prop) land before measuring.
   __weak __typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
     __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+    if (!strongSelf || strongSelf->_initialPresentGeneration != generation)
       return;
 
-    [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
-                      animated:strongSelf->_initialDetentAnimated
+    if (strongSelf->_controller.isBeingPresented)
+      return;
+
+    if (!strongSelf.window || strongSelf->_controller.isBeingDismissed) {
+      strongSelf->_didInitiallyPresent = NO;
+      return;
+    }
+
+    if (strongSelf->_controller.isPresented) {
+      return;
+    }
+
+    [strongSelf presentAtIndex:initialDetentIndex
+                      animated:initialDetentAnimated
                     completion:^(BOOL success, NSError *_Nullable error) {
                       // Present can fail if the view detached during this turn —
                       // reset so the next attach/prop update retries.
-                      if (!success) {
-                        strongSelf->_didInitiallyPresent = NO;
+                      if (strongSelf->_initialPresentGeneration == generation) {
+                        if (success) {
+                          strongSelf->_forceInitialPresentAnimated = NO;
+                        } else {
+                          strongSelf->_didInitiallyPresent = NO;
+                        }
                       }
                     }];
   });
@@ -387,12 +418,32 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  _initialPresentGeneration += 1;
+  _mountGeneration += 1;
+
+  if (_controller.isPresented || _controller.isBeingPresented || _controller.isBeingDismissed) {
+    _controllerSessionOwnedByPreviousMount = YES;
+  }
+
+  if (_controller.isPresented && !_controller.isBeingDismissed) {
+    [self dismissAnimated:NO completion:nil];
+  }
+
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+
+  [self cleanupContainerView];
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
+  _forceInitialPresentAnimated = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
+  _pendingMountEvent = NO;
+  _pendingPropsUpdate = NO;
+  _pendingLayoutUpdate = NO;
+  _isSheetUpdatePending = NO;
+  _pendingDetents = nil;
+  _pendingSizeChange = NO;
 }
 
 #pragma mark - Child Component Mounting
@@ -483,6 +534,8 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
+  [self clearStaleControllerSessionOwnershipIfNeeded];
+
   if (_controller.isBeingPresented || _controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already presented. Use resize() to change detent.");
     if (completion) {
@@ -503,6 +556,11 @@ using namespace facebook::react;
       completion(NO, error);
     }
     return;
+  }
+
+  if (_pendingDetents) {
+    _controller.detents = _pendingDetents;
+    _pendingDetents = nil;
   }
 
   [_controller setupAnchorViewInView:presentingViewController.view];
@@ -561,8 +619,12 @@ using namespace facebook::react;
   return _controller;
 }
 
+- (BOOL)controllerSessionOwnedByPreviousMount {
+  return _controllerSessionOwnedByPreviousMount;
+}
+
 - (void)emitDismissedPosition {
-  [TrueSheetStateEvents emitPositionChange:_eventEmitter
+  [TrueSheetStateEvents emitPositionChange:self.activeEventEmitter
                                      index:-1
                                   position:_controller.screenHeight
                                     detent:0
@@ -578,6 +640,9 @@ using namespace facebook::react;
     }
     return;
   }
+
+  // Keep below the no-op guard: only a real dismiss supersedes auto-present; its isBeingDismissed bail resets the latch.
+  _initialPresentGeneration += 1;
 
   // Dismiss from the presenting view controller to dismiss this sheet and all its children
   UIViewController *presenter = _controller.presentingViewController;
@@ -644,8 +709,12 @@ using namespace facebook::react;
     return;
 
   _isSheetUpdatePending = YES;
+  NSUInteger generation = _mountGeneration;
 
   dispatch_async(dispatch_get_main_queue(), ^{
+    if (self->_mountGeneration != generation)
+      return;
+
     self->_isSheetUpdatePending = NO;
     if (!self->_containerView || self->_controller.isBeingDismissed)
       return;
@@ -687,12 +756,18 @@ using namespace facebook::react;
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   _controller.activeDetentIndex = index;
-  [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter index:index position:position detent:detent];
+  [TrueSheetLifecycleEvents emitWillPresent:self.activeEventEmitter index:index position:position detent:detent];
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
+  if (_controllerSessionOwnedByPreviousMount) {
+    [self dismissAnimated:NO completion:nil];
+    return;
+  }
+
+  _didInitiallyPresent = YES;
   [_containerView setupKeyboardObserverWithViewController:_controller];
-  [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
+  [TrueSheetLifecycleEvents emitDidPresent:self.activeEventEmitter index:index position:position detent:detent];
 
   if (_pendingPropsUpdate) {
     _pendingPropsUpdate = NO;
@@ -711,14 +786,14 @@ using namespace facebook::react;
                        detent:(CGFloat)detent {
   switch (state) {
     case UIGestureRecognizerStateBegan:
-      [TrueSheetDragEvents emitDragBegin:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragBegin:self.activeEventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateChanged:
-      [TrueSheetDragEvents emitDragChange:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragChange:self.activeEventEmitter index:index position:position detent:detent];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-      [TrueSheetDragEvents emitDragEnd:_eventEmitter index:index position:position detent:detent];
+      [TrueSheetDragEvents emitDragEnd:self.activeEventEmitter index:index position:position detent:detent];
       break;
     default:
       break;
@@ -727,18 +802,39 @@ using namespace facebook::react;
 
 - (void)viewControllerWillDismiss {
   if (!_dismissedByNavigation) {
-    [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
+    [TrueSheetLifecycleEvents emitWillDismiss:self.activeEventEmitter];
   }
 }
 
 - (void)viewControllerDidDismiss {
   [_containerView cleanupKeyboardObserver];
+  BOOL controllerSessionOwnedByPreviousMount = _controllerSessionOwnedByPreviousMount;
+  facebook::react::SharedViewEventEmitter eventEmitter = self.activeEventEmitter;
+  _controllerSessionOwnedByPreviousMount = NO;
+
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;
 
     _controller.activeDetentIndex = -1;
-    [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
+    [TrueSheetLifecycleEvents emitDidDismiss:eventEmitter];
+  }
+
+  if (controllerSessionOwnedByPreviousMount) {
+    [_snapshotView removeFromSuperview];
+    _snapshotView = nil;
+  }
+
+  if (self.window) {
+    NSUInteger generation = _initialPresentGeneration;
+    __weak __typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf || strongSelf->_initialPresentGeneration != generation)
+        return;
+
+      [strongSelf presentInitialIfNeeded];
+    });
   }
 }
 
@@ -746,14 +842,18 @@ using namespace facebook::react;
   if (_controller.activeDetentIndex != index) {
     _controller.activeDetentIndex = index;
   }
-  [TrueSheetStateEvents emitDetentChange:_eventEmitter index:index position:position detent:detent];
+  [TrueSheetStateEvents emitDetentChange:self.activeEventEmitter index:index position:position detent:detent];
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)index
                                position:(CGFloat)position
                                  detent:(CGFloat)detent
                                realtime:(BOOL)realtime {
-  [TrueSheetStateEvents emitPositionChange:_eventEmitter index:index position:position detent:detent realtime:realtime];
+  [TrueSheetStateEvents emitPositionChange:self.activeEventEmitter
+                                     index:index
+                                  position:position
+                                    detent:detent
+                                  realtime:realtime];
 }
 
 - (void)viewControllerDidChangeSize:(CGSize)size {
@@ -765,19 +865,19 @@ using namespace facebook::react;
 }
 
 - (void)viewControllerWillFocus {
-  [TrueSheetFocusEvents emitWillFocus:_eventEmitter];
+  [TrueSheetFocusEvents emitWillFocus:self.activeEventEmitter];
 }
 
 - (void)viewControllerDidFocus {
-  [TrueSheetFocusEvents emitDidFocus:_eventEmitter];
+  [TrueSheetFocusEvents emitDidFocus:self.activeEventEmitter];
 }
 
 - (void)viewControllerWillBlur {
-  [TrueSheetFocusEvents emitWillBlur:_eventEmitter];
+  [TrueSheetFocusEvents emitWillBlur:self.activeEventEmitter];
 }
 
 - (void)viewControllerDidBlur {
-  [TrueSheetFocusEvents emitDidBlur:_eventEmitter];
+  [TrueSheetFocusEvents emitDidBlur:self.activeEventEmitter];
 }
 
 #pragma mark - RNScreensEventObserverDelegate
@@ -816,14 +916,30 @@ using namespace facebook::react;
   }
 
   _dismissedByNavigation = YES;
+  NSUInteger generation = _mountGeneration;
   __weak __typeof(self) weakSelf = self;
   [_controller finishInteractiveDismissWithDuration:duration
                                          completion:^{
-                                           [weakSelf dismissAnimated:NO completion:nil];
+                                           __typeof(self) strongSelf = weakSelf;
+                                           if (!strongSelf || strongSelf->_mountGeneration != generation)
+                                             return;
+
+                                           [strongSelf dismissAnimated:NO completion:nil];
                                          }];
 }
 
 #pragma mark - Private Helpers
+
+- (facebook::react::SharedViewEventEmitter)activeEventEmitter {
+  return _controllerSessionOwnedByPreviousMount ? nullptr : _eventEmitter;
+}
+
+- (void)clearStaleControllerSessionOwnershipIfNeeded {
+  if (_controllerSessionOwnedByPreviousMount && !_controller.isPresented && !_controller.isBeingPresented &&
+      !_controller.isBeingDismissed) {
+    _controllerSessionOwnedByPreviousMount = NO;
+  }
+}
 
 - (void)setupScrollable {
   if (!_containerView)
