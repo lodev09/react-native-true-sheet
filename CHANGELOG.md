@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fast dismiss/re-present cycles no longer strand an auto-presented sheet or leak the previous mount's lifecycle and detent state into its replacement. Recycled sheet hosts are also released from the native registry correctly. ([#800](https://github.com/lodev09/react-native-true-sheet/pull/800) by [@maxlapides](https://github.com/maxlapides))
 - **Android**: A stacked parent sheet now follows its child frame-by-frame when the child resizes, and no longer gets stuck at stale detents after a half-expanded settle. ([#797](https://github.com/lodev09/react-native-true-sheet/pull/797) by [@lodev09](https://github.com/lodev09))
 - **Android**: The scrollable content now tracks the keyboard frame-by-frame — the focused input rides the keyboard up smoothly, and the scroll position eases back on dismiss instead of snapping. ([#798](https://github.com/lodev09/react-native-true-sheet/pull/798) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
