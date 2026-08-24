@@ -22,9 +22,10 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🧭 **React Navigation** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) for seamless navigation integration
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
-## What's New in v4
+## 🎉 What's New in v4
 
-**v4 is in beta.** It rewrites the layout engine — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
+> [!TIP]
+> ✨ **v4 is in beta!** It rewrites the layout engine — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
 
 * 📏 **Synchronous layout** - Content resizes in the same frame as the sheet, no more lag
 * 📐 **`auto` detent with scrollables** - The sheet now sizes itself to a `ScrollView`/`FlatList`'s content height
@@ -71,7 +72,7 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
-These install v3. For v4, append `@beta` — see [What's New in v4](#whats-new-in-v4).
+These install v3. For v4, append `@beta` — see [🎉 What's New in v4](#-whats-new-in-v4).
 
 ## Documentation
 
