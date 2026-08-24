@@ -37,7 +37,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 npx expo install @lodev09/react-native-true-sheet@beta
 ```
 
-See the [Migration Guide](https://sheet.lodev09.com/migration) to upgrade. **v3 is still supported** for React Native 0.81+ and remains the `latest` release on npm.
+See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81+ and remains the `latest` release on npm.
 
 ## Installation
 
