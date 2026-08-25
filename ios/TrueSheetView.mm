@@ -64,7 +64,6 @@ using namespace facebook::react;
   BOOL _pendingMountEvent;
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
-  BOOL _isContainerHeightUpdate;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
 }
@@ -344,8 +343,7 @@ using namespace facebook::react;
   if (!_state)
     return;
 
-  BOOL sameWidth = fabs(size.width - _lastStateSize.width) < 0.5;
-  if (sameWidth && fabs(size.height - _lastStateSize.height) < 0.5)
+  if (fabs(size.width - _lastStateSize.width) < 0.5 && fabs(size.height - _lastStateSize.height) < 0.5)
     return;
 
   _lastStateSize = size;
@@ -354,18 +352,10 @@ using namespace facebook::react;
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
 
-  // A height-only push (drag, detent snap, keyboard) can only resize
-  // height-derived content (e.g. flex: 1) — flag the synchronous relayout so
-  // its size reports aren't mistaken for intrinsic content changes (see
-  // setupSheetDetentsForSizeChange). Width changes (rotation, split view)
-  // reflow content, so their reports still count.
-  _isContainerHeightUpdate = sameWidth;
-
   // RN 0.82+ processes immediate state updates in the same layout pass, so Yoga
   // resizes the container synchronously with the sheet (e.g. inside UIKit's
   // animation block during detent transitions).
   _state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
-  _isContainerHeightUpdate = NO;
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -632,13 +622,6 @@ using namespace facebook::react;
  * Debounced sheet update to handle rapid content/header size changes.
  */
 - (void)setupSheetDetentsForSizeChange {
-  // Content resized by the sheet's own height push (Yoga laying out flex: 1
-  // content against the new container height) is not a content size change —
-  // retargeting detents from it would make auto detents chase the sheet
-  // during drags and detent snaps.
-  if (_isContainerHeightUpdate)
-    return;
-
   // Keep the footer's absorbed inset in sync with the latest measured heights
   // even before presenting, so the sheet presents at its final size.
   [self refreshFooterBottomInset];

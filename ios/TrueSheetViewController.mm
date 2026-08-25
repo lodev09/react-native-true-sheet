@@ -1038,9 +1038,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   if (!realtime || !TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
     _lastEmittedPositionState = state;
 
-    NSLog(@"TrueSheet: position %.2f (index: %.2f, detent: %.2f) realtime: %d driven by: %@", state.position,
-      state.index, state.detent, realtime, debug);
-
     [self.delegate viewControllerDidChangePosition:state.index
                                           position:state.position
                                             detent:state.detent
