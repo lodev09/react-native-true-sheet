@@ -49,13 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetFooterView *footerView;
 
 /**
- * Whether the sheet has an `auto` detent. Deriving the sheet height from the
- * scroll content is circular with natural layout, so the detected ScrollView's
- * viewport is force-bounded to the container only in this case.
- */
-@property (nonatomic, assign) BOOL hasAutoDetent;
-
-/**
  * Content height measured unconstrained by the shadow node — the height the
  * content wants regardless of container bounds (see
  * TrueSheetContentViewShadowNode). Falls back to the frame height before the

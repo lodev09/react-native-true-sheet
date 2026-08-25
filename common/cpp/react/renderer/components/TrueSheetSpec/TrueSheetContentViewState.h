@@ -12,8 +12,6 @@ namespace facebook::react {
 
 /*
  * State for <TrueSheetContentView> component.
- * `scrollableBounded` is set from native when a ScrollView is detected so the
- * shadow node bounds the content to the container via flexShrink.
  * `naturalHeight` is measured by the shadow node during layout — the height
  * the content wants when unbounded (see TrueSheetContentViewShadowNode).
  */
@@ -25,13 +23,9 @@ class TrueSheetContentViewState final {
   TrueSheetContentViewState(
       TrueSheetContentViewState const &previousState,
       folly::dynamic data)
-      : scrollableBounded(
-            data.getDefault("scrollableBounded", previousState.scrollableBounded)
-                .getBool()),
-        naturalHeight(previousState.naturalHeight) {}
+      : naturalHeight(previousState.naturalHeight) {}
 #endif
 
-  bool scrollableBounded{false};
   Float naturalHeight{0};
 
 #ifdef ANDROID

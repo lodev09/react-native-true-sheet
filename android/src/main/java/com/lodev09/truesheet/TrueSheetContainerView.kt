@@ -95,12 +95,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.bottomInset = value
     }
 
-  var hasAutoDetent = false
-    set(value) {
-      field = value
-      contentView?.hasAutoDetent = value
-    }
-
   override val eventDispatcher: EventDispatcher?
     get() = delegate?.eventDispatcher
 
@@ -131,7 +125,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
         child.scrollableOptions = scrollableOptions
         child.scrollableHandle = scrollableHandle
         child.bottomInset = scrollableBottomInset
-        child.hasAutoDetent = hasAutoDetent
         contentView = child
 
         // State lands before the view is attached, so pull the current value

@@ -64,12 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL contentInsetAdjustment;
 
 /**
- * Whether the sheet has an `auto` detent — bounds the detected scrollable's
- * viewport to the container so the sheet height can derive from its content size
- */
-@property (nonatomic, assign) BOOL hasAutoDetent;
-
-/**
  * Bottom safe-area inset the footer absorbs as padding — the footer
  * owns the sheet's bottom edge, so its background fills the inset
  */

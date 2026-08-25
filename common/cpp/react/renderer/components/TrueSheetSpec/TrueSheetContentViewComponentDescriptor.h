@@ -11,14 +11,6 @@ namespace facebook::react {
 class TrueSheetContentViewComponentDescriptor final
     : public ConcreteComponentDescriptor<TrueSheetContentViewShadowNode> {
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
-
-  void adopt(ShadowNode &shadowNode) const override {
-    auto &concreteShadowNode =
-        static_cast<TrueSheetContentViewShadowNode &>(shadowNode);
-    concreteShadowNode.adjustLayoutWithState();
-
-    ConcreteComponentDescriptor::adopt(shadowNode);
-  }
 };
 
 } // namespace facebook::react

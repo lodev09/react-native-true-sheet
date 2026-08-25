@@ -20,7 +20,6 @@ class TrueSheetContentViewManager : ViewGroupManager<TrueSheetContentView>() {
   override fun createViewInstance(reactContext: ThemedReactContext): TrueSheetContentView = TrueSheetContentView(reactContext)
 
   override fun updateState(view: TrueSheetContentView, props: ReactStylesDiffMap?, stateWrapper: StateWrapper?): Any? {
-    view.stateWrapper = stateWrapper
     stateWrapper?.stateData?.let { data ->
       if (data.hasKey("naturalHeight")) {
         view.updateNaturalHeight(data.getDouble("naturalHeight"))
