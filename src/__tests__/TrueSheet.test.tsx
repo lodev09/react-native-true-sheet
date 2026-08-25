@@ -1,7 +1,9 @@
 /* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
+import { createRef } from 'react';
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetPeek } from '../index';
+import TrueSheetModule from '../specs/NativeTrueSheetModule';
 import type {
   DidDismissEvent,
   WillFocusEvent,
@@ -115,6 +117,69 @@ describe('TrueSheet', () => {
       );
       // Content should be rendered immediately
       expect(getByText('Eager Content')).toBeDefined();
+    });
+
+    it('should render native view content without presentation when lazy is disabled', () => {
+      const { getByText, getByTestId } = render(
+        <TrueSheet name="non-lazy-test" lazy={false} testID="non-lazy-host">
+          <Text>Non-Lazy Content</Text>
+        </TrueSheet>
+      );
+
+      expect(getByText('Non-Lazy Content')).toBeDefined();
+      expect(getByTestId('non-lazy-host').props.lazy).toBeUndefined();
+    });
+
+    it('should render native view content when lazy becomes disabled', () => {
+      const sheet = (
+        <TrueSheet name="deferred-non-lazy-test">
+          <Text>Deferred Non-Lazy Content</Text>
+        </TrueSheet>
+      );
+      const { queryByText, rerender } = render(sheet);
+
+      expect(queryByText('Deferred Non-Lazy Content')).toBeNull();
+
+      rerender(<TrueSheet {...sheet.props} lazy={false} />);
+
+      expect(queryByText('Deferred Non-Lazy Content')).not.toBeNull();
+
+      rerender(sheet);
+
+      expect(queryByText('Deferred Non-Lazy Content')).not.toBeNull();
+    });
+
+    it('should keep non-lazy native view content mounted after dismiss', () => {
+      const { getByTestId, queryByText } = render(
+        <TrueSheet name="non-lazy-dismiss-test" lazy={false} testID="non-lazy-dismiss-host">
+          <Text>Persistent Non-Lazy Content</Text>
+        </TrueSheet>
+      );
+
+      act(() => {
+        getByTestId('non-lazy-dismiss-host').props.onDidDismiss({
+          nativeEvent: null,
+        });
+      });
+
+      expect(queryByText('Persistent Non-Lazy Content')).not.toBeNull();
+    });
+
+    it('should present non-lazy content without waiting for another mount', async () => {
+      const sheetRef = createRef<TrueSheet>();
+      const onMountMock = jest.fn();
+      render(
+        <TrueSheet ref={sheetRef} name="non-lazy-present-test" lazy={false} onMount={onMountMock}>
+          <Text>Ready Non-Lazy Content</Text>
+        </TrueSheet>
+      );
+
+      await act(async () => {
+        await sheetRef.current?.present();
+      });
+
+      expect(onMountMock).not.toHaveBeenCalled();
+      expect(TrueSheetModule?.presentByRef).toHaveBeenCalledTimes(1);
     });
 
     it('should render native view content when present is called', async () => {
