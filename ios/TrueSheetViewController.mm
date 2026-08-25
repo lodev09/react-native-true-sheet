@@ -639,15 +639,22 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return;
   }
 
+  // Drags emit from the pan handler — never settle or learn from a layout
+  // pass while the frame tracks the finger. Pending changes keep their flags
+  // and settle on the first post-drag layout.
+  if (_isDragging) {
+    return;
+  }
+
   if (_pendingContentSizeChange || _pendingDetentsChange) {
     _pendingContentSizeChange = NO;
     _pendingDetentsChange = NO;
     [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
-  } else if (!_isDragging) {
-    // Drags emit from the pan handler. A child on top moves this sheet two
-    // ways: an animated collapse/restore step (presenting/dismissing) — emit
-    // the target non-realtime so JS animates to it — or direct per-frame
-    // re-layouts while the child drags, which stay realtime.
+  } else {
+    // A child on top moves this sheet two ways: an animated collapse/restore
+    // step (presenting/dismissing) — emit the target non-realtime so JS
+    // animates to it — or direct per-frame re-layouts while the child drags,
+    // which stay realtime.
     BOOL realtime = self.presentedViewController == nil || !self.isPresentedViewAnimating;
 
     // A layout pass at rest can nudge the frame by a sub-pixel amount
@@ -1029,6 +1036,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // the tolerance, and the corrected value must still reach JS.
   if (!realtime || !TrueSheetPositionStateEquals(_lastEmittedPositionState, state)) {
     _lastEmittedPositionState = state;
+
+    NSLog(@"TrueSheet: position %.2f (index: %.2f, detent: %.2f) realtime: %d driven by: %@", state.position,
+      state.index, state.detent, realtime, debug);
 
     [self.delegate viewControllerDidChangePosition:state.index
                                           position:state.position
