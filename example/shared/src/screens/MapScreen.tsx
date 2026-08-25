@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   map: StyleSheet.absoluteFill,
   content: {
-    flex: 1,
+    flexGrow: 1,
     padding: SPACING,
     gap: GAP,
   },

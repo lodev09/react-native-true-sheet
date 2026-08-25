@@ -639,14 +639,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return;
   }
 
-  // Drags emit from the pan handler — never settle or learn from a layout
-  // pass while the frame tracks the finger. Pending changes keep their flags
-  // and settle on the first post-drag layout.
-  if (_isDragging) {
-    return;
-  }
-
-  if (_pendingContentSizeChange || _pendingDetentsChange) {
+  // Mid-drag the frame tracks the finger — never settle or learn from it;
+  // pending changes keep their flags and settle on the first post-drag layout.
+  if ((_pendingContentSizeChange || _pendingDetentsChange) && !_isDragging) {
     _pendingContentSizeChange = NO;
     _pendingDetentsChange = NO;
     [self settleAtDetentIndex:self.currentDetentIndex debug:@"layout"];
@@ -654,16 +649,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     // A child on top moves this sheet two ways: an animated collapse/restore
     // step (presenting/dismissing) — emit the target non-realtime so JS
     // animates to it — or direct per-frame re-layouts while the child drags,
-    // which stay realtime.
+    // which stay realtime. Mid-drag no child is on top, so drags emit realtime.
     BOOL realtime = self.presentedViewController == nil || !self.isPresentedViewAnimating;
 
     // A layout pass at rest can nudge the frame by a sub-pixel amount
     // (pixel-grid snapping after present), leaving the interpolated index
     // slightly off the whole number. Re-learn when the frame is effectively
     // at the current detent so the drift is absorbed instead of emitted.
-    // The tight threshold keeps real movement (e.g. scroll-driven expansion)
-    // from being absorbed.
-    if (self.presentedViewController == nil && !self.isPresentedViewAnimating) {
+    // The tight threshold keeps real movement (e.g. scroll-driven expansion
+    // or a drag hovering near the detent) from being absorbed.
+    if (!_isDragging && self.presentedViewController == nil && !self.isPresentedViewAnimating) {
       NSInteger index = self.currentDetentIndex;
       CGFloat expectedHeight = [_detentCalculator resolvedHeightForIndex:index];
       CGFloat actualHeight = self.screenHeight - self.currentPosition;
@@ -787,7 +782,14 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       _isDragging = YES;
       break;
     case UIGestureRecognizerStateChanged:
-      [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
+      // Layout owns the emit while the sheet resizes with the finger (a
+      // layout pass is already queued), and the transition tick owns it
+      // during an interactive dismiss. Translation-only movement (e.g.
+      // dragging down to the first detent) triggers neither — emit here as
+      // the backup.
+      if (!_isTransitioning && !self.presentedView.layer.needsLayout && !self.viewIfLoaded.layer.needsLayout) {
+        [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:YES debug:@"drag change"];
+      }
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled: {
@@ -872,27 +874,26 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)handleTransitionTick {
-  // Interactive dismiss phase (finger down) — the pan handler emits.
-  if (!_isDragging) {
-    CGFloat position = self.livePosition;
+  // Also covers the interactive dismiss phase (finger down) — layout passes
+  // are skipped while transitioning, so the tick owns position there too.
+  CGFloat position = self.livePosition;
 
-    if (self.isBeingDismissed) {
-      // Emit only once the dismiss is committed: on release UIKit moves the
-      // model frame off-screen, while a cancelled drag rewinds it back to the
-      // detent (isBeingDismissed stays YES during the rewind).
-      if (self.currentPosition >= self.screenHeight) {
-        [self emitWillDismissEvents];
-      }
-
-      // Hide blur at the end of dismiss to prevent UIVisualEffectView
-      // from causing a flicker/flash at the bottom edge of the sheet.
-      if (self.screenHeight - position < 1) {
-        _blurView.alpha = 0;
-      }
+  if (self.isBeingDismissed) {
+    // Emit only once the dismiss is committed: on release UIKit moves the
+    // model frame off-screen, while a cancelled drag rewinds it back to the
+    // detent (isBeingDismissed stays YES during the rewind).
+    if (self.currentPosition >= self.screenHeight) {
+      [self emitWillDismissEvents];
     }
 
-    [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition"];
+    // Hide blur at the end of dismiss to prevent UIVisualEffectView
+    // from causing a flicker/flash at the bottom edge of the sheet.
+    if (self.screenHeight - position < 1) {
+      _blurView.alpha = 0;
+    }
   }
+
+  [self emitChangePositionDelegateWithPosition:position realtime:YES debug:@"transition"];
 }
 
 /**
