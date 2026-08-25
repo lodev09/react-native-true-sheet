@@ -54,7 +54,6 @@ using namespace facebook::react;
   TrueSheetViewInsetAdjustment _insetAdjustment;
   ScrollableOptions *_scrollableOptions;
   NSInteger _scrollableHandle;
-  BOOL _hasAutoDetent;
   BOOL _initialDetentAnimated;
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
@@ -193,12 +192,8 @@ using namespace facebook::react;
 
   // Detents (-1 represents "auto")
   NSMutableArray *detents = [NSMutableArray new];
-  _hasAutoDetent = NO;
   for (const auto &detent : newProps.detents) {
     [detents addObject:@(detent)];
-    if (detent == -1) {
-      _hasAutoDetent = YES;
-    }
   }
 
   if (oldProps) {
@@ -833,7 +828,6 @@ using namespace facebook::react;
   _containerView.scrollableHandle = _scrollableHandle;
   _containerView.contentInsetAdjustment = (_scrollableOptions ? _scrollableOptions.contentInsetAdjustment : YES) &&
                                           _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
-  _containerView.hasAutoDetent = _hasAutoDetent;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];
 }

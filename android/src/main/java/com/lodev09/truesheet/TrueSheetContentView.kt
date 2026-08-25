@@ -8,9 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
-import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
@@ -57,11 +55,9 @@ interface TrueSheetContentViewDelegate {
 @SuppressLint("ViewConstructor")
 class TrueSheetContentView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
   var delegate: TrueSheetContentViewDelegate? = null
-  var stateWrapper: StateWrapper? = null
 
   private var detectedScrollView: ViewGroup? = null
   private var originalScrollViewPaddingBottom: Int = 0
-  private var scrollableBounded = false
 
   /**
    * Content height measured unconstrained by the shadow node — the height the
@@ -141,20 +137,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       clearScrollable()
     }
 
-  /**
-   * Whether the sheet has an `auto` detent. Deriving the sheet height from the
-   * scroll content is circular with natural layout, so the detected ScrollView's
-   * viewport is force-bounded to the container only in this case.
-   */
-  var hasAutoDetent = false
-    set(value) {
-      if (field == value) return
-      field = value
-      if (detectedScrollView != null) {
-        setScrollableBounded(value)
-      }
-    }
-
   override fun addView(child: View?, index: Int) {
     super.addView(child, index)
     checkScrollViewChanged()
@@ -168,22 +150,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun checkScrollViewChanged() {
     if (detectedScrollView == null || detectedScrollView?.isDescendantOf(this) == false) {
       delegate?.contentViewScrollViewDidChange()
-    }
-  }
-
-  /**
-   * Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-   * detected ScrollView's viewport is bounded to the visible space. Only applied
-   * for auto detents — otherwise content lays out naturally like a regular view.
-   */
-  private fun setScrollableBounded(bounded: Boolean) {
-    if (scrollableBounded == bounded) return
-    scrollableBounded = bounded
-
-    stateWrapper?.let {
-      val newState = WritableNativeMap()
-      newState.putBoolean("scrollableBounded", bounded)
-      it.updateState(newState)
     }
   }
 
@@ -216,7 +182,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     scrollView.addOnLayoutChangeListener(scrollableLayoutListener)
     scrollView.getChildAt(0)?.addOnLayoutChangeListener(scrollableLayoutListener)
 
-    setScrollableBounded(hasAutoDetent)
     updateContentInset()
 
     // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
@@ -274,7 +239,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     detectedScrollView?.isNestedScrollingEnabled = false
     (detectedScrollView?.parent as? SwipeRefreshLayout)?.isNestedScrollingEnabled = true
     setScrollViewPaddingBottom(originalScrollViewPaddingBottom)
-    setScrollableBounded(false)
     detectedScrollView = null
     originalScrollViewPaddingBottom = 0
     baseBottomInset = 0

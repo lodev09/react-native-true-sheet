@@ -1268,7 +1268,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 {/* Content lays out naturally like native — fill only for auto
                     detents with a plugged scrollable, where natural layout is
                     circular (sheet height derives from the scroll content size).
-                    Mirrors the native shadow node's scrollableBounded behavior. */}
+                    Unlike native, CSS won't cap the content to the container
+                    (no fit-content flex basis), so the fill is still needed here. */}
                 <View
                   ref={contentRef}
                   style={hasAutoDetent && hasBoundedScrollable ? [contentFillStyle, style] : style}

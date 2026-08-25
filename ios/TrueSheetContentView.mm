@@ -29,7 +29,6 @@ using namespace facebook::react;
   CGFloat _lastReportedNaturalHeight;
   CGFloat _appliedKeyboardOffset;
   BOOL _observingTextChanges;
-  BOOL _scrollableBounded;
   UIScrollViewContentInsetAdjustmentBehavior _originalInsetAdjustmentBehavior;
   BOOL _appliedContentInsetAdjustment;
 }
@@ -57,22 +56,6 @@ using namespace facebook::react;
   if (naturalHeight != _lastReportedNaturalHeight) {
     _lastReportedNaturalHeight = naturalHeight;
     [self.delegate contentViewDidChangeSize:CGSizeMake(self.frame.size.width, naturalHeight)];
-  }
-}
-
-// Tells the shadow node to fill the container (flexGrow/flexShrink) so the
-// detected ScrollView's viewport is bounded to the visible space. Only applied
-// for auto detents — otherwise content lays out naturally like a regular view.
-- (void)setScrollableBounded:(BOOL)bounded {
-  if (_scrollableBounded == bounded) {
-    return;
-  }
-  _scrollableBounded = bounded;
-
-  if (_state) {
-    auto newState = _state->getData();
-    newState.scrollableBounded = bounded;
-    _state->updateState(std::move(newState));
   }
 }
 
@@ -109,17 +92,6 @@ using namespace facebook::react;
   } else if (!_contentInsetAdjustment && _appliedContentInsetAdjustment) {
     scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
     _appliedContentInsetAdjustment = NO;
-  }
-}
-
-- (void)setHasAutoDetent:(BOOL)hasAutoDetent {
-  if (_hasAutoDetent == hasAutoDetent) {
-    return;
-  }
-  _hasAutoDetent = hasAutoDetent;
-
-  if (_detectedScrollView) {
-    [self setScrollableBounded:hasAutoDetent];
   }
 }
 
@@ -207,7 +179,6 @@ using namespace facebook::react;
     _detectedScrollView.scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
     _appliedContentInsetAdjustment = NO;
   }
-  [self setScrollableBounded:NO];
   _detectedScrollView = nil;
 }
 
@@ -229,7 +200,6 @@ using namespace facebook::react;
   _detectedScrollView = scrollView;
 
   [self applyContentInsetAdjustment];
-  [self setScrollableBounded:_hasAutoDetent];
 
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
   CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
@@ -443,10 +413,8 @@ using namespace facebook::react;
   [self stopObservingTextChanges];
   [self clearScrollable];
   _state.reset();
-  _scrollableBounded = NO;
   _scrollableHandle = 0;
   _contentInsetAdjustment = NO;
-  _hasAutoDetent = NO;
   _lastReportedNaturalHeight = 0;
 }
 
