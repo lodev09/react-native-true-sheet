@@ -119,58 +119,58 @@ describe('TrueSheet', () => {
       expect(getByText('Eager Content')).toBeDefined();
     });
 
-    it('should render native view content without presentation when prewarm is enabled', () => {
+    it('should render native view content without presentation when lazy is disabled', () => {
       const { getByText, getByTestId } = render(
-        <TrueSheet name="prewarm-test" prewarm testID="prewarm-host">
-          <Text>Prewarmed Content</Text>
+        <TrueSheet name="non-lazy-test" lazy={false} testID="non-lazy-host">
+          <Text>Non-Lazy Content</Text>
         </TrueSheet>
       );
 
-      expect(getByText('Prewarmed Content')).toBeDefined();
-      expect(getByTestId('prewarm-host').props.prewarm).toBeUndefined();
+      expect(getByText('Non-Lazy Content')).toBeDefined();
+      expect(getByTestId('non-lazy-host').props.lazy).toBeUndefined();
     });
 
-    it('should render native view content when prewarm becomes enabled', () => {
+    it('should render native view content when lazy becomes disabled', () => {
       const sheet = (
-        <TrueSheet name="deferred-prewarm-test">
-          <Text>Deferred Prewarmed Content</Text>
+        <TrueSheet name="deferred-non-lazy-test">
+          <Text>Deferred Non-Lazy Content</Text>
         </TrueSheet>
       );
       const { queryByText, rerender } = render(sheet);
 
-      expect(queryByText('Deferred Prewarmed Content')).toBeNull();
+      expect(queryByText('Deferred Non-Lazy Content')).toBeNull();
 
-      rerender(<TrueSheet {...sheet.props} prewarm />);
+      rerender(<TrueSheet {...sheet.props} lazy={false} />);
 
-      expect(queryByText('Deferred Prewarmed Content')).not.toBeNull();
+      expect(queryByText('Deferred Non-Lazy Content')).not.toBeNull();
 
       rerender(sheet);
 
-      expect(queryByText('Deferred Prewarmed Content')).not.toBeNull();
+      expect(queryByText('Deferred Non-Lazy Content')).not.toBeNull();
     });
 
-    it('should keep prewarmed native view content mounted after dismiss', () => {
+    it('should keep non-lazy native view content mounted after dismiss', () => {
       const { getByTestId, queryByText } = render(
-        <TrueSheet name="prewarm-dismiss-test" prewarm testID="prewarm-dismiss-host">
-          <Text>Persistent Prewarmed Content</Text>
+        <TrueSheet name="non-lazy-dismiss-test" lazy={false} testID="non-lazy-dismiss-host">
+          <Text>Persistent Non-Lazy Content</Text>
         </TrueSheet>
       );
 
       act(() => {
-        getByTestId('prewarm-dismiss-host').props.onDidDismiss({
+        getByTestId('non-lazy-dismiss-host').props.onDidDismiss({
           nativeEvent: null,
         });
       });
 
-      expect(queryByText('Persistent Prewarmed Content')).not.toBeNull();
+      expect(queryByText('Persistent Non-Lazy Content')).not.toBeNull();
     });
 
-    it('should present prewarmed content without waiting for another mount', async () => {
+    it('should present non-lazy content without waiting for another mount', async () => {
       const sheetRef = createRef<TrueSheet>();
       const onMountMock = jest.fn();
       render(
-        <TrueSheet ref={sheetRef} name="prewarm-present-test" prewarm onMount={onMountMock}>
-          <Text>Ready Prewarmed Content</Text>
+        <TrueSheet ref={sheetRef} name="non-lazy-present-test" lazy={false} onMount={onMountMock}>
+          <Text>Ready Non-Lazy Content</Text>
         </TrueSheet>
       );
 

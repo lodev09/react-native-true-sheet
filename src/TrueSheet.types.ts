@@ -432,7 +432,8 @@ export interface TrueSheetProps extends ViewProps {
   initialDetentAnimated?: boolean;
 
   /**
-   * Mounts the sheet content before presentation without presenting the sheet.
+   * Specify whether the sheet content should mount lazily, on first presentation.
+   * Set to `false` to mount the content before presentation without presenting the sheet.
    * Use this when content is not ready on the first render, then call `present()`
    * after your readiness signal so auto detents measure the settled content.
    *
@@ -441,9 +442,9 @@ export interface TrueSheetProps extends ViewProps {
    *
    * @platform android
    * @platform ios
-   * @default false
+   * @default true
    */
-  prewarm?: boolean;
+  lazy?: boolean;
 
   /**
    * The detent index that the sheet should start to dim the background.
