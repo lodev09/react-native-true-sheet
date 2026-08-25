@@ -22,6 +22,23 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🧭 **React Navigation** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) for seamless navigation integration
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
+## 🎉 What's New in v4
+
+> [!TIP]
+> ✨ **v4 is in beta!** It rewrites the layout engine — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
+
+* 📏 **Synchronous layout** - Content resizes in the same frame as the sheet, no more lag
+* 📐 **`auto` detent with scrollables** - The sheet now sizes itself to a `ScrollView`/`FlatList`'s content height
+* 📜 **`scrollableRef`** - Pass a `ScrollView`/`FlatList` ref to wire nested scrolling, keyboard insets, and `auto` detent sizing
+* 🦶 **Relative footers** - Footers take up space below the content by default
+* 🧭 **Expo Router** - First-class support via the `Sheet` layout from `/navigation/expo-router`
+
+```sh
+npx expo install @lodev09/react-native-true-sheet@beta
+```
+
+See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81+ and remains the `latest` release on npm.
+
 ## Installation
 
 > [!IMPORTANT]
@@ -30,7 +47,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 
 ### Prerequisites
 
-- React Native 0.82+
+- React Native 0.82+ (0.81+ on v3)
 - New Architecture enabled
 - Xcode 26.1+
 
@@ -55,6 +72,8 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
+These install v3. For v4, append `@beta` — see [🎉 What's New in v4](#-whats-new-in-v4).
+
 ## Documentation
 
 - [Example](example)
@@ -63,7 +82,7 @@ cd ios && pod install
 - [React Navigation](https://sheet.lodev09.com/guides/navigation)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
-- [Migrating to v3](https://sheet.lodev09.com/migration)
+- [Migrating to v3](https://sheet.lodev09.com/migration-v3)
 
 ## Usage
 

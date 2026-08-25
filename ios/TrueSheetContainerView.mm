@@ -157,7 +157,6 @@ using namespace facebook::react;
   if (_contentView) {
     _contentView.scrollableHandle = _scrollableHandle;
     _contentView.contentInsetAdjustment = _contentInsetAdjustment;
-    _contentView.hasAutoDetent = _hasAutoDetent;
     [_contentView setupScrollable];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {

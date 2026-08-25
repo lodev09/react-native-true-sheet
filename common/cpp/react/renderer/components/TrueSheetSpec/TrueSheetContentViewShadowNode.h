@@ -22,8 +22,6 @@ class JSI_EXPORT TrueSheetContentViewShadowNode final
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:
-  void adjustLayoutWithState();
-
 #pragma mark - LayoutableShadowNode
 
   void layout(LayoutContext layoutContext) override;
