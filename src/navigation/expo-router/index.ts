@@ -1,17 +1,26 @@
 import { StackRouter, unstable_integrateWithRouter, useNavigation } from 'expo-router';
 
-import { createTrueSheetRouter, type StackRouterFactory } from '../createTrueSheetRouter';
+import { createTrueSheetRouter } from '../createTrueSheetRouter';
 import { trueSheetNavigator } from '../navigator';
 import type { ParamListBase } from './base-types';
 import type {
+  StackRouterFactory,
   TrueSheetNavigationOptions,
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
   TrueSheetNavigatorContentExtraProps,
   TrueSheetNavigatorProps,
+  TrueSheetRouterFactory,
   TrueSheetRouterOptions,
   TrueSheetStandardEventMap,
 } from './types';
+
+// expo-router's vendored StackRouter is structurally identical to @react-navigation's.
+// Pinned to this entry's own router types: `createTrueSheetRouter` is shared and typed
+// against React Navigation, which resolves to `any` in apps that only install expo-router.
+const sheetRouter: TrueSheetRouterFactory = createTrueSheetRouter(
+  StackRouter as StackRouterFactory
+);
 
 const SheetNavigator = unstable_integrateWithRouter<
   TrueSheetNavigationOptions,
@@ -19,17 +28,12 @@ const SheetNavigator = unstable_integrateWithRouter<
   TrueSheetStandardEventMap,
   TrueSheetNavigatorContentExtraProps,
   TrueSheetRouterOptions
->(
-  trueSheetNavigator,
-  // expo-router's vendored StackRouter is structurally identical to @react-navigation's
-  createTrueSheetRouter(StackRouter as StackRouterFactory),
-  {
-    createProps: ({ state, dispatch }) => ({
-      routes: state.routes,
-      dispatch,
-    }),
-  }
-);
+>(trueSheetNavigator, sheetRouter, {
+  createProps: ({ state, dispatch }) => ({
+    routes: state.routes,
+    dispatch,
+  }),
+});
 
 // Public props: `routes`/`dispatch` are injected by `createProps` (optional here
 // so the navigator type stays comparable), and expo-router intersects the event

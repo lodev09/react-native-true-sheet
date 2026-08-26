@@ -3,6 +3,7 @@
  * vendored React Navigation types so apps that only install `expo-router` still
  * get real types instead of `any` — see `./base-types`.
  */
+import type { TrueSheetActionType } from '../actions';
 import type {
   TrueSheetActionHelpersOf,
   TrueSheetDispatch,
@@ -12,11 +13,13 @@ import type {
 } from '../types';
 import type {
   DefaultNavigatorOptions,
+  NavigationAction,
   NavigationHelpers,
   NavigationProp,
   NavigationState,
   ParamListBase,
   RouteProp,
+  Router,
   StackActionHelpers,
   StackRouterOptions,
 } from './base-types';
@@ -26,6 +29,22 @@ export type TrueSheetRouterOptions = StackRouterOptions;
 export type TrueSheetNavigationState<ParamList extends ParamListBase> = TrueSheetStateOf<
   NavigationState<ParamList>
 >;
+
+export type TrueSheetRouterState = TrueSheetNavigationState<ParamListBase>;
+
+export type TrueSheetRouter = Router<TrueSheetRouterState, TrueSheetActionType>;
+
+export type TrueSheetRouterFactory = (options: TrueSheetRouterOptions) => TrueSheetRouter;
+
+/**
+ * The base `StackRouter` factory to wrap — see `../types` for the shared contract.
+ */
+export type StackRouterFactory = <
+  State extends NavigationState<ParamListBase>,
+  Action extends NavigationAction,
+>(
+  options: TrueSheetRouterOptions
+) => Router<State, Action>;
 
 export type TrueSheetRoute = TrueSheetNavigationState<ParamListBase>['routes'][number];
 

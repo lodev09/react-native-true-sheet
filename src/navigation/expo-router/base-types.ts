@@ -6,11 +6,13 @@
  */
 export type {
   DefaultNavigatorOptions,
+  NavigationAction,
   NavigationHelpers,
   NavigationProp,
   NavigationState,
   ParamListBase,
   RouteProp,
+  Router,
   StackActionHelpers,
   StackRouterOptions,
 } from 'expo-router/react-navigation';

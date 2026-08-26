@@ -1,7 +1,8 @@
 import { StackRouter, type ParamListBase } from '@react-navigation/core';
 
 import { TrueSheetActions } from '../actions';
-import { createTrueSheetRouter, type StackRouterFactory } from '../createTrueSheetRouter';
+import { createTrueSheetRouter } from '../createTrueSheetRouter';
+import type { StackRouterFactory } from '../types';
 import type { TrueSheetNavigationState } from '../types';
 
 type State = TrueSheetNavigationState<ParamListBase>;

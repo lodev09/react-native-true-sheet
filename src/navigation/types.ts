@@ -9,12 +9,15 @@ import type { TrueSheetActionType } from './actions';
 import type {
   DefaultNavigatorOptions,
   Descriptor,
+  NavigationAction,
   NavigationHelpers,
   NavigationProp,
   NavigationState,
   ParamListBase,
   RouteProp,
+  Router,
   StackActionHelpers,
+  StackRouterOptions,
 } from './base-types';
 
 export type PositionChangeHandler = (payload: PositionChangeEventPayload) => void;
@@ -95,6 +98,32 @@ export type TrueSheetStateOf<State extends { routes: readonly unknown[] }> = Omi
 export type TrueSheetNavigationState<ParamList extends ParamListBase> = TrueSheetStateOf<
   NavigationState<ParamList>
 >;
+
+export type TrueSheetRouterState = TrueSheetNavigationState<ParamListBase>;
+
+export type TrueSheetRouterOptions = StackRouterOptions;
+
+export type TrueSheetRouter = Router<TrueSheetRouterState, TrueSheetActionType>;
+
+/**
+ * The wrapped router factory — also the shape `createTrueSheetRouter` accepts,
+ * pre-instantiated so either entry point's `StackRouterFactory` fits it.
+ */
+export type TrueSheetRouterFactory = (options: TrueSheetRouterOptions) => TrueSheetRouter;
+
+/**
+ * The base `StackRouter` factory to wrap, typed generically over the state and
+ * action types the wrapper threads through — `StackRouter` is structural and
+ * never touches the sheet-specific fields.
+ * Injected by each entry point so the shared router never imports
+ * `@react-navigation/*` at runtime (Expo Router apps don't install it).
+ */
+export type StackRouterFactory = <
+  State extends NavigationState<ParamListBase>,
+  Action extends NavigationAction,
+>(
+  options: TrueSheetRouterOptions
+) => Router<State, Action>;
 
 /**
  * `TrueSheetNavigationEventMap` in the `standard-navigation` event-map shape.

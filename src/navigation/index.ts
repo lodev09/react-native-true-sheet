@@ -4,16 +4,17 @@ import {
   type StandardNavigationTypeBagBase,
 } from '@react-navigation/native';
 
-import { createTrueSheetRouter, type StackRouterFactory } from './createTrueSheetRouter';
+import { createTrueSheetRouter } from './createTrueSheetRouter';
 import { trueSheetNavigator } from './navigator';
 import type {
+  StackRouterFactory,
   TrueSheetActionHelpers,
   TrueSheetNavigationOptions,
   TrueSheetNavigationEventMap,
   TrueSheetNavigationState,
   TrueSheetNavigatorContentExtraProps,
+  TrueSheetRouterOptions,
 } from './types';
-import type { TrueSheetRouterOptions } from './createTrueSheetRouter';
 
 export interface TrueSheetNavigationTypeBag extends StandardNavigationTypeBagBase {
   State: TrueSheetNavigationState<this['ParamList']>;
@@ -62,20 +63,18 @@ export const createTrueSheetNavigator = createNavigator;
 export const createTrueSheetScreen = createScreen;
 
 export { TrueSheetActions, type TrueSheetActionType } from './actions';
-export {
-  createTrueSheetRouter,
-  type StackRouterFactory,
-  type TrueSheetRouterOptions,
-} from './createTrueSheetRouter';
+export { createTrueSheetRouter } from './createTrueSheetRouter';
 export { useTrueSheetNavigation } from './useTrueSheetNavigation';
 
 export type { DetentInfoEventPayload, PositionChangeEventPayload } from '../TrueSheet.types';
 
 export type {
+  StackRouterFactory,
   TrueSheetNavigationEventMap,
   TrueSheetNavigationHelpers,
   TrueSheetNavigationOptions,
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
+  TrueSheetRouterOptions,
   TrueSheetScreenProps,
 } from './types';
