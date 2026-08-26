@@ -41,6 +41,10 @@ using namespace facebook::react;
 @interface TrueSheetView () <TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate,
   RNScreensEventObserverDelegate>
+
+- (void)stageContainerViewForMeasurement;
+- (void)attachContainerViewToController;
+- (void)removeMeasurementHostView;
 @end
 
 @implementation TrueSheetView {
@@ -63,6 +67,7 @@ using namespace facebook::react;
   BOOL _pendingMountEvent;
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
+  UIView *_measurementHostView;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
 }
@@ -97,12 +102,17 @@ using namespace facebook::react;
 - (void)didMoveToWindow {
   [super didMoveToWindow];
 
-  if (!self.window)
+  if (!self.window) {
+    [self attachContainerViewToController];
+    [self removeMeasurementHostView];
     return;
+  }
 
   if (self.tag > 0) {
     [TrueSheetModule registerView:self withTag:@(self.tag)];
   }
+
+  [self stageContainerViewForMeasurement];
 
   if (_pendingNavigationRepresent && !_controller.isPresented) {
     _pendingNavigationRepresent = NO;
@@ -133,27 +143,35 @@ using namespace facebook::react;
 
   _didInitiallyPresent = YES;
 
+  [self stageContainerViewForMeasurement];
+
   // Deferred a runloop turn so sibling mounts from the current transaction
   // (e.g. a footer committed alongside the prop) land before measuring.
   __weak __typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
-    __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
-      return;
+    // SwiftUI-backed children report their intrinsic size after entering a
+    // window. Give that measurement one more runloop turn to reach Fabric
+    // before the auto detent is captured for presentation.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+        return;
 
-    [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
-                      animated:strongSelf->_initialDetentAnimated
-                    completion:^(BOOL success, NSError *_Nullable error) {
-                      // Present can fail if the view detached during this turn —
-                      // reset so the next attach/prop update retries.
-                      if (!success) {
-                        strongSelf->_didInitiallyPresent = NO;
-                      }
-                    }];
+      [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
+                        animated:strongSelf->_initialDetentAnimated
+                      completion:^(BOOL success, NSError *_Nullable error) {
+                        // Present can fail if the view detached during this turn —
+                        // reset so the next attach/prop update retries.
+                        if (!success) {
+                          strongSelf->_didInitiallyPresent = NO;
+                        }
+                      }];
+    });
   });
 }
 
 - (void)dealloc {
+  [self removeMeasurementHostView];
   [_screensEventObserver stopObserving];
   _screensEventObserver = nil;
 
@@ -362,6 +380,8 @@ using namespace facebook::react;
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   }
 
+  [self stageContainerViewForMeasurement];
+
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
@@ -381,6 +401,9 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
+
+  [self attachContainerViewToController];
+  [self removeMeasurementHostView];
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 
@@ -451,6 +474,8 @@ using namespace facebook::react;
   } else {
     _pendingMountEvent = YES;
   }
+
+  [self stageContainerViewForMeasurement];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -499,6 +524,9 @@ using namespace facebook::react;
     }
     return;
   }
+
+  [self attachContainerViewToController];
+  [self removeMeasurementHostView];
 
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
@@ -735,6 +763,10 @@ using namespace facebook::react;
     _controller.activeDetentIndex = -1;
     [TrueSheetLifecycleEvents emitDidDismiss:_eventEmitter];
   }
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self stageContainerViewForMeasurement];
+  });
 }
 
 - (void)viewControllerDidChangeDetent:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
@@ -819,6 +851,47 @@ using namespace facebook::react;
 }
 
 #pragma mark - Private Helpers
+
+- (void)stageContainerViewForMeasurement {
+  if (!_containerView || !self.window || _controller.isPresented || _controller.isBeingPresented ||
+      _controller.isBeingDismissed || _containerView.superview == _measurementHostView) {
+    return;
+  }
+
+  UIViewController *presentingViewController = [self findPresentingViewController];
+  UIView *presenterView = presentingViewController.view;
+  if (!presentingViewController || presenterView.window != self.window) {
+    return;
+  }
+
+  if (!_measurementHostView) {
+    _measurementHostView = [[UIView alloc] initWithFrame:presenterView.bounds];
+    _measurementHostView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _measurementHostView.alpha = 0;
+    _measurementHostView.userInteractionEnabled = NO;
+    _measurementHostView.accessibilityElementsHidden = YES;
+    [presenterView insertSubview:_measurementHostView atIndex:0];
+  }
+
+  _containerView.frame = _measurementHostView.bounds;
+  [_measurementHostView addSubview:_containerView];
+  [_containerView setNeedsLayout];
+  [_containerView layoutIfNeeded];
+}
+
+- (void)attachContainerViewToController {
+  if (!_containerView || _containerView.superview == _controller.view) {
+    return;
+  }
+
+  [_controller.view addSubview:_containerView];
+  [_controller.view bringSubviewToFront:_containerView];
+}
+
+- (void)removeMeasurementHostView {
+  [_measurementHostView removeFromSuperview];
+  _measurementHostView = nil;
+}
 
 - (void)setupScrollable {
   if (!_containerView)
