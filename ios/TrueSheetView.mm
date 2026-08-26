@@ -960,11 +960,15 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
   [presentingViewController addChildViewController:_measurementViewController];
   _measurementViewController.view.frame = _measurementHostView.bounds;
   _measurementViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  [_measurementHostView addSubview:_measurementViewController.view];
-  [_measurementViewController didMoveToParentViewController:presentingViewController];
 
+  // Move through an off-window controller view before attaching it to the
+  // hidden host. Native wrappers such as Expo's SwiftUI Host reparent their
+  // internal view controller from didMoveToWindow; a direct window-to-window
+  // move skips that lifecycle and leaves their pre-presentation size stale.
   _containerView.frame = _measurementViewController.view.bounds;
   [_measurementViewController.view addSubview:_containerView];
+  [_measurementHostView addSubview:_measurementViewController.view];
+  [_measurementViewController didMoveToParentViewController:presentingViewController];
   [_containerView setNeedsLayout];
   [_containerView layoutIfNeeded];
   return YES;
