@@ -1,3 +1,11 @@
+import type { NavigatorArgs } from 'standard-navigation';
+
+import type {
+  DetentInfoEventPayload,
+  PositionChangeEventPayload,
+  TrueSheetProps,
+} from '../TrueSheet.types';
+import type { TrueSheetActionType } from './actions';
 import type {
   DefaultNavigatorOptions,
   Descriptor,
@@ -7,15 +15,7 @@ import type {
   ParamListBase,
   RouteProp,
   StackActionHelpers,
-} from '@react-navigation/core';
-import type { NavigatorArgs } from 'standard-navigation';
-
-import type {
-  DetentInfoEventPayload,
-  PositionChangeEventPayload,
-  TrueSheetProps,
-} from '../TrueSheet.types';
-import type { TrueSheetActionType } from './actions';
+} from './base-types';
 
 export type PositionChangeHandler = (payload: PositionChangeEventPayload) => void;
 
@@ -74,17 +74,27 @@ export type TrueSheetNavigationEventMap = {
   sheetDidBlur: { data: undefined };
 };
 
-export type TrueSheetNavigationState<ParamList extends ParamListBase> = Omit<
-  NavigationState<ParamList>,
+/**
+ * A navigation state tagged as `true-sheet`, with the sheet fields the router
+ * adds to each route.
+ * Generic over the base state so each entry point can bind its own
+ * `NavigationState` — see `./base-types`.
+ */
+export type TrueSheetStateOf<State extends { routes: readonly unknown[] }> = Omit<
+  State,
   'routes'
 > & {
   type: 'true-sheet';
-  routes: (NavigationState<ParamList>['routes'][number] & {
+  routes: (State['routes'][number] & {
     resizeIndex?: number;
     resizeKey?: number;
     closing?: boolean;
   })[];
 };
+
+export type TrueSheetNavigationState<ParamList extends ParamListBase> = TrueSheetStateOf<
+  NavigationState<ParamList>
+>;
 
 /**
  * `TrueSheetNavigationEventMap` in the `standard-navigation` event-map shape.
@@ -116,13 +126,20 @@ export interface TrueSheetNavigatorContentExtraProps {
   dispatch: TrueSheetDispatch;
 }
 
-export type TrueSheetActionHelpers<ParamList extends ParamListBase> =
-  StackActionHelpers<ParamList> & {
-    /**
-     * Resize the sheet to a specific detent index.
-     */
-    resize(index?: number): void;
-  };
+/**
+ * Generic over the base helpers so each entry point can bind its own
+ * `StackActionHelpers` — see `./base-types`.
+ */
+export type TrueSheetActionHelpersOf<Helpers> = Helpers & {
+  /**
+   * Resize the sheet to a specific detent index.
+   */
+  resize(index?: number): void;
+};
+
+export type TrueSheetActionHelpers<ParamList extends ParamListBase> = TrueSheetActionHelpersOf<
+  StackActionHelpers<ParamList>
+>;
 
 export type TrueSheetNavigationProp<
   ParamList extends ParamListBase,

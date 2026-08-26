@@ -1,20 +1,17 @@
-import type { ParamListBase } from '@react-navigation/core';
 import { StackRouter, unstable_integrateWithRouter, useNavigation } from 'expo-router';
 
-import {
-  createTrueSheetRouter,
-  type StackRouterFactory,
-  type TrueSheetRouterOptions,
-} from '../createTrueSheetRouter';
+import { createTrueSheetRouter, type StackRouterFactory } from '../createTrueSheetRouter';
 import { trueSheetNavigator } from '../navigator';
+import type { ParamListBase } from './base-types';
 import type {
   TrueSheetNavigationOptions,
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
   TrueSheetNavigatorContentExtraProps,
   TrueSheetNavigatorProps,
+  TrueSheetRouterOptions,
   TrueSheetStandardEventMap,
-} from '../types';
+} from './types';
 
 const SheetNavigator = unstable_integrateWithRouter<
   TrueSheetNavigationOptions,
@@ -86,4 +83,4 @@ export type {
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
   TrueSheetScreenProps,
-} from '../types';
+} from './types';

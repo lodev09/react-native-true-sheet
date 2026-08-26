@@ -1,12 +1,11 @@
+import { TrueSheetActions, type TrueSheetActionType } from './actions';
 import type {
   NavigationAction,
   NavigationState,
   ParamListBase,
   Router,
   StackRouterOptions,
-} from '@react-navigation/core';
-
-import { TrueSheetActions, type TrueSheetActionType } from './actions';
+} from './base-types';
 import type { TrueSheetNavigationState } from './types';
 
 export type TrueSheetRouterOptions = StackRouterOptions;
