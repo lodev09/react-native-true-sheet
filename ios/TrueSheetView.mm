@@ -50,6 +50,7 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
   RNScreensEventObserverDelegate>
 
 - (void)stageContainerViewForMeasurement;
+- (BOOL)stageContainerViewInMeasurementController;
 - (void)attachContainerViewToController;
 - (void)removeMeasurementHostView;
 - (void)scheduleInitialPresentationAfterMeasurement;
@@ -80,6 +81,7 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
   NSUInteger _initialMeasurementGeneration;
   CFTimeInterval _initialMeasurementDeadline;
   UIView *_measurementHostView;
+  UIViewController *_measurementViewController;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
 }
@@ -432,6 +434,7 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
   [_containerView removeFromSuperview];
 
   _containerView = nil;
+  [self removeMeasurementHostView];
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
@@ -882,6 +885,12 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
       return;
     }
 
+    if (!strongSelf->_measurementViewController && strongSelf->_initialMeasurementDeadline > CACurrentMediaTime() &&
+        [strongSelf stageContainerViewInMeasurementController]) {
+      [strongSelf scheduleInitialPresentationAfterMeasurement];
+      return;
+    }
+
     strongSelf->_isInitialMeasurementPending = NO;
 
     if (strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
@@ -907,7 +916,7 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
 
 - (void)stageContainerViewForMeasurement {
   if (!_containerView || !self.window || _controller.isPresented || _controller.isBeingPresented ||
-      _controller.isBeingDismissed || _containerView.superview == _measurementHostView) {
+      _controller.isBeingDismissed || _measurementViewController || _containerView.superview == _measurementHostView) {
     return;
   }
 
@@ -932,6 +941,35 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
   [_containerView layoutIfNeeded];
 }
 
+- (BOOL)stageContainerViewInMeasurementController {
+  if (!_containerView || !_measurementHostView || !_measurementHostView.superview || _measurementViewController) {
+    return NO;
+  }
+
+  UIViewController *presentingViewController = [self findPresentingViewController];
+  if (!presentingViewController || presentingViewController.view.window != self.window) {
+    return NO;
+  }
+
+  // Native-backed children can derive intrinsic size from their containing
+  // view controller. Recreate that transition inside the hidden host before
+  // UIKit resolves the initial measured detent. A disposable controller keeps
+  // the real sheet controller's first containment transition reserved for its
+  // actual presentation.
+  _measurementViewController = [[UIViewController alloc] init];
+  [presentingViewController addChildViewController:_measurementViewController];
+  _measurementViewController.view.frame = _measurementHostView.bounds;
+  _measurementViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [_measurementHostView addSubview:_measurementViewController.view];
+  [_measurementViewController didMoveToParentViewController:presentingViewController];
+
+  _containerView.frame = _measurementViewController.view.bounds;
+  [_measurementViewController.view addSubview:_containerView];
+  [_containerView setNeedsLayout];
+  [_containerView layoutIfNeeded];
+  return YES;
+}
+
 - (void)attachContainerViewToController {
   if (!_containerView || _containerView.superview == _controller.view) {
     return;
@@ -942,6 +980,13 @@ static const NSTimeInterval InitialMeasurementTimeout = 0.5;
 }
 
 - (void)removeMeasurementHostView {
+  if (_measurementViewController.parentViewController) {
+    [_measurementViewController willMoveToParentViewController:nil];
+    [_measurementViewController.view removeFromSuperview];
+    [_measurementViewController removeFromParentViewController];
+  }
+
+  _measurementViewController = nil;
   [_measurementHostView removeFromSuperview];
   _measurementHostView = nil;
 }
