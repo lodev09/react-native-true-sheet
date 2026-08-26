@@ -29,6 +29,7 @@
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewShadowNode.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewState.h>
 
+#import <QuartzCore/QuartzCore.h>
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
 #import <React/RCTLog.h>
@@ -38,6 +39,12 @@
 
 using namespace facebook::react;
 
+// Native-backed children such as SwiftUI views can publish their intrinsic size
+// several display frames after entering a window. Wait for a short quiet period,
+// but cap the total delay so a broken child cannot block presentation forever.
+static const NSTimeInterval InitialMeasurementSettleInterval = 0.08;
+static const NSTimeInterval InitialMeasurementTimeout = 0.5;
+
 @interface TrueSheetView () <TrueSheetViewControllerDelegate,
   TrueSheetContainerViewDelegate,
   RNScreensEventObserverDelegate>
@@ -45,6 +52,8 @@ using namespace facebook::react;
 - (void)stageContainerViewForMeasurement;
 - (void)attachContainerViewToController;
 - (void)removeMeasurementHostView;
+- (void)scheduleInitialPresentationAfterMeasurement;
+- (void)cancelPendingInitialPresentation;
 @end
 
 @implementation TrueSheetView {
@@ -67,6 +76,9 @@ using namespace facebook::react;
   BOOL _pendingMountEvent;
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
+  BOOL _isInitialMeasurementPending;
+  NSUInteger _initialMeasurementGeneration;
+  CFTimeInterval _initialMeasurementDeadline;
   UIView *_measurementHostView;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
@@ -92,6 +104,9 @@ using namespace facebook::react;
     _initialDetentIndex = -1;
     _initialDetentAnimated = YES;
     _isSheetUpdatePending = NO;
+    _isInitialMeasurementPending = NO;
+    _initialMeasurementGeneration = 0;
+    _initialMeasurementDeadline = 0;
 
     _screensEventObserver = [[RNScreensEventObserver alloc] init];
     _screensEventObserver.delegate = self;
@@ -142,35 +157,21 @@ using namespace facebook::react;
   }
 
   _didInitiallyPresent = YES;
+  _isInitialMeasurementPending = YES;
+
+  BOOL usesMeasuredDetent = NO;
+  if (_initialDetentIndex < (NSInteger)_controller.detents.count) {
+    double detent = [_controller.detents[_initialDetentIndex] doubleValue];
+    usesMeasuredDetent = detent == -1 || detent == -2;
+  }
+  _initialMeasurementDeadline = CACurrentMediaTime() + (usesMeasuredDetent ? InitialMeasurementTimeout : 0);
 
   [self stageContainerViewForMeasurement];
-
-  // Deferred a runloop turn so sibling mounts from the current transaction
-  // (e.g. a footer committed alongside the prop) land before measuring.
-  __weak __typeof(self) weakSelf = self;
-  dispatch_async(dispatch_get_main_queue(), ^{
-    // SwiftUI-backed children report their intrinsic size after entering a
-    // window. Give that measurement one more runloop turn to reach Fabric
-    // before the auto detent is captured for presentation.
-    dispatch_async(dispatch_get_main_queue(), ^{
-      __typeof(self) strongSelf = weakSelf;
-      if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
-        return;
-
-      [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
-                        animated:strongSelf->_initialDetentAnimated
-                      completion:^(BOOL success, NSError *_Nullable error) {
-                        // Present can fail if the view detached during this turn —
-                        // reset so the next attach/prop update retries.
-                        if (!success) {
-                          strongSelf->_didInitiallyPresent = NO;
-                        }
-                      }];
-    });
-  });
+  [self scheduleInitialPresentationAfterMeasurement];
 }
 
 - (void)dealloc {
+  [self cancelPendingInitialPresentation];
   [self removeMeasurementHostView];
   [_screensEventObserver stopObserving];
   _screensEventObserver = nil;
@@ -402,6 +403,7 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  [self cancelPendingInitialPresentation];
   [self attachContainerViewToController];
   [self removeMeasurementHostView];
 
@@ -418,6 +420,12 @@ using namespace facebook::react;
 - (void)cleanupContainerView {
   if (_containerView == nil)
     return;
+
+  BOOL wasInitialMeasurementPending = _isInitialMeasurementPending;
+  [self cancelPendingInitialPresentation];
+  if (wasInitialMeasurementPending) {
+    _didInitiallyPresent = NO;
+  }
 
   _containerView.delegate = nil;
   [_touchHandler detachFromView:_containerView];
@@ -503,6 +511,8 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
+  [self cancelPendingInitialPresentation];
+
   if (_controller.isBeingPresented || _controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already presented. Use resize() to change detent.");
     if (completion) {
@@ -684,21 +694,25 @@ using namespace facebook::react;
 - (void)containerViewContentDidChangeSize:(CGSize)newSize {
   _controller.contentHeight = @(newSize.height);
   [self setupSheetDetentsForSizeChange];
+  [self scheduleInitialPresentationAfterMeasurement];
 }
 
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize {
   _controller.headerHeight = @(newSize.height);
   [self setupSheetDetentsForSizeChange];
+  [self scheduleInitialPresentationAfterMeasurement];
 }
 
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize {
   [self syncFooterMetrics];
   [self setupSheetDetentsForSizeChange];
   [_controller setupAccessibilityContainer];
+  [self scheduleInitialPresentationAfterMeasurement];
 }
 
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize {
   [self setupSheetDetentsForSizeChange];
+  [self scheduleInitialPresentationAfterMeasurement];
 }
 
 // When the ScrollView changes (e.g. conditional remount), re-detect the new ScrollView.
@@ -851,6 +865,45 @@ using namespace facebook::react;
 }
 
 #pragma mark - Private Helpers
+
+- (void)scheduleInitialPresentationAfterMeasurement {
+  if (!_isInitialMeasurementPending)
+    return;
+
+  NSUInteger generation = ++_initialMeasurementGeneration;
+  CFTimeInterval remaining = MAX(0.0, _initialMeasurementDeadline - CACurrentMediaTime());
+  NSTimeInterval delay = MIN(InitialMeasurementSettleInterval, remaining);
+
+  __weak __typeof(self) weakSelf = self;
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    __typeof(self) strongSelf = weakSelf;
+    if (!strongSelf || !strongSelf->_isInitialMeasurementPending ||
+        generation != strongSelf->_initialMeasurementGeneration) {
+      return;
+    }
+
+    strongSelf->_isInitialMeasurementPending = NO;
+
+    if (strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+      return;
+
+    [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
+                      animated:strongSelf->_initialDetentAnimated
+                    completion:^(BOOL success, NSError *_Nullable error) {
+                      // Present can fail if the view detached while waiting —
+                      // reset so the next attach/prop update retries.
+                      if (!success) {
+                        strongSelf->_didInitiallyPresent = NO;
+                      }
+                    }];
+  });
+}
+
+- (void)cancelPendingInitialPresentation {
+  _isInitialMeasurementPending = NO;
+  _initialMeasurementDeadline = 0;
+  _initialMeasurementGeneration++;
+}
 
 - (void)stageContainerViewForMeasurement {
   if (!_containerView || !self.window || _controller.isPresented || _controller.isBeingPresented ||
