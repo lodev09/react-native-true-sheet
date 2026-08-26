@@ -17,6 +17,7 @@
 - **Android**: The scrollable content now tracks the keyboard frame-by-frame — the focused input rides the keyboard up smoothly, and the scroll position eases back on dismiss instead of snapping. ([#798](https://github.com/lodev09/react-native-true-sheet/pull/798) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - Auto detents now correctly size explicit-height and deeply nested scrollables. ([#783](https://github.com/lodev09/react-native-true-sheet/pull/783) by [@lodev09](https://github.com/lodev09))
+- The `/navigation/expo-router` entry now sources its base types from Expo Router's vendored React Navigation, so Expo Router apps get real navigation types instead of silently resolving to `any` — which left screen options unchecked and made `screenListeners` required. ([#806](https://github.com/lodev09/react-native-true-sheet/pull/806) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
