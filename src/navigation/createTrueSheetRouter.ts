@@ -1,29 +1,5 @@
-import type {
-  NavigationAction,
-  NavigationState,
-  ParamListBase,
-  Router,
-  StackRouterOptions,
-} from '@react-navigation/core';
-
-import { TrueSheetActions, type TrueSheetActionType } from './actions';
-import type { TrueSheetNavigationState } from './types';
-
-export type TrueSheetRouterOptions = StackRouterOptions;
-
-/**
- * The base `StackRouter` factory to wrap, typed generically over the state and
- * action types the wrapper threads through — `StackRouter` is structural and
- * never touches the sheet-specific fields.
- * Injected by each entry point so the shared router never imports
- * `@react-navigation/*` at runtime (Expo Router apps don't install it).
- */
-export type StackRouterFactory = <
-  State extends NavigationState<ParamListBase>,
-  Action extends NavigationAction,
->(
-  options: TrueSheetRouterOptions
-) => Router<State, Action>;
+import { TrueSheetActions } from './actions';
+import type { TrueSheetRouter, TrueSheetRouterFactory, TrueSheetRouterOptions } from './types';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -56,13 +32,9 @@ const ensureBaseRoute = <T extends { routes: { name: string }[] }>(
 };
 
 export const createTrueSheetRouter =
-  (stackRouter: StackRouterFactory) =>
-  (
-    routerOptions: TrueSheetRouterOptions
-  ): Router<TrueSheetNavigationState<ParamListBase>, TrueSheetActionType> => {
-    const baseRouter = stackRouter<TrueSheetNavigationState<ParamListBase>, TrueSheetActionType>(
-      routerOptions
-    );
+  (stackRouter: TrueSheetRouterFactory) =>
+  (routerOptions: TrueSheetRouterOptions): TrueSheetRouter => {
+    const baseRouter = stackRouter(routerOptions);
 
     return {
       ...baseRouter,

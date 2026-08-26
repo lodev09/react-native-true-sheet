@@ -1,6 +1,5 @@
-import type { ParamListBase } from '@react-navigation/native';
-
-import type { TrueSheetNavigationProp } from '../navigation/types';
+import type { ParamListBase } from '../navigation/expo-router/base-types';
+import type { TrueSheetNavigationProp } from '../navigation/expo-router/types';
 import {
   TrueSheetActions,
   useTrueSheetNavigation as useTrueSheetNavigationMock,
@@ -22,8 +21,10 @@ export const Sheet = Object.assign(
  * Mock useTrueSheetNavigation hook for testing.
  */
 export const useTrueSheetNavigation = jest.fn(
+  // Double cast: the shared mock is typed against React Navigation, this entry
+  // against Expo Router's vendored copy — identical shapes, unrelated declarations
   <T extends ParamListBase = ParamListBase>(): TrueSheetNavigationProp<T> =>
-    useTrueSheetNavigationMock() as TrueSheetNavigationProp<T>
+    useTrueSheetNavigationMock() as unknown as TrueSheetNavigationProp<T>
 );
 
 export { TrueSheetActions };
@@ -37,4 +38,4 @@ export type {
   TrueSheetNavigationProp,
   TrueSheetNavigationState,
   TrueSheetScreenProps,
-} from '../navigation/types';
+} from '../navigation/expo-router/types';
