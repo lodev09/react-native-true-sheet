@@ -8,6 +8,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#import <React/RCTMountingTransactionObserving.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
@@ -28,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface TrueSheetContentView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
+@interface TrueSheetContentView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate, RCTMountingTransactionObserving>
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;

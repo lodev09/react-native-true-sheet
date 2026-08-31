@@ -159,6 +159,17 @@ using namespace facebook::react;
   }
 }
 
+// A handle that commits in the same transaction as the ScrollView's insertion
+// resolves to nothing — prop updates process before mount instructions, and a
+// deep insertion doesn't pass through this view's mount hooks. Retry once the
+// whole transaction has mounted.
+- (void)mountingTransactionDidMount:(const MountingTransaction &)transaction
+               withSurfaceTelemetry:(const SurfaceTelemetry &)surfaceTelemetry {
+  if (_scrollableHandle > 0 && !_detectedScrollView) {
+    [self.delegate contentViewScrollViewDidChange];
+  }
+}
+
 #pragma mark - Scrollable
 
 // The scroll indicator follows automatically — UIKit derives its insets from

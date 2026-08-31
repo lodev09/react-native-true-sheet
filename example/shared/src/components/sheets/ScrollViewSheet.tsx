@@ -23,6 +23,7 @@ import {
   SPACING,
   times,
 } from '../../utils';
+import { Button } from '../Button';
 import { Footer, FooterPill } from '../Footer';
 import { Header } from '../Header';
 import { Text as ThemedText } from '../Text';
@@ -60,7 +61,7 @@ const HeavyItem = ({ index }: { index: number }) => {
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
   const scrollViewRef = useRef<ScrollView>(null);
-  const [showList, setShowList] = useState(true);
+  const [showList, setShowList] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(() => {
@@ -95,22 +96,28 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
       {...props}
     >
-      {showList ? (
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.content}
-          keyboardDismissMode="on-drag"
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          {times(20, (i) => (
-            <HeavyItem key={i} index={i} />
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={[styles.placeholder, styles.listPlaceholder]}>
-          <ThemedText style={styles.placeholderText}>List is hidden</ThemedText>
-        </View>
-      )}
+      <View style={styles.wrapper} collapsable={false}>
+        {showList ? (
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={styles.content}
+            keyboardDismissMode="on-drag"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          >
+            {times(20, (i) => (
+              <HeavyItem key={i} index={i} />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={[styles.placeholder, styles.listPlaceholder]}>
+            <ThemedText style={styles.placeholderText}>
+              The ScrollView is not mounted yet — mounting it after the sheet has presented tests
+              late scrollable detection.
+            </ThemedText>
+            <Button text="Show ScrollView" onPress={() => setShowList(true)} />
+          </View>
+        )}
+      </View>
     </TrueSheet>
   );
 });
@@ -120,6 +127,9 @@ ScrollViewSheet.displayName = 'ScrollViewSheet';
 const styles = StyleSheet.create({
   sheet: {
     flex: 1,
+  },
+  wrapper: {
+    height: '100%',
   },
   content: {
     padding: SPACING,
@@ -175,11 +185,14 @@ const styles = StyleSheet.create({
   },
   // Clear the absolute header so the message sits in the visible area
   listPlaceholder: {
+    flex: 1,
     paddingTop: HEADER_HEIGHT + SPACING * 2,
+    gap: SPACING,
   },
   placeholderText: {
     fontSize: 14,
     opacity: 0.5,
+    textAlign: 'center',
     // The sheet background is fixed DARK on Android; themed elsewhere
     ...Platform.select({ android: { color: LIGHT_GRAY } }),
   },
