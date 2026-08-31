@@ -65,8 +65,10 @@ using namespace facebook::react;
   }
   _scrollableHandle = scrollableHandle;
 
-  // Release the previously resolved ScrollView — setupScrollable re-resolves
+  // Release the previously resolved ScrollView, then resolve the new one. A handle that arrives after the
+  // sheet has presented reaches none of the lifecycle calls that would otherwise re-resolve it.
   [self clearScrollable];
+  [self setupScrollable];
 }
 
 - (void)setContentInsetAdjustment:(BOOL)contentInsetAdjustment {
