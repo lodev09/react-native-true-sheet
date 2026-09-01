@@ -53,6 +53,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const { onNavigateToModal, onNavigateToTest, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
+  const overlaySheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
   const [detentIndex, setDetentIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -216,10 +217,23 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
               exiting={spring(new ZoomOut())}
             >
               <Text style={styles.overlayText}>Rendered above the sheet!</Text>
+              <Button text="Open Sheet" onPress={() => overlaySheet.current?.present()} />
               <Button text="Close" onPress={() => setDialogVisible(false)} />
             </Animated.View>
           </AnimatedPressable>
         )}
+
+        {/* A sheet inside the overlay presents like any other — beneath the dialog */}
+        <TrueSheet
+          ref={overlaySheet}
+          name="basic-overlay"
+          detents={['auto']}
+          backgroundColor={DARK}
+          style={styles.childContent}
+        >
+          <DemoContent color={DARK_BLUE} />
+          <Button text="Close" onPress={() => overlaySheet.current?.dismiss()} />
+        </TrueSheet>
       </TrueSheetOverlay>
 
       <TrueSheet

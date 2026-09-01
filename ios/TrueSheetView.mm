@@ -536,9 +536,19 @@ using namespace facebook::react;
                                          }
                                        }];
 
-  // Presenting adds the sheet's transition view on top of the window — keep
-  // overlays above it (again on completion in case the transition was queued)
-  [TrueSheetOverlayView bringOverlaysToFrontInWindow:window];
+  // Presenting adds the sheet's transition view on top of the window once the
+  // transition starts — re-front overlays alongside it so the first frame is
+  // already ordered (and again on completion in case the transition was queued)
+  id<UIViewControllerTransitionCoordinator> coordinator = _controller.transitionCoordinator;
+  if (coordinator) {
+    [coordinator
+      animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        [TrueSheetOverlayView bringOverlaysToFrontInWindow:window];
+      }
+                      completion:nil];
+  } else {
+    [TrueSheetOverlayView bringOverlaysToFrontInWindow:window];
+  }
 }
 
 - (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion {
