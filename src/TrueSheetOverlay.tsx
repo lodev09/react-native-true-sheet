@@ -12,10 +12,13 @@ export const TrueSheetOverlay = ({ style, ...rest }: ViewProps) => (
 );
 
 const styles = StyleSheet.create({
-  // Sized to the window from native — absolute so it takes no layout space
+  // Sized to the window from native — absolute so it takes no layout space.
+  // Children render in a native container, so the host itself must never
+  // catch touches (Android forces it visible on layout).
   overlay: {
     position: 'absolute',
     top: 0,
     left: 0,
+    pointerEvents: 'none',
   },
 });

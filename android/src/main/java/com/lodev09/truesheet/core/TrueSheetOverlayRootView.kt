@@ -48,6 +48,16 @@ class TrueSheetOverlayRootView(private val reactContext: ThemedReactContext) :
     translationZ = OVERLAY_Z
   }
 
+  // Children are positioned by Fabric — a FrameLayout pass would stretch them to match_parent
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
+  }
+
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     delegate?.overlayRootViewDidChangeSize(w, h)
@@ -55,7 +65,11 @@ class TrueSheetOverlayRootView(private val reactContext: ThemedReactContext) :
 
   override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
     if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
-      isHandlingStream = TouchTargetHelper.findTargetTagForTouch(ev.x, ev.y, this) != id
+      // The path ends with this root, so a touch that misses every child resolves to it
+      val target = TouchTargetHelper
+        .findTargetPathAndCoordinatesForTouch(ev.x, ev.y, this, FloatArray(2))
+        .firstNotNullOfOrNull { it.getView() }
+      isHandlingStream = target != null && target !== this
     }
     if (!isHandlingStream) return false
     return super.dispatchTouchEvent(ev)

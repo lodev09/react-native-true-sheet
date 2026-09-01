@@ -5,6 +5,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
 #include <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
+#include <react/renderer/components/TrueSheetSpec/TrueSheetOverlayViewComponentDescriptor.h>
 #include <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 
 namespace facebook {
