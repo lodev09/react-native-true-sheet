@@ -207,7 +207,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 - (CGFloat)screenHeight {
-  UIWindow *window = self.view.window;
+  // In a windowed iPad app (Stage Manager, iPadOS 26 windowing) the window can be shorter than
+  // UIScreen.mainScreen, so prefer the window's height. Some callers run before this controller's
+  // view is attached (e.g. mid-presentation detent resolution), so fall back to the presenter's.
+  UIWindow *window = self.view.window ?: self.presentingViewController.view.window;
   return window ? window.bounds.size.height : UIScreen.mainScreen.bounds.size.height;
 }
 
@@ -668,6 +671,21 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
 
     [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:realtime debug:@"layout"];
+  }
+}
+
+// Rotation or an iPad window resize changes the height fractional detents
+// resolve against — re-resolve alongside the transition so the sheet lands on
+// the new height instead of waiting for a content-driven rebuild.
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+
+  if (@available(iOS 16.0, *)) {
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+      [self.sheet invalidateDetents];
+    }
+                                 completion:nil];
   }
 }
 
@@ -1198,23 +1216,18 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   if (@available(iOS 16.0, *)) {
     NSString *detentId = [NSString stringWithFormat:@"custom-%f", value];
-    CGFloat sheetHeight = value * self.screenHeight;
-    return [self customDetentWithIdentifier:detentId height:sheetHeight atIndex:index];
+    // Resolve lazily — detents are built before presentation (no window yet), and
+    // UIKit re-resolves on container size changes (rotation, windowed iPad resize).
+    return [self customDetentWithIdentifier:detentId
+                                    atIndex:index
+                                heightBlock:^CGFloat {
+                                  return value * self.screenHeight;
+                                }];
   } else if (value >= 0.5) {
     return [UISheetPresentationControllerDetent largeDetent];
   } else {
     return [UISheetPresentationControllerDetent mediumDetent];
   }
-}
-
-- (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
-                                                             height:(CGFloat)height
-                                                            atIndex:(NSInteger)index API_AVAILABLE(ios(16.0)) {
-  return [self customDetentWithIdentifier:identifier
-                                  atIndex:index
-                              heightBlock:^CGFloat {
-                                return height;
-                              }];
 }
 
 - (UISheetPresentationControllerDetent *)customDetentWithIdentifier:(NSString *)identifier
