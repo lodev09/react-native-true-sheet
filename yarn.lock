@@ -6222,6 +6222,7 @@ __metadata:
     "@types/babel__core": "npm:^7"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:~19.2.14"
+    "@types/react-dom": "npm:~19.2.0"
     commitlint: "npm:^19.8.1"
     del-cli: "npm:^6.0.0"
     eslint: "npm:^9.35.0"
@@ -6246,6 +6247,7 @@ __metadata:
     "@react-navigation/native": ">=7.3.0"
     expo-router: ">=57.0.0"
     react: "*"
+    react-dom: "*"
     react-native: ">=0.82.0"
     react-native-reanimated: ">=4"
     react-native-worklets: "*"
@@ -6258,6 +6260,8 @@ __metadata:
     "@react-navigation/native":
       optional: true
     expo-router:
+      optional: true
+    react-dom:
       optional: true
     react-native-reanimated:
       optional: true
@@ -8398,6 +8402,15 @@ __metadata:
   peerDependencies:
     "@types/react": ^19.0.0
   checksum: 10c0/83833af502f501a372b370fdeb7cf933dfc8780903fe0e0d6e6a76b4ea3adbe5316159a62a0388d8afdd409afd76a40959e2ce82fbb788f57d32c786a63601ee
+  languageName: node
+  linkType: hard
+
+"@types/react-dom@npm:~19.2.0":
+  version: 19.2.5
+  resolution: "@types/react-dom@npm:19.2.5"
+  peerDependencies:
+    "@types/react": ^19.2.0
+  checksum: 10c0/7a59467b043debf392d109daa1ba672e791f20ce6f24ae81fb54715f890f8119d24967e61e3644b6307428603b695b7d59e69eaf531bd1963a74a6cb462f5f49
   languageName: node
   linkType: hard
 

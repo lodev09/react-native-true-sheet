@@ -4,6 +4,7 @@
 
 ### 🎉 New features
 
+- New `TrueSheetOverlay` component renders its children above every presented sheet — for toasts, dialogs, and other overlays. Replaces the `FullWindowOverlay`/`Modal` workaround. ([#817](https://github.com/lodev09/react-native-true-sheet/pull/817) by [@lodev09](https://github.com/lodev09))
 - Added a JS-only `lazy` prop — set to `false` to mount sheet content before presentation, allowing `auto` detents to measure settled content before the sheet opens. ([#792](https://github.com/lodev09/react-native-true-sheet/pull/792) by [@maxlapides](https://github.com/maxlapides))
 - **iOS**: Smoother `onPositionChange`, and `onWillDismiss` now fires only when a drag-to-dismiss is committed. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744), [#756](https://github.com/lodev09/react-native-true-sheet/pull/756) by [@lodev09](https://github.com/lodev09))
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))

@@ -1,13 +1,24 @@
-import { forwardRef, useRef, useState, type Ref, useImperativeHandle } from 'react';
-import { StyleSheet } from 'react-native';
+import { forwardRef, useEffect, useRef, useState, type Ref, useImperativeHandle } from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  FadeOutUp,
+  ZoomIn,
+  ZoomOut,
+  type ComplexAnimationBuilder,
+  type WithSpringConfig,
+} from 'react-native-reanimated';
 import {
   TrueSheet,
+  TrueSheetOverlay,
   TrueSheetPeek,
   useTrueSheet,
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, SPACING, times } from '../../utils';
+import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -15,6 +26,23 @@ import { ButtonGroup } from '../ButtonGroup';
 import { Spacer } from '../Spacer';
 import { Header } from '../Header';
 import { Input } from '../Input';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SPRING_CONFIG: WithSpringConfig = {
+  damping: 500,
+  stiffness: 1000,
+  mass: 3,
+  overshootClamping: true,
+};
+
+const spring = <T extends ComplexAnimationBuilder<any>>(animation: T) =>
+  animation
+    .springify()
+    .damping(SPRING_CONFIG.damping!)
+    .stiffness(SPRING_CONFIG.stiffness!)
+    .mass(SPRING_CONFIG.mass!)
+    .overshootClamping(SPRING_CONFIG.overshootClamping ? 1 : 0);
 
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
@@ -25,8 +53,12 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const { onNavigateToModal, onNavigateToTest, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
+  const overlaySheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
   const [detentIndex, setDetentIndex] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const toastTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const { dismissAll, dismissStack } = useTrueSheet();
 
@@ -49,6 +81,14 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
     await sheetRef.current?.dismiss();
     await TrueSheet.present('prompt-sheet');
   };
+
+  const showToast = () => {
+    setToast('Rendered above the sheet!');
+    clearTimeout(toastTimeout.current);
+    toastTimeout.current = setTimeout(() => setToast(null), 2000);
+  };
+
+  useEffect(() => () => clearTimeout(toastTimeout.current), []);
 
   const addContent = () => {
     setContentCount((prev) => prev + 1);
@@ -127,6 +167,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <Button text="Auto" onPress={() => resize(1)} />
         <Button text="Large" onPress={() => resize(2)} />
       </ButtonGroup>
+      <ButtonGroup>
+        <Button text="Show Toast" onPress={showToast} />
+        <Button text="Show Dialog" onPress={() => setDialogVisible(true)} />
+      </ButtonGroup>
       <TrueSheetPeek />
       <Spacer />
       <Input />
@@ -144,6 +188,53 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       />
       <Spacer />
       <Button text="Dismiss" onPress={dismiss} />
+
+      {/* Touches outside the toast pass through — the sheet stays interactive */}
+      <TrueSheetOverlay style={styles.toastOverlay}>
+        {toast && (
+          <Animated.View
+            style={styles.toast}
+            entering={spring(new FadeInDown())}
+            exiting={spring(new FadeOutUp())}
+          >
+            <Text style={styles.overlayText}>{toast}</Text>
+          </Animated.View>
+        )}
+      </TrueSheetOverlay>
+
+      {/* A full-size backdrop blocks the sheet until the dialog is dismissed */}
+      <TrueSheetOverlay>
+        {dialogVisible && (
+          <AnimatedPressable
+            style={styles.backdrop}
+            entering={spring(new FadeIn())}
+            exiting={spring(new FadeOut())}
+            onPress={() => setDialogVisible(false)}
+          >
+            <Animated.View
+              style={styles.dialog}
+              entering={spring(new ZoomIn())}
+              exiting={spring(new ZoomOut())}
+            >
+              <Text style={styles.overlayText}>Rendered above the sheet!</Text>
+              <Button text="Open Sheet" onPress={() => overlaySheet.current?.present()} />
+              <Button text="Close" onPress={() => setDialogVisible(false)} />
+            </Animated.View>
+          </AnimatedPressable>
+        )}
+
+        {/* A sheet inside the overlay presents like any other — beneath the dialog */}
+        <TrueSheet
+          ref={overlaySheet}
+          name="basic-overlay"
+          detents={['auto']}
+          backgroundColor={DARK}
+          style={styles.childContent}
+        >
+          <DemoContent color={DARK_BLUE} />
+          <Button text="Close" onPress={() => overlaySheet.current?.dismiss()} />
+        </TrueSheet>
+      </TrueSheetOverlay>
 
       <TrueSheet
         ref={childSheet}
@@ -176,6 +267,32 @@ const styles = StyleSheet.create({
   childContent: {
     padding: SPACING,
     gap: GAP,
+  },
+  toastOverlay: {
+    alignItems: 'center',
+    paddingTop: SPACING * 4,
+  },
+  toast: {
+    backgroundColor: DARK,
+    borderRadius: SPACING,
+    paddingHorizontal: SPACING,
+    paddingVertical: SPACING / 2,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: SPACING,
+  },
+  dialog: {
+    backgroundColor: DARK,
+    borderRadius: SPACING,
+    padding: SPACING,
+    gap: GAP,
+  },
+  overlayText: {
+    color: LIGHT_GRAY,
+    textAlign: 'center',
   },
 });
 
