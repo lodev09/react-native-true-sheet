@@ -682,10 +682,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 
   if (@available(iOS 16.0, *)) {
-    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      [self.sheet invalidateDetents];
-    }
-                                 completion:nil];
+    [coordinator
+      animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        [self.sheet invalidateDetents];
+      }
+                      completion:nil];
   }
 }
 

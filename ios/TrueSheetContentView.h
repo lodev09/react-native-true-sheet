@@ -29,7 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface TrueSheetContentView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate, RCTMountingTransactionObserving>
+@interface TrueSheetContentView
+    : RCTViewComponentView <TrueSheetKeyboardObserverDelegate, RCTMountingTransactionObserving>
 
 @property (nonatomic, weak, nullable) id<TrueSheetContentViewDelegate> delegate;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
