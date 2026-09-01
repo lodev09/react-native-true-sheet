@@ -32,6 +32,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 📜 **`scrollableRef`** - Pass a `ScrollView`/`FlatList` ref to wire nested scrolling, keyboard insets, and `auto` detent sizing
 * 🦶 **Relative footers** - Footers take up space below the content by default
 * 🧭 **Expo Router** - First-class support via the `Sheet` layout from `/navigation/expo-router`
+* 🍞 **`TrueSheetOverlay`** - Render toasts, dialogs, and other [overlays above your sheets](https://sheet.lodev09.com/guides/overlays) — no more `FullWindowOverlay`/`Modal` workarounds
 
 ```sh
 npx expo install @lodev09/react-native-true-sheet@beta
