@@ -53,6 +53,9 @@ NS_ASSUME_NONNULL_BEGIN
                                        >
 
 @property (nonatomic, weak, nullable) id<TrueSheetViewControllerDelegate> delegate;
+// The presenter's view, set before the sheet is presented. Detents are built while this
+// controller's own view is still window-less, so `screenHeight` reads the window from here.
+@property (nonatomic, weak, nullable) UIView *presenterView;
 @property (nonatomic, strong) NSArray<NSNumber *> *detents;
 @property (nonatomic, strong, nullable) NSNumber *maxContentHeight;
 @property (nonatomic, strong, nullable) NSNumber *maxContentWidth;

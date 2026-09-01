@@ -500,6 +500,7 @@ using namespace facebook::react;
     return;
   }
 
+  _controller.presenterView = presentingViewController.view;
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
   [_controller setupSheetProps];
@@ -872,6 +873,7 @@ using namespace facebook::react;
   }
 
   UIView *presenterView = _controller.presentingViewController.view;
+  _controller.presenterView = presenterView;
   [_controller setupAnchorViewInView:presenterView];
 
   [_controller setupSheetSizing];

@@ -207,7 +207,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 }
 
 - (CGFloat)screenHeight {
-  UIWindow *window = self.view.window;
+  // `setupSheetDetents` runs before `presentViewController:`, so self.view has no window yet and a
+  // fractional detent would resolve against UIScreen.mainScreen — the whole display, not the app's
+  // window. That over-sizes every fraction in a windowed iPad app whose window is shorter than the
+  // display, and the sheet clamps to full height until a resize rebuilds the detents.
+  UIWindow *window = self.view.window ?: self.presentingViewController.view.window ?: self.presenterView.window;
   return window ? window.bounds.size.height : UIScreen.mainScreen.bounds.size.height;
 }
 
