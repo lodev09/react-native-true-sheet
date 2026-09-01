@@ -2,7 +2,7 @@
 import { createRef } from 'react';
 import { Text } from 'react-native';
 import { render, act } from '@testing-library/react-native';
-import { TrueSheet, TrueSheetPeek } from '../index';
+import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
 import type {
   DidDismissEvent,
@@ -68,6 +68,15 @@ describe('TrueSheet', () => {
     );
     expect(getByText('Peek Content')).toBeDefined();
     expect(getByText('Content')).toBeDefined();
+  });
+
+  it('should render TrueSheetOverlay children', () => {
+    const { getByText } = render(
+      <TrueSheetOverlay>
+        <Text>Overlay Content</Text>
+      </TrueSheetOverlay>
+    );
+    expect(getByText('Overlay Content')).toBeDefined();
   });
 
   it('should render with detents prop', () => {

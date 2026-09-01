@@ -13,6 +13,7 @@
 #import "TrueSheetContentView.h"
 #import "TrueSheetFooterView.h"
 #import "TrueSheetModule.h"
+#import "TrueSheetOverlayView.h"
 #import "TrueSheetViewController.h"
 #import "core/RNScreensEventObserver.h"
 #import "events/TrueSheetDragEvents.h"
@@ -525,13 +526,19 @@ using namespace facebook::react;
   [_screensEventObserver capturePresenterScreenFromView:self];
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
+  UIWindow *window = presentingViewController.view.window;
   [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{
+                                         [TrueSheetOverlayView bringOverlaysToFrontInWindow:window];
                                          if (completion) {
                                            completion(YES, nil);
                                          }
                                        }];
+
+  // Presenting adds the sheet's transition view on top of the window — keep
+  // overlays above it (again on completion in case the transition was queued)
+  [TrueSheetOverlayView bringOverlaysToFrontInWindow:window];
 }
 
 - (void)resizeToIndex:(NSInteger)index completion:(nullable TrueSheetCompletionBlock)completion {

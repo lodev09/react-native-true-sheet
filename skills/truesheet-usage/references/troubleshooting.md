@@ -11,7 +11,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [initialDetentIndex not working from deep link (iOS)](#initialdetentindex-not-working-from-deep-link-ios)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
-- [Overlays render behind the sheet (Android)](#overlays-render-behind-the-sheet-android)
+- [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
 - [Keyboard hides input](#keyboard-hides-input)
 - [Sheet doesn't build (Xcode version)](#sheet-doesnt-build-xcode-version)
 - [EAS Build fails](#eas-build-fails)
@@ -118,13 +118,13 @@ useFocusEffect(
 
 **Fix:** Remove manual safe-area padding from the footer and scroll content. To manage it yourself instead, opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}` (scrollable) or `insetAdjustment="never"` (whole sheet).
 
-## Overlays render behind the sheet (Android)
+## Overlays render behind the sheet
 
 **Symptom:** Dropdowns, toasts, or dialogs from portal-based libraries render behind the sheet.
 
-**Cause:** The sheet lives in a native `CoordinatorLayout` that sits above the normal React Native view hierarchy.
+**Cause:** Sheets are presented natively, above the React Native view hierarchy.
 
-**Fix:** Render overlays in `FullWindowOverlay` (iOS) or `Modal` (Android). See [Advanced Patterns: Overlays on sheets](./advanced-patterns.md#overlays-on-sheets).
+**Fix:** Render overlays in `TrueSheetOverlay`. See [Advanced Patterns: Overlays on sheets](./advanced-patterns.md#overlays-on-sheets).
 
 ## Keyboard hides input
 

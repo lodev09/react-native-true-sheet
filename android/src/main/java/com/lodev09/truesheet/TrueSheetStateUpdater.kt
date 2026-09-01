@@ -1,5 +1,7 @@
 package com.lodev09.truesheet
 
+import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.StateWrapper
 
 /**
@@ -21,6 +23,22 @@ object TrueSheetStateUpdater {
   /** Returns false when unavailable — caller should fall back to async updateState. */
   fun updateState(stateWrapper: StateWrapper, widthDp: Float, heightDp: Float): Boolean =
     isAvailable && nativeUpdateState(stateWrapper, widthDp, heightDp)
+
+  /**
+   * Pushes the container size (px) into the Fabric state — synchronously when
+   * the bridge is available, async otherwise.
+   */
+  fun updateContainerSize(stateWrapper: StateWrapper, widthPx: Int, heightPx: Int) {
+    val widthDp = widthPx.toFloat().pxToDp()
+    val heightDp = heightPx.toFloat().pxToDp()
+
+    if (updateState(stateWrapper, widthDp, heightDp)) return
+
+    val newStateData = WritableNativeMap()
+    newStateData.putDouble("containerWidth", widthDp.toDouble())
+    newStateData.putDouble("containerHeight", heightDp.toDouble())
+    stateWrapper.updateState(newStateData)
+  }
 
   /** Returns false when unavailable — caller should fall back to async updateState. */
   fun updateFooterState(stateWrapper: StateWrapper, bottomInsetDp: Float): Boolean =

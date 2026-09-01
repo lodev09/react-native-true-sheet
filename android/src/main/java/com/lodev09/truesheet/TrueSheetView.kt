@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.UiThread
 import com.facebook.react.bridge.LifecycleEventListener
-import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.StateWrapper
@@ -22,6 +21,7 @@ import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
 import com.lodev09.truesheet.utils.KeyboardUtils
+import com.lodev09.truesheet.utils.findRootContainerView
 
 /**
  * Main TrueSheet host view that manages the sheet and dispatches events to JavaScript.
@@ -376,18 +376,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     lastContainerWidth = width
     lastContainerHeight = height
 
-    val sw = stateWrapper ?: return
-    val widthDp = width.toFloat().pxToDp()
-    val heightDp = height.toFloat().pxToDp()
-
-    // Synchronous update — commits and mounts within the same UI-thread frame
-    if (TrueSheetStateUpdater.updateState(sw, widthDp, heightDp)) return
-
-    // Fallback: async state update
-    val newStateData = WritableNativeMap()
-    newStateData.putDouble("containerWidth", widthDp.toDouble())
-    newStateData.putDouble("containerHeight", heightDp.toDouble())
-    sw.updateState(newStateData)
+    stateWrapper?.let { TrueSheetStateUpdater.updateContainerSize(it, width, height) }
   }
 
   // ==================== Sheet Actions ====================
@@ -731,16 +720,5 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
    * of whichever window this view is in - whether that's the activity's window or a
    * Modal's dialog window.
    */
-  override fun findRootContainerView(): ViewGroup? {
-    var current: android.view.ViewParent? = parent
-
-    while (current != null) {
-      if (current is ViewGroup && current.id == android.R.id.content) {
-        return current
-      }
-      current = current.parent
-    }
-
-    return reactContext.currentActivity?.findViewById(android.R.id.content)
-  }
+  override fun findRootContainerView(): ViewGroup? = findRootContainerView(reactContext)
 }

@@ -67,6 +67,13 @@ export function TrueSheetPeek({ children, ...rest }: ViewProps) {
 }
 
 /**
+ * Mock TrueSheetOverlay component for testing.
+ */
+export function TrueSheetOverlay({ children, ...rest }: ViewProps) {
+  return React.createElement(View, rest, children);
+}
+
+/**
  * Mock TrueSheetProvider for testing.
  */
 export function TrueSheetProvider({ children }: { children: React.ReactNode }) {

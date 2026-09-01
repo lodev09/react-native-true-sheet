@@ -209,6 +209,18 @@ import { TrueSheet, TrueSheetPeek } from '@lodev09/react-native-true-sheet'
 
 Collapsed, the sheet shows everything from the top through the **bottom edge** of `TrueSheetPeek`; content below stays hidden until expanded. An empty `<TrueSheetPeek />` works as a fold marker between existing views. One peek component per sheet. Absolute footers count toward the peek height; relative footers don't (pushed off-screen at peek).
 
+### Toasts and dialogs above sheets
+
+```tsx
+import { TrueSheet, TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
+
+<TrueSheetOverlay>
+  {toast && <Toast message={toast} />}
+</TrueSheetOverlay>
+```
+
+Renders children in a native layer above every presented sheet. Show/hide by conditionally rendering children. Fills the window; touches that miss the children pass through. Never use RN `Modal`/`FullWindowOverlay` for this anymore.
+
 ### Non-dismissible confirmation
 
 ```tsx
@@ -293,6 +305,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 |---------|-----|---------|-----|
 | `'auto'` detent | iOS 16+ | Yes | Yes |
 | `'peek'` detent / `TrueSheetPeek` | iOS 16+ | Yes | Yes |
+| `TrueSheetOverlay` | Yes | Yes | Yes |
 | `backgroundBlur` | Yes | No | No |
 | Liquid Glass | iOS 26+ | No | No |
 | Static global methods | Yes | Yes | No (use provider) |

@@ -20,6 +20,7 @@
 #import <react/renderer/components/TrueSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetContentViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
+#import <react/renderer/components/TrueSheetSpec/TrueSheetOverlayViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetViewComponentDescriptor.h>
 
 #import <TrueSheetSpec/TrueSheetSpec.h>
@@ -90,6 +91,17 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<TrueSheetPeekViewComponentDescriptor>();
+}
+
+@end
+
+@interface TrueSheetOverlayView : RCTViewComponentView
+@end
+
+@implementation TrueSheetOverlayView
+
++ (ComponentDescriptorProvider)componentDescriptorProvider {
+  return concreteComponentDescriptorProvider<TrueSheetOverlayViewComponentDescriptor>();
 }
 
 @end

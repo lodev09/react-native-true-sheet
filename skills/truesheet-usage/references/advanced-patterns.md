@@ -308,23 +308,22 @@ Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. Th
 
 ## Overlays on sheets
 
-Portal-based UI elements (dialogs, toasts, dropdown menus) may render behind the sheet on Android because the sheet lives in its own `CoordinatorLayout`.
+Sheets are presented natively above the React Native view hierarchy, so toasts, dialogs, and JS-portal content render behind them.
 
-**Solution:** Use `FullWindowOverlay` (iOS) or `Modal` (Android):
+**Solution:** Render the content in `TrueSheetOverlay` — a native layer above every presented sheet. Show/hide by conditionally rendering children (no `visible` prop). Mount it anywhere, including inside a sheet's content.
 
 ```tsx
-import { Platform, Modal } from 'react-native'
-import { FullWindowOverlay } from 'react-native-screens'
+import { TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
 
-const Overlay = Platform.select({
-  ios: FullWindowOverlay,
-  default: Modal,
-})
-
-<Overlay visible={visible} transparent>
-  <YourDialogContent />
-</Overlay>
+<TrueSheetOverlay>
+  {toast && <Toast message={toast} />}
+</TrueSheetOverlay>
 ```
+
+- Fills the window; touches that miss its children pass through (the sheet stays draggable). For a blocking dialog, render an `absoluteFill` backdrop child.
+- Use `style` for flex/padding layout of children. The overlay itself never renders (no `backgroundColor`).
+- Native modals presented afterwards (RN `Modal`, native-stack modal screens) and the keyboard still render above it.
+- Supported on iOS, Android, and Web.
 
 ---
 

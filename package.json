@@ -106,6 +106,7 @@
     "@types/babel__core": "^7",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.2.14",
+    "@types/react-dom": "~19.2.0",
     "commitlint": "^19.8.1",
     "del-cli": "^6.0.0",
     "eslint": "^9.35.0",
@@ -136,6 +137,7 @@
     "@react-navigation/native": ">=7.3.0",
     "expo-router": ">=57.0.0",
     "react": "*",
+    "react-dom": "*",
     "react-native": ">=0.82.0",
     "react-native-reanimated": ">=4",
     "react-native-worklets": "*",
@@ -152,6 +154,9 @@
       "optional": true
     },
     "expo-router": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     },
     "react-native-reanimated": {
@@ -283,6 +288,9 @@
         },
         "TrueSheetPeekView": {
           "className": "TrueSheetPeekView"
+        },
+        "TrueSheetOverlayView": {
+          "className": "TrueSheetOverlayView"
         }
       }
     }
