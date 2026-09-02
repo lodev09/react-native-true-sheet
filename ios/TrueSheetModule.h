@@ -27,15 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Register a sheet component view with its React tag
- * Called automatically by TrueSheetView during initialization
+ * Called automatically by TrueSheetView when it attaches to a window.
+ * The registry holds views weakly, so no unregistration is needed.
  */
 + (void)registerView:(TrueSheetView *)view withTag:(NSNumber *)tag;
-
-/**
- * Unregister a sheet component view
- * Called automatically by TrueSheetView during dealloc
- */
-+ (void)unregisterViewWithTag:(NSNumber *)tag;
 
 @end
 

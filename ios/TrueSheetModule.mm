@@ -18,8 +18,9 @@
 
 #import <TrueSheetSpec/TrueSheetSpec.h>
 
-// Static registry to store view references by tag
-static NSMutableDictionary<NSNumber *, TrueSheetView *> *viewRegistry;
+// Static registry of live hosts by tag — weak so an unmounted host deallocates
+// (RN zeroes the tag before teardown, so hosts can't unregister themselves)
+static NSMapTable<NSNumber *, TrueSheetView *> *viewRegistry;
 
 @interface TrueSheetModule () <NativeTrueSheetModuleSpec>
 @end
@@ -30,7 +31,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 
 + (void)initialize {
   if (self == [TrueSheetModule class]) {
-    viewRegistry = [NSMutableDictionary new];
+    viewRegistry = [NSMapTable strongToWeakObjectsMapTable];
   }
 }
 
@@ -151,7 +152,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
       // Find the root presented sheet (one without a parent TrueSheet)
       TrueSheetView *rootSheet = nil;
 
-      for (TrueSheetView *view in viewRegistry.allValues) {
+      for (TrueSheetView *view in viewRegistry.objectEnumerator) {
         if (!view.viewController.isPresented) {
           continue;
         }
@@ -191,7 +192,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   }
 
   @synchronized(viewRegistry) {
-    return viewRegistry[reactTag];
+    return [viewRegistry objectForKey:reactTag];
   }
 }
 
@@ -201,17 +202,7 @@ RCT_EXPORT_MODULE(TrueSheetModule)
   }
 
   @synchronized(viewRegistry) {
-    viewRegistry[tag] = view;
-  }
-}
-
-+ (void)unregisterViewWithTag:(NSNumber *)tag {
-  if (!tag) {
-    return;
-  }
-
-  @synchronized(viewRegistry) {
-    [viewRegistry removeObjectForKey:tag];
+    [viewRegistry setObject:view forKey:tag];
   }
 }
 
