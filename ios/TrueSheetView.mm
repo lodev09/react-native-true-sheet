@@ -125,10 +125,35 @@ using namespace facebook::react;
 
   UIViewController *vc = [self findPresentingViewController];
 
-  // Only present if the view controller is in the same window and not being dismissed
-  if (!vc || vc.view.window != self.window || _controller.isBeingDismissed) {
+  // Only present if the view controller is in the same window
+  if (!vc || vc.view.window != self.window) {
     // Animate next time when sheet finally moves to the correct window
     _initialDetentAnimated = YES;
+    return;
+  }
+
+  // A sheet still animating out of the presenter (e.g. our own controller,
+  // recycled mid-dismissal) blocks presentation — retry once its transition ends.
+  UIViewController *dismissing = vc.presentedViewController;
+  if (dismissing && dismissing.isBeingDismissed) {
+    _initialDetentAnimated = YES;
+
+    __weak __typeof(self) weakSelf = self;
+    void (^retry)(void) = ^{
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf presentInitialIfNeeded];
+      });
+    };
+
+    id<UIViewControllerTransitionCoordinator> coordinator = dismissing.transitionCoordinator;
+    if (coordinator) {
+      [coordinator animateAlongsideTransition:nil
+                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                     retry();
+                                   }];
+    } else {
+      retry();
+    }
     return;
   }
 
@@ -176,8 +201,6 @@ using namespace facebook::react;
 
   [_snapshotView removeFromSuperview];
   _snapshotView = nil;
-
-  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -383,7 +406,38 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
-  [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+  // Pooled mid-dismissal: the next mount can reuse this host — and its
+  // controller — while the previous sheet is still animating out. Detach until
+  // that transition ends so its tail (didBlur, didDismiss, position) can't reach
+  // the new mount, then hand the controller back and let auto-present retry.
+  if (_controller.isBeingDismissed) {
+    _controller.delegate = nil;
+
+    __weak __typeof(self) weakSelf = self;
+    void (^reattach)(void) = ^{
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __typeof(self) strongSelf = weakSelf;
+        if (!strongSelf)
+          return;
+
+        strongSelf->_controller.delegate = strongSelf;
+        strongSelf->_controller.activeDetentIndex = -1;
+        if (strongSelf.window) {
+          [strongSelf presentInitialIfNeeded];
+        }
+      });
+    };
+
+    id<UIViewControllerTransitionCoordinator> coordinator = _controller.transitionCoordinator;
+    if (coordinator) {
+      [coordinator animateAlongsideTransition:nil
+                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                     reattach();
+                                   }];
+    } else {
+      reattach();
+    }
+  }
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
