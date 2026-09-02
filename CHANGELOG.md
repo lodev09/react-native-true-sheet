@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: The library now builds on Android Gradle Plugin 9, which ships built-in Kotlin — the explicit Kotlin plugin is skipped when AGP already provides it. ([#819](https://github.com/lodev09/react-native-true-sheet/pull/819) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 3.11.12
 
 ### 🐛 Bug fixes
