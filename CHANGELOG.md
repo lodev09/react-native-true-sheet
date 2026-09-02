@@ -14,6 +14,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Unmounting a sheet mid-dismissal and mounting a new one no longer leaks the old sheet's `onDidDismiss` into the new mount or blocks its auto-present. ([#818](https://github.com/lodev09/react-native-true-sheet/pull/818) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fractional detents now resolve against the app's window instead of the full screen, fixing full-height sheets in windowed iPad apps (Stage Manager, iPadOS 26 windowing), and re-resolve when the window is resized or rotated. ([#815](https://github.com/lodev09/react-native-true-sheet/pull/815) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 - **Android**: A stacked parent sheet now follows its child frame-by-frame when the child resizes, and no longer gets stuck at stale detents after a half-expanded settle. ([#797](https://github.com/lodev09/react-native-true-sheet/pull/797) by [@lodev09](https://github.com/lodev09))
 - **Android**: The scrollable content now tracks the keyboard frame-by-frame — the focused input rides the keyboard up smoothly, and the scroll position eases back on dismiss instead of snapping. ([#798](https://github.com/lodev09/react-native-true-sheet/pull/798) by [@lodev09](https://github.com/lodev09))
