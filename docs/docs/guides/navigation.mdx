@@ -107,6 +107,70 @@ function App() {
 }
 ```
 
+### Nesting Navigators in Sheets
+
+Native stacks are not supported inside a sheet screen. On Android, `react-native-screens` looks for the app's root view above its containers, and the sheet renders outside of it. Presenting a sheet screen whose component is a `createNativeStackNavigator` crashes with:
+
+```
+IllegalStateException: ScreenContainer is not attached under ReactRootView
+```
+
+Only the base screen (the first screen, or `initialRouteName`) can host a native stack, as shown in [Wrapping Existing Navigation](#wrapping-existing-navigation).
+
+For multi-step flows inside a sheet, use one of these instead:
+
+- **Stack sheets.** Make each step its own sheet screen and navigate between them. The presenting sheet stays visible underneath, and `navigation.pop()`, `popTo()`, and `popToTop()` walk back through the stack. This is the recommended approach.
+
+  ```tsx
+  function SettingsSheet() {
+    const navigation = useTrueSheetNavigation();
+
+    return (
+      <View>
+        <Button title="Profile" onPress={() => navigation.navigate('Profile')} />
+        <Button title="Back" onPress={() => navigation.pop()} />
+      </View>
+    );
+  }
+  ```
+
+  With [Expo Router](#expo-router), keep each step as a sibling route under the `Sheet` layout instead of giving the flow its own `_layout.tsx` with a `<Stack>`:
+
+  ```
+  app/
+  ├── _layout.tsx          # Sheet layout
+  ├── index.tsx            # Base content
+  ├── settings.tsx         # Sheet screen
+  └── profile.tsx          # Sheet screen, presented from settings
+  ```
+
+  ```tsx
+  // app/_layout.tsx
+  export default function SheetLayout() {
+    return (
+      <Sheet>
+        <Sheet.Screen name="index" />
+        <Sheet.Screen name="settings" options={{ detents: ['auto', 1] }} />
+        <Sheet.Screen name="profile" options={{ detents: ['auto', 1] }} />
+      </Sheet>
+    );
+  }
+
+  // app/settings.tsx
+  export default function SettingsSheet() {
+    const router = useRouter();
+
+    return (
+      <View>
+        <Button title="Profile" onPress={() => router.push('/profile')} />
+        <Button title="Back" onPress={() => router.back()} />
+      </View>
+    );
+  }
+  ```
+
+- **Local state.** Swap the sheet's content with plain React state when you don't need navigation history or deep links.
+
 ### Navigation & Resizing
 
 ```tsx
@@ -277,6 +341,10 @@ Inside sheet screens, import `useTrueSheetNavigation` from the same entry point:
 ```tsx
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 ```
+
+:::warning
+A sheet route must not have its own `_layout.tsx` with a `<Stack>`. Keep multi-step flows as sibling sheet screens under the `Sheet` layout instead. See [Nesting Navigators in Sheets](#nesting-navigators-in-sheets).
+:::
 
 See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
 
