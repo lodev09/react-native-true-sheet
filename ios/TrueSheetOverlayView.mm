@@ -28,13 +28,10 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
 
 @implementation TrueSheetOverlayView {
   TrueSheetOverlayContainerView *_containerView;
-  // Owns `_containerView` so it has a view controller in its responder chain.
-  //
-  // The container is added straight to the window, which makes it a sibling of
-  // `rootViewController.view`, and a UIWindow's responder chain skips its root view
-  // controller. Without an owner here `-[UIView reactViewController]` walks
-  // container -> window -> application and finds nothing, so content that installs a
-  // view controller cannot attach and renders nothing.
+  // Owns `_containerView` so it has a view controller in its responder chain. The
+  // container is a sibling of `rootViewController.view`, and a window's responder chain
+  // skips its root view controller — without an owner, `-[UIView reactViewController]`
+  // finds nothing and content that installs a view controller cannot attach.
   UIViewController *_containerController;
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetOverlayViewShadowNode::ConcreteState::Shared _state;
@@ -64,8 +61,8 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
     _containerView = [[TrueSheetOverlayContainerView alloc] initWithFrame:CGRectZero];
     _containerView.delegate = self;
 
-    // Assigning it as the controller's view is what puts the controller in the
-    // container's responder chain; the containment below is for lifecycle only.
+    // Assigning the container as its view is what puts the controller in the responder
+    // chain; the containment below is for lifecycle only.
     _containerController = [UIViewController new];
     _containerController.view = _containerView;
 
