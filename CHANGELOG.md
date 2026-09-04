@@ -14,6 +14,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Content that needs a parent view controller, like React Native's `Modal`, now works inside `TrueSheetOverlay` instead of silently rendering nothing. ([#823](https://github.com/lodev09/react-native-true-sheet/pull/823) by [@SamuelBrucksch](https://github.com/SamuelBrucksch) and [@lodev09](https://github.com/lodev09))
 - **iOS**: Unmounting a sheet mid-dismissal and mounting a new one no longer leaks the old sheet's `onDidDismiss` into the new mount or blocks its auto-present. ([#818](https://github.com/lodev09/react-native-true-sheet/pull/818) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fractional detents now resolve against the app's window instead of the full screen, fixing full-height sheets in windowed iPad apps (Stage Manager, iPadOS 26 windowing), and re-resolve when the window is resized or rotated. ([#815](https://github.com/lodev09/react-native-true-sheet/pull/815) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 - **Android**: A stacked parent sheet now follows its child frame-by-frame when the child resizes, and no longer gets stuck at stale detents after a half-expanded settle. ([#797](https://github.com/lodev09/react-native-true-sheet/pull/797) by [@lodev09](https://github.com/lodev09))

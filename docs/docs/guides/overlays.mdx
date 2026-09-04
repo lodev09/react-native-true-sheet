@@ -70,6 +70,7 @@ Since it fills the window, content may sit under the status bar or the system na
 
 - Native modals presented **after** the overlay — React Native's `Modal`, native-stack modal screens — render above it.
 - The keyboard always renders above the overlay.
+- `react-native-screens` containers — native stacks, bottom tabs, drawers — are not supported inside the overlay. On Android they crash with the same error described in [Nesting Navigators in Sheets](./navigation#nesting-navigators-in-sheets).
 
 ## Platform Support
 
