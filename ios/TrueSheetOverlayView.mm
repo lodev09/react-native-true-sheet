@@ -28,6 +28,14 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
 
 @implementation TrueSheetOverlayView {
   TrueSheetOverlayContainerView *_containerView;
+  // Owns `_containerView` so it has a view controller in its responder chain.
+  //
+  // The container is added straight to the window, which makes it a sibling of
+  // `rootViewController.view`, and a UIWindow's responder chain skips its root view
+  // controller. Without an owner here `-[UIView reactViewController]` walks
+  // container -> window -> application and finds nothing, so content that installs a
+  // view controller cannot attach and renders nothing.
+  UIViewController *_containerController;
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetOverlayViewShadowNode::ConcreteState::Shared _state;
   CGSize _lastStateSize;
@@ -56,6 +64,11 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
     _containerView = [[TrueSheetOverlayContainerView alloc] initWithFrame:CGRectZero];
     _containerView.delegate = self;
 
+    // Assigning it as the controller's view is what puts the controller in the
+    // container's responder chain; the containment below is for lifecycle only.
+    _containerController = [UIViewController new];
+    _containerController.view = _containerView;
+
     _touchHandler = [[RCTSurfaceTouchHandler alloc] init];
     [_touchHandler attachToView:_containerView];
 
@@ -79,8 +92,16 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
   if (window) {
     _containerView.frame = window.bounds;
     [window addSubview:_containerView];
+
+    UIViewController *root = window.rootViewController;
+    if (root != nil && _containerController.parentViewController != root) {
+      [root addChildViewController:_containerController];
+      [_containerController didMoveToParentViewController:root];
+    }
   } else {
+    [_containerController willMoveToParentViewController:nil];
     [_containerView removeFromSuperview];
+    [_containerController removeFromParentViewController];
   }
 }
 
@@ -126,7 +147,9 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  [_containerController willMoveToParentViewController:nil];
   [_containerView removeFromSuperview];
+  [_containerController removeFromParentViewController];
   _lastStateSize = CGSizeZero;
   _state.reset();
   self.hidden = YES;
