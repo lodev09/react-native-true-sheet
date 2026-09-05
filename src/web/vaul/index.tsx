@@ -778,6 +778,16 @@ export function Root({
     unfreezeScrollables();
     setIsDragging(false);
     dragEndTime.current = new Date();
+
+    // The press that started this "drag" may have dismissed the drawer (e.g. a
+    // back button acting on pointerdown). Snapping now would overwrite the
+    // dismiss transform that closeDrawer just wrote and freeze the sheet in
+    // place until it unmounts.
+    if (!isOpen) {
+      if (pointerEvent) onReleaseProp?.(pointerEvent, false);
+      return;
+    }
+
     const swipeAmount = getTranslate(drawerRef.current, direction);
 
     // Drag overshoot below the lowest snap point translates the detached

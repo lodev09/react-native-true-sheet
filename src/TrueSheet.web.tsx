@@ -53,7 +53,7 @@ import {
 } from './web/constants';
 import { getDOMElement } from './web/dom';
 import { Drawer } from './web/vaul';
-import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
+import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
 
 // Resolves the user's `scrollableRef` to its scrollable DOM element — RN-web
 // ScrollView refs expose the scroll node directly (with helpers attached);
@@ -198,19 +198,34 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       e.preventDefault();
       return;
     }
+    if (!(target instanceof Element)) return;
+    const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
+    if (!wrapper) return;
     // The footer is rendered via vaul's `detachedSiblings` as a sibling of
     // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
     // clicks on it as "outside" the content. Don't dismiss for clicks that
     // landed inside the wrapper.
-    if (target instanceof Element) {
-      const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
-      if (wrapper && wrapper.contains(target)) {
-        e.preventDefault();
-      }
+    if (wrapper.contains(target)) {
+      e.preventDefault();
+      return;
     }
+    // Every sheet runs Radix non-modal and portals its overlay + wrapper as
+    // siblings into the shared container, so a press on a sheet stacked above
+    // this one (its content or its dim overlay) is also delivered here as
+    // "outside". Sheets present in document order, so anything after our
+    // wrapper belongs to a descendant. Radix may dispatch on the deferred
+    // click (touch), after a dismissing descendant has left the DOM — treat
+    // disconnected as above too.
+    /* eslint-disable no-bitwise */
+    const above = Node.DOCUMENT_POSITION_FOLLOWING | Node.DOCUMENT_POSITION_DISCONNECTED;
+    if (wrapper.compareDocumentPosition(target) & above) {
+      e.preventDefault();
+    }
+    /* eslint-enable no-bitwise */
   };
 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
+  const dismissDescendantsRef = useRef<() => void>(() => {});
 
   const methods = useMemo<TrueSheetMethods>(
     () => ({
@@ -276,6 +291,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const contentRef = useRef<View>(null);
   const peekElRef = useRef<View>(null);
   const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
+
+  // The peek's own onLayout only fires when *it* resizes. Content added above
+  // it moves it without resizing it, so re-measure its offset whenever the
+  // content view's layout changes.
+  const handleContentLayout = useCallback(() => {
+    const peekEl = getDOMElement(peekElRef.current);
+    const contentEl = getDOMElement(contentRef.current);
+    if (peekEl && contentEl) {
+      setPeekContentHeight(measurePeekContentHeight(peekEl, contentEl));
+    }
+  }, []);
 
   // An absolute (floating) header overlaps the content, so it contributes no
   // height to the 'auto' detent measurement.
@@ -727,6 +753,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const present = isOpen;
     if (!present) {
+      // Mirror native: dismissing a sheet takes every sheet stacked above it
+      // (iOS dismisses from the presenter; Android runs dismissStack first).
+      dismissDescendantsRef.current();
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
       // emitWillDismissEvents (blur fires before dismiss). willPresent is
       // deferred to `start()` below (needs the mounted drawer's geometry).
@@ -844,6 +873,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     isFormSheet
   );
   dismissAboveRef.current = dismissAbove;
+  // Captured per render: by the time the dismiss effect runs, this sheet has
+  // already been popped from the stack, so `dismissAbove` can't find it.
+  dismissDescendantsRef.current = () => {
+    for (let i = descendants.length - 1; i >= 0; i--) {
+      descendants[i]!.ref.current?.dismiss();
+    }
+  };
 
   // Mirror Android: translate this sheet down to match the deepest descendant's
   // top so the whole stack visually aligns. Cascades because every ancestor
@@ -889,17 +925,23 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
 
-    // Track only the immediate child's snap point. Walking deeper descendants
-    // would push this sheet further when a grandchild opens, even when our
-    // own child didn't move (e.g., child skipped its cascade for a page
-    // grandchild) — leaving a visible gap between this sheet and its child.
+    // Track the immediate child's *actual* top: its cascade transform when it
+    // was itself pushed behind a grandchild, else its own snap point. Mirrors
+    // Android's addTranslation propagating extra translation up the stack —
+    // a grandchild opening pushes this sheet only as far as our child moved.
+    const readTranslateY = (el: HTMLElement) => {
+      const match = el.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
+      return match ? Number.parseFloat(match[1]!) : null;
+    };
     const computeTargetY = () => {
       const parentSnap =
         Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
       const node = descendants[0]?.nodeRef.current;
       if (!node) return parentSnap;
-      const childSnap = Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
-      return Math.max(parentSnap, childSnap);
+      const childTop =
+        readTranslateY(node) ??
+        (Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0);
+      return Math.max(parentSnap, childTop);
     };
 
     // When a form-sheet parent has a form-sheet descendant, clip the parent to
@@ -935,18 +977,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const apply = () => {
       applyFormClip();
-      // Mirror iOS: a page-sheet child fully covers a form-sheet parent, so the
-      // cascade push-down has no visible effect — and would briefly peek above
-      // the page during the present animation. Leave the parent put.
-      const child = descendants[0];
-      if (isFormSheet && child && !child.isFormSheetRef.current) {
+      // Mirror iPad/Android (`isExpanded`): a parent at full height (detent 1)
+      // stays put and the child simply overlays it. Full height is the sheet's
+      // own ceiling — the viewport for a page sheet, the capped content-fit
+      // height for a form sheet — so compare against where detent 1 lands.
+      const parentSnap =
+        Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      const { effectiveH, ceiling } = computeDetentGeometry();
+      if (parentSnap <= effectiveH - ceiling + 0.5) {
         parent.style.transition = transition;
         parent.style.transform = '';
         return;
       }
+      // Mirror Android: stay put while the child is being dragged (its live
+      // transform would drag us along during drag-to-dismiss). The release
+      // snap rewrites the child's style and re-applies.
+      if (descendants[0]?.nodeRef.current?.classList.contains(DRAG_CLASS)) return;
       const targetY = computeTargetY();
-      const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
-      const currentY = match ? Number.parseFloat(match[1]!) : 0;
+      const currentY = readTranslateY(parent) ?? 0;
       if (Math.abs(currentY - targetY) < 0.5) return;
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
@@ -958,12 +1006,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // inline style changes.
     const observer = new MutationObserver(apply);
     observer.observe(parent, { attributes: true, attributeFilter: ['style'] });
+    // The child's own cascade lands in a later frame — follow it when it moves.
+    const childNode = descendants[0]?.nodeRef.current;
+    if (childNode) observer.observe(childNode, { attributes: true, attributeFilter: ['style'] });
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet, isOpen]);
+  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet, isOpen, computeDetentGeometry]);
 
   // Focus/blur events fire when a descendant sheet appears on top of this one
   // (blur) or when all descendants are dismissed (focus). will-events fire
@@ -1273,6 +1324,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                 <View
                   ref={contentRef}
                   style={hasAutoDetent && hasBoundedScrollable ? [contentFillStyle, style] : style}
+                  onLayout={handleContentLayout}
                 >
                   {children}
                 </View>
@@ -1295,7 +1347,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <View ref={contentRef} style={style}>
+                <View ref={contentRef} style={style} onLayout={handleContentLayout}>
                   {children}
                 </View>
                 {footer && !absoluteFooter && (
