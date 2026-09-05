@@ -198,19 +198,34 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       e.preventDefault();
       return;
     }
+    if (!(target instanceof Element)) return;
+    const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
+    if (!wrapper) return;
     // The footer is rendered via vaul's `detachedSiblings` as a sibling of
     // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
     // clicks on it as "outside" the content. Don't dismiss for clicks that
     // landed inside the wrapper.
-    if (target instanceof Element) {
-      const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
-      if (wrapper && wrapper.contains(target)) {
-        e.preventDefault();
-      }
+    if (wrapper.contains(target)) {
+      e.preventDefault();
+      return;
     }
+    // Every sheet runs Radix non-modal and portals its overlay + wrapper as
+    // siblings into the shared container, so a press on a sheet stacked above
+    // this one (its content or its dim overlay) is also delivered here as
+    // "outside". Sheets present in document order, so anything after our
+    // wrapper belongs to a descendant. Radix may dispatch on the deferred
+    // click (touch), after a dismissing descendant has left the DOM — treat
+    // disconnected as above too.
+    /* eslint-disable no-bitwise */
+    const above = Node.DOCUMENT_POSITION_FOLLOWING | Node.DOCUMENT_POSITION_DISCONNECTED;
+    if (wrapper.compareDocumentPosition(target) & above) {
+      e.preventDefault();
+    }
+    /* eslint-enable no-bitwise */
   };
 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
+  const dismissDescendantsRef = useRef<() => void>(() => {});
 
   const methods = useMemo<TrueSheetMethods>(
     () => ({
@@ -727,6 +742,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const present = isOpen;
     if (!present) {
+      // Mirror native: dismissing a sheet takes every sheet stacked above it
+      // (iOS dismisses from the presenter; Android runs dismissStack first).
+      dismissDescendantsRef.current();
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
       // emitWillDismissEvents (blur fires before dismiss). willPresent is
       // deferred to `start()` below (needs the mounted drawer's geometry).
@@ -844,6 +862,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     isFormSheet
   );
   dismissAboveRef.current = dismissAbove;
+  // Captured per render: by the time the dismiss effect runs, this sheet has
+  // already been popped from the stack, so `dismissAbove` can't find it.
+  dismissDescendantsRef.current = () => {
+    for (let i = descendants.length - 1; i >= 0; i--) {
+      descendants[i]!.ref.current?.dismiss();
+    }
+  };
 
   // Mirror Android: translate this sheet down to match the deepest descendant's
   // top so the whole stack visually aligns. Cascades because every ancestor
