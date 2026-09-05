@@ -52,7 +52,7 @@ import {
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
 import { Drawer } from './web/vaul';
-import { DEFAULT_PEEK_HEIGHT, TRANSITIONS } from './web/vaul/constants';
+import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
 
 const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, ref) => {
   const {
@@ -714,17 +714,23 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
 
-    // Track only the immediate child's snap point. Walking deeper descendants
-    // would push this sheet further when a grandchild opens, even when our
-    // own child didn't move (e.g., child skipped its cascade for a page
-    // grandchild) — leaving a visible gap between this sheet and its child.
+    // Track the immediate child's *actual* top: its cascade transform when it
+    // was itself pushed behind a grandchild, else its own snap point. Mirrors
+    // Android's addTranslation propagating extra translation up the stack —
+    // a grandchild opening pushes this sheet only as far as our child moved.
+    const readTranslateY = (el: HTMLElement) => {
+      const match = el.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
+      return match ? Number.parseFloat(match[1]!) : null;
+    };
     const computeTargetY = () => {
       const parentSnap =
         Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
       const node = descendants[0]?.nodeRef.current;
       if (!node) return parentSnap;
-      const childSnap = Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0;
-      return Math.max(parentSnap, childSnap);
+      const childTop =
+        readTranslateY(node) ??
+        (Number.parseFloat(node.style.getPropertyValue('--snap-point-height')) || 0);
+      return Math.max(parentSnap, childTop);
     };
 
     // When a form-sheet parent has a form-sheet descendant, clip the parent to
@@ -772,9 +778,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         parent.style.transform = '';
         return;
       }
+      // Mirror Android: stay put while the child is being dragged (its live
+      // transform would drag us along during drag-to-dismiss). The release
+      // snap rewrites the child's style and re-applies.
+      if (descendants[0]?.nodeRef.current?.classList.contains(DRAG_CLASS)) return;
       const targetY = computeTargetY();
-      const match = parent.style.transform.match(/translate3d\([^,]*,\s*(-?\d*\.?\d+)px/);
-      const currentY = match ? Number.parseFloat(match[1]!) : 0;
+      const currentY = readTranslateY(parent) ?? 0;
       if (Math.abs(currentY - targetY) < 0.5) return;
       parent.style.transition = transition;
       parent.style.transform = `translate3d(0, ${targetY}px, 0)`;
@@ -786,6 +795,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     // inline style changes.
     const observer = new MutationObserver(apply);
     observer.observe(parent, { attributes: true, attributeFilter: ['style'] });
+    // The child's own cascade lands in a later frame — follow it when it moves.
+    const childNode = descendants[0]?.nodeRef.current;
+    if (childNode) observer.observe(childNode, { attributes: true, attributeFilter: ['style'] });
 
     return () => {
       cancelAnimationFrame(raf);
