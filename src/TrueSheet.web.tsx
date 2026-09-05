@@ -275,6 +275,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const peekElRef = useRef<View>(null);
   const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
 
+  // The peek's own onLayout only fires when *it* resizes. Content added above
+  // it moves it without resizing it, so re-measure its offset whenever the
+  // content view's layout changes.
+  const handleContentLayout = useCallback(() => {
+    const peekEl = peekElRef.current as unknown as HTMLElement | null;
+    const contentEl = contentRef.current as unknown as HTMLElement | null;
+    if (peekEl && contentEl) {
+      setPeekContentHeight(measurePeekContentHeight(peekEl, contentEl));
+    }
+  }, []);
+
   const peekHeight =
     (header ? headerHeight : 0) + (footer ? footerHeight : 0) + peekContentHeight ||
     DEFAULT_PEEK_HEIGHT;
@@ -422,7 +433,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       positions.push(effectiveH - h);
       values.push(effectiveH > 0 ? h / effectiveH : 0);
     }
-    return { windowH, positions, values };
+    return { windowH, effectiveH, ceiling, positions, values };
   }, []);
 
   // Detent info for lifecycle events. Position/detent come from the active
@@ -749,11 +760,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const apply = () => {
       applyFormClip();
-      // Mirror iOS: a page-sheet child fully covers a form-sheet parent, so the
-      // cascade push-down has no visible effect — and would briefly peek above
-      // the page during the present animation. Leave the parent put.
-      const child = descendants[0];
-      if (isFormSheet && child && !child.isFormSheetRef.current) {
+      // Mirror iPad/Android (`isExpanded`): a parent at full height (detent 1)
+      // stays put and the child simply overlays it. Full height is the sheet's
+      // own ceiling — the viewport for a page sheet, the capped content-fit
+      // height for a form sheet — so compare against where detent 1 lands.
+      const parentSnap =
+        Number.parseFloat(parent.style.getPropertyValue('--snap-point-height')) || 0;
+      const { effectiveH, ceiling } = computeDetentGeometry();
+      if (parentSnap <= effectiveH - ceiling + 0.5) {
         parent.style.transition = transition;
         parent.style.transform = '';
         return;
@@ -777,7 +791,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet, isOpen]);
+  }, [descendants, activeSnapPoint, cornerRadius, isFormSheet, isOpen, computeDetentGeometry]);
 
   // Focus/blur events fire when a descendant sheet appears on top of this one
   // (blur) or when all descendants are dismissed (focus). will-events fire
@@ -1045,7 +1059,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                   style={scrollableContainerStyle}
                   data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
                 >
-                  <View ref={contentRef} style={style}>
+                  <View ref={contentRef} style={style} onLayout={handleContentLayout}>
                     {children}
                   </View>
                 </div>
@@ -1057,7 +1071,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
                     {isValidElement(header) ? header : createElement(header)}
                   </View>
                 )}
-                <View ref={contentRef} style={style}>
+                <View ref={contentRef} style={style} onLayout={handleContentLayout}>
                   {children}
                 </View>
               </>
