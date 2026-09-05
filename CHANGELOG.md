@@ -5,6 +5,7 @@
 ### 🐛 Bug fixes
 
 - **Android**: The library now builds on Android Gradle Plugin 9, which ships built-in Kotlin — the explicit Kotlin plugin is skipped when AGP already provides it. ([#819](https://github.com/lodev09/react-native-true-sheet/pull/819) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- **Web**: Stacked sheets now behave like native — a press inside a child no longer dismisses the sheets beneath it, dismissing a parent takes its children, the `peek` detent tracks content changes, and parents slide behind their child (staying put at full height) all the way up the stack. ([#825](https://github.com/lodev09/react-native-true-sheet/pull/825) by [@lodev09](https://github.com/lodev09))
 
 ## 3.11.12
 
