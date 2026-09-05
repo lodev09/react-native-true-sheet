@@ -4,7 +4,7 @@ import { TrueSheetProvider, type TrueSheet } from '@lodev09/react-native-true-sh
 
 import { BLUE, GAP, SPACING } from '../utils';
 import { Button, Spacer } from '../components';
-import { BasicSheet, PromptSheet, FlatListSheet, StackedSheet } from '../components/sheets';
+import { BasicSheet, PromptSheet, FlatListSheet } from '../components/sheets';
 
 interface TestScreenProps {
   onGoBack: () => void;
@@ -14,7 +14,6 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
   const basicSheet = useRef<TrueSheet>(null);
   const promptSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
-  const stackedSheet = useRef<TrueSheet>(null);
 
   return (
     <TrueSheetProvider>
@@ -24,16 +23,10 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
         <Button text="Basic Sheet" onPress={() => basicSheet.current?.present()} />
         <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
         <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
-        <Button
-          text="Stacked Sheet"
-          hint="#816 web repro"
-          onPress={() => stackedSheet.current?.present()}
-        />
 
         <BasicSheet dismissible={false} initialDetentIndex={0} dimmed={false} ref={basicSheet} />
         <PromptSheet ref={promptSheet} />
         <FlatListSheet ref={flatListSheet} />
-        <StackedSheet ref={stackedSheet} />
       </View>
     </TrueSheetProvider>
   );
