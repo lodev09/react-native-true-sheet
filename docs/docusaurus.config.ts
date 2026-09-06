@@ -2,7 +2,10 @@ import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-// import pkg from '../package.json'
+const codeTheme = (backgroundColor: string) => ({
+  ...prismThemes.oneDark,
+  plain: { ...prismThemes.oneDark.plain, backgroundColor },
+});
 
 const config: Config = {
   title: 'React Native True Sheet',
@@ -63,6 +66,28 @@ const config: Config = {
       attributes: {
         rel: 'preconnect',
         href: 'https://github.com/lodev09',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossorigin: 'anonymous',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap',
       },
     },
     {
@@ -160,17 +185,55 @@ const config: Config = {
       ],
     },
     footer: {
+      links: [
+        {
+          title: 'Docs',
+          items: [
+            { label: 'Introduction', to: '/intro' },
+            { label: 'Installation', to: '/install' },
+            { label: 'Usage', to: '/usage' },
+            { label: 'Configuration', to: '/reference/configuration' },
+            { label: 'Troubleshooting', to: '/troubleshooting' },
+          ],
+        },
+        {
+          title: 'Guides',
+          items: [
+            { label: 'Keyboard', to: '/guides/keyboard' },
+            { label: 'Navigation', to: '/guides/navigation' },
+            { label: 'Reanimated', to: '/guides/reanimated' },
+            { label: 'Liquid Glass', to: '/guides/liquid-glass' },
+            { label: 'Web', to: '/guides/web' },
+          ],
+        },
+        {
+          title: 'Project',
+          items: [
+            { label: 'Blog', to: '/blog' },
+            { label: 'GitHub', href: 'https://github.com/lodev09/react-native-true-sheet' },
+            { label: 'npm', href: 'https://www.npmjs.com/package/@lodev09/react-native-true-sheet' },
+            {
+              label: 'Changelog',
+              href: 'https://github.com/lodev09/react-native-true-sheet/blob/main/CHANGELOG.md',
+            },
+            {
+              label: 'Example app',
+              href: 'https://github.com/lodev09/react-native-true-sheet/tree/main/example',
+            },
+          ],
+        },
+      ],
       copyright: `Made with ❤️ by <a href="https://github.com/lodev09">Jovanni Lo</a>`,
     },
     prism: {
-      theme: prismThemes.oneDark,
-      darkTheme: prismThemes.oneDark,
+      theme: codeTheme('#0f1b2d'),
+      darkTheme: codeTheme('#1a2d4a'),
       additionalLanguages: ['swift', 'java', 'kotlin'],
     },
     announcementBar: {
-      id: '3.11.0-release',
-      content: `🎉 <b>True Sheet 3.11</b> is here! New web renderer, <code>presentation</code> API, and more ⚡ <a href="/blog/release-3-11">Read the announcement →</a>`,
-      backgroundColor: '#1f64ae',
+      id: '4.0.0-beta',
+      content: `🚧 <b>True Sheet 4.0 beta</b> rewrites the layout engine. <code>npx expo install @lodev09/react-native-true-sheet@beta</code> <a href="/next/migration">Migration guide</a>`,
+      backgroundColor: '#0f1b2d',
       textColor: '#ffffff',
     },
     image: 'img/logo.png',
