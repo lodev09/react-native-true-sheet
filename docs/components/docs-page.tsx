@@ -19,7 +19,12 @@ export function DocsPageView({ slug }: { slug: string[] }) {
   const MDX = page.data.body;
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
+    <DocsPage
+      toc={page.data.toc}
+      full={page.data.full}
+      className="md:pt-6 xl:pt-8"
+      tableOfContent={{ container: { className: 'pt-8' } }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
