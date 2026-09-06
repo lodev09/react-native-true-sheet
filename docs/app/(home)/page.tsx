@@ -1,5 +1,16 @@
 import clsx from 'clsx';
 import { ServerCodeBlock } from 'fumadocs-ui/components/codeblock.rsc';
+import {
+  Accessibility,
+  Activity,
+  ArrowUpRight,
+  Cpu,
+  Droplets,
+  Keyboard,
+  Layers,
+  MoveVertical,
+  Route,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SheetDemo from '@/components/sheet-demo';
@@ -55,41 +66,49 @@ const PLATFORMS = [
 
 const FEATURES = [
   {
+    icon: Cpu,
     title: 'Built on Fabric',
     text: 'Layout state and shadow nodes live in C++ shared by both platforms. Content resizes in the same frame as the sheet.',
     to: '/intro',
   },
   {
+    icon: MoveVertical,
     title: 'Detents that fit',
     text: 'Size by fraction, fixed height, or auto. Auto measures your content, including scroll views and lists.',
     to: '/guides/resizing',
   },
   {
+    icon: Keyboard,
     title: 'Keyboard aware',
     text: 'The sheet and its scrollables move out of the way when the keyboard shows. No listeners to wire up.',
     to: '/guides/keyboard',
   },
   {
+    icon: Activity,
     title: 'Reanimated ready',
     text: 'Read the sheet position as a shared value and drive your own animations on the UI thread.',
     to: '/guides/reanimated',
   },
   {
+    icon: Route,
     title: 'Sheets as screens',
     text: 'A sheet navigator for React Navigation and a Sheet layout for Expo Router. Push, pop, and pass params.',
     to: '/guides/navigation',
   },
   {
+    icon: Layers,
     title: 'Stack and overlay',
     text: 'Present sheets over sheets. Render toasts and dialogs above them with TrueSheetOverlay.',
     to: '/guides/stacking',
   },
   {
+    icon: Droplets,
     title: 'Liquid Glass',
     text: 'Native background blur and Liquid Glass on iOS 26, featured on the Expo blog.',
     to: '/guides/liquid-glass',
   },
   {
+    icon: Accessibility,
     title: 'Accessible by default',
     text: 'Screen readers announce detents. Grabber labels, hints, and actions are yours to customize.',
     to: '/reference/types#accessibilityoptions',
@@ -176,14 +195,29 @@ export default async function Home() {
 
       <section className={styles.section}>
         <div className={styles.container}>
-          <h2 className={styles.title}>Everything a sheet should do.</h2>
+          <div className={styles.featuresHeader}>
+            <div>
+              <p className={styles.eyebrow}>Features</p>
+              <h2 className={styles.title}>Everything a sheet should do.</h2>
+            </div>
+            <p className={styles.featuresLede}>
+              Native presentation on every platform, with the details handled for you. Pick a card
+              to read the guide.
+            </p>
+          </div>
           <ul className={styles.features}>
-            {FEATURES.map((f) => (
-              <li key={f.title} className={styles.feature}>
-                <Link href={f.to} className={styles.featureTitle}>
-                  {f.title}
+            {FEATURES.map(({ icon: Icon, ...f }) => (
+              <li key={f.title}>
+                <Link href={f.to} className={styles.feature}>
+                  <span className={styles.featureIcon}>
+                    <Icon aria-hidden />
+                  </span>
+                  <h3 className={styles.featureTitle}>
+                    {f.title}
+                    <ArrowUpRight className={styles.featureArrow} aria-hidden />
+                  </h3>
+                  <p>{f.text}</p>
                 </Link>
-                <p>{f.text}</p>
               </li>
             ))}
           </ul>
