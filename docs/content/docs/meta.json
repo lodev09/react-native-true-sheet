@@ -1,11 +1,3 @@
 {
-  "pages": [
-    "intro",
-    "install",
-    "usage",
-    "migration",
-    "guides",
-    "reference",
-    "troubleshooting"
-  ]
+  "pages": ["v3", "next"]
 }

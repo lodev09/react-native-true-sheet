@@ -1,4 +1,7 @@
 {
+  "title": "Unreleased",
+  "description": "4.0.0 beta",
+  "root": "version",
   "pages": [
     "intro",
     "install",

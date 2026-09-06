@@ -1,21 +1,19 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import type { LayoutTab } from 'fumadocs-ui/layouts/shared';
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook';
 import type { ReactNode } from 'react';
 import { baseOptions } from '@/lib/layout.shared';
-import { versions, type DocsVersion } from '@/lib/source';
+import { source } from '@/lib/source';
+import { DocsHeader } from './docs-header';
 
-function versionTabs(): LayoutTab[] {
-  return versions.map((version) => ({
-    title: version.label,
-    description: version.description,
-    url: `${version.source.getPage(['intro'])?.url}`,
-    urls: new Set(version.source.getPages().map((page) => page.url)),
-  }));
-}
+export function DocsShell({ children }: { children: ReactNode }) {
+  const base = baseOptions();
 
-export function DocsShell({ version, children }: { version: DocsVersion; children: ReactNode }) {
   return (
-    <DocsLayout {...baseOptions()} tree={version.source.getPageTree()} tabs={versionTabs()}>
+    <DocsLayout
+      {...base}
+      tree={source.getPageTree()}
+      nav={{ ...base.nav, mode: 'top' }}
+      slots={{ header: DocsHeader }}
+    >
       {children}
     </DocsLayout>
   );

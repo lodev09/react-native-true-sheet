@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { site } from '@/lib/site';
-import { blogSource, versions } from '@/lib/source';
+import { blogSource, source } from '@/lib/source';
 
 export const revalidate = false;
 
@@ -16,12 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly' as const,
       priority: 0.5,
     })),
-    ...versions.flatMap((version) =>
-      version.source.getPages().map((page) => ({
-        url: url(page.url),
-        changeFrequency: 'weekly' as const,
-        priority: version.tag === 'latest' ? 0.8 : 0.5,
-      }))
-    ),
+    ...source.getPages().map((page) => ({
+      url: url(page.url),
+      changeFrequency: 'weekly' as const,
+      priority: page.slugs[0] === 'next' ? 0.5 : 0.8,
+    })),
   ];
 }

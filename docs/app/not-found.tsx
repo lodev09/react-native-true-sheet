@@ -1,11 +1,10 @@
-import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { DefaultNotFound } from 'fumadocs-ui/layouts/home/not-found';
-import { baseOptions } from '@/lib/layout.shared';
+import { HomeShell } from '@/components/home-shell';
 
 export default function NotFound() {
   return (
-    <HomeLayout {...baseOptions()}>
+    <HomeShell>
       <DefaultNotFound />
-    </HomeLayout>
+    </HomeShell>
   );
 }

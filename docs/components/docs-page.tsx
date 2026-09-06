@@ -5,15 +5,15 @@ import {
   DocsPage,
   DocsTitle,
   EditOnGitHub,
-} from 'fumadocs-ui/layouts/docs/page';
+} from 'fumadocs-ui/layouts/notebook/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import { site } from '@/lib/site';
-import type { DocsVersion } from '@/lib/source';
+import { source } from '@/lib/source';
 
-export function DocsPageView({ version, slug }: { version: DocsVersion; slug?: string[] }) {
-  const page = version.source.getPage(slug);
+export function DocsPageView({ slug }: { slug: string[] }) {
+  const page = source.getPage(slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -23,17 +23,15 @@ export function DocsPageView({ version, slug }: { version: DocsVersion; slug?: s
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <MDX components={getMDXComponents({ a: createRelativeLink(version.source, page) })} />
+        <MDX components={getMDXComponents({ a: createRelativeLink(source, page) })} />
       </DocsBody>
-      <EditOnGitHub
-        href={`${site.github}/blob/main/docs/content/${version.dir}/${page.path}`}
-      />
+      <EditOnGitHub href={`${site.github}/blob/main/docs/content/docs/${page.path}`} />
     </DocsPage>
   );
 }
 
-export function docsPageMetadata(version: DocsVersion, slug?: string[]): Metadata {
-  const page = version.source.getPage(slug);
+export function docsPageMetadata(slug: string[]): Metadata {
+  const page = source.getPage(slug);
   if (!page) notFound();
 
   return {

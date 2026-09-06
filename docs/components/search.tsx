@@ -19,7 +19,7 @@ import {
 import { useState } from 'react';
 
 const tags = [
-  { name: '3.11.13', value: 'latest' },
+  { name: '3.11.13', value: 'v3' },
   { name: 'Unreleased', value: 'next' },
 ];
 

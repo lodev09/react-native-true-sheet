@@ -6,24 +6,14 @@ import remarkDirective from 'remark-directive';
 import { z } from 'zod';
 import { loadCodeThemes } from './lib/code-theme';
 
-const docSchema = pageSchema.extend({
-  keywords: z.array(z.string()).optional(),
-});
-
-const docOptions = {
-  schema: docSchema,
-  postprocess: { includeProcessedMarkdown: true },
-};
-
 export const docs = defineDocs({
   dir: 'content/docs',
-  docs: docOptions,
-  meta: { schema: metaSchema },
-});
-
-export const next = defineDocs({
-  dir: 'content/next',
-  docs: docOptions,
+  docs: {
+    schema: pageSchema.extend({
+      keywords: z.array(z.string()).optional(),
+    }),
+    postprocess: { includeProcessedMarkdown: true },
+  },
   meta: { schema: metaSchema },
 });
 

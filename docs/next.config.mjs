@@ -8,7 +8,18 @@ const config = {
   agentRules: false,
   async redirects() {
     return [
+      { source: '/v3', destination: '/v3/intro', permanent: false },
       { source: '/next', destination: '/next/intro', permanent: false },
+      {
+        source: '/:page(intro|install|usage|migration|troubleshooting)',
+        destination: '/v3/:page',
+        permanent: true,
+      },
+      {
+        source: '/:section(guides|reference)/:slug',
+        destination: '/v3/:section/:slug',
+        permanent: true,
+      },
       { source: '/blog/tags/:path*', destination: '/blog', permanent: true },
       { source: '/blog/page/:page', destination: '/blog', permanent: true },
       { source: '/blog/archive', destination: '/blog', permanent: true },
