@@ -10,7 +10,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CalloutContainer: (props: CalloutContainerProps) => (
       <CalloutContainer
         {...props}
-        className="border-(--callout-color)/20 bg-(--callout-color)/10 shadow-none"
+        className="border-(--callout-color)/20 bg-(--callout-color)/10 ps-3 shadow-none [&>[role=none]]:hidden"
       />
     ),
     pre: (props: HTMLAttributes<HTMLPreElement>) => (

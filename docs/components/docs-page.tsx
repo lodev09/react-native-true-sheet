@@ -25,7 +25,10 @@ export function DocsPageView({ slug }: { slug: string[] }) {
       <DocsBody>
         <MDX components={getMDXComponents({ a: createRelativeLink(source, page) })} />
       </DocsBody>
-      <EditOnGitHub href={`${site.github}/blob/main/docs/content/docs/${page.path}`} />
+      <EditOnGitHub
+        href={`${site.github}/blob/main/docs/content/docs/${page.path}`}
+        className="self-start"
+      />
     </DocsPage>
   );
 }
