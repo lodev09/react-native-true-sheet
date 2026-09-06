@@ -37,3 +37,4 @@
 - Upgrade the examples to Expo SDK 57 and React Native 0.86. ([#755](https://github.com/lodev09/react-native-true-sheet/pull/755) by [@lodev09](https://github.com/lodev09))
 - Update the `truesheet-usage` AI skill for the v4 API. ([#799](https://github.com/lodev09/react-native-true-sheet/pull/799) by [@lodev09](https://github.com/lodev09))
 - Document that native stacks can't be nested inside sheet screens, with stacked sheets as the recommended alternative. ([#822](https://github.com/lodev09/react-native-true-sheet/pull/822) by [@lodev09](https://github.com/lodev09))
+- The docs site moved from Docusaurus to Fumadocs, with built-in search, a redesigned blog and landing page, and the latest docs served at the root — old `/v3` links redirect. ([#826](https://github.com/lodev09/react-native-true-sheet/pull/826) by [@lodev09](https://github.com/lodev09))

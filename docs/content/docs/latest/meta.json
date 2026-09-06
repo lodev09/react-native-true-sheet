@@ -1,0 +1,14 @@
+{
+  "title": "3.11.13",
+  "description": "Latest",
+  "root": "version",
+  "pages": [
+    "intro",
+    "install",
+    "usage",
+    "migration",
+    "guides",
+    "reference",
+    "troubleshooting"
+  ]
+}

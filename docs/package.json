@@ -3,46 +3,38 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "dev": "next dev",
+    "start": "next dev",
+    "build": "next build",
+    "serve": "next start",
+    "postinstall": "fumadocs-mdx",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.10.2",
-    "@docusaurus/plugin-google-gtag": "^3.10.2",
-    "@docusaurus/plugin-vercel-analytics": "^3.10.2",
-    "@docusaurus/preset-classic": "^3.10.2",
-    "@mdx-js/react": "^3.0.0",
+    "@next/third-parties": "^16.3.4",
+    "@shikijs/transformers": "^4.4.3",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.0.0",
-    "prism-react-renderer": "^2.3.0",
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "fumadocs-core": "^16.15.7",
+    "fumadocs-mdx": "^15.4.0",
+    "fumadocs-ui": "^16.15.7",
+    "lucide-react": "^1.41.0",
+    "next": "^16.3.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remark-directive": "^4.0.0",
+    "shiki": "^4.4.3",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.10.2",
-    "@docusaurus/tsconfig": "^3.10.2",
-    "@docusaurus/types": "^3.10.2",
-    "@types/react": "19.1.1",
-    "@types/react-dom": "19.1.1",
-    "typescript": "~5.2.2"
-  },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 3 chrome version",
-      "last 3 firefox version",
-      "last 5 safari version"
-    ]
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.14",
+    "@types/node": "^26.4.1",
+    "@types/react": "~19.2.14",
+    "@types/react-dom": "^19.2.5",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3"
   },
   "engines": {
     "node": ">=24.0"

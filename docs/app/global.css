@@ -1,0 +1,138 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/lib/default-colors.css';
+@import 'fumadocs-ui/css/preset.css';
+
+@theme {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
+  --font-mono:
+    ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+
+  --color-fd-background: #fbfcfe;
+  --color-fd-foreground: #1a2537;
+  --color-fd-muted: #eef3fa;
+  --color-fd-muted-foreground: #4f5f78;
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #1a2537;
+  --color-fd-card: #ffffff;
+  --color-fd-card-foreground: #1a2537;
+  --color-fd-border: rgba(15, 27, 45, 0.1);
+  --color-fd-primary: #1f64ae;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: #f3f6fb;
+  --color-fd-secondary-foreground: #0f1b2d;
+  --color-fd-accent: #e3ecf7;
+  --color-fd-accent-foreground: #0f1b2d;
+  --color-fd-ring: #3784d7;
+}
+
+@theme inline {
+  --font-heading: var(--font-bricolage), var(--font-sans);
+}
+
+.dark {
+  --color-fd-background: #0f1b2d;
+  --color-fd-foreground: #dce5f2;
+  --color-fd-muted: #172841;
+  --color-fd-muted-foreground: #a6b6cf;
+  --color-fd-popover: #16253d;
+  --color-fd-popover-foreground: #dce5f2;
+  --color-fd-card: #16253d;
+  --color-fd-card-foreground: #dce5f2;
+  --color-fd-border: rgba(125, 181, 240, 0.14);
+  --color-fd-primary: #8bb8e8;
+  --color-fd-primary-foreground: #0f1b2d;
+  --color-fd-secondary: #1a2c47;
+  --color-fd-secondary-foreground: #eef3fa;
+  --color-fd-accent: #213a5e;
+  --color-fd-accent-foreground: #eef3fa;
+  --color-fd-ring: #7db5f0;
+}
+
+/* Brand tokens shared with the landing page and demo */
+
+:root {
+  --ts-font-display: var(--font-bricolage), var(--font-sans);
+  --ts-frame: #0f1b2d;
+  --ts-phone: #0f1b2d;
+  --ts-phone-ring: rgba(255, 255, 255, 0.1);
+  --ts-panel: #0f1b2d;
+  --ts-band: #0f1b2d;
+  --ts-blue: #1f64ae;
+  --ts-sky: #3784d7;
+  --ts-sky-soft: #e3ecf7;
+  --ts-text: #0f1b2d;
+  --ts-muted: #4f5f78;
+  --ts-surface: #ffffff;
+  --ts-mist: #eef3fa;
+  --ts-tint: #f3f6fb;
+  --ts-line: rgba(15, 27, 45, 0.08);
+  --ts-line-strong: rgba(15, 27, 45, 0.16);
+  --ts-hairline: rgba(15, 27, 45, 0.07);
+  --ts-glow: rgba(55, 132, 215, 0.28);
+  --ts-sheet: #ffffff;
+  --ts-grabber: rgba(15, 27, 45, 0.2);
+  --ts-chip: rgba(15, 27, 45, 0.07);
+  --ts-map-bg: #e8eef6;
+  --ts-map-block: #dfe7f1;
+  --ts-map-road: #f7f9fc;
+  --ts-map-water: #c7dcf3;
+}
+
+.dark {
+  --ts-phone: #08111f;
+  --ts-phone-ring: rgba(125, 181, 240, 0.22);
+  --ts-panel: #1a2d4a;
+  --ts-band: #0a1526;
+  --ts-blue: #5b9be0;
+  --ts-sky: #7db5f0;
+  --ts-sky-soft: #213a5e;
+  --ts-text: #eef3fa;
+  --ts-muted: #a6b6cf;
+  --ts-surface: #1a2c47;
+  --ts-mist: #172841;
+  --ts-tint: #0c1728;
+  --ts-line: rgba(125, 181, 240, 0.12);
+  --ts-line-strong: rgba(125, 181, 240, 0.22);
+  --ts-hairline: rgba(125, 181, 240, 0.1);
+  --ts-glow: rgba(55, 132, 215, 0.3);
+  --ts-sheet: #1f3352;
+  --ts-grabber: rgba(238, 243, 250, 0.22);
+  --ts-chip: rgba(125, 181, 240, 0.14);
+  --ts-map-bg: #1b2d4a;
+  --ts-map-block: #23395c;
+  --ts-map-road: #2f4a72;
+  --ts-map-water: #234a7c;
+}
+
+/* Typography */
+
+h1,
+h2,
+h3 {
+  font-family: var(--ts-font-display);
+  letter-spacing: -0.025em;
+}
+
+.prose img {
+  border-radius: 14px;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

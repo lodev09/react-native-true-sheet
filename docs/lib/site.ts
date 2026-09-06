@@ -1,0 +1,28 @@
+export const site = {
+  name: 'React Native True Sheet',
+  shortName: 'True Sheet',
+  url: 'https://sheet.lodev09.com',
+  description: 'The true native bottom sheet experience for your React Native Apps.',
+  keywords: [
+    'react native bottom sheet',
+    'native bottom sheet',
+    'ios bottom sheet',
+    'android bottom sheet',
+    'react native sheet component',
+    'fabric bottom sheet',
+    'new architecture bottom sheet',
+    'UISheetPresentationController',
+    'true sheet',
+  ],
+  github: 'https://github.com/lodev09/react-native-true-sheet',
+  npm: 'https://www.npmjs.com/package/@lodev09/react-native-true-sheet',
+  gaId: 'G-1KKZ78CJ2X',
+  author: {
+    name: 'Jovanni Lo',
+    handle: '@lodev09',
+    url: 'https://github.com/lodev09',
+    image: 'https://github.com/lodev09.png',
+    linkedin: 'https://www.linkedin.com/in/lodev09/',
+    twitter: '@lodev09',
+  },
+} as const;
