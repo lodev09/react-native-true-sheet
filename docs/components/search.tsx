@@ -17,10 +17,13 @@ import {
   type SharedProps,
 } from 'fumadocs-ui/components/dialog/search';
 import { useState } from 'react';
+import latest from '@/content/docs/latest/meta.json';
+import next from '@/content/docs/next/meta.json';
 
+// Values match the version folder names, which the search API uses as tags.
 const tags = [
-  { name: '3.11.13', value: 'v3' },
-  { name: 'Unreleased', value: 'next' },
+  { name: latest.title, value: 'latest' },
+  { name: next.title, value: 'next' },
 ];
 
 export default function CustomSearchDialog(props: SharedProps) {

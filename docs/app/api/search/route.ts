@@ -10,6 +10,6 @@ export const { GET } = createFromSource(source, {
     description: page.data.description,
     url: page.url,
     structuredData: page.data.structuredData,
-    tag: page.slugs[0],
+    tag: page.path.split('/')[0],
   }),
 });

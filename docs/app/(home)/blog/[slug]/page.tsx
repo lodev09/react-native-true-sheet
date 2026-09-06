@@ -4,12 +4,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import { authors } from '@/lib/authors';
+import { formatDate } from '@/lib/date';
 import { blogSource } from '@/lib/source';
 
 type Props = { params: Promise<{ slug: string }> };
-
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
 export default async function BlogPost({ params }: Props) {
   const { slug } = await params;
@@ -23,7 +21,13 @@ export default async function BlogPost({ params }: Props) {
       <Link href="/blog" className="text-sm text-fd-muted-foreground hover:text-fd-primary">
         ← All posts
       </Link>
-      <h1 className="font-heading mt-4 mb-3 text-4xl font-bold tracking-tight">
+      <time
+        dateTime={page.data.date.toISOString()}
+        className="mt-8 block text-sm text-fd-muted-foreground"
+      >
+        {formatDate(page.data.date)}
+      </time>
+      <h1 className="font-heading mt-3 mb-3 text-4xl font-bold tracking-tight">
         {page.data.title}
       </h1>
       <p className="mb-6 text-lg text-fd-muted-foreground">{page.data.description}</p>
@@ -41,9 +45,6 @@ export default async function BlogPost({ params }: Props) {
             </a>
           );
         })}
-        <time dateTime={page.data.date.toISOString()} className="text-fd-muted-foreground">
-          {formatDate(page.data.date)}
-        </time>
       </div>
       <article className="prose">
         <InlineTOC items={page.data.toc} />

@@ -57,42 +57,42 @@ const FEATURES = [
   {
     title: 'Built on Fabric',
     text: 'Layout state and shadow nodes live in C++ shared by both platforms. Content resizes in the same frame as the sheet.',
-    to: '/v3/intro',
+    to: '/intro',
   },
   {
     title: 'Detents that fit',
     text: 'Size by fraction, fixed height, or auto. Auto measures your content, including scroll views and lists.',
-    to: '/v3/guides/resizing',
+    to: '/guides/resizing',
   },
   {
     title: 'Keyboard aware',
     text: 'The sheet and its scrollables move out of the way when the keyboard shows. No listeners to wire up.',
-    to: '/v3/guides/keyboard',
+    to: '/guides/keyboard',
   },
   {
     title: 'Reanimated ready',
     text: 'Read the sheet position as a shared value and drive your own animations on the UI thread.',
-    to: '/v3/guides/reanimated',
+    to: '/guides/reanimated',
   },
   {
     title: 'Sheets as screens',
     text: 'A sheet navigator for React Navigation and a Sheet layout for Expo Router. Push, pop, and pass params.',
-    to: '/v3/guides/navigation',
+    to: '/guides/navigation',
   },
   {
     title: 'Stack and overlay',
     text: 'Present sheets over sheets. Render toasts and dialogs above them with TrueSheetOverlay.',
-    to: '/v3/guides/stacking',
+    to: '/guides/stacking',
   },
   {
     title: 'Liquid Glass',
     text: 'Native background blur and Liquid Glass on iOS 26, featured on the Expo blog.',
-    to: '/v3/guides/liquid-glass',
+    to: '/guides/liquid-glass',
   },
   {
     title: 'Accessible by default',
     text: 'Screen readers announce detents. Grabber labels, hints, and actions are yours to customize.',
-    to: '/v3/reference/types#accessibilityoptions',
+    to: '/reference/types#accessibilityoptions',
   },
 ];
 
@@ -118,7 +118,7 @@ export default async function Home() {
             </p>
             <InstallCommand command={INSTALL} />
             <div className={styles.actions}>
-              <Link className={clsx(styles.button, styles.buttonPrimary)} href="/v3/intro">
+              <Link className={clsx(styles.button, styles.buttonPrimary)} href="/intro">
                 Read the docs
               </Link>
               <Link className={clsx(styles.button, styles.buttonGhost)} href={site.github}>
@@ -159,7 +159,7 @@ export default async function Home() {
               Prefer events? Lifecycle, drag, focus, and detent events fire from the native side with
               the same timing your users feel.
             </p>
-            <Link href="/v3/reference/methods" className={styles.textLink}>
+            <Link href="/reference/methods" className={styles.textLink}>
               Browse the methods and events
             </Link>
           </div>

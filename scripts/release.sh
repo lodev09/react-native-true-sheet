@@ -26,9 +26,21 @@ else
   # Update CHANGELOG
   sed -i '' "s/## Unreleased/## Unreleased\\n\\n## ${VERSION}/" CHANGELOG.md
 
-  # Version docs
+  # Version docs: snapshot the unreleased docs as the new latest version.
+  # `next` keeps evolving as the unreleased docs.
   echo "Creating docs version $VERSION..."
-  rm -rf docs/versioned_docs docs/versioned_sidebars docs/versions.json
-  cd docs && ./node_modules/.bin/docusaurus docs:version "$VERSION" && cd ..
+  DOCS=docs/content/docs
+  rm -rf "$DOCS/latest"
+  cp -R "$DOCS/next" "$DOCS/latest"
+  node -e '
+    const fs = require("fs");
+    const [dir, version] = process.argv.slice(1);
+    const write = (file, patch) => {
+      const meta = { ...JSON.parse(fs.readFileSync(file, "utf8")), ...patch };
+      fs.writeFileSync(file, JSON.stringify(meta, null, 2) + "\n");
+    };
+    write(`${dir}/latest/meta.json`, { title: version, description: "Latest" });
+    write(`${dir}/next/meta.json`, { title: "Unreleased", description: "Next" });
+  ' "$DOCS" "$VERSION"
   echo "Docs version $VERSION created."
 fi

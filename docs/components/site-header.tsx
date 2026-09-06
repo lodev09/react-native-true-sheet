@@ -1,13 +1,22 @@
 'use client';
 
 import clsx from 'clsx';
+import { usePathname } from 'fumadocs-core/framework';
+import Link from 'fumadocs-core/link';
 import { buttonVariants } from 'fumadocs-ui/components/ui/button';
-import { LinkItem, type BaseSlots, type LinkItemType } from 'fumadocs-ui/layouts/shared';
+import {
+  isLinkItemActive,
+  LinkItem,
+  type BaseSlots,
+  type LinkItemType,
+} from 'fumadocs-ui/layouts/shared';
 import type { ComponentProps, ReactNode } from 'react';
 
 interface SiteHeaderProps extends ComponentProps<'header'> {
   navItems: LinkItemType[];
   slots: BaseSlots;
+  /** Link forced active for the current layout, e.g. Docs while inside the docs layout. */
+  activeUrl?: string;
   /** Rendered on small screens in place of the inline links. */
   menu?: ReactNode;
 }
@@ -15,7 +24,15 @@ interface SiteHeaderProps extends ComponentProps<'header'> {
 export const hasUrl = (item: LinkItemType): item is Extract<LinkItemType, { url: string }> =>
   'url' in item && typeof item.url === 'string';
 
-export function SiteHeader({ navItems, slots, menu, className, ...props }: SiteHeaderProps) {
+export function SiteHeader({
+  navItems,
+  slots,
+  activeUrl,
+  menu,
+  className,
+  ...props
+}: SiteHeaderProps) {
+  const pathname = usePathname();
   const links = navItems.filter((item) => hasUrl(item) && item.type !== 'icon');
   const icons = navItems.filter((item) => hasUrl(item) && item.type === 'icon');
 
@@ -29,12 +46,14 @@ export function SiteHeader({ navItems, slots, menu, className, ...props }: SiteH
         <ul className="ms-4 flex items-center gap-1 max-lg:hidden">
           {links.map((item, i) => (
             <li key={i}>
-              <LinkItem
-                item={item}
+              <Link
+                href={item.url}
+                external={item.external}
+                data-active={item.url === activeUrl || isLinkItemActive(item, pathname)}
                 className="inline-flex items-center gap-1 p-2 text-sm text-fd-muted-foreground transition-colors hover:text-fd-accent-foreground data-[active=true]:text-fd-primary"
               >
                 {item.text}
-              </LinkItem>
+              </Link>
             </li>
           ))}
         </ul>

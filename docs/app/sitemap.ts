@@ -19,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...source.getPages().map((page) => ({
       url: url(page.url),
       changeFrequency: 'weekly' as const,
-      priority: page.slugs[0] === 'next' ? 0.5 : 0.8,
+      priority: page.path.startsWith('next/') ? 0.5 : 0.8,
     })),
   ];
 }

@@ -5,21 +5,21 @@ const columns = [
   {
     title: 'Docs',
     items: [
-      { label: 'Introduction', href: '/v3/intro' },
-      { label: 'Installation', href: '/v3/install' },
-      { label: 'Usage', href: '/v3/usage' },
-      { label: 'Configuration', href: '/v3/reference/configuration' },
-      { label: 'Troubleshooting', href: '/v3/troubleshooting' },
+      { label: 'Introduction', href: '/intro' },
+      { label: 'Installation', href: '/install' },
+      { label: 'Usage', href: '/usage' },
+      { label: 'Configuration', href: '/reference/configuration' },
+      { label: 'Troubleshooting', href: '/troubleshooting' },
     ],
   },
   {
     title: 'Guides',
     items: [
-      { label: 'Keyboard', href: '/v3/guides/keyboard' },
-      { label: 'Navigation', href: '/v3/guides/navigation' },
-      { label: 'Reanimated', href: '/v3/guides/reanimated' },
-      { label: 'Liquid Glass', href: '/v3/guides/liquid-glass' },
-      { label: 'Web', href: '/v3/guides/web' },
+      { label: 'Keyboard', href: '/guides/keyboard' },
+      { label: 'Navigation', href: '/guides/navigation' },
+      { label: 'Reanimated', href: '/guides/reanimated' },
+      { label: 'Liquid Glass', href: '/guides/liquid-glass' },
+      { label: 'Web', href: '/guides/web' },
     ],
   },
   {
@@ -61,7 +61,7 @@ export function SiteFooter() {
       <p className="mx-auto mt-10 w-full max-w-[1180px] text-center text-sm text-fd-muted-foreground">
         Made with ❤️ by{' '}
         <a href={site.author.url} className="hover:text-fd-primary">
-          {site.author.name}
+          {site.author.handle}
         </a>
       </p>
     </footer>
