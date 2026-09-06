@@ -1,0 +1,23 @@
+{
+  "title": "Guides",
+  "pages": [
+    "dimming",
+    "edge-to-edge",
+    "footer",
+    "global-methods",
+    "header",
+    "jest",
+    "keyboard",
+    "liquid-glass",
+    "navigation",
+    "onmount",
+    "overlays",
+    "peeking",
+    "reanimated",
+    "resizing",
+    "scrolling",
+    "side-sheets",
+    "stacking",
+    "web"
+  ]
+}

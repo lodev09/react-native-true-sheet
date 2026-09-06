@@ -1,25 +1,26 @@
 # Website
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
-
-### Installation
+Built with [Fumadocs](https://fumadocs.dev) on Next.js.
 
 ```
-$ yarn
+content/
+├── docs/   # 3.11.13 (served at /)
+├── next/   # Unreleased (served at /next)
+└── blog/
 ```
 
-### Local Development
+## Development
 
 ```
-$ yarn start
+yarn docs dev
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-### Build
+## Build
 
 ```
-$ yarn build
+yarn docs build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+## Versioning
+
+To cut a new version, copy `content/next` over `content/docs` and update the labels in `lib/source.ts`.

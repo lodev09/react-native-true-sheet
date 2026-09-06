@@ -1,0 +1,37 @@
+---
+date: 2025-12-16
+title: Android Dimming and Stacking Improvements
+description: True Sheet 3.4 brings smooth dimming and native sheet stacking on Android, now consistent with iOS.
+authors: [lodev09]
+tags: [release, android, stacking, dimming]
+---
+
+## Sheet is getting good on Android! 🤖
+
+Version 3.4 brings two major upgrades to the Android experience: silky-smooth dimming and natural sheet stacking — now consistent with iOS! ✨
+
+<img alt="Android Dimming and Stacking" src="/img/blog/android-3-4.gif" width="300" />
+
+## 🌑 Smooth Dimming
+
+Say goodbye to clunky window dim! True Sheet now uses a **custom dim view** with real-time interpolation. As you drag the sheet, the dim smoothly fades in and out based on position.
+
+The `dimmedDetentIndex` prop feels alive — drag past the threshold and watch the background dim; drag back down and it fades away. Buttery smooth. 🧈
+
+Learn more in the [Dimming guide](/guides/dimming).
+
+## 📚 Natural Sheet Stacking
+
+When you present a sheet on top of another, the parent now **slides down** instead of disappearing. This creates a beautiful stacking effect that feels right at home on Android.
+
+Resize the child sheet? The parent follows along in real-time to maintain that perfect visual hierarchy. 🎯
+
+Learn more in the [Stacking guide](/guides/stacking).
+
+## Get It 🚀
+
+```sh
+yarn add @lodev09/react-native-true-sheet@^3.4.0
+```
+
+Have feedback? [Open an issue](https://github.com/lodev09/react-native-true-sheet/issues)!

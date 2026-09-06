@@ -190,7 +190,7 @@
       "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
-      "<rootDir>/docs/build"
+      "<rootDir>/docs/.next"
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",

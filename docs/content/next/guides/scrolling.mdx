@@ -1,0 +1,126 @@
+---
+title: Scrolling Content
+description: Handle scrolling content within the bottom sheet.
+keywords: [bottom sheet scrolling, bottom sheet scrollview, bottom sheet flatlist]
+---
+
+Scrolling content within the sheet works like a regular view — bound the scroll view's height with `flex: 1`, plug a `ScrollView` or `FlatList` in, and point the sheet at it with [`scrollableRef`](../reference/configuration#scrollableref).
+
+<img alt="scrolling" src="/img/guides/scrolling.gif" width="300"/>
+
+## How?
+
+Pass a ref of your scroll view (including `ScrollView` and `FlatList`) to the sheet via the [`scrollableRef`](../reference/configuration#scrollableref) prop. Keyboard handling and nested scrolling are then wired for you.
+
+Like any scroll view in React Native, it needs a bounded height to scroll. Pass `flex: 1` via the sheet's [`style`](../reference/configuration#style) prop so the content fills the sheet's visible height per detent — resizing in realtime while dragging:
+
+```tsx
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+  const scrollableRef = useRef<ScrollView>(null)
+
+  return (
+    <TrueSheet ref={sheet} scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+      <ScrollView ref={scrollableRef}>
+        <View />
+      </ScrollView>
+    </TrueSheet>
+  )
+}
+```
+
+The scroll view doesn't have to be a direct child — wrapping it in a container `View` works too:
+
+```tsx
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+  <View style={{ flex: 1 }}>
+    <View>{/* Header content */}</View>
+    <FlatList ref={scrollableRef} data={data} renderItem={renderItem} />
+  </View>
+</TrueSheet>
+```
+
+:::info
+On Android, nested scrolling is managed internally — any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored. `RefreshControl` is also fully supported.
+:::
+
+:::info
+The [`auto`](../reference/types#sheetdetent) detent works with scrolling content too — no `flex: 1` needed. The sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height.
+:::
+
+## Bottom Safe-Area Inset
+
+The sheet applies the bottom safe-area inset to your scroll content automatically while the content can scroll — the last item clears the home indicator (iOS) and navigation bar (Android):
+
+- **iOS**: The scroll view's native [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) is set to `automatic` while it's plugged into the sheet — no need to set React Native's iOS-only prop yourself.
+- **Android**: The inset is applied as content padding, mirroring iOS's `automatic` behavior — parity React Native's iOS-only prop can't provide.
+- **Web**: The content is lifted above the safe area (`env(safe-area-inset-bottom)`).
+
+To opt out and manage the padding yourself, set `contentInsetAdjustmentBehavior` to `false` in [`scrollableOptions`](../reference/configuration#scrollableoptions):
+
+```tsx
+const insets = useSafeAreaInsets()
+
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+>
+  <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+:::info
+This only applies while the sheet's [`insetAdjustment`](../reference/configuration#insetadjustment) is `'automatic'`. If the sheet has a relative [`footer`](footer), the footer absorbs the bottom inset instead — pad your content for the footer's height, not the safe area.
+:::
+
+## Preventing Scroll-to-Expand
+
+By default, scrolling content to the top edge expands the sheet to the next detent. To disable this (e.g., for YouTube-style comments sheets where only the grabber should expand the sheet), set `scrollingExpandsSheet` to `false`:
+
+```tsx
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ scrollingExpandsSheet: false }}
+  detents={[0.5, 1]}
+>
+  <ScrollView ref={scrollableRef}>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+On iOS, this uses [`prefersScrollingExpandsWhenScrolledToEdge`](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller/3858107-prefersscrollingexpandswhenscrol). On Android, a custom `BottomSheetBehavior` selectively blocks scroll-driven expansion while preserving normal scrolling, fling deceleration, and grabber-based dragging.
+
+## Scroll Edge Effect
+
+On iOS 26+, you can apply a blur/gradient edge effect on the header and footer when content scrolls behind them. This uses [`UIScrollEdgeElementContainerInteraction`](https://developer.apple.com/documentation/uikit/uiscrolledgeelementcontainerinteraction) under the hood.
+
+Set [`topScrollEdgeEffect`](../reference/types#scrollableoptions) and/or [`bottomScrollEdgeEffect`](../reference/types#scrollableoptions) in [`scrollableOptions`](../reference/configuration#scrollableoptions) to enable it:
+
+```tsx
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{
+    topScrollEdgeEffect: 'automatic',
+    bottomScrollEdgeEffect: 'soft',
+  }}
+  header={<Header />}
+  footer={<Footer />}
+>
+  <ScrollView ref={scrollableRef}>
+    <View />
+  </ScrollView>
+</TrueSheet>
+```
+
+Available values: `'automatic'`, `'hard'`, `'soft'`, or `'hidden'` (default). See [`ScrollEdgeEffect`](../reference/types#scrolledgeeffect).
+
+:::info
+This also controls the scroll view's own edge effects ([`UIScrollEdgeEffect`](https://developer.apple.com/documentation/uikit/uiscrolledgeeffect)). `topScrollEdgeEffect` applies to both the header interaction and the scroll view's top edge, and `bottomScrollEdgeEffect` applies to both the footer interaction and the scroll view's bottom edge.
+:::
+
+:::note
+This feature requires iOS 26 or later. On older versions, these options are ignored.
+:::

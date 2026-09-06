@@ -1,0 +1,293 @@
+---
+title: Migrating to v4
+description: Migration guide from v3 to v4
+keywords: [bottom sheet migration, upgrading bottom sheet, v3 to v4, breaking changes]
+---
+
+This guide will help you migrate from TrueSheet v3 to v4. Version 4 rewrites the sheet's layout engine — the sheet now lays out synchronously per detent with Yoga owning all frames, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
+
+:::info
+Upgrading from v2? Start with [Migrating to v3](migration-v3).
+:::
+
+## Breaking Changes
+
+### 1. React Native 0.82+ Required
+
+Version 4 relies on synchronous Fabric state updates (available since React Native 0.82) to resize content in the same frame as the sheet.
+
+**Requirements:**
+- React Native >= 0.82 (Expo SDK 55+)
+- New Architecture enabled
+
+### 2. `scrollable` Prop Replaced by `scrollableRef`
+
+Point the sheet at your scroll view (including `ScrollView` and `FlatList`) with the `scrollableRef` prop. Like any scroll view in React Native, it needs a bounded height to scroll, so pass `flex: 1` via the sheet's `style` prop for fixed detents. With an `auto` detent, no `flex: 1` is needed — the sheet sizes to the scroll content and bounds the viewport automatically.
+
+**Migration:**
+
+```tsx
+// ❌ v3
+<TrueSheet scrollable detents={[0.5, 1]}>
+  <ScrollView>{/* ... */}</ScrollView>
+</TrueSheet>
+
+// ✅ v4 — plug the scroll view via scrollableRef, bound the content with flex: 1
+<TrueSheet scrollableRef={scrollableRef} style={{ flex: 1 }} detents={[0.5, 1]}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
+
+// ✅ v4 — 'auto' detent sizes to the scroll content, no flex needed
+<TrueSheet scrollableRef={scrollableRef} detents={['auto']}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
+```
+
+:::tip
+See the [Scrolling guide](guides/scrolling) for more information.
+:::
+
+### 3. Content Lays Out Naturally
+
+Content now wraps its children's height by default — like a regular view or a react-navigation screen — instead of filling the sheet. If your layout relied on the content filling the sheet (e.g. spacers, centered content, or a bounded scroll view), pass `flex: 1` via the sheet's `style` prop.
+
+**Migration:**
+
+```tsx
+// ❌ v3 — content filled the sheet implicitly
+<TrueSheet detents={[0.5]}>
+  <View style={{ flex: 1, justifyContent: 'center' }}>
+    <Text>Centered</Text>
+  </View>
+</TrueSheet>
+
+// ✅ v4 — fill the sheet explicitly
+<TrueSheet style={{ flex: 1 }} detents={[0.5]}>
+  <View style={{ flex: 1, justifyContent: 'center' }}>
+    <Text>Centered</Text>
+  </View>
+</TrueSheet>
+```
+
+### 4. Footer Lays Out Relative by Default
+
+The footer now takes up space **below the content** (still pinned to the sheet's bottom edge). Its height is included in the `auto` detent calculation, but excluded from the `peek` detent (it's pushed off-screen at peek). `footerOptions.keyboardOffset` no longer applies — a relative footer stays in the layout flow behind the keyboard.
+
+To restore the v3 floating behavior, set the new `footerOptions.position` to `'absolute'` — the footer floats over the content, is excluded from the `auto` detent, counts toward the `peek` detent, and rises above the keyboard.
+
+**Migration:**
+
+```tsx
+// ❌ v3 — footer floats over the content
+<TrueSheet footer={<MyFooter />}>
+  {/* content */}
+</TrueSheet>
+
+// ✅ v4 — same floating behavior, now opt-in
+<TrueSheet footer={<MyFooter />} footerOptions={{ position: 'absolute' }}>
+  {/* content */}
+</TrueSheet>
+```
+
+:::info
+A relative footer is laid out below the content — if your content is taller than the sheet's visible height (e.g. fixed detents), bound it with `flex: 1` so the footer stays visible.
+:::
+
+:::tip
+See the [Footer guide](guides/footer) for more details.
+:::
+
+### 5. Footer Absorbs the Bottom Safe-Area Inset
+
+The footer now owns the sheet's bottom edge and absorbs the bottom safe-area inset as padding when `insetAdjustment` is `"automatic"` (the default) — its content stays above the home indicator while its background fills the inset. Remove any manual safe-area padding from your footer, or it will be applied twice:
+
+```tsx
+// ❌ v3 — manual safe-area padding
+const MyFooter = () => {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={{ paddingBottom: insets.bottom, backgroundColor: '#333' }}>
+      <FooterContent />
+    </View>
+  );
+};
+
+// ✅ v4 — the footer absorbs the inset natively
+<TrueSheet footer={<FooterContent />} footerStyle={{ backgroundColor: '#333' }}>
+  {/* content */}
+</TrueSheet>
+```
+
+:::tip
+See the [Footer guide](guides/footer#safe-area-handling) for more details.
+:::
+
+### 6. Scrollable Bottom Inset via `contentInsetAdjustmentBehavior`
+
+A plugged scrollable still gets the bottom safe-area inset applied natively, now only while the content can actually scroll — mirroring iOS's [`contentInsetAdjustmentBehavior="automatic"`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) on all platforms. Remove any manual safe-area padding from your scroll content, or opt out with the new `scrollableOptions.contentInsetAdjustmentBehavior` and pad it yourself:
+
+```tsx
+// ✅ v4 — the inset is applied natively while the content can scroll
+<TrueSheet scrollableRef={scrollableRef}>
+  <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+</TrueSheet>
+
+// ✅ v4 — opt out and pad the content yourself
+const insets = useSafeAreaInsets();
+
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+>
+  <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
+    {/* ... */}
+  </ScrollView>
+</TrueSheet>
+```
+
+:::info
+If your sheet has a relative footer, it absorbs the bottom inset instead (see above) — pad for the footer's height, not the safe area.
+:::
+
+### 7. Sheet Navigator Requires `@react-navigation/native` 7.3+
+
+The navigator is now built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so one implementation works with both React Navigation and Expo Router. For React Navigation apps, the `/navigation` entry point now requires `@react-navigation/native` version `7.3.0` or higher (previously `@react-navigation/core`), plus the new `standard-navigation` peer dependency:
+
+```sh
+yarn add @react-navigation/native@^7.3.0 standard-navigation
+```
+
+Your navigator code is unchanged — `createTrueSheetNavigator`, `useTrueSheetNavigation`, screen options, `navigation.resize()`, and listeners all keep the same API.
+
+### 8. Expo Router Uses the New `/navigation/expo-router` Entry Point
+
+The `withLayoutContext` recipe is replaced by a ready-to-use `Sheet` layout. Requires Expo SDK 57+ and the new `standard-navigation` peer dependency — no `@react-navigation/*` install needed.
+
+```sh
+yarn add standard-navigation
+```
+
+**Migration:**
+
+```tsx
+// ❌ v3 — manual withLayoutContext wrapper
+import { withLayoutContext } from 'expo-router';
+import {
+  createTrueSheetNavigator,
+  type TrueSheetNavigationEventMap,
+  type TrueSheetNavigationOptions,
+  type TrueSheetNavigationState,
+} from '@lodev09/react-native-true-sheet/navigation';
+
+type ParamListBase = Record<string, object | undefined>;
+
+const { Navigator } = createTrueSheetNavigator();
+
+const Sheet = withLayoutContext<
+  TrueSheetNavigationOptions,
+  typeof Navigator,
+  TrueSheetNavigationState<ParamListBase>,
+  TrueSheetNavigationEventMap
+>(Navigator);
+
+// ✅ v4 — import the Sheet layout directly
+import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+In sheet screens, import `useTrueSheetNavigation` from the same entry point:
+
+```tsx
+// ❌ v3
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation';
+
+// ✅ v4 — Expo Router apps only
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+:::tip
+See the [Navigation guide](guides/navigation#expo-router) for more details.
+:::
+
+## New Features in v4
+
+### 1. `auto` Detent with Scrollables
+
+The `auto` detent now works with plugged scrollables — the sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height. See the [Scrolling guide](guides/scrolling).
+
+### 2. Floating Header with `headerOptions`
+
+The new `headerOptions` prop mirrors `footerOptions` — set `position` to `'absolute'` to float the header over the content, pinned to the top edge and excluded from the `auto` detent calculation. See the [Header guide](guides/header).
+
+```tsx
+<TrueSheet header={<MyHeader />} headerOptions={{ position: 'absolute' }}>
+  {/* content */}
+</TrueSheet>
+```
+
+### 3. Synchronous Per-Detent Layout
+
+The container is sized to the sheet's visible height per detent and tracks it in realtime while dragging, on all platforms. Flex layouts (e.g. a bottom-pinned button) follow the sheet's edge frame-by-frame instead of being sized to the largest detent.
+
+### 4. First-Class Expo Router Support
+
+The new `/navigation/expo-router` entry point exports a ready-to-use `Sheet` layout that integrates with Expo Router's built-in navigation directly. See the [Navigation guide](guides/navigation#expo-router).
+
+### 5. Static API with `createTrueSheetScreen`
+
+The navigator now supports React Navigation's [static API](https://reactnavigation.org/docs/static-configuration):
+
+```tsx
+const Sheet = createTrueSheetNavigator({
+  screens: {
+    Main: MainScreen,
+    Details: createTrueSheetScreen({
+      screen: DetailsSheet,
+      options: { detents: ['auto', 1] },
+    }),
+  },
+});
+```
+
+## Step-by-Step Migration
+
+1. **Update React Native** to 0.82 or newer.
+2. **Update the package:**
+   ```sh
+   yarn add @lodev09/react-native-true-sheet@^4.0.0
+   ```
+   ```sh
+   npm install @lodev09/react-native-true-sheet@^4.0.0
+   ```
+3. **Clean and reinstall iOS dependencies:**
+   ```sh
+   cd ios
+   rm -rf Pods Podfile.lock build
+   pod install
+   cd ..
+   ```
+4. **Clean Android build:**
+   ```sh
+   cd android
+   ./gradlew clean
+   cd ..
+   ```
+5. **Update your code:**
+   - Replace the `scrollable` prop with `scrollableRef`, passing a ref of your scroll view
+   - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
+   - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
+   - Remove manual safe-area padding from footers and scroll content — both are handled natively
+   - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
+   - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
+6. **Test your app:**
+   ```sh
+   npx react-native run-ios
+   npx react-native run-android
+   ```
+
+## Need Help?
+
+If you encounter any issues during migration:
+
+- Check the [Troubleshooting](troubleshooting) guide
+- Open an issue on [GitHub](https://github.com/lodev09/react-native-true-sheet/issues)
+- Review the [example app](https://github.com/lodev09/react-native-true-sheet/tree/main/example) for reference implementations

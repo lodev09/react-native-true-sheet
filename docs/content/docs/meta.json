@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "intro",
+    "install",
+    "usage",
+    "migration",
+    "guides",
+    "reference",
+    "troubleshooting"
+  ]
+}
