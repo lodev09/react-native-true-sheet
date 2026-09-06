@@ -2,14 +2,13 @@ import './global.css';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Banner } from 'fumadocs-ui/components/banner';
-import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque } from 'next/font/google';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SiteFooter } from '@/components/site-footer';
 import { site } from '@/lib/site';
-import { versions } from '@/lib/source';
+import { Provider } from './provider';
 
 const heading = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -85,17 +84,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
           </span>
         </Banner>
-        <RootProvider
-          search={{
-            options: {
-              tags: versions.map((version) => ({ name: version.label, value: version.tag })),
-              allowClear: true,
-            },
-          }}
-        >
+        <Provider>
           {children}
           <SiteFooter />
-        </RootProvider>
+        </Provider>
         {jsonLd.map((data, index) => (
           <script
             key={index}

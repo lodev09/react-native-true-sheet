@@ -153,8 +153,8 @@ If your sheet has a relative footer, it absorbs the bottom inset instead (see ab
 
 The navigator is now built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so one implementation works with both React Navigation and Expo Router. For React Navigation apps, the `/navigation` entry point now requires `@react-navigation/native` version `7.3.0` or higher (previously `@react-navigation/core`), plus the new `standard-navigation` peer dependency:
 
-```sh
-yarn add @react-navigation/native@^7.3.0 standard-navigation
+```npm
+npm install @react-navigation/native@^7.3.0 standard-navigation
 ```
 
 Your navigator code is unchanged — `createTrueSheetNavigator`, `useTrueSheetNavigation`, screen options, `navigation.resize()`, and listeners all keep the same API.
@@ -163,8 +163,8 @@ Your navigator code is unchanged — `createTrueSheetNavigator`, `useTrueSheetNa
 
 The `withLayoutContext` recipe is replaced by a ready-to-use `Sheet` layout. Requires Expo SDK 57+ and the new `standard-navigation` peer dependency — no `@react-navigation/*` install needed.
 
-```sh
-yarn add standard-navigation
+```npm
+npm install standard-navigation
 ```
 
 **Migration:**
@@ -252,10 +252,7 @@ const Sheet = createTrueSheetNavigator({
 
 1. **Update React Native** to 0.82 or newer.
 2. **Update the package:**
-   ```sh
-   yarn add @lodev09/react-native-true-sheet@^4.0.0
-   ```
-   ```sh
+   ```npm
    npm install @lodev09/react-native-true-sheet@^4.0.0
    ```
 3. **Clean and reinstall iOS dependencies:**

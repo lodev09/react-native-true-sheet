@@ -55,6 +55,7 @@ export default defineConfig({
         },
       ],
     ],
+    remarkNpmOptions: { persist: { id: 'package-manager' } },
     rehypeCodeOptions: {
       themes: await loadCodeThemes(),
       transformers: [...(rehypeCodeDefaultOptions.transformers ?? []), transformerMetaHighlight()],
