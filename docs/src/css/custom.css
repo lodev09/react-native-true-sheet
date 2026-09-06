@@ -36,6 +36,11 @@
   --ifm-alert-background-color: #11663f;
 }
 
+.theme-announcement-bar code {
+  --ifm-code-background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 .padding-top--md {
   padding: 1.5rem !important;
 }
