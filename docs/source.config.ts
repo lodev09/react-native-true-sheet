@@ -4,7 +4,7 @@ import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 import { defineCollections, defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import remarkDirective from 'remark-directive';
 import { z } from 'zod';
-import { loadCodeThemes } from './lib/code-theme';
+import { codeThemes } from './lib/code-theme';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -47,7 +47,7 @@ export default defineConfig({
     ],
     remarkNpmOptions: { persist: { id: 'package-manager' } },
     rehypeCodeOptions: {
-      themes: await loadCodeThemes(),
+      themes: codeThemes,
       transformers: [...(rehypeCodeDefaultOptions.transformers ?? []), transformerMetaHighlight()],
     },
   }),

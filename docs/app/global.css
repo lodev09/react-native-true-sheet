@@ -31,22 +31,22 @@
 }
 
 .dark {
-  --color-fd-background: #0f1b2d;
-  --color-fd-foreground: #dce5f2;
-  --color-fd-muted: #172841;
-  --color-fd-muted-foreground: #a6b6cf;
-  --color-fd-popover: #16253d;
-  --color-fd-popover-foreground: #dce5f2;
-  --color-fd-card: #16253d;
-  --color-fd-card-foreground: #dce5f2;
-  --color-fd-border: rgba(125, 181, 240, 0.14);
-  --color-fd-primary: #8bb8e8;
-  --color-fd-primary-foreground: #0f1b2d;
-  --color-fd-secondary: #1a2c47;
-  --color-fd-secondary-foreground: #eef3fa;
-  --color-fd-accent: #213a5e;
-  --color-fd-accent-foreground: #eef3fa;
-  --color-fd-ring: #7db5f0;
+  --color-fd-background: #0b0c0f;
+  --color-fd-foreground: #e6e7ea;
+  --color-fd-muted: #16181d;
+  --color-fd-muted-foreground: #9a9fa8;
+  --color-fd-popover: #131519;
+  --color-fd-popover-foreground: #e6e7ea;
+  --color-fd-card: #131519;
+  --color-fd-card-foreground: #e6e7ea;
+  --color-fd-border: rgba(255, 255, 255, 0.08);
+  --color-fd-primary: #6aa6e6;
+  --color-fd-primary-foreground: #0b0c0f;
+  --color-fd-secondary: #181b21;
+  --color-fd-secondary-foreground: #f0f1f3;
+  --color-fd-accent: #1f2329;
+  --color-fd-accent-foreground: #f0f1f3;
+  --color-fd-ring: #5b9be0;
 }
 
 /* Brand tokens shared with the landing page and demo */
@@ -61,6 +61,10 @@
   --ts-blue: #1f64ae;
   --ts-sky: #3784d7;
   --ts-sky-soft: #e3ecf7;
+  --ts-on-accent: #ffffff;
+  --ts-panel-text: #d6e2f3;
+  --ts-panel-muted: #b8ccf0;
+  --ts-panel-accent: #7db5f0;
   --ts-text: #0f1b2d;
   --ts-muted: #4f5f78;
   --ts-surface: #ffffff;
@@ -80,29 +84,33 @@
 }
 
 .dark {
-  --ts-phone: #08111f;
-  --ts-phone-ring: rgba(125, 181, 240, 0.22);
-  --ts-panel: #1a2d4a;
-  --ts-band: #0a1526;
-  --ts-blue: #5b9be0;
-  --ts-sky: #7db5f0;
-  --ts-sky-soft: #213a5e;
-  --ts-text: #eef3fa;
-  --ts-muted: #a6b6cf;
-  --ts-surface: #1a2c47;
-  --ts-mist: #172841;
-  --ts-tint: #0c1728;
-  --ts-line: rgba(125, 181, 240, 0.12);
-  --ts-line-strong: rgba(125, 181, 240, 0.22);
-  --ts-hairline: rgba(125, 181, 240, 0.1);
-  --ts-glow: rgba(55, 132, 215, 0.3);
-  --ts-sheet: #1f3352;
-  --ts-grabber: rgba(238, 243, 250, 0.22);
-  --ts-chip: rgba(125, 181, 240, 0.14);
-  --ts-map-bg: #1b2d4a;
-  --ts-map-block: #23395c;
-  --ts-map-road: #2f4a72;
-  --ts-map-water: #234a7c;
+  --ts-phone: #050607;
+  --ts-phone-ring: rgba(255, 255, 255, 0.12);
+  --ts-panel: #15171c;
+  --ts-band: #07080a;
+  --ts-blue: #3d7fd1;
+  --ts-sky: #5b9be0;
+  --ts-sky-soft: #1c2a3d;
+  --ts-on-accent: #ffffff;
+  --ts-panel-text: #e6e7ea;
+  --ts-panel-muted: #9a9fa8;
+  --ts-panel-accent: #f0f1f3;
+  --ts-text: #f0f1f3;
+  --ts-muted: #9a9fa8;
+  --ts-surface: #14161b;
+  --ts-mist: #181b21;
+  --ts-tint: #0e1013;
+  --ts-line: rgba(255, 255, 255, 0.08);
+  --ts-line-strong: rgba(255, 255, 255, 0.16);
+  --ts-hairline: rgba(255, 255, 255, 0.06);
+  --ts-glow: rgba(91, 155, 224, 0.1);
+  --ts-sheet: #1c1f25;
+  --ts-grabber: rgba(240, 241, 243, 0.22);
+  --ts-chip: rgba(255, 255, 255, 0.08);
+  --ts-map-bg: #16181d;
+  --ts-map-block: #1f2228;
+  --ts-map-road: #2b2f37;
+  --ts-map-water: #1e3550;
 }
 
 /* Typography */

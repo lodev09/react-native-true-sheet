@@ -110,7 +110,7 @@
 
 .pin circle {
   fill: var(--ts-sky);
-  stroke: #fff;
+  stroke: var(--ts-on-accent);
   stroke-width: 3;
 }
 
@@ -337,7 +337,7 @@
   padding: 18px 20px 14px;
   border-radius: 18px;
   background: var(--ts-panel);
-  color: #d6e2f3;
+  color: var(--ts-panel-text);
   box-shadow:
     0 30px 60px -30px rgba(15, 27, 45, 0.6),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -357,15 +357,15 @@
 }
 
 .tag {
-  color: #7db5f0;
+  color: var(--ts-panel-accent);
 }
 
 .attr {
-  color: #b8ccf0;
+  color: var(--ts-panel-muted);
 }
 
 .ident {
-  color: #d6e2f3;
+  color: var(--ts-panel-text);
 }
 
 .str {
@@ -397,18 +397,18 @@
 }
 
 .detent:focus-visible {
-  outline: 2px solid #7db5f0;
+  outline: 2px solid var(--ts-sky);
   outline-offset: 1px;
 }
 
 .detentActive {
   background: var(--ts-sky);
-  box-shadow: 0 0 0 4px rgba(55, 132, 215, 0.25);
+  box-shadow: 0 0 0 4px var(--ts-glow);
 }
 
 .detentActive .str,
 .detentActive .num {
-  color: #fff;
+  color: var(--ts-on-accent);
 }
 
 .log {
@@ -418,7 +418,7 @@
   font-family: var(--font-mono);
   font-size: 11.5px;
   line-height: 1.5;
-  color: #8fb0dc;
+  color: var(--ts-panel-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { StaticCodeBlock } from '@/components/code-block';
 import SheetDemo from '@/components/sheet-demo';
-import { loadCodeThemes } from '@/lib/code-theme';
+import { codeThemes } from '@/lib/code-theme';
 import { site } from '@/lib/site';
 import { InstallCommand } from './install-command';
 import styles from './page.module.css';
@@ -122,9 +123,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-export default async function Home() {
-  const themes = await loadCodeThemes();
-
+export default function Home() {
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
@@ -186,8 +185,8 @@ export default async function Home() {
             <ServerCodeBlock
               code={USAGE}
               lang="tsx"
-              themes={themes}
-              codeblock={{ keepBackground: true }}
+              themes={codeThemes}
+              components={{ pre: StaticCodeBlock }}
             />
           </div>
         </div>
@@ -246,15 +245,15 @@ export default async function Home() {
             <ServerCodeBlock
               code={`${INSTALL}@beta`}
               lang="sh"
-              themes={themes}
-              codeblock={{ keepBackground: true }}
+              themes={codeThemes}
+              components={{ pre: StaticCodeBlock }}
             />
             <p className={styles.betaNote}>Teach your coding agent the library too:</p>
             <ServerCodeBlock
               code="npx skills add lodev09/react-native-true-sheet"
               lang="sh"
-              themes={themes}
-              codeblock={{ keepBackground: true }}
+              themes={codeThemes}
+              components={{ pre: StaticCodeBlock }}
             />
           </div>
         </div>
