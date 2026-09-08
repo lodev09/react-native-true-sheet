@@ -478,7 +478,6 @@ using namespace facebook::react;
   [_touchHandler attachToView:_containerView];
   [_controller.view addSubview:_containerView];
   [_controller.view bringSubviewToFront:_containerView];
-  _containerView.accessibilityViewIsModal = YES;
   _controller.accessibilityContentView = _containerView;
   [_controller setupAccessibilityContainer];
 
