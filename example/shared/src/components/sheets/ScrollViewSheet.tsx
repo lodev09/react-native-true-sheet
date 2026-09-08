@@ -18,6 +18,7 @@ import {
   DARK_GRAY,
   FOOTER_HEIGHT,
   GAP,
+  GRAY,
   HEADER_HEIGHT,
   LIGHT_GRAY,
   SPACING,
@@ -58,6 +59,42 @@ const HeavyItem = ({ index }: { index: number }) => {
     </Pressable>
   );
 };
+
+const CARD_WIDTH = SPACING * 11;
+const CARD_SNAP = CARD_WIDTH + GAP;
+
+const Card = ({ index }: { index: number }) => (
+  <Pressable style={styles.card} onPress={() => console.log(`Card #${index + 1} pressed!`)}>
+    <Image
+      source={{ uri: `https://picsum.photos/seed/card-${index}/400/400` }}
+      style={styles.cardImage}
+    />
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle}>Card #{index + 1}</Text>
+      <Text style={styles.cardCaption}>Swipe horizontally</Text>
+    </View>
+  </Pressable>
+);
+
+// Horizontal scrolling inside the sheet — the sheet should not drag while
+// the carousel is panning sideways.
+const Carousel = () => (
+  <View style={styles.carousel}>
+    <ThemedText style={styles.sectionTitle}>Featured</ThemedText>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      snapToInterval={CARD_SNAP}
+      decelerationRate="fast"
+      style={styles.carouselScroll}
+      contentContainerStyle={styles.carouselContent}
+    >
+      {times(10, (i) => (
+        <Card key={i} index={i} />
+      ))}
+    </ScrollView>
+  </View>
+);
 
 export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((props, ref) => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -104,6 +141,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
             keyboardDismissMode="on-drag"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           >
+            <Carousel />
             {times(20, (i) => (
               <HeavyItem key={i} index={i} />
             ))}
@@ -143,6 +181,44 @@ const styles = StyleSheet.create({
       default: DARK_GRAY,
       ios: undefined,
     }),
+  },
+  carousel: {
+    gap: GAP,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  // Bleed past the content padding so cards can scroll edge to edge
+  carouselScroll: {
+    marginHorizontal: -SPACING,
+  },
+  carouselContent: {
+    paddingHorizontal: SPACING,
+    gap: GAP,
+  },
+  card: {
+    width: CARD_WIDTH,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: BORDER_RADIUS,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: CARD_WIDTH,
+  },
+  cardContent: {
+    padding: GAP,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  cardCaption: {
+    fontSize: 13,
+    color: GRAY,
+    marginTop: 2,
   },
   item: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
