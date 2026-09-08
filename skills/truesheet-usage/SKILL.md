@@ -121,7 +121,7 @@ export function App() {
 
 ### Navigation (React Navigation / Expo Router)
 
-See [advanced patterns reference](./references/advanced-patterns.md#react-navigation) for full setup with `createTrueSheetNavigator`, the static API (`createTrueSheetScreen`), the Expo Router `Sheet` layout from `/navigation/expo-router`, screen options, and `useTrueSheetNavigation`.
+See [advanced patterns reference](./references/advanced-patterns.md#react-navigation) for full setup with `createTrueSheetNavigator`, the static API (`createTrueSheetScreen`), the Expo Router `Sheet` layout from `/navigation/expo-router`, screen options (including `scrollableRef` via `setOptions`), multi-step flows as stacked sheet screens, and `useTrueSheetNavigation`.
 
 ### Reanimated
 
@@ -219,7 +219,7 @@ import { TrueSheet, TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
 </TrueSheetOverlay>
 ```
 
-Renders children in a native layer above every presented sheet. Show/hide by conditionally rendering children. Fills the window; touches that miss the children pass through. Never use RN `Modal`/`FullWindowOverlay` for this anymore.
+Renders children in a native layer above every presented sheet. Show/hide by conditionally rendering children. Fills the window; touches that miss the children pass through. Never use RN `Modal`/`FullWindowOverlay` for this anymore. Don't put `react-native-screens` containers (native stack, tabs, drawer) inside it — Android crashes.
 
 ### Non-dismissible confirmation
 
@@ -257,6 +257,16 @@ Fine-tune with `blurOptions={{ intensity: 80, interaction: true }}`. Blur is iOS
 ```tsx
 <TrueSheet detents={['auto', 1]} initialDetentIndex={0} initialDetentAnimated>
   <WelcomeContent />
+</TrueSheet>
+```
+
+### Pre-mount content for `'auto'` detents
+
+Content mounts on first `present()` by default. If it settles asynchronously (data fetch, images), `'auto'` measures too early. Set `lazy={false}` to mount content up front without presenting, then present once ready (native only):
+
+```tsx
+<TrueSheet ref={sheet} lazy={false} detents={['auto']}>
+  <AsyncContent onReady={() => sheet.current?.present()} />
 </TrueSheet>
 ```
 
@@ -298,6 +308,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 10. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.
 11. **Use `header`/`footer` props** for fixed chrome — don't reach for absolute positioning. Float them with `headerOptions`/`footerOptions` `position: 'absolute'` when they should overlay content.
 12. **Liquid Glass** is automatic on iOS 26+. Set `backgroundColor` or `backgroundBlur` to disable it per-sheet (iOS 26.1+), or add `UIDesignRequiresCompatibility` to Info.plist to disable app-wide.
+13. **Native stacks go in the base screen, not in sheet screens** (Sheet Navigator / Expo Router). The first screen is a regular view and can host `createNativeStackNavigator` (that's how you wrap an app). A sheet screen can't — Android crashes with `ScreenContainer is not attached under ReactRootView`. For multi-step flows, make each step its own sheet screen.
 
 ## Platform Differences at a Glance
 
@@ -316,6 +327,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
 | `insetAdjustment` | Yes | Yes | No |
+| `lazy={false}` (pre-mount content) | Yes | Yes | No |
 | Edge-to-edge | N/A | Auto-detected | N/A |
 | Keyboard handling | Built-in | Built-in | N/A |
 

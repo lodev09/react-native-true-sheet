@@ -12,6 +12,8 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
+- [Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)](#sheet-screen-crashes-screencontainer-is-not-attached-under-reactrootview-android)
+- ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
 - [Keyboard hides input](#keyboard-hides-input)
 - [Sheet doesn't build (Xcode version)](#sheet-doesnt-build-xcode-version)
 - [EAS Build fails](#eas-build-fails)
@@ -125,6 +127,26 @@ useFocusEffect(
 **Cause:** Sheets are presented natively, above the React Native view hierarchy.
 
 **Fix:** Render overlays in `TrueSheetOverlay`. See [Advanced Patterns: Overlays on sheets](./advanced-patterns.md#overlays-on-sheets).
+
+## Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)
+
+**Symptom:** Presenting a sheet screen (Sheet Navigator / Expo Router) or rendering inside `TrueSheetOverlay` crashes on Android with `IllegalStateException: ScreenContainer is not attached under ReactRootView`.
+
+**Cause:** A `react-native-screens` container (native stack, bottom tabs, drawer) is rendered inside a sheet screen or overlay. Sheets and overlays render outside the app's root view, where `react-native-screens` can't attach.
+
+**Fix:** Keep native stacks in the base screen (the first screen is a regular view, so wrapping your app there works). Don't nest them in sheet screens or overlays. For multi-step flows inside a sheet, make each step its own sheet screen (Expo Router: sibling routes under the `Sheet` layout, no nested `_layout.tsx` with `<Stack>`). See [Advanced Patterns: Nesting navigators](./advanced-patterns.md#nesting-navigators).
+
+## 'auto' detent is too short or wrong on first present
+
+**Symptom:** A sheet with `detents={['auto']}` opens at the wrong height when content loads asynchronously, then corrects itself.
+
+**Cause:** Content mounts lazily on first `present()`, so `'auto'` measures before the content settles.
+
+**Fix:** Set `lazy={false}` to mount content immediately without presenting, then call `present()` after your readiness signal (native only). SwiftUI-hosted views still only measure during presentation.
+
+```tsx
+<TrueSheet ref={sheet} lazy={false} detents={['auto']}>
+```
 
 ## Keyboard hides input
 

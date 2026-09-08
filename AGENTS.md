@@ -71,6 +71,18 @@ Both platforms: `TrueSheetView` (hidden host) → Controller → `ContainerView`
 2. Create event class in `ios/events/` and `android/.../events/`
 3. Emit from native view
 
+### Updating the AI skill
+
+`skills/truesheet-usage/` is the consumer-facing skill installed via `npx skills add lodev09/react-native-true-sheet`. Whenever docs under `docs/content/docs/next/` change (new prop, event, method, guide, limitation, or troubleshooting entry), update the skill to match in the same PR:
+
+- `SKILL.md` — quick-start recipes, "Rules That Save Debugging Time", platform table
+- `references/configuration.md` — props (mirror `reference/configuration.mdx` + `types.mdx`)
+- `references/api.md` — events and methods
+- `references/advanced-patterns.md` — navigation, reanimated, web, overlays, jest, migration
+- `references/troubleshooting.md` — symptom → cause → fix entries
+
+The skill summarizes the docs, it does not copy them. Keep entries terse and code-first. Add a `💡 Others` changelog entry when the skill changes.
+
 ### Creating a Pull Request
 
 When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`.

@@ -61,6 +61,23 @@ function App() {
 
 To present sheets from anywhere, wrap your root stack: `<Sheet.Screen name="Root" component={RootStack} />` plus sheet screens as siblings.
 
+### Nesting navigators
+
+Nesting a native stack **works in the base screen** — the first screen (or `initialRouteName`) is a regular view, so `<Sheet.Screen name="Root" component={RootStack} />` is the normal way to wrap an app (see above).
+
+It **does not work inside a sheet screen**. On Android, a sheet screen whose component is a `createNativeStackNavigator` crashes with:
+
+```
+IllegalStateException: ScreenContainer is not attached under ReactRootView
+```
+
+For multi-step flows inside a sheet:
+
+- **Stack sheets (recommended)** — make each step its own sheet screen and `navigation.navigate()` between them. The presenting sheet stays visible underneath; `pop()`, `popTo()`, `popToTop()` walk back.
+- **Local state** — swap the sheet's content with React state when you don't need history or deep links.
+
+With Expo Router, keep each step as a sibling route under the `Sheet` layout — a sheet route must not have its own `_layout.tsx` with a `<Stack>`.
+
 ### Static API
 
 React Navigation's [static configuration](https://reactnavigation.org/docs/static-configuration) is supported via `createTrueSheetScreen`:
@@ -106,6 +123,29 @@ navigation.goBack()          // dismiss current sheet
 navigation.setOptions({
   footer: <UpdatedFooter />,
 })
+```
+
+### Scrollable content in a sheet screen
+
+`scrollableRef` and `scrollableOptions` are screen options like any other prop. The ref lives inside the screen component, so set it with `setOptions`, and bound the scroll view with `style: { flex: 1 }` on the screen options:
+
+```tsx
+<Sheet.Screen
+  name="Details"
+  component={DetailsSheet}
+  options={{ detents: [0.5, 1], style: { flex: 1 } }}
+/>
+
+function DetailsSheet() {
+  const navigation = useTrueSheetNavigation()
+  const scrollableRef = useRef<ScrollView>(null)
+
+  useEffect(() => {
+    navigation.setOptions({ scrollableRef })
+  }, [navigation])
+
+  return <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
+}
 ```
 
 ### Screen event listeners
@@ -159,7 +199,17 @@ Inside sheet screens, import the hook from the **same entry point**:
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router'
 ```
 
-All navigator features (screen options, reanimated, dynamic header/footer via `setOptions`, listeners) apply here too.
+All navigator features (screen options, reanimated, dynamic header/footer and `scrollableRef` via `setOptions`, listeners) apply here too.
+
+A sheet route must not have its own `_layout.tsx` with a `<Stack>` — keep multi-step flows as sibling sheet screens under the `Sheet` layout (see [Nesting navigators](#nesting-navigators)):
+
+```
+app/
+├── _layout.tsx   # Sheet layout
+├── index.tsx     # Base content
+├── settings.tsx  # Sheet screen
+└── profile.tsx   # Sheet screen, pushed from settings via router.push('/profile')
+```
 
 ---
 
@@ -322,7 +372,9 @@ import { TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
 
 - Fills the window; touches that miss its children pass through (the sheet stays draggable). For a blocking dialog, render an `absoluteFill` backdrop child.
 - Use `style` for flex/padding layout of children. The overlay itself never renders (no `backgroundColor`).
+- Fills the window, so children may sit under the status bar / navigation bar — inset them with `useSafeAreaInsets`.
 - Native modals presented afterwards (RN `Modal`, native-stack modal screens) and the keyboard still render above it.
+- `react-native-screens` containers (native stack, bottom tabs, drawer) are not supported inside the overlay — Android crashes with `ScreenContainer is not attached under ReactRootView`.
 - Supported on iOS, Android, and Web.
 
 ---
@@ -378,7 +430,7 @@ jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
 
 ### Available mocks
 
-- `/mock`: `TrueSheet` (mocked `present`/`dismiss`/`resize`), `TrueSheetProvider`, `useTrueSheet`
+- `/mock`: `TrueSheet` (mocked `present`/`dismiss`/`resize`), `TrueSheetOverlay` (renders children in a View), `TrueSheetProvider`, `useTrueSheet`
 - `/navigation/mock`: `createTrueSheetNavigator`, `createTrueSheetScreen`, `TrueSheetActions`, `useTrueSheetNavigation`
 - `/navigation/expo-router/mock`: `Sheet` (pass-through with `Screen` and `Protected`), `TrueSheetActions`, `useTrueSheetNavigation`
 - `/reanimated/mock`: `ReanimatedTrueSheet`, `ReanimatedTrueSheetProvider`, `useReanimatedTrueSheet`, `useReanimatedPositionChangeHandler`
@@ -452,4 +504,6 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - `'peek'` detent + `TrueSheetPeek` component
 - `headerOptions` (floating header)
 - `accessibilityOptions`
+- `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
+- `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
