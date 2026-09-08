@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -7,12 +7,13 @@ import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
-import { Button, DemoContent, Footer } from '@example/shared/components';
-import { BLUE, DARK, DARK_BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
+import { Button, DemoContent, Footer, Header } from '@example/shared/components';
+import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
 import {
   NotificationsSheetContent,
   ProfileSheetContent,
+  ScrollableSheetContent,
   SettingsSheetContent,
   TestScreen,
 } from '@example/shared/screens';
@@ -34,6 +35,7 @@ const HomeScreen = () => {
       </View>
       <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+      <Button text="Open Scrollable Sheet" onPress={() => navigation.navigate('Scrollable')} />
       <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
@@ -115,6 +117,25 @@ const SmallFooterSheet = () => {
       <Text style={styles.sheetTitle}>Small Footer Sheet</Text>
       <Text style={styles.sheetSubtitle}>Small auto detent with a late-mounted footer.</Text>
     </View>
+  );
+};
+
+// Scrolling content in a sheet screen — the ScrollView is created here, so it's
+// plugged into the sheet via `setOptions` instead of the static screen options.
+const ScrollableSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+  const scrollableRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    navigation.setOptions({ scrollableRef });
+  }, [navigation]);
+
+  return (
+    <ScrollableSheetContent
+      scrollableRef={scrollableRef}
+      onResize={() => navigation.resize(1)}
+      onPop={() => navigation.pop()}
+    />
   );
 };
 
@@ -249,6 +270,25 @@ export const SheetNavigator = () => {
         }}
       />
       <SheetStack.Screen
+        name="Scrollable"
+        component={ScrollableSheet}
+        options={{
+          detents: [0.6, 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+          style: styles.scrollableSheet,
+          header: <Header />,
+          headerOptions: { position: 'absolute' },
+          footer: <Footer />,
+          footerStyle: styles.scrollableFooter,
+          footerOptions: { position: 'absolute' },
+          scrollableOptions: {
+            topScrollEdgeEffect: 'soft',
+            bottomScrollEdgeEffect: 'soft',
+          },
+        }}
+      />
+      <SheetStack.Screen
         name="SmallFooter"
         component={SmallFooterSheet}
         options={{
@@ -299,6 +339,13 @@ const styles = StyleSheet.create({
   buttons: {
     gap: GAP,
     marginTop: SPACING,
+  },
+  scrollableSheet: {
+    flex: 1,
+  },
+  // Transparent on iOS so the scroll edge effect shows through
+  scrollableFooter: {
+    backgroundColor: Platform.select({ default: DARK_GRAY, ios: undefined }),
   },
   smallFooter: {
     justifyContent: 'center',
