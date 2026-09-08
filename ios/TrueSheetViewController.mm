@@ -45,11 +45,26 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)restoreWindowAccessibilityElements;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
+- (NSArray *)accessibilityGrabberElements;
 - (void)endInteractiveDismissState;
 - (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
                                       duration:(NSTimeInterval)duration
                           allowUserInteraction:(BOOL)allowUserInteraction
                                     completion:(void (^)(void))completion;
+
+@end
+
+// VoiceOver delivers the two-finger Z (escape) gesture by walking up the view
+// hierarchy from the focused element, so the sheet's root view handles it.
+@interface TrueSheetControllerView : UIView
+@property (nonatomic, weak) TrueSheetViewController *controller;
+@end
+
+@implementation TrueSheetControllerView
+
+- (BOOL)accessibilityPerformEscape {
+  return [self.controller accessibilityPerformEscape];
+}
 
 @end
 
@@ -380,6 +395,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 #pragma mark - View Lifecycle
 
+- (void)loadView {
+  TrueSheetControllerView *view = [[TrueSheetControllerView alloc] init];
+  view.controller = self;
+  self.view = view;
+}
+
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
@@ -487,6 +508,32 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 }
 
+- (NSArray *)accessibilityGrabberElements {
+  if (_grabberView && !_grabberView.hidden) {
+    return @[ _grabberView ];
+  }
+
+  // The system grabber is an accessibility element UIKit adds to the presented view
+  // (a sibling of our root view). Expose it so VoiceOver can resize or dismiss with it.
+  // UIKit also keeps a transparent bottom grabber there, so skip invisible views.
+  NSMutableArray *elements = [NSMutableArray array];
+  for (UIView *subview in self.presentationController.presentedView.subviews) {
+    if (subview != self.view && subview.isAccessibilityElement && !subview.hidden && subview.alpha > 0) {
+      [elements addObject:subview];
+    }
+  }
+  return elements;
+}
+
+- (BOOL)accessibilityPerformEscape {
+  if (!_isPresented || !self.dismissible) {
+    return NO;
+  }
+
+  [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  return YES;
+}
+
 - (void)setAccessibilityContentElement:(UIView *)contentView {
   BOOL hasAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]] &&
                                         [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements];
@@ -499,12 +546,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // its accessibilityElements getter recomputes live, so a footer/content subtree
   // that remounts (e.g. swapping a footer button on a state change) stays
   // discoverable instead of leaving this snapshot pointing at destroyed views.
-  NSArray *accessibilityElements;
+  NSMutableArray *accessibilityElements = [[self accessibilityGrabberElements] mutableCopy];
   if (isAccessibilityModal) {
     NSArray *contentElements = contentView.accessibilityElements;
-    accessibilityElements = contentElements.count > 0 ? contentElements : @[ contentView ];
+    [accessibilityElements addObjectsFromArray:contentElements.count > 0 ? contentElements : @[ contentView ]];
   } else {
-    accessibilityElements = @[ contentView ];
+    [accessibilityElements addObject:contentView];
   }
 
   self.view.isAccessibilityElement = NO;
@@ -1417,6 +1464,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _grabberView.onTap = nil;
     _grabberView.onIncrement = nil;
     _grabberView.onDecrement = nil;
+  }
+
+  // Only the topmost sheet may refresh, or a parent's prop update would steal the
+  // window accessibility override from the child presented over it.
+  if (_isPresented && self.isTopmostPresentedController) {
+    [self setupAccessibilityContainer];
   }
 }
 
