@@ -138,11 +138,11 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           <ScrollView
             ref={scrollViewRef}
             contentContainerStyle={styles.content}
-            keyboardDismissMode="on-drag"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          >
-            <Carousel />
-            {times(20, (i) => (
+              keyboardDismissMode="on-drag"
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
+              <Carousel />
+              {times(20, (i) => (
               <HeavyItem key={i} index={i} />
             ))}
           </ScrollView>
@@ -188,6 +188,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
+    // The sheet background is fixed DARK on Android; themed elsewhere
+    ...Platform.select({ android: { color: LIGHT_GRAY } }),
   },
   // Bleed past the content padding so cards can scroll edge to edge
   carouselScroll: {
