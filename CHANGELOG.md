@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: VoiceOver users can now dismiss the sheet with the two-finger Z gesture, and the grabber is announced as the sheet's first element so it can be resized or dismissed with swipe gestures. ([#829](https://github.com/lodev09/react-native-true-sheet/pull/829) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.13
 
 ### 🐛 Bug fixes
