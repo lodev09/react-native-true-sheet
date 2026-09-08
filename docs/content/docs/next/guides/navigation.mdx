@@ -1,5 +1,5 @@
 ---
-title: React Navigation
+title: Navigation
 description: Navigate to other screens from within the bottom sheet.
 keywords: [bottom sheet navigation, react-navigation, navigating from sheet, sheet navigator]
 ---
@@ -252,6 +252,39 @@ function DetailsSheet() {
 :::tip
 All [TrueSheet props](../reference/configuration) like `header`, `footer`, `grabber`, `dismissible`, etc. can be dynamically updated via `setOptions`.
 :::
+
+### Scrollable Content
+
+[`scrollableRef`](../reference/configuration#scrollableref) and [`scrollableOptions`](../reference/configuration#scrollableoptions) are screen options like any other prop. Since the ref is created inside the screen component, set it with `setOptions`:
+
+```tsx
+function DetailsSheet() {
+  const navigation = useTrueSheetNavigation();
+  const scrollableRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    navigation.setOptions({ scrollableRef });
+  }, [navigation]);
+
+  return (
+    <ScrollView ref={scrollableRef}>
+      {/* ... */}
+    </ScrollView>
+  );
+}
+```
+
+Bound the scroll view's height with `flex: 1` via the screen's `style` option.
+
+```tsx
+<Sheet.Screen
+  name="Details"
+  component={DetailsSheet}
+  options={{ detents: [0.5, 1], style: { flex: 1 } }}
+/>
+```
+
+See the [Scrolling guide](scrolling) for more information.
 
 ### Screen Listeners
 
