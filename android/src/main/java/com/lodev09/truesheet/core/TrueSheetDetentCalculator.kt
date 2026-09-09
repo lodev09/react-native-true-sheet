@@ -130,6 +130,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getLowestSheetTop(): Int = if (hasKeyboardFloor) getSheetTop(detents[0], includeKeyboard = false) else getSheetTopForDetentIndex(0)
 
+  /**
+   * Top of the half stop while the keyboard floor is active: the keyboard-free
+   * second detent, or the floor itself for a single detent.
+   */
+  fun getKeyboardHalfStopTop(): Int = getSheetTop(detents[minOf(1, detents.size - 1)], includeKeyboard = false)
+
   // Clamp to the space the sheet can actually occupy — matching
   // setupSheetDetents. A keyboard-inflated detent height can exceed it,
   // placing the expected top above the screen while the real sheet stops

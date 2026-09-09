@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.TouchTargetHelper
+import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetCoordinatorLayoutDelegate {
@@ -22,8 +23,11 @@ interface TrueSheetCoordinatorLayoutDelegate {
   fun findScrollView(): ViewGroup?
   fun findSheetView(): TrueSheetBottomSheetView?
 
-  /** A downward pull the sheet couldn't follow ended; `overdragPx` is the travel it didn't follow. */
-  fun coordinatorLayoutDidPullDown(overdragPx: Int)
+  /**
+   * A downward pull the sheet couldn't follow ended; `overdragPx` is the travel it
+   * didn't follow, `keyboardWasVisible` whether the keyboard was up when it began.
+   */
+  fun coordinatorLayoutDidPullDown(overdragPx: Int, keyboardWasVisible: Boolean)
 }
 
 /**
@@ -79,6 +83,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var pullStartY = 0f
   private var pullLastY = 0f
   private var pullOverdrag = 0f
+  private var pullKeyboardVisible = false
 
   init {
     layoutParams = LayoutParams(
@@ -118,6 +123,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
         pullStartY = ev.rawY
         pullLastY = ev.rawY
         pullOverdrag = 0f
+        pullKeyboardVisible = pullTracking && KeyboardUtils.isKeyboardVisible(this)
       }
 
       MotionEvent.ACTION_MOVE -> if (pullTracking) {
@@ -141,7 +147,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
         // Let the behavior settle first so the controller sees the resting position.
         val handled = super.dispatchTouchEvent(ev)
         if (dy > dx && pullOverdrag > PULL_DOWN_THRESHOLD_DP.dpToPx()) {
-          delegate?.coordinatorLayoutDidPullDown(pullOverdrag.toInt())
+          delegate?.coordinatorLayoutDidPullDown(pullOverdrag.toInt(), pullKeyboardVisible)
         }
         return handled
       }
