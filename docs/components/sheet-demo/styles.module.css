@@ -151,6 +151,11 @@
   box-shadow: 0 6px 18px -8px rgba(15, 27, 45, 0.35);
 }
 
+:global(.dark) .searchBar {
+  background: color-mix(in srgb, var(--ts-sheet) 90%, var(--ts-text));
+  box-shadow: none;
+}
+
 .searchGlyph {
   width: 14px;
   height: 14px;
