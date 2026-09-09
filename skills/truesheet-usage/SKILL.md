@@ -240,6 +240,25 @@ Renders children in a native layer above every presented sheet. Show/hide by con
 </TrueSheet>
 ```
 
+### Confirm before dismiss (unsaved changes)
+
+```tsx
+<TrueSheet
+  ref={sheet}
+  dismissible={!isDirty}
+  onDismissAttempt={() =>
+    Alert.alert('Discard changes?', undefined, [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => sheet.current?.dismiss() },
+    ])
+  }
+>
+  {/* form */}
+</TrueSheet>
+```
+
+Don't try to block dismissal from a callback — native can't wait on JS. Toggle `dismissible` from state; blocked drags and back/escape fire `onDismissAttempt` (dim taps don't), then `dismiss()` programmatically.
+
 ### iOS blur background
 
 ```tsx
@@ -340,6 +359,7 @@ The most commonly used events:
 | `onMount` | Content is mounted and ready | — |
 | `onDidPresent` | Sheet finished presenting | `{ index, position, detent }` |
 | `onDidDismiss` | Sheet finished dismissing | — |
+| `onDismissAttempt` | User tried to dismiss while `dismissible={false}` | — |
 | `onDetentChange` | User dragged or `resize()` changed the detent | `{ index, position, detent }` |
 | `onPositionChange` | Continuous position updates during drag/animation | `{ index, position, detent, realtime }` |
 

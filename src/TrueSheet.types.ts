@@ -36,6 +36,7 @@ export type WillPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type DidPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type WillDismissEvent = NativeSyntheticEvent<null>;
 export type DidDismissEvent = NativeSyntheticEvent<null>;
+export type DismissAttemptEvent = NativeSyntheticEvent<null>;
 export type DragBeginEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type DragChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type DragEndEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
@@ -456,6 +457,7 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Prevents interactive dismissal of the Sheet.
+   * Blocked attempts fire `onDismissAttempt`, so you can confirm before dismissing programmatically.
    *
    * @default true
    */
@@ -687,6 +689,13 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the Sheet has been dismissed
    */
   onDidDismiss?: (event: DidDismissEvent) => void;
+
+  /**
+   * Called when the user tries to dismiss the sheet while `dismissible` is `false`,
+   * e.g. by dragging down or pressing back/escape. Tapping the dim does not count.
+   * The sheet stays presented. Confirm with the user, then call `dismiss()` to proceed.
+   */
+  onDismissAttempt?: (event: DismissAttemptEvent) => void;
 
   /**
    * Called when the detent of the sheet has changed.

@@ -12,6 +12,7 @@ import { isIOS, isMobileFirefox } from './browser';
 import {
   BORDER_RADIUS,
   CLOSE_THRESHOLD,
+  DISMISS_ATTEMPT_THRESHOLD,
   DRAG_CLASS,
   NESTED_DISPLACEMENT,
   SCROLL_LOCK_TIMEOUT,
@@ -93,6 +94,12 @@ export type DialogProps = {
    * @default true
    */
   dismissible?: boolean;
+  /**
+   * Called when the user tries to close a non-dismissible drawer — dragging down
+   * at the first snap point, pressing escape, or tapping the handle of a
+   * single-snap-point drawer. Overlay clicks don't count, mirroring iOS.
+   */
+  onDismissAttempt?: () => void;
   /**
    * When `false` the drawer can't be dragged by the user. Programmatic snap-point
    * changes still animate. Defaults to `true`.
@@ -218,6 +225,7 @@ export function Root({
   closeThreshold = CLOSE_THRESHOLD,
   scrollLockTimeout = SCROLL_LOCK_TIMEOUT,
   dismissible = true,
+  onDismissAttempt,
   draggable = true,
   handleOnly = false,
   fadeFromIndex = snapPoints && snapPoints.length - 1,
@@ -274,6 +282,7 @@ export function Root({
   const isAllowedToDrag = React.useRef<boolean>(false);
   const nestedOpenChangeTimer = React.useRef<NodeJS.Timeout | null>(null);
   const pointerStart = React.useRef(0);
+  const dismissAttempted = React.useRef(false);
   const keyboardIsOpen = React.useRef(false);
   const shouldAnimate = React.useRef(!defaultOpen);
   const previousDiffFromInitial = React.useRef(0);
@@ -517,7 +526,17 @@ export function Root({
       const noCloseSnapPointsPreCondition = snapPoints && !dismissible && !isDraggingInDirection;
 
       // Disallow dragging down to close when first snap point is the active one and dismissible prop is set to false.
-      if (noCloseSnapPointsPreCondition && activeSnapPointIndex === 0) return;
+      if (noCloseSnapPointsPreCondition && activeSnapPointIndex === 0) {
+        // The drawer stays put. Remember a deliberate pull that would otherwise
+        // have dragged it (content at its top) so release() can report it.
+        if (
+          -draggedDistance > DISMISS_ATTEMPT_THRESHOLD &&
+          (isAllowedToDrag.current || shouldDrag(event.target, isDraggingInDirection))
+        ) {
+          dismissAttempted.current = true;
+        }
+        return;
+      }
 
       // We need to capture last time when drag with scroll was triggered and have a timeout between
       const absDraggedDistance = Math.abs(draggedDistance);
@@ -779,6 +798,11 @@ export function Root({
     setIsDragging(false);
     dragEndTime.current = new Date();
 
+    if (dismissAttempted.current) {
+      dismissAttempted.current = false;
+      if (isOpen) onDismissAttempt?.();
+    }
+
     // The press that started this "drag" may have dismissed the drawer (e.g. a
     // back button acting on pointerdown). Snapping now would overwrite the
     // dismiss transform that closeDrawer just wrote and freeze the sheet in
@@ -976,6 +1000,7 @@ export function Root({
           onTouchDrag: (event, pointerEvent) => drag(event, pointerEvent),
           onTouchRelease: (event, pointerEvent) => release(event, pointerEvent),
           dismissible,
+          onDismissAttempt,
           shouldAnimate,
           handleOnly,
           isOpen,
@@ -1131,6 +1156,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       snapPoints,
       setActiveSnapPoint,
       dismissible,
+      onDismissAttempt,
       container,
       handleOnly,
       shouldAnimate,
@@ -1463,6 +1489,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
               activeSnapPointIndex > 0
             ) {
               setActiveSnapPoint(snapPoints![0]!);
+            } else {
+              onDismissAttempt?.();
             }
           }
         }}
@@ -1604,6 +1632,7 @@ export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(
       activeSnapPoint,
       setActiveSnapPoint,
       dismissible,
+      onDismissAttempt,
       handleOnly,
       isOpen,
       onPress,
@@ -1644,6 +1673,12 @@ export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(
 
       if (isLastSnapPoint && dismissible) {
         closeDrawer();
+        return;
+      }
+
+      // Mirrors native: a single-detent sheet's handle tap is a dismiss.
+      if (isLastSnapPoint && snapPoints.length === 1) {
+        onDismissAttempt?.();
         return;
       }
 

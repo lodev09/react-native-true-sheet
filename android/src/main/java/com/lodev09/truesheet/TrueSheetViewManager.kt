@@ -81,6 +81,7 @@ class TrueSheetViewManager :
       DidPresentEvent.EVENT_NAME to hashMapOf("registrationName" to DidPresentEvent.REGISTRATION_NAME),
       WillDismissEvent.EVENT_NAME to hashMapOf("registrationName" to WillDismissEvent.REGISTRATION_NAME),
       DidDismissEvent.EVENT_NAME to hashMapOf("registrationName" to DidDismissEvent.REGISTRATION_NAME),
+      DismissAttemptEvent.EVENT_NAME to hashMapOf("registrationName" to DismissAttemptEvent.REGISTRATION_NAME),
       DetentChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DetentChangeEvent.REGISTRATION_NAME),
       DragBeginEvent.EVENT_NAME to hashMapOf("registrationName" to DragBeginEvent.REGISTRATION_NAME),
       DragChangeEvent.EVENT_NAME to hashMapOf("registrationName" to DragChangeEvent.REGISTRATION_NAME),

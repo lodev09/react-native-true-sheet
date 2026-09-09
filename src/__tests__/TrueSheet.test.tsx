@@ -6,6 +6,7 @@ import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
 import type {
   DidDismissEvent,
+  DismissAttemptEvent,
   WillFocusEvent,
   DidFocusEvent,
   WillBlurEvent,
@@ -289,6 +290,66 @@ describe('TrueSheet', () => {
 
       // Content should now be rendered after state update
       expect(queryByText('Lifecycle Content')).not.toBeNull();
+    });
+  });
+
+  describe('Dismiss Attempt', () => {
+    it('should call onDismissAttempt when triggered', async () => {
+      const onDismissAttemptMock = jest.fn();
+      render(
+        <TrueSheet
+          name="dismiss-attempt-test"
+          initialDetentIndex={0}
+          dismissible={false}
+          onDismissAttempt={onDismissAttemptMock}
+        >
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = TrueSheet['instances']['dismiss-attempt-test']!;
+
+      await act(async () => {
+        sheetRef['onDismissAttempt']({} as DismissAttemptEvent);
+      });
+
+      expect(onDismissAttemptMock).toHaveBeenCalled();
+    });
+
+    it('should report a back press on a non-dismissible sheet and consume it', async () => {
+      const onDismissAttemptMock = jest.fn();
+      render(
+        <TrueSheet
+          name="dismiss-attempt-back-test"
+          initialDetentIndex={0}
+          dismissible={false}
+          onDismissAttempt={onDismissAttemptMock}
+        >
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = TrueSheet['instances']['dismiss-attempt-back-test']!;
+      sheetRef['isPresented'] = true;
+      sheetRef['isSheetVisible'] = true;
+
+      expect(sheetRef['handleBackPress']()).toBe(true);
+      expect(onDismissAttemptMock).toHaveBeenCalledTimes(1);
+      expect(TrueSheetModule?.handleBackPress).not.toHaveBeenCalled();
+    });
+
+    it('should let a back press propagate when non-dismissible without a handler', async () => {
+      render(
+        <TrueSheet name="dismiss-attempt-propagate-test" initialDetentIndex={0} dismissible={false}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = TrueSheet['instances']['dismiss-attempt-propagate-test']!;
+      sheetRef['isPresented'] = true;
+      sheetRef['isSheetVisible'] = true;
+
+      expect(sheetRef['handleBackPress']()).toBe(false);
     });
   });
 

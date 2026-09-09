@@ -33,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)emitDidDismiss:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
 
++ (void)emitDismissAttempt:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
+
 @end
 
 NS_ASSUME_NONNULL_END

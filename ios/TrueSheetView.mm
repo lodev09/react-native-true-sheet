@@ -796,6 +796,10 @@ using namespace facebook::react;
   }
 }
 
+- (void)viewControllerDidAttemptDismiss {
+  [TrueSheetLifecycleEvents emitDismissAttempt:_eventEmitter];
+}
+
 - (void)viewControllerDidDismiss {
   [_containerView cleanupKeyboardObserver];
   if (!_dismissedByNavigation) {

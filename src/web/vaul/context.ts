@@ -23,6 +23,7 @@ interface DrawerContextValue {
   onNestedOpenChange: (o: boolean) => void;
   onNestedRelease: (event: React.PointerEvent<HTMLDivElement>, open: boolean) => void;
   dismissible: boolean;
+  onDismissAttempt?: () => void;
   isOpen: boolean;
   isDragging: boolean;
   keyboardIsOpen: React.MutableRefObject<boolean>;

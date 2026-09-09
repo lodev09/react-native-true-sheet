@@ -590,6 +590,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
   }
 
+  override fun viewControllerDidAttemptDismiss() {
+    val surfaceId = UIManagerHelper.getSurfaceId(this)
+    eventDispatcher?.dispatchEvent(DismissAttemptEvent(surfaceId, id))
+  }
+
   override fun viewControllerDidDismiss(parent: TrueSheetView?) {
     // Detach coordinator from the root container view
     viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }

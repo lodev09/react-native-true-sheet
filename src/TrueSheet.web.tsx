@@ -31,6 +31,7 @@ import type {
   TrueSheetStaticMethods,
   WillBlurEvent,
   WillDismissEvent,
+  DismissAttemptEvent,
   WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
@@ -105,6 +106,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDidPresent,
     onWillDismiss,
     onDidDismiss,
+    onDismissAttempt,
     onDetentChange,
     onDragBegin,
     onDragChange,
@@ -1025,12 +1027,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const onDidBlurRef = useRef(onDidBlur);
   const onWillFocusRef = useRef(onWillFocus);
   const onDidFocusRef = useRef(onDidFocus);
+  const onDismissAttemptRef = useRef(onDismissAttempt);
   useEffect(() => {
     onWillBlurRef.current = onWillBlur;
     onDidBlurRef.current = onDidBlur;
     onWillFocusRef.current = onWillFocus;
     onDidFocusRef.current = onDidFocus;
+    onDismissAttemptRef.current = onDismissAttempt;
   });
+  const handleDismissAttempt = useCallback(() => {
+    onDismissAttemptRef.current?.({ nativeEvent: null } as DismissAttemptEvent);
+  }, []);
 
   const prevDescendantCountRef = useRef(0);
   useEffect(() => {
@@ -1256,6 +1263,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         onDrag={handleDrag}
         onRelease={handleRelease}
         dismissible={dismissible}
+        onDismissAttempt={handleDismissAttempt}
         draggable={draggable}
         repositionInputs={false}
         modal={dimmed}
