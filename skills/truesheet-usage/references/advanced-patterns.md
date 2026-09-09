@@ -507,3 +507,4 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
+- Element inspector works inside a presented sheet (dev builds, no setup) — header, content, and footer are inspectable
