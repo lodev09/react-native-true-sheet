@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.TouchTargetHelper
@@ -20,6 +21,7 @@ interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidChangeConfiguration()
   fun findScrollView(): ViewGroup?
   fun findSheetView(): TrueSheetBottomSheetView?
+  fun coordinatorLayoutDidPullDown()
 }
 
 /**
@@ -65,6 +67,16 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var streamSheetDraggable = false
   private var streamDraggableEditText = false
 
+  // Pull-down tracking. BottomSheetBehavior gives no callback when a downward drag
+  // is clamped by `isHideable = false` — the sheet stays put (or the scrollable
+  // overscrolls) and no state change fires. Track the finger ourselves and report
+  // a stationary vertical pull on release so the controller can surface a
+  // blocked dismiss attempt.
+  private var pullTracking = false
+  private var pullStartX = 0f
+  private var pullStartY = 0f
+  private var pullSheetTop = 0
+
   init {
     layoutParams = LayoutParams(
       LayoutParams.MATCH_PARENT,
@@ -93,6 +105,39 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
   override val pointerEvents: PointerEvents
     get() = PointerEvents.BOX_NONE
+
+  override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    when (ev.actionMasked) {
+      MotionEvent.ACTION_DOWN -> {
+        val sheet = delegate?.findSheetView()
+        val scrollView = delegate?.findScrollView()
+        // Only a touch on the sheet whose scrollable (if any) is already at its
+        // top can be a drag-to-dismiss; anything else is a scroll or a dim tap.
+        pullTracking = sheet != null &&
+          isTouchInside(sheet, ev) &&
+          scrollView?.canScrollVertically(-1) != true
+        pullStartX = ev.rawX
+        pullStartY = ev.rawY
+        pullSheetTop = sheet?.top ?: 0
+      }
+
+      MotionEvent.ACTION_UP -> if (pullTracking) {
+        pullTracking = false
+        val dx = kotlin.math.abs(ev.rawX - pullStartX)
+        val dy = ev.rawY - pullStartY
+        val sheet = delegate?.findSheetView()
+        // Let the behavior settle first so a moved sheet is caught by the top check.
+        val handled = super.dispatchTouchEvent(ev)
+        if (sheet != null && sheet.top == pullSheetTop && dy > dx && dy > PULL_DOWN_THRESHOLD_DP.dpToPx()) {
+          delegate?.coordinatorLayoutDidPullDown()
+        }
+        return handled
+      }
+
+      MotionEvent.ACTION_CANCEL -> pullTracking = false
+    }
+    return super.dispatchTouchEvent(ev)
+  }
 
   /**
    * Clears stale `nestedScrollingChildRef` from BottomSheetBehavior.
@@ -158,6 +203,14 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
     streamSheetDraggable = true
     streamDraggableEditText = target is EditText
+  }
+
+  private fun isTouchInside(view: View, ev: MotionEvent): Boolean {
+    val loc = IntArray(2)
+    view.getLocationOnScreen(loc)
+    val x = ev.rawX.toInt()
+    val y = ev.rawY.toInt()
+    return x >= loc[0] && x <= loc[0] + view.width && y >= loc[1] && y <= loc[1] + view.height
   }
 
   private fun findDescendantViewAt(view: View, rawX: Int, rawY: Int, predicate: (View) -> Boolean): View? {
@@ -299,5 +352,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
   companion object {
     private const val GESTURE_HANDLER_ROOT_VIEW_CLASS = "com.swmansion.gesturehandler.react.RNGestureHandlerRootView"
     private const val GESTURE_CLAIM_SLOP_FACTOR = 3
+    private const val PULL_DOWN_THRESHOLD_DP = 24f
   }
 }

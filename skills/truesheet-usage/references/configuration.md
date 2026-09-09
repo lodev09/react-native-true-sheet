@@ -116,7 +116,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `dismissible` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can swipe to dismiss or tap outside |
+| `dismissible` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can swipe to dismiss or tap outside. Blocked attempts fire `onDismissAttempt` |
 | `draggable` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can drag to resize. When `false`, the grabber is hidden |
 
 ## Dimming

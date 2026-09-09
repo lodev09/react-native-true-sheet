@@ -40,6 +40,10 @@ export type TrueSheetNavigationEventMap = {
    */
   sheetDidDismiss: { data: undefined };
   /**
+   * Event fired when the user tries to dismiss a non-dismissible sheet.
+   */
+  sheetDismissAttempt: { data: undefined };
+  /**
    * Event fired when the sheet's detent changes.
    */
   sheetDetentChange: { data: DetentInfoEventPayload };

@@ -94,6 +94,21 @@ class DidDismissEvent(surfaceId: Int, viewId: Int) : Event<DidDismissEvent>(surf
 }
 
 /**
+ * Fired when the user tries to dismiss a non-dismissible sheet
+ */
+class DismissAttemptEvent(surfaceId: Int, viewId: Int) : Event<DismissAttemptEvent>(surfaceId, viewId) {
+
+  override fun getEventName(): String = EVENT_NAME
+
+  override fun getEventData(): WritableMap = Arguments.createMap()
+
+  companion object {
+    const val EVENT_NAME = "topDismissAttempt"
+    const val REGISTRATION_NAME = "onDismissAttempt"
+  }
+}
+
+/**
  * Fired when the sheet visibility changes due to screen transitions
  */
 class VisibilityChangeEvent(surfaceId: Int, viewId: Int, private val visible: Boolean) : Event<VisibilityChangeEvent>(surfaceId, viewId) {

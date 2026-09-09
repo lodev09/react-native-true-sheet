@@ -55,6 +55,7 @@ interface TrueSheetViewControllerDelegate {
   fun viewControllerDidPresent(index: Int, position: Float, detent: Float)
   fun viewControllerWillDismiss()
   fun viewControllerDidDismiss(parent: TrueSheetView?)
+  fun viewControllerDidAttemptDismiss()
   fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragBegin(index: Int, position: Float, detent: Float)
   fun viewControllerDidDragChange(index: Int, position: Float, detent: Float)
@@ -493,6 +494,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
+  override fun coordinatorLayoutDidPullDown() {
+    // A pull that left the sheet in place at its lowest detent is a blocked
+    // drag-to-dismiss. Keyboard-shifted detents make the index unreliable.
+    if (isPresented && !dismissible && draggable && currentDetentIndex == 0 && keyboardInset == 0) {
+      delegate?.viewControllerDidAttemptDismiss()
+    }
+  }
+
   // =============================================================================
   // MARK: - TrueSheetDimViewDelegate
   // =============================================================================
@@ -530,8 +539,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override fun bottomSheetViewDidTapGrabber() {
     val nextIndex = (currentDetentIndex + 1) % detents.size
-    if (nextIndex == 0 && detents.size == 1 && dismissible) {
-      dismiss(animated = true)
+    if (nextIndex == 0 && detents.size == 1) {
+      if (dismissible) {
+        dismiss(animated = true)
+      } else {
+        delegate?.viewControllerDidAttemptDismiss()
+      }
     } else {
       setStateForDetentIndex(nextIndex)
     }
@@ -548,6 +561,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       setStateForDetentIndex(currentDetentIndex - 1)
     } else if (dismissible) {
       dismiss(animated = true)
+    } else {
+      delegate?.viewControllerDidAttemptDismiss()
     }
   }
 

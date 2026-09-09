@@ -14,6 +14,7 @@ import type {
   PositionChangeEventPayload,
   WillBlurEvent,
   WillDismissEvent,
+  DismissAttemptEvent,
   WillFocusEvent,
   WillPresentEvent,
 } from '../../TrueSheet.types';
@@ -78,6 +79,7 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
       onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
       onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
       onDidDismiss,
+      onDismissAttempt: (_e: DismissAttemptEvent) => emitEvent('sheetDismissAttempt', undefined),
       onDetentChange: (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
       onDragBegin: (e: DragBeginEvent) => emitEvent('sheetDragBegin', e.nativeEvent),
       onDragChange: (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),

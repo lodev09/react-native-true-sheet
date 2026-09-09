@@ -23,6 +23,7 @@ import type {
   PositionChangeEvent,
   DidDismissEvent,
   WillDismissEvent,
+  DismissAttemptEvent,
   MountEvent,
   WillFocusEvent,
   DidFocusEvent,
@@ -166,6 +167,7 @@ export class TrueSheet
     this.onMount = this.onMount.bind(this);
     this.onWillDismiss = this.onWillDismiss.bind(this);
     this.onDidDismiss = this.onDidDismiss.bind(this);
+    this.onDismissAttempt = this.onDismissAttempt.bind(this);
     this.onWillPresent = this.onWillPresent.bind(this);
     this.onDidPresent = this.onDidPresent.bind(this);
     this.onDetentChange = this.onDetentChange.bind(this);
@@ -367,6 +369,10 @@ export class TrueSheet
     this.props.onWillDismiss?.(event);
   }
 
+  private onDismissAttempt(event: DismissAttemptEvent): void {
+    this.props.onDismissAttempt?.(event);
+  }
+
   private onDidDismiss(event: DidDismissEvent): void {
     this.isPresented = false;
     this.isSheetVisible = true;
@@ -436,9 +442,12 @@ export class TrueSheet
     const nodeHandle = findNodeHandle(this.nativeRef.current);
     if (nodeHandle == null || nodeHandle === -1) return false;
 
-    // When not dismissible, let back propagate (e.g. navigation goes back to the previous screen)
+    // When not dismissible, report the attempt. An attempt handler consumes the back
+    // press; otherwise let it propagate (e.g. navigation goes back to the previous screen)
     if (this.props.dismissible === false) {
-      return this.props.onBackPress?.() ?? false;
+      const { onDismissAttempt, onBackPress } = this.props;
+      onDismissAttempt?.({ nativeEvent: null } as DismissAttemptEvent);
+      return onBackPress?.() ?? onDismissAttempt != null;
     }
 
     TrueSheetModule?.handleBackPress(nodeHandle);
@@ -675,6 +684,7 @@ export class TrueSheet
         onDidPresent={this.onDidPresent}
         onWillDismiss={this.onWillDismiss}
         onDidDismiss={this.onDidDismiss}
+        onDismissAttempt={this.onDismissAttempt}
         onDetentChange={this.onDetentChange}
         onDragBegin={this.onDragBegin}
         onDragChange={this.onDragChange}

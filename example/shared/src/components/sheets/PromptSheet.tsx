@@ -1,5 +1,5 @@
-import { forwardRef, useRef, type Ref, useImperativeHandle } from 'react';
-import { ScrollView, StyleSheet, TextInput } from 'react-native';
+import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { BUTTON_HEIGHT, DARK, GAP, SPACING } from '../../utils';
@@ -28,8 +28,27 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
   const input10Ref = useRef<TextInput>(null);
   const textAreaRef = useRef<TextInput>(null);
 
+  // Unsaved changes lock the sheet; a blocked dismiss asks before discarding
+  const [isDirty, setIsDirty] = useState(false);
+  const markDirty = () => setIsDirty(true);
+
   const handleDismiss = () => {
+    setIsDirty(false);
     console.log('Sheet prompt dismissed!');
+  };
+
+  const handleDismissAttempt = () => {
+    console.log('Dismiss attempted with unsaved changes');
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (window.confirm('Discard changes?')) sheetRef.current?.dismiss();
+      return;
+    }
+
+    Alert.alert('Discard changes?', 'Your input will be lost.', [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => sheetRef.current?.dismiss() },
+    ]);
   };
 
   const handleDismissPress = async () => {
@@ -57,6 +76,8 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
       }}
       backgroundBlur="dark"
       backgroundColor={DARK}
+      dismissible={!isDirty}
+      onDismissAttempt={handleDismissAttempt}
       onDidDismiss={handleDismiss}
       onDidPresent={(e) => {
         console.log(
@@ -94,6 +115,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input1Ref}
           placeholder="First name"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input2Ref.current?.focus()}
@@ -101,6 +123,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input2Ref}
           placeholder="Last name"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input3Ref.current?.focus()}
@@ -109,6 +132,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           ref={input3Ref}
           placeholder="Email"
           keyboardType="email-address"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input4Ref.current?.focus()}
@@ -117,6 +141,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           ref={input4Ref}
           placeholder="Phone"
           keyboardType="phone-pad"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input5Ref.current?.focus()}
@@ -124,6 +149,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input5Ref}
           placeholder="Address"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input6Ref.current?.focus()}
@@ -131,6 +157,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input6Ref}
           placeholder="City"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input7Ref.current?.focus()}
@@ -138,6 +165,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input7Ref}
           placeholder="State"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input8Ref.current?.focus()}
@@ -146,6 +174,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
           ref={input8Ref}
           placeholder="Zip code"
           keyboardType="number-pad"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input9Ref.current?.focus()}
@@ -153,6 +182,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input9Ref}
           placeholder="Country"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => input10Ref.current?.focus()}
@@ -160,11 +190,12 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         <Input
           ref={input10Ref}
           placeholder="Contact"
+          onChangeText={markDirty}
           submitBehavior="submit"
           returnKeyType="next"
           onSubmitEditing={() => textAreaRef.current?.focus()}
         />
-        <Input ref={textAreaRef} placeholder="Message..." multiline />
+        <Input ref={textAreaRef} placeholder="Message..." onChangeText={markDirty} multiline />
       </ScrollView>
     </TrueSheet>
   );

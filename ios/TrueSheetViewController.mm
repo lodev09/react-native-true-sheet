@@ -526,7 +526,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (BOOL)accessibilityPerformEscape {
-  if (!_isPresented || !self.dismissible) {
+  if (!_isPresented) {
+    return NO;
+  }
+
+  if (!self.dismissible) {
+    [self.delegate viewControllerDidAttemptDismiss];
     return NO;
   }
 
@@ -1463,6 +1468,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
         }];
       } else if (strongSelf.dismissible) {
         [strongSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+      } else {
+        [strongSelf.delegate viewControllerDidAttemptDismiss];
       }
     };
 
@@ -1492,8 +1499,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return;
 
   NSInteger nextIndex = (currentIndex + 1) % detentCount;
-  if (nextIndex == 0 && detentCount == 1 && self.dismissible) {
-    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  if (nextIndex == 0 && detentCount == 1) {
+    if (self.dismissible) {
+      [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+    } else {
+      [self.delegate viewControllerDidAttemptDismiss];
+    }
   } else {
     [self.sheet animateChanges:^{
       [self resizeToDetentIndex:nextIndex];
@@ -1583,6 +1594,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
   return self.dismissible;
+}
+
+// UIKit calls this after shouldDismiss returns NO — the sheet has already
+// bounced back, so JS can confirm and dismiss programmatically (Apple's
+// unsaved-changes pattern).
+- (void)presentationControllerDidAttemptToDismiss:(UIPresentationController *)presentationController {
+  [self.delegate viewControllerDidAttemptDismiss];
 }
 
 - (void)sheetPresentationControllerDidChangeSelectedDetentIdentifier:

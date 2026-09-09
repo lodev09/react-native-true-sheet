@@ -9,6 +9,10 @@ export const DEFAULT_PEEK_HEIGHT = 150;
 
 export const CLOSE_THRESHOLD = 0.25;
 
+// Minimum downward pull (px) on a non-dismissible drawer at its first snap
+// point before the release counts as a dismiss attempt.
+export const DISMISS_ATTEMPT_THRESHOLD = 24;
+
 export const SCROLL_LOCK_TIMEOUT = 100;
 
 export const BORDER_RADIUS = 8;
