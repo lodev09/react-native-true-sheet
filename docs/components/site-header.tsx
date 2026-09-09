@@ -10,7 +10,9 @@ import {
   type BaseSlots,
   type LinkItemType,
 } from 'fumadocs-ui/layouts/shared';
-import type { ComponentProps, ReactNode } from 'react';
+import { useContext, type ComponentProps, type ReactNode } from 'react';
+import { GitHubStarsContext } from '@/app/provider';
+import { site } from '@/lib/site';
 
 interface SiteHeaderProps extends ComponentProps<'header'> {
   navItems: LinkItemType[];
@@ -33,6 +35,7 @@ export function SiteHeader({
   ...props
 }: SiteHeaderProps) {
   const pathname = usePathname();
+  const stars = useContext(GitHubStarsContext);
   const links = navItems.filter((item) => hasUrl(item) && item.type !== 'icon');
   const icons = navItems.filter((item) => hasUrl(item) && item.type === 'icon');
 
@@ -57,25 +60,50 @@ export function SiteHeader({
             </li>
           ))}
         </ul>
-        <div className="ms-auto flex items-center gap-1.5">
+        <div className="ms-auto flex items-center gap-1.5 lg:gap-2">
           {slots.searchTrigger && (
             <slots.searchTrigger.full
               hideIfDisabled
-              className="w-full max-w-[240px] rounded-full ps-2.5 max-lg:hidden"
+              className="me-[9px] w-[320px] shrink-0 rounded-full ps-2.5 max-lg:hidden"
             />
           )}
-          {slots.themeSwitch && <slots.themeSwitch className="shrink-0 max-lg:hidden" />}
+          {slots.searchTrigger && slots.themeSwitch && (
+            <span aria-hidden="true" className="h-4 w-px shrink-0 bg-fd-border max-lg:hidden" />
+          )}
+          {slots.themeSwitch && (
+            <slots.themeSwitch
+              className={clsx(
+                buttonVariants({ color: 'ghost' }),
+                'h-9 w-9 shrink-0 rounded-md border-0 p-0 text-fd-muted-foreground max-lg:hidden *:size-4.5 *:rounded-none *:bg-transparent *:fill-none *:p-0 [&>svg:first-child]:hidden dark:[&>svg:first-child]:block dark:[&>svg:last-child]:hidden'
+              )}
+            />
+          )}
+          {slots.themeSwitch && icons.length > 0 && (
+            <span aria-hidden="true" className="h-4 w-px shrink-0 bg-fd-border max-lg:hidden" />
+          )}
           {icons.map((item, i) => (
             <LinkItem
               key={i}
               item={item}
-              aria-label={item.label}
+              aria-label={
+                item.url === site.github && stars !== undefined
+                  ? `GitHub: ${stars.toLocaleString('en-US')} stars`
+                  : item.label
+              }
               className={clsx(
-                buttonVariants({ color: 'ghost', size: 'icon-sm' }),
-                'shrink-0 text-fd-muted-foreground max-lg:hidden'
+                buttonVariants({ color: 'ghost' }),
+                'h-9 shrink-0 gap-2 px-[9px] text-fd-muted-foreground max-lg:hidden [&>svg]:size-4.5 [&>svg]:shrink-0'
               )}
             >
               {item.icon}
+              {item.url === site.github && stars !== undefined && (
+                <span className="text-xs font-medium tabular-nums text-fd-muted-foreground">
+                  {stars.toLocaleString('en-US', {
+                    notation: 'compact',
+                    maximumFractionDigits: 1,
+                  })}
+                </span>
+              )}
             </LinkItem>
           ))}
           {slots.searchTrigger && (
