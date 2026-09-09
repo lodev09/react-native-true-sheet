@@ -19,7 +19,7 @@ object KeyboardUtils {
     return isKeyboardVisible(rootView)
   }
 
-  private fun isKeyboardVisible(view: View): Boolean {
+  fun isKeyboardVisible(view: View): Boolean {
     val insets = ViewCompat.getRootWindowInsets(view) ?: return false
     return insets.isVisible(WindowInsetsCompat.Type.ime())
   }
