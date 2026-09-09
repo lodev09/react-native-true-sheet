@@ -11,6 +11,7 @@
 - New `headerOptions` prop with a `position` option — set to `'absolute'` to float the header over the content and exclude it from the `auto` detent height. ([#747](https://github.com/lodev09/react-native-true-sheet/pull/747) by [@lodev09](https://github.com/lodev09))
 - The footer now absorbs the bottom safe-area inset as padding when `insetAdjustment` is `automatic`, except while the keyboard is open. ([#749](https://github.com/lodev09/react-native-true-sheet/pull/749), [#750](https://github.com/lodev09/react-native-true-sheet/pull/750) by [@lodev09](https://github.com/lodev09))
 - New `scrollableOptions.keyboardOffset` option to adjust the scrollable's keyboard bottom inset. ([#785](https://github.com/lodev09/react-native-true-sheet/pull/785) by [@lodev09](https://github.com/lodev09))
+- The dev menu's element inspector now works inside a presented sheet — header, content, and footer are all inspectable. ([#832](https://github.com/lodev09/react-native-true-sheet/pull/832) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

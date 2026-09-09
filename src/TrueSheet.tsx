@@ -4,6 +4,7 @@ import {
   createRef,
   type ReactNode,
   type ComponentRef,
+  type ComponentType,
   isValidElement,
   createElement,
   useEffect,
@@ -40,11 +41,30 @@ import {
   Platform,
   StyleSheet,
   BackHandler,
+  RootTagContext,
   findNodeHandle,
   processColor,
   type NativeEventSubscription,
   type GestureResponderEvent,
+  type RootTag,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
+
+interface AppContainerProps {
+  rootTag: RootTag;
+  rootViewStyle?: StyleProp<ViewStyle>;
+  internal_excludeLogBox?: boolean;
+  children?: ReactNode;
+}
+
+// RN has no public API for hosting the element inspector inside a presented view;
+// this is the internal RN's Modal uses. Dev-only so prod bundles never resolve it.
+// The template literal keeps the RN babel preset's deep-import warning off while
+// Metro still resolves the module statically.
+const AppContainer: ComponentType<AppContainerProps> | null = __DEV__
+  ? require(`react-native/Libraries/ReactNative/AppContainer`).default
+  : null;
 
 const LINKING_ERROR =
   `The package '@lodev09/react-native-true-sheet' doesn't seem to be linked. Make sure: \n\n` +
@@ -99,6 +119,8 @@ export class TrueSheet
   implements TrueSheetMethods
 {
   displayName = 'TrueSheet';
+
+  static contextType = RootTagContext;
 
   private readonly nativeRef: RefObject<NativeRef | null>;
 
@@ -580,6 +602,42 @@ export class TrueSheet
       };
     }
 
+    const sheetContent = (
+      <>
+        {header && (
+          <TrueSheetHeaderViewNativeComponent
+            style={[
+              styles.header,
+              headerOptions?.position === 'absolute' && styles.absoluteHeader,
+              headerStyle,
+            ]}
+          >
+            {isValidElement(header) ? header : createElement(header)}
+          </TrueSheetHeaderViewNativeComponent>
+        )}
+        <TrueSheetContentViewNativeComponent style={style}>
+          {children}
+        </TrueSheetContentViewNativeComponent>
+        {footer && (
+          <TrueSheetFooterViewNativeComponent
+            autoBottomInset={insetAdjustment === 'automatic'}
+            style={[
+              styles.footer,
+              footerOptions?.position === 'absolute'
+                ? styles.absoluteFooter
+                : styles.relativeFooter,
+              footerStyle,
+            ]}
+          >
+            {isValidElement(footer) ? footer : createElement(footer)}
+          </TrueSheetFooterViewNativeComponent>
+        )}
+        {autoPresent && !this.state.initialPresentReady && (
+          <InitialPresentGate onReady={this.onInitialPresentReady} />
+        )}
+      </>
+    );
+
     return (
       <TrueSheetViewNativeComponent
         {...rest}
@@ -641,36 +699,22 @@ export class TrueSheet
       >
         {this.state.shouldRenderNativeView && (
           <TrueSheetContainerViewNativeComponent style={styles.container}>
-            {header && (
-              <TrueSheetHeaderViewNativeComponent
-                style={[
-                  styles.header,
-                  headerOptions?.position === 'absolute' && styles.absoluteHeader,
-                  headerStyle,
-                ]}
+            {AppContainer ? (
+              // Hosts the element inspector inside the sheet, like RN's Modal does —
+              // the app-level one sits behind the presented sheet.
+              // `display: contents` keeps AppContainer's wrapper views out of both
+              // Yoga layout and the native tree, so header/content/footer remain the
+              // container's direct native children, while the inspector overlay
+              // anchors to the container and lines up with measured frames.
+              <AppContainer
+                rootTag={this.context as RootTag}
+                rootViewStyle={styles.inspectorHost}
+                internal_excludeLogBox
               >
-                {isValidElement(header) ? header : createElement(header)}
-              </TrueSheetHeaderViewNativeComponent>
-            )}
-            <TrueSheetContentViewNativeComponent style={style}>
-              {children}
-            </TrueSheetContentViewNativeComponent>
-            {footer && (
-              <TrueSheetFooterViewNativeComponent
-                autoBottomInset={insetAdjustment === 'automatic'}
-                style={[
-                  styles.footer,
-                  footerOptions?.position === 'absolute'
-                    ? styles.absoluteFooter
-                    : styles.relativeFooter,
-                  footerStyle,
-                ]}
-              >
-                {isValidElement(footer) ? footer : createElement(footer)}
-              </TrueSheetFooterViewNativeComponent>
-            )}
-            {autoPresent && !this.state.initialPresentReady && (
-              <InitialPresentGate onReady={this.onInitialPresentReady} />
+                {sheetContent}
+              </AppContainer>
+            ) : (
+              sheetContent
             )}
           </TrueSheetContainerViewNativeComponent>
         )}
@@ -691,6 +735,9 @@ const styles = StyleSheet.create({
   // Fill the sheet so flex layouts track the sheet's size per detent
   container: {
     ...StyleSheet.absoluteFill,
+  },
+  inspectorHost: {
+    display: 'contents',
   },
   header: {
     pointerEvents: 'box-none',
