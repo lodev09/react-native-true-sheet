@@ -33,6 +33,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🦶 **Relative footers** - Footers take up space below the content by default
 * 🧭 **Expo Router** - First-class support via the `Sheet` layout from `/navigation/expo-router`
 * 🍞 **`TrueSheetOverlay`** - Render toasts, dialogs, and other [overlays above your sheets](https://sheet.lodev09.com/guides/overlays) — no more `FullWindowOverlay`/`Modal` workarounds
+* 🔍 **Element inspector** - React Native's dev menu inspector now works inside a presented sheet
 
 ```sh
 npx expo install @lodev09/react-native-true-sheet@beta
