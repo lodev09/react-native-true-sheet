@@ -604,7 +604,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     override fun onSlide(sheetView: View, slideOffset: Float) {
-      handleSlide(sheetView, slideOffset)
+      handleSlide(sheetView)
     }
   }
 
@@ -631,7 +631,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
-  private fun handleSlide(sheetView: View, slideOffset: Float) {
+  private fun handleSlide(sheetView: View) {
     // Skip during dismiss animation
     if (isBeingDismissed) return
 
@@ -660,7 +660,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // footer rides the sheet between them, jittering against the keyboard.
     // positionFooter derives from current state, so double-driving it with
     // keyboardDidChangeHeight is harmless.
-    positionFooter(slideOffset)
+    positionFooter()
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(sheetView.top)
@@ -1121,7 +1121,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var footerKeyboardOffset: Int = 0
 
-  fun positionFooter(slideOffset: Float? = null) {
+  fun positionFooter() {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
     val sheet = sheetView ?: return
@@ -1145,18 +1145,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val footerHeight = footerView.height
     val sheetHeight = sheet.height
-    val sheetTop = sheet.top
 
-    var footerY = (sheetHeight - sheetTop - footerHeight - keyboardShift).toFloat()
-
-    // Adjust during dismiss animation when slideOffset is negative. Skipped
-    // while the keyboard is open — the detents collapse to the expanded
-    // position, so any downward drag reads as a negative slideOffset and the
-    // adjustment would sink the footer behind the keyboard, snapping back up
-    // when the keyboard detents reset on release.
-    if (slideOffset != null && slideOffset < 0 && keyboardShift == 0) {
-      footerY -= (footerHeight * slideOffset)
-    }
+    // Pinned to the screen bottom (above the keyboard) while the sheet sits at
+    // or above its lowest stop; past it the footer rides down with the sheet
+    // instead, like iOS
+    val anchorTop = minOf(sheet.top, detentCalculator.getLowestSheetTop())
+    val footerY = (sheetHeight - anchorTop - footerHeight - keyboardShift).toFloat()
 
     // Clamp to prevent footer going above safe area
     val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
@@ -1361,9 +1355,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * Updates position emission, footer, and dim amount together.
    * This pattern is commonly used during animations and state changes.
    */
-  private fun updateSheetVisuals(effectiveTop: Int, slideOffset: Float? = null) {
+  private fun updateSheetVisuals(effectiveTop: Int) {
     emitChangePositionDelegate(effectiveTop)
-    positionFooter(slideOffset)
+    positionFooter()
     updateDimAmount(effectiveTop)
   }
 
