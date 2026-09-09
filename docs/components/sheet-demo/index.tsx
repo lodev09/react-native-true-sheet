@@ -90,7 +90,12 @@ export default function SheetDemo(): React.ReactElement {
             </span>
           </div>
 
-          <svg className={styles.map} viewBox="0 0 280 600" fill="none" preserveAspectRatio="xMidYMid slice">
+          <svg
+            className={styles.map}
+            viewBox="0 0 280 600"
+            fill="none"
+            preserveAspectRatio="xMidYMid slice"
+          >
             <g className={styles.mapBlocks}>
               <rect x="-20" y="40" width="120" height="90" rx="10" />
               <rect x="130" y="20" width="180" height="110" rx="10" />
@@ -147,7 +152,10 @@ export default function SheetDemo(): React.ReactElement {
             <ul className={styles.list}>
               {PLACES.map((p) => (
                 <li key={p.name} className={styles.row}>
-                  <span className={styles.rowIcon} style={{ '--hue': p.hue } as React.CSSProperties} />
+                  <span
+                    className={styles.rowIcon}
+                    style={{ '--hue': p.hue } as React.CSSProperties}
+                  />
                   <span className={styles.rowText}>
                     <span className={styles.rowName}>{p.name}</span>
                     <span className={styles.rowKind}>{p.kind}</span>
@@ -181,7 +189,11 @@ export default function SheetDemo(): React.ReactElement {
                 aria-pressed={presented && i === index}
                 aria-label={`Resize sheet to detent ${JSON.stringify(d)}`}
               >
-                {typeof d === 'string' ? <span className={styles.str}>{`'${d}'`}</span> : <span className={styles.num}>{d}</span>}
+                {typeof d === 'string' ? (
+                  <span className={styles.str}>{`'${d}'`}</span>
+                ) : (
+                  <span className={styles.num}>{d}</span>
+                )}
               </button>
             </React.Fragment>
           ))}

@@ -15,7 +15,12 @@ export function InstallCommand({ command }: { command: string }) {
   return (
     <div className={styles.install}>
       <code>{command}</code>
-      <button type="button" onClick={copy} className={styles.copy} aria-label="Copy install command">
+      <button
+        type="button"
+        onClick={copy}
+        className={styles.copy}
+        aria-label="Copy install command"
+      >
         {copied ? 'Copied' : 'Copy'}
       </button>
     </div>

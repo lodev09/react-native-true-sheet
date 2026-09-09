@@ -138,11 +138,11 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           <ScrollView
             ref={scrollViewRef}
             contentContainerStyle={styles.content}
-              keyboardDismissMode="on-drag"
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            >
-              <Carousel />
-              {times(20, (i) => (
+            keyboardDismissMode="on-drag"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          >
+            <Carousel />
+            {times(20, (i) => (
               <HeavyItem key={i} index={i} />
             ))}
           </ScrollView>

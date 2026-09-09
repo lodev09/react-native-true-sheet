@@ -174,8 +174,8 @@ export default function Home() {
               animation finishes, so you can sequence work without guessing.
             </p>
             <p>
-              Prefer events? Lifecycle, drag, focus, and detent events fire from the native side with
-              the same timing your users feel.
+              Prefer events? Lifecycle, drag, focus, and detent events fire from the native side
+              with the same timing your users feel.
             </p>
             <Link href="/reference/methods" className={styles.textLink}>
               Browse the methods and events
