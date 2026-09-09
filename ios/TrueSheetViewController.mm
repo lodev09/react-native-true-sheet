@@ -398,6 +398,15 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     presentedView.accessibilityViewIsModal = isAccessibilityModal;
     presentedView.accessibilityElements = accessibilityElements;
 
+    // The system grabber is a sibling of our root view, so an escape performed while it
+    // is focused walks presentedView → window and never reaches TrueSheetControllerView.
+    if (@available(iOS 17.0, *)) {
+      __weak __typeof(self) weakSelf = self;
+      presentedView.accessibilityPerformEscapeBlock = ^BOOL {
+        return [weakSelf accessibilityPerformEscape];
+      };
+    }
+
     UIWindow *window = self.view.window;
     UIViewController *presentingViewController = [self accessibilityPresentingViewController];
     if (window && presentingViewController.view) {
