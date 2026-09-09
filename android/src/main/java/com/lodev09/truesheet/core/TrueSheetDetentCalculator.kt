@@ -25,9 +25,9 @@ interface TrueSheetDetentCalculatorDelegate {
   val topInset: Int
 
   /**
-   * True while the keyboard holds the sheet up but it can't be dismissed: the
-   * collapsed stop then sits at the keyboard-free first detent (the "floor")
-   * so a drag-down can dismiss the keyboard instead.
+   * True while the keyboard holds the sheet up: the collapsed stop then sits at
+   * the keyboard-free first detent (the "floor") so a drag-down dismisses the
+   * keyboard before it can dismiss the sheet.
    */
   val hasKeyboardFloor: Boolean
 }
@@ -124,6 +124,12 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val includeKeyboard = !(hasKeyboardFloor && index == 0 && detents.size > 1)
     return getSheetTop(detents[index], includeKeyboard)
   }
+
+  /**
+   * Top of the lowest stop the sheet can rest at: the keyboard floor while it's
+   * active, else the first detent.
+   */
+  fun getLowestSheetTop(): Int = if (hasKeyboardFloor) getSheetTop(detents[0], includeKeyboard = false) else getSheetTopForDetentIndex(0)
 
   // Clamp to the space the sheet can actually occupy — matching
   // setupSheetDetents. A keyboard-inflated detent height can exceed it,
@@ -225,10 +231,9 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val count = detents.size
     if (count == 0) return null
 
-    val firstPos = getSheetTopForDetentIndex(0)
     // A single keyboard-shifted detent can rest down at its keyboard floor —
     // that range is still index 0, not a dismissal
-    val floorPos = if (hasKeyboardFloor) getSheetTop(detents[0], includeKeyboard = false) else firstPos
+    val floorPos = getLowestSheetTop()
 
     // Position is below the lowest stop (sheet is being dragged down to dismiss)
     if (positionPx > floorPos) {
