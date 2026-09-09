@@ -118,11 +118,10 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
       return realScreenHeight
     }
-    // With a keyboard floor, a multi-detent sheet's first detent is the floor
-    // itself. A single detent stays keyboard-shifted — the floor is its
-    // collapsed stop, not its resting position.
-    val includeKeyboard = !(hasKeyboardFloor && index == 0 && detents.size > 1)
-    return getSheetTop(detents[index], includeKeyboard)
+    // With a keyboard floor only the last detent stays keyboard-shifted — it's
+    // the keyboard-expanded resting position; the stops below it are keyboard-free
+    val isKeyboardFreeStop = hasKeyboardFloor && index != detents.size - 1
+    return getSheetTop(detents[index], includeKeyboard = !isKeyboardFreeStop)
   }
 
   /**
@@ -174,10 +173,9 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getStateForDetentIndex(index: Int): Int {
     val stateMap = getDetentStateMap() ?: return BottomSheetBehavior.STATE_HIDDEN
-    // The collapsed stop is the keyboard floor, so the keyboard-expanded last
-    // detent (which for a single detent would otherwise map to collapsed) lives
-    // at the expanded stop
-    if (delegate?.hasKeyboardFloor == true && index == detents.size - 1) return BottomSheetBehavior.STATE_EXPANDED
+    // With a keyboard floor the keyboard-expanded last detent lives at the
+    // expanded stop — the half stop (which may share its index) is keyboard-free
+    if (hasKeyboardFloor && index == detents.size - 1) return BottomSheetBehavior.STATE_EXPANDED
     return stateMap.entries.find { it.value == index }?.key ?: BottomSheetBehavior.STATE_HIDDEN
   }
 
