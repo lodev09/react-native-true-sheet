@@ -250,8 +250,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var dismissible: Boolean = true
     set(value) {
+      if (field == value) return
       field = value
       behavior?.isHideable = value
+      // Toggling with the keyboard up adds or removes the keyboard floor
+      if (isPresented && keyboardInset > 0) setupSheetDetents()
     }
 
   override var draggable: Boolean = true
@@ -337,6 +340,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private val isKeyboardTransitioning: Boolean
     get() = keyboardObserver?.isTransitioning ?: false
+
+  // Keyboard is up or animating — detents are (or are about to be) keyboard-shifted
+  val isKeyboardActive: Boolean
+    get() = keyboardInset > 0 || isKeyboardTransitioning
+
+  // A non-dismissible sheet can't slide out from under the keyboard, so keep the
+  // keyboard-free first detent reachable as the collapsed stop — landing there
+  // dismisses the keyboard, like iOS.
+  override val hasKeyboardFloor: Boolean
+    get() = keyboardInset > 0 && !dismissible
 
   fun isFocusedViewWithinSheet(): Boolean {
     val sheet = sheetView ?: return false
@@ -495,9 +508,20 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun findSheetView(): TrueSheetBottomSheetView? = sheetView
 
   override fun coordinatorLayoutDidPullDown() {
-    // A pull that left the sheet in place at its lowest detent is a blocked
-    // drag-to-dismiss. Keyboard-shifted detents make the index unreliable.
-    if (isPresented && !dismissible && draggable && currentDetentIndex == 0 && keyboardInset == 0) {
+    if (!isPresented || dismissible || !draggable) return
+    val sheet = sheetView ?: return
+
+    // With the keyboard up the sheet normally rides down to the keyboard floor
+    // (see hasKeyboardFloor); a pull that still couldn't move it (first detent
+    // already full height) dismisses the keyboard instead, like iOS.
+    // Keyboard-shifted detents make the index unreliable for the attempt check.
+    if (keyboardInset > 0) {
+      if (shouldHandleKeyboard()) commitDetentAndDismissKeyboard(0, sheet)
+      return
+    }
+
+    // A pull that left the sheet in place at its lowest detent is a blocked drag-to-dismiss.
+    if (currentDetentIndex == 0) {
       delegate?.viewControllerDidAttemptDismiss()
     }
   }
@@ -623,8 +647,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Drive the parent's stack translation from our actual frame position —
     // an independently-timed animation lags behind (e.g. auto detent shrink)
     // and reveals the parent above this sheet's top edge. Skipped while
-    // dragging so the parent stays put during drag-to-dismiss.
-    if (!isPresentAnimating && interactionState !is InteractionState.Dragging) {
+    // dragging so the parent stays put during drag-to-dismiss, and while the
+    // keyboard is active so growing for it doesn't move the parent (like iOS).
+    if (!isPresentAnimating && interactionState !is InteractionState.Dragging && !isKeyboardActive) {
       syncParentTranslation(sheetView.top)
     }
 
@@ -695,8 +720,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-    // Settled — resize the container to the settled detent (applies deferred shrinks)
-    updateStateDimensions()
+    if (hasKeyboardFloor && newState == BottomSheetBehavior.STATE_COLLAPSED) {
+      // Landed on the keyboard floor — dismiss the keyboard and commit the first
+      // detent. keyboardWillHide reconfigures the detents (and the container) to it.
+      commitDetentAndDismissKeyboard(0, sheetView)
+    } else {
+      // Settled — resize the container to the settled detent (applies deferred shrinks)
+      updateStateDimensions()
+    }
 
     if (!isKeyboardTransitioning) {
       updateDimAmount(animated = true)
@@ -941,10 +972,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val maxAvailableHeight = realScreenHeight - topInset
 
-    val peekHeight = minOf(detentCalculator.getDetentHeight(detents[0]), maxAvailableHeight)
+    // With a keyboard floor the collapsed stop is the keyboard-free first detent;
+    // a single detent then keeps its keyboard-shifted height at the half/expanded stop
+    val peekHeight = minOf(detentCalculator.getDetentHeight(detents[0], includeKeyboard = !hasKeyboardFloor), maxAvailableHeight)
 
     val halfExpandedDetentHeight = when (detents.size) {
-      1 -> peekHeight
+      1 -> detentCalculator.getDetentHeight(detents[0])
       else -> detentCalculator.getDetentHeight(detents[1])
     }
 
@@ -1061,7 +1094,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (contentHeight == 0) return
 
     // While keyboard is active or transitioning, use the target detent position for dim
-    val top = if (keyboardInset > 0 || isKeyboardTransitioning) {
+    val top = if (isKeyboardActive) {
       detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
     } else {
       val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
@@ -1263,6 +1296,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleSettling(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
     if (keyboardInset <= 0) return
+    // The keyboard floor is a real stop — the behavior settles there on its own and
+    // handleStateSettled dismisses the keyboard. Committing a detent here too would
+    // race the settle with the keyboardWillHide reconfigure.
+    if (hasKeyboardFloor) return
 
     // After drag release, check if the sheet was dragged past the midpoint between the
     // keyboard-expanded position and a non-keyboard detent position. If so, dismiss
@@ -1279,17 +1316,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         // Target position matches the keyboard-expanded position — keep keyboard open
         if (nonKeyboardTop == keyboardTop) break
 
-        detentIndexBeforeKeyboard = -1
-        currentDetentIndex = i
-        dismissKeyboard()
-        setupDimmedBackground()
-
-        val position = getPositionDpForView(sheetView)
-        val detent = detentCalculator.getDetentValueForIndex(i)
-        delegate?.viewControllerDidChangeDetent(i, position, detent)
+        commitDetentAndDismissKeyboard(i, sheetView)
         break
       }
     }
+  }
+
+  // Commits a non-keyboard detent and hides the keyboard; keyboardWillHide then
+  // reconfigures the detents so the sheet settles at the committed index.
+  private fun commitDetentAndDismissKeyboard(index: Int, sheetView: View) {
+    detentIndexBeforeKeyboard = -1
+    currentDetentIndex = index
+    dismissKeyboard()
+    setupDimmedBackground()
+
+    val position = getPositionDpForView(sheetView)
+    val detent = detentCalculator.getDetentValueForIndex(index)
+    delegate?.viewControllerDidChangeDetent(index, position, detent)
   }
 
   private fun handleDragChange(sheetView: View) {
@@ -1396,7 +1439,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (detents.isEmpty()) return
 
     val maxAvailableHeight = realScreenHeight - topInset
-    val minHeight = minOf(detentCalculator.getDetentHeight(detents.first()), maxAvailableHeight)
+    val minHeight = minOf(
+      detentCalculator.getDetentHeight(detents.first(), includeKeyboard = !hasKeyboardFloor),
+      maxAvailableHeight
+    )
     val newHeight = detentCalculator.getVisibleSheetHeight(sheetTop).coerceIn(minHeight, maxAvailableHeight)
 
     setStateDimensions(getStateWidth(), newHeight)

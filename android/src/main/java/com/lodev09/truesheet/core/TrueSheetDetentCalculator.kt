@@ -23,6 +23,13 @@ interface TrueSheetDetentCalculatorDelegate {
   val maxContentHeight: Int?
   val keyboardInset: Int
   val topInset: Int
+
+  /**
+   * True while the keyboard holds the sheet up but it can't be dismissed: the
+   * collapsed stop then sits at the keyboard-free first detent (the "floor")
+   * so a drag-down can dismiss the keyboard instead.
+   */
+  val hasKeyboardFloor: Boolean
 }
 
 /**
@@ -44,6 +51,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
   private val topInset: Int get() = delegate?.topInset ?: 0
+  private val hasKeyboardFloor: Boolean get() = delegate?.hasKeyboardFloor == true
 
   /**
    * Height for auto (-1.0) detents: content + header + footer height.
@@ -110,12 +118,20 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
       return realScreenHeight
     }
-    // Clamp to the space the sheet can actually occupy — matching
-    // setupSheetDetents. A keyboard-inflated detent height can exceed it,
-    // placing the expected top above the screen while the real sheet stops
-    // at the top inset.
+    // With a keyboard floor, a multi-detent sheet's first detent is the floor
+    // itself. A single detent stays keyboard-shifted — the floor is its
+    // collapsed stop, not its resting position.
+    val includeKeyboard = !(hasKeyboardFloor && index == 0 && detents.size > 1)
+    return getSheetTop(detents[index], includeKeyboard)
+  }
+
+  // Clamp to the space the sheet can actually occupy — matching
+  // setupSheetDetents. A keyboard-inflated detent height can exceed it,
+  // placing the expected top above the screen while the real sheet stops
+  // at the top inset.
+  private fun getSheetTop(detent: Double, includeKeyboard: Boolean = true): Int {
     val maxAvailableHeight = realScreenHeight - topInset
-    return realScreenHeight - minOf(getDetentHeight(detents[index]), maxAvailableHeight)
+    return realScreenHeight - minOf(getDetentHeight(detent, includeKeyboard), maxAvailableHeight)
   }
 
   /**
@@ -152,6 +168,10 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
    */
   fun getStateForDetentIndex(index: Int): Int {
     val stateMap = getDetentStateMap() ?: return BottomSheetBehavior.STATE_HIDDEN
+    // The collapsed stop is the keyboard floor, so the keyboard-expanded last
+    // detent (which for a single detent would otherwise map to collapsed) lives
+    // at the expanded stop
+    if (delegate?.hasKeyboardFloor == true && index == detents.size - 1) return BottomSheetBehavior.STATE_EXPANDED
     return stateMap.entries.find { it.value == index }?.key ?: BottomSheetBehavior.STATE_HIDDEN
   }
 
@@ -206,11 +226,14 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     if (count == 0) return null
 
     val firstPos = getSheetTopForDetentIndex(0)
+    // A single keyboard-shifted detent can rest down at its keyboard floor —
+    // that range is still index 0, not a dismissal
+    val floorPos = if (hasKeyboardFloor) getSheetTop(detents[0], includeKeyboard = false) else firstPos
 
-    // Position is below first detent (sheet is being dragged down to dismiss)
-    if (positionPx > firstPos) {
-      val range = realScreenHeight - firstPos
-      val progress = if (range > 0) (positionPx - firstPos).toFloat() / range else 0f
+    // Position is below the lowest stop (sheet is being dragged down to dismiss)
+    if (positionPx > floorPos) {
+      val range = realScreenHeight - floorPos
+      val progress = if (range > 0) (positionPx - floorPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }
 

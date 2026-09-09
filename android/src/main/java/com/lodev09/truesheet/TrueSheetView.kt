@@ -482,8 +482,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupSheetDetentsForSizeChange()
       // While settling, onSlide drives the parent translation in realtime —
       // an animated update here would race it frame-by-frame, staggering the
-      // emitted position
-      if (!viewController.isSettling) {
+      // emitted position. Keyboard-driven resizes leave the parent alone (like
+      // iOS); keyboardDidHide resizes again once the detents are keyboard-free.
+      if (!viewController.isSettling && !viewController.isKeyboardActive) {
         TrueSheetStackManager.updateParentTranslation(this)
       }
     }
