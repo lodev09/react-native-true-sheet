@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.TouchTargetHelper
+import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.isDescendantOf
 
 interface TrueSheetCoordinatorLayoutDelegate {
@@ -21,7 +22,12 @@ interface TrueSheetCoordinatorLayoutDelegate {
   fun coordinatorLayoutDidChangeConfiguration()
   fun findScrollView(): ViewGroup?
   fun findSheetView(): TrueSheetBottomSheetView?
-  fun coordinatorLayoutDidPullDown()
+
+  /**
+   * A downward pull the sheet couldn't follow ended; `overdragPx` is the travel it
+   * didn't follow, `keyboardWasVisible` whether the keyboard was up when it began.
+   */
+  fun coordinatorLayoutDidPullDown(overdragPx: Int, keyboardWasVisible: Boolean)
 }
 
 /**
@@ -69,13 +75,15 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
   // Pull-down tracking. BottomSheetBehavior gives no callback when a downward drag
   // is clamped by `isHideable = false` — the sheet stays put (or the scrollable
-  // overscrolls) and no state change fires. Track the finger ourselves and report
-  // a stationary vertical pull on release so the controller can surface a
-  // blocked dismiss attempt.
+  // overscrolls) and no state change fires. Accumulate the downward finger travel
+  // neither the sheet nor its scrollable followed and report it on release so the
+  // controller can surface a blocked dismiss attempt.
   private var pullTracking = false
   private var pullStartX = 0f
   private var pullStartY = 0f
-  private var pullSheetTop = 0
+  private var pullLastY = 0f
+  private var pullOverdrag = 0f
+  private var pullKeyboardVisible = false
 
   init {
     layoutParams = LayoutParams(
@@ -110,26 +118,36 @@ class TrueSheetCoordinatorLayout(context: Context) :
     when (ev.actionMasked) {
       MotionEvent.ACTION_DOWN -> {
         val sheet = delegate?.findSheetView()
-        val scrollView = delegate?.findScrollView()
-        // Only a touch on the sheet whose scrollable (if any) is already at its
-        // top can be a drag-to-dismiss; anything else is a scroll or a dim tap.
-        pullTracking = sheet != null &&
-          isTouchInside(sheet, ev) &&
-          scrollView?.canScrollVertically(-1) != true
+        pullTracking = sheet != null && isTouchInside(sheet, ev)
         pullStartX = ev.rawX
         pullStartY = ev.rawY
-        pullSheetTop = sheet?.top ?: 0
+        pullLastY = ev.rawY
+        pullOverdrag = 0f
+        pullKeyboardVisible = pullTracking && KeyboardUtils.isKeyboardVisible(this)
+      }
+
+      MotionEvent.ACTION_MOVE -> if (pullTracking) {
+        val sheet = delegate?.findSheetView()
+        val topBefore = sheet?.top
+        val handled = super.dispatchTouchEvent(ev)
+        val step = ev.rawY - pullLastY
+        pullLastY = ev.rawY
+        // Finger moved down but the sheet stayed put and the scrollable is at
+        // its top — the pull was clamped
+        if (step > 0 && sheet != null && sheet.top == topBefore && delegate?.findScrollView()?.canScrollVertically(-1) != true) {
+          pullOverdrag += step
+        }
+        return handled
       }
 
       MotionEvent.ACTION_UP -> if (pullTracking) {
         pullTracking = false
         val dx = kotlin.math.abs(ev.rawX - pullStartX)
         val dy = ev.rawY - pullStartY
-        val sheet = delegate?.findSheetView()
-        // Let the behavior settle first so a moved sheet is caught by the top check.
+        // Let the behavior settle first so the controller sees the resting position.
         val handled = super.dispatchTouchEvent(ev)
-        if (sheet != null && sheet.top == pullSheetTop && dy > dx && dy > PULL_DOWN_THRESHOLD_DP.dpToPx()) {
-          delegate?.coordinatorLayoutDidPullDown()
+        if (dy > dx && pullOverdrag > PULL_DOWN_THRESHOLD_DP.dpToPx()) {
+          delegate?.coordinatorLayoutDidPullDown(pullOverdrag.toInt(), pullKeyboardVisible)
         }
         return handled
       }
