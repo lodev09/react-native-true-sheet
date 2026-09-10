@@ -40,7 +40,7 @@ else
       fs.writeFileSync(file, JSON.stringify(meta, null, 2) + "\n");
     };
     write(`${dir}/latest/meta.json`, { title: version, description: "Latest" });
-    write(`${dir}/next/meta.json`, { title: "Unreleased", description: "Next" });
+    write(`${dir}/next/meta.json`, { title: "Next", description: "Unreleased" });
   ' "$DOCS" "$VERSION"
   echo "Docs version $VERSION created."
 fi
