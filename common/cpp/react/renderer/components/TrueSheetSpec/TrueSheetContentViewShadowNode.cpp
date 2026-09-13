@@ -21,15 +21,13 @@ void TrueSheetContentViewShadowNode::layout(LayoutContext layoutContext) {
   updateNaturalHeightIfNeeded(layoutContext);
 }
 
-// The content's committed height follows the container instead of its own
-// content when it can grow/shrink along the main axis or uses a percent
-// height. Reporting that height as the natural height would echo the sheet's
-// own size back as a content size change — e.g. flex: 1 content tracking a
-// drag frame by frame.
+// Even auto-height content can be constrained by the container when a
+// descendant ScrollView shrinks to fit. Its committed height then hides
+// content growth, so only a fixed, non-flexible height can be used directly.
 static bool isHeightContainerDerived(const yoga::Style &style) {
   return style.flexGrow().unwrapOrDefault(0) > 0 ||
       style.flexShrink().unwrapOrDefault(0) > 0 ||
-      style.dimension(Dimension::Height).isPercent();
+      !style.dimension(Dimension::Height).isPoints();
 }
 
 // The natural height is the height the content wants when unbounded — the
