@@ -5,12 +5,14 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import dynamic from 'next/dynamic';
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { site } from '@/lib/site';
+import type { Version } from '@/lib/versions';
 
 const SearchDialog = dynamic(() => import('@/components/search'), { ssr: false });
 
 export const GitHubStarsContext = createContext<number | undefined>(undefined);
+export const VersionsContext = createContext<Version[]>([]);
 
-export function Provider({ children }: { children: ReactNode }) {
+export function Provider({ versions, children }: { versions: Version[]; children: ReactNode }) {
   const [stars, setStars] = useState<number>();
 
   useEffect(() => {
@@ -21,8 +23,10 @@ export function Provider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <RootProvider search={{ SearchDialog }}>
-      <GitHubStarsContext value={stars}>{children}</GitHubStarsContext>
-    </RootProvider>
+    <VersionsContext value={versions}>
+      <RootProvider search={{ SearchDialog }}>
+        <GitHubStarsContext value={stars}>{children}</GitHubStarsContext>
+      </RootProvider>
+    </VersionsContext>
   );
 }

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SiteFooter } from '@/components/site-footer';
 import { site } from '@/lib/site';
+import { versions } from '@/lib/versions';
 import { Provider } from './provider';
 
 const heading = Bricolage_Grotesque({
@@ -84,7 +85,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
           </span>
         </Banner>
-        <Provider>
+        <Provider versions={versions}>
           {children}
           <SiteFooter />
         </Provider>
