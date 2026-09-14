@@ -168,8 +168,6 @@ using namespace facebook::react;
   if (_scrollableHandle > 0 && !_detectedScrollView) {
     [self.delegate contentViewScrollViewDidChange];
   }
-
-  [self updateKeyboardInset];
 }
 
 #pragma mark - Scrollable
@@ -183,13 +181,6 @@ using namespace facebook::react;
   UIEdgeInsets contentInset = _detectedScrollView.scrollView.contentInset;
   contentInset.bottom = inset;
   _detectedScrollView.scrollView.contentInset = contentInset;
-}
-
-- (void)updateKeyboardInset {
-  CGFloat keyboardHeight = _keyboardObserver.currentHeight;
-  if (_detectedScrollView && keyboardHeight > 0) {
-    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
-  }
 }
 
 - (void)clearScrollable {
@@ -222,22 +213,26 @@ using namespace facebook::react;
   [self applyContentInsetAdjustment];
 
   // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
-  [self updateKeyboardInset];
+  CGFloat keyboardHeight = _keyboardObserver ? _keyboardObserver.currentHeight : 0;
+  if (keyboardHeight > 0) {
+    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
+  }
 }
 
-// Short or nested scroll views can end above the sheet's bottom edge.
-// Measure their actual keyboard overlap, including space occupied by a relative footer.
+// A relative footer stays behind the keyboard below the content, so its
+// height shields that much of the keyboard's overlap. An absolute footer
+// floats within the viewport — its clearance is the content padding's job
+// (the caret reveal accounts for it, see footerOcclusion).
 - (CGFloat)keyboardInsetWithHeight:(CGFloat)height {
-  UIScrollView *scrollView = _detectedScrollView.scrollView;
-  UIWindow *window = scrollView.window;
-  CGRect scrollFrame = [scrollView convertRect:scrollView.bounds toView:window];
-  CGFloat keyboardTop = CGRectGetMaxY(window.bounds) - height;
-  CGFloat inset = MAX(0, CGRectGetMaxY(scrollFrame) - keyboardTop);
+  CGFloat inset = height;
+  if (self.footerView && !_keyboardObserver.viewController.absoluteFooter) {
+    inset = MAX(0, height - self.footerView.frame.size.height);
+  }
 
   // UIKit stacks the safe area on top of contentInset while the adjustment
   // behavior is automatic — take it out so the total lands on the keyboard edge.
   if (_appliedContentInsetAdjustment) {
-    inset = MAX(0, inset - scrollView.safeAreaInsets.bottom);
+    inset = MAX(0, inset - _detectedScrollView.scrollView.safeAreaInsets.bottom);
   }
 
   // Track how much of keyboardOffset actually lands in the inset so the caret
@@ -247,6 +242,7 @@ using namespace facebook::react;
 
   // Content that already fits above the keyboard has nothing to reveal — the
   // inset would only open blank scroll range below it (huge gap at the bottom).
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
   if (scrollView.contentSize.height <= scrollView.bounds.size.height - adjustedInset) {
     _appliedKeyboardOffset = 0;
     return 0;
@@ -338,14 +334,12 @@ using namespace facebook::react;
 
   CGFloat inset = [self keyboardInsetWithHeight:height];
   [UIView animateWithDuration:duration
-    delay:0
-    options:curve | UIViewAnimationOptionBeginFromCurrentState
-    animations:^{
-      [self setKeyboardInset:inset];
-    }
-    completion:^(BOOL finished) {
-      [self updateKeyboardInset];
-    }];
+                        delay:0
+                      options:curve | UIViewAnimationOptionBeginFromCurrentState
+                   animations:^{
+                     [self setKeyboardInset:inset];
+                   }
+                   completion:nil];
 
   // Defer scroll until the next run loop so content insets are applied first
   if (firstResponder) {
@@ -369,7 +363,7 @@ using namespace facebook::react;
   dispatch_async(dispatch_get_main_queue(), ^{
     // Typing can grow the content (e.g. a multiline input) past the fits-above-
     // the-keyboard threshold — keep the inset in sync before revealing the caret.
-    [self updateKeyboardInset];
+    [self setKeyboardInset:[self keyboardInsetWithHeight:self->_keyboardObserver.currentHeight]];
     [self scrollToFocusedCaretAnimated:YES];
   });
 }
