@@ -192,7 +192,18 @@ export class TrueSheet
   // sheet content, so its ref is only populated once the native tree renders.
   private updateScrollableHandle(): void {
     const { scrollableRef } = this.props;
-    const scrollableHandle = scrollableRef?.current ? findNodeHandle(scrollableRef.current) : null;
+    let scrollableHandle: number | null = null;
+    if (scrollableRef?.current) {
+      try {
+        scrollableHandle = findNodeHandle(scrollableRef.current);
+      } catch (error) {
+        // A stale ref (e.g. a wrapper that never clears it on unmount) makes
+        // findNodeHandle throw. Treat it as no scrollable instead of crashing.
+        if (__DEV__) {
+          console.warn('TrueSheet: scrollableRef points to an unmounted component.', error);
+        }
+      }
+    }
 
     if (scrollableHandle !== this.state.scrollableHandle) {
       this.setState({ scrollableHandle });
