@@ -831,6 +831,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [GestureUtil attachPanGestureHandler:presentedView target:self selector:@selector(handlePanGesture:)];
+  [GestureUtil restrictPanGesturesToSheetView:presentedView];
 
   TrueSheetContentView *contentView = [self findContentView:presentedView];
   if (contentView) {

@@ -27,6 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)setPanGesturesEnabled:(BOOL)enabled forView:(UIView *)view;
 
+/**
+ * Makes the pan gesture recognizers on a view, and on its ancestors up to the window,
+ * ignore touches that begin outside that view. Scroll views are skipped, since
+ * `-[UIScrollViewPanGestureRecognizer setDelegate:]` raises.
+ * @param view The view a touch must begin inside for the gesture to be recognized
+ */
++ (void)restrictPanGesturesToSheetView:(UIView *)view;
+
 @end
 
 NS_ASSUME_NONNULL_END
