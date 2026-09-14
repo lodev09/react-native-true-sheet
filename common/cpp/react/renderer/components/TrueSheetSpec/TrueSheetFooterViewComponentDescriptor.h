@@ -8,17 +8,15 @@ namespace facebook::react {
 /*
  * Descriptor for <TrueSheetFooterView> component.
  */
-class TrueSheetFooterViewComponentDescriptor final
-    : public ConcreteComponentDescriptor<TrueSheetFooterViewShadowNode> {
+class TrueSheetFooterViewComponentDescriptor final : public ConcreteComponentDescriptor<TrueSheetFooterViewShadowNode> {
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 
   void adopt(ShadowNode &shadowNode) const override {
-    auto &concreteShadowNode =
-        static_cast<TrueSheetFooterViewShadowNode &>(shadowNode);
+    auto &concreteShadowNode = static_cast<TrueSheetFooterViewShadowNode &>(shadowNode);
     concreteShadowNode.adjustLayoutWithState();
 
     ConcreteComponentDescriptor::adopt(shadowNode);
   }
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

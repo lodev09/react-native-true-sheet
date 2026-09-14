@@ -16,11 +16,8 @@ JSI_EXPORT extern const char TrueSheetOverlayViewComponentName[];
  * lay out against the full window like the sheet's container.
  */
 class JSI_EXPORT TrueSheetOverlayViewShadowNode final
-    : public ConcreteViewShadowNode<
-          TrueSheetOverlayViewComponentName,
-          TrueSheetOverlayViewProps,
-          TrueSheetOverlayViewEventEmitter,
-          TrueSheetViewState> {
+    : public ConcreteViewShadowNode<TrueSheetOverlayViewComponentName, TrueSheetOverlayViewProps,
+        TrueSheetOverlayViewEventEmitter, TrueSheetViewState> {
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:
@@ -33,4 +30,4 @@ class JSI_EXPORT TrueSheetOverlayViewShadowNode final
   void adjustLayoutWithState();
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

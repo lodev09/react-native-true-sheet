@@ -8,13 +8,11 @@ namespace facebook::react {
 /*
  * Descriptor for <TrueSheetView> component.
  */
-class TrueSheetViewComponentDescriptor final
-    : public ConcreteComponentDescriptor<TrueSheetViewShadowNode> {
+class TrueSheetViewComponentDescriptor final : public ConcreteComponentDescriptor<TrueSheetViewShadowNode> {
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 
   void adopt(ShadowNode &shadowNode) const override {
-    auto &concreteShadowNode =
-        static_cast<TrueSheetViewShadowNode &>(shadowNode);
+    auto &concreteShadowNode = static_cast<TrueSheetViewShadowNode &>(shadowNode);
     concreteShadowNode.adjustLayoutWithState();
 
     ConcreteComponentDescriptor::adopt(shadowNode);
@@ -25,4 +23,4 @@ class TrueSheetViewComponentDescriptor final
   }
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

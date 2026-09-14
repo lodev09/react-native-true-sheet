@@ -23,11 +23,10 @@ class TrueSheetViewState final {
   TrueSheetViewState() = default;
 
 #ifdef ANDROID
-  TrueSheetViewState(
-      TrueSheetViewState const &previousState,
-      folly::dynamic data)
+  TrueSheetViewState(TrueSheetViewState const &previousState, folly::dynamic data)
       : containerWidth(static_cast<float>(data["containerWidth"].getDouble())),
-        containerHeight(static_cast<float>(data["containerHeight"].getDouble())) {}
+        containerHeight(static_cast<float>(data["containerHeight"].getDouble())) {
+  }
 #endif
 
   float containerWidth{0};
@@ -49,4 +48,4 @@ class TrueSheetViewState final {
 #endif
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

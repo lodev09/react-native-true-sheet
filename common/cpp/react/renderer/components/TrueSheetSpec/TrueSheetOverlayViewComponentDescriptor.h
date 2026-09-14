@@ -18,4 +18,4 @@ class TrueSheetOverlayViewComponentDescriptor final
   }
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

@@ -11,7 +11,7 @@ void TrueSheetOverlayViewShadowNode::adjustLayoutWithState() {
 
   const auto &stateData = getStateData();
   applyContainerSizeToYogaNode(
-      yogaNode_, getConcreteProps().yogaStyle, stateData.containerWidth, stateData.containerHeight);
+    yogaNode_, getConcreteProps().yogaStyle, stateData.containerWidth, stateData.containerHeight);
 }
 
-} // namespace facebook::react
+}  // namespace facebook::react

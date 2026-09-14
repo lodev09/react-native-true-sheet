@@ -15,4 +15,4 @@ float TrueSheetInsets::bottomSafeArea() {
   return gBottomSafeArea.load(std::memory_order_relaxed);
 }
 
-} // namespace facebook::react
+}  // namespace facebook::react

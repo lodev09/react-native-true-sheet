@@ -14,15 +14,12 @@ JSI_EXPORT extern const char TrueSheetFooterViewComponentName[];
  * `ShadowNode` for <TrueSheetFooterView> component.
  */
 class JSI_EXPORT TrueSheetFooterViewShadowNode final
-    : public ConcreteViewShadowNode<
-          TrueSheetFooterViewComponentName,
-          TrueSheetFooterViewProps,
-          TrueSheetFooterViewEventEmitter,
-          TrueSheetFooterViewState> {
+    : public ConcreteViewShadowNode<TrueSheetFooterViewComponentName, TrueSheetFooterViewProps,
+        TrueSheetFooterViewEventEmitter, TrueSheetFooterViewState> {
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:
   void adjustLayoutWithState();
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

@@ -13,8 +13,7 @@ extern const char TrueSheetFooterViewComponentName[] = "TrueSheetFooterView";
 void TrueSheetFooterViewShadowNode::adjustLayoutWithState() {
   ensureUnsealed();
 
-  auto state = std::static_pointer_cast<
-      const TrueSheetFooterViewShadowNode::ConcreteState>(getState());
+  auto state = std::static_pointer_cast<const TrueSheetFooterViewShadowNode::ConcreteState>(getState());
   auto stateData = state->getData();
 
   auto &props = getConcreteProps();
@@ -60,4 +59,4 @@ void TrueSheetFooterViewShadowNode::adjustLayoutWithState() {
   }
 }
 
-} // namespace facebook::react
+}  // namespace facebook::react

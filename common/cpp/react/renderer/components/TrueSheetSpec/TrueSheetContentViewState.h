@@ -20,10 +20,9 @@ class TrueSheetContentViewState final {
   TrueSheetContentViewState() = default;
 
 #ifdef ANDROID
-  TrueSheetContentViewState(
-      TrueSheetContentViewState const &previousState,
-      folly::dynamic data)
-      : naturalHeight(previousState.naturalHeight) {}
+  TrueSheetContentViewState(TrueSheetContentViewState const &previousState, folly::dynamic data)
+      : naturalHeight(previousState.naturalHeight) {
+  }
 #endif
 
   Float naturalHeight{0};
@@ -36,4 +35,4 @@ class TrueSheetContentViewState final {
 #endif
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

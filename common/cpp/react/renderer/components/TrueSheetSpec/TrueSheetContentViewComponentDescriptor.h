@@ -13,4 +13,4 @@ class TrueSheetContentViewComponentDescriptor final
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

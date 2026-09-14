@@ -13,4 +13,4 @@ class TrueSheetInsets {
   static float bottomSafeArea();
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

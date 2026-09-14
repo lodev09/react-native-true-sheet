@@ -11,10 +11,7 @@ namespace facebook::react {
  * native. A zero dimension leaves that axis to Yoga.
  */
 inline void applyContainerSizeToYogaNode(
-    yoga::Node &node,
-    const yoga::Style &baseStyle,
-    float containerWidth,
-    float containerHeight) {
+  yoga::Node &node, const yoga::Style &baseStyle, float containerWidth, float containerHeight) {
   if (containerWidth <= 0 && containerHeight <= 0) {
     return;
   }
@@ -43,4 +40,4 @@ inline void applyContainerSizeToYogaNode(
   }
 }
 
-} // namespace facebook::react
+}  // namespace facebook::react

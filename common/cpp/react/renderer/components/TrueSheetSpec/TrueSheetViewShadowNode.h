@@ -15,12 +15,8 @@ JSI_EXPORT extern const char TrueSheetViewComponentName[];
 /*
  * `ShadowNode` for <TrueSheetView> component.
  */
-class JSI_EXPORT TrueSheetViewShadowNode final
-    : public ConcreteViewShadowNode<
-          TrueSheetViewComponentName,
-          TrueSheetViewProps,
-          TrueSheetViewEventEmitter,
-          TrueSheetViewState> {
+class JSI_EXPORT TrueSheetViewShadowNode final : public ConcreteViewShadowNode<TrueSheetViewComponentName,
+                                                   TrueSheetViewProps, TrueSheetViewEventEmitter, TrueSheetViewState> {
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
  public:
@@ -42,4 +38,4 @@ class JSI_EXPORT TrueSheetViewShadowNode final
 #endif
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react

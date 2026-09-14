@@ -8,4 +8,4 @@ folly::dynamic TrueSheetFooterViewState::getDynamic() const {
 }
 #endif
 
-} // namespace facebook::react
+}  // namespace facebook::react

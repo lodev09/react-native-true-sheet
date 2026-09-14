@@ -18,11 +18,9 @@ class TrueSheetFooterViewState final {
   TrueSheetFooterViewState() = default;
 
 #ifdef ANDROID
-  TrueSheetFooterViewState(
-      TrueSheetFooterViewState const &previousState,
-      folly::dynamic data)
-      : bottomInset(static_cast<float>(data["bottomInset"].getDouble())),
-        initialized(true) {}
+  TrueSheetFooterViewState(TrueSheetFooterViewState const &previousState, folly::dynamic data)
+      : bottomInset(static_cast<float>(data["bottomInset"].getDouble())), initialized(true) {
+  }
 #endif
 
   float bottomInset{0};
@@ -38,4 +36,4 @@ class TrueSheetFooterViewState final {
 #endif
 };
 
-} // namespace facebook::react
+}  // namespace facebook::react
