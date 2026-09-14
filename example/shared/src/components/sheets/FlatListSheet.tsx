@@ -26,7 +26,7 @@ interface FlatListSheetProps extends TrueSheetProps {}
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
-  const [itemCount, setItemCount] = useState(3);
+  const [itemCount, setItemCount] = useState(1);
   const [showList, setShowList] = useState(true);
 
   const toggleButton = (

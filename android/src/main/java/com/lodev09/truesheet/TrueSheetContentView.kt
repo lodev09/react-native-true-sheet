@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
+import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollTo
 
@@ -123,7 +124,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private val scrollableLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
     updateContentInset()
-    clampScrollPosition()
   }
 
   private val scrollContentLayoutListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
@@ -198,12 +198,6 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     }
 
     updateContentInset()
-
-    // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
-    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
-    if (keyboardHeight > 0) {
-      updateScrollViewInsetForKeyboard(keyboardHeight)
-    }
   }
 
   /**
@@ -221,7 +215,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       0
     }
 
-    applyBottomInset()
+    updateScrollViewInsetForKeyboard(keyboardObserver?.currentHeight ?: 0)
   }
 
   // Fabric's measured height excludes the native inset, avoiding feedback.
@@ -339,12 +333,15 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   private fun updateScrollViewInsetForKeyboard(keyboardHeight: Int) {
-    // A relative footer stays behind the keyboard below the content, so its
-    // height shields that much of the keyboard's overlap. An absolute footer
-    // floats within the viewport — its clearance is the content padding's job
-    // (the caret reveal accounts for it, see scrollToFocusedInput).
+    val scrollView = detectedScrollView ?: return
+
+    // Short or nested scroll views can end above the sheet's bottom edge.
+    // Their position also accounts for space occupied by a relative footer.
     keyboardBottomInset = if (keyboardHeight > 0) {
-      val baseInset = maxOf(0, keyboardHeight + minOf(0, delegate?.footerKeyboardOcclusion ?: 0))
+      val location = IntArray(2)
+      scrollView.getLocationInWindow(location)
+      val keyboardTop = ScreenUtils.getRealScreenHeight(reactContext) - keyboardHeight
+      val baseInset = maxOf(0, location[1] + scrollView.height - keyboardTop)
       val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
       appliedKeyboardOffset = adjustedInset - baseInset
       adjustedInset
