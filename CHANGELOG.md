@@ -26,7 +26,6 @@
 - **Android**: Short scroll content can now scroll to the bottom while the keyboard is open. ([#835](https://github.com/lodev09/react-native-true-sheet/pull/835) by [@lodev09](https://github.com/lodev09))
 - **Web**: Stacked sheets now behave like native — a press inside a child no longer dismisses the sheets beneath it, dismissing a parent takes its children, the `peek` detent tracks content changes, and parents slide behind their child (staying put at full height) all the way up the stack. ([#824](https://github.com/lodev09/react-native-true-sheet/pull/824) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
-- Auto detents now correctly size explicit-height and deeply nested scrollables. ([#783](https://github.com/lodev09/react-native-true-sheet/pull/783) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
