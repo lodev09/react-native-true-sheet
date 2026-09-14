@@ -53,6 +53,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
       footerStyle={styles.footer}
+      insetAdjustment="never"
       footerOptions={{ position: 'absolute' }}
       {...props}
     >

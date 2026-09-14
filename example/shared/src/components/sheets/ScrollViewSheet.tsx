@@ -138,7 +138,6 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
           <ScrollView
             ref={scrollViewRef}
             contentContainerStyle={styles.content}
-            keyboardDismissMode="on-drag"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           >
             <Carousel />
@@ -167,7 +166,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wrapper: {
-    height: '100%',
+    flex: 1,
   },
   content: {
     padding: SPACING,
