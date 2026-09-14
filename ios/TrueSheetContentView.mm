@@ -181,6 +181,10 @@ using namespace facebook::react;
     return;
 
   UIEdgeInsets contentInset = _detectedScrollView.scrollView.contentInset;
+  if (fabs(contentInset.bottom - inset) < 0.001) {
+    return;
+  }
+
   contentInset.bottom = inset;
   _detectedScrollView.scrollView.contentInset = contentInset;
 }
