@@ -43,3 +43,4 @@
 - Document that native stacks can't be nested inside sheet screens, with stacked sheets as the recommended alternative. ([#822](https://github.com/lodev09/react-native-true-sheet/pull/822) by [@lodev09](https://github.com/lodev09))
 - The docs site moved from Docusaurus to Fumadocs, with built-in search, a redesigned blog and landing page, and the latest docs served at the root — old `/v3` links redirect. ([#826](https://github.com/lodev09/react-native-true-sheet/pull/826) by [@lodev09](https://github.com/lodev09))
 - The v3 docs stay available at `/v3` once v4 is released, and the docs version dropdown now tracks each release. ([#836](https://github.com/lodev09/react-native-true-sheet/pull/836) by [@lodev09](https://github.com/lodev09))
+- The bare example now adopts the iOS UIScene lifecycle, fixing a launch crash on Xcode 27 and the iOS 27 simulator. ([#843](https://github.com/lodev09/react-native-true-sheet/pull/843) by [@lodev09](https://github.com/lodev09))
