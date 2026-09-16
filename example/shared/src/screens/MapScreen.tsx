@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import {
   Platform,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
@@ -171,11 +172,11 @@ const MapScreenInner = ({
         footer={<Footer />}
         footerStyle={styles.footer}
         initialDetentIndex={0}
-        placement={anchorLeft ? 'leading' : 'automatic'}
+        placement={anchorLeft ? 'leading' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
-        backgroundColor={`${BLUE}33`}
-        style={styles.content}
+        backgroundColor={Platform.select({ ios: `${BLUE}33`, default: undefined })}
+        style={styles.sheet}
         detached
         dismissible={false}
         // onLayout={(e: LayoutChangeEvent) => {
@@ -228,64 +229,66 @@ const MapScreenInner = ({
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}
       >
-        <View style={styles.heading}>
-          <Text style={styles.title}>True Sheet</Text>
-          <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
-        </View>
-        <Button
-          text="TrueSheet View"
-          hint="Long press to stress test"
-          onPress={() => presentBasicSheet(0)}
-          onLongPress={rapidPresentDismiss}
-        />
-        <Button text="Open Modal" onPress={onNavigateToModal} />
-        <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
-        {isTablet && (
+        <ScrollView alwaysBounceVertical={false} contentContainerStyle={styles.content}>
+          <View style={styles.heading}>
+            <Text style={styles.title}>True Sheet</Text>
+            <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+          </View>
+          <Button
+            text="TrueSheet View"
+            hint="Long press to stress test"
+            onPress={() => presentBasicSheet(0)}
+            onLongPress={rapidPresentDismiss}
+          />
+          <Button text="Open Modal" onPress={onNavigateToModal} />
+          <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
+          {isTablet && (
+            <ButtonGroup>
+              <Button text="Leading" onPress={() => setAnchorLeft(true)} />
+              <Button text="Center" onPress={() => setAnchorLeft(false)} />
+            </ButtonGroup>
+          )}
           <ButtonGroup>
-            <Button text="Leading" onPress={() => setAnchorLeft(true)} />
-            <Button text="Center" onPress={() => setAnchorLeft(false)} />
+            <Button text="Test Screen" onPress={onNavigateToTest} />
+            <Button text="Test Stack" onPress={onNavigateToTestStack} />
           </ButtonGroup>
-        )}
-        <ButtonGroup>
-          <Button text="Test Screen" onPress={onNavigateToTest} />
-          <Button text="Test Stack" onPress={onNavigateToTestStack} />
-        </ButtonGroup>
-        <Spacer />
-        <ButtonGroup>
-          <Button text="Prompt" onPress={() => promptSheet.current?.present()} />
-          <Button text="Gestures" onPress={() => gestureSheet.current?.present()} />
-        </ButtonGroup>
-        <ButtonGroup>
-          <Button
-            text="ScrollView"
-            loading={scrollViewLoading}
-            disabled={scrollViewLoading}
-            onPress={presentScrollViewSheet}
+          <Spacer />
+          <ButtonGroup>
+            <Button text="Prompt" onPress={() => promptSheet.current?.present()} />
+            <Button text="Gestures" onPress={() => gestureSheet.current?.present()} />
+          </ButtonGroup>
+          <ButtonGroup>
+            <Button
+              text="ScrollView"
+              loading={scrollViewLoading}
+              disabled={scrollViewLoading}
+              onPress={presentScrollViewSheet}
+            />
+            <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
+          </ButtonGroup>
+          <Spacer />
+          {showExtraContent && <DemoContent text="Extra content that changes height" />}
+          <ButtonGroup>
+            <Button
+              text={showExtraContent ? 'Remove Content' : 'Add Content'}
+              onPress={() => setShowExtraContent(!showExtraContent)}
+            />
+            <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
+          </ButtonGroup>
+          <ButtonGroup>
+            <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
+            <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
+          </ButtonGroup>
+          <BasicSheet
+            ref={basicSheet}
+            onNavigateToModal={onNavigateToModal}
+            onNavigateToTest={onNavigateToTest}
           />
-          <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
-        </ButtonGroup>
-        <Spacer />
-        {showExtraContent && <DemoContent text="Extra content that changes height" />}
-        <ButtonGroup>
-          <Button
-            text={showExtraContent ? 'Remove Content' : 'Add Content'}
-            onPress={() => setShowExtraContent(!showExtraContent)}
-          />
-          <Button text="Expand" onPress={() => sheetRef.current?.resize(2)} />
-        </ButtonGroup>
-        <ButtonGroup>
-          <Button text="Collapse" onPress={() => sheetRef.current?.resize(0)} />
-          <Button text="Dismiss" onPress={() => sheetRef.current?.dismiss()} />
-        </ButtonGroup>
-        <BasicSheet
-          ref={basicSheet}
-          onNavigateToModal={onNavigateToModal}
-          onNavigateToTest={onNavigateToTest}
-        />
-        <PromptSheet ref={promptSheet} />
-        <ScrollViewSheet ref={scrollViewSheet} />
-        <FlatListSheet ref={flatListSheet} />
-        <GestureSheet ref={gestureSheet} />
+          <PromptSheet ref={promptSheet} />
+          <ScrollViewSheet ref={scrollViewSheet} />
+          <FlatListSheet ref={flatListSheet} />
+          <GestureSheet ref={gestureSheet} />
+        </ScrollView>
       </ReanimatedTrueSheet>
     </View>
   );
@@ -320,6 +323,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: StyleSheet.absoluteFill,
+  sheet: { flex: 1 },
   content: {
     padding: SPACING,
     gap: GAP,
