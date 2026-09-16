@@ -176,12 +176,18 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
+// Only an absolute footer floats above the keyboard — a relative footer stays
+// in the layout flow behind it, and an absolute one opts out via
+// footerOptions.avoidKeyboard.
+- (BOOL)floatsAboveKeyboard {
+  TrueSheetViewController *controller = self.keyboardObserver.viewController;
+  return controller.absoluteFooter && controller.footerAvoidsKeyboard;
+}
+
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the
-// keyboard slide is carried by a transform instead of layout. Only an absolute
-// footer floats above the keyboard — a relative footer stays in the layout
-// flow behind it.
+// keyboard slide is carried by a transform instead of layout.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
-  if (!self.keyboardObserver.viewController.absoluteFooter) {
+  if (![self floatsAboveKeyboard]) {
     return;
   }
 
@@ -232,7 +238,15 @@ using namespace facebook::react;
 
 - (void)applyKeyboardOffset {
   CGFloat height = self.keyboardObserver.currentHeight;
-  if (height <= 0 || !self.keyboardObserver.viewController.absoluteFooter) {
+  if (height <= 0) {
+    return;
+  }
+
+  // avoidKeyboard flipped off mid-keyboard — drop the slide already applied
+  if (![self floatsAboveKeyboard]) {
+    [self setKeyboardVisible:NO];
+    _currentKeyboardOffset = 0;
+    self.transform = CGAffineTransformIdentity;
     return;
   }
 

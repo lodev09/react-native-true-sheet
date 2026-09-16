@@ -68,6 +68,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.updateContentInset()
     }
 
+  override var footerAvoidsKeyboard: Boolean = true
+    set(value) {
+      if (field == value) return
+      field = value
+      contentView?.updateContentInset()
+    }
+
   /**
    * Bottom safe-area inset the footer absorbs as padding — the footer
    * owns the sheet's bottom edge, so its background fills the inset.

@@ -332,8 +332,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override var absoluteFooter: Boolean = false
 
+  // A footer that stays behind the keyboard pads nothing while it's up — the
+  // keyboard inset covers it, and the auto detent excludes it
   override val footerInsetAdjustment: Boolean
-    get() = absoluteFooter && scrollableHandle > 0 && scrollableOptions?.contentInsetAdjustment?.footer != false
+    get() = absoluteFooter &&
+      scrollableHandle > 0 &&
+      scrollableOptions?.contentInsetAdjustment?.footer != false &&
+      (footerAvoidsKeyboard || keyboardInset == 0)
 
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
@@ -1160,6 +1165,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var footerKeyboardOffset: Int = 0
 
+  /**
+   * false keeps an absolute footer pinned to the sheet's bottom edge behind
+   * the keyboard instead of rising above it.
+   */
+  var footerAvoidsKeyboard: Boolean = true
+
   fun positionFooter() {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
@@ -1176,7 +1187,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // The footer's absorbed safe-area inset rides below the keyboard's top
     // edge — its content stays flush with the keyboard without dropping the
     // inset padding from the layout, which would jump at the transition edges
-    val keyboardShift = if (currentKeyboardInset > 0) {
+    val keyboardShift = if (currentKeyboardInset > 0 && footerAvoidsKeyboard) {
       maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
     } else {
       0

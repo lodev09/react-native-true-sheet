@@ -689,6 +689,7 @@ export class TrueSheet
         footerOptions={{
           footerPosition: footerOptions?.position,
           keyboardOffset: footerOptions?.keyboardOffset,
+          avoidKeyboard: footerOptions?.avoidKeyboard,
         }}
         presentation={presentation}
         insetAdjustment={insetAdjustment}

@@ -207,9 +207,14 @@ using namespace facebook::react;
 // adjustment behavior is automatic — take out the inset baked into the
 // footer's height so the total lands on the footer's top edge. Stays constant
 // across keyboard transitions: the footer drops its inset as it rises, and
-// the baked value drops with it.
+// the baked value drops with it. A footer that doesn't avoid the keyboard sits
+// behind it — the keyboard inset covers it, so nothing stacks on top.
 - (CGFloat)footerInset {
   if (!_footerInsetAdjustment || !self.footerView || !_detectedScrollView) {
+    return 0;
+  }
+
+  if (_keyboardObserver.currentHeight > 0 && !_keyboardObserver.viewController.footerAvoidsKeyboard) {
     return 0;
   }
 
@@ -306,9 +311,11 @@ using namespace facebook::react;
 
 // An absolute footer floats over the viewport's bottom edge — extend the
 // caret target so it clears the footer, not just the keyboard. Not needed
-// while the footer inset is applied: the visible rect already ends above it.
+// while the footer inset is applied (the visible rect already ends above it)
+// or when the footer stays behind the keyboard.
 - (CGFloat)footerOcclusion {
-  if (self.footerView && _keyboardObserver.viewController.absoluteFooter && [self footerInset] <= 0) {
+  TrueSheetViewController *controller = _keyboardObserver.viewController;
+  if (self.footerView && controller.absoluteFooter && controller.footerAvoidsKeyboard && [self footerInset] <= 0) {
     return [self.footerView keyboardOcclusionHeight];
   }
   return 0;

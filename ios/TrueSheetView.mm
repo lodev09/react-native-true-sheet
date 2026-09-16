@@ -325,8 +325,11 @@ using namespace facebook::react;
     options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
-  if (_controller.footerKeyboardOffset != footerKeyboardOffset) {
+  BOOL footerAvoidsKeyboard = newProps.footerOptions.avoidKeyboard;
+  if (_controller.footerKeyboardOffset != footerKeyboardOffset ||
+      _controller.footerAvoidsKeyboard != footerAvoidsKeyboard) {
     _controller.footerKeyboardOffset = footerKeyboardOffset;
+    _controller.footerAvoidsKeyboard = footerAvoidsKeyboard;
     [_containerView updateFooterKeyboardOffset];
   }
 
@@ -899,7 +902,10 @@ using namespace facebook::react;
   _containerView.scrollableHandle = _scrollableHandle;
   _containerView.safeAreaInsetAdjustment = (_scrollableOptions ? _scrollableOptions.safeAreaInsetAdjustment : YES) &&
                                            _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
-  _containerView.footerInsetAdjustment = _controller.footerInsetAdjustment;
+  // Raw value — the controller's getter is keyboard-aware, the content view
+  // gates on the keyboard itself (see TrueSheetContentView footerInset)
+  _containerView.footerInsetAdjustment = (_scrollableOptions ? _scrollableOptions.footerInsetAdjustment : YES) &&
+                                         _controller.absoluteFooter && _scrollableHandle > 0;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];
 }

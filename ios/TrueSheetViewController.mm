@@ -119,6 +119,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _grabber = YES;
     _draggable = YES;
     _scrollingExpandsSheet = YES;
+    _footerAvoidsKeyboard = YES;
     _dismissible = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
@@ -334,8 +335,26 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  * carries the inset in its height (see footerBottomInset) — subtract exactly
  * what was baked in so UIKit's own safe-area layout doesn't double it.
  */
+// A footer that stays behind the keyboard pads nothing while the keyboard is
+// up — the keyboard covers it, so the auto detent excludes it.
+- (BOOL)footerInsetAdjustment {
+  return _footerInsetAdjustment && (_footerAvoidsKeyboard || _keyboardHeight <= 0);
+}
+
+// Re-resolve alongside the keyboard animation so the footer drops out of (or
+// back into) the auto detent in the same motion — waiting for the shrink-back
+// to finish lets the content settle behind the footer first.
+- (void)setKeyboardHeight:(CGFloat)keyboardHeight {
+  BOOL wasVisible = _keyboardHeight > 0;
+  _keyboardHeight = keyboardHeight;
+
+  if (wasVisible != (keyboardHeight > 0) && _footerInsetAdjustment && !_footerAvoidsKeyboard && self.isPresented) {
+    [self setupSheetDetentsForSizeChange];
+  }
+}
+
 - (CGFloat)autoDetentBottomInset {
-  if ((_absoluteFooter && !_footerInsetAdjustment) || [self.footerHeight floatValue] <= 0) {
+  if ((_absoluteFooter && !self.footerInsetAdjustment) || [self.footerHeight floatValue] <= 0) {
     return 0;
   }
 
@@ -686,8 +705,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   // Dismissing with the keyboard up skips the hide notification — don't let
-  // the stale flag block learning on the next present.
+  // the stale flag block learning on the next present, or a stale height keep
+  // the footer out of the auto detent.
   _keyboardSheetGrown = NO;
+  _keyboardHeight = 0;
 
   [self emitDidDismissEvents];
 }

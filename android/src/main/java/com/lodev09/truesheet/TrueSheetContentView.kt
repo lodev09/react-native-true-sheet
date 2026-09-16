@@ -69,6 +69,12 @@ interface TrueSheetContentViewDelegate {
   val absoluteFooterHeight: Int
 
   /**
+   * false when an absolute footer stays behind the keyboard instead of rising
+   * above it — the keyboard inset then covers the footer.
+   */
+  val footerAvoidsKeyboard: Boolean
+
+  /**
    * A relative footer sits below the content and absorbs the bottom safe-area
    * inset — the scrollable doesn't reach the sheet's bottom edge, so no
    * content inset is applied (mirrors iOS, where UIKit resolves this
@@ -270,9 +276,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   // keyboard rise is a translation) so a short scrollable ending above the
   // footer gets no inset. The safe-area inset baked into the footer is already
   // covered by the safe-area or keyboard inset when one applies — only the
-  // footer's occlusion above it stacks on top.
+  // footer's occlusion above it stacks on top. A footer that stays behind the
+  // keyboard pads nothing while it's up — the keyboard inset covers it. Gated
+  // on the keyboard's target so it flips with the detents at the start of the
+  // animation, not once the animating inset reaches zero.
   private fun footerInsetAbove(safeAreaInset: Int): Int {
     if (scrollableOptions?.contentInsetAdjustment?.footer == false) return 0
+    if ((keyboardObserver?.targetHeight ?: 0) > 0 && delegate?.footerAvoidsKeyboard == false) return 0
     val scrollView = detectedScrollView ?: return 0
     val container = parent as? View ?: return 0
     val footerHeight = delegate?.absoluteFooterHeight ?: 0
@@ -346,6 +356,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
           }
         }
 
+        // Re-apply up front so a footer that stays behind the keyboard swaps
+        // its inset in the same frame the detents reconfigure
+        override fun keyboardWillShow(height: Int) {
+          applyBottomInset()
+        }
+
         override fun keyboardDidShow(height: Int) {
           attachCaretListener()
           scrollToFocusedInput()
@@ -353,6 +369,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
         override fun keyboardWillHide() {
           detachCaretListener()
+          applyBottomInset()
         }
 
         override fun focusDidChange(newFocus: View) {
@@ -459,8 +476,13 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
     // An absolute footer floats over the viewport's bottom edge — extend the
     // caret target so it clears the footer, not just the keyboard. Not needed
-    // while the footer inset is applied: the visible range already ends above it.
-    val footerOcclusion = if (footerBottomInset > 0) 0 else maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
+    // while the footer inset is applied (the visible range already ends above
+    // it) or when the footer stays behind the keyboard.
+    val footerOcclusion = if (footerBottomInset > 0 || delegate?.footerAvoidsKeyboard == false) {
+      0
+    } else {
+      maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
+    }
 
     val offset = keyboardScrollOffset.toInt()
     val appliedInset = maxOf(baseBottomInset, keyboardBottomInset) + footerBottomInset

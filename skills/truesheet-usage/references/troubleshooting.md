@@ -168,7 +168,7 @@ TrueSheet has built-in keyboard avoidance — this usually means something else 
    ```tsx
    <TrueSheet scrollableRef={scrollableRef} scrollableOptions={{ keyboardScrollOffset: 16 }}>
    ```
-3. **Footer behavior**: an **absolute** footer (`footerOptions={{ position: 'absolute' }}`) rises above the keyboard automatically; a **relative** footer (default) stays in the layout flow and is covered by the keyboard until it hides.
+3. **Footer behavior**: an **absolute** footer (`footerOptions={{ position: 'absolute' }}`) rises above the keyboard automatically — pass `avoidKeyboard: false` to keep it behind the keyboard; a **relative** footer (default) stays in the layout flow and is covered by the keyboard until it hides.
 
 ## Sheet doesn't build (Xcode version)
 

@@ -288,6 +288,16 @@ export interface FooterOptions {
    * @default 0
    */
   keyboardOffset?: number;
+
+  /**
+   * Whether an `absolute` footer rises above the keyboard when it opens.
+   * Set to `false` to keep the footer pinned to the sheet's bottom edge behind the keyboard.
+   * A `relative` footer never rises, so this has no effect.
+   *
+   * @platform ios, android
+   * @default true
+   */
+  avoidKeyboard?: boolean;
 }
 
 /**
