@@ -1516,6 +1516,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return self.placement == TrueSheetViewPlacement::Leading || self.placement == TrueSheetViewPlacement::Trailing;
 }
 
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_0)
 - (UISheetPresentationControllerPlacement)preferredPlacement API_AVAILABLE(ios(27.0)) {
   switch (self.placement) {
     case TrueSheetViewPlacement::Leading:
@@ -1528,6 +1529,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       return UISheetPresentationControllerPlacementAutomatic;
   }
 }
+#endif
 
 - (void)setupAnchorViewInView:(UIView *)parentView {
   if (!parentView)
@@ -1536,12 +1538,14 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_anchorView removeFromSuperview];
   _anchorView = nil;
 
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_0)
   // iOS 27 exposes native placement. `sourceView` must stay nil since it overrides `preferredPlacement`.
   if (@available(iOS 27.0, *)) {
     self.sheetPresentationController.sourceView = nil;
     self.sheetPresentationController.preferredPlacement = [self preferredPlacement];
     return;
   }
+#endif
 
   // Pre-27 has no explicit center, so `center` falls back to the system default like `automatic`.
   if (!self.isAnchored) {
