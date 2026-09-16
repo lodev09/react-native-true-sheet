@@ -69,9 +69,21 @@ NS_ASSUME_NONNULL_BEGIN
  * `automatic` while plugged so UIKit applies the bottom safe-area inset to
  * the scroll content. The previous behavior is restored on clear.
  */
-@property (nonatomic, assign) BOOL contentInsetAdjustment;
+@property (nonatomic, assign) BOOL safeAreaInsetAdjustment;
+
+/**
+ * Pads the resolved ScrollView's bottom content inset by the absolute
+ * footer's height so the last item scrolls into view above it. Stacks with
+ * the keyboard inset.
+ */
+@property (nonatomic, assign) BOOL footerInsetAdjustment;
 
 - (RCTScrollViewComponentView *_Nullable)findScrollView;
+
+/**
+ * Re-applies the footer and keyboard insets — call when the footer's size changes
+ */
+- (void)updateBottomInset;
 
 /**
  * Resolve the ScrollView from `scrollableHandle`, wiring keyboard handling

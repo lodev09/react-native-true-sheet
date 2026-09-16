@@ -62,6 +62,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL absoluteHeader;
 @property (nonatomic, strong, nullable) NSNumber *footerHeight;
 @property (nonatomic, assign) BOOL absoluteFooter;
+
+/**
+ * YES while the plugged scrollable is padded by the absolute footer's height
+ * (see ScrollableOptions.contentInsetAdjustment) — the footer then counts
+ * toward the auto detent like a relative one, so the content ends above it.
+ */
+@property (nonatomic, assign) BOOL footerInsetAdjustment;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;

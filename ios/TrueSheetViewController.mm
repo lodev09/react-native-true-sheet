@@ -268,7 +268,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  * unpadded.
  */
 - (CGFloat)maxNaturalDetentHeight {
-  CGFloat applied = [self.footerHeight floatValue] > 0 ? _appliedFooterBottomInset : 0;
   CGFloat maxHeight = 0;
 
   for (id detent in self.detents) {
@@ -279,11 +278,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     CGFloat value = [detent doubleValue];
     CGFloat height = 0;
     if (value == -1) {
-      // Auto counts a relative footer's (padded) height
-      height = [_detentCalculator autoHeight] - (_absoluteFooter ? 0 : applied);
+      height = [_detentCalculator autoHeight] - [self autoDetentBottomInset];
     } else if (value == -2) {
-      // Peek counts an absolute footer's (padded) height
-      height = [_detentCalculator peekHeight] - (_absoluteFooter ? applied : 0);
+      height = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
     } else if (value > 0 && value <= 1) {
       height = value * self.screenHeight;
     }
@@ -332,13 +329,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 /**
- * Bottom inset excluded from the auto detent. A relative footer owns the
- * sheet's bottom edge and carries the inset in its height (see
- * footerBottomInset) — subtract exactly what was baked in so UIKit's own
- * safe-area layout doesn't double it.
+ * Bottom inset excluded from the auto detent. A relative footer (or an
+ * absolute one padding the scrollable) owns the sheet's bottom edge and
+ * carries the inset in its height (see footerBottomInset) — subtract exactly
+ * what was baked in so UIKit's own safe-area layout doesn't double it.
  */
 - (CGFloat)autoDetentBottomInset {
-  if (_absoluteFooter || [self.footerHeight floatValue] <= 0) {
+  if ((_absoluteFooter && !_footerInsetAdjustment) || [self.footerHeight floatValue] <= 0) {
     return 0;
   }
 

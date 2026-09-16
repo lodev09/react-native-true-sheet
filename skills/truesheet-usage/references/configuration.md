@@ -155,7 +155,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 }
 ```
 - `'relative'`: takes space below the content, included in `'auto'` but **excluded from `'peek'`** (pushed off-screen at peek). Stays in the layout flow behind the keyboard. If content is taller than the sheet (fixed detents), bound it with `flex: 1` on the sheet `style` so the footer stays visible.
-- `'absolute'`: floats over the content, excluded from `'auto'` but **included in `'peek'`**, and rises above the keyboard. Add bottom padding to your content so it ends above the footer.
+- `'absolute'`: floats over the content, excluded from `'auto'` but **included in `'peek'`**, and rises above the keyboard. A plugged scrollable is padded by the measured footer height automatically (and the footer then counts toward `'auto'`); for non-scrolling content, add bottom padding yourself so it ends above the footer.
 - `keyboardOffset` adjusts how far an absolute footer rises with the keyboard. Negative values tuck the footer's own bottom padding behind the keyboard.
 
 **Safe area:** the footer absorbs the bottom safe-area inset as padding when `insetAdjustment` is `'automatic'` — don't add manual `paddingBottom: insets.bottom` or it doubles up. While the keyboard is open, an absolute footer skips the inset (no gap above the keyboard).
@@ -170,7 +170,11 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 **`ScrollableOptions`:**
 ```tsx
 {
-  contentInsetAdjustmentBehavior?: boolean  // apply bottom safe-area inset to scroll content while it can scroll (default: true)
+  contentInsetAdjustment?: 'automatic' | 'safe-area' | 'footer' | 'never'
+                                            // what the sheet insets the scroll content's bottom for (default: 'automatic')
+                                            // 'automatic': safe-area inset while it can scroll + absolute footer height (footer counts toward 'auto')
+                                            // 'safe-area': safe area only (content scrolls under the footer); 'footer': footer only; 'never': none
+                                            // safe-area part needs insetAdjustment 'automatic'; footer part is independent of it
   scrollingExpandsSheet?: boolean           // scrolling to top expands the sheet (default: true)
   keyboardScrollOffset?: number             // extra spacing above keyboard when scrolling to a focused input (default: 0)
   keyboardOffset?: number                   // adjust the keyboard bottom inset; pass -insets.bottom to cancel manual padding (default: 0)

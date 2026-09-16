@@ -56,14 +56,14 @@ The sheet applies the bottom safe-area inset to your scroll content automaticall
 - **Android**: The inset is applied as content padding, mirroring iOS's `automatic` behavior — parity React Native's iOS-only prop can't provide.
 - **Web**: The content is lifted above the safe area (`env(safe-area-inset-bottom)`).
 
-To opt out and manage the padding yourself, set `contentInsetAdjustmentBehavior` to `false` in [`scrollableOptions`](../reference/configuration#scrollableoptions):
+To opt out and manage the padding yourself, set [`contentInsetAdjustment`](../reference/types#contentinsetadjustment) to `'never'` (or `'footer'` to keep the [footer inset](#footer-inset)) in [`scrollableOptions`](../reference/configuration#scrollableoptions):
 
 ```tsx
 const insets = useSafeAreaInsets()
 
 <TrueSheet
   scrollableRef={scrollableRef}
-  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+  scrollableOptions={{ contentInsetAdjustment: 'never' }}
 >
   <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
     <View />
@@ -72,7 +72,41 @@ const insets = useSafeAreaInsets()
 ```
 
 :::info
-This only applies while the sheet's [`insetAdjustment`](../reference/configuration#insetadjustment) is `'automatic'`. If the sheet has a relative [`footer`](footer), the footer absorbs the bottom inset instead — pad your content for the footer's height, not the safe area.
+This only applies while the sheet's [`insetAdjustment`](../reference/configuration#insetadjustment) is `'automatic'`. If the sheet has a relative [`footer`](footer), the footer absorbs the bottom inset instead — the scroll view ends above it, so no padding is needed.
+:::
+
+## Footer Inset
+
+An absolute [`footer`](footer#floating-footer) floats over the content, covering the bottom of the scroll view. The sheet pads the scroll content by the footer's measured height automatically — the last item scrolls into view above the footer, and the footer counts toward the [`auto`](../reference/types#sheetdetent) detent so the content ends above it when the sheet is sized to its content. No `paddingBottom: FOOTER_HEIGHT` needed:
+
+```tsx
+<TrueSheet
+  detents={['auto', 1]}
+  scrollableRef={scrollableRef}
+  footer={<Footer />}
+  footerOptions={{ position: 'absolute' }}
+>
+  <FlatList ref={scrollableRef} data={data} renderItem={renderItem} />
+</TrueSheet>
+```
+
+Only the part of the footer that overlaps the scroll view is applied — a short scroll view that ends above the footer gets no inset. The bottom safe-area inset the footer absorbs is not counted twice, and while the keyboard is open the inset stacks with the keyboard inset as the footer rises above it.
+
+To let the content scroll under the footer instead, set [`contentInsetAdjustment`](../reference/types#contentinsetadjustment) to `'safe-area'` (keeps the safe-area inset) or `'never'`:
+
+```tsx
+<TrueSheet
+  scrollableRef={scrollableRef}
+  scrollableOptions={{ contentInsetAdjustment: 'safe-area' }}
+  footer={<Footer />}
+  footerOptions={{ position: 'absolute' }}
+>
+  <FlatList ref={scrollableRef} data={data} renderItem={renderItem} />
+</TrueSheet>
+```
+
+:::info
+This only applies with `footerOptions.position` set to `'absolute'`. A relative footer sits below the content, so the scroll view already ends above it. Unlike the safe-area inset, it doesn't depend on the sheet's [`insetAdjustment`](../reference/configuration#insetadjustment) — the footer covers the scroll view either way. Remove any manual `paddingBottom` for the footer from your content, or it doubles up.
 :::
 
 ## Preventing Scroll-to-Expand

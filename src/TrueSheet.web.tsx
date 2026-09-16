@@ -354,10 +354,15 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const [hasBoundedScrollable, setHasBoundedScrollable] = useState(false);
   const [scrollableAutoHeight, setScrollableAutoHeight] = useState(0);
   const detectedScrollerRef = useRef<HTMLElement | null>(null);
+  // Bottom padding applied to the plugged scrollable for an absolute footer
+  // (see the footer inset effect below)
+  const footerInsetRef = useRef(0);
 
   // Natural content height (header + content + footer, with a detected
   // scrollable's viewport replaced by its content size) — the height the
-  // content wants regardless of the sheet's bounds.
+  // content wants regardless of the sheet's bounds. An absolute footer's inset
+  // on the scrollable counts like a relative footer's height, so the content
+  // ends above the footer (mirrors native's auto detent).
   const measureNaturalHeight = useCallback(() => {
     const contentEl = getDOMElement(contentRef.current);
     if (!contentEl || !contentEl.isConnected) return 0;
@@ -368,7 +373,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const scroller = detectedScrollerRef.current;
     const scrollContent = scroller?.firstElementChild;
     if (scroller?.isConnected && scrollContent instanceof HTMLElement) {
-      height += scrollContent.offsetHeight - scroller.clientHeight;
+      height += scrollContent.offsetHeight - scroller.clientHeight + footerInsetRef.current;
     }
     return Math.max(0, height);
   }, []);
@@ -730,6 +735,99 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     },
     [interpolateFromPosition, updateSizedLayoutHeight]
   );
+
+  // Web mirror of native's footer inset (`contentInsetAdjustment`
+  // 'automatic' | 'footer'): pad the plugged scrollable by how much the
+  // absolute footer covers it. Measured from layout offsets (not client rects)
+  // so in-flight transforms don't skew it — the footer's bottom sits at the
+  // visible bottom of the layout container, so only a scroller reaching that
+  // edge gets an inset, and a safe-area lift (or a short scroller) shrinks it.
+  // Padding on the scroll container extends its scrollable overflow, like a
+  // native content inset.
+  const insetBehavior = scrollableOptions?.contentInsetAdjustment ?? 'automatic';
+  const footerInsetAdjustment =
+    Boolean(footer) &&
+    absoluteFooter &&
+    (insetBehavior === 'automatic' || insetBehavior === 'footer');
+
+  useEffect(() => {
+    if (!isOpen || !footerInsetAdjustment || !scrollableRef) return undefined;
+
+    let canceled = false;
+    let rafId = 0;
+    let mutationObserver: MutationObserver | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let scroller: HTMLElement | null = null;
+
+    const reset = () => {
+      if (scroller) scroller.style.paddingBottom = '';
+      footerInsetRef.current = 0;
+    };
+
+    const apply = () => {
+      const footerEl = getDOMElement(footerElRef.current);
+      const container = sizedLayoutRef.current ?? drawerContentRef.current;
+      if (!scroller?.isConnected || !footerEl || !container) return;
+
+      // Measure without our own padding so an unbounded scroller (sized by its
+      // content) doesn't grow by the inset and feed back into the overlap.
+      scroller.style.paddingBottom = '';
+      let bottom = scroller.offsetTop + scroller.offsetHeight;
+      let el = scroller.offsetParent as HTMLElement | null;
+      while (el && el !== container) {
+        bottom += el.offsetTop;
+        el = el.offsetParent as HTMLElement | null;
+      }
+      const footerTop = container.offsetHeight - footerEl.offsetHeight;
+      const inset = el ? Math.max(0, bottom - footerTop) : 0;
+      footerInsetRef.current = inset;
+      scroller.style.paddingBottom = inset > 0 ? `${inset}px` : '';
+    };
+
+    // (Re)resolve the plugged scrollable — a conditional remount swaps the node
+    const observe = () => {
+      const resolved = getScrollableElement(scrollableRef.current);
+      const next = resolved?.isConnected ? resolved : null;
+      if (next === scroller && resizeObserver) return;
+
+      reset();
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      scroller = next;
+      if (!scroller) return;
+
+      resizeObserver = new ResizeObserver(apply);
+      resizeObserver.observe(scroller);
+      const footerEl = getDOMElement(footerElRef.current);
+      if (footerEl) resizeObserver.observe(footerEl);
+      const container = sizedLayoutRef.current ?? drawerContentRef.current;
+      if (container) resizeObserver.observe(container);
+      apply();
+    };
+
+    const attach = () => {
+      if (canceled) return;
+      const drawerEl = drawerContentRef.current;
+      if (!drawerEl || !drawerEl.isConnected) {
+        // Radix Presence defers the portal mount; poll until the drawer is live.
+        rafId = window.requestAnimationFrame(attach);
+        return;
+      }
+      observe();
+      mutationObserver = new MutationObserver(observe);
+      mutationObserver.observe(drawerEl, { childList: true, subtree: true });
+    };
+
+    rafId = window.requestAnimationFrame(attach);
+
+    return () => {
+      canceled = true;
+      window.cancelAnimationFrame(rafId);
+      mutationObserver?.disconnect();
+      resizeObserver?.disconnect();
+      reset();
+    };
+  }, [isOpen, footerInsetAdjustment, scrollableRef]);
 
   // Fire onMount once after first render. React-mount is the earliest point
   // the component is ready for imperative calls, matching the native
@@ -1128,13 +1226,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Lift content above iOS home indicator / bottom safe area when enabled.
       // A relative footer owns the inset instead (see resolvedFooterStyle); an
       // absolute footer floats over the content, so the content keeps its lift.
-      // A plugged scrollable keeps the lift too (contentInsetAdjustmentBehavior,
-      // default on) — disable it to scroll edge-to-edge behind the indicator
-      // with user-applied content padding.
+      // A plugged scrollable keeps the lift too (contentInsetAdjustment
+      // 'automatic' | 'safe-area') — 'footer' | 'never' scroll edge-to-edge
+      // behind the indicator with user-applied content padding.
       paddingBottom:
         insetAdjustment === 'automatic' &&
         !(footerOwnsInset && !absoluteFooter) &&
-        (!scrollableRef || (scrollableOptions?.contentInsetAdjustmentBehavior ?? true))
+        (!scrollableRef || insetBehavior === 'automatic' || insetBehavior === 'safe-area')
           ? 'env(safe-area-inset-bottom, 0px)'
           : 0,
     }),
@@ -1145,7 +1243,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       footerOwnsInset,
       absoluteFooter,
       scrollableRef,
-      scrollableOptions,
+      insetBehavior,
     ]
   );
 

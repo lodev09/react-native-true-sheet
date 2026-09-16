@@ -301,32 +301,28 @@ using namespace facebook::react;
   _scrollableHandle = newProps.scrollableHandle;
 
   const auto &scrollableOpts = newProps.scrollableOptions;
-  BOOL scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
-  BOOL contentInsetAdjustment = scrollableOpts.contentInsetAdjustmentBehavior;
-  auto topEdgeEffect = scrollableOpts.topScrollEdgeEffect;
-  auto bottomEdgeEffect = scrollableOpts.bottomScrollEdgeEffect;
-  BOOL hasScrollableOptions = scrollableOpts.keyboardScrollOffset > 0 || scrollableOpts.keyboardOffset != 0 ||
-                              !scrollingExpandsSheet || !contentInsetAdjustment ||
-                              topEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
-                              bottomEdgeEffect != TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  ScrollableOptions *options = [[ScrollableOptions alloc] init];
+  options.contentInsetAdjustment = scrollableOpts.contentInsetAdjustment;
+  options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
+  options.keyboardOffset = scrollableOpts.keyboardOffset;
+  options.scrollingExpandsSheet = scrollableOpts.scrollingExpandsSheet;
+  options.topScrollEdgeEffect = scrollableOpts.topScrollEdgeEffect;
+  options.bottomScrollEdgeEffect = scrollableOpts.bottomScrollEdgeEffect;
 
-  if (hasScrollableOptions) {
-    ScrollableOptions *options = [[ScrollableOptions alloc] init];
-    options.contentInsetAdjustment = contentInsetAdjustment;
-    options.keyboardScrollOffset = scrollableOpts.keyboardScrollOffset;
-    options.keyboardOffset = scrollableOpts.keyboardOffset;
-    options.scrollingExpandsSheet = scrollingExpandsSheet;
-    options.topScrollEdgeEffect = topEdgeEffect;
-    options.bottomScrollEdgeEffect = bottomEdgeEffect;
-    _scrollableOptions = options;
-  } else {
-    _scrollableOptions = nil;
-  }
+  // nil while every option is at its default
+  BOOL hasScrollableOptions = options.keyboardScrollOffset > 0 || options.keyboardOffset != 0 ||
+                              !options.scrollingExpandsSheet ||
+                              options.contentInsetAdjustment != TrueSheetViewContentInsetAdjustment::Automatic ||
+                              options.topScrollEdgeEffect != TrueSheetViewTopScrollEdgeEffect::Hidden ||
+                              options.bottomScrollEdgeEffect != TrueSheetViewBottomScrollEdgeEffect::Hidden;
+  _scrollableOptions = hasScrollableOptions ? options : nil;
 
-  _controller.scrollingExpandsSheet = scrollingExpandsSheet;
+  _controller.scrollingExpandsSheet = options.scrollingExpandsSheet;
 
   _controller.absoluteHeader = newProps.headerOptions.position == TrueSheetViewPosition::Absolute;
   _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
+  _controller.footerInsetAdjustment =
+    options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   if (_controller.footerKeyboardOffset != footerKeyboardOffset) {
@@ -901,8 +897,9 @@ using namespace facebook::react;
 
   _containerView.scrollableOptions = _scrollableOptions;
   _containerView.scrollableHandle = _scrollableHandle;
-  _containerView.contentInsetAdjustment = (_scrollableOptions ? _scrollableOptions.contentInsetAdjustment : YES) &&
-                                          _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
+  _containerView.safeAreaInsetAdjustment = (_scrollableOptions ? _scrollableOptions.safeAreaInsetAdjustment : YES) &&
+                                           _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
+  _containerView.footerInsetAdjustment = _controller.footerInsetAdjustment;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];
 }

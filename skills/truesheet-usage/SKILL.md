@@ -168,7 +168,7 @@ const scrollableRef = useRef<ScrollView>(null)
 - The scroll view doesn't have to be a direct child — a wrapping `View` works
 - Keyboard handling, nested scrolling (Android), and the bottom safe-area inset are wired automatically
 - Scrolling to top expands to the next detent — disable with `scrollableOptions={{ scrollingExpandsSheet: false }}` (YouTube-style comments)
-- The bottom safe-area inset is applied natively while content can scroll — don't add manual safe-area padding, or opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}`
+- The bottom safe-area inset (and an absolute footer's height) is applied natively while content can scroll — don't add manual padding, or opt out with `scrollableOptions={{ contentInsetAdjustment: 'never' }}` (`'safe-area'` / `'footer'` keep one of the two)
 
 ### Fixed header and footer
 
@@ -193,6 +193,7 @@ const scrollableRef = useRef<ScrollView>(null)
 - The footer **absorbs the bottom safe-area inset** natively — remove manual `paddingBottom: insets.bottom` from footer content or it doubles up. Set the footer background via `footerStyle` so it fills the inset.
 - A relative footer is laid out below the content — with fixed detents, bound the content with `flex: 1` (sheet `style`) so the footer stays visible.
 - To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard; a relative one stays in the layout flow behind it.
+- An absolute footer covers the bottom of a plugged scrollable — the scroll content is padded by the measured footer height automatically (default `contentInsetAdjustment: 'automatic'`) and the footer counts toward `'auto'`, so don't hard-code `paddingBottom: FOOTER_HEIGHT`. Use `'safe-area'` to let content scroll under the footer.
 
 ### Peeking (map-style collapsed sheet)
 

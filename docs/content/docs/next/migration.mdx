@@ -122,13 +122,13 @@ const MyFooter = () => {
 See the [Footer guide](guides/footer#safe-area-handling) for more details.
 :::
 
-### 6. Scrollable Bottom Inset via `contentInsetAdjustmentBehavior`
+### 6. Scrollable Bottom Inset via `contentInsetAdjustment`
 
-A plugged scrollable still gets the bottom safe-area inset applied natively, now only while the content can actually scroll — mirroring iOS's [`contentInsetAdjustmentBehavior="automatic"`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) on all platforms. Remove any manual safe-area padding from your scroll content, or opt out with the new `scrollableOptions.contentInsetAdjustmentBehavior` and pad it yourself:
+A plugged scrollable still gets the bottom safe-area inset applied natively, now only while the content can actually scroll — mirroring iOS's [`contentInsetAdjustmentBehavior="automatic"`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) on all platforms. An absolute footer floating over the scrollable is handled the same way: the scroll content is padded by the footer's measured height and the footer counts toward the `auto` detent. Remove any manual safe-area or footer padding from your scroll content, or opt out with the new `scrollableOptions.contentInsetAdjustment` and pad it yourself:
 
 ```tsx
-// ✅ v4 — the inset is applied natively while the content can scroll
-<TrueSheet scrollableRef={scrollableRef}>
+// ✅ v4 — the safe-area and footer insets are applied natively
+<TrueSheet scrollableRef={scrollableRef} footer={<Footer />} footerOptions={{ position: 'absolute' }}>
   <ScrollView ref={scrollableRef}>{/* ... */}</ScrollView>
 </TrueSheet>
 
@@ -137,7 +137,7 @@ const insets = useSafeAreaInsets();
 
 <TrueSheet
   scrollableRef={scrollableRef}
-  scrollableOptions={{ contentInsetAdjustmentBehavior: false }}
+  scrollableOptions={{ contentInsetAdjustment: 'never' }}
 >
   <ScrollView ref={scrollableRef} contentContainerStyle={{ paddingBottom: insets.bottom }}>
     {/* ... */}
@@ -145,8 +145,10 @@ const insets = useSafeAreaInsets();
 </TrueSheet>
 ```
 
+`'safe-area'` keeps only the safe-area inset (content scrolls under the footer) and `'footer'` keeps only the footer inset. See [Scrolling Content](guides/scrolling#bottom-safe-area-inset).
+
 :::info
-If your sheet has a relative footer, it absorbs the bottom inset instead (see above) — pad for the footer's height, not the safe area.
+If your sheet has a relative footer, it absorbs the bottom inset instead (see above) — the scroll view ends above it, so no padding is needed.
 :::
 
 ### 7. Sheet Navigator Requires `@react-navigation/native` 7.3+

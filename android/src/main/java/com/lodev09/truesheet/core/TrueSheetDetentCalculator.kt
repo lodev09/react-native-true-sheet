@@ -18,6 +18,14 @@ interface TrueSheetDetentCalculatorDelegate {
   val absoluteHeader: Boolean
   val footerHeight: Int
   val absoluteFooter: Boolean
+
+  /**
+   * True while the plugged scrollable is padded by the absolute footer's
+   * height (see ScrollableOptions.footerInsetAdjustment) — the footer then
+   * counts toward the auto detent like a relative one, so the content ends
+   * above it.
+   */
+  val footerInsetAdjustment: Boolean
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -54,20 +62,28 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val hasKeyboardFloor: Boolean get() = delegate?.hasKeyboardFloor == true
 
   /**
+   * An absolute footer floats over the content and contributes no height to
+   * the auto detent — unless it pads the scrollable, then the content ends
+   * above it like a relative footer.
+   */
+  private val footerInAuto: Boolean
+    get() = delegate?.absoluteFooter == false || delegate?.footerInsetAdjustment == true
+
+  /**
    * Height for auto (-1.0) detents: content + header + footer height.
    * An absolute (floating) header or footer overlaps the content, so it contributes no height.
    */
   private val autoDetentHeight: Int
     get() = contentHeight +
       (if (delegate?.absoluteHeader == true) 0 else headerHeight) +
-      (if (delegate?.absoluteFooter == true) 0 else footerHeight)
+      (if (footerInAuto) footerHeight else 0)
 
   /**
-   * Bottom inset for auto detents. A relative footer owns the sheet's bottom
-   * edge, so it absorbs the inset instead of adding it to the auto height.
+   * Bottom inset for auto detents. A footer counted in the auto height owns
+   * the sheet's bottom edge, so it absorbs the inset instead of adding it.
    */
   private val autoDetentBottomInset: Int
-    get() = if (footerHeight > 0 && delegate?.absoluteFooter == false) 0 else contentBottomInset
+    get() = if (footerHeight > 0 && footerInAuto) 0 else contentBottomInset
 
   /**
    * Bottom inset for peek detents. An absolute footer counts toward the peek

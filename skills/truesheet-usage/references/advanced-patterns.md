@@ -497,7 +497,7 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 ### 4. Safe-area padding is now native
 
 - The footer absorbs the bottom safe-area inset — remove manual `useSafeAreaInsets()` padding from footers.
-- A plugged scrollable gets the bottom inset natively while it can scroll — remove manual padding, or opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}`.
+- A plugged scrollable gets the bottom inset natively while it can scroll, and is padded by an absolute footer's height — remove manual padding, or opt out with `scrollableOptions={{ contentInsetAdjustment: 'never' }}`.
 
 ### 5. Navigation entry points
 
