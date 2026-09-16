@@ -16,12 +16,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ScrollableOptions : NSObject
 
-@property (nonatomic, assign) BOOL contentInsetAdjustment;
+@property (nonatomic, assign) facebook::react::TrueSheetViewContentInsetAdjustment contentInsetAdjustment;
 @property (nonatomic, assign) CGFloat keyboardScrollOffset;
 @property (nonatomic, assign) CGFloat keyboardOffset;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) facebook::react::TrueSheetViewTopScrollEdgeEffect topScrollEdgeEffect;
 @property (nonatomic, assign) facebook::react::TrueSheetViewBottomScrollEdgeEffect bottomScrollEdgeEffect;
+
+/**
+ * Derived from `contentInsetAdjustment` — which of the two bottom insets apply
+ */
+@property (nonatomic, readonly) BOOL safeAreaInsetAdjustment;
+@property (nonatomic, readonly) BOOL footerInsetAdjustment;
 
 @end
 
@@ -58,10 +64,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) NSInteger scrollableHandle;
 
 /**
- * Whether the resolved scrollable's `contentInsetAdjustmentBehavior` is set to
- * `automatic` — already gated by the sheet's `insetAdjustment`
+ * Whether the resolved scrollable gets the bottom safe-area inset (UIKit's
+ * `contentInsetAdjustmentBehavior` set to `automatic`) — already gated by the
+ * sheet's `insetAdjustment`
  */
-@property (nonatomic, assign) BOOL contentInsetAdjustment;
+@property (nonatomic, assign) BOOL safeAreaInsetAdjustment;
+
+/**
+ * Whether the resolved scrollable is padded by the absolute footer's height —
+ * already gated by the footer position and a plugged scrollable
+ */
+@property (nonatomic, assign) BOOL footerInsetAdjustment;
 
 /**
  * Bottom safe-area inset the footer absorbs as padding — the footer

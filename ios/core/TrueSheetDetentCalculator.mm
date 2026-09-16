@@ -30,9 +30,11 @@
 }
 
 - (CGFloat)autoHeight {
-  // An absolute (floating) header or footer overlaps the content, so it contributes no height
+  // An absolute (floating) header or footer overlaps the content, so it contributes no height —
+  // unless the footer pads the scrollable, then the content ends above it like a relative footer
   CGFloat headerHeight = self.delegate.absoluteHeader ? 0 : [self.delegate.headerHeight floatValue];
-  CGFloat footerHeight = self.delegate.absoluteFooter ? 0 : [self.delegate.footerHeight floatValue];
+  BOOL floatingFooter = self.delegate.absoluteFooter && !self.delegate.footerInsetAdjustment;
+  CGFloat footerHeight = floatingFooter ? 0 : [self.delegate.footerHeight floatValue];
   return [self.delegate.contentHeight floatValue] + headerHeight + footerHeight;
 }
 

@@ -96,7 +96,7 @@ Options for customizing scrollable behavior. Applies to the scrollable provided 
 
 | Property | Type | Description | Default |
 | - | - | - | - |
-| `contentInsetAdjustmentBehavior` | `boolean` | Applies the bottom safe-area inset to the scroll content automatically while the content can scroll. On iOS, sets the scroll view's native [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior) to `automatic`; on Android and Web, the sheet applies the inset itself — parity React Native's iOS-only prop can't provide. Only applies while the sheet's [`insetAdjustment`](configuration#insetadjustment) is `'automatic'`; a relative footer absorbs the inset instead. | `true` |
+| `contentInsetAdjustment` | [`ContentInsetAdjustment`](#contentinsetadjustment) | What the sheet insets the bottom of the scroll content for: the bottom safe-area inset while the content can scroll, and/or the height of an `absolute` [`footer`](configuration#footer) floating over it (which then counts toward the `auto` detent). See [Bottom Safe-Area Inset](../guides/scrolling#bottom-safe-area-inset) and [Footer Inset](../guides/scrolling#footer-inset). | `'automatic'` |
 | `scrollingExpandsSheet` | `boolean` | When `false`, scrolling the content does not expand the sheet to the next detent. Only dragging the grabber or sheet background expands it. Useful for YouTube-style comments sheets. | `true` |
 | `keyboardScrollOffset` | `number` | Additional offset when scrolling to a focused input above the keyboard. | `0` |
 | `keyboardOffset` | `number` | Adjusts the bottom inset applied to the scrollable when the keyboard is shown. Negative values reduce it — pass `-insets.bottom` to cancel out safe-area padding already included in the content's `paddingBottom`. | `0` |
@@ -142,6 +142,19 @@ Options for customizing footer behavior.
 | - | - | - | - |
 | `position` | `'relative' \| 'absolute'` | How the footer participates in the sheet layout. `'relative'` takes up space below the content, pinned to the bottom edge — included in the `auto` detent height but excluded from the `peek` detent height (it's pushed off-screen at peek). `'absolute'` floats over the content, pinned to the bottom edge — excluded from the `auto` detent height but included in the `peek` detent height. | `'relative'` |
 | `keyboardOffset` | `number` | Adjusts how far an `absolute` footer rises when the keyboard opens. Positive values raise it higher; negative values tuck the footer's own bottom padding behind the keyboard instead of leaving a gap. The built-in safe-area inset is skipped automatically while the keyboard is open. A `relative` footer stays in the layout flow behind the keyboard, so this has no effect. | `0` |
+
+## `ContentInsetAdjustment`
+
+What the sheet insets the bottom of a plugged scrollable's content for. Set via [`ScrollableOptions`](#scrollableoptions).
+
+| Value | Description |
+| - | - |
+| `'automatic'` | The bottom safe-area inset while the content can scroll, plus the height of an `absolute` footer floating over the scroll view — the footer then counts toward the `auto` detent. This is the default. |
+| `'safe-area'` | The safe-area inset only — content scrolls under an absolute footer. |
+| `'footer'` | The absolute footer only — you pad for the safe area. |
+| `'never'` | No inset — you pad the content yourself. |
+
+The safe-area inset only applies while the sheet's [`insetAdjustment`](configuration#insetadjustment) is `'automatic'`; a relative footer absorbs it instead. The footer inset is independent of `insetAdjustment` — only the part of the footer overlapping the scroll view is applied, and it stacks with the keyboard inset. See [Scrolling Content](../guides/scrolling#bottom-safe-area-inset).
 
 ## `ScrollEdgeEffect`
 

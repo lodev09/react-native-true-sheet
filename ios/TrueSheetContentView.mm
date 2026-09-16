@@ -30,7 +30,7 @@ using namespace facebook::react;
   CGFloat _appliedKeyboardOffset;
   BOOL _observingTextChanges;
   UIScrollViewContentInsetAdjustmentBehavior _originalInsetAdjustmentBehavior;
-  BOOL _appliedContentInsetAdjustment;
+  BOOL _appliedSafeAreaInsetAdjustment;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -69,29 +69,38 @@ using namespace facebook::react;
   [self clearScrollable];
 }
 
-- (void)setContentInsetAdjustment:(BOOL)contentInsetAdjustment {
-  if (_contentInsetAdjustment == contentInsetAdjustment) {
+- (void)setSafeAreaInsetAdjustment:(BOOL)safeAreaInsetAdjustment {
+  if (_safeAreaInsetAdjustment == safeAreaInsetAdjustment) {
     return;
   }
-  _contentInsetAdjustment = contentInsetAdjustment;
-  [self applyContentInsetAdjustment];
+  _safeAreaInsetAdjustment = safeAreaInsetAdjustment;
+  [self applySafeAreaInsetAdjustment];
+  [self updateBottomInset];
+}
+
+- (void)setFooterInsetAdjustment:(BOOL)footerInsetAdjustment {
+  if (_footerInsetAdjustment == footerInsetAdjustment) {
+    return;
+  }
+  _footerInsetAdjustment = footerInsetAdjustment;
+  [self updateBottomInset];
 }
 
 // Hands the bottom safe-area inset to UIKit — `automatic` only insets while
 // the content can scroll, which the Android counterpart mirrors manually.
-- (void)applyContentInsetAdjustment {
+- (void)applySafeAreaInsetAdjustment {
   if (!_detectedScrollView) {
     return;
   }
 
   UIScrollView *scrollView = _detectedScrollView.scrollView;
-  if (_contentInsetAdjustment && !_appliedContentInsetAdjustment) {
+  if (_safeAreaInsetAdjustment && !_appliedSafeAreaInsetAdjustment) {
     _originalInsetAdjustmentBehavior = scrollView.contentInsetAdjustmentBehavior;
     scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAutomatic;
-    _appliedContentInsetAdjustment = YES;
-  } else if (!_contentInsetAdjustment && _appliedContentInsetAdjustment) {
+    _appliedSafeAreaInsetAdjustment = YES;
+  } else if (!_safeAreaInsetAdjustment && _appliedSafeAreaInsetAdjustment) {
     scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
-    _appliedContentInsetAdjustment = NO;
+    _appliedSafeAreaInsetAdjustment = NO;
   }
 }
 
@@ -169,14 +178,16 @@ using namespace facebook::react;
     [self.delegate contentViewScrollViewDidChange];
   }
 
-  [self updateKeyboardInset];
+  // Layout has settled for the whole tree — the footer overlap (sheet height,
+  // scroll view frame) and the keyboard inset are current here
+  [self updateBottomInset];
 }
 
 #pragma mark - Scrollable
 
 // The scroll indicator follows automatically — UIKit derives its insets from
 // the content inset while `automaticallyAdjustsScrollIndicatorInsets` is set.
-- (void)setKeyboardInset:(CGFloat)inset {
+- (void)setBottomInset:(CGFloat)inset {
   if (!_detectedScrollView)
     return;
 
@@ -189,19 +200,52 @@ using namespace facebook::react;
   _detectedScrollView.scrollView.contentInset = contentInset;
 }
 
-- (void)updateKeyboardInset {
-  CGFloat keyboardHeight = _keyboardObserver.currentHeight;
-  if (_detectedScrollView && keyboardHeight > 0) {
-    [self setKeyboardInset:[self keyboardInsetWithHeight:keyboardHeight]];
+// How much of the absolute footer covers the scroll view — measured from the
+// footer's layout position (pinned to the container's bottom edge; its
+// keyboard rise is a transform) so a short scroll view ending above the footer
+// gets no inset. UIKit stacks the safe area on top of contentInset while the
+// adjustment behavior is automatic — take out the inset baked into the
+// footer's height so the total lands on the footer's top edge. Stays constant
+// across keyboard transitions: the footer drops its inset as it rises, and
+// the baked value drops with it.
+- (CGFloat)footerInset {
+  if (!_footerInsetAdjustment || !self.footerView || !_detectedScrollView) {
+    return 0;
   }
+
+  UIView *container = self.footerView.superview;
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  CGRect scrollFrame = [scrollView convertRect:scrollView.bounds toView:container];
+  CGFloat footerTop = container.bounds.size.height - self.footerView.bounds.size.height;
+
+  CGFloat inset = CGRectGetMaxY(scrollFrame) - footerTop;
+  if (_appliedSafeAreaInsetAdjustment) {
+    inset -= self.footerView.appliedBottomInset;
+  }
+  return MAX(0, inset);
+}
+
+- (CGFloat)keyboardInset {
+  CGFloat keyboardHeight = _keyboardObserver.currentHeight;
+  return keyboardHeight > 0 ? [self keyboardInsetWithHeight:keyboardHeight] : 0;
+}
+
+// Safe to call mid keyboard animation: the target matches the animation's
+// model value (the footer inset doesn't change with the keyboard), so the
+// early-out in setBottomInset: leaves the animation alone.
+- (void)updateBottomInset {
+  if (!_detectedScrollView) {
+    return;
+  }
+  [self setBottomInset:[self footerInset] + [self keyboardInset]];
 }
 
 - (void)clearScrollable {
-  [self setKeyboardInset:0];
+  [self setBottomInset:0];
   _appliedKeyboardOffset = 0;
-  if (_appliedContentInsetAdjustment) {
+  if (_appliedSafeAreaInsetAdjustment) {
     _detectedScrollView.scrollView.contentInsetAdjustmentBehavior = _originalInsetAdjustmentBehavior;
-    _appliedContentInsetAdjustment = NO;
+    _appliedSafeAreaInsetAdjustment = NO;
   }
   _detectedScrollView = nil;
 }
@@ -223,10 +267,10 @@ using namespace facebook::react;
 
   _detectedScrollView = scrollView;
 
-  [self applyContentInsetAdjustment];
+  [self applySafeAreaInsetAdjustment];
 
-  // If keyboard is currently showing, re-apply the keyboard inset to the new ScrollView
-  [self updateKeyboardInset];
+  // Apply the footer inset, and the keyboard inset if it's currently showing
+  [self updateBottomInset];
 }
 
 // Short or nested scroll views can end above the sheet's bottom edge.
@@ -240,7 +284,7 @@ using namespace facebook::react;
 
   // UIKit stacks the safe area on top of contentInset while the adjustment
   // behavior is automatic — take it out so the total lands on the keyboard edge.
-  if (_appliedContentInsetAdjustment) {
+  if (_appliedSafeAreaInsetAdjustment) {
     inset = MAX(0, inset - scrollView.safeAreaInsets.bottom);
   }
 
@@ -249,9 +293,10 @@ using namespace facebook::react;
   CGFloat adjustedInset = MAX(0, inset + self.keyboardOffset);
   _appliedKeyboardOffset = adjustedInset - inset;
 
-  // Content that already fits above the keyboard has nothing to reveal — the
-  // inset would only open blank scroll range below it (huge gap at the bottom).
-  if (scrollView.contentSize.height <= scrollView.bounds.size.height - adjustedInset) {
+  // Content that already fits above the keyboard (and footer) has nothing to
+  // reveal — the inset would only open blank scroll range below it (huge gap
+  // at the bottom).
+  if (scrollView.contentSize.height + [self footerInset] <= scrollView.bounds.size.height - adjustedInset) {
     _appliedKeyboardOffset = 0;
     return 0;
   }
@@ -260,9 +305,10 @@ using namespace facebook::react;
 }
 
 // An absolute footer floats over the viewport's bottom edge — extend the
-// caret target so it clears the footer, not just the keyboard.
+// caret target so it clears the footer, not just the keyboard. Not needed
+// while the footer inset is applied: the visible rect already ends above it.
 - (CGFloat)footerOcclusion {
-  if (self.footerView && _keyboardObserver.viewController.absoluteFooter) {
+  if (self.footerView && _keyboardObserver.viewController.absoluteFooter && [self footerInset] <= 0) {
     return [self.footerView keyboardOcclusionHeight];
   }
   return 0;
@@ -340,15 +386,15 @@ using namespace facebook::react;
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
 
-  CGFloat inset = [self keyboardInsetWithHeight:height];
+  CGFloat inset = [self footerInset] + [self keyboardInsetWithHeight:height];
   [UIView animateWithDuration:duration
     delay:0
     options:curve | UIViewAnimationOptionBeginFromCurrentState
     animations:^{
-      [self setKeyboardInset:inset];
+      [self setBottomInset:inset];
     }
     completion:^(BOOL finished) {
-      [self updateKeyboardInset];
+      [self updateBottomInset];
     }];
 
   // Defer scroll until the next run loop so content insets are applied first
@@ -373,7 +419,7 @@ using namespace facebook::react;
   dispatch_async(dispatch_get_main_queue(), ^{
     // Typing can grow the content (e.g. a multiline input) past the fits-above-
     // the-keyboard threshold — keep the inset in sync before revealing the caret.
-    [self updateKeyboardInset];
+    [self updateBottomInset];
     [self scrollToFocusedCaretAnimated:YES];
   });
 }
@@ -422,7 +468,7 @@ using namespace facebook::react;
                         delay:0
                       options:curve | UIViewAnimationOptionBeginFromCurrentState
                    animations:^{
-                     [self setKeyboardInset:0];
+                     [self setBottomInset:[self footerInset]];
                    }
                    completion:nil];
 }
@@ -435,7 +481,8 @@ using namespace facebook::react;
   [self clearScrollable];
   _state.reset();
   _scrollableHandle = 0;
-  _contentInsetAdjustment = NO;
+  _safeAreaInsetAdjustment = NO;
+  _footerInsetAdjustment = NO;
   _lastReportedNaturalHeight = 0;
 }
 

@@ -86,26 +86,23 @@ On iPad, the sheet is displayed as a floating modal, so no inset is applied. Set
 
 By default, the footer takes up space below the content and its height is included in the [`auto`](../reference/types#sheetdetent) detent calculation. Set `footerOptions.position` to `'absolute'` to float the footer over the content instead — it stays pinned to the bottom edge but no longer adds to the `auto` detent height. An absolute footer absorbs the bottom safe-area inset the same way a relative one does — see [Safe Area Handling](#safe-area-handling).
 
-```tsx {5-5}
+```tsx {5-6}
 const App = () => {
   return (
     <TrueSheet
       detents={['auto']}
+      scrollableRef={scrollableRef}
       footerOptions={{ position: 'absolute' }}
       footer={<Fab />}
     >
-      <FlatList
-        data={items}
-        contentContainerStyle={{ paddingBottom: FOOTER_HEIGHT }}
-        renderItem={({ item }) => <ItemRow item={item} />}
-      />
+      <FlatList ref={scrollableRef} data={items} renderItem={({ item }) => <ItemRow item={item} />} />
     </TrueSheet>
   )
 }
 ```
 
 :::tip
-Since the footer overlaps the content, add bottom padding to your content (e.g. `contentContainerStyle`) so it ends above the footer.
+Since the footer overlaps the content, a plugged [`scrollableRef`](../reference/configuration#scrollableref) is padded by the footer's measured height automatically — the last item scrolls into view above the footer, and the footer counts toward the `auto` detent. See [Footer Inset](scrolling#footer-inset). For non-scrolling content, add bottom padding yourself so it ends above the footer.
 :::
 
 :::info

@@ -5,7 +5,7 @@ import type { TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { Button } from '../components/Button';
 import { DemoContent } from '../components/DemoContent';
 import { Input } from '../components/Input';
-import { FOOTER_HEIGHT, GAP, HEADER_HEIGHT, LIGHT_GRAY, SPACING, times } from '../utils';
+import { GAP, HEADER_HEIGHT, LIGHT_GRAY, SPACING, times } from '../utils';
 
 interface ScrollableSheetContentProps {
   // Typed as the sheet's own prop type — the app that owns the ref hands it to
@@ -47,9 +47,8 @@ export const ScrollableSheetContent = ({
 const styles = StyleSheet.create({
   content: {
     padding: SPACING,
-    // Clear the absolute header and footer
+    // Clear the absolute header; the absolute footer's inset is applied natively
     paddingTop: HEADER_HEIGHT + SPACING,
-    paddingBottom: FOOTER_HEIGHT + SPACING,
     gap: GAP,
   },
   sheetTitle: {

@@ -6,7 +6,6 @@ import {
   BORDER_RADIUS,
   DARK,
   DARK_GRAY,
-  FOOTER_HEIGHT,
   GAP,
   GRAY,
   HEADER_HEIGHT,
@@ -114,11 +113,10 @@ const styles = StyleSheet.create({
       ios: DARK_GRAY,
     }),
   },
+  // The footer and safe-area insets are applied natively (contentInsetAdjustment)
   content: {
     padding: SPACING,
     paddingTop: HEADER_HEIGHT + SPACING,
-    // The safe-area inset is applied natively (contentInsetAdjustmentBehavior)
-    paddingBottom: FOOTER_HEIGHT + SPACING,
   },
   card: {
     padding: SPACING,

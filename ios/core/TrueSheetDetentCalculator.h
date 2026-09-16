@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL absoluteHeader;
 @property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
 @property (nonatomic, readonly) BOOL absoluteFooter;
+@property (nonatomic, readonly) BOOL footerInsetAdjustment;
 @property (nonatomic, strong, readonly, nullable) NSNumber *peekContentHeight;
 
 @end

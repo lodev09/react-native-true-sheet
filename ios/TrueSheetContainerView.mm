@@ -32,7 +32,7 @@ using namespace facebook::react;
 
 - (instancetype)init {
   if (self = [super init]) {
-    _contentInsetAdjustment = YES;
+    _contentInsetAdjustment = TrueSheetViewContentInsetAdjustment::Automatic;
     _keyboardScrollOffset = 0;
     _keyboardOffset = 0;
     _scrollingExpandsSheet = YES;
@@ -40,6 +40,16 @@ using namespace facebook::react;
     _bottomScrollEdgeEffect = TrueSheetViewBottomScrollEdgeEffect::Hidden;
   }
   return self;
+}
+
+- (BOOL)safeAreaInsetAdjustment {
+  return _contentInsetAdjustment == TrueSheetViewContentInsetAdjustment::Automatic ||
+         _contentInsetAdjustment == TrueSheetViewContentInsetAdjustment::SafeArea;
+}
+
+- (BOOL)footerInsetAdjustment {
+  return _contentInsetAdjustment == TrueSheetViewContentInsetAdjustment::Automatic ||
+         _contentInsetAdjustment == TrueSheetViewContentInsetAdjustment::Footer;
 }
 
 @end
@@ -153,10 +163,16 @@ using namespace facebook::react;
   _contentView.keyboardOffset = scrollableOptions ? scrollableOptions.keyboardOffset : 0;
 }
 
+- (void)setFooterInsetAdjustment:(BOOL)footerInsetAdjustment {
+  _footerInsetAdjustment = footerInsetAdjustment;
+  _contentView.footerInsetAdjustment = footerInsetAdjustment;
+}
+
 - (void)setupScrollable {
   if (_contentView) {
     _contentView.scrollableHandle = _scrollableHandle;
-    _contentView.contentInsetAdjustment = _contentInsetAdjustment;
+    _contentView.safeAreaInsetAdjustment = _safeAreaInsetAdjustment;
+    _contentView.footerInsetAdjustment = _footerInsetAdjustment;
     [_contentView setupScrollable];
     [_contentView applyScrollEdgeEffects:_scrollableOptions];
     if (@available(iOS 26.0, *)) {
@@ -202,6 +218,7 @@ using namespace facebook::react;
     _contentView = (TrueSheetContentView *)childComponentView;
     _contentView.delegate = self;
     _contentView.footerView = _footerView;
+    _contentView.footerInsetAdjustment = _footerInsetAdjustment;
 
     // Children mount bottom-up, so the content subtree is complete here.
     // Late-mounted peek views attach themselves instead (see TrueSheetPeekView).
@@ -283,6 +300,7 @@ using namespace facebook::react;
 
 - (void)footerViewDidChangeSize:(CGSize)newSize {
   [self.delegate containerViewFooterDidChangeSize:newSize];
+  [_contentView updateBottomInset];
   if (@available(iOS 26.0, *)) {
     [self setupEdgeInteractions];
   }

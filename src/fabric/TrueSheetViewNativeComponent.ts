@@ -35,7 +35,7 @@ type BlurOptionsType = Readonly<{
 type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
 
 type ScrollableOptionsType = Readonly<{
-  contentInsetAdjustmentBehavior?: WithDefault<boolean, true>;
+  contentInsetAdjustment?: WithDefault<'automatic' | 'safe-area' | 'footer' | 'never', 'automatic'>;
   keyboardScrollOffset?: WithDefault<Double, 0>;
   keyboardOffset?: WithDefault<Double, 0>;
   scrollingExpandsSheet?: WithDefault<boolean, true>;

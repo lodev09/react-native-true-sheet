@@ -163,30 +163,42 @@ export interface AccessibilityOptions {
 export type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
 
 /**
+ * What the sheet insets the bottom of a plugged scrollable's content for.
+ * See `ScrollableOptions.contentInsetAdjustment`.
+ */
+export type ContentInsetAdjustment = 'automatic' | 'safe-area' | 'footer' | 'never';
+
+/**
  * Options for scrollable behavior.
  */
 export interface ScrollableOptions {
   /**
-   * Applies the bottom safe-area inset to the scroll content automatically
-   * while the content can scroll, so the last item clears the home indicator
-   * (iOS) and navigation bar (Android).
+   * What the sheet insets the bottom of the scroll content for, so the last
+   * item clears whatever covers the scroll view's bottom edge.
    *
-   * - **iOS**: Sets the scroll view's native
+   * - `'automatic'`: The bottom safe-area inset while the content can scroll
+   *   (home indicator on iOS, navigation bar on Android), plus the height of
+   *   an `absolute` footer floating over the scroll view. The footer then
+   *   counts toward the `auto` detent so the content ends above it.
+   * - `'safe-area'`: The safe-area inset only — content scrolls under an
+   *   absolute footer.
+   * - `'footer'`: The absolute footer only — you pad for the safe area.
+   * - `'never'`: No inset — you pad the content yourself.
+   *
+   * The safe-area inset only applies while the sheet's `insetAdjustment` is
+   * `'automatic'`; a relative footer absorbs it instead. The footer inset is
+   * independent of `insetAdjustment` — it only covers the part of the footer
+   * overlapping the scroll view, and stacks with the keyboard inset while the
+   * footer rises above the keyboard.
+   *
+   * On iOS, the safe-area inset sets the scroll view's native
    * [`contentInsetAdjustmentBehavior`](https://developer.apple.com/documentation/uikit/uiscrollview/contentinsetadjustmentbehavior)
-   * to `automatic` while it's plugged into the sheet — no need to set React
-   * Native's iOS-only prop yourself.
-   * - **Android**: Pads the scroll content with the bottom window inset,
-   * mirroring iOS's `automatic` behavior — parity React Native's iOS-only
-   * prop can't provide.
-   * - **Web**: Lifts the content above the safe area
-   * (`env(safe-area-inset-bottom)`).
+   * to `automatic` while it's plugged into the sheet; Android and Web apply
+   * the inset themselves.
    *
-   * Only applies while the sheet's `insetAdjustment` is `'automatic'`. When
-   * the sheet has a relative footer, the footer absorbs the inset instead.
-   *
-   * @default true
+   * @default 'automatic'
    */
-  contentInsetAdjustmentBehavior?: boolean;
+  contentInsetAdjustment?: ContentInsetAdjustment;
 
   /**
    * Extra offset when scrolling to the focused input when keyboard appears.

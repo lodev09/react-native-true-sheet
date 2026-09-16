@@ -11,6 +11,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [initialDetentIndex not working from deep link (iOS)](#initialdetentindex-not-working-from-deep-link-ios)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
+- [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
 - [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
 - [Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)](#sheet-screen-crashes-screencontainer-is-not-attached-under-reactrootview-android)
 - ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
@@ -118,7 +119,15 @@ useFocusEffect(
 
 **Cause:** v4 handles the bottom safe-area inset natively — the footer absorbs it as padding, and a plugged scrollable gets it while the content can scroll. Manual `useSafeAreaInsets()` padding gets applied twice.
 
-**Fix:** Remove manual safe-area padding from the footer and scroll content. To manage it yourself instead, opt out with `scrollableOptions={{ contentInsetAdjustmentBehavior: false }}` (scrollable) or `insetAdjustment="never"` (whole sheet).
+**Fix:** Remove manual safe-area padding from the footer and scroll content. To manage it yourself instead, opt out with `scrollableOptions={{ contentInsetAdjustment: 'never' }}` (scrollable) or `insetAdjustment="never"` (whole sheet).
+
+## Last scroll item hidden behind an absolute footer
+
+**Symptom:** The end of a `ScrollView`/`FlatList` sits under a `footerOptions={{ position: 'absolute' }}` footer and can't be scrolled into view.
+
+**Cause:** An absolute footer floats over the content and takes no layout space, so the scroll view extends behind it. The sheet only pads a scrollable it knows about.
+
+**Fix:** Pass the scroll view via `scrollableRef` and keep `contentInsetAdjustment` at `'automatic'` (default) or `'footer'` — the scroll content is padded by the measured footer height and the footer counts toward the `'auto'` detent. Remove any hard-coded `paddingBottom: FOOTER_HEIGHT` from `contentContainerStyle`, or it doubles up.
 
 ## Overlays render behind the sheet
 

@@ -62,6 +62,11 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     }
 
   var absoluteFooter: Boolean = false
+    set(value) {
+      if (field == value) return
+      field = value
+      contentView?.updateContentInset()
+    }
 
   /**
    * Bottom safe-area inset the footer absorbs as padding — the footer
@@ -217,6 +222,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override val footerKeyboardOcclusion: Int
     get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
 
+  override val absoluteFooterHeight: Int
+    get() = if (absoluteFooter) footerView?.height ?: 0 else 0
+
   override val hasRelativeFooter: Boolean
     get() = footerView != null && !absoluteFooter
 
@@ -236,7 +244,8 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override fun footerViewDidChangeSize(width: Int, height: Int) {
     footerHeight = height
     delegate?.containerViewFooterDidChangeSize(width, height)
-    // A relative footer takes over the bottom inset — drop the scrollable's
+    // A relative footer takes over the bottom inset — drop the scrollable's;
+    // an absolute one may pad the scrollable by its height
     contentView?.updateContentInset()
   }
 

@@ -332,6 +332,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override var absoluteFooter: Boolean = false
 
+  override val footerInsetAdjustment: Boolean
+    get() = absoluteFooter && scrollableHandle > 0 && scrollableOptions?.contentInsetAdjustment?.footer != false
+
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
