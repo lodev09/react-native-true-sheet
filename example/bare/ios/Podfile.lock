@@ -1964,7 +1964,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNReanimated (4.5.0):
+  - RNReanimated (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1986,36 +1986,12 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.5.0)
-    - RNReanimated/common (= 4.5.0)
-    - RNReanimated/view (= 4.5.0)
+    - RNReanimated/apple (= 4.5.1)
+    - RNReanimated/common (= 4.5.1)
+    - RNReanimated/view (= 4.5.1)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.5.0):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - RNWorklets
-    - Yoga
-  - RNReanimated/common (4.5.0):
+  - RNReanimated/apple (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2039,7 +2015,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/view (4.5.0):
+  - RNReanimated/common (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2063,7 +2039,31 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNScreens (4.25.2):
+  - RNReanimated/view (4.5.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
+  - RNScreens (4.26.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2085,9 +2085,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNScreens/common (= 4.25.2)
+    - RNScreens/common (= 4.26.2)
     - Yoga
-  - RNScreens/common (4.25.2):
+  - RNScreens/common (4.26.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2132,7 +2132,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.10.0):
+  - RNWorklets (0.10.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2154,10 +2154,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.10.0)
-    - RNWorklets/common (= 0.10.0)
+    - RNWorklets/apple (= 0.10.1)
+    - RNWorklets/common (= 0.10.1)
     - Yoga
-  - RNWorklets/apple (0.10.0):
+  - RNWorklets/apple (0.10.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2180,7 +2180,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.10.0):
+  - RNWorklets/common (0.10.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2544,10 +2544,10 @@ SPEC CHECKSUMS:
   ReactCommon: d5c1bb4427bf51c443de5926aac332c89ddd9363
   ReactNativeDependencies: fa0a54b3f5319ae0e3b9aff32bfee7a424b88e66
   RNGestureHandler: 92172e79df6e88e0e93b6341f9dcd8b5a02746ba
-  RNReanimated: a9bf68fb5f19ce1c363b7d1413dcf8ee323185b8
-  RNScreens: 991cc417cd396602a6cf59a42139e5a9d91462a9
+  RNReanimated: fcf6a8cdd698fb09a811a8d6c5bcfe36575d965d
+  RNScreens: 7118cd7715c226856125b5bece3c4d9abec90356
   RNTrueSheet: 9d74f75a9a0dbfd8d92474afada2f646083b7f85
-  RNWorklets: ae7f2b95d75b903387e6359583f2fd67bc9a93ff
+  RNWorklets: 43af89f696342f91118a2f1f3a879056e2f47331
   Yoga: fe50ab299e578f397fef753cf309c6703a4db29b
 
 PODFILE CHECKSUM: 40a3e6176465eb4ad43fac09df7bfc62b131b80b
