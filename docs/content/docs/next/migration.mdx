@@ -208,6 +208,23 @@ import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigat
 See the [Navigation guide](guides/navigation#expo-router) for more details.
 :::
 
+### 9. `backgroundColor` No Longer Disables Liquid Glass
+
+On iOS 26+, `backgroundColor` now paints over the [Liquid Glass](guides/liquid-glass) background instead of replacing it. Opaque colors look the same as before. A translucent color now tints the glass instead of rendering a see-through flat color. To get the v3 flat background, set the new `glass` prop to `false`.
+
+```tsx
+// ❌ v3 — backgroundColor removes the glass
+<TrueSheet backgroundColor="#ffffff" />
+
+// ✅ v4 — same flat result
+<TrueSheet backgroundColor="#ffffff" glass={false} />
+
+// ✅ v4 — tinted glass
+<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)" />
+```
+
+`backgroundBlur` still removes the glass on its own.
+
 ## New Features in v4
 
 ### 1. `auto` Detent with Scrollables
@@ -277,6 +294,7 @@ React Native's element inspector now works inside a presented sheet. Open the de
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers and scroll content — both are handled natively
+   - Add `glass={false}` to sheets with a translucent `backgroundColor` that should stay flat on iOS 26+
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

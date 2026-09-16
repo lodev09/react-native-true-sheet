@@ -575,6 +575,7 @@ export class TrueSheet
       dimmedDetentIndex,
       backgroundBlur,
       blurOptions,
+      glass = true,
       cornerRadius,
       maxContentHeight,
       maxContentWidth,
@@ -666,6 +667,7 @@ export class TrueSheet
         detents={resolvedDetents}
         backgroundBlur={backgroundBlur}
         blurOptions={blurOptions}
+        glass={glass}
         backgroundColor={backgroundColor}
         cornerRadius={cornerRadius}
         grabber={grabber}

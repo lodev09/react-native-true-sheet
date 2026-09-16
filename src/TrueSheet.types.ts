@@ -474,8 +474,21 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * Main sheet background color.
    * Uses system default when not provided.
+   *
+   * On iOS 26+, paints over the Liquid Glass background.
+   * Use a translucent color to tint the glass, or set `glass` to `false` for a flat color.
    */
   backgroundColor?: ColorValue;
+
+  /**
+   * Keeps the Liquid Glass background behind `backgroundColor`.
+   * Set to `false` to remove the glass and render a flat background.
+   * `backgroundBlur` always removes the glass.
+   *
+   * @platform ios 26.1+
+   * @default true
+   */
+  glass?: boolean;
 
   /**
    * The sheet corner radius.

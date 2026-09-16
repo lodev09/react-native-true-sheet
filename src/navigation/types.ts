@@ -216,6 +216,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'dimmedDetentIndex'
   | 'backgroundBlur'
   | 'blurOptions'
+  | 'glass'
   | 'maxContentHeight'
   | 'maxContentWidth'
   | 'presentation'

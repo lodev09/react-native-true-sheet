@@ -56,8 +56,22 @@ The sheet's background color. Uses the system default when not provided.
 :::info
 When not provided, iOS 26+ uses the default [Liquid Glass](../guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
 
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
+On iOS 26+, this paints over the [Liquid Glass](../guides/liquid-glass) background. Use a translucent color to tint the glass, or set [`glass`](#glass) to `false` for a flat color.
 :::
+
+## `glass`
+
+Keeps the [Liquid Glass](../guides/liquid-glass) background behind [`backgroundColor`](#backgroundcolor). Set to `false` to remove the glass and render a flat background. [`backgroundBlur`](#backgroundblur) always removes the glass.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ 26.1+ | | |
+
+```tsx
+<TrueSheet backgroundColor="#ffffff" glass={false}>
+  <View />
+</TrueSheet>
+```
 
 ## `backgroundBlur`
 

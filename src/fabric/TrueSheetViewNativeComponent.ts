@@ -117,6 +117,7 @@ export interface NativeProps extends ViewProps {
   blurOptions?: BlurOptionsType;
 
   // Boolean properties - match defaults from TrueSheet.types.ts
+  glass?: WithDefault<boolean, true>;
   grabber?: WithDefault<boolean, true>;
   grabberOptions?: GrabberOptionsType;
   accessibilityOptions?: AccessibilityOptionsType;

@@ -49,7 +49,8 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26.1+, setting this overrides Liquid Glass. Android default is Material 3 `colorSurfaceContainerLow` (adapts to light/dark) |
+| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26+ it paints over Liquid Glass — translucent colors tint the glass. Android default is Material 3 `colorSurfaceContainerLow` (adapts to light/dark) |
+| `glass` | `boolean` | `true` | 🍎 26.1+ | Keep Liquid Glass behind `backgroundColor`. `false` renders a flat background. `backgroundBlur` always removes glass |
 | `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius. iOS uses the device's native radius; Android defaults to `16` (Material 3) |
 | `elevation` | `number` | 4 | 🤖🌐 | Shadow depth |
 | `style` | `ViewStyle` | — | 🍎🤖🌐 | Content style override. Content wraps its children's height by default — pass `flex: 1` to fill the sheet's visible height per detent |

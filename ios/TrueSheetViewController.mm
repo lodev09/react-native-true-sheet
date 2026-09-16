@@ -1412,7 +1412,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
     if (!self.isDesignCompatibilityMode) {
-      if (self.backgroundColor || hasBlur) {
+      if (!self.glass || hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
       } else {
         self.sheet.backgroundEffect = nil;
