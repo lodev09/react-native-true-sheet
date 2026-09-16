@@ -1513,7 +1513,20 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (BOOL)isAnchored {
-  return self.anchor == TrueSheetViewAnchor::Leading || self.anchor == TrueSheetViewAnchor::Trailing;
+  return self.placement == TrueSheetViewPlacement::Leading || self.placement == TrueSheetViewPlacement::Trailing;
+}
+
+- (UISheetPresentationControllerPlacement)preferredPlacement API_AVAILABLE(ios(27.0)) {
+  switch (self.placement) {
+    case TrueSheetViewPlacement::Leading:
+      return UISheetPresentationControllerPlacementLeading;
+    case TrueSheetViewPlacement::Center:
+      return UISheetPresentationControllerPlacementCenter;
+    case TrueSheetViewPlacement::Trailing:
+      return UISheetPresentationControllerPlacementTrailing;
+    case TrueSheetViewPlacement::Automatic:
+      return UISheetPresentationControllerPlacementAutomatic;
+  }
 }
 
 - (void)setupAnchorViewInView:(UIView *)parentView {
@@ -1523,20 +1536,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_anchorView removeFromSuperview];
   _anchorView = nil;
 
-  if (!self.isAnchored) {
-    self.sheetPresentationController.sourceView = nil;
-    if (@available(iOS 27.0, *)) {
-      self.sheetPresentationController.preferredPlacement = UISheetPresentationControllerPlacementAutomatic;
-    }
-    return;
-  }
-
   // iOS 27 exposes native placement. `sourceView` must stay nil since it overrides `preferredPlacement`.
   if (@available(iOS 27.0, *)) {
     self.sheetPresentationController.sourceView = nil;
-    self.sheetPresentationController.preferredPlacement = self.anchor == TrueSheetViewAnchor::Trailing
-                                                            ? UISheetPresentationControllerPlacementTrailing
-                                                            : UISheetPresentationControllerPlacementLeading;
+    self.sheetPresentationController.preferredPlacement = [self preferredPlacement];
+    return;
+  }
+
+  // Pre-27 has no explicit center, so `center` falls back to the system default like `automatic`.
+  if (!self.isAnchored) {
+    self.sheetPresentationController.sourceView = nil;
     return;
   }
 
@@ -1546,7 +1555,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [parentView addSubview:_anchorView];
 
   NSLayoutAnchor *horizontalAnchor =
-    self.anchor == TrueSheetViewAnchor::Trailing ? parentView.trailingAnchor : parentView.leadingAnchor;
+    self.placement == TrueSheetViewPlacement::Trailing ? parentView.trailingAnchor : parentView.leadingAnchor;
 
   [NSLayoutConstraint activateConstraints:@[
     [_anchorView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor],

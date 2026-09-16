@@ -564,27 +564,31 @@ export interface TrueSheetProps extends ViewProps {
   maxContentWidth?: number;
 
   /**
-   * Anchors the sheet to the specified horizontal edge.
+   * Horizontal placement of the sheet within the screen.
    *
-   * - `'center'`: Centers the sheet horizontally (default).
-   * - `'leading'`: Anchors the sheet to the leading edge (left in LTR, right in RTL).
-   * - `'trailing'`: Anchors the sheet to the trailing edge (right in LTR, left in RTL).
+   * - `'automatic'`: The system decides (default). Centered on Android, Web, and iOS 26 and below.
+   * - `'center'`: Centers the sheet horizontally.
+   * - `'leading'`: Places the sheet on the leading edge (left in LTR, right in RTL).
+   * - `'trailing'`: Places the sheet on the trailing edge (right in LTR, left in RTL).
+   *
+   * `'automatic'` and `'center'` only differ on iOS 27+, where they map to
+   * `UISheetPresentationController.preferredPlacement`.
    *
    * Ignored on phones in portrait orientation.
    *
-   * @default 'center'
+   * @default 'automatic'
    */
-  anchor?: 'leading' | 'center' | 'trailing';
+  placement?: 'automatic' | 'leading' | 'center' | 'trailing';
 
   /**
    * The offset from the screen edge.
-   * Only applies when `anchor` is `'leading'` or `'trailing'`.
+   * Only applies when `placement` is `'leading'` or `'trailing'`.
    *
    * @platform android
    * @platform web
    * @default 16
    */
-  anchorOffset?: number;
+  placementOffset?: number;
 
   /**
    * Controls how the sheet adjusts its height for system insets (safe area).

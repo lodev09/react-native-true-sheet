@@ -171,7 +171,7 @@ const MapScreenInner = ({
         footer={<Footer />}
         footerStyle={styles.footer}
         initialDetentIndex={0}
-        anchor={anchorLeft ? 'leading' : 'center'}
+        placement={anchorLeft ? 'leading' : 'automatic'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
         backgroundColor={`${BLUE}33`}
@@ -242,7 +242,7 @@ const MapScreenInner = ({
         <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
         {isTablet && (
           <ButtonGroup>
-            <Button text="Anchor Left" onPress={() => setAnchorLeft(true)} />
+            <Button text="Leading" onPress={() => setAnchorLeft(true)} />
             <Button text="Center" onPress={() => setAnchorLeft(false)} />
           </ButtonGroup>
         )}

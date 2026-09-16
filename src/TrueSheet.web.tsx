@@ -40,7 +40,7 @@ import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheet
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
-  DEFAULT_ANCHOR_OFFSET,
+  DEFAULT_PLACEMENT_OFFSET,
   DEFAULT_CORNER_RADIUS,
   DEFAULT_DETACHED_OFFSET,
   DEFAULT_FORM_SHEET_HEIGHT_RATIO,
@@ -78,8 +78,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     backgroundColor: backgroundColorProp,
     maxContentHeight,
     maxContentWidth,
-    anchor = 'center',
-    anchorOffset = DEFAULT_ANCHOR_OFFSET,
+    placement = 'automatic',
+    placementOffset = DEFAULT_PLACEMENT_OFFSET,
     scrollableRef,
     scrollableOptions,
     grabber = true,
@@ -1184,7 +1184,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   //   `maxContentWidth` is ignored ('form' is absolute).
   // - presentation='page' → `maxContentWidth` (any viewport) or
   //   DEFAULT_MAX_WIDTH (tablet/landscape readability cap).
-  // Detached without a width constraint applies anchorOffset on both edges so
+  // Detached without a width constraint applies placementOffset on both edges so
   // the floating card breathes from the viewport sides.
   const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
     // Mobile portrait ignores width sizing entirely (matches iOS/Android:
@@ -1209,11 +1209,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       marginInlineStart = 'auto';
       marginInlineEnd = 'auto';
     } else if (maxWidth == null) {
-      marginInlineStart = anchorOffset;
-      marginInlineEnd = anchorOffset;
+      marginInlineStart = placementOffset;
+      marginInlineEnd = placementOffset;
     } else {
-      marginInlineStart = anchor === 'leading' ? anchorOffset : 'auto';
-      marginInlineEnd = anchor === 'trailing' ? anchorOffset : 'auto';
+      marginInlineStart = placement === 'leading' ? placementOffset : 'auto';
+      marginInlineEnd = placement === 'trailing' ? placementOffset : 'auto';
     }
 
     if (maxWidth != null) next.maxWidth = maxWidth;
@@ -1225,8 +1225,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     isFormSheet,
     maxContentWidth,
     presentation,
-    anchor,
-    anchorOffset,
+    placement,
+    placementOffset,
     effectiveDetached,
     dropShadow,
   ]);

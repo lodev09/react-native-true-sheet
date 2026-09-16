@@ -579,8 +579,8 @@ export class TrueSheet
       cornerRadius,
       maxContentHeight,
       maxContentWidth,
-      anchor = 'center',
-      anchorOffset,
+      placement = 'automatic',
+      placementOffset,
       scrollableOptions,
       footerOptions,
       presentation = 'page',
@@ -681,8 +681,8 @@ export class TrueSheet
         draggable={draggable}
         maxContentHeight={maxContentHeight}
         maxContentWidth={maxContentWidth}
-        anchor={anchor}
-        anchorOffset={anchorOffset}
+        placement={placement}
+        placementOffset={placementOffset}
         scrollableHandle={this.state.scrollableHandle ?? -1}
         scrollableOptions={scrollableOptions}
         headerOptions={headerOptions}

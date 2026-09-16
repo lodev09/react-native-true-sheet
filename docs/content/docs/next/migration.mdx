@@ -225,16 +225,18 @@ On iOS 26+, `backgroundColor` now paints over the [Liquid Glass](guides/liquid-g
 
 `backgroundBlur` still removes the glass on its own.
 
-### 10. `anchor` Uses `leading` / `trailing`
+### 10. `anchor` Renamed to `placement`
 
-The `anchor` values `'left'` and `'right'` are renamed to `'leading'` and `'trailing'`. Native side sheets already followed the layout direction, so the new names match what the sheet does — `'leading'` is the left edge in LTR and the right edge in RTL. Web now follows the layout direction too.
+`anchor` is now `placement` and `anchorOffset` is now `placementOffset`. The values `'left'` and `'right'` are renamed to `'leading'` and `'trailing'` — native side sheets already followed the layout direction, so the new names match what the sheet does. Web now follows the layout direction too.
+
+The default is the new `'automatic'` value, which lets the system decide. `'center'` is still available as an explicit request. The two only differ on iOS 27+, where they map to `UISheetPresentationController`'s `preferredPlacement`. Everywhere else they both center the sheet, so the default behavior is unchanged.
 
 ```tsx
 // ❌ v3
-<TrueSheet anchor="left" maxContentWidth={400} />
+<TrueSheet anchor="left" anchorOffset={24} maxContentWidth={400} />
 
 // ✅ v4
-<TrueSheet anchor="leading" maxContentWidth={400} />
+<TrueSheet placement="leading" placementOffset={24} maxContentWidth={400} />
 ```
 
 :::tip
@@ -311,7 +313,7 @@ React Native's element inspector now works inside a presented sheet. Open the de
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers and scroll content — both are handled natively
    - Add `glass={false}` to sheets with a translucent `backgroundColor` that should stay flat on iOS 26+
-   - Rename `anchor="left"` / `anchor="right"` to `anchor="leading"` / `anchor="trailing"`
+   - Rename `anchor` to `placement` and `anchorOffset` to `placementOffset`, with `"left"` / `"right"` becoming `"leading"` / `"trailing"`
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

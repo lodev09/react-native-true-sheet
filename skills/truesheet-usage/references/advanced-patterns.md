@@ -316,22 +316,23 @@ await dismiss('my-sheet')
 
 ## Side sheets
 
-Anchor a sheet to the leading or trailing edge (follows layout direction). Useful for tablet layouts or navigation drawers.
+Place a sheet on the leading or trailing edge (follows layout direction). Useful for tablet layouts or navigation drawers.
 
 ```tsx
 <TrueSheet
-  anchor="leading"
+  placement="leading"
   detents={['auto', 1]}
   maxContentWidth={400}
-  anchorOffset={16}
+  placementOffset={16}
 >
   <SideMenu />
 </TrueSheet>
 ```
 
+- Default `'automatic'` lets the system decide; `'center'` is explicit. They only differ on iOS 27+ (`preferredPlacement`) — elsewhere both center the sheet
 - On iOS, the system controls the side margins (`preferredPlacement` on iOS 27+, `sourceView` before)
-- On phones in portrait, anchor is ignored — the sheet is always full-width
-- `anchorOffset` applies on Android and Web only
+- On phones in portrait, placement is ignored — the sheet is always full-width
+- `placementOffset` applies on Android and Web only
 
 ---
 
@@ -511,16 +512,16 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 <TrueSheet backgroundColor="#ffffff" glass={false}>
 ```
 
-### 7. `anchor` `'left'`/`'right'` → `'leading'`/`'trailing'`
+### 7. `anchor` → `placement`
 
-Names now match behavior — native side sheets already followed layout direction (RTL flips them). Web follows it too.
+`anchor`→`placement`, `anchorOffset`→`placementOffset`, `'left'`/`'right'`→`'leading'`/`'trailing'`. Names now match behavior — native side sheets already followed layout direction (RTL flips them). Web follows it too. New default `'automatic'` lets the system decide; only differs from `'center'` on iOS 27+.
 
 ```tsx
 // ❌ v3
-<TrueSheet anchor="left" maxContentWidth={400}>
+<TrueSheet anchor="left" anchorOffset={24} maxContentWidth={400}>
 
 // ✅ v4
-<TrueSheet anchor="leading" maxContentWidth={400}>
+<TrueSheet placement="leading" placementOffset={24} maxContentWidth={400}>
 ```
 
 ### New in v4

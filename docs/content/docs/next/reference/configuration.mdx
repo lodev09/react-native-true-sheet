@@ -149,25 +149,29 @@ On Android and Web, the sheet defaults to a maximum width of `640dp`. Setting th
 This prop is ignored on phones in portrait orientation — the sheet always spans the full width.
 :::
 
-## `anchor`
+## `placement`
 
-Anchors the sheet to the specified horizontal edge. `'leading'` and `'trailing'` follow the layout direction (left/right in LTR, right/left in RTL).
+Horizontal placement of the sheet. `'leading'` and `'trailing'` follow the layout direction (left/right in LTR, right/left in RTL).
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `'leading' \| 'center' \| 'trailing'` | `'center'` | ✅ | ✅ | ✅ |
+| `'automatic' \| 'leading' \| 'center' \| 'trailing'` | `'automatic'` | ✅ | ✅ | ✅ |
 
 :::info
-On iOS 27+, the sheet uses the native `preferredPlacement` API. Earlier versions use `sourceView`. System-defined margins prevent fully flush edge attachment.
+`'automatic'` lets the system decide. It only differs from `'center'` on iOS 27+, where both map to `UISheetPresentationController`'s native `preferredPlacement`. On Android, Web, and iOS 26 and below, `'automatic'` and `'center'` both center the sheet.
+:::
+
+:::info
+On iOS 26 and below, edge placement uses `sourceView`. System-defined margins prevent fully flush edge attachment.
 :::
 
 :::note
 This prop is ignored on phones in portrait orientation.
 :::
 
-## `anchorOffset`
+## `placementOffset`
 
-The offset from the screen edge. Only applies when [`anchor`](#anchor) is `'leading'` or `'trailing'`.
+The offset from the screen edge. Only applies when [`placement`](#placement) is `'leading'` or `'trailing'`.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
