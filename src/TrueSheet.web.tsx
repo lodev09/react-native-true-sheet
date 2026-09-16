@@ -1203,22 +1203,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (dropShadow) next.filter = dropShadow;
     if (!needsMargins) return next;
 
-    let marginLeft: number | string;
-    let marginRight: number | string;
+    let marginInlineStart: number | string;
+    let marginInlineEnd: number | string;
     if (isFormSheet) {
-      marginLeft = 'auto';
-      marginRight = 'auto';
+      marginInlineStart = 'auto';
+      marginInlineEnd = 'auto';
     } else if (maxWidth == null) {
-      marginLeft = anchorOffset;
-      marginRight = anchorOffset;
+      marginInlineStart = anchorOffset;
+      marginInlineEnd = anchorOffset;
     } else {
-      marginLeft = anchor === 'left' ? anchorOffset : 'auto';
-      marginRight = anchor === 'right' ? anchorOffset : 'auto';
+      marginInlineStart = anchor === 'leading' ? anchorOffset : 'auto';
+      marginInlineEnd = anchor === 'trailing' ? anchorOffset : 'auto';
     }
 
     if (maxWidth != null) next.maxWidth = maxWidth;
-    next.marginLeft = marginLeft;
-    next.marginRight = marginRight;
+    next.marginInlineStart = marginInlineStart;
+    next.marginInlineEnd = marginInlineEnd;
     return next;
   }, [
     isLandscapeOrTablet,

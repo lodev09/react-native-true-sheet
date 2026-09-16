@@ -225,6 +225,22 @@ On iOS 26+, `backgroundColor` now paints over the [Liquid Glass](guides/liquid-g
 
 `backgroundBlur` still removes the glass on its own.
 
+### 10. `anchor` Uses `leading` / `trailing`
+
+The `anchor` values `'left'` and `'right'` are renamed to `'leading'` and `'trailing'`. Native side sheets already followed the layout direction, so the new names match what the sheet does — `'leading'` is the left edge in LTR and the right edge in RTL. Web now follows the layout direction too.
+
+```tsx
+// ❌ v3
+<TrueSheet anchor="left" maxContentWidth={400} />
+
+// ✅ v4
+<TrueSheet anchor="leading" maxContentWidth={400} />
+```
+
+:::tip
+See the [Side Sheets guide](guides/side-sheets) for more details.
+:::
+
 ## New Features in v4
 
 ### 1. `auto` Detent with Scrollables
@@ -295,6 +311,7 @@ React Native's element inspector now works inside a presented sheet. Open the de
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers and scroll content — both are handled natively
    - Add `glass={false}` to sheets with a translucent `backgroundColor` that should stay flat on iOS 26+
+   - Rename `anchor="left"` / `anchor="right"` to `anchor="leading"` / `anchor="trailing"`
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

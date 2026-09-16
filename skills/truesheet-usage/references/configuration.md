@@ -187,8 +187,8 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `anchor` | `'left' \| 'center' \| 'right'` | `'center'` | 🍎🤖🌐 | Horizontal positioning. Ignored on phones in portrait |
-| `anchorOffset` | `number` | `16` | 🤖🌐 | Edge margin when anchored left/right |
+| `anchor` | `'leading' \| 'center' \| 'trailing'` | `'center'` | 🍎🤖🌐 | Horizontal positioning, follows layout direction. Ignored on phones in portrait |
+| `anchorOffset` | `number` | `16` | 🤖🌐 | Edge margin when anchored leading/trailing |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
 

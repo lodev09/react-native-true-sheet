@@ -316,11 +316,11 @@ await dismiss('my-sheet')
 
 ## Side sheets
 
-Anchor a sheet to the left or right edge. Useful for tablet layouts or navigation drawers.
+Anchor a sheet to the leading or trailing edge (follows layout direction). Useful for tablet layouts or navigation drawers.
 
 ```tsx
 <TrueSheet
-  anchor="left"
+  anchor="leading"
   detents={['auto', 1]}
   maxContentWidth={400}
   anchorOffset={16}
@@ -329,7 +329,7 @@ Anchor a sheet to the left or right edge. Useful for tablet layouts or navigatio
 </TrueSheet>
 ```
 
-- On iOS, the system controls the side margins via `sourceView`
+- On iOS, the system controls the side margins (`preferredPlacement` on iOS 27+, `sourceView` before)
 - On phones in portrait, anchor is ignored — the sheet is always full-width
 - `anchorOffset` applies on Android and Web only
 
@@ -509,6 +509,18 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 
 ```tsx
 <TrueSheet backgroundColor="#ffffff" glass={false}>
+```
+
+### 7. `anchor` `'left'`/`'right'` → `'leading'`/`'trailing'`
+
+Names now match behavior — native side sheets already followed layout direction (RTL flips them). Web follows it too.
+
+```tsx
+// ❌ v3
+<TrueSheet anchor="left" maxContentWidth={400}>
+
+// ✅ v4
+<TrueSheet anchor="leading" maxContentWidth={400}>
 ```
 
 ### New in v4

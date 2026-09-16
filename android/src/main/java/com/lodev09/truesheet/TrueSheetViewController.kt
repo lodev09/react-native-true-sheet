@@ -81,15 +81,15 @@ interface TrueSheetViewControllerDelegate {
  * keyboard avoidance, dimmed backgrounds, back button, and lifecycle events for stacked sheets.
  */
 enum class TrueSheetAnchor {
-  LEFT,
+  LEADING,
   CENTER,
-  RIGHT;
+  TRAILING;
 
   companion object {
     fun fromString(value: String?): TrueSheetAnchor =
       when (value) {
-        "left" -> LEFT
-        "right" -> RIGHT
+        "leading" -> LEADING
+        "trailing" -> TRAILING
         else -> CENTER
       }
   }

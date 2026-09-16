@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -92,10 +92,7 @@ const MapScreenInner = ({
   const { width, height } = useWindowDimensions();
   const { animatedPosition } = useReanimatedTrueSheet();
 
-  const isTablet = useMemo(() => {
-    if (Platform.OS === 'ios') return Platform.isPad;
-    return Math.min(width, height) >= 600;
-  }, [width, height]);
+  const isTablet = Math.min(width, height) >= 600;
 
   const sheetRef = useRef<TrueSheet>(null);
 
@@ -174,7 +171,7 @@ const MapScreenInner = ({
         footer={<Footer />}
         footerStyle={styles.footer}
         initialDetentIndex={0}
-        anchor={anchorLeft ? 'left' : 'center'}
+        anchor={anchorLeft ? 'leading' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
         backgroundColor={`${BLUE}33`}

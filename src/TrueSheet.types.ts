@@ -567,18 +567,18 @@ export interface TrueSheetProps extends ViewProps {
    * Anchors the sheet to the specified horizontal edge.
    *
    * - `'center'`: Centers the sheet horizontally (default).
-   * - `'left'`: Anchors the sheet to the left edge.
-   * - `'right'`: Anchors the sheet to the right edge.
+   * - `'leading'`: Anchors the sheet to the leading edge (left in LTR, right in RTL).
+   * - `'trailing'`: Anchors the sheet to the trailing edge (right in LTR, left in RTL).
    *
    * Ignored on phones in portrait orientation.
    *
    * @default 'center'
    */
-  anchor?: 'left' | 'center' | 'right';
+  anchor?: 'leading' | 'center' | 'trailing';
 
   /**
    * The offset from the screen edge.
-   * Only applies when `anchor` is `'left'` or `'right'`.
+   * Only applies when `anchor` is `'leading'` or `'trailing'`.
    *
    * @platform android
    * @platform web

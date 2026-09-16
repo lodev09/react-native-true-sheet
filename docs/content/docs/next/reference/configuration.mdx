@@ -151,14 +151,14 @@ This prop is ignored on phones in portrait orientation — the sheet always span
 
 ## `anchor`
 
-Anchors the sheet to the specified horizontal edge.
+Anchors the sheet to the specified horizontal edge. `'leading'` and `'trailing'` follow the layout direction (left/right in LTR, right/left in RTL).
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `'left' \| 'center' \| 'right'` | `'center'` | ✅ | ✅ | ✅ |
+| `'leading' \| 'center' \| 'trailing'` | `'center'` | ✅ | ✅ | ✅ |
 
 :::info
-On iOS, the sheet uses `sourceView` to control horizontal positioning. System-defined margins prevent fully flush edge attachment.
+On iOS 27+, the sheet uses the native `preferredPlacement` API. Earlier versions use `sourceView`. System-defined margins prevent fully flush edge attachment.
 :::
 
 :::note
@@ -167,7 +167,7 @@ This prop is ignored on phones in portrait orientation.
 
 ## `anchorOffset`
 
-The offset from the screen edge. Only applies when [`anchor`](#anchor) is `'left'` or `'right'`.
+The offset from the screen edge. Only applies when [`anchor`](#anchor) is `'leading'` or `'trailing'`.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |

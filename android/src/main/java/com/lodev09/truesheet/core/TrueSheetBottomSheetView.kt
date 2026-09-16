@@ -96,11 +96,11 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   private fun resolveAnchor(): Pair<Int, Int> {
     val anchor = if (ScreenUtils.isPortraitPhone(reactContext)) null else delegate?.anchor
     val gravity = when (anchor) {
-      TrueSheetAnchor.LEFT -> Gravity.START
-      TrueSheetAnchor.RIGHT -> Gravity.END
+      TrueSheetAnchor.LEADING -> Gravity.START
+      TrueSheetAnchor.TRAILING -> Gravity.END
       else -> Gravity.CENTER_HORIZONTAL
     } or Gravity.BOTTOM
-    val margin = if (anchor == TrueSheetAnchor.LEFT || anchor == TrueSheetAnchor.RIGHT) delegate?.anchorOffset ?: 0 else 0
+    val margin = if (anchor == TrueSheetAnchor.LEADING || anchor == TrueSheetAnchor.TRAILING) delegate?.anchorOffset ?: 0 else 0
     return Pair(gravity, margin)
   }
 

@@ -109,7 +109,7 @@ export interface NativeProps extends ViewProps {
     'none'
   >;
 
-  anchor?: WithDefault<'left' | 'center' | 'right', 'center'>;
+  anchor?: WithDefault<'leading' | 'center' | 'trailing', 'center'>;
   anchorOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 
