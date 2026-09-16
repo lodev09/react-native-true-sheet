@@ -82,7 +82,6 @@
   CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
 
   _currentHeight = keyboardHeight;
-  _viewController.keyboardHeight = keyboardHeight;
 
   if (keyboardHeight > 0) {
     _viewController.keyboardSheetGrown = YES;
@@ -98,6 +97,8 @@
         }
       });
   }
+
+  _viewController.keyboardHeight = keyboardHeight;
 
   for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates) {
     if (keyboardHeight > 0) {

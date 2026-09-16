@@ -232,6 +232,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   override val absoluteFooterHeight: Int
     get() = if (absoluteFooter) footerView?.height ?: 0 else 0
 
+  override val absoluteFooterTop: Int
+    get() = footerView?.y?.toInt() ?: height
+
   override val hasRelativeFooter: Boolean
     get() = footerView != null && !absoluteFooter
 

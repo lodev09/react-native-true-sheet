@@ -292,6 +292,9 @@ export interface FooterOptions {
   /**
    * Whether an `absolute` footer rises above the keyboard when it opens.
    * Set to `false` to keep the footer pinned to the sheet's bottom edge behind the keyboard.
+   * With footer inset adjustment enabled, any uncovered portion still adds scroll padding
+   * and contributes to the expanded `auto` height.
+   * The pinned footer keeps its safe-area padding and ignores `keyboardOffset`.
    * A `relative` footer never rises, so this has no effect.
    *
    * @platform ios, android

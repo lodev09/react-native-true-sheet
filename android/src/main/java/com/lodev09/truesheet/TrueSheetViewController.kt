@@ -332,13 +332,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   override var absoluteFooter: Boolean = false
 
-  // A footer that stays behind the keyboard pads nothing while it's up — the
-  // keyboard inset covers it, and the auto detent excludes it
   override val footerInsetAdjustment: Boolean
-    get() = absoluteFooter &&
-      scrollableHandle > 0 &&
-      scrollableOptions?.contentInsetAdjustment?.footer != false &&
-      (footerAvoidsKeyboard || keyboardInset == 0)
+    get() = absoluteFooter && scrollableHandle > 0 && scrollableOptions?.contentInsetAdjustment?.footer != false
 
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
@@ -1169,7 +1164,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    * false keeps an absolute footer pinned to the sheet's bottom edge behind
    * the keyboard instead of rising above it.
    */
-  var footerAvoidsKeyboard: Boolean = true
+  override var footerAvoidsKeyboard: Boolean = true
 
   fun positionFooter() {
     if (!isPresented) return
@@ -1205,6 +1200,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Clamp to prevent footer going above safe area
     val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
+    if (!footerAvoidsKeyboard) {
+      containerView?.contentView?.updateContentInset()
+    }
   }
 
   // =============================================================================
@@ -1269,11 +1267,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
           // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
           if (restoring || isKeyboardDismissProgrammatic) {
-            setupSheetDetents()
             if (restoring) {
               currentDetentIndex = detentIndexBeforeKeyboard
-              setStateForDetentIndex(currentDetentIndex)
             }
+            setupSheetDetents()
           }
 
           // Same-frame reposition — the reconfigure above shrinks the container

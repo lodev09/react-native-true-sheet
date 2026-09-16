@@ -902,10 +902,7 @@ using namespace facebook::react;
   _containerView.scrollableHandle = _scrollableHandle;
   _containerView.safeAreaInsetAdjustment = (_scrollableOptions ? _scrollableOptions.safeAreaInsetAdjustment : YES) &&
                                            _insetAdjustment == TrueSheetViewInsetAdjustment::Automatic;
-  // Raw value — the controller's getter is keyboard-aware, the content view
-  // gates on the keyboard itself (see TrueSheetContentView footerInset)
-  _containerView.footerInsetAdjustment = (_scrollableOptions ? _scrollableOptions.footerInsetAdjustment : YES) &&
-                                         _controller.absoluteFooter && _scrollableHandle > 0;
+  _containerView.footerInsetAdjustment = _controller.footerInsetAdjustment;
   [self refreshFooterBottomInset];
   [_containerView setupScrollable];
 }
