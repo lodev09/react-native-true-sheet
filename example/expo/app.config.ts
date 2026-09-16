@@ -33,6 +33,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-font',
     'expo-web-browser',
     [
+      'expo-build-properties',
+      {
+        ios: {
+          enableSceneSupport: true,
+        },
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         image: './assets/images/splash-icon.png',

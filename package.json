@@ -112,14 +112,14 @@
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "expo-router": "~57.0.7",
+    "expo-router": "~57.0.21",
     "jest": "^29.7.0",
     "prettier": "^3.0.3",
     "react": "19.2.3",
     "react-native": "0.86.0",
     "react-native-builder-bob": "^0.41.0",
-    "react-native-reanimated": "4.5.0",
-    "react-native-worklets": "0.10.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1",
     "react-test-renderer": "19.2.3",
     "release-it": "^20.0.1",
     "standard-navigation": "^0.0.9",
@@ -128,8 +128,9 @@
   },
   "resolutions": {
     "@types/react": "~19.2.14",
-    "react-native-reanimated": "4.5.0",
-    "react-native-worklets": "0.10.0"
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.26.2#~/.yarn/patches/react-native-screens-npm-4.26.2.patch"
   },
   "peerDependencies": {
     "@radix-ui/react-dialog": ">=1",
