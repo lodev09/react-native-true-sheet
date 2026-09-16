@@ -529,6 +529,7 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - `'auto'` detent works with scrollables
 - `'peek'` detent + `TrueSheetPeek` component
 - `headerOptions` (floating header)
+- `footerOptions={{ position: 'absolute', avoidKeyboard: false }}` keeps native absolute footers behind the keyboard. The default is `true`. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height.
 - `accessibilityOptions`
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `glass` prop — keep or remove Liquid Glass behind `backgroundColor` (iOS 26.1+)
