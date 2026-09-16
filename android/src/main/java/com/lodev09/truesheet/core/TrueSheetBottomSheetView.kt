@@ -18,7 +18,7 @@ import androidx.core.view.ViewCompat
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.lodev09.truesheet.TrueSheetAnchor
+import com.lodev09.truesheet.TrueSheetPlacement
 import com.lodev09.truesheet.utils.ScreenUtils
 
 interface TrueSheetBottomSheetViewDelegate {
@@ -27,8 +27,8 @@ interface TrueSheetBottomSheetViewDelegate {
   val sheetElevation: Float
   val sheetBackgroundColor: Int?
   val maxContentWidth: Int?
-  val anchor: TrueSheetAnchor
-  val anchorOffset: Int
+  val placement: TrueSheetPlacement
+  val placementOffset: Int
   val grabber: Boolean
   val grabberOptions: GrabberOptions?
   val accessibilityOptions: AccessibilityOptions?
@@ -94,13 +94,19 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // =============================================================================
 
   private fun resolveAnchor(): Pair<Int, Int> {
-    val anchor = if (ScreenUtils.isPortraitPhone(reactContext)) null else delegate?.anchor
-    val gravity = when (anchor) {
-      TrueSheetAnchor.LEFT -> Gravity.START
-      TrueSheetAnchor.RIGHT -> Gravity.END
+    val placement = if (ScreenUtils.isPortraitPhone(reactContext)) null else delegate?.placement
+    val gravity = when (placement) {
+      TrueSheetPlacement.LEADING -> Gravity.START
+      TrueSheetPlacement.TRAILING -> Gravity.END
       else -> Gravity.CENTER_HORIZONTAL
     } or Gravity.BOTTOM
-    val margin = if (anchor == TrueSheetAnchor.LEFT || anchor == TrueSheetAnchor.RIGHT) delegate?.anchorOffset ?: 0 else 0
+    val margin = if (placement == TrueSheetPlacement.LEADING ||
+      placement == TrueSheetPlacement.TRAILING
+    ) {
+      delegate?.placementOffset ?: 0
+    } else {
+      0
+    }
     return Pair(gravity, margin)
   }
 

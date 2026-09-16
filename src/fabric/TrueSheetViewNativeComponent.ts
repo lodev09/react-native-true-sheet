@@ -109,8 +109,8 @@ export interface NativeProps extends ViewProps {
     'none'
   >;
 
-  anchor?: WithDefault<'left' | 'center' | 'right', 'center'>;
-  anchorOffset?: WithDefault<Double, 16>;
+  placement?: WithDefault<'automatic' | 'leading' | 'center' | 'trailing', 'automatic'>;
+  placementOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 
   // Blur options

@@ -255,8 +255,7 @@ using namespace facebook::react;
   // Content width
   _controller.maxContentWidth = newProps.maxContentWidth != 0.0 ? @(newProps.maxContentWidth) : nil;
 
-  // Anchor
-  _controller.anchor = newProps.anchor;
+  _controller.placement = newProps.placement;
 
   _controller.grabber = newProps.grabber;
 

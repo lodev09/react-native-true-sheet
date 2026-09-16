@@ -224,15 +224,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.maxContentWidth = width
   }
 
-  fun setAnchor(anchor: String?) {
-    val value = TrueSheetAnchor.fromString(anchor)
-    if (viewController.anchor == value) return
-    viewController.anchor = value
+  fun setPlacement(placement: String?) {
+    val value = TrueSheetPlacement.fromString(placement)
+    if (viewController.placement == value) return
+    viewController.placement = value
   }
 
-  fun setAnchorOffset(offset: Int) {
-    if (viewController.anchorOffset == offset) return
-    viewController.anchorOffset = offset
+  fun setPlacementOffset(offset: Int) {
+    if (viewController.placementOffset == offset) return
+    viewController.placementOffset = offset
   }
 
   fun setDimmed(dimmed: Boolean) {

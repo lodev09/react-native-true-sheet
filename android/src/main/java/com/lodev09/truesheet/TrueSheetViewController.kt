@@ -80,17 +80,19 @@ interface TrueSheetViewControllerDelegate {
  * enabling touch pass-through to underlying views. Handles detent configuration, drag interactions,
  * keyboard avoidance, dimmed backgrounds, back button, and lifecycle events for stacked sheets.
  */
-enum class TrueSheetAnchor {
-  LEFT,
+enum class TrueSheetPlacement {
+  AUTOMATIC,
+  LEADING,
   CENTER,
-  RIGHT;
+  TRAILING;
 
   companion object {
-    fun fromString(value: String?): TrueSheetAnchor =
+    fun fromString(value: String?): TrueSheetPlacement =
       when (value) {
-        "left" -> LEFT
-        "right" -> RIGHT
-        else -> CENTER
+        "leading" -> LEADING
+        "center" -> CENTER
+        "trailing" -> TRAILING
+        else -> AUTOMATIC
       }
   }
 }
@@ -120,7 +122,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   companion object {
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
-    private const val DEFAULT_ANCHOR_OFFSET = 16 // dp
+    private const val DEFAULT_PLACEMENT_OFFSET = 16 // dp
     private const val TRANSLATE_ANIMATION_DURATION = 200L
     private const val DISMISS_DURATION = 200L
     private const val SCREEN_FADE_DURATION = 150L
@@ -221,8 +223,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Detent Configuration
   override var maxContentHeight: Int? = null
   override var maxContentWidth: Int? = null
-  override var anchor: TrueSheetAnchor = TrueSheetAnchor.CENTER
-  override var anchorOffset: Int = DEFAULT_ANCHOR_OFFSET.dpToPx().toInt()
+  override var placement: TrueSheetPlacement = TrueSheetPlacement.AUTOMATIC
+  override var placementOffset: Int = DEFAULT_PLACEMENT_OFFSET.dpToPx().toInt()
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
 
   // Appearance Configuration

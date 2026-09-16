@@ -351,7 +351,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `scrollableRef` | Yes | Yes | Yes |
 | Scroll edge effects | iOS 26+ | No | No |
 | `grabberOptions` | Yes | Yes | No |
-| `anchor` / side sheets | System-controlled margins | `anchorOffset` prop | `anchorOffset` prop |
+| `placement` / side sheets | System-controlled margins; `'automatic'` vs `'center'` differ on iOS 27+ | `placementOffset` prop | `placementOffset` prop |
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
 | `insetAdjustment` | Yes | Yes | No |
