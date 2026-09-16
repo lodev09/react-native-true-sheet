@@ -20,10 +20,10 @@
     "react-native": "0.86.0",
     "react-native-config": "^1.6.1",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-reanimated": "4.5.0",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "patch:react-native-screens@npm%3A4.25.2#~/.yarn/patches/react-native-screens-npm-4.25.2.patch",
-    "react-native-worklets": "0.10.0",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.26.2#~/.yarn/patches/react-native-screens-npm-4.26.2.patch",
+    "react-native-worklets": "0.10.1",
     "standard-navigation": "^0.0.9"
   },
   "devDependencies": {

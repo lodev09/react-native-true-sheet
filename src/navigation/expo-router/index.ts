@@ -22,12 +22,15 @@ const sheetRouter: TrueSheetRouterFactory = createTrueSheetRouter(
   StackRouter as StackRouterFactory
 );
 
+// `routes`/`dispatch` are injected by `createProps`, so they are declared as
+// CreateProps (last generic) and excluded from the public navigator props
 const SheetNavigator = unstable_integrateWithRouter<
   TrueSheetNavigationOptions,
   TrueSheetNavigationState<ParamListBase>,
   TrueSheetStandardEventMap,
-  TrueSheetNavigatorContentExtraProps,
-  TrueSheetRouterOptions
+  object,
+  TrueSheetRouterOptions,
+  TrueSheetNavigatorContentExtraProps
 >(trueSheetNavigator, sheetRouter, {
   createProps: ({ state, dispatch }) => ({
     routes: state.routes,
@@ -35,15 +38,9 @@ const SheetNavigator = unstable_integrateWithRouter<
   }),
 });
 
-// Public props: `routes`/`dispatch` are injected by `createProps` (optional here
-// so the navigator type stays comparable), and expo-router intersects the event
-// map with an index signature which breaks precisely typed `screenListeners`
-// callbacks - replace it with the exact map
-type SheetProps = Omit<
-  React.ComponentProps<typeof SheetNavigator>,
-  'screenListeners' | 'routes' | 'dispatch'
-> &
-  Partial<Pick<React.ComponentProps<typeof SheetNavigator>, 'routes' | 'dispatch'>> &
+// expo-router intersects the event map with an index signature which breaks
+// precisely typed `screenListeners` callbacks - replace it with the exact map
+type SheetProps = Omit<React.ComponentProps<typeof SheetNavigator>, 'screenListeners'> &
   Pick<TrueSheetNavigatorProps, 'screenListeners'>;
 
 /**
