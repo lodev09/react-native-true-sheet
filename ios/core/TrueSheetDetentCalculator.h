@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly, nullable) NSNumber *footerHeight;
 @property (nonatomic, readonly) BOOL absoluteFooter;
 @property (nonatomic, readonly) BOOL footerInsetAdjustment;
+@property (nonatomic, readonly) BOOL footerAvoidsKeyboard;
+@property (nonatomic, readonly) CGFloat appliedFooterBottomInset;
 @property (nonatomic, strong, readonly, nullable) NSNumber *peekContentHeight;
 
 @end
@@ -48,8 +50,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Returns the height for auto (-1) detents: content + header + footer height.
  An absolute (floating) header or footer contributes no height.
+ A pinned footer contributes only its overlap above the keyboard. UIKit adds
+ the keyboard expansion separately. Pass 0 for the keyboard-free height.
  */
-- (CGFloat)autoHeight;
+- (CGFloat)autoHeightForKeyboardHeight:(CGFloat)keyboardHeight;
 
 /**
  Returns the height for peek (-2) detents: header + footer + peek content height.

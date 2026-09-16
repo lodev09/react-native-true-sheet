@@ -323,6 +323,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.positionFooter()
   }
 
+  fun setFooterAvoidsKeyboard(avoids: Boolean) {
+    viewController.footerAvoidsKeyboard = avoids
+    viewController.containerView?.footerAvoidsKeyboard = avoids
+    viewController.positionFooter()
+  }
+
   private fun setupScrollable() {
     viewController.containerView?.let {
       it.scrollableOptions = viewController.scrollableOptions
@@ -330,6 +336,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       it.scrollableBottomInset = viewController.contentBottomInset
       it.footerBottomInset = viewController.contentBottomInset
       it.absoluteFooter = viewController.absoluteFooter
+      it.footerAvoidsKeyboard = viewController.footerAvoidsKeyboard
       it.setupScrollable()
     }
 

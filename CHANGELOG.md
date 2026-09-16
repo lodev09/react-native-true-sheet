@@ -13,6 +13,7 @@
 - New `scrollableOptions.keyboardOffset` option to adjust the scrollable's keyboard bottom inset. ([#785](https://github.com/lodev09/react-native-true-sheet/pull/785) by [@lodev09](https://github.com/lodev09))
 - The dev menu's element inspector now works inside a presented sheet — header, content, and footer are all inspectable. ([#832](https://github.com/lodev09/react-native-true-sheet/pull/832) by [@lodev09](https://github.com/lodev09))
 - New `onDismissAttempt` event fires when the user tries to dismiss a sheet with `dismissible` set to `false` — confirm unsaved changes, then call `dismiss()`. ([#833](https://github.com/lodev09/react-native-true-sheet/pull/833) by [@lodev09](https://github.com/lodev09))
+- Added `footerOptions.avoidKeyboard` on iOS and Android. Set it to `false` to keep absolute footers behind the keyboard while preserving space for any uncovered portion. ([#849](https://github.com/lodev09/react-native-true-sheet/pull/849) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

@@ -87,6 +87,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) CGFloat footerKeyboardOffset;
+
+/**
+ * NO keeps an absolute footer pinned to the sheet's bottom edge behind the
+ * keyboard instead of rising above it.
+ */
+@property (nonatomic, assign) BOOL footerAvoidsKeyboard;
 @property (nonatomic, assign) BOOL dismissible;
 @property (nonatomic, assign) BOOL isPresented;
 @property (nonatomic, assign) NSInteger activeDetentIndex;
@@ -97,6 +103,12 @@ NS_ASSUME_NONNULL_BEGIN
  * ~keyboardHeight into the learned offset.
  */
 @property (nonatomic, assign) BOOL keyboardSheetGrown;
+
+/**
+ * Target keyboard height, set as soon as the keyboard frame change is
+ * announced — ahead of the grow/shrink animation, unlike keyboardSheetGrown.
+ */
+@property (nonatomic, assign) CGFloat keyboardHeight;
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;

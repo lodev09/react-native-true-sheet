@@ -99,7 +99,7 @@ export const PromptSheet = forwardRef((props: PromptSheetProps, ref: Ref<TrueShe
         </>
       }
       footerStyle={styles.footer}
-      footerOptions={{ position: 'absolute' }}
+      footerOptions={{ position: 'absolute', avoidKeyboard: false }}
       {...props}
     >
       <ScrollView

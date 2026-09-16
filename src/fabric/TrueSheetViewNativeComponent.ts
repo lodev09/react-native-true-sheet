@@ -48,6 +48,7 @@ type FooterOptionsType = Readonly<{
   // the field name, so a second `position` would redefine TrueSheetViewPosition
   footerPosition?: WithDefault<'relative' | 'absolute', 'relative'>;
   keyboardOffset?: WithDefault<Double, 0>;
+  avoidKeyboard?: WithDefault<boolean, true>;
 }>;
 
 type HeaderOptionsType = Readonly<{

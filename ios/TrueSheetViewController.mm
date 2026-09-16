@@ -119,6 +119,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _grabber = YES;
     _draggable = YES;
     _scrollingExpandsSheet = YES;
+    _footerAvoidsKeyboard = YES;
     _dismissible = YES;
     _dimmed = YES;
     _dimmedDetentIndex = @(0);
@@ -278,7 +279,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     CGFloat value = [detent doubleValue];
     CGFloat height = 0;
     if (value == -1) {
-      height = [_detentCalculator autoHeight] - [self autoDetentBottomInset];
+      height = [_detentCalculator autoHeightForKeyboardHeight:0] - [self autoDetentBottomInset];
     } else if (value == -2) {
       height = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
     } else if (value > 0 && value <= 1) {
@@ -328,6 +329,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
 }
 
+// Re-resolve alongside the keyboard animation as its overlap with the pinned
+// footer changes, including keyboard height changes while already visible.
+- (void)setKeyboardHeight:(CGFloat)keyboardHeight {
+  if (_keyboardHeight == keyboardHeight) {
+    return;
+  }
+  _keyboardHeight = keyboardHeight;
+
+  if (_footerInsetAdjustment && !_footerAvoidsKeyboard && self.isPresented) {
+    [self setupSheetDetentsForSizeChange];
+  }
+}
+
 /**
  * Bottom inset excluded from the auto detent. A relative footer (or an
  * absolute one padding the scrollable) owns the sheet's bottom edge and
@@ -335,7 +349,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  * what was baked in so UIKit's own safe-area layout doesn't double it.
  */
 - (CGFloat)autoDetentBottomInset {
-  if ((_absoluteFooter && !_footerInsetAdjustment) || [self.footerHeight floatValue] <= 0) {
+  if ((_absoluteFooter && !self.footerInsetAdjustment) || [self.footerHeight floatValue] <= 0) {
     return 0;
   }
 
@@ -686,8 +700,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   // Dismissing with the keyboard up skips the hide notification — don't let
-  // the stale flag block learning on the next present.
+  // the stale flag block learning on the next present, or a stale height keep
+  // the footer out of the auto detent.
   _keyboardSheetGrown = NO;
+  _keyboardHeight = 0;
 
   [self emitDidDismissEvents];
 }
@@ -1168,7 +1184,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  */
 - (void)setupSheetDetentsForSizeChange {
   if (@available(iOS 16.0, *)) {
-    CGFloat autoHeight = [_detentCalculator autoHeight];
+    CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight];
     CGFloat peekHeight = [_detentCalculator peekHeight];
 
     if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
@@ -1201,7 +1217,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
 
-  _autoDetentHeight = [_detentCalculator autoHeight];
+  _autoDetentHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight];
   _peekDetentHeight = [_detentCalculator peekHeight];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {

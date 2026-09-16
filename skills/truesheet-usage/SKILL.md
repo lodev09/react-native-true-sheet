@@ -192,8 +192,9 @@ const scrollableRef = useRef<ScrollView>(null)
 - Both are **relative** by default: header takes space above the content, footer below it, and both count toward the `'auto'` detent.
 - The footer **absorbs the bottom safe-area inset** natively — remove manual `paddingBottom: insets.bottom` from footer content or it doubles up. Set the footer background via `footerStyle` so it fills the inset.
 - A relative footer is laid out below the content — with fixed detents, bound the content with `flex: 1` (sheet `style`) so the footer stays visible.
-- To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard; a relative one stays in the layout flow behind it.
+- To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard (opt out with `avoidKeyboard: false`); a relative one stays in the layout flow behind it.
 - An absolute footer covers the bottom of a plugged scrollable — the scroll content is padded by the measured footer height automatically (default `contentInsetAdjustment: 'automatic'`) and the footer counts toward `'auto'`, so don't hard-code `paddingBottom: FOOTER_HEIGHT`. Use `'safe-area'` to let content scroll under the footer.
+- With `avoidKeyboard: false`, only the footer portion above the keyboard adds scroll padding and contributes to the expanded `'auto'` height. Footer inset adjustment must be enabled.
 
 ### Peeking (map-style collapsed sheet)
 

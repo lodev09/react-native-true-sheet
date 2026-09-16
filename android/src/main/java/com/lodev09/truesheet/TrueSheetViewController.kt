@@ -1160,6 +1160,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   var footerKeyboardOffset: Int = 0
 
+  /**
+   * false keeps an absolute footer pinned to the sheet's bottom edge behind
+   * the keyboard instead of rising above it.
+   */
+  override var footerAvoidsKeyboard: Boolean = true
+
   fun positionFooter() {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
@@ -1176,7 +1182,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // The footer's absorbed safe-area inset rides below the keyboard's top
     // edge — its content stays flush with the keyboard without dropping the
     // inset padding from the layout, which would jump at the transition edges
-    val keyboardShift = if (currentKeyboardInset > 0) {
+    val keyboardShift = if (currentKeyboardInset > 0 && footerAvoidsKeyboard) {
       maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
     } else {
       0
@@ -1194,6 +1200,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Clamp to prevent footer going above safe area
     val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
+    if (!footerAvoidsKeyboard) {
+      containerView?.contentView?.updateContentInset()
+    }
   }
 
   // =============================================================================
@@ -1258,11 +1267,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
           // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
           if (restoring || isKeyboardDismissProgrammatic) {
-            setupSheetDetents()
             if (restoring) {
               currentDetentIndex = detentIndexBeforeKeyboard
-              setStateForDetentIndex(currentDetentIndex)
             }
+            setupSheetDetents()
           }
 
           // Same-frame reposition — the reconfigure above shrinks the container

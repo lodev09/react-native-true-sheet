@@ -19,7 +19,7 @@
   if (index >= 0 && index < (NSInteger)detents.count) {
     CGFloat value = [detents[index] doubleValue];
     if (value == -1) {
-      return [self autoHeight] / self.delegate.screenHeight;
+      return [self autoHeightForKeyboardHeight:0] / self.delegate.screenHeight;
     }
     if (value == -2) {
       return [self peekHeight] / self.delegate.screenHeight;
@@ -29,12 +29,15 @@
   return 0;
 }
 
-- (CGFloat)autoHeight {
+- (CGFloat)autoHeightForKeyboardHeight:(CGFloat)keyboardHeight {
   // An absolute (floating) header or footer overlaps the content, so it contributes no height —
   // unless the footer pads the scrollable, then the content ends above it like a relative footer
   CGFloat headerHeight = self.delegate.absoluteHeader ? 0 : [self.delegate.headerHeight floatValue];
   BOOL floatingFooter = self.delegate.absoluteFooter && !self.delegate.footerInsetAdjustment;
   CGFloat footerHeight = floatingFooter ? 0 : [self.delegate.footerHeight floatValue];
+  if (self.delegate.absoluteFooter && !floatingFooter && !self.delegate.footerAvoidsKeyboard) {
+    footerHeight -= MIN(keyboardHeight, MAX(0, footerHeight - self.delegate.appliedFooterBottomInset));
+  }
   return [self.delegate.contentHeight floatValue] + headerHeight + footerHeight;
 }
 

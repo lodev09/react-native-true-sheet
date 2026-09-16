@@ -26,6 +26,7 @@ interface TrueSheetDetentCalculatorDelegate {
    * above it.
    */
   val footerInsetAdjustment: Boolean
+  val footerAvoidsKeyboard: Boolean
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -121,7 +122,17 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       (detent * screenHeight).toInt() + contentBottomInset
     }
 
-    val height = if (includeKeyboard) baseHeight + keyboardInset else baseHeight
+    val keyboardHeight = if (includeKeyboard) keyboardInset else 0
+    val footerKeyboardOverlap = if (detent == -1.0 &&
+      delegate?.absoluteFooter == true &&
+      footerInAuto &&
+      delegate?.footerAvoidsKeyboard == false
+    ) {
+      minOf(keyboardHeight, maxOf(0, footerHeight - contentBottomInset))
+    } else {
+      0
+    }
+    val height = baseHeight + keyboardHeight - footerKeyboardOverlap
     val maxAllowedHeight = screenHeight + contentBottomInset
     return maxContentHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }

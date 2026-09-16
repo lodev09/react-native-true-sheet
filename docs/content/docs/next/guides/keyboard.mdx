@@ -78,6 +78,16 @@ If your absolute footer renders its own bottom padding, that padding leaves a ga
 
 The footer slides up by the keyboard height plus `keyboardOffset`. A negative value reduces the rise so the padding sits behind the keyboard; a positive value raises the footer higher.
 
+Set `avoidKeyboard` to `false` to keep an absolute footer at the bottom edge of the sheet:
+
+```tsx
+<TrueSheet footer={<Footer />} footerOptions={{ position: 'absolute', avoidKeyboard: false }}>
+  {/* ... */}
+</TrueSheet>
+```
+
+The keyboard covers the pinned footer. With footer inset adjustment enabled, any footer portion above the keyboard still adds scroll padding and contributes to the expanded `auto` height. A fully covered footer adds no extra space above the keyboard. The footer keeps its safe-area padding, and `keyboardOffset` has no effect.
+
 ## Autofocus Limitation
 
 Avoid using `autoFocus` on `TextInput` components inside the sheet. The keyboard may appear before the sheet has finished presenting, causing layout issues.

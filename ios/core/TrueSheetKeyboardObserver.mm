@@ -98,6 +98,8 @@
       });
   }
 
+  _viewController.keyboardHeight = keyboardHeight;
+
   for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates) {
     if (keyboardHeight > 0) {
       [delegate keyboardWillShow:keyboardHeight duration:duration curve:curve];

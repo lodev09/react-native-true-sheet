@@ -152,13 +152,15 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 {
   position?: 'relative' | 'absolute' // default: 'relative'
   keyboardOffset?: number            // default: 0 — absolute footers only
+  avoidKeyboard?: boolean            // default: true — absolute footers only, native only
 }
 ```
 - `'relative'`: takes space below the content, included in `'auto'` but **excluded from `'peek'`** (pushed off-screen at peek). Stays in the layout flow behind the keyboard. If content is taller than the sheet (fixed detents), bound it with `flex: 1` on the sheet `style` so the footer stays visible.
 - `'absolute'`: floats over the content, excluded from `'auto'` but **included in `'peek'`**, and rises above the keyboard. A plugged scrollable is padded by the measured footer height automatically (and the footer then counts toward `'auto'`); for non-scrolling content, add bottom padding yourself so it ends above the footer.
 - `keyboardOffset` adjusts how far an absolute footer rises with the keyboard. Negative values tuck the footer's own bottom padding behind the keyboard.
+- `avoidKeyboard: false` keeps an absolute footer pinned behind the keyboard. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height. The footer keeps its safe-area padding and ignores `keyboardOffset`.
 
-**Safe area:** the footer absorbs the bottom safe-area inset as padding when `insetAdjustment` is `'automatic'` — don't add manual `paddingBottom: insets.bottom` or it doubles up. While the keyboard is open, an absolute footer skips the inset (no gap above the keyboard).
+**Safe area:** the footer absorbs the bottom safe-area inset as padding when `insetAdjustment` is `'automatic'` — don't add manual `paddingBottom: insets.bottom` or it doubles up. An absolute footer rises without a safe-area gap above the keyboard. With `avoidKeyboard: false`, it stays behind the keyboard and keeps the inset.
 
 ## Scrolling
 

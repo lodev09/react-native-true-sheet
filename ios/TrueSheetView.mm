@@ -325,8 +325,11 @@ using namespace facebook::react;
     options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
-  if (_controller.footerKeyboardOffset != footerKeyboardOffset) {
+  BOOL footerAvoidsKeyboard = newProps.footerOptions.avoidKeyboard;
+  if (_controller.footerKeyboardOffset != footerKeyboardOffset ||
+      _controller.footerAvoidsKeyboard != footerAvoidsKeyboard) {
     _controller.footerKeyboardOffset = footerKeyboardOffset;
+    _controller.footerAvoidsKeyboard = footerAvoidsKeyboard;
     [_containerView updateFooterKeyboardOffset];
   }
 
