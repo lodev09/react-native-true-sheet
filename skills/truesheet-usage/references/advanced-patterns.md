@@ -339,11 +339,16 @@ Anchor a sheet to the left or right edge. Useful for tablet layouts or navigatio
 
 Liquid Glass is the frosted glass visual effect introduced in iOS 26. It's automatic — no configuration needed.
 
-**When it activates:** iOS 26+ with no `backgroundColor` and no `backgroundBlur` set.
+**When it activates:** iOS 26+ unless `glass={false}` or `backgroundBlur` is set.
 
-**Disable per-sheet (iOS 26.1+):** set `backgroundColor` and/or `backgroundBlur`:
+**Tint it:** `backgroundColor` paints over the glass, so a translucent color tints it while content behind stays visible:
 ```tsx
-<TrueSheet backgroundColor="#ffffff">
+<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)">
+```
+
+**Disable per-sheet (iOS 26.1+):** set `glass={false}` (flat `backgroundColor`) and/or `backgroundBlur`:
+```tsx
+<TrueSheet backgroundColor="#ffffff" glass={false}>
 ```
 
 **Disable app-wide (Info.plist):**
@@ -498,6 +503,14 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - React Navigation: install `standard-navigation`, bump `@react-navigation/native` to 7.3+. API is unchanged. Static API now available via `createTrueSheetScreen`.
 - Expo Router: replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and import `useTrueSheetNavigation` from that entry point.
 
+### 6. `backgroundColor` keeps Liquid Glass (iOS 26+)
+
+`backgroundColor` now paints over the glass instead of removing it. Opaque colors look the same; translucent colors now tint the glass. Add `glass={false}` for the v3 flat result:
+
+```tsx
+<TrueSheet backgroundColor="#ffffff" glass={false}>
+```
+
 ### New in v4
 
 - `'auto'` detent works with scrollables
@@ -505,6 +518,7 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - `headerOptions` (floating header)
 - `accessibilityOptions`
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
+- `glass` prop — keep or remove Liquid Glass behind `backgroundColor` (iOS 26.1+)
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
 - Element inspector works inside a presented sheet (dev builds, no setup) — header, content, and footer are inspectable

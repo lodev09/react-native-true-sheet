@@ -177,6 +177,7 @@ const MapScreenInner = ({
         anchor={anchorLeft ? 'left' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
+        backgroundColor={`${BLUE}33`}
         style={styles.content}
         detached
         dismissible={false}

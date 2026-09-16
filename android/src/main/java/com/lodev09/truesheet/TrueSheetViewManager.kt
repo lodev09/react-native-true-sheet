@@ -233,6 +233,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "glass", defaultBoolean = true)
+  override fun setGlass(view: TrueSheetView, glass: Boolean) {
+    // iOS-specific prop - no-op on Android
+  }
+
   @ReactProp(name = "insetAdjustment")
   override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
     view.setInsetAdjustment(insetAdjustment ?: "automatic")
