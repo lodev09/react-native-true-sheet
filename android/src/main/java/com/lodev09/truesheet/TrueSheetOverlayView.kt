@@ -32,6 +32,11 @@ class TrueSheetOverlayView(private val reactContext: ThemedReactContext) :
   private var lastWidth = 0
   private var lastHeight = 0
 
+  // Fabric hands back a new StateWrapper on every state commit — including our
+  // own pushes — so pushState dedupes against the last pushed size to break the loop
+  private var lastStateWidth = 0
+  private var lastStateHeight = 0
+
   var stateWrapper: StateWrapper? = null
     set(value) {
       field = value
@@ -101,6 +106,11 @@ class TrueSheetOverlayView(private val reactContext: ThemedReactContext) :
 
   private fun pushState() {
     if (lastWidth == 0 && lastHeight == 0) return
-    stateWrapper?.let { TrueSheetStateUpdater.updateContainerSize(it, lastWidth, lastHeight) }
+    if (lastWidth == lastStateWidth && lastHeight == lastStateHeight) return
+    val sw = stateWrapper ?: return
+
+    lastStateWidth = lastWidth
+    lastStateHeight = lastHeight
+    TrueSheetStateUpdater.updateContainerSize(sw, lastWidth, lastHeight)
   }
 }
