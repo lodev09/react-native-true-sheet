@@ -35,7 +35,11 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
-import { measurePeekContentHeight, TrueSheetPeekContext } from './TrueSheetPeek.web';
+import {
+  measurePeekContentHeight,
+  TrueSheetPeekContext,
+  type TrueSheetPeekContextValue,
+} from './TrueSheetPeek.web';
 import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
@@ -291,19 +295,41 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // within the content — measured by the peek against `contentRef`.
   const [peekContentHeight, setPeekContentHeight] = useState(0);
   const contentRef = useRef<View>(null);
-  const peekElRef = useRef<View>(null);
-  const peekContext = useMemo(() => ({ contentRef, peekRef: peekElRef, setPeekContentHeight }), []);
+  const peekElRef = useRef<View | null>(null);
 
-  // The peek's own onLayout only fires when *it* resizes. Content added above
-  // it moves it without resizing it, so re-measure its offset whenever the
-  // content view's layout changes.
-  const handleContentLayout = useCallback(() => {
+  const measurePeek = useCallback(() => {
     const peekEl = getDOMElement(peekElRef.current);
     const contentEl = getDOMElement(contentRef.current);
     if (peekEl && contentEl) {
       setPeekContentHeight(measurePeekContentHeight(peekEl, contentEl));
     }
   }, []);
+
+  // Last-attached wins — during a screen swap the incoming peek mounts before
+  // the outgoing one unmounts, so the outgoing detach must not clear it.
+  const peekContext = useMemo<TrueSheetPeekContextValue>(
+    () => ({
+      contentRef,
+      attachPeek: (view) => {
+        peekElRef.current = view;
+        measurePeek();
+      },
+      detachPeek: (view) => {
+        if (peekElRef.current !== view) return;
+        peekElRef.current = null;
+        setPeekContentHeight(0);
+      },
+      measurePeek: (view) => {
+        if (peekElRef.current === view) measurePeek();
+      },
+    }),
+    [measurePeek]
+  );
+
+  // The peek's own onLayout only fires when *it* resizes. Content added above
+  // it moves it without resizing it, so re-measure its offset whenever the
+  // content view's layout changes.
+  const handleContentLayout = measurePeek;
 
   // An absolute (floating) header overlaps the content, so it contributes no
   // height to the 'auto' detent measurement.
