@@ -201,9 +201,15 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   fun attachPeekView(view: TrueSheetPeekView) {
     if (peekView === view) return
 
-    if (peekView != null) {
-      RNLog.w(context as ThemedReactContext, "TrueSheet: Sheet can only have one peek component.")
-      return
+    val previous = peekView
+    if (previous != null) {
+      previous.delegate = null
+
+      post {
+        if (previous.isAttachedToWindow && peekView !== previous) {
+          RNLog.w(context as ThemedReactContext, "TrueSheet: Sheet can only have one peek component.")
+        }
+      }
     }
 
     peekView = view
