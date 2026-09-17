@@ -72,6 +72,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   // manually.
   private var streamSheetDraggable = false
   private var streamDraggableEditText = false
+  private var streamScrollsIndependently = false
 
   // Pull-down tracking. BottomSheetBehavior gives no callback when a downward drag
   // is clamped by `isHideable = false` — the sheet stays put (or the scrollable
@@ -196,6 +197,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private fun updateStreamTargetFlags(ev: MotionEvent) {
     streamSheetDraggable = false
     streamDraggableEditText = false
+    streamScrollsIndependently = false
 
     val sheet = delegate?.findSheetView() ?: return
     val target = TouchTargetHelper.findTargetPathAndCoordinatesForTouch(ev.x, ev.y, this, FloatArray(2))
@@ -215,7 +217,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
 
     var view: View? = target
     while (view != null && view !== this) {
-      if (view.canScrollVertically(1) || view.canScrollVertically(-1)) return
+      if (view.canScrollVertically(1) || view.canScrollVertically(-1)) {
+        streamScrollsIndependently = !view.isNestedScrollingEnabled
+        return
+      }
       view = view.parent as? View
     }
 
@@ -296,6 +301,8 @@ class TrueSheetCoordinatorLayout(context: Context) :
       }
       return false
     }
+
+    if (streamScrollsIndependently) return false
 
     if (streamGestureClaimed) {
       if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {

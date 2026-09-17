@@ -501,9 +501,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override fun coordinatorLayoutDidLayout(changed: Boolean) {
     if (changed) invalidateScreenMetrics()
 
-    // Reposition footer when layout changes
     if (isPresented && changed) {
-      positionFooter()
+      setupSheetDetentsForSizeChange()
     }
   }
 
