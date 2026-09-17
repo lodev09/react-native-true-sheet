@@ -229,7 +229,11 @@ const MapScreenInner = ({
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}
       >
-        <ScrollView alwaysBounceVertical={false} contentContainerStyle={styles.content}>
+        <ScrollView
+          nestedScrollEnabled
+          alwaysBounceVertical={false}
+          contentContainerStyle={styles.content}
+        >
           <View style={styles.heading}>
             <Text style={styles.title}>True Sheet</Text>
             <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
