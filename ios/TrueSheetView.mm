@@ -831,6 +831,7 @@ using namespace facebook::react;
 
 - (void)viewControllerSafeAreaInsetsDidChange {
   [self refreshFooterBottomInset];
+  [_containerView updateFooterKeyboardOffset];
 }
 
 - (void)viewControllerWillFocus {

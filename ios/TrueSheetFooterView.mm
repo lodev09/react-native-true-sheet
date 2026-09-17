@@ -155,6 +155,8 @@ using namespace facebook::react;
     _lastHeight = height;
     [self.delegate footerViewDidChangeSize:CGSizeMake(layoutMetrics.frame.size.width, height)];
   }
+
+  [self applyKeyboardOffset];
 }
 
 - (void)prepareForRecycle {
@@ -184,6 +186,20 @@ using namespace facebook::react;
   return controller.absoluteFooter && controller.footerAvoidsKeyboard;
 }
 
+- (CGFloat)keyboardSlideForHeight:(CGFloat)height {
+  UIWindow *window = self.window;
+  if (!window) {
+    return 0;
+  }
+
+  // Measure in the transform's coordinate space, excluding the footer's current slide.
+  CGFloat footerBottom = self.center.y + self.bounds.size.height / 2;
+  CGPoint keyboardTopInWindow = CGPointMake(CGRectGetMidX(window.bounds), CGRectGetMaxY(window.bounds) - height);
+  CGFloat keyboardTop = [self.superview convertPoint:keyboardTopInWindow fromView:window].y;
+  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
+  return MAX(0, footerBottom - keyboardTop + keyboardOffset);
+}
+
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the
 // keyboard slide is carried by a transform instead of layout.
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
@@ -193,18 +209,19 @@ using namespace facebook::react;
 
   [self setKeyboardVisible:YES];
 
-  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
-  CGFloat slide = MAX(0, height + keyboardOffset);
+  CGFloat slide = [self keyboardSlideForHeight:height];
   _currentKeyboardOffset = slide;
 
   [UIView animateWithDuration:duration
-                        delay:0
-                      options:curve | UIViewAnimationOptionBeginFromCurrentState
-                   animations:^{
-                     self.transform = CGAffineTransformMakeTranslation(0, -slide);
-                     [self syncEdgeEffect];
-                   }
-                   completion:nil];
+    delay:0
+    options:curve | UIViewAnimationOptionBeginFromCurrentState
+    animations:^{
+      self.transform = CGAffineTransformMakeTranslation(0, -slide);
+      [self syncEdgeEffect];
+    }
+    completion:^(BOOL finished) {
+      [self applyKeyboardOffset];
+    }];
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
@@ -252,8 +269,7 @@ using namespace facebook::react;
 
   [self setKeyboardVisible:YES];
 
-  CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
-  CGFloat slide = MAX(0, height + keyboardOffset);
+  CGFloat slide = [self keyboardSlideForHeight:height];
   _currentKeyboardOffset = slide;
   self.transform = CGAffineTransformMakeTranslation(0, -slide);
 }

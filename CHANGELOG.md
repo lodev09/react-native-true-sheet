@@ -17,6 +17,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Fix keyboard alignment for absolute footers on iPad and iPhone. ([#855](https://github.com/lodev09/react-native-true-sheet/pull/855) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Unmounting a sheet mid-dismissal and mounting a new one no longer leaks the old sheet's `onDidDismiss` into the new mount or blocks its auto-present. ([#818](https://github.com/lodev09/react-native-true-sheet/pull/818) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fractional detents now resolve against the app's window instead of the full screen, fixing full-height sheets in windowed iPad apps (Stage Manager, iPadOS 26 windowing), and re-resolve when the window is resized or rotated. ([#815](https://github.com/lodev09/react-native-true-sheet/pull/815) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 - **iOS**: VoiceOver users can now dismiss the sheet with the two-finger Z gesture, and the grabber is announced as the sheet's first element so it can be resized or dismissed with swipe gestures. A sheet with a custom grabber no longer expands to the next detent on its own when presented under VoiceOver. ([#828](https://github.com/lodev09/react-native-true-sheet/pull/828), [#830](https://github.com/lodev09/react-native-true-sheet/pull/830) by [@lodev09](https://github.com/lodev09))
