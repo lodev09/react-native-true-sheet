@@ -139,6 +139,9 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
 
   override fun onTouchEvent(event: MotionEvent): Boolean {
     if (blockGestures) {
+      if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+        parent?.requestDisallowInterceptTouchEvent(true)
+      }
       // When dimmed, consume touch and trigger click on ACTION_UP
       if (event.action == MotionEvent.ACTION_UP) {
         performClick()
