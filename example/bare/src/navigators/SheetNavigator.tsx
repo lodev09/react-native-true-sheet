@@ -12,6 +12,7 @@ import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '@exa
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
 import {
   NotificationsSheetContent,
+  PeekSheetContent,
   ProfileSheetContent,
   ScrollableSheetContent,
   SettingsSheetContent,
@@ -37,6 +38,7 @@ const HomeScreen = () => {
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
       <Button text="Open Scrollable Sheet" onPress={() => navigation.navigate('Scrollable')} />
       <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
+      <Button text="Open Peek Sheet" onPress={() => navigation.navigate('Peek')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
     </View>
@@ -118,6 +120,12 @@ const SmallFooterSheet = () => {
       <Text style={styles.sheetSubtitle}>Small auto detent with a late-mounted footer.</Text>
     </View>
   );
+};
+
+const PeekSheet = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return <PeekSheetContent onPop={() => navigation.pop()} />;
 };
 
 // Scrolling content in a sheet screen — the ScrollView is created here, so it's
@@ -297,6 +305,17 @@ export const SheetNavigator = () => {
           cornerRadius: 16,
         }}
       />
+      <SheetStack.Screen
+        name="Peek"
+        component={PeekSheet}
+        options={{
+          detents: ['peek', 1],
+          backgroundColor: DARK,
+          cornerRadius: 16,
+          style: styles.peekSheet,
+          header: <Header />,
+        }}
+      />
     </SheetStack.Navigator>
   );
 };
@@ -341,6 +360,9 @@ const styles = StyleSheet.create({
     marginTop: SPACING,
   },
   scrollableSheet: {
+    flex: 1,
+  },
+  peekSheet: {
     flex: 1,
   },
   // Transparent on iOS so the scroll edge effect shows through

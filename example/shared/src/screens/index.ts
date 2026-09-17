@@ -1,6 +1,7 @@
 export * from './MapScreen';
 export * from './ModalScreen';
 export * from './NotificationsSheetContent';
+export * from './PeekSheetContent';
 export * from './ProfileSheetContent';
 export * from './ScrollableSheetContent';
 export * from './SettingsSheetContent';

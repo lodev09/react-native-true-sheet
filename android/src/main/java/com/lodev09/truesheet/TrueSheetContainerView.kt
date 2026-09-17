@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.EventDispatcher
-import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 
 interface TrueSheetContainerViewDelegate {
@@ -202,10 +201,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
   fun attachPeekView(view: TrueSheetPeekView) {
     if (peekView === view) return
 
-    if (peekView != null) {
-      RNLog.w(context as ThemedReactContext, "TrueSheet: Sheet can only have one peek component.")
-      return
-    }
+    // Last-attached wins. During a screen transition the incoming peek mounts
+    // before the outgoing one detaches, and the outgoing detach is a no-op.
+    peekView?.delegate = null
 
     peekView = view
     view.delegate = this

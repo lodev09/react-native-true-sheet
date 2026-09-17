@@ -328,10 +328,9 @@ using namespace facebook::react;
     return;
   }
 
-  if (_peekView != nil) {
-    RCTLogWarn(@"TrueSheet: Sheet can only have one peek component.");
-    return;
-  }
+  // Last-attached wins. During a screen transition the incoming peek mounts
+  // before the outgoing one detaches, and the outgoing detach is a no-op.
+  _peekView.delegate = nil;
 
   _peekView = peekView;
   peekView.delegate = self;

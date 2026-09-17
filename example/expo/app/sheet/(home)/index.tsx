@@ -19,6 +19,7 @@ export default function SheetHomeScreen() {
       <Button text="Open Settings Sheet" onPress={() => router.push('/sheet/settings')} />
       <Button text="Open Scrollable Sheet" onPress={() => router.push('/sheet/scrollable')} />
       <Button text="Open Small Footer Sheet" onPress={() => router.push('/sheet/small-footer')} />
+      <Button text="Open Peek Sheet" onPress={() => router.push('/sheet/peek')} />
       <Button text="Navigate to Test" onPress={() => router.push('/sheet/test')} />
       <Button text="Go Back" onPress={() => router.back()} />
     </View>

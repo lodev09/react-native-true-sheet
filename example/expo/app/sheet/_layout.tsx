@@ -111,6 +111,16 @@ export default function SheetStackLayout() {
             cornerRadius: 16,
           }}
         />
+        <Sheet.Screen
+          name="peek"
+          options={{
+            detents: ['peek', 1],
+            backgroundColor: DARK,
+            cornerRadius: 16,
+            style: styles.peekSheet,
+            header: <Header />,
+          }}
+        />
       </Sheet>
     </TrueSheetProvider>
   );
@@ -118,6 +128,9 @@ export default function SheetStackLayout() {
 
 const styles = StyleSheet.create({
   scrollableSheet: {
+    flex: 1,
+  },
+  peekSheet: {
     flex: 1,
   },
   // Transparent on iOS so the scroll edge effect shows through

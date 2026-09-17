@@ -1,16 +1,15 @@
-import { createContext, type RefObject, useContext, useEffect, useRef } from 'react';
+import { createContext, type RefObject, useContext, useLayoutEffect, useRef } from 'react';
 import { type LayoutChangeEvent, View, type ViewProps } from 'react-native';
 
-import { getDOMElement } from './web/dom';
-
 /**
- * Reports the measured peek content height to the owning TrueSheet.
+ * Registers a peek with the owning TrueSheet so it can measure the peek live.
  * @internal
  */
 export interface TrueSheetPeekContextValue {
   contentRef: RefObject<View | null>;
-  peekRef: RefObject<View | null>;
-  setPeekContentHeight: (height: number) => void;
+  attachPeek: (view: View) => void;
+  detachPeek: (view: View) => void;
+  measurePeek: (view: View) => void;
 }
 
 export const TrueSheetPeekContext = createContext<TrueSheetPeekContextValue | null>(null);
@@ -19,14 +18,19 @@ export const TrueSheetPeekContext = createContext<TrueSheetPeekContextValue | nu
  * Distance from the top of the content view to the bottom of the peek view,
  * so the peek view's offset within the content (padding, views above it)
  * counts toward the peek detent. Both rects live in the drawer's transformed
- * subtree, so an in-flight translate cancels out of the delta.
+ * subtree, so an in-flight translate cancels out of the delta. Rounded so the
+ * sub-pixel noise of a mid-transition measurement doesn't register as a
+ * change — the content re-measures every frame while the snap animates, and
+ * a new value would restart the snap.
  * @internal
  */
 export const measurePeekContentHeight = (
   peekElement: HTMLElement,
   contentElement: HTMLElement
 ): number =>
-  peekElement.getBoundingClientRect().bottom - contentElement.getBoundingClientRect().top;
+  Math.round(
+    peekElement.getBoundingClientRect().bottom - contentElement.getBoundingClientRect().top
+  );
 
 /**
  * Wrapper component that marks its children as the sheet's peek content.
@@ -36,25 +40,23 @@ export const measurePeekContentHeight = (
  */
 export const TrueSheetPeek = ({ onLayout, ...rest }: ViewProps) => {
   const context = useContext(TrueSheetPeekContext);
-  const localRef = useRef<View>(null);
+  const viewRef = useRef<View>(null);
 
-  // Register into the sheet's peek ref so it can measure the peek live
-  // during detent geometry computation (state lags the first willPresent).
-  const viewRef = context?.peekRef ?? localRef;
+  // Attach by instance rather than sharing a ref — during a screen swap the
+  // incoming peek mounts before the outgoing one unmounts, and a shared ref
+  // would be nulled by the outgoing unmount.
+  useLayoutEffect(() => {
+    const view = viewRef.current;
+    if (!context || !view) return;
 
-  useEffect(() => () => context?.setPeekContentHeight(0), [context]);
+    context.attachPeek(view);
+    return () => context.detachPeek(view);
+  }, [context]);
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    if (context) {
-      const peekElement = getDOMElement(viewRef.current);
-      const contentElement = getDOMElement(context.contentRef.current);
-
-      const bottom =
-        peekElement && contentElement
-          ? measurePeekContentHeight(peekElement, contentElement)
-          : event.nativeEvent.layout.height;
-
-      context.setPeekContentHeight(bottom);
+    const view = viewRef.current;
+    if (context && view) {
+      context.measurePeek(view);
     }
 
     onLayout?.(event);
