@@ -22,6 +22,7 @@ import com.lodev09.truesheet.utils.TouchEventDeduper
  */
 interface TrueSheetFooterViewDelegate {
   fun footerViewDidChangeSize(width: Int, height: Int)
+  fun footerViewDidLayout()
   val eventDispatcher: EventDispatcher?
 }
 
@@ -95,6 +96,17 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
       lastHeight = h
       delegate?.footerViewDidChangeSize(w, h)
     }
+  }
+
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
+    super.onLayout(changed, left, top, right, bottom)
+    delegate?.footerViewDidLayout()
   }
 
   // ==================== RootView Implementation ====================
