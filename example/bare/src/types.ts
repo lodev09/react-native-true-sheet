@@ -20,6 +20,7 @@ export type SheetStackParamList = {
   Notifications: undefined;
   Scrollable: undefined;
   SmallFooter: undefined;
+  Peek: undefined;
 };
 
 export type SheetHomeStackParamList = {

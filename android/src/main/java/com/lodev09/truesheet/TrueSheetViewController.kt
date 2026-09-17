@@ -1131,7 +1131,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (!dimmed) return
-    if (contentHeight == 0) return
 
     // While keyboard is active or transitioning, use the target detent position for dim
     val top = if (isKeyboardActive) {
