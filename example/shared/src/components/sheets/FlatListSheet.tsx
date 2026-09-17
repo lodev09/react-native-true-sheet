@@ -61,6 +61,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           data={times(itemCount, (i) => i)}
           contentContainerStyle={styles.content}
           indicatorStyle="black"
+          alwaysBounceVertical={false}
           ItemSeparatorComponent={Spacer}
           renderItem={({ item }) => <DemoContent color={DARK_GRAY} text={`Item #${item}`} />}
           ListFooterComponent={
