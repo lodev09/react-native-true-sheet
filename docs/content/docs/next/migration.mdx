@@ -301,6 +301,33 @@ On iOS and Android, the new `footerOptions.avoidKeyboard` option defaults to `tr
 
 With footer inset adjustment enabled, only the footer portion above the keyboard adds scroll padding and contributes to the expanded `auto` height. The pinned footer keeps its safe-area padding and ignores `keyboardOffset`. Relative footers are unchanged. See [Keyboard Handling](guides/keyboard#footer-behavior).
 
+### 8. Overlays with `TrueSheetOverlay`
+
+The new `TrueSheetOverlay` component renders its children in a native layer above every presented sheet, on all platforms. It replaces the v3 `FullWindowOverlay` / `Modal` workaround for toasts and dialogs. Show or hide it by conditionally rendering children — there is no `visible` prop.
+
+```tsx
+// ❌ v3 — platform-specific workaround
+const Overlay = Platform.select({
+  ios: FullWindowOverlay,
+  default: Modal,
+})
+
+<Overlay visible={visible} transparent>
+  <Dialog onClose={() => setVisible(false)} />
+</Overlay>
+
+// ✅ v4
+import { TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
+
+<TrueSheetOverlay>
+  {visible && <Dialog onClose={() => setVisible(false)} />}
+</TrueSheetOverlay>
+```
+
+:::tip
+See the [Overlays guide](guides/overlays) for touch handling, layout, and limitations.
+:::
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.
@@ -328,6 +355,7 @@ With footer inset adjustment enabled, only the footer portion above the keyboard
    - Remove manual safe-area padding from footers and scroll content — both are handled natively
    - Add `glass={false}` to sheets with a translucent `backgroundColor` that should stay flat on iOS 26+
    - Rename `anchor` to `placement` and `anchorOffset` to `placementOffset`, with `"left"` / `"right"` becoming `"leading"` / `"trailing"`
+   - Replace `FullWindowOverlay` / `Modal` overlay workarounds with `TrueSheetOverlay`
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**
