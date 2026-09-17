@@ -15,6 +15,7 @@ interface TrueSheetContainerViewDelegate {
   fun containerViewScrollViewDidChange()
   fun containerViewHeaderDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
+  fun containerViewFooterDidLayout()
   fun containerViewPeekDidChangeSize(width: Int, height: Int)
 }
 
@@ -263,6 +264,10 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     // A relative footer takes over the bottom inset — drop the scrollable's;
     // an absolute one may pad the scrollable by its height
     contentView?.updateContentInset()
+  }
+
+  override fun footerViewDidLayout() {
+    delegate?.containerViewFooterDidLayout()
   }
 
   override fun peekViewDidChangeSize(width: Int, height: Int) {

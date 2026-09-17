@@ -586,19 +586,19 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         delegate?.viewControllerDidAttemptDismiss()
       }
     } else {
-      setStateForDetentIndex(nextIndex)
+      resize(nextIndex)
     }
   }
 
   override fun bottomSheetViewDidAccessibilityIncrement() {
     if (currentDetentIndex < detents.size - 1) {
-      setStateForDetentIndex(currentDetentIndex + 1)
+      resize(currentDetentIndex + 1)
     }
   }
 
   override fun bottomSheetViewDidAccessibilityDecrement() {
     if (currentDetentIndex > 0) {
-      setStateForDetentIndex(currentDetentIndex - 1)
+      resize(currentDetentIndex - 1)
     } else if (dismissible) {
       dismiss(animated = true)
     } else {
@@ -650,6 +650,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isBeingDismissed) return
 
     val behavior = behavior ?: return
+
+    if (interactionState is InteractionState.Dragging || pendingDetentIndex >= 0) {
+      updateStateDimensionsForPosition(sheetView.top)
+    }
 
     when (behavior.state) {
       BottomSheetBehavior.STATE_DRAGGING -> handleDragChange(sheetView)
@@ -757,7 +761,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       // the detents (and the container) to it.
       commitDetentAndDismissKeyboard(index, sheetView)
     } else {
-      // Settled — resize the container to the settled detent (applies deferred shrinks)
       updateStateDimensions()
     }
 
@@ -885,7 +888,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     pendingDetentIndex = detentIndex
-    updateStateDimensions(deferShrink = true)
     setupDimmedBackground()
     setStateForDetentIndex(detentIndex)
     resizePromise?.invoke()
@@ -1071,11 +1073,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
-    // Defer while dragging — the size change is driven by the drag itself (the
-    // container tracks the sheet's visible height), and reconfiguring resets
-    // behavior state, killing the gesture. Applied on settle so a real content
-    // change mid-drag (e.g. items removed from a list) isn't lost.
-    if (interactionState is InteractionState.Dragging) {
+    // Reconfiguring while the container tracks the sheet can interrupt its
+    // motion. Apply content size changes once the drag or resize settles.
+    if (interactionState is InteractionState.Dragging || isSettling) {
       hasPendingSizeChange = true
       return
     }
@@ -1387,8 +1387,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun handleDragChange(sheetView: View) {
     if (interactionState !is InteractionState.Dragging) return
 
-    updateStateDimensionsForDrag(sheetView.top)
-
     val position = getPositionDpForView(sheetView)
     val detent = detentCalculator.getDetentValueForIndex(currentDetentIndex)
     delegate?.viewControllerDidDragChange(currentDetentIndex, position, detent)
@@ -1459,13 +1457,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   /**
    * Updates the Fabric state with the current/target detent size so Yoga sizes
    * the container to the sheet's visible height.
-   *
-   * Unlike iOS, resize animations run over multiple frames (ViewDragHelper), so
-   * shrinking is deferred to settle ([deferShrink]) when a resize animation is
-   * about to run — growing applies immediately so content is laid out before
-   * the sheet reveals it.
    */
-  private fun updateStateDimensions(deferShrink: Boolean = false) {
+  private fun updateStateDimensions() {
     if (detents.isEmpty()) return
 
     val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
@@ -1474,17 +1467,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
     val newWidth = getStateWidth()
 
-    if (deferShrink && newWidth == lastStateWidth && newHeight < lastStateHeight) return
-
     setStateDimensions(newWidth, newHeight)
   }
 
   /**
-   * Tracks the sheet's visible height during drag (and the post-release settle
-   * animation) so the container resizes with the finger, like iOS. Clamped to the
+   * Tracks the sheet's visible height during drags and resize animations. Clamped to the
    * smallest detent — dragging below it slides the sheet out without resizing.
    */
-  private fun updateStateDimensionsForDrag(sheetTop: Int) {
+  private fun updateStateDimensionsForPosition(sheetTop: Int) {
     if (detents.isEmpty()) return
 
     val maxAvailableHeight = realScreenHeight - topInset
