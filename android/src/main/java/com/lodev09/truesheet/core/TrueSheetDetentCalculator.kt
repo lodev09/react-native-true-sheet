@@ -236,9 +236,8 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
       )
 
       // Without a keyboard floor the half stop shares the peek's height (see
-      // `halfExpandedDetentHeight`), so it belongs to index 0. Mapped to 1, the top detent
-      // settled half-expanded, where an upward nested scroll is consumed to expand rather
-      // than reaching the scrollable.
+      // halfExpandedDetentHeight), so it belongs to index 0 — mapped to 1 the top detent
+      // settles half-expanded, where upward nested scrolls expand instead of scrolling.
       2 -> if (hasKeyboardFloor) {
         mapOf(
           BottomSheetBehavior.STATE_COLLAPSED to 0,

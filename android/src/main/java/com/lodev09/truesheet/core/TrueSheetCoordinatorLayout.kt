@@ -180,16 +180,12 @@ class TrueSheetCoordinatorLayout(context: Context) :
   }
 
   /**
-   * Points BottomSheetBehavior's nested-scrolling child at the sheet's own scrollable.
+   * Points `nestedScrollingChildRef` at the scrollable given by `scrollableRef`.
    *
    * The behavior resolves that child itself, by walking the sheet for the first view with
-   * nested scrolling enabled — and `ScrollView` and `HorizontalScrollView` have it on by
-   * default. Content with a horizontal row above its list therefore handed the behavior
-   * the horizontal view: a vertical drag then counted as "outside the scrolling child",
-   * `onInterceptTouchEvent` returned true, and the gesture went to a sheet already at its
-   * largest detent — so the list never scrolled and nothing moved at all.
-   *
-   * `scrollableRef` names the scrollable, so it wins here too.
+   * nested scrolling enabled — which `ScrollView` and `HorizontalScrollView` have on by
+   * default. A horizontal row above a list therefore won it, leaving vertical drags
+   * counted as outside the scrolling child and intercepted into the sheet.
    */
   private fun pinNestedScrollingChildRef(scrollView: View?) {
     if (scrollView == null) return
