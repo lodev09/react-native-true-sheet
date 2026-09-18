@@ -20,7 +20,14 @@ import {
   VELOCITY_THRESHOLD,
   WINDOW_TOP_OFFSET,
 } from './constants';
-import { dampenValue, getTranslate, isVertical, reset, set } from './helpers';
+import {
+  dampenValue,
+  getSnapPointTransform,
+  getTranslate,
+  isVertical,
+  reset,
+  set,
+} from './helpers';
 import type { DrawerDirection } from './types';
 import { useComposedRefs } from './use-composed-refs';
 import { useControllableState } from './use-controllable-state';
@@ -1301,11 +1308,17 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       // same detent). Without this, position goes stale mid-animation because
       // the drawer's `transitionrun` never fires.
       const onTransitionRun = (e: TransitionEvent) => {
-        if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+        if (
+          (e.target === drawer || e.target === wrapper) &&
+          (e.propertyName === 'transform' || e.propertyName === '--snap-point-height')
+        )
           state.start();
       };
       const onTransitionDone = (e: TransitionEvent) => {
-        if ((e.target === drawer || e.target === wrapper) && e.propertyName === 'transform')
+        if (
+          (e.target === drawer || e.target === wrapper) &&
+          (e.propertyName === 'transform' || e.propertyName === '--snap-point-height')
+        )
           state.stop();
       };
       const onAnimationStart = (e: AnimationEvent) => {
@@ -1412,6 +1425,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       wasOpenRef.current = isOpen;
     }, [isOpen, detached, drawerRef]);
 
+    // Subsequent snap writes belong to useSnapPoints. A React style update on
+    // release would overwrite the live drag value before its transition starts.
+    const initialSnapPointOffset = React.useRef(snapPointsOffset?.[activeSnapPointIndex ?? 0] ?? 0);
     const contentNode = (
       <DialogPrimitive.Content
         data-vaul-drawer-direction={direction}
@@ -1426,7 +1442,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         style={
           snapPointsOffset && snapPointsOffset.length > 0
             ? ({
-                '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
+                '--snap-point-height': `${initialSnapPointOffset.current}px`,
+                'transform': getSnapPointTransform(direction),
                 ...style,
                 'pointerEvents': 'auto',
               } as React.CSSProperties)

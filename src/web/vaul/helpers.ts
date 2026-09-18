@@ -80,6 +80,11 @@ export const isVertical = (direction: DrawerDirection) => {
   }
 };
 
+export const getSnapPointTransform = (direction: DrawerDirection) =>
+  isVertical(direction)
+    ? 'translate3d(0, var(--snap-point-height), 0)'
+    : 'translate3d(var(--snap-point-height), 0, 0)';
+
 export function getTranslate(element: HTMLElement, direction: DrawerDirection): number | null {
   if (!element) {
     return null;

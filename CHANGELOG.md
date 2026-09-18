@@ -30,6 +30,7 @@
 - **Android**: Fix scrolling after rotation, including ScrollViews without `scrollableRef`. ([#852](https://github.com/lodev09/react-native-true-sheet/pull/852) by [@lodev09](https://github.com/lodev09))
 - **Android**: Prevent dragging a sheet behind a dimmed sheet. ([#856](https://github.com/lodev09/react-native-true-sheet/pull/856) by [@lodev09](https://github.com/lodev09))
 - **Web**: Stacked sheets now behave like native — a press inside a child no longer dismisses the sheets beneath it, dismissing a parent takes its children, the `peek` detent tracks content changes, and parents slide behind their child (staying put at full height) all the way up the stack. ([#824](https://github.com/lodev09/react-native-true-sheet/pull/824) by [@lodev09](https://github.com/lodev09))
+- **Web**: Flex content now fills the visible sheet height, with stable footers during dragging and snapping. Fix `auto` sizing and floating-footer spacing when scrollable content changes.
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - The peek detent no longer collapses when swapping between two screens that each render a peek component — the last-mounted peek wins. ([#851](https://github.com/lodev09/react-native-true-sheet/pull/851) by [@SamuelBrucksch](https://github.com/SamuelBrucksch) and [@lodev09](https://github.com/lodev09))
 
