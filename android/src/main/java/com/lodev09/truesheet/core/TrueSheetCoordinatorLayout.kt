@@ -179,29 +179,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
     } catch (_: Exception) {}
   }
 
-  /**
-   * Points `nestedScrollingChildRef` at the scrollable given by `scrollableRef`.
-   *
-   * The behavior resolves that child itself, by walking the sheet for the first view with
-   * nested scrolling enabled — which `ScrollView` and `HorizontalScrollView` have on by
-   * default. A horizontal row above a list therefore won it, leaving vertical drags
-   * counted as outside the scrolling child and intercepted into the sheet.
-   */
-  private fun pinNestedScrollingChildRef(scrollView: View?) {
-    if (scrollView == null) return
-    val sheet = delegate?.findSheetView() ?: return
-    val behavior = sheet.behavior ?: return
-    try {
-      val field = behavior.javaClass.superclass.getDeclaredField("nestedScrollingChildRef")
-      field.isAccessible = true
-      @Suppress("UNCHECKED_CAST")
-      val current = (field.get(behavior) as? java.lang.ref.WeakReference<View>)?.get()
-      if (current !== scrollView) {
-        field.set(behavior, java.lang.ref.WeakReference(scrollView))
-      }
-    } catch (_: Exception) {}
-  }
-
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
     // Swallow only that case — nothing between the touched EditText and the sheet scrolls
@@ -233,7 +210,6 @@ class TrueSheetCoordinatorLayout(context: Context) :
     // instead, so fall through and let the sheet drag from it — an EditText
     // target needs the disallow-intercept swallow or its stream dies.
     val scrollView = delegate?.findScrollView()
-    pinNestedScrollingChildRef(scrollView)
     if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) {
       val hasRefreshControl = scrollView.parent is SwipeRefreshLayout
       if (hasRefreshControl || scrollView.scrollY > 0 || scrollView.canScrollVertically(1)) return
