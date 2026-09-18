@@ -1017,8 +1017,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // and a long one at the first, like iOS
     val peekHeight = minOf(detentCalculator.getDetentHeight(detents[0], includeKeyboard = !hasKeyboardFloor), maxAvailableHeight)
 
-    val halfExpandedDetentHeight = when (detents.size) {
-      1 -> peekHeight
+    val halfExpandedDetentHeight = when {
+      detents.size == 1 -> peekHeight
+
+      // Two detents: park the half stop on the peek too, as the single-detent case does.
+      // Taken from detents[1] it lands just under the expanded stop, since both resolve to
+      // the largest height, and the behavior then consumes every upward nested scroll to
+      // travel that gap — flipping EXPANDED -> HALF_EXPANDED while a scrollable at the top
+      // detent never scrolls. A keyboard floor still needs a distinct half stop to rest at.
+      detents.size == 2 && !hasKeyboardFloor -> peekHeight
+
       else -> detentCalculator.getDetentHeight(detents[1], includeKeyboard = !hasKeyboardFloor)
     }
 

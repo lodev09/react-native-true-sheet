@@ -179,6 +179,33 @@ class TrueSheetCoordinatorLayout(context: Context) :
     } catch (_: Exception) {}
   }
 
+  /**
+   * Points BottomSheetBehavior's nested-scrolling child at the sheet's own scrollable.
+   *
+   * The behavior resolves that child itself, by walking the sheet for the first view with
+   * nested scrolling enabled — and `ScrollView` and `HorizontalScrollView` have it on by
+   * default. Content with a horizontal row above its list therefore handed the behavior
+   * the horizontal view: a vertical drag then counted as "outside the scrolling child",
+   * `onInterceptTouchEvent` returned true, and the gesture went to a sheet already at its
+   * largest detent — so the list never scrolled and nothing moved at all.
+   *
+   * `scrollableRef` names the scrollable, so it wins here too.
+   */
+  private fun pinNestedScrollingChildRef(scrollView: View?) {
+    if (scrollView == null) return
+    val sheet = delegate?.findSheetView() ?: return
+    val behavior = sheet.behavior ?: return
+    try {
+      val field = behavior.javaClass.superclass.getDeclaredField("nestedScrollingChildRef")
+      field.isAccessible = true
+      @Suppress("UNCHECKED_CAST")
+      val current = (field.get(behavior) as? java.lang.ref.WeakReference<View>)?.get()
+      if (current !== scrollView) {
+        field.set(behavior, java.lang.ref.WeakReference(scrollView))
+      }
+    } catch (_: Exception) {}
+  }
+
   override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
     // RN's ReactEditText fires this(true) on ACTION_DOWN, killing sheet drag over an input.
     // Swallow only that case — nothing between the touched EditText and the sheet scrolls
@@ -210,6 +237,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
     // instead, so fall through and let the sheet drag from it — an EditText
     // target needs the disallow-intercept swallow or its stream dies.
     val scrollView = delegate?.findScrollView()
+    pinNestedScrollingChildRef(scrollView)
     if (scrollView != null && (target === scrollView || target.isDescendantOf(scrollView))) {
       val hasRefreshControl = scrollView.parent is SwipeRefreshLayout
       if (hasRefreshControl || scrollView.scrollY > 0 || scrollView.canScrollVertically(1)) return
