@@ -406,6 +406,18 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
 
+  // Unmounted while still presented — the owner stopped rendering the sheet
+  // without dismissing it first. Left alone, the native sheet outlives its JS:
+  // it stays on screen, fully drawn, dead to touches and gone from the
+  // accessibility tree until the user swipes it away. `dealloc` would dismiss
+  // it, but a pooled host is never deallocated. Dismiss it here, as Android
+  // does in `onDropInstance`; the block below then treats it like any sheet
+  // pooled mid-dismissal. Nothing is emitted: the JS side is already gone.
+  if (_controller.isPresented && !_controller.isBeingDismissed) {
+    _controller.delegate = nil;
+    [_controller.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  }
+
   // Pooled mid-dismissal: the next mount can reuse this host — and its
   // controller — while the previous sheet is still animating out. Detach until
   // that transition ends so its tail (didBlur, didDismiss, position) can't reach
