@@ -1,4 +1,5 @@
 export type AppStackParamList = {
+  FooterPress: undefined;
   SheetStack: undefined;
   Map: undefined;
   Standard: undefined;

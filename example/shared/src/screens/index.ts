@@ -1,3 +1,4 @@
+export * from './FooterPressScreen';
 export * from './MapScreen';
 export * from './ModalScreen';
 export * from './NotificationsSheetContent';

@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
+import { FooterPressScreen, MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
 import { DARK_BLUE } from '@example/shared/utils';
 import { Map } from '@example/shared/components';
 import { ModalStackNavigator } from './ModalStackNavigator';
@@ -11,7 +11,7 @@ import { useAppNavigation } from '../hooks';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-const INITIAL_ROUTE_NAME: keyof AppStackParamList = 'Map';
+const INITIAL_ROUTE_NAME: keyof AppStackParamList = 'FooterPress';
 
 const MapScreenWrapper = () => {
   const navigation = useAppNavigation();
@@ -52,6 +52,11 @@ export const RootNavigator = () => {
         options={{ presentation: 'fullScreenModal', headerShown: false }}
         name="SheetStack"
         component={SheetNavigator}
+      />
+      <Stack.Screen
+        name="FooterPress"
+        component={FooterPressScreen}
+        options={{ title: 'Footer press repro' }}
       />
       <Stack.Screen options={{ headerShown: false }} name="Map" component={MapScreenWrapper} />
       <Stack.Screen

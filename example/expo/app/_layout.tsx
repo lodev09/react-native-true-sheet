@@ -59,6 +59,7 @@ function RootLayoutNav() {
               headerStyle: { backgroundColor: DARK_BLUE },
             }}
           >
+            <Stack.Screen name="footer-press" options={{ title: 'Footer press repro' }} />
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
             <Stack.Screen name="test" options={{ title: 'Test' }} />
