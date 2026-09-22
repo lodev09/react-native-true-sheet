@@ -105,18 +105,6 @@ object ScreenUtils {
   fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
 
   /**
-   * Get the location of a view in screen coordinates
-   *
-   * @param view The view to get screen location for
-   * @return IntArray with [x, y] coordinates in screen space
-   */
-  fun getScreenLocation(view: View): IntArray {
-    val location = IntArray(2)
-    view.getLocationOnScreen(location)
-    return location
-  }
-
-  /**
    * Returns true if the device is a phone in portrait orientation.
    */
   fun isPortraitPhone(reactContext: ReactContext): Boolean {

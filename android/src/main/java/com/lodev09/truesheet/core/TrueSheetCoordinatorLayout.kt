@@ -250,7 +250,7 @@ class TrueSheetCoordinatorLayout(context: Context) :
   }
 
   /**
-   * Called by descendant RootView implementations (controller, footer) when a child
+   * Called by the descendant RootView (controller) when a child
    * starts a native gesture — e.g. an RNGH handler activated or a scrollable began
    * scrolling. Yields sheet interception for the rest of the touch stream.
    */

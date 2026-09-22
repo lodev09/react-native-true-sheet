@@ -1,29 +1,18 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewParent
 import com.facebook.react.bridge.WritableNativeMap
-import com.facebook.react.uimanager.JSPointerDispatcher
-import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.PixelUtil.pxToDp
-import com.facebook.react.uimanager.PointerEvents
-import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
-import com.lodev09.truesheet.core.TrueSheetCoordinatorLayout
-import com.lodev09.truesheet.utils.TouchEventDeduper
 
 /**
- * Delegate interface for footer view size changes and event dispatching
+ * Delegate interface for footer view size changes
  */
 interface TrueSheetFooterViewDelegate {
   fun footerViewDidChangeSize(width: Int, height: Int)
   fun footerViewDidLayout()
-  val eventDispatcher: EventDispatcher?
 }
 
 /**
@@ -31,18 +20,15 @@ interface TrueSheetFooterViewDelegate {
  * This is the second child of TrueSheetContainerView
  * Positioned absolutely at the bottom of the sheet
  *
- * Implements RootView to handle touch events when positioned outside parent bounds.
+ * Touches reach it through the controller's RootView like any other sheet
+ * content — the container tracks the sheet's visible height, so the footer
+ * always lays out inside the container's bounds.
  */
 @SuppressLint("ViewConstructor")
-class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
-  ReactViewGroup(reactContext),
-  RootView {
+class TrueSheetFooterView(reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
   var delegate: TrueSheetFooterViewDelegate? = null
   var stateWrapper: StateWrapper? = null
-
-  private val eventDispatcher: EventDispatcher?
-    get() = delegate?.eventDispatcher
 
   private var lastWidth = 0
   private var lastHeight = 0
@@ -80,14 +66,6 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
     sw.updateState(newState)
   }
 
-  private val jsTouchDispatcher = JSTouchDispatcher(this)
-  private var jsPointerDispatcher: JSPointerDispatcher? = null
-  private val touchDeduper = TouchEventDeduper()
-
-  init {
-    jsPointerDispatcher = JSPointerDispatcher(this)
-  }
-
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
 
@@ -107,74 +85,6 @@ class TrueSheetFooterView(private val reactContext: ThemedReactContext) :
   ) {
     super.onLayout(changed, left, top, right, bottom)
     delegate?.footerViewDidLayout()
-  }
-
-  // ==================== RootView Implementation ====================
-
-  override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let { dispatcher ->
-      if (touchDeduper.shouldDispatch(event)) {
-        jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
-      }
-      jsPointerDispatcher?.handleMotionEvent(event, dispatcher, true)
-    }
-    return super.onInterceptTouchEvent(event)
-  }
-
-  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-    // Mirrors ReactSurfaceView: keep receiving onInterceptTouchEvent so
-    // jsTouchDispatcher sees the gesture end, but forward the request up the tree.
-    parent?.requestDisallowInterceptTouchEvent(disallowIntercept)
-  }
-
-  override fun onTouchEvent(event: MotionEvent): Boolean {
-    if (pointerEvents == PointerEvents.NONE || pointerEvents == PointerEvents.BOX_NONE) {
-      return false
-    }
-
-    eventDispatcher?.let { dispatcher ->
-      if (touchDeduper.shouldDispatch(event)) {
-        jsTouchDispatcher.handleTouchEvent(event, dispatcher, reactContext)
-      }
-      jsPointerDispatcher?.handleMotionEvent(event, dispatcher, false)
-    }
-    super.onTouchEvent(event)
-    return true
-  }
-
-  override fun onInterceptHoverEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let { jsPointerDispatcher?.handleMotionEvent(event, it, true) }
-    return super.onHoverEvent(event)
-  }
-
-  override fun onHoverEvent(event: MotionEvent): Boolean {
-    eventDispatcher?.let { jsPointerDispatcher?.handleMotionEvent(event, it, false) }
-    return super.onHoverEvent(event)
-  }
-
-  override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
-    findCoordinatorLayout()?.childDidClaimNativeGesture()
-    eventDispatcher?.let { dispatcher ->
-      jsTouchDispatcher.onChildStartedNativeGesture(ev, dispatcher)
-      jsPointerDispatcher?.onChildStartedNativeGesture(childView, ev, dispatcher)
-    }
-  }
-
-  private fun findCoordinatorLayout(): TrueSheetCoordinatorLayout? {
-    var current: ViewParent? = parent
-    while (current != null && current !is TrueSheetCoordinatorLayout) {
-      current = current.parent
-    }
-    return current as? TrueSheetCoordinatorLayout
-  }
-
-  override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
-    eventDispatcher?.let { jsTouchDispatcher.onChildEndedNativeGesture(ev, it) }
-    jsPointerDispatcher?.onChildEndedNativeGesture()
-  }
-
-  override fun handleException(t: Throwable) {
-    reactContext.reactApplicationContext.handleException(RuntimeException(t))
   }
 
   companion object {
