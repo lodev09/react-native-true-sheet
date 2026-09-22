@@ -1042,13 +1042,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       animate = isPresented
     )
 
-    updateStateDimensions()
-
     if (isPresented && applyState) {
       // Prefer the pending target while a resize animation is in flight so a
       // layout-driven reconfigure doesn't revert to the stale currentDetentIndex.
       val targetIndex = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
+
+      // Track the settle like resize() — the container (and the footer pinned
+      // to its bottom) follows the sheet's visible height instead of jumping
+      // to the target and riding the animation
+      pendingDetentIndex = targetIndex
+      sheetView?.let { updateStateDimensionsForPosition(it.top) }
       setStateForDetentIndex(targetIndex)
+
+      // Already at the target — no slide frames will follow
+      if (!isSettling) {
+        pendingDetentIndex = -1
+        updateStateDimensions()
+      }
+    } else {
+      updateStateDimensions()
     }
 
     interactionState = InteractionState.Idle
@@ -1190,9 +1202,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val sheetHeight = sheet.height
 
     // Pinned to the screen bottom (above the keyboard) while the sheet sits at
-    // or above its lowest stop; past it the footer rides down with the sheet
-    // instead, like iOS
-    val anchorTop = minOf(sheet.top, detentCalculator.getLowestSheetTop())
+    // or above its lowest stop; dragged past it the footer rides down with the
+    // sheet instead, like iOS. A resize settle always pins — the sheet may be
+    // animating up from below a stop that just grew
+    val anchorTop = if (pendingDetentIndex >= 0) sheet.top else minOf(sheet.top, detentCalculator.getLowestSheetTop())
     val footerY = (sheetHeight - anchorTop - footerHeight - keyboardShift).toFloat()
 
     // Clamp to prevent footer going above safe area
