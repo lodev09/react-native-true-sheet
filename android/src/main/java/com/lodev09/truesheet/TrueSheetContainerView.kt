@@ -4,11 +4,9 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 interface TrueSheetContainerViewDelegate {
-  val eventDispatcher: EventDispatcher?
   fun containerViewContentDidChangeSize(width: Int, height: Int)
   fun containerViewContentDidScroll()
   fun containerViewScrollViewDidChange()
@@ -106,9 +104,6 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       field = value
       contentView?.bottomInset = value
     }
-
-  override val eventDispatcher: EventDispatcher?
-    get() = delegate?.eventDispatcher
 
   init {
     // Allow footer to position outside container bounds

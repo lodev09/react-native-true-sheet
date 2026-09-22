@@ -169,7 +169,15 @@ const MapScreenInner = ({
         name="main"
         detents={['peek', 'auto', 1]}
         ref={sheetRef}
-        footer={<Footer />}
+        footer={
+          <Footer
+            onTouchStart={(e) => log(`footer touchStart y:${Math.round(e.nativeEvent.pageY)}`)}
+            // onTouchMove={(e) => log(`footer touchMove y:${Math.round(e.nativeEvent.pageY)}`)}
+            onPressIn={() => log('footer pressIn')}
+            onPressOut={() => log('footer pressOut')}
+            onPress={() => log('footer pressed')}
+          />
+        }
         footerStyle={styles.footer}
         initialDetentIndex={0}
         placement={anchorLeft ? 'leading' : 'center'}
