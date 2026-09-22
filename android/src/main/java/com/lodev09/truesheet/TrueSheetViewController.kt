@@ -209,12 +209,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Touch Dispatchers
   private val jsTouchDispatcher = JSTouchDispatcher(this)
   private val jsPointerDispatcher = JSPointerDispatcher(this)
-
-  // True when the active touch stream began inside the footer. Latched on
-  // ACTION_DOWN so subsequent MOVE events keep routing to the footer even if
-  // the finger drifts outside the footer's rect mid-gesture.
-  private var footerOwnsTouchStream = false
-
   private val touchDeduper = TouchEventDeduper()
 
   private val eventDispatcher
@@ -1578,41 +1572,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
   // MARK: - RootView Touch Handling
   // =============================================================================
-
-  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-    val footer = containerView?.footerView
-    val action = event.actionMasked
-
-    if (footer != null && footer.isShown) {
-      if (action == MotionEvent.ACTION_DOWN) {
-        val loc = ScreenUtils.getScreenLocation(footer)
-        val x = event.rawX.toInt()
-        val y = event.rawY.toInt()
-        footerOwnsTouchStream = x >= loc[0] &&
-          x <= loc[0] + footer.width &&
-          y >= loc[1] &&
-          y <= loc[1] + footer.height
-      }
-
-      if (footerOwnsTouchStream) {
-        val loc = ScreenUtils.getScreenLocation(footer)
-        val localEvent = MotionEvent.obtain(event)
-        localEvent.setLocation(event.rawX - loc[0], event.rawY - loc[1])
-        val handled = footer.dispatchTouchEvent(localEvent)
-        localEvent.recycle()
-
-        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-          footerOwnsTouchStream = false
-        }
-        if (handled) return true
-      }
-    }
-
-    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-      footerOwnsTouchStream = false
-    }
-    return super.dispatchTouchEvent(event)
-  }
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
