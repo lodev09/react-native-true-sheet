@@ -111,6 +111,27 @@ The sheet's content lays out naturally — like a regular view or a screen — w
 
 If layout still misbehaves, try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
 
+## `@expo/ui` Host Opens Small, Then Grows
+
+With an `auto` detent, a sheet containing an [`@expo/ui`](https://docs.expo.dev/versions/latest/sdk/ui/) `<Host matchContents>` opens at a small height, then grows to fit the content.
+
+Jetpack Compose and SwiftUI content can only measure once it's attached to a window, and sheet content is only attached on `present()`. The `Host` reports its size a few frames into the present animation, and the sheet resizes to it. [`lazy={false}`](reference/configuration#lazy) doesn't help here — it mounts the content earlier, but doesn't attach it.
+
+To open at the right height, give the `Host` a known height instead of `matchContents`:
+
+```tsx
+const [height, setHeight] = useState(480);
+
+<TrueSheet detents={['auto']}>
+  <Host
+    style={{ height }}
+    onLayoutContent={({ nativeEvent }) => nativeEvent.height > 0 && setHeight(nativeEvent.height)}
+  >
+    <DateTimePicker displayedComponents="date" variant="picker" />
+  </Host>
+</TrueSheet>
+```
+
 ## Xcode and EAS Build Issues
 
 ### Xcode Version

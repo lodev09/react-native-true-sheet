@@ -15,6 +15,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
 - [Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)](#sheet-screen-crashes-screencontainer-is-not-attached-under-reactrootview-android)
 - ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
+- [@expo/ui Host opens small, then grows](#expoui-host-opens-small-then-grows)
 - [Keyboard hides input](#keyboard-hides-input)
 - [Sheet doesn't build (Xcode version)](#sheet-doesnt-build-xcode-version)
 - [EAS Build fails](#eas-build-fails)
@@ -155,6 +156,25 @@ useFocusEffect(
 
 ```tsx
 <TrueSheet ref={sheet} lazy={false} detents={['auto']}>
+```
+
+## @expo/ui Host opens small, then grows
+
+**Symptom:** With `detents={['auto']}`, a sheet containing `@expo/ui`'s `<Host matchContents>` opens small, then grows to fit the content.
+
+**Cause:** Compose/SwiftUI content only measures once attached to a window, and sheet content attaches on `present()`. The `Host` reports its size mid-animation. `lazy={false}` doesn't help — it mounts earlier but doesn't attach.
+
+**Fix:** Give the `Host` a known height instead of `matchContents`:
+
+```tsx
+const [height, setHeight] = useState(480);
+
+<Host
+  style={{ height }}
+  onLayoutContent={({ nativeEvent }) => nativeEvent.height > 0 && setHeight(nativeEvent.height)}
+>
+  <DateTimePicker displayedComponents="date" variant="picker" />
+</Host>
 ```
 
 ## Keyboard hides input
