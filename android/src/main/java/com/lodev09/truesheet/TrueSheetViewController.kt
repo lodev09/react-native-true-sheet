@@ -708,6 +708,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresentAnimating) {
       isPresentAnimating = false
       finishPresent()
+      flushPendingSizeChange()
       return
     }
 
