@@ -3,6 +3,7 @@ package com.lodev09.truesheet.utils
 import android.content.Context
 import android.os.Build
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
@@ -36,10 +37,22 @@ object KeyboardUtils {
    * Dismisses the soft keyboard with an optional callback when the animation completes.
    */
   fun dismiss(view: View, onComplete: (() -> Unit)?) {
+    if (!isKeyboardVisible(view)) {
+      onComplete?.invoke()
+      return
+    }
+
     val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     val focusedView = view.rootView.findFocus()
 
-    if (focusedView == null || !isKeyboardVisible(view)) {
+    // A keyboard can stay up with nothing focused, e.g. a blur that lands after focus was restored,
+    // so hide it through the window instead of treating it as already hidden.
+    if (focusedView == null) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        view.windowInsetsController?.hide(WindowInsets.Type.ime())
+      } else {
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+      }
       onComplete?.invoke()
       return
     }

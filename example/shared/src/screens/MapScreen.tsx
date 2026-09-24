@@ -239,6 +239,7 @@ const MapScreenInner = ({
       >
         <ScrollView
           nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
           alwaysBounceVertical={false}
           contentContainerStyle={styles.content}
         >

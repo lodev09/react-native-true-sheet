@@ -403,11 +403,22 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val parentSheet = TrueSheetStackManager.getTopmostSheet()
     val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
     val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
-    if (KeyboardUtils.isKeyboardVisible(reactContext) && shouldDismissKeyboard) {
+    if (shouldDismissKeyboard && KeyboardUtils.isKeyboardVisible(reactContext)) {
       viewController.saveFocusedView()
       KeyboardUtils.dismiss(this) {
-        post { present(detentIndex, animated, promiseCallback) }
+        post { presentSheet(detentIndex, animated, promiseCallback) }
       }
+      // Blur like iOS so JS focus state stays in sync until restoreFocusedView() refocuses it
+      rootView.findFocus()?.clearFocus()
+      return
+    }
+
+    presentSheet(detentIndex, animated, promiseCallback)
+  }
+
+  private fun presentSheet(detentIndex: Int, animated: Boolean, promiseCallback: () -> Unit) {
+    if (viewController.isPresented) {
+      promiseCallback()
       return
     }
 
