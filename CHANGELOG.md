@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: `present()` no longer hangs when the keyboard is open with nothing focused. The keyboard now hides and the sheet opens. ([#870](https://github.com/lodev09/react-native-true-sheet/pull/870) by [@simongt](https://github.com/simongt))
+
 ## 3.11.14
 
 ### 🐛 Bug fixes
