@@ -390,12 +390,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    present(detentIndex, animated, false, promiseCallback)
-  }
-
-  // Runs the keyboard branch at most once. A keyboard still visible after the dismiss
-  // would otherwise re-post present() forever and never settle the promise.
-  private fun present(detentIndex: Int, animated: Boolean, keyboardDismissAttempted: Boolean, promiseCallback: () -> Unit) {
     if (viewController.isPresented) {
       RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
       promiseCallback()
@@ -409,11 +403,22 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val parentSheet = TrueSheetStackManager.getTopmostSheet()
     val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
     val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
-    if (!keyboardDismissAttempted && KeyboardUtils.isKeyboardVisible(reactContext) && shouldDismissKeyboard) {
+    if (shouldDismissKeyboard && KeyboardUtils.isKeyboardVisible(reactContext)) {
       viewController.saveFocusedView()
       KeyboardUtils.dismiss(this) {
-        post { present(detentIndex, animated, true, promiseCallback) }
+        post { presentSheet(detentIndex, animated, promiseCallback) }
       }
+      // Blur like iOS so JS focus state stays in sync until restoreFocusedView() refocuses it
+      rootView.findFocus()?.clearFocus()
+      return
+    }
+
+    presentSheet(detentIndex, animated, promiseCallback)
+  }
+
+  private fun presentSheet(detentIndex: Int, animated: Boolean, promiseCallback: () -> Unit) {
+    if (viewController.isPresented) {
+      promiseCallback()
       return
     }
 

@@ -37,18 +37,22 @@ object KeyboardUtils {
    * Dismisses the soft keyboard with an optional callback when the animation completes.
    */
   fun dismiss(view: View, onComplete: (() -> Unit)?) {
-    val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-    val focusedView = view.rootView.findFocus()
-
     if (!isKeyboardVisible(view)) {
       onComplete?.invoke()
       return
     }
 
+    val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    val focusedView = view.rootView.findFocus()
+
     // A keyboard can stay up with nothing focused, e.g. a blur that lands after focus was restored,
     // so hide it through the window instead of treating it as already hidden.
     if (focusedView == null) {
-      hideWithoutFocusedView(view, imm)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        view.windowInsetsController?.hide(WindowInsets.Type.ime())
+      } else {
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+      }
       onComplete?.invoke()
       return
     }
@@ -73,14 +77,6 @@ object KeyboardUtils {
     }
 
     imm?.hideSoftInputFromWindow(focusedView.windowToken, 0)
-  }
-
-  private fun hideWithoutFocusedView(view: View, imm: InputMethodManager?) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      view.windowInsetsController?.hide(WindowInsets.Type.ime())
-    } else {
-      imm?.hideSoftInputFromWindow(view.windowToken, 0)
-    }
   }
 
   /**
