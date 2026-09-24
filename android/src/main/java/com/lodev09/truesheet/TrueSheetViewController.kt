@@ -1050,7 +1050,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (!viewToFocus.isAttachedToWindow) return
     if (viewToFocus.requestFocus()) {
       viewToFocus.postDelayed({
-        KeyboardUtils.show(viewToFocus)
+        if (viewToFocus.isFocused) KeyboardUtils.show(viewToFocus)
       }, 100)
     }
   }
