@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import {
-  Keyboard,
   Platform,
   ScrollView,
   StyleSheet,
@@ -34,21 +33,11 @@ import Animated, {
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
-import {
-  Button,
-  ButtonGroup,
-  DemoContent,
-  Footer,
-  Header,
-  Input,
-  Spacer,
-  Text,
-} from '../components';
+import { Button, ButtonGroup, DemoContent, Footer, Header, Spacer, Text } from '../components';
 import { BLUE, DARK, GAP, HEADER_HEIGHT, SPACING } from '../utils';
 
 import {
   BasicSheet,
-  BlankSheet,
   FlatListSheet,
   GestureSheet,
   PromptSheet,
@@ -113,7 +102,6 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const keyboardSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -132,13 +120,6 @@ const MapScreenInner = ({
   const presentBasicSheet = async (index = 0) => {
     await basicSheet.current?.present(index);
     log('basic sheet presented');
-  };
-
-  const presentKeyboardSheet = async () => {
-    const startedAt = Date.now();
-    log('keyboard sheet present()');
-    await keyboardSheet.current?.present();
-    log(`keyboard sheet resolved ${Date.now() - startedAt}ms`);
   };
 
   const rapidPresentDismiss = async () => {
@@ -258,8 +239,8 @@ const MapScreenInner = ({
       >
         <ScrollView
           nestedScrollEnabled
-          alwaysBounceVertical={false}
           keyboardShouldPersistTaps="handled"
+          alwaysBounceVertical={false}
           contentContainerStyle={styles.content}
         >
           <View style={styles.heading}>
@@ -272,8 +253,6 @@ const MapScreenInner = ({
             onPress={() => presentBasicSheet(0)}
             onLongPress={rapidPresentDismiss}
           />
-          <Input />
-          <Button text="Keyboard Sheet" onPress={presentKeyboardSheet} />
           <Button text="Open Modal" onPress={onNavigateToModal} />
           <Button text="Sheet Navigator" onPress={onNavigateToSheetStack} />
           {isTablet && (
@@ -322,7 +301,6 @@ const MapScreenInner = ({
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
           <GestureSheet ref={gestureSheet} />
-          <BlankSheet ref={keyboardSheet} onWillDismiss={() => Keyboard.dismiss()} />
         </ScrollView>
       </ReanimatedTrueSheet>
     </View>
