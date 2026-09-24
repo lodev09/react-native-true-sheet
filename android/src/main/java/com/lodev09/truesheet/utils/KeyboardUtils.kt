@@ -3,6 +3,7 @@ package com.lodev09.truesheet.utils
 import android.content.Context
 import android.os.Build
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
@@ -39,7 +40,15 @@ object KeyboardUtils {
     val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     val focusedView = view.rootView.findFocus()
 
-    if (focusedView == null || !isKeyboardVisible(view)) {
+    if (!isKeyboardVisible(view)) {
+      onComplete?.invoke()
+      return
+    }
+
+    // A keyboard can stay up with nothing focused, e.g. a blur that lands after focus was restored,
+    // so hide it through the window instead of treating it as already hidden.
+    if (focusedView == null) {
+      hideWithoutFocusedView(view, imm)
       onComplete?.invoke()
       return
     }
@@ -64,6 +73,14 @@ object KeyboardUtils {
     }
 
     imm?.hideSoftInputFromWindow(focusedView.windowToken, 0)
+  }
+
+  private fun hideWithoutFocusedView(view: View, imm: InputMethodManager?) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      view.windowInsetsController?.hide(WindowInsets.Type.ime())
+    } else {
+      imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }
   }
 
   /**
