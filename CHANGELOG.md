@@ -17,7 +17,7 @@
 
 - Added `background` and `backgroundStyle` for custom backgrounds, exact colors, and glass or blur tints on all platforms. Includes examples, docs, and AI skill guidance. ([#874](https://github.com/lodev09/react-native-true-sheet/pull/874) by [@lodev09](https://github.com/lodev09))
 
-- Added `detentBackgrounds` with color strings or color/blur objects, native iOS transitions, and cross-fades elsewhere. Includes updated docs and AI skill guidance.
+- Added `detentBackgrounds` with color strings or color/blur objects, native iOS transitions, and cross-fades elsewhere. Includes updated docs and AI skill guidance. ([#876](https://github.com/lodev09/react-native-true-sheet/pull/876) by [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 
