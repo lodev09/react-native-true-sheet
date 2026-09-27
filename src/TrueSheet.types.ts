@@ -348,8 +348,8 @@ export type BackgroundBlur =
 
 export type DetentBackground =
   | string
-  | { color: ColorValue; blur?: never }
-  | { blur: BackgroundBlur; color?: never };
+  | { color: ColorValue; blur?: BackgroundBlur }
+  | { blur: BackgroundBlur; color?: ColorValue };
 
 /**
  * Supported Sheet detent.
