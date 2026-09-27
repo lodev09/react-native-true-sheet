@@ -15,6 +15,8 @@
 - New `onDismissAttempt` event fires when the user tries to dismiss a sheet with `dismissible` set to `false` — confirm unsaved changes, then call `dismiss()`. ([#833](https://github.com/lodev09/react-native-true-sheet/pull/833) by [@lodev09](https://github.com/lodev09))
 - Added `footerOptions.avoidKeyboard` on iOS and Android. Set it to `false` to keep absolute footers behind the keyboard while preserving space for any uncovered portion. ([#849](https://github.com/lodev09/react-native-true-sheet/pull/849) by [@lodev09](https://github.com/lodev09))
 
+- Added `background` and `backgroundStyle` for custom backgrounds, exact colors, and glass or blur tints on all platforms. Includes examples, docs, and AI skill guidance. ([#874](https://github.com/lodev09/react-native-true-sheet/pull/874) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed a crash on some iOS 26.1 builds when presenting a sheet. ([#872](https://github.com/lodev09/react-native-true-sheet/pull/872) by [@lodev09](https://github.com/lodev09))
