@@ -1424,7 +1424,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
-    if (!self.isDesignCompatibilityMode) {
+    // Some 26.1 builds ship `_UIFormSheetPresentationController` without this setter
+    if (!self.isDesignCompatibilityMode && [self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
       if (!self.glass || hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
       } else {
@@ -1554,9 +1555,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_0)
   // iOS 27 exposes native placement. `sourceView` must stay nil since it overrides `preferredPlacement`.
   if (@available(iOS 27.0, *)) {
-    self.sheetPresentationController.sourceView = nil;
-    self.sheetPresentationController.preferredPlacement = [self preferredPlacement];
-    return;
+    if ([self.sheetPresentationController respondsToSelector:@selector(setPreferredPlacement:)]) {
+      self.sheetPresentationController.sourceView = nil;
+      self.sheetPresentationController.preferredPlacement = [self preferredPlacement];
+      return;
+    }
   }
 #endif
 
