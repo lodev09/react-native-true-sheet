@@ -18,13 +18,39 @@ By default, TrueSheet enables Liquid Glass on iOS 26+ devices. The sheet will au
 
 ## Tinting Liquid Glass
 
-[`backgroundColor`](../reference/configuration#backgroundcolor) paints over the glass, so a translucent color tints it while keeping the blur and the content behind the sheet visible.
+[`backgroundStyle`](../reference/configuration#backgroundstyle) paints over the glass or blur. A translucent color tints the effect and keeps the content behind the sheet visible.
 
 ```tsx
-<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)">
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}>
   {/* Sheet content */}
 </TrueSheet>
 ```
+
+Use an opaque `backgroundStyle.backgroundColor` for an exact color, including over full-screen modals.
+The wrapper fills the sheet behind the header, content, and footer. It ignores touches and applies across all detents.
+
+## Custom blur
+
+Pass a blur element to [`background`](../reference/configuration#background) to use a third-party blur.
+Size the element with `StyleSheet.absoluteFill`. The blur library controls intensity and platform support.
+
+For example, with `expo-blur` installed:
+
+```tsx
+import { BlurView } from 'expo-blur';
+import { StyleSheet } from 'react-native';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+
+<TrueSheet
+  glass={false}
+  backgroundColor="transparent"
+  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
+>
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+The custom background sits above the sheet background effects. On iOS 26.0, `glass={false}` cannot remove the system glass.
 
 ## Disabling Liquid Glass
 

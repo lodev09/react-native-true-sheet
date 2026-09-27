@@ -59,6 +59,47 @@ When not provided, iOS 26+ uses the default [Liquid Glass](../guides/liquid-glas
 On iOS 26+, this paints over the [Liquid Glass](../guides/liquid-glass) background. Use a translucent color to tint the glass, or set [`glass`](#glass) to `false` for a flat color.
 :::
 
+## `background`
+
+A custom background behind the header, content, and footer. Accepts a `ReactNode`.
+The wrapper fills the sheet, sits above the sheet background effects, and ignores touches.
+It does not affect content height or detent calculations.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ReactNode` | | ✅ | ✅ | ✅ |
+
+Size the element to fill the wrapper:
+
+```tsx
+<TrueSheet background={<View style={[StyleSheet.absoluteFill, { backgroundColor: '#18202b' }]} />}>
+  <Text>Sheet content</Text>
+</TrueSheet>
+```
+
+For a custom blur, see the [Liquid Glass guide](../guides/liquid-glass#custom-blur).
+
+## `backgroundStyle`
+
+Style for the [`background`](#background) wrapper. Only `backgroundColor` is supported.
+The style works without a `background` element and applies across all detents.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `StyleProp<Pick<ViewStyle, 'backgroundColor'>>` | | ✅ | ✅ | ✅ |
+
+Use an opaque color for an exact background color, including over full-screen modals.
+Use a translucent color to tint the glass or blur:
+
+```tsx
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+>
+  <Text>Sheet content</Text>
+</TrueSheet>
+```
+
 ## `glass`
 
 Keeps the [Liquid Glass](../guides/liquid-glass) background behind [`backgroundColor`](#backgroundcolor). Set to `false` to remove the glass and render a flat background. [`backgroundBlur`](#backgroundblur) always removes the glass.

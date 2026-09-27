@@ -2,6 +2,7 @@ import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 
 import type { TrueSheetProps, TrueSheetStaticMethods } from '../TrueSheet.types';
+import { TrueSheetBackground } from '../TrueSheetBackground';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -54,8 +55,15 @@ export class TrueSheet extends React.Component<TrueSheetProps, TrueSheetState> {
   }
 
   render() {
-    const { children, style } = this.props;
-    return React.createElement(View, { style }, this.renderHeader(), children, this.renderFooter());
+    const { children, style, background, backgroundStyle } = this.props;
+    return React.createElement(
+      View,
+      { style },
+      React.createElement(TrueSheetBackground, { background, backgroundStyle }),
+      this.renderHeader(),
+      children,
+      this.renderFooter()
+    );
   }
 }
 

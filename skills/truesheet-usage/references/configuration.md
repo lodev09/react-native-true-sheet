@@ -50,10 +50,27 @@ Every TrueSheet prop with type, default value, and platform support.
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
 | `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26+ it paints over Liquid Glass — translucent colors tint the glass. Android default is Material 3 `colorSurfaceContainerLow` (adapts to light/dark) |
+| `background` | `ReactNode` | — | 🍎🤖🌐 | Custom node behind header/content/footer, above sheet effects. Wrapper fills the sheet and ignores touches. Size the node with `StyleSheet.absoluteFill` |
+| `backgroundStyle` | `StyleProp<Pick<ViewStyle, 'backgroundColor'>>` | — | 🍎🤖🌐 | Only `backgroundColor` is applied. Opaque colors give an exact color, including over full-screen modals. Translucent colors tint glass/blur. Works without `background` |
 | `glass` | `boolean` | `true` | 🍎 26.1+ | Keep Liquid Glass behind `backgroundColor`. `false` renders a flat background. `backgroundBlur` always removes glass |
 | `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius. iOS uses the device's native radius; Android defaults to `16` (Material 3) |
 | `elevation` | `number` | 4 | 🤖🌐 | Shadow depth |
 | `style` | `ViewStyle` | — | 🍎🤖🌐 | Content style override. Content wraps its children's height by default — pass `flex: 1` to fill the sheet's visible height per detent |
+
+The background wrapper does not affect detent heights. It applies across all detents.
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
+
+// With expo-blur installed. Platform support follows the blur library.
+<TrueSheet
+  glass={false}
+  backgroundColor="transparent"
+  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
+/>
+```
+
+On iOS 26.0, `glass={false}` cannot remove the system glass behind a custom background.
 
 ## Blur
 

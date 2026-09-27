@@ -1,4 +1,4 @@
-import type { Component, ComponentType, ReactElement, RefObject } from 'react';
+import type { Component, ComponentType, ReactElement, ReactNode, RefObject } from 'react';
 import type {
   ColorValue,
   NativeSyntheticEvent,
@@ -504,6 +504,19 @@ export interface TrueSheetProps extends ViewProps {
    * Use a translucent color to tint the glass, or set `glass` to `false` for a flat color.
    */
   backgroundColor?: ColorValue;
+
+  /**
+   * Custom background rendered behind the header, content, and footer.
+   * The wrapper fills the sheet and ignores touches.
+   * Size the element to fill it with `StyleSheet.absoluteFill`.
+   */
+  background?: ReactNode;
+
+  /**
+   * Style for the background wrapper. Only `backgroundColor` is supported.
+   * Use an opaque color for an exact color, or a translucent color to tint glass or blur.
+   */
+  backgroundStyle?: StyleProp<Pick<ViewStyle, 'backgroundColor'>>;
 
   /**
    * Keeps the Liquid Glass background behind `backgroundColor`.
