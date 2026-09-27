@@ -236,6 +236,26 @@ using namespace facebook::react;
   // Background color
   _controller.backgroundColor = RCTUIColorFromSharedColor(newProps.backgroundColor);
 
+  NSMutableArray<NSDictionary *> *detentBackgrounds = [NSMutableArray new];
+  ContextContainer contextContainer;
+  PropsParserContext parserContext{-1, contextContainer};
+  for (const auto &entry : newProps.detentBackgrounds) {
+    NSMutableDictionary *background = [NSMutableDictionary new];
+    UIColor *color = RCTUIColorFromSharedColor(entry.color);
+    if (color) {
+      background[@"color"] = color;
+    }
+    if (!entry.blur.empty()) {
+      auto blur = TrueSheetViewBackgroundBlur::None;
+      fromRawValue(parserContext, RawValue(entry.blur), blur);
+      background[@"blur"] = @(static_cast<int>(blur));
+    }
+    [detentBackgrounds addObject:background];
+  }
+  if (![_controller.detentBackgrounds isEqualToArray:detentBackgrounds]) {
+    _controller.detentBackgrounds = detentBackgrounds;
+  }
+
   // Blur tint
   _controller.backgroundBlur = newProps.backgroundBlur;
 

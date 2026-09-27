@@ -204,6 +204,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     setupScrollable()
 
     if (viewController.isPresented) {
+      viewController.setupBackground()
       viewController.sheetView?.setupBackground()
       viewController.sheetView?.setupGrabber()
       viewController.sheetView?.updateGravity()
@@ -260,9 +261,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.sheetCornerRadius = radius
   }
 
+  fun setDetentBackgrounds(colors: List<Int?>) {
+    viewController.detentBackgrounds = colors
+  }
+
   fun setSheetBackgroundColor(color: Int?) {
-    if (viewController.sheetBackgroundColor == color) return
-    viewController.sheetBackgroundColor = color
+    viewController.backgroundColor = color
   }
 
   fun setDismissible(dismissible: Boolean) {

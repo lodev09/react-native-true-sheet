@@ -1,6 +1,6 @@
 /* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
 import { createRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { processColor, StyleSheet, Text, View } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
@@ -16,6 +16,55 @@ import type {
 } from '../TrueSheet.types';
 
 describe('TrueSheet', () => {
+  it('normalizes detent backgrounds and updates or removes them', () => {
+    const backgrounds = [null, { color: 'transparent' }, { blur: 'dark' }] as const;
+    const { getByTestId, rerender } = render(
+      <TrueSheet testID="detent-backgrounds" detentBackgrounds={[...backgrounds]} />
+    );
+    expect(getByTestId('detent-backgrounds').props.detentBackgrounds).toEqual([
+      {},
+      { color: processColor('transparent') },
+      { blur: 'dark', color: undefined },
+    ]);
+
+    rerender(<TrueSheet testID="detent-backgrounds" detentBackgrounds={[{ color: '#123456' }]} />);
+    expect(getByTestId('detent-backgrounds').props.detentBackgrounds).toEqual([
+      { color: processColor('#123456') },
+    ]);
+    rerender(<TrueSheet testID="detent-backgrounds" />);
+    expect(getByTestId('detent-backgrounds').props.detentBackgrounds).toBeUndefined();
+  });
+
+  it.each(['#123456', 'red', 'rgba(0, 0, 0, 0.5)', 'transparent'])(
+    'treats the string %s as a detent color',
+    (color) => {
+      const { getByTestId } = render(
+        <TrueSheet
+          testID="detent-backgrounds"
+          detentBackgrounds={[color, { color }, { blur: 'dark' }]}
+        />
+      );
+      expect(getByTestId('detent-backgrounds').props.detentBackgrounds).toEqual([
+        { color: processColor(color) },
+        { color: processColor(color) },
+        { blur: 'dark', color: undefined },
+      ]);
+    }
+  );
+
+  it('normalizes sparse detent backgrounds and trims entries with the detents', () => {
+    const backgrounds = new Array(4);
+    backgrounds[1] = { color: '#123456' };
+    const { getByTestId } = render(
+      <TrueSheet testID="detent-backgrounds" detentBackgrounds={backgrounds} />
+    );
+    expect(getByTestId('detent-backgrounds').props.detentBackgrounds).toEqual([
+      {},
+      { color: processColor('#123456') },
+      {},
+    ]);
+  });
+
   it('should export TrueSheet component', () => {
     expect(TrueSheet).toBeDefined();
     expect(typeof TrueSheet).toBe('function');

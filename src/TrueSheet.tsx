@@ -38,6 +38,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 import { TrueSheetBackground } from './TrueSheetBackground';
+import { normalizeDetentBackground } from './detentBackgrounds';
 
 import {
   Platform,
@@ -565,6 +566,7 @@ export class TrueSheet
     const {
       detents = [0.5, 1],
       backgroundColor,
+      detentBackgrounds,
       background,
       backgroundStyle,
       dismissible = true,
@@ -669,6 +671,13 @@ export class TrueSheet
         detents={resolvedDetents}
         backgroundBlur={backgroundBlur}
         backgroundColor={backgroundColor}
+        detentBackgrounds={
+          detentBackgrounds &&
+          Array.from(detentBackgrounds.slice(0, 3), (entry) => {
+            const normalized = normalizeDetentBackground(entry);
+            return normalized ? { ...normalized, color: processColor(normalized.color) } : {};
+          })
+        }
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={this.resolvedGrabberOptions}

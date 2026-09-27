@@ -66,6 +66,12 @@ export interface PositionChangeEventPayload {
 export interface NativeProps extends ViewProps {
   // Array properties
   detents?: ReadonlyArray<Double>;
+  detentBackgrounds?: ReadonlyArray<
+    Readonly<{
+      color?: ProcessedColorValue | null;
+      blur?: string;
+    }>
+  >;
 
   // Number properties - use 0 as default to avoid nil insertion
   maxContentHeight?: WithDefault<Double, 0>;

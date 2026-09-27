@@ -58,6 +58,7 @@ import {
 } from './web/constants';
 import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
+import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
 import { observeSheetLayout } from './web/layout';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
@@ -82,6 +83,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     cornerRadius,
     style,
     backgroundColor: backgroundColorProp,
+    detentBackgrounds,
     background,
     backgroundStyle,
     maxContentHeight,
@@ -155,12 +157,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const effectiveDetached = isFormSheet || detached;
 
   const colorScheme = useColorScheme();
-  const backgroundColor =
-    backgroundColorProp ??
-    (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
-
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const isPresentingRef = useRef(shouldAutoPresent);
+  const [displayedBackgroundIndex, setDisplayedBackgroundIndex] = useState(
+    shouldAutoPresent ? initialDetentIndex : 0
+  );
+  const backgroundColor =
+    normalizeDetentBackground(
+      detentBackgrounds?.[Math.min(displayedBackgroundIndex, validDetents.length - 1)]
+    )?.color ??
+    backgroundColorProp ??
+    (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
   const [activeSnapPoint, setActiveSnapPoint] = useState<SheetDetent | null>(
     () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
   );
@@ -243,6 +253,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           throw new Error(
             `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
           );
+        }
+        if (!isOpenRef.current) {
+          isPresentingRef.current = true;
+          setDisplayedBackgroundIndex(index);
         }
         setActiveSnapPoint(detent);
         setIsOpen(true);
@@ -646,11 +660,21 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const handlePositionChange = useCallback(
     (position: number) => {
       const { index, detent } = interpolateFromPosition(position);
+      if (isOpenRef.current && !isPresentingRef.current) {
+        const { effectiveH, positions } = computeDetentGeometry();
+        setDisplayedBackgroundIndex((current) =>
+          getDetentBackgroundIndex(
+            effectiveH - position,
+            positions.map((top) => effectiveH - top),
+            current
+          )
+        );
+      }
       onPositionChangeRef.current?.({
         nativeEvent: { index, position, detent, realtime: true },
       } as PositionChangeEvent);
     },
-    [interpolateFromPosition]
+    [interpolateFromPosition, computeDetentGeometry]
   );
 
   // Fire onMount once after first render. React-mount is the earliest point
@@ -689,6 +713,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
     const fireDone = () => {
       if (present) {
+        isPresentingRef.current = false;
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
         onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
       } else {
@@ -1022,6 +1047,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       ? `drop-shadow(0 ${-elevation}px ${elevation * 3}px rgba(0, 0, 0, 0.15))`
       : undefined;
 
+  const backgroundLayerStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    backgroundColor: backgroundColor as string,
+    transition: isPresentingRef.current ? 'none' : 'background-color 200ms',
+  };
+
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
@@ -1033,7 +1066,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       flexDirection: 'column',
       borderTopLeftRadius: effectiveCornerRadius,
       borderTopRightRadius: effectiveCornerRadius,
-      backgroundColor: backgroundColor as string,
       // Clip children to the rounded top so headers/content with their own
       // background don't bleed past the corners. `clip` (not `hidden`): a
       // hidden box is still a scroll container, so browser focus-reveal (e.g.
@@ -1054,7 +1086,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
           : 0,
     }),
     [
-      backgroundColor,
       effectiveCornerRadius,
       insetAdjustment,
       footerOwnsInset,
@@ -1211,6 +1242,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               ) : undefined
             }
           >
+            <div aria-hidden style={backgroundLayerStyle} />
             <Drawer.Title style={visuallyHiddenStyle}>
               {accessibilityOptions?.paneTitle ?? 'Sheet'}
             </Drawer.Title>

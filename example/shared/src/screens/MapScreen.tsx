@@ -183,6 +183,7 @@ const MapScreenInner = ({
         placement={anchorLeft ? 'leading' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
+        detentBackgrounds={[null, null, BLUE]}
         backgroundStyle={{
           backgroundColor: `${BLUE}33`,
         }}

@@ -392,6 +392,21 @@ Only `backgroundColor` is supported in `backgroundStyle`. It works without a `ba
 For a custom background, pass a `ReactNode` to `background`. Size the element with `StyleSheet.absoluteFill`.
 See the [configuration reference](reference/configuration#background) and the [custom blur example](guides/liquid-glass#custom-blur).
 
+### 10. Per-Detent Backgrounds
+
+The new `detentBackgrounds` prop replaces JavaScript background changes in `onDetentChange`:
+
+```tsx
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+Supported iOS 26.1+ devices transition natively. Other devices cross-fade after passing the midpoint between detents.
+Android and Web inherit the sheet background for blur entries.
+See [`detentBackgrounds`](reference/configuration#detentbackgrounds).
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.
