@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, GAP, SPACING } from '../utils';
-import { Button, Footer, Header, Spacer } from '../components';
+import { Button, Header, Spacer } from '../components';
 import { BasicSheet, PromptSheet, FlatListSheet } from '../components/sheets';
 
 interface TestScreenProps {
@@ -31,7 +31,7 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
         <FlatListSheet ref={flatListSheet} />
         <TrueSheet
           ref={backgroundSheet}
-          detents={[0.5, 1]}
+          detents={['auto', 1]}
           backgroundStyle={{ backgroundColor: DARK }}
           background={
             <View style={StyleSheet.absoluteFill}>
@@ -39,11 +39,10 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
             </View>
           }
           header={<Header />}
-          footer={<Footer />}
           style={styles.sheetContent}
         >
-          <Button text="Half" onPress={() => backgroundSheet.current?.resize(0)} />
           <Button text="Full" onPress={() => backgroundSheet.current?.resize(1)} />
+          <Button text="Auto" onPress={() => backgroundSheet.current?.resize(0)} />
           <Button text="Close" onPress={() => backgroundSheet.current?.dismiss()} />
         </TrueSheet>
       </View>
