@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.11.16
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed a crash on some iOS 26.1 builds when presenting a sheet. ([#873](https://github.com/lodev09/react-native-true-sheet/pull/873) by [@lodev09](https://github.com/lodev09))
