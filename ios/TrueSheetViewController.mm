@@ -1135,7 +1135,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
-    if (!self.isDesignCompatibilityMode) {
+    // Some 26.1 builds ship `_UIFormSheetPresentationController` without this setter
+    if (!self.isDesignCompatibilityMode && [self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
       if (self.backgroundColor || hasBlur) {
         self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
       } else {
