@@ -56,7 +56,7 @@ For tinted Liquid Glass, omit `backgroundBlur` and `backgroundColor`.
 **Cause:** v4 removes `blurOptions`. The built-in blur uses system intensity and ignores touches.
 
 **Fix:** Use a third-party blur in `background`, sized with `StyleSheet.absoluteFill`.
-See the [custom blur example](configuration.md#appearance). The blur library controls platform support.
+See the [custom blur example](advanced-patterns.md#custom-blur). The blur library controls platform support.
 
 ## Content renders with zero height or gets clipped
 

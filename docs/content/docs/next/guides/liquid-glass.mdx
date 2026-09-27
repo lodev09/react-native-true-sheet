@@ -17,47 +17,9 @@ Liquid Glass is a visual effect introduced in iOS 26 that provides a translucent
 By default, TrueSheet enables Liquid Glass on iOS 26+ devices.
 On supported iOS 26.1+ devices, `backgroundColor` or `backgroundBlur` replaces it with a native effect. With neither prop set, the default is Liquid Glass.
 
-## Background effects
-
-Native effects require iOS 26.1+, the background effect setters on the sheet and its detents, and no design compatibility mode.
-Design compatibility mode applies only on iOS 26. iOS 27+ ignores `UIDesignRequiresCompatibility`.
-
-| Input | Native effects | Fallback |
-| - | - | - |
-| `backgroundColor` | Color effect | Painted color |
-| `backgroundBlur` | Blur effect, replaces glass | Non-interactive blur view at system intensity |
-| Neither | Liquid Glass | Platform default; system-material blur before iOS 26 |
-| `backgroundStyle.backgroundColor` | Paint above the effect | Paint above the sheet background |
-| `background` | Custom node above the effect | Custom node above the sheet background |
-
-On iOS, blur takes precedence over color. Use `backgroundStyle` to tint either glass or blur.
-The fallback covers older iOS versions, devices without the setters, and `UIDesignRequiresCompatibility` mode.
-On iOS 26.0, the fallback color or blur sits above Liquid Glass, which TrueSheet cannot remove.
-
-:::note
-The native color effect can shift dark, low-chroma colors over full-screen modals. Use an opaque `backgroundStyle.backgroundColor` for an exact color.
+:::tip
+See the [Backgrounds guide](backgrounds) for colors, blur, custom backgrounds, per-detent backgrounds, and the iOS fallback behavior.
 :::
-
-## Per-detent backgrounds
-
-[`detentBackgrounds`](../reference/configuration#detentbackgrounds) selects a color or blur for each detent.
-On supported iOS 26.1+ devices, UIKit transitions between these effects as the sheet moves.
-
-```tsx
-<TrueSheet
-  detents={['peek', 'auto', 1]}
-  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
-/>
-```
-
-In this example, the peek detent uses default Liquid Glass. The other detents use blur and color effects.
-A `null` or missing entry inherits the sheet effect. An entry overrides it.
-Detents with a color or blur entry lose the glass touch response.
-Tinted glass effects are not supported per detent.
-`backgroundStyle` can tint the background, but its tint applies across all detents.
-
-Other iOS devices cross-fade after passing the midpoint between detents.
-Android and Web use the same midpoint rule for colors and inherit the sheet background for blur entries.
 
 ## Tinting Liquid Glass
 
@@ -69,30 +31,7 @@ Android and Web use the same midpoint rule for colors and inherit the sheet back
 </TrueSheet>
 ```
 
-Use an opaque `backgroundStyle.backgroundColor` for an exact color, including over full-screen modals.
-The wrapper fills the sheet behind the header, content, and footer. It ignores touches and applies across all detents.
-
-## Custom blur
-
-Pass a blur element to [`background`](../reference/configuration#background) to use a third-party blur.
-Size the element with `StyleSheet.absoluteFill`. The blur library controls intensity and platform support.
-
-For example, with `expo-blur` installed:
-
-```tsx
-import { BlurView } from 'expo-blur';
-import { StyleSheet } from 'react-native';
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
-
-<TrueSheet
-  backgroundColor="transparent"
-  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
->
-  {/* Sheet content */}
-</TrueSheet>
-```
-
-The custom background sits above the sheet background effects. On iOS 26.0 or devices without the setters, a transparent color cannot remove the system glass.
+Tinted glass is not supported per detent. On iOS 26+, detents with a [`detentBackgrounds`](backgrounds#per-detent-backgrounds) entry lose the glass touch response.
 
 ## Disabling Liquid Glass
 
@@ -125,7 +64,7 @@ Use `backgroundColor="transparent"` to remove the glass without adding a color. 
 :::
 
 :::note
-This requires iOS 26.1+ with native background effect support. Devices without the setters use the fallback described above.
+This requires iOS 26.1+ with native background effect support. Devices without the setters use the [fallback](backgrounds#ios-background-effects).
 :::
 
 ### Using `UIDesignRequiresCompatibility`

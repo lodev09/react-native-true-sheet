@@ -1,6 +1,7 @@
 {
   "title": "Guides",
   "pages": [
+    "backgrounds",
     "dimming",
     "edge-to-edge",
     "footer",

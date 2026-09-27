@@ -5,7 +5,7 @@ description: >-
   Use this skill whenever the user wants to add, configure, control, or debug a bottom sheet using TrueSheet —
   including ref-based sheets, named global sheets, web support with TrueSheetProvider/useTrueSheet,
   React Navigation or Expo Router sheet flows, Reanimated-driven animations, scrolling content,
-  stacking, headers/footers, detents, peeking, side sheets, keyboard handling, dimming, liquid glass,
+  stacking, headers/footers, detents, peeking, side sheets, keyboard handling, dimming, backgrounds, liquid glass,
   and Jest testing. Also use when the user is migrating from v3 to v4, troubleshooting layout or
   gesture issues, or asking about any TrueSheet prop, event, or method — even if they don't
   mention "TrueSheet" by name but describe a bottom sheet in a React Native context.
@@ -261,29 +261,20 @@ Renders children in a native layer above every presented sheet. Show/hide by con
 
 Don't try to block dismissal from a callback — native can't wait on JS. Toggle `dismissible` from state; blocked drags and back/escape fire `onDismissAttempt` (dim taps don't), then `dismiss()` programmatically.
 
-### iOS blur background
+### Backgrounds
 
 ```tsx
-<TrueSheet detents={['auto']} backgroundBlur="system-material">
-  <View style={{ padding: 16 }}>
-    <Text>Blurred sheet</Text>
-  </View>
-</TrueSheet>
+<TrueSheet backgroundBlur="system-material" /> {/* iOS-only blur, wins over backgroundColor */}
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} /> {/* tint glass/blur */}
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} /> {/* exact opaque color */}
+<TrueSheet backgroundColor="transparent" /> {/* clear, no glass on supported iOS 26.1+ */}
+<TrueSheet background={<BlurView intensity={40} style={StyleSheet.absoluteFill} />} /> {/* custom node */}
+<TrueSheet detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']} /> {/* per detent */}
 ```
 
-Blur is iOS-only and takes precedence over `backgroundColor`. Tint it with `backgroundStyle.backgroundColor`.
+`backgroundStyle.backgroundColor` paints over glass or blur. `background` renders any node above the sheet effects; the wrapper ignores touches.
 `blurOptions` is removed in v4. For custom intensity, use a third-party blur in `background`.
-
-### iOS tinted or flat Liquid Glass
-
-```tsx
-<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}> {/* tinted glass */}
-<TrueSheet backgroundColor="transparent"> {/* clear, no glass on supported iOS 26.1+ */}
-```
-
-`backgroundStyle.backgroundColor` paints over glass or blur. Use a translucent tint or an opaque exact color.
-For a custom node, use `background` with `StyleSheet.absoluteFill`. The wrapper ignores touches.
-See [configuration.md](references/configuration.md#appearance) for a custom blur example.
+See [Backgrounds](references/advanced-patterns.md#backgrounds) for layers, per-detent transitions, and iOS fallbacks.
 
 ### Present on mount
 
@@ -417,5 +408,5 @@ When you need the full picture, load these reference files:
 |-----------|--------------|
 | [Configuration](./references/configuration.md) | Every prop with type, default, platform support, and notes |
 | [API](./references/api.md) | Complete events and methods reference with payload types |
-| [Advanced Patterns](./references/advanced-patterns.md) | Navigation, Reanimated, Web, Side sheets, Liquid Glass, Jest mocking, Migration v3→v4 |
+| [Advanced Patterns](./references/advanced-patterns.md) | Navigation, Reanimated, Web, Side sheets, Backgrounds, Liquid Glass, Jest mocking, Migration v3→v4 |
 | [Troubleshooting](./references/troubleshooting.md) | Common issues and fixes by platform |
