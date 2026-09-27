@@ -239,13 +239,6 @@ using namespace facebook::react;
   // Blur tint
   _controller.backgroundBlur = newProps.backgroundBlur;
 
-  // Blur options
-  const auto &blurOpts = newProps.blurOptions;
-  _controller.blurIntensity = blurOpts.intensity >= 0 ? @(blurOpts.intensity) : nil;
-  _controller.blurInteraction = blurOpts.interaction;
-
-  _controller.glass = newProps.glass;
-
   // Corner radius
   _controller.cornerRadius = newProps.cornerRadius < 0 ? nil : @(newProps.cornerRadius);
 

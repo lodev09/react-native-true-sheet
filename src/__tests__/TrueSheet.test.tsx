@@ -135,6 +135,40 @@ describe('TrueSheet', () => {
       rerender(<TrueSheet background={background} lazy={false} />);
       expect(queryByTestId('lazy-background')).not.toBeNull();
     });
+
+    it('keeps the wrapper tint separate from sheet color and blur updates', () => {
+      const backgroundStyle = { backgroundColor: 'rgba(0, 122, 255, 0.25)' };
+      const { getByTestId, UNSAFE_getByType, rerender } = render(
+        <TrueSheet
+          initialDetentIndex={0}
+          testID="effect-background-host"
+          backgroundColor="transparent"
+          backgroundStyle={backgroundStyle}
+        />
+      );
+
+      expect(getByTestId('effect-background-host').props.backgroundColor).toBe('transparent');
+
+      rerender(
+        <TrueSheet
+          initialDetentIndex={0}
+          testID="effect-background-host"
+          backgroundBlur="system-material"
+          backgroundStyle={backgroundStyle}
+        />
+      );
+
+      const host = getByTestId('effect-background-host');
+      const wrapper = UNSAFE_getByType(TrueSheetBackground).findByType(View);
+      expect(host.props.backgroundColor).toBeUndefined();
+      expect(host.props.backgroundBlur).toBe('system-material');
+      expect(StyleSheet.flatten(wrapper.props.style).backgroundColor).toBe(
+        backgroundStyle.backgroundColor
+      );
+
+      rerender(<TrueSheet initialDetentIndex={0} testID="effect-background-host" />);
+      expect(getByTestId('effect-background-host').props.backgroundBlur).toBeUndefined();
+    });
   });
 
   it('should render TrueSheetOverlay children', () => {

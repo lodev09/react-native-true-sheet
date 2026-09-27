@@ -56,7 +56,11 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
         <Spacer />
         <Button text="Open RN Modal" onPress={() => setModalVisible(true)} />
 
-        <BasicSheet dimmedDetentIndex={1} backgroundColor={DARK} ref={basicSheet} />
+        <BasicSheet
+          dimmedDetentIndex={1}
+          backgroundStyle={{ backgroundColor: DARK }}
+          ref={basicSheet}
+        />
         <BlankSheet dimmed={false} ref={blankSheet} />
         <PromptSheet dimmed={false} ref={promptSheet} />
         <FlatListSheet ref={flatlistSheet} />
@@ -84,7 +88,7 @@ export const ModalScreen = ({ onNavigateToTest, onDismiss }: ModalScreenProps) =
               <Button text="FlatList Sheet" onPress={() => modalFlatlistSheet.current?.present()} />
               <Spacer />
 
-              <BasicSheet backgroundColor={DARK} ref={modalBasicSheet} />
+              <BasicSheet backgroundStyle={{ backgroundColor: DARK }} ref={modalBasicSheet} />
               <PromptSheet dimmed={false} ref={modalPromptSheet} />
               <FlatListSheet ref={modalFlatlistSheet} />
               <ScrollViewSheet ref={modalScrollViewSheet} />

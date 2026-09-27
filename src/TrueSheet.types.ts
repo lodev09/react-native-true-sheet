@@ -304,28 +304,6 @@ export interface FooterOptions {
 }
 
 /**
- * Options for customizing the blur effect.
- * Only applies when `backgroundBlur` is set.
- *
- * @platform ios
- */
-export interface BlurOptions {
-  /**
-   * The intensity of the blur effect (0-100).
-   * Uses system default if not provided.
-   */
-  intensity?: number;
-  /**
-   * Enables or disables user interaction on the blur view.
-   * Disabling this can help with visual artifacts (flash) on iOS 18+
-   * when touching the sheet content with blur enabled.
-   *
-   * @default true
-   */
-  interaction?: boolean;
-}
-
-/**
  * Inset adjustment behavior for the sheet content.
  */
 export type InsetAdjustment =
@@ -500,8 +478,9 @@ export interface TrueSheetProps extends ViewProps {
    * Main sheet background color.
    * Uses system default when not provided.
    *
-   * On iOS 26+, paints over the Liquid Glass background.
-   * Use a translucent color to tint the glass, or set `glass` to `false` for a flat color.
+   * On supported iOS 26.1+ devices, uses a native color effect.
+   * `backgroundBlur` takes precedence on iOS.
+   * Use `backgroundStyle.backgroundColor` for an exact color or to tint glass or blur.
    */
   backgroundColor?: ColorValue;
 
@@ -517,16 +496,6 @@ export interface TrueSheetProps extends ViewProps {
    * Use an opaque color for an exact color, or a translucent color to tint glass or blur.
    */
   backgroundStyle?: StyleProp<Pick<ViewStyle, 'backgroundColor'>>;
-
-  /**
-   * Keeps the Liquid Glass background behind `backgroundColor`.
-   * Set to `false` to remove the glass and render a flat background.
-   * `backgroundBlur` always removes the glass.
-   *
-   * @platform ios 26.1+
-   * @default true
-   */
-  glass?: boolean;
 
   /**
    * The sheet corner radius.
@@ -573,19 +542,12 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * The blur effect style on iOS.
-   * Blends with `backgroundColor` when provided.
+   * Takes precedence over `backgroundColor`.
+   * Use `backgroundStyle.backgroundColor` to tint the blur.
    *
    * @platform ios
    */
   backgroundBlur?: BackgroundBlur;
-
-  /**
-   * Options for customizing the blur effect.
-   * Only applies when `backgroundBlur` is set.
-   *
-   * @platform ios
-   */
-  blurOptions?: BlurOptions;
 
   /**
    * Overrides `large` or `100%` height.

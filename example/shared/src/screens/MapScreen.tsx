@@ -183,7 +183,9 @@ const MapScreenInner = ({
         placement={anchorLeft ? 'leading' : 'center'}
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
-        backgroundColor={Platform.select({ ios: `${BLUE}33`, default: undefined })}
+        backgroundStyle={{
+          backgroundColor: `${BLUE}33`,
+        }}
         style={styles.sheet}
         detached
         dismissible={false}

@@ -27,11 +27,6 @@ type AccessibilityOptionsType = Readonly<{
   paneTitle?: WithDefault<string, 'Bottom sheet'>;
 }>;
 
-type BlurOptionsType = Readonly<{
-  intensity?: WithDefault<Double, -1>;
-  interaction?: WithDefault<boolean, true>;
-}>;
-
 type ScrollEdgeEffect = 'automatic' | 'hard' | 'soft' | 'hidden';
 
 type ScrollableOptionsType = Readonly<{
@@ -114,11 +109,7 @@ export interface NativeProps extends ViewProps {
   placementOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
 
-  // Blur options
-  blurOptions?: BlurOptionsType;
-
   // Boolean properties - match defaults from TrueSheet.types.ts
-  glass?: WithDefault<boolean, true>;
   grabber?: WithDefault<boolean, true>;
   grabberOptions?: GrabberOptionsType;
   accessibilityOptions?: AccessibilityOptionsType;

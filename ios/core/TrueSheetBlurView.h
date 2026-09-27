@@ -14,8 +14,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TrueSheetBlurView : UIVisualEffectView
 
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
-@property (nonatomic, strong, nullable) NSNumber *blurIntensity;
-@property (nonatomic, assign) BOOL blurInteraction;
 
 /// Adds the blur view to a parent view with proper constraints
 - (void)addToView:(UIView *)parentView;

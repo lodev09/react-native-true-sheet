@@ -134,7 +134,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
 
-    _blurInteraction = YES;
     _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
@@ -370,6 +369,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (BOOL)isDesignCompatibilityMode {
+  if (@available(iOS 27.0, *)) {
+    return NO;
+  }
   if (@available(iOS 26.0, *)) {
     NSNumber *value = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"];
     return value.boolValue;
@@ -1407,7 +1409,44 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self applyActiveDetent];
 }
 
+- (BOOL)canUseBackgroundEffects {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
+  if (@available(iOS 26.1, *)) {
+    // Some 26.1 builds omit setters declared in the SDK.
+    if (self.isDesignCompatibilityMode || ![self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
+      return NO;
+    }
+    for (UISheetPresentationControllerDetent *detent in self.sheet.detents) {
+      if (![detent respondsToSelector:@selector(setBackgroundEffect:)]) {
+        return NO;
+      }
+    }
+    return YES;
+  }
+#endif
+  return NO;
+}
+
 - (void)setupBackground {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
+  if (@available(iOS 26.1, *)) {
+    if ([self canUseBackgroundEffects]) {
+      UIVisualEffect *effect = nil;
+      if (self.backgroundBlur != TrueSheetViewBackgroundBlur::None) {
+        effect = [UIBlurEffect effectWithStyle:[BlurUtil blurEffectStyleFromEnum:self.backgroundBlur]];
+      } else if (self.backgroundColor) {
+        effect = [UIColorEffect effectWithColor:self.backgroundColor];
+      }
+      self.sheet.backgroundEffect = effect;
+      self.view.backgroundColor = nil;
+      _blurView.hidden = YES;
+      _blurView.backgroundBlur = TrueSheetViewBackgroundBlur::None;
+      [_blurView applyBlurEffect];
+      return;
+    }
+  }
+#endif
+
   auto effectiveBackgroundBlur = self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
@@ -1417,25 +1456,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   BOOL hasBlur = effectiveBackgroundBlur != TrueSheetViewBackgroundBlur::None;
 
-  _blurView.backgroundBlur = hasBlur ? effectiveBackgroundBlur : TrueSheetViewBackgroundBlur::None;
-  _blurView.blurIntensity = self.blurIntensity;
-  _blurView.blurInteraction = self.blurInteraction;
+  _blurView.hidden = NO;
+  _blurView.backgroundBlur = effectiveBackgroundBlur;
   [_blurView applyBlurEffect];
 
-#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
-  if (@available(iOS 26.1, *)) {
-    // Some 26.1 builds ship `_UIFormSheetPresentationController` without this setter
-    if (!self.isDesignCompatibilityMode && [self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
-      if (!self.glass || hasBlur) {
-        self.sheet.backgroundEffect = [UIColorEffect effectWithColor:[UIColor clearColor]];
-      } else {
-        self.sheet.backgroundEffect = nil;
-      }
-    }
-  }
-#endif
-
-  self.view.backgroundColor = self.backgroundColor;
+  self.view.backgroundColor = hasBlur ? nil : self.backgroundColor;
 }
 
 - (void)setupGrabber {
