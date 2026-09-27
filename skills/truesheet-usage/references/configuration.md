@@ -58,19 +58,7 @@ Every TrueSheet prop with type, default value, and platform support.
 | `style` | `ViewStyle` | — | 🍎🤖🌐 | Content style override. Content wraps its children's height by default — pass `flex: 1` to fill the sheet's visible height per detent |
 
 The background wrapper does not affect detent heights. It applies across all detents.
-
-```tsx
-<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
-
-// With expo-blur installed. Platform support follows the blur library.
-<TrueSheet
-  backgroundColor="transparent"
-  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
-/>
-```
-
-On iOS 26.0 or devices without the effect setters, a transparent color cannot remove the system glass behind a custom background.
-Dark native color effects can shift over full-screen modals. Use an opaque `backgroundStyle.backgroundColor` for an exact color.
+See [Backgrounds](advanced-patterns.md#backgrounds) for recipes, custom blur, and iOS fallbacks.
 
 ### Per-detent backgrounds
 

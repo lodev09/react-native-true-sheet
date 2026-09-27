@@ -75,6 +75,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
   NSInteger _displayedBackgroundIndex;
+  BOOL _usesBackgroundEffects;
 
   // Present/dismiss tracking: a display link scoped to the transition
   // coordinator — started alongside the transition, stopped in its completion.
@@ -1124,8 +1125,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
   }
 
-  if (self.isPresented && !self.isBeingDismissed && !_isWillDismissEmitted &&
-      ![self canUseBackgroundEffects:self.sheet.detents]) {
+  if (self.isPresented && !self.isBeingDismissed && !_isWillDismissEmitted && !_usesBackgroundEffects) {
     NSInteger index = [_detentCalculator backgroundIndexForPosition:position displayedIndex:_displayedBackgroundIndex];
     if (index != _displayedBackgroundIndex) {
       _displayedBackgroundIndex = index;
@@ -1247,9 +1247,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [_detentCalculator setDetentCount:self.detents.count];
+  _usesBackgroundEffects = [self canUseBackgroundEffects:detents];
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
-    if ([self canUseBackgroundEffects:detents]) {
+    if (_usesBackgroundEffects) {
       for (NSInteger index = 0; index < detents.count; index++) {
         NSDictionary *entry = [self backgroundForIndex:index];
         auto blur = entry[@"blur"] ? static_cast<TrueSheetViewBackgroundBlur>([entry[@"blur"] intValue])
@@ -1477,7 +1478,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 - (void)setupBackground {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
-    if ([self canUseBackgroundEffects:self.sheet.detents]) {
+    if (_usesBackgroundEffects) {
       self.sheet.backgroundEffect = [self backgroundEffectForColor:self.backgroundColor blur:self.backgroundBlur];
       self.view.backgroundColor = nil;
       _blurView.hidden = YES;
