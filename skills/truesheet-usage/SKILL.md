@@ -271,13 +271,14 @@ Don't try to block dismissal from a callback — native can't wait on JS. Toggle
 </TrueSheet>
 ```
 
-Fine-tune with `blurOptions={{ intensity: 80, interaction: true }}`. Blur is iOS-only.
+Blur is iOS-only and takes precedence over `backgroundColor`. Tint it with `backgroundStyle.backgroundColor`.
+`blurOptions` is removed in v4. For custom intensity, use a third-party blur in `background`.
 
 ### iOS tinted or flat Liquid Glass
 
 ```tsx
 <TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}> {/* tinted glass */}
-<TrueSheet backgroundColor="#ffffff" glass={false}>     {/* flat, no glass (iOS 26.1+) */}
+<TrueSheet backgroundColor="transparent"> {/* clear, no glass on supported iOS 26.1+ */}
 ```
 
 `backgroundStyle.backgroundColor` paints over glass or blur. Use a translucent tint or an opaque exact color.
@@ -339,7 +340,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 9. **Use `flexGrow: 1`** (not `flex: 1`) on `GestureHandlerRootView` inside the sheet on Android — unless the sheet itself has `style={{ flex: 1 }}`.
 10. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.
 11. **Use `header`/`footer` props** for fixed chrome — don't reach for absolute positioning. Float them with `headerOptions`/`footerOptions` `position: 'absolute'` when they should overlay content.
-12. **Liquid Glass** is automatic on iOS 26+. `backgroundColor` paints over it, so translucent colors tint the glass. Set `glass={false}` or `backgroundBlur` to remove it per-sheet (iOS 26.1+), or add `UIDesignRequiresCompatibility` to Info.plist to disable app-wide.
+12. **Background effects**: on supported iOS 26.1+, blur takes precedence over color, then the default is Liquid Glass. Use `backgroundColor="transparent"` for a clear effect. Tint glass/blur or paint an exact color with `backgroundStyle.backgroundColor`. Missing effect setters or design compatibility mode on iOS 26 use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility`. For custom intensity, use a third-party blur in `background`; `blurOptions` is removed.
 13. **Native stacks go in the base screen, not in sheet screens** (Sheet Navigator / Expo Router). The first screen is a regular view and can host `createNativeStackNavigator` (that's how you wrap an app). A sheet screen can't — Android crashes with `ScreenContainer is not attached under ReactRootView`. For multi-step flows, make each step its own sheet screen.
 
 ## Platform Differences at a Glance

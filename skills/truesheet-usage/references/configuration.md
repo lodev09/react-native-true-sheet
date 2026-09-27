@@ -49,10 +49,9 @@ Every TrueSheet prop with type, default value, and platform support.
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Sheet background. On iOS 26+ it paints over Liquid Glass — translucent colors tint the glass. Android default is Material 3 `colorSurfaceContainerLow` (adapts to light/dark) |
+| `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Native color effect on supported iOS 26.1+, painted color elsewhere. Blur wins on iOS. Use `backgroundStyle` for tints or exact colors. Android/Web default is Material 3 `colorSurfaceContainerLow` |
 | `background` | `ReactNode` | — | 🍎🤖🌐 | Custom node behind header/content/footer, above sheet effects. Wrapper fills the sheet and ignores touches. Size the node with `StyleSheet.absoluteFill` |
 | `backgroundStyle` | `StyleProp<Pick<ViewStyle, 'backgroundColor'>>` | — | 🍎🤖🌐 | Only `backgroundColor` is applied. Opaque colors give an exact color, including over full-screen modals. Translucent colors tint glass/blur. Works without `background` |
-| `glass` | `boolean` | `true` | 🍎 26.1+ | Keep Liquid Glass behind `backgroundColor`. `false` renders a flat background. `backgroundBlur` always removes glass |
 | `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius. iOS uses the device's native radius; Android defaults to `16` (Material 3) |
 | `elevation` | `number` | 4 | 🤖🌐 | Shadow depth |
 | `style` | `ViewStyle` | — | 🍎🤖🌐 | Content style override. Content wraps its children's height by default — pass `flex: 1` to fill the sheet's visible height per detent |
@@ -64,30 +63,25 @@ The background wrapper does not affect detent heights. It applies across all det
 
 // With expo-blur installed. Platform support follows the blur library.
 <TrueSheet
-  glass={false}
   backgroundColor="transparent"
   background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
 />
 ```
 
-On iOS 26.0, `glass={false}` cannot remove the system glass behind a custom background.
+On iOS 26.0 or devices without the effect setters, a transparent color cannot remove the system glass behind a custom background.
+Dark native color effects can shift over full-screen modals. Use an opaque `backgroundStyle.backgroundColor` for an exact color.
 
 ## Blur
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `backgroundBlur` | `BackgroundBlur` | — | 🍎 | iOS blur effect applied over `backgroundColor`. On iOS 26.1+, setting this overrides Liquid Glass |
-| `blurOptions` | `BlurOptions` | — | 🍎 | Fine-tune blur intensity and interaction |
+| `backgroundBlur` | `BackgroundBlur` | — | 🍎 | Takes precedence over `backgroundColor`. Native effect on supported iOS 26.1+, non-interactive blur view at system intensity elsewhere. Tint with `backgroundStyle` |
 
 **`BackgroundBlur` values:** `'light'`, `'dark'`, `'default'`, `'extra-light'`, `'regular'`, `'prominent'`, `'system-ultra-thin-material'`, `'system-thin-material'`, `'system-material'`, `'system-thick-material'`, `'system-chrome-material'`, plus `-light` and `-dark` variants of each system material.
 
-**`BlurOptions`:**
-```tsx
-{
-  intensity?: number    // 0–100 (default: system)
-  interaction?: boolean // allow touches through blur (default: true). Disabling can help with visual artifacts on iOS 18+
-}
-```
+`blurOptions` and `BlurOptions` are removed in v4. Use a third-party blur in `background` for custom intensity or other platforms.
+The fallback covers older iOS versions, missing effect setters, and design compatibility mode on iOS 26.
+iOS 27+ ignores `UIDesignRequiresCompatibility`. Before iOS 26, the default is system-material blur.
 
 ## Grabber
 

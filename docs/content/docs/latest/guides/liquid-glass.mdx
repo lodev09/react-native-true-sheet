@@ -44,7 +44,11 @@ This only works on iOS 26.1 and above.
 
 ### Using `UIDesignRequiresCompatibility`
 
-Set `UIDesignRequiresCompatibility` to `true` in your `Info.plist` to disable Liquid Glass.
+On iOS 26, set `UIDesignRequiresCompatibility` to `true` in your `Info.plist` to disable Liquid Glass.
+
+:::note
+iOS 27 and later ignore this key. Use `backgroundColor` or `backgroundBlur` to replace Liquid Glass on individual sheets.
+:::
 
 #### Using Info.plist
 
@@ -86,7 +90,8 @@ npx expo run:ios
 ```
 
 :::note
-This setting disables the Liquid Glass UI across your entire app, not just for sheets. See [Apple's documentation](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UIDesignRequiresCompatibility) for more details.
+On iOS 26, this setting disables Liquid Glass across the entire app. It has no effect on iOS 27+.
+See [Apple's documentation](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UIDesignRequiresCompatibility) for more details.
 :::
 
 ## Learn More

@@ -210,22 +210,39 @@ import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigat
 See the [Navigation guide](guides/navigation#expo-router) for more details.
 :::
 
-### 9. `backgroundColor` No Longer Disables Liquid Glass
+### 9. Background Colors and Blur
 
-On iOS 26+, `backgroundColor` now paints over the [Liquid Glass](guides/liquid-glass) background instead of replacing it. Opaque colors look the same as before. A translucent color now tints the glass instead of rendering a see-through flat color. To get the v3 flat background, set the new `glass` prop to `false`.
+On supported iOS 26.1+ devices, `backgroundColor` uses a native color effect and `backgroundBlur` uses a native blur effect.
+On iOS, blur now takes precedence over color. Use `backgroundStyle.backgroundColor` to tint the blur:
 
 ```tsx
-// ❌ v3 — backgroundColor removes the glass
-<TrueSheet backgroundColor="#ffffff" />
+// ❌ v3 — color and blur blend
+<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)" backgroundBlur="system-material" />
 
-// ✅ v4 — same flat result
-<TrueSheet backgroundColor="#ffffff" glass={false} />
+// ✅ v4 — tint the blur through the background wrapper
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+/>
+```
 
-// ✅ v4 — tinted glass
+For tinted Liquid Glass, use `backgroundStyle` without `backgroundColor` or `backgroundBlur`:
+
+```tsx
 <TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
 ```
 
-`backgroundBlur` still removes the glass on its own.
+For an exact opaque color, including over full-screen modals, use `backgroundStyle.backgroundColor`:
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} />
+```
+
+The native color effect can shift dark, low-chroma colors over full-screen modals.
+
+Earlier iOS versions and devices without the background effect setters use a painted color or a blur view.
+Design compatibility mode also uses this fallback on iOS 26. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+On iOS 26.0, the fallback sits above Liquid Glass. See [Background effects](guides/liquid-glass#background-effects) for details.
 
 ### 10. `anchor` Renamed to `placement`
 
@@ -244,6 +261,29 @@ The default is the new `'automatic'` value, which lets the system decide. `'cent
 :::tip
 See the [Side Sheets guide](guides/side-sheets) for more details.
 :::
+
+### 11. `blurOptions` Removed
+
+Remove `blurOptions` and the `BlurOptions` type. The built-in blur now uses system intensity and ignores touches.
+The `interaction: false` workaround for the iOS 18 touch flash is no longer needed.
+
+For custom intensity, use a third-party blur in `background`:
+
+```tsx
+// ❌ v3
+<TrueSheet backgroundBlur="dark" blurOptions={{ intensity: 40, interaction: false }} />
+
+// ✅ v4 — with expo-blur installed
+import { BlurView } from 'expo-blur';
+import { StyleSheet } from 'react-native';
+
+<TrueSheet
+  backgroundColor="transparent"
+  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
+/>
+```
+
+The blur library controls platform support. See [Custom blur](guides/liquid-glass#custom-blur).
 
 ## New Features in v4
 
@@ -377,7 +417,8 @@ See the [configuration reference](reference/configuration#background) and the [c
    - Add `style={{ flex: 1 }}` where content should fill the sheet (bounded scroll views, spacer layouts)
    - Add `footerOptions={{ position: 'absolute' }}` to keep a floating footer
    - Remove manual safe-area padding from footers and scroll content — both are handled natively
-   - Add `glass={false}` to sheets with a translucent `backgroundColor` that should stay flat on iOS 26+
+   - Use `backgroundStyle.backgroundColor` for glass/blur tints and exact opaque colors
+   - Remove `blurOptions`; use a third-party blur in `background` for custom intensity
    - Rename `anchor` to `placement` and `anchorOffset` to `placementOffset`, with `"left"` / `"right"` becoming `"leading"` / `"trailing"`
    - Replace `FullWindowOverlay` / `Modal` overlay workarounds with `TrueSheetOverlay`
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+

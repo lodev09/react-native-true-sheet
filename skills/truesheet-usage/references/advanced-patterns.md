@@ -340,25 +340,26 @@ Place a sheet on the leading or trailing edge (follows layout direction). Useful
 
 Liquid Glass is the frosted glass visual effect introduced in iOS 26. It's automatic — no configuration needed.
 
-**When it activates:** iOS 26+ unless `glass={false}` or `backgroundBlur` is set.
+**When it activates:** by default on iOS 26+. On supported iOS 26.1+, `backgroundColor` or `backgroundBlur` replaces it with an effect. With neither set, the default is Liquid Glass.
 
-**Tint it:** `backgroundColor` paints over the glass, so a translucent color tints it while content behind stays visible:
+**Tint it:** use `backgroundStyle.backgroundColor`:
 ```tsx
-<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)">
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}>
 ```
 
-**Disable per-sheet (iOS 26.1+):** set `glass={false}` (flat `backgroundColor`) and/or `backgroundBlur`:
+**Disable per-sheet (supported iOS 26.1+):** use `backgroundColor="transparent"` for a clear effect, or set a color/blur effect:
 ```tsx
-<TrueSheet backgroundColor="#ffffff" glass={false}>
+<TrueSheet backgroundColor="transparent">
 ```
 
-**Disable app-wide (Info.plist):**
+**Disable app-wide on iOS 26 (Info.plist):**
 ```xml
 <key>UIDesignRequiresCompatibility</key>
 <true/>
 ```
 
-Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. This disables Liquid Glass for the entire app, not just sheets.
+Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. This disables Liquid Glass for the entire app on iOS 26.
+iOS 27+ ignores this key. Use `backgroundColor` or `backgroundBlur` for individual sheets.
 
 ---
 
@@ -504,12 +505,16 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - React Navigation: install `standard-navigation`, bump `@react-navigation/native` to 7.3+. API is unchanged. Static API now available via `createTrueSheetScreen`.
 - Expo Router: replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and import `useTrueSheetNavigation` from that entry point.
 
-### 6. `backgroundColor` keeps Liquid Glass (iOS 26+)
+### 6. Background effects and removed `blurOptions`
 
-`backgroundColor` now paints over the glass instead of removing it. Opaque colors look the same; translucent colors now tint the glass. Add `glass={false}` for the v3 flat result:
+On supported iOS 26.1+, `backgroundColor` uses a color effect and `backgroundBlur` uses a blur effect.
+Blur takes precedence over color on iOS. Tint through the background wrapper:
 
 ```tsx
-<TrueSheet backgroundColor="#ffffff" glass={false}>
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+/>
 ```
 
 Use `backgroundStyle.backgroundColor` for an exact opaque color or a translucent tint over glass/blur:
@@ -522,6 +527,11 @@ Use `backgroundStyle.backgroundColor` for an exact opaque color or a translucent
 For a custom node, use `background` and size it with `StyleSheet.absoluteFill`.
 The wrapper fills the sheet behind header/content/footer, ignores touches, and does not affect detent heights.
 Only `backgroundColor` is supported in `backgroundStyle`. See [configuration.md](configuration.md#appearance) for a custom blur example.
+
+Remove `blurOptions` and `BlurOptions`. For custom intensity, use a third-party blur in `background`.
+The built-in blur ignores touches, so the iOS 18 `interaction: false` workaround is no longer needed.
+Missing effect setters and design compatibility mode on iOS 26 use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+On iOS 26.0, color/blur still sits above glass.
 
 ### 7. `anchor` → `placement`
 
@@ -543,7 +553,6 @@ Only `backgroundColor` is supported in `backgroundStyle`. See [configuration.md]
 - `footerOptions={{ position: 'absolute', avoidKeyboard: false }}` keeps native absolute footers behind the keyboard. The default is `true`. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height.
 - `accessibilityOptions`
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
-- `glass` prop — keep or remove Liquid Glass behind `backgroundColor` (iOS 26.1+)
 - `background` / `backgroundStyle` — custom nodes, exact colors, and glass/blur tints on all platforms
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging

@@ -13,15 +13,13 @@
 
 using namespace facebook::react;
 
-@implementation TrueSheetBlurView {
-  UIViewPropertyAnimator *_blurAnimator;
-}
+@implementation TrueSheetBlurView
 
 #pragma mark - Initialization
 
 - (instancetype)init {
   if (self = [super init]) {
-    _blurInteraction = YES;
+    self.userInteractionEnabled = NO;
   }
   return self;
 }
@@ -38,45 +36,14 @@ using namespace facebook::react;
   [parentView insertSubview:self atIndex:0];
 }
 
-- (void)clearAnimator {
-  if (_blurAnimator) {
-    [_blurAnimator stopAnimation:YES];
-    _blurAnimator = nil;
-  }
-}
-
 - (void)applyBlurEffect {
-  self.userInteractionEnabled = self.blurInteraction;
-
   if (self.backgroundBlur == TrueSheetViewBackgroundBlur::None) {
-    [self clearAnimator];
     self.effect = nil;
     return;
   }
 
   UIBlurEffectStyle style = [BlurUtil blurEffectStyleFromEnum:self.backgroundBlur];
-  UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:style];
-
-  CGFloat intensity =
-    (self.blurIntensity && [self.blurIntensity floatValue] >= 0) ? [self.blurIntensity floatValue] / 100.0 : 1.0;
-
-  if (intensity >= 1.0) {
-    [self clearAnimator];
-    self.effect = blurEffect;
-    return;
-  }
-
-  if (!_blurAnimator) {
-    __weak __typeof(self) weakSelf = self;
-    _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1.0
-                                                               curve:UIViewAnimationCurveLinear
-                                                          animations:^{
-                                                            weakSelf.effect = blurEffect;
-                                                          }];
-  }
-
-  _blurAnimator.pausesOnCompletion = YES;
-  _blurAnimator.fractionComplete = intensity;
+  self.effect = [UIBlurEffect effectWithStyle:style];
 }
 
 @end

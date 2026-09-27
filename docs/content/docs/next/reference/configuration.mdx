@@ -54,9 +54,11 @@ The sheet's background color. Uses the system default when not provided.
 | `ColorValue` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
-When not provided, iOS 26+ uses the default [Liquid Glass](../guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+Without a color or blur, iOS 26+ uses [Liquid Glass](../guides/liquid-glass), while earlier iOS versions use system-material blur. Android and Web use Material Design 3's `colorSurfaceContainerLow`, which adapts to light/dark mode.
 
-On iOS 26+, this paints over the [Liquid Glass](../guides/liquid-glass) background. Use a translucent color to tint the glass, or set [`glass`](#glass) to `false` for a flat color.
+On supported iOS 26.1+ devices, `backgroundColor` uses a native color effect. It does not tint Liquid Glass. Other devices paint the background color.
+
+On iOS, [`backgroundBlur`](#backgroundblur) takes precedence over `backgroundColor`. Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint glass or blur, or for an exact opaque color over full-screen modals.
 :::
 
 ## `background`
@@ -100,51 +102,24 @@ Use a translucent color to tint the glass or blur:
 </TrueSheet>
 ```
 
-## `glass`
-
-Keeps the [Liquid Glass](../guides/liquid-glass) background behind [`backgroundColor`](#backgroundcolor). Set to `false` to remove the glass and render a flat background. [`backgroundBlur`](#backgroundblur) always removes the glass.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| `boolean` | `true` | ✅ 26.1+ | | |
-
-```tsx
-<TrueSheet backgroundColor="#ffffff" glass={false}>
-  <View />
-</TrueSheet>
-```
-
 ## `backgroundBlur`
 
-The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
+The blur effect style on iOS, such as `"light"`, `"dark"`, or `"system-material"`. It takes precedence over [`backgroundColor`](#backgroundcolor).
+Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint the blur.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | [`BackgroundBlur`](types#backgroundblur) | | ✅ | | |
 
 :::info
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
+On supported iOS 26.1+ devices, this uses a native effect that replaces Liquid Glass.
+Earlier iOS versions and devices without the setters use a non-interactive blur view at system intensity.
+Design compatibility mode on iOS 26 also uses this fallback.
+On iOS 27+, `UIDesignRequiresCompatibility` is ignored.
+On iOS 26.0, this blur sits above Liquid Glass.
 :::
 
-## `blurOptions`
-
-Options for customizing the blur effect. Only applies when [`backgroundBlur`](#backgroundblur) is set.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`BlurOptions`](types#bluroptions) | | ✅ | | |
-
-```tsx
-<TrueSheet
-  backgroundBlur="dark"
-  blurOptions={{
-    intensity: 80,
-    interaction: false,
-  }}
->
-  <View />
-</TrueSheet>
-```
+For custom intensity or blur on other platforms, use a third-party blur in [`background`](#background).
 
 ## `cornerRadius`
 

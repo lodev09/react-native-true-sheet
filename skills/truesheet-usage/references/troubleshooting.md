@@ -4,6 +4,9 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 
 ## Table of Contents
 
+- [Dark background colors shift over full-screen modals](#dark-background-colors-shift-over-full-screen-modals)
+- [Background color no longer tints the blur](#background-color-no-longer-tints-the-blur)
+- [Need custom blur intensity](#need-custom-blur-intensity)
 - [Content renders with zero height or gets clipped](#content-renders-with-zero-height-or-gets-clipped)
 - [Blank screen after modal dismiss (iOS)](#blank-screen-after-modal-dismiss-ios)
 - [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
@@ -22,6 +25,38 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Patched react-native-screens not applied on EAS](#patched-react-native-screens-not-applied-on-eas)
 
 ---
+
+## Dark background colors shift over full-screen modals
+
+**Cause:** On supported iOS 26.1+, the native color effect can shift dark, low-chroma colors.
+
+**Fix:** Paint an exact opaque color with the background wrapper:
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} />
+```
+
+## Background color no longer tints the blur
+
+**Cause:** On iOS, `backgroundBlur` takes precedence over `backgroundColor`.
+
+**Fix:** Move the tint to `backgroundStyle.backgroundColor`:
+
+```tsx
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+/>
+```
+
+For tinted Liquid Glass, omit `backgroundBlur` and `backgroundColor`.
+
+## Need custom blur intensity
+
+**Cause:** v4 removes `blurOptions`. The built-in blur uses system intensity and ignores touches.
+
+**Fix:** Use a third-party blur in `background`, sized with `StyleSheet.absoluteFill`.
+See the [custom blur example](configuration.md#appearance). The blur library controls platform support.
 
 ## Content renders with zero height or gets clipped
 
