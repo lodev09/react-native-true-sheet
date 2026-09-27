@@ -50,6 +50,7 @@ Every TrueSheet prop with type, default value, and platform support.
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
 | `backgroundColor` | `ColorValue` | System default | 🍎🤖🌐 | Native color effect on supported iOS 26.1+, painted color elsewhere. Blur wins on iOS. Use `backgroundStyle` for tints or exact colors. Android/Web default is Material 3 `colorSurfaceContainerLow` |
+| `detentBackgrounds` | `(DetentBackground \| null)[]` | — | 🍎🤖🌐 | Entries match detent indices. Native iOS 26.1+ transitions, midpoint cross-fades elsewhere. Android/Web ignore blur entries |
 | `background` | `ReactNode` | — | 🍎🤖🌐 | Custom node behind header/content/footer, above sheet effects. Wrapper fills the sheet and ignores touches. Size the node with `StyleSheet.absoluteFill` |
 | `backgroundStyle` | `StyleProp<Pick<ViewStyle, 'backgroundColor'>>` | — | 🍎🤖🌐 | Only `backgroundColor` is applied. Opaque colors give an exact color, including over full-screen modals. Translucent colors tint glass/blur. Works without `background` |
 | `cornerRadius` | `number` | System default | 🍎🤖🌐 | Corner radius. iOS uses the device's native radius; Android defaults to `16` (Material 3) |
@@ -70,6 +71,27 @@ The background wrapper does not affect detent heights. It applies across all det
 
 On iOS 26.0 or devices without the effect setters, a transparent color cannot remove the system glass behind a custom background.
 Dark native color effects can shift over full-screen modals. Use an opaque `backgroundStyle.backgroundColor` for an exact color.
+
+### Per-detent backgrounds
+
+```tsx
+type DetentBackground =
+  | string
+  | { color: ColorValue; blur?: never }
+  | { blur: BackgroundBlur; color?: never }
+
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+- Strings are color shorthand: `'#18202b'` equals `{ color: '#18202b' }`. Object entries accept color or blur, never both.
+- `null`, `undefined`, or missing entries inherit the sheet background. A color entry overrides the sheet blur.
+- Android/Web inherit the sheet background for blur entries.
+- Fallbacks cross-fade past the midpoint in both directions, including `resize()`. Presentation starts at the requested entry.
+- Native color/blur entries lose the glass touch response. Per-detent tinted glass is unsupported.
+- `background`/`backgroundStyle` apply across all detents above these effects. An opaque wrapper hides them.
 
 ## Blur
 

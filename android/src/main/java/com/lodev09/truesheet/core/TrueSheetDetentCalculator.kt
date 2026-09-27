@@ -137,6 +137,22 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     return maxContentHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
   }
 
+  fun getBackgroundIndex(sheetTop: Int, displayedIndex: Int): Int {
+    if (detents.isEmpty()) return -1
+
+    val height = getVisibleSheetHeight(sheetTop)
+    var nextIndex = displayedIndex.coerceIn(0, detents.size - 1)
+    var distance = kotlin.math.abs(height - getVisibleSheetHeight(getSheetTopForDetentIndex(nextIndex)))
+    for (index in detents.indices) {
+      val nextDistance = kotlin.math.abs(height - getVisibleSheetHeight(getSheetTopForDetentIndex(index)))
+      if (nextDistance < distance) {
+        nextIndex = index
+        distance = nextDistance
+      }
+    }
+    return nextIndex
+  }
+
   /**
    * Get the expected sheet top position for a detent index.
    */

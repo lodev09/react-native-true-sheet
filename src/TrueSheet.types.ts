@@ -346,6 +346,11 @@ export type BackgroundBlur =
   | 'system-thick-material-dark'
   | 'system-chrome-material-dark';
 
+export type DetentBackground =
+  | string
+  | { color: ColorValue; blur?: BackgroundBlur }
+  | { blur: BackgroundBlur; color?: ColorValue };
+
 /**
  * Supported Sheet detent.
  */
@@ -483,6 +488,15 @@ export interface TrueSheetProps extends ViewProps {
    * Use `backgroundStyle.backgroundColor` for an exact color or to tint glass or blur.
    */
   backgroundColor?: ColorValue;
+
+  /**
+   * Backgrounds matched to `detents` by index. Strings are color values.
+   * Null or missing entries inherit
+   * `backgroundColor`/`backgroundBlur`. iOS 26.1+ transitions natively.
+   * Other platforms cross-fade after passing the midpoint between detents.
+   * Blur entries use the sheet background on Android and Web.
+   */
+  detentBackgrounds?: (DetentBackground | null)[];
 
   /**
    * Custom background rendered behind the header, content, and footer.

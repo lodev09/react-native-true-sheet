@@ -179,7 +179,14 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     clipToOutline = true
   }
 
-  private fun getDefaultBackgroundColor(): Int {
+  fun updateBackgroundColor(color: Int) {
+    (background as? ShapeDrawable)?.let {
+      it.paint.color = color
+      it.invalidateSelf()
+    }
+  }
+
+  fun getDefaultBackgroundColor(): Int {
     val isNight = (
       reactContext.resources.configuration.uiMode and
         Configuration.UI_MODE_NIGHT_MASK

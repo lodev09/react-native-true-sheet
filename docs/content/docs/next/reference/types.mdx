@@ -22,6 +22,21 @@ keywords: [bottom sheet types, bottom sheet typescript, bottom sheet definitions
 The `"auto"` detent derives the sheet height from the content's natural height. With scrolling content, it sizes to the scroll view's content height and resizes as content grows or shrinks. See [Scrolling Content](../guides/scrolling).
 :::
 
+## `DetentBackground`
+
+An entry in [`detentBackgrounds`](configuration#detentbackgrounds). A string is a color value.
+Object entries accept either color or blur, never both.
+
+```tsx
+export type DetentBackground =
+  | string
+  | { color: ColorValue; blur?: never }
+  | { blur: BackgroundBlur; color?: never };
+```
+
+`ColorValue` is a React Native color. [`BackgroundBlur`](#backgroundblur) selects an iOS blur style.
+Android and Web inherit the sheet background for blur entries.
+
 ## `BackgroundBlur`
 
 Blur style that is mapped into native values in iOS.

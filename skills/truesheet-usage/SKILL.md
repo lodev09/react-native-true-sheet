@@ -350,6 +350,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `'auto'` detent | iOS 16+ | Yes | Yes |
 | `'peek'` detent / `TrueSheetPeek` | iOS 16+ | Yes | Yes |
 | `TrueSheetOverlay` | Yes | Yes | Yes |
+| `detentBackgrounds` | Native effects on supported 26.1+, midpoint cross-fades otherwise | Color cross-fades | Color cross-fades |
 | `backgroundBlur` | Yes | No | No |
 | `background` / `backgroundStyle` | Yes | Yes | Yes |
 | Liquid Glass | iOS 26+ | No | No |

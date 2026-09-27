@@ -55,7 +55,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const childSheet = useRef<TrueSheet>(null);
   const overlaySheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
-  const [detentIndex, setDetentIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -139,7 +138,6 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         )
       }
       onDetentChange={(e) => {
-        setDetentIndex(e.nativeEvent.index);
         console.log(
           `Detent changed to index:`,
           e.nativeEvent.index,
@@ -150,8 +148,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       onMount={() => {
         console.log('BasicSheet is ready!');
       }}
-      backgroundBlur={detentIndex > 0 ? 'system-material' : undefined}
-      backgroundColor={detentIndex > 0 ? BLUE : undefined}
+      detentBackgrounds={[null, { blur: 'system-material' }, BLUE]}
       header={<Header />}
       footer={<Footer />}
       footerStyle={styles.footer}

@@ -61,6 +61,36 @@ On supported iOS 26.1+ devices, `backgroundColor` uses a native color effect. It
 On iOS, [`backgroundBlur`](#backgroundblur) takes precedence over `backgroundColor`. Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint glass or blur, or for an exact opaque color over full-screen modals.
 :::
 
+## `detentBackgrounds`
+
+Backgrounds matched to [`detents`](#detents) by index. Each entry is a color string or an object with either `color` or `blur`.
+A string such as `"#18202b"` is shorthand for `{ color: "#18202b" }`.
+`null`, `undefined`, and missing entries inherit `backgroundColor`/`backgroundBlur`.
+An entry replaces the sheet background, so a color entry overrides the sheet blur.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`(DetentBackground \| null)[]`](types#detentbackground) | | ✅ | ✅ | ✅ |
+
+```tsx
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+| Platform | Transition | Blur entries |
+| - | - | - |
+| iOS 26.1+ with native effect support | UIKit transitions as the sheet moves | Native blur effect |
+| Other iOS devices | Cross-fade after passing the midpoint between detents | Blur view at system intensity |
+| Android and Web | Color cross-fade after passing the midpoint between detents | Inherit the sheet background |
+
+The midpoint rule applies in both directions, including `resize()`.
+Presentation starts with the entry at the presented index.
+`background` and `backgroundStyle` remain above these effects and apply across all detents.
+An opaque background wrapper hides the detent backgrounds.
+See [per-detent backgrounds](../guides/liquid-glass#per-detent-backgrounds) for Liquid Glass limitations.
+
 ## `background`
 
 A custom background behind the header, content, and footer. Accepts a `ReactNode`.

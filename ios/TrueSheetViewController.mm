@@ -74,6 +74,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _autoDetentHeight;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
+  NSInteger _displayedBackgroundIndex;
 
   // Present/dismiss tracking: a display link scoped to the transition
   // coordinator — started alongside the transition, stopped in its completion.
@@ -112,6 +113,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (instancetype)init {
   if (self = [super initWithNibName:nil bundle:nil]) {
     _detents = @[ @0.5, @1 ];
+    _detentBackgrounds = @[];
+    _displayedBackgroundIndex = 0;
     _contentHeight = @(0);
     _headerHeight = @(0);
     _footerHeight = @(0);
@@ -1121,6 +1124,21 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
   }
 
+  if (self.isPresented && !self.isBeingDismissed && !_isWillDismissEmitted &&
+      ![self canUseBackgroundEffects:self.sheet.detents]) {
+    NSInteger index = [_detentCalculator backgroundIndexForPosition:position displayedIndex:_displayedBackgroundIndex];
+    if (index != _displayedBackgroundIndex) {
+      _displayedBackgroundIndex = index;
+      [UIView animateWithDuration:0.2
+                            delay:0
+                          options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+                       animations:^{
+                         [self setupBackground];
+                       }
+                       completion:nil];
+    }
+  }
+
   TrueSheetPositionState state = {
     .position = position,
     .detent = [self interpolatedDetentForPosition:position],
@@ -1229,6 +1247,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [_detentCalculator setDetentCount:self.detents.count];
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
+  if (@available(iOS 26.1, *)) {
+    if ([self canUseBackgroundEffects:detents]) {
+      for (NSInteger index = 0; index < detents.count; index++) {
+        NSDictionary *entry = [self backgroundForIndex:index];
+        auto blur = entry[@"blur"] ? static_cast<TrueSheetViewBackgroundBlur>([entry[@"blur"] intValue])
+                                   : TrueSheetViewBackgroundBlur::None;
+        detents[index].backgroundEffect = [self backgroundEffectForColor:entry[@"color"] blur:blur];
+      }
+    }
+  }
+#endif
+
   sheet.detents = detents;
 
   if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
@@ -1396,6 +1427,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)setupActiveDetentWithIndex:(NSInteger)index {
   _activeDetentIndex = index;
+  _displayedBackgroundIndex = index;
+  [self setupBackground];
   [self applyActiveDetent];
 }
 
@@ -1409,14 +1442,14 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self applyActiveDetent];
 }
 
-- (BOOL)canUseBackgroundEffects {
+- (BOOL)canUseBackgroundEffects:(NSArray<UISheetPresentationControllerDetent *> *)detents {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
     // Some 26.1 builds omit setters declared in the SDK.
     if (self.isDesignCompatibilityMode || ![self.sheet respondsToSelector:@selector(setBackgroundEffect:)]) {
       return NO;
     }
-    for (UISheetPresentationControllerDetent *detent in self.sheet.detents) {
+    for (UISheetPresentationControllerDetent *detent in detents) {
       if (![detent respondsToSelector:@selector(setBackgroundEffect:)]) {
         return NO;
       }
@@ -1427,17 +1460,25 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return NO;
 }
 
+- (NSDictionary *)backgroundForIndex:(NSInteger)index {
+  return index >= 0 && index < self.detentBackgrounds.count ? self.detentBackgrounds[index] : nil;
+}
+
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
+- (UIVisualEffect *)backgroundEffectForColor:(UIColor *)color
+                                        blur:(TrueSheetViewBackgroundBlur)blur API_AVAILABLE(ios(26.1)) {
+  if (blur != TrueSheetViewBackgroundBlur::None) {
+    return [UIBlurEffect effectWithStyle:[BlurUtil blurEffectStyleFromEnum:blur]];
+  }
+  return color ? [UIColorEffect effectWithColor:color] : nil;
+}
+#endif
+
 - (void)setupBackground {
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_1) && !TARGET_OS_MACCATALYST
   if (@available(iOS 26.1, *)) {
-    if ([self canUseBackgroundEffects]) {
-      UIVisualEffect *effect = nil;
-      if (self.backgroundBlur != TrueSheetViewBackgroundBlur::None) {
-        effect = [UIBlurEffect effectWithStyle:[BlurUtil blurEffectStyleFromEnum:self.backgroundBlur]];
-      } else if (self.backgroundColor) {
-        effect = [UIColorEffect effectWithColor:self.backgroundColor];
-      }
-      self.sheet.backgroundEffect = effect;
+    if ([self canUseBackgroundEffects:self.sheet.detents]) {
+      self.sheet.backgroundEffect = [self backgroundEffectForColor:self.backgroundColor blur:self.backgroundBlur];
       self.view.backgroundColor = nil;
       _blurView.hidden = YES;
       _blurView.backgroundBlur = TrueSheetViewBackgroundBlur::None;
@@ -1447,10 +1488,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 #endif
 
-  auto effectiveBackgroundBlur = self.backgroundBlur;
+  NSDictionary *entry = [self backgroundForIndex:_displayedBackgroundIndex];
+  BOOL hasEntry = entry[@"color"] || entry[@"blur"];
+  UIColor *color = hasEntry ? entry[@"color"] : self.backgroundColor;
+  auto effectiveBackgroundBlur =
+    hasEntry ? (entry[@"blur"] ? static_cast<TrueSheetViewBackgroundBlur>([entry[@"blur"] intValue])
+                               : TrueSheetViewBackgroundBlur::None)
+             : self.backgroundBlur;
   if (@available(iOS 26.0, *)) {
     // iOS 26+ has default liquid glass effect
-  } else if (effectiveBackgroundBlur == TrueSheetViewBackgroundBlur::None && !self.backgroundColor) {
+  } else if (effectiveBackgroundBlur == TrueSheetViewBackgroundBlur::None && !color) {
     effectiveBackgroundBlur = TrueSheetViewBackgroundBlur::SystemMaterial;
   }
 
@@ -1460,7 +1507,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _blurView.backgroundBlur = effectiveBackgroundBlur;
   [_blurView applyBlurEffect];
 
-  self.view.backgroundColor = hasBlur ? nil : self.backgroundColor;
+  self.view.backgroundColor = hasBlur ? nil : color;
 }
 
 - (void)setupGrabber {

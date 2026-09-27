@@ -547,6 +547,8 @@ On iOS 26.0, color/blur still sits above glass.
 
 ### New in v4
 
+- `detentBackgrounds` — color/blur entries by detent index. Native iOS 26.1+ transitions, midpoint cross-fades elsewhere. Android/Web inherit the sheet background for blur entries. See [configuration](configuration.md#per-detent-backgrounds).
+
 - `'auto'` detent works with scrollables
 - `'peek'` detent + `TrueSheetPeek` component
 - `headerOptions` (floating header)

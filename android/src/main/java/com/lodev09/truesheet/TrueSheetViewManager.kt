@@ -1,8 +1,10 @@
 package com.lodev09.truesheet
 
 import android.view.WindowManager
+import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PointerEvents
@@ -112,6 +114,21 @@ class TrueSheetViewManager :
       .toCollection(detents)
 
     view.setDetents(detents)
+  }
+
+  @ReactProp(name = "detentBackgrounds")
+  override fun setDetentBackgrounds(view: TrueSheetView, value: ReadableArray?) {
+    view.setDetentBackgrounds(
+      (0 until (value?.size() ?: 0)).map { index ->
+        val entry = value?.getMap(index)
+        if (entry != null && entry.hasKey("color") && !entry.isNull("color")) {
+          val color = if (entry.getType("color") == ReadableType.Map) entry.getMap("color") else entry.getDouble("color")
+          ColorPropConverter.getColor(color, view.context)
+        } else {
+          null
+        }
+      }
+    )
   }
 
   @ReactProp(name = "backgroundColor", customType = "Color")

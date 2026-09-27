@@ -38,6 +38,27 @@ On iOS 26.0, the fallback color or blur sits above Liquid Glass, which TrueSheet
 The native color effect can shift dark, low-chroma colors over full-screen modals. Use an opaque `backgroundStyle.backgroundColor` for an exact color.
 :::
 
+## Per-detent backgrounds
+
+[`detentBackgrounds`](../reference/configuration#detentbackgrounds) selects a color or blur for each detent.
+On supported iOS 26.1+ devices, UIKit transitions between these effects as the sheet moves.
+
+```tsx
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+In this example, the peek detent uses default Liquid Glass. The other detents use blur and color effects.
+A `null` or missing entry inherits the sheet effect. An entry overrides it.
+Detents with a color or blur entry lose the glass touch response.
+Tinted glass effects are not supported per detent.
+`backgroundStyle` can tint the background, but its tint applies across all detents.
+
+Other iOS devices cross-fade after passing the midpoint between detents.
+Android and Web use the same midpoint rule for colors and inherit the sheet background for blur entries.
+
 ## Tinting Liquid Glass
 
 [`backgroundStyle`](../reference/configuration#backgroundstyle) paints over the glass or blur. A translucent color tints the effect and keeps the content behind the sheet visible.

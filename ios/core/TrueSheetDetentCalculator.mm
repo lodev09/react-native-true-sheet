@@ -98,6 +98,24 @@
   return 0;
 }
 
+- (NSInteger)backgroundIndexForPosition:(CGFloat)position displayedIndex:(NSInteger)displayedIndex {
+  NSInteger count = self.delegate.detents.count;
+  if (count == 0)
+    return -1;
+
+  CGFloat height = self.delegate.screenHeight - position;
+  NSInteger nextIndex = MAX(0, MIN(displayedIndex, count - 1));
+  CGFloat distance = fabs(height - [self resolvedHeightForIndex:nextIndex]);
+  for (NSInteger index = 0; index < count; index++) {
+    CGFloat nextDistance = fabs(height - [self resolvedHeightForIndex:index]);
+    if (nextDistance < distance) {
+      nextIndex = index;
+      distance = nextDistance;
+    }
+  }
+  return nextIndex;
+}
+
 - (BOOL)findSegmentForPosition:(CGFloat)position outIndex:(NSInteger *)outIndex outProgress:(CGFloat *)outProgress {
   NSArray<NSNumber *> *detents = self.delegate.detents;
   NSInteger count = detents.count;

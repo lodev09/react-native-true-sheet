@@ -46,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
  For peek (-2) detents, calculates based on header + footer height.
  */
 - (CGFloat)detentValueForIndex:(NSInteger)index;
+- (NSInteger)backgroundIndexForPosition:(CGFloat)position displayedIndex:(NSInteger)displayedIndex;
 
 /**
  Returns the height for auto (-1) detents: content + header + footer height.

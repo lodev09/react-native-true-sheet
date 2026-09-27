@@ -1,5 +1,6 @@
 package com.lodev09.truesheet
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Canvas
 import android.os.Build
@@ -227,7 +228,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
   override var accessibilityOptions: AccessibilityOptions? = null
+  var backgroundColor: Int? = null
+  var detentBackgrounds: List<Int?> = emptyList()
+  private var displayedBackgroundIndex = 0
+  private var backgroundAnimator: ValueAnimator? = null
+  private var targetBackgroundColor: Int? = null
   override var sheetBackgroundColor: Int? = null
+    private set
   var insetAdjustment: TrueSheetInsetAdjustment = TrueSheetInsetAdjustment.AUTOMATIC
 
   var scrollableOptions: ScrollableOptions? = null
@@ -425,6 +432,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   private fun cleanupSheet() {
     cleanupKeyboardObserver()
+    backgroundAnimator?.cancel()
+    backgroundAnimator = null
+    targetBackgroundColor = null
     sheetView?.animate()?.cancel()
 
     // Cleanup dim views
@@ -846,6 +856,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setupDimmedBackground()
     setupKeyboardObserver()
 
+    displayedBackgroundIndex = detentIndex
+    setupBackground(animated = false)
     sheet.setupBackground()
     sheet.setupElevation()
     sheet.setupGrabber()
@@ -1098,6 +1110,30 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
   // MARK: - Dimmed Background
   // =============================================================================
+
+  fun setupBackground(animated: Boolean = true) {
+    val sheet = sheetView ?: return
+    val color = detentBackgrounds.getOrNull(displayedBackgroundIndex)
+      ?: backgroundColor ?: sheet.getDefaultBackgroundColor()
+    if (animated && color == targetBackgroundColor) return
+
+    backgroundAnimator?.cancel()
+    targetBackgroundColor = color
+    val startColor = sheetBackgroundColor ?: color
+    if (!animated || !isPresented || startColor == color) {
+      sheetBackgroundColor = color
+      sheet.updateBackgroundColor(color)
+      return
+    }
+    backgroundAnimator = ValueAnimator.ofArgb(startColor, color).apply {
+      duration = 200L
+      addUpdateListener {
+        sheetBackgroundColor = it.animatedValue as Int
+        sheet.updateBackgroundColor(it.animatedValue as Int)
+      }
+      start()
+    }
+  }
 
   fun setupDimmedBackground() {
     val coordinator = this.coordinatorLayout ?: run {
@@ -1427,6 +1463,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun emitChangePositionDelegate(currentTop: Int, realtime: Boolean = true) {
+    if (isPresented && !isPresentAnimating && !isBeingDismissed) {
+      val index = detentCalculator.getBackgroundIndex(currentTop, displayedBackgroundIndex)
+      if (index != displayedBackgroundIndex) {
+        displayedBackgroundIndex = index
+        setupBackground()
+      }
+    }
     // Dedupe emissions for same position
     if (currentTop == lastEmittedPositionPx) return
 
