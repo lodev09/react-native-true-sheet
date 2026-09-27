@@ -1,9 +1,11 @@
 /* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
 import { createRef } from 'react';
-import { Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
+import { TrueSheetBackground } from '../TrueSheetBackground';
+import TrueSheetContainerViewNativeComponent from '../fabric/TrueSheetContainerViewNativeComponent';
 import type {
   DidDismissEvent,
   DismissAttemptEvent,
@@ -69,6 +71,70 @@ describe('TrueSheet', () => {
     );
     expect(getByText('Peek Content')).toBeDefined();
     expect(getByText('Content')).toBeDefined();
+  });
+
+  describe('Background', () => {
+    it('renders a non-interactive background before the header, content, and footer', () => {
+      const { getByTestId, UNSAFE_getByType } = render(
+        <TrueSheet
+          initialDetentIndex={0}
+          testID="background-host"
+          background={<View testID="custom-background" style={StyleSheet.absoluteFill} />}
+          header={<Text>Header</Text>}
+          footer={<Text>Footer</Text>}
+        >
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const wrapper = UNSAFE_getByType(TrueSheetBackground).findByType(View);
+      const container = UNSAFE_getByType(TrueSheetContainerViewNativeComponent);
+      const layers = container.findAll(
+        (node: { type: unknown }) => node.type === TrueSheetBackground || node.type === Text
+      );
+      expect(layers).toHaveLength(4);
+      expect(layers[0].type === TrueSheetBackground).toBe(true);
+      expect(wrapper.props.pointerEvents).toBe('none');
+      expect(StyleSheet.flatten(wrapper.props.style)).toEqual(StyleSheet.absoluteFill);
+      expect(wrapper.findByProps({ testID: 'custom-background' })).toBeDefined();
+      expect(getByTestId('background-host').props.background).toBeUndefined();
+    });
+
+    it('applies only the flattened background color and updates without a custom node', () => {
+      const backgroundStyle = StyleSheet.create({
+        tint: { backgroundColor: 'red', top: 40, opacity: 0.5, pointerEvents: 'auto' },
+      });
+      const { rerender, UNSAFE_getByType, getByTestId } = render(
+        <TrueSheet
+          initialDetentIndex={0}
+          testID="styled-background-host"
+          backgroundStyle={[backgroundStyle.tint, false, [{ backgroundColor: 'blue' }]]}
+        />
+      );
+
+      const wrapper = () => UNSAFE_getByType(TrueSheetBackground).findByType(View);
+      expect(StyleSheet.flatten(wrapper().props.style)).toEqual({
+        ...StyleSheet.absoluteFill,
+        backgroundColor: 'blue',
+      });
+      expect(wrapper().props.pointerEvents).toBe('none');
+      expect(getByTestId('styled-background-host').props.backgroundStyle).toBeUndefined();
+
+      rerender(<TrueSheet initialDetentIndex={0} backgroundStyle={{ backgroundColor: 'green' }} />);
+      expect(StyleSheet.flatten(wrapper().props.style).backgroundColor).toBe('green');
+
+      rerender(<TrueSheet initialDetentIndex={0} />);
+      expect(StyleSheet.flatten(wrapper().props.style).backgroundColor).toBeUndefined();
+    });
+
+    it('mounts the background with lazy sheet content', () => {
+      const background = <View testID="lazy-background" />;
+      const { queryByTestId, rerender } = render(<TrueSheet background={background} />);
+      expect(queryByTestId('lazy-background')).toBeNull();
+
+      rerender(<TrueSheet background={background} lazy={false} />);
+      expect(queryByTestId('lazy-background')).not.toBeNull();
+    });
   });
 
   it('should render TrueSheetOverlay children', () => {

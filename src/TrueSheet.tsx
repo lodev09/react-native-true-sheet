@@ -37,6 +37,7 @@ import TrueSheetHeaderViewNativeComponent from './fabric/TrueSheetHeaderViewNati
 import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNativeComponent';
 
 import TrueSheetModule from './specs/NativeTrueSheetModule';
+import { TrueSheetBackground } from './TrueSheetBackground';
 
 import {
   Platform,
@@ -564,6 +565,8 @@ export class TrueSheet
     const {
       detents = [0.5, 1],
       backgroundColor,
+      background,
+      backgroundStyle,
       dismissible = true,
       draggable = true,
       grabber = true,
@@ -625,6 +628,7 @@ export class TrueSheet
 
     const sheetContent = (
       <>
+        <TrueSheetBackground background={background} backgroundStyle={backgroundStyle} />
         {header && (
           <TrueSheetHeaderViewNativeComponent
             style={[

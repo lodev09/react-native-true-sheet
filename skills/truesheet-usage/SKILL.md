@@ -276,11 +276,13 @@ Fine-tune with `blurOptions={{ intensity: 80, interaction: true }}`. Blur is iOS
 ### iOS tinted or flat Liquid Glass
 
 ```tsx
-<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)">   {/* tinted glass */}
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}> {/* tinted glass */}
 <TrueSheet backgroundColor="#ffffff" glass={false}>     {/* flat, no glass (iOS 26.1+) */}
 ```
 
-`backgroundColor` paints over the glass on iOS 26+, so translucent colors tint it. `glass={false}` removes the glass for a flat color.
+`backgroundStyle.backgroundColor` paints over glass or blur. Use a translucent tint or an opaque exact color.
+For a custom node, use `background` with `StyleSheet.absoluteFill`. The wrapper ignores touches.
+See [configuration.md](references/configuration.md#appearance) for a custom blur example.
 
 ### Present on mount
 
@@ -348,6 +350,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `'peek'` detent / `TrueSheetPeek` | iOS 16+ | Yes | Yes |
 | `TrueSheetOverlay` | Yes | Yes | Yes |
 | `backgroundBlur` | Yes | No | No |
+| `background` / `backgroundStyle` | Yes | Yes | Yes |
 | Liquid Glass | iOS 26+ | No | No |
 | Static global methods | Yes | Yes | No (use provider) |
 | `scrollableRef` | Yes | Yes | Yes |

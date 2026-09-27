@@ -51,6 +51,19 @@ describe('TrueSheet Mocks', () => {
       expect(getByText('Footer')).toBeDefined();
     });
 
+    it('should render a custom background', () => {
+      const { getByText } = render(
+        <TrueSheet
+          background={<Text>Background</Text>}
+          backgroundStyle={{ backgroundColor: 'red' }}
+        >
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+      expect(getByText('Background')).toBeDefined();
+      expect(getByText('Content')).toBeDefined();
+    });
+
     it('should call static present method', async () => {
       await TrueSheet.present('test-sheet', 0);
       expect(TrueSheet.present).toHaveBeenCalledWith('test-sheet', 0);

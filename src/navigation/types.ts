@@ -206,6 +206,8 @@ export type TrueSheetNavigationSheetProps = Pick<
   TrueSheetProps,
   | 'detents'
   | 'backgroundColor'
+  | 'background'
+  | 'backgroundStyle'
   | 'cornerRadius'
   | 'dismissible'
   | 'draggable'

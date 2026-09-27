@@ -57,6 +57,7 @@ import {
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
 import { getDOMElement } from './web/dom';
+import { TrueSheetBackground } from './TrueSheetBackground';
 import { observeSheetLayout } from './web/layout';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
@@ -81,6 +82,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     cornerRadius,
     style,
     backgroundColor: backgroundColorProp,
+    background,
+    backgroundStyle,
     maxContentHeight,
     maxContentWidth,
     placement = 'automatic',
@@ -1217,6 +1220,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               style={sizedLayoutStyle}
               data-vaul-scroll-locked={isScrollLocked ? '' : undefined}
             >
+              <TrueSheetBackground background={background} backgroundStyle={backgroundStyle} />
               {header && (
                 <View ref={headerElRef} style={resolvedHeaderStyle} onLayout={handleHeaderLayout}>
                   {isValidElement(header) ? header : createElement(header)}
