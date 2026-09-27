@@ -222,7 +222,7 @@ On iOS 26+, `backgroundColor` now paints over the [Liquid Glass](guides/liquid-g
 <TrueSheet backgroundColor="#ffffff" glass={false} />
 
 // ✅ v4 — tinted glass
-<TrueSheet backgroundColor="rgba(0, 122, 255, 0.25)" />
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
 ```
 
 `backgroundBlur` still removes the glass on its own.
@@ -327,6 +327,30 @@ import { TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
 :::tip
 See the [Overlays guide](guides/overlays) for touch handling, layout, and limitations.
 :::
+
+### 9. Custom Backgrounds
+
+The new `background` and `backgroundStyle` props work on iOS, Android, and Web.
+The background wrapper fills the sheet behind the header, content, and footer. It sits above the sheet effects and ignores touches.
+It does not affect content height or detent calculations.
+
+Use `backgroundStyle.backgroundColor` for an exact opaque color or a translucent tint over glass or blur:
+
+```tsx
+// Exact color, including over full-screen modals
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} />
+
+// Tint the blur
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+/>
+```
+
+Only `backgroundColor` is supported in `backgroundStyle`. It works without a `background` element and applies across all detents.
+
+For a custom background, pass a `ReactNode` to `background`. Size the element with `StyleSheet.absoluteFill`.
+See the [configuration reference](reference/configuration#background) and the [custom blur example](guides/liquid-glass#custom-blur).
 
 ## Step-by-Step Migration
 

@@ -512,6 +512,17 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 <TrueSheet backgroundColor="#ffffff" glass={false}>
 ```
 
+Use `backgroundStyle.backgroundColor` for an exact opaque color or a translucent tint over glass/blur:
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} />
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
+```
+
+For a custom node, use `background` and size it with `StyleSheet.absoluteFill`.
+The wrapper fills the sheet behind header/content/footer, ignores touches, and does not affect detent heights.
+Only `backgroundColor` is supported in `backgroundStyle`. See [configuration.md](configuration.md#appearance) for a custom blur example.
+
 ### 7. `anchor` → `placement`
 
 `anchor`→`placement`, `anchorOffset`→`placementOffset`, `'left'`/`'right'`→`'leading'`/`'trailing'`. Names now match behavior — native side sheets already followed layout direction (RTL flips them). Web follows it too. New default `'automatic'` lets the system decide; only differs from `'center'` on iOS 27+.
@@ -533,6 +544,7 @@ The footer now takes space below the content (still pinned to the bottom edge) a
 - `accessibilityOptions`
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `glass` prop — keep or remove Liquid Glass behind `backgroundColor` (iOS 26.1+)
+- `background` / `backgroundStyle` — custom nodes, exact colors, and glass/blur tints on all platforms
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
 - Element inspector works inside a presented sheet (dev builds, no setup) — header, content, and footer are inspectable
