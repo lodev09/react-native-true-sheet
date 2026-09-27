@@ -39,6 +39,7 @@
 
 ### 💥 Breaking changes
 
+- **iOS**: Removed `blurOptions`; use a third-party blur in `background` for custom intensity. Blur now takes precedence over `backgroundColor`; use `backgroundStyle.backgroundColor` for glass/blur tints and exact colors, with updated docs and AI skill guidance. ([#875](https://github.com/lodev09/react-native-true-sheet/pull/875) by [@lodev09](https://github.com/lodev09))
 - The footer now lays out relative by default, taking up space below the content — set `footerOptions.position` to `'absolute'` to restore the previous floating behavior. ([#748](https://github.com/lodev09/react-native-true-sheet/pull/748), [#754](https://github.com/lodev09/react-native-true-sheet/pull/754) by [@lodev09](https://github.com/lodev09))
 - Content now wraps its children's height by default instead of filling the sheet — pass `flex: 1` via `style` to fill. ([#746](https://github.com/lodev09/react-native-true-sheet/pull/746) by [@lodev09](https://github.com/lodev09))
 - The container is now sized to the sheet's visible height per detent and tracks it in realtime while dragging, requiring React Native 0.82+. ([#735](https://github.com/lodev09/react-native-true-sheet/pull/735) by [@lodev09](https://github.com/lodev09))
