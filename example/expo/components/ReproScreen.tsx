@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 import { BLUE, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 
@@ -16,6 +17,16 @@ export const useDelayedMount = () => {
   }, []);
 
   return mounted;
+};
+
+// A deep-linked route opened over this screen on a cold start would otherwise
+// get the sheet stacked on top of it — hold initialDetentIndex until focused.
+export const useFocusedInitialDetentIndex = () => {
+  const [initialDetentIndex, setInitialDetentIndex] = useState(-1);
+
+  useFocusEffect(useCallback(() => setInitialDetentIndex(0), []));
+
+  return initialDetentIndex;
 };
 
 interface ReproScreenProps {
