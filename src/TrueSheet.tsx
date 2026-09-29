@@ -571,6 +571,7 @@ export class TrueSheet
       backgroundStyle,
       dismissible = true,
       draggable = true,
+      dismissThreshold = 'half',
       grabber = true,
       grabberOptions,
       accessibilityOptions,
@@ -688,6 +689,7 @@ export class TrueSheet
         initialDetentAnimated={initialDetentAnimated}
         dismissible={dismissible}
         draggable={draggable}
+        dismissThreshold={dismissThreshold}
         maxContentHeight={maxContentHeight}
         maxContentWidth={maxContentWidth}
         placement={placement}

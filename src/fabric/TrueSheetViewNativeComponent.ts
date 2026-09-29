@@ -114,6 +114,7 @@ export interface NativeProps extends ViewProps {
   placement?: WithDefault<'automatic' | 'leading' | 'center' | 'trailing', 'automatic'>;
   placementOffset?: WithDefault<Double, 16>;
   insetAdjustment?: WithDefault<'automatic' | 'never', 'automatic'>;
+  dismissThreshold?: WithDefault<'half' | 'short', 'half'>;
 
   // Boolean properties - match defaults from TrueSheet.types.ts
   grabber?: WithDefault<boolean, true>;

@@ -353,6 +353,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
 | `insetAdjustment` | Yes | Yes | No |
+| `dismissThreshold` | No (system-controlled) | Yes | Yes |
 | `lazy={false}` (pre-mount content) | Yes | Yes | No |
 | Edge-to-edge | N/A | Auto-detected | N/A |
 | Keyboard handling | Built-in | Built-in | N/A |

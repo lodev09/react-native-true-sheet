@@ -238,6 +238,21 @@ Controls how the bottom safe area inset affects detent heights.
 | `"automatic"` | System handles insets automatically. This is the default behavior. |
 | `"never"` | TrueSheet will keep the layout as-is for precise sizing. |
 
+## `DismissThreshold`
+
+How far the sheet must be swiped down from its lowest detent to dismiss.
+
+```tsx
+<TrueSheet dismissThreshold="short">
+  <View />
+</TrueSheet>
+```
+
+| Value | Description |
+| - | - |
+| `"half"` | Dismisses past half of the lowest detent, or on a quick flick. Matches iOS. This is the default behavior. |
+| `"short"` | Dismisses on a short drag (56 dp) or any downward fling (125 dp/s), like Compose Material3's `ModalBottomSheet`. |
+
 ## `DetentInfoEventPayload`
 
 `Object` that comes with most sheet events.

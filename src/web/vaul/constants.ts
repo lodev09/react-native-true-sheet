@@ -9,6 +9,11 @@ export const DEFAULT_PEEK_HEIGHT = 150;
 
 export const CLOSE_THRESHOLD = 0.25;
 
+// Compose Material3 SheetState's dismiss thresholds, used by the 'short'
+// dismiss threshold: velocity in px/ms, distance in px.
+export const SHORT_DISMISS_VELOCITY = 0.125;
+export const SHORT_DISMISS_DISTANCE = 56;
+
 // Minimum downward pull (px) on a non-dismissible drawer at its first snap
 // point before the release counts as a dismiss attempt.
 export const DISMISS_ATTEMPT_THRESHOLD = 24;

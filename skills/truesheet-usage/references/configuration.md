@@ -140,6 +140,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 |------|------|---------|-----------|-------------|
 | `dismissible` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can swipe to dismiss or tap outside. Blocked attempts fire `onDismissAttempt` |
 | `draggable` | `boolean` | `true` | 🍎🤖🌐 | Whether the user can drag to resize. When `false`, the grabber is hidden |
+| `dismissThreshold` | `'half' \| 'short'` | `'half'` | 🤖🌐 | Swipe distance to dismiss from the lowest detent. `'half'` matches iOS; `'short'` dismisses on a 56 dp drag or any fling, like Compose Material3 |
 
 ## Dimming
 

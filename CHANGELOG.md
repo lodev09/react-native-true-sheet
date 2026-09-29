@@ -19,6 +19,8 @@
 
 - Added `detentBackgrounds` with color strings or color/blur objects, native iOS transitions, and cross-fades elsewhere. Includes updated docs and AI skill guidance. ([#876](https://github.com/lodev09/react-native-true-sheet/pull/876) by [@lodev09](https://github.com/lodev09))
 
+- Added `dismissThreshold` on Android and Web. Set it to `'short'` to dismiss on a short drag or fling, like Compose Material3's sheet. Includes docs and AI skill guidance. ([#880](https://github.com/lodev09/react-native-true-sheet/pull/880) by [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **iOS**: Fixed a crash on some iOS 26.1 builds when presenting a sheet. ([#872](https://github.com/lodev09/react-native-true-sheet/pull/872) by [@lodev09](https://github.com/lodev09))

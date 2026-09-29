@@ -102,6 +102,12 @@ export type DialogProps = {
    */
   dismissible?: boolean;
   /**
+   * How far the drawer must be dragged past its first snap point to close.
+   * `'half'` closes past half of it, `'short'` on a short drag or any fling.
+   * @default 'half'
+   */
+  dismissThreshold?: 'half' | 'short';
+  /**
    * Called when the user tries to close a non-dismissible drawer — dragging down
    * at the first snap point, pressing escape, or tapping the handle of a
    * single-snap-point drawer. Overlay clicks don't count, mirroring iOS.
@@ -232,6 +238,7 @@ export function Root({
   closeThreshold = CLOSE_THRESHOLD,
   scrollLockTimeout = SCROLL_LOCK_TIMEOUT,
   dismissible = true,
+  dismissThreshold = 'half',
   onDismissAttempt,
   draggable = true,
   handleOnly = false,
@@ -855,6 +862,7 @@ export function Root({
         closeDrawer,
         velocity,
         dismissible,
+        dismissThreshold,
       });
       if (pointerEvent) onReleaseProp?.(pointerEvent, true);
       return;

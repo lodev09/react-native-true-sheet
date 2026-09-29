@@ -18,6 +18,7 @@ import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensEventObserver
 import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
+import com.lodev09.truesheet.core.TrueSheetDismissThreshold
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
 import com.lodev09.truesheet.utils.KeyboardUtils
@@ -275,6 +276,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setDraggable(draggable: Boolean) {
     viewController.draggable = draggable
+  }
+
+  fun setDismissThreshold(dismissThreshold: String?) {
+    viewController.dismissThreshold = TrueSheetDismissThreshold.fromString(dismissThreshold)
   }
 
   fun setGrabber(grabber: Boolean) {
