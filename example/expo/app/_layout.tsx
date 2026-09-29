@@ -74,6 +74,7 @@ function RootLayoutNav() {
               options={{ presentation: 'fullScreenModal', headerShown: false }}
             />
             <Stack.Screen name="test-stack" options={{ headerShown: false }} />
+            <Stack.Screen name="repro" options={{ headerShown: false }} />
           </Stack>
         </TrueSheetProvider>
       </ThemeProvider>
