@@ -64,6 +64,9 @@ using namespace facebook::react;
   BOOL _pendingMountEvent;
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
+  BOOL _isPresentPending;
+  NSUInteger _pendingPresentGeneration;
+  TrueSheetCompletionBlock _pendingPresentCompletion;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
 }
@@ -182,6 +185,8 @@ using namespace facebook::react;
 - (void)dealloc {
   [_screensEventObserver stopObserving];
   _screensEventObserver = nil;
+
+  [self cancelPendingPresent];
 
   if (_controller && _controller.presentingViewController) {
     // Find the root presenting controller to dismiss the entire stack
@@ -452,6 +457,8 @@ using namespace facebook::react;
     }
   }
 
+  [self cancelPendingPresent];
+
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
   _dismissedByNavigation = NO;
@@ -545,7 +552,7 @@ using namespace facebook::react;
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
             completion:(nullable TrueSheetCompletionBlock)completion {
-  if (_controller.isBeingPresented || _controller.isPresented) {
+  if (_controller.isBeingPresented || _controller.isPresented || _isPresentPending) {
     RCTLogWarn(@"TrueSheet: sheet is already presented. Use resize() to change detent.");
     if (completion) {
       completion(YES, nil);
@@ -564,6 +571,36 @@ using namespace facebook::react;
     if (completion) {
       completion(NO, error);
     }
+    return;
+  }
+
+  // A controller still animating out of the presenter (e.g. a navigation modal
+  // closing) makes UIKit queue this presentation, so everything measured below
+  // goes stale before it starts. Present once that transition ends.
+  UIViewController *dismissing = presentingViewController.presentedViewController;
+  id<UIViewControllerTransitionCoordinator> dismissCoordinator =
+    dismissing.isBeingDismissed ? dismissing.transitionCoordinator : nil;
+  if (dismissCoordinator) {
+    _isPresentPending = YES;
+    _pendingPresentCompletion = completion;
+    NSUInteger generation = ++_pendingPresentGeneration;
+
+    __weak __typeof(self) weakSelf = self;
+    [dismissCoordinator
+      animateAlongsideTransition:nil
+                      completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                          __typeof(self) strongSelf = weakSelf;
+                          if (!strongSelf || !strongSelf->_isPresentPending ||
+                              strongSelf->_pendingPresentGeneration != generation)
+                            return;
+
+                          TrueSheetCompletionBlock pendingCompletion = strongSelf->_pendingPresentCompletion;
+                          strongSelf->_isPresentPending = NO;
+                          strongSelf->_pendingPresentCompletion = nil;
+                          [strongSelf presentAtIndex:index animated:animated completion:pendingCompletion];
+                        });
+                      }];
     return;
   }
 
@@ -647,7 +684,32 @@ using namespace facebook::react;
                                   realtime:NO];
 }
 
+/**
+ * Drops a deferred present and resolves its caller. Returns whether one was pending.
+ */
+- (BOOL)cancelPendingPresent {
+  if (!_isPresentPending) {
+    return NO;
+  }
+
+  TrueSheetCompletionBlock pendingCompletion = _pendingPresentCompletion;
+  _isPresentPending = NO;
+  _pendingPresentCompletion = nil;
+  if (pendingCompletion) {
+    pendingCompletion(YES, nil);
+  }
+  return YES;
+}
+
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  // Dismissing before a deferred present starts cancels it — nothing was presented.
+  if ([self cancelPendingPresent]) {
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
   if (_controller.isBeingDismissed || !_controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already dismissed. No need to dismiss it again.");
 
