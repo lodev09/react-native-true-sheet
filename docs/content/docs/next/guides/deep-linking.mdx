@@ -1,0 +1,52 @@
+---
+title: Deep Linking
+description: Keep an auto-presenting sheet below a deep-linked screen on a cold start.
+keywords: [bottom sheet deep link, bottom sheet cold start, initialDetentIndex deep link]
+---
+
+A screen can [present its sheet on mount](onmount) with `initialDetentIndex`. When a deep link opens the app from a cold start, another screen can open on top of that screen at the same time — a modal, or a sheet in a [sheet navigator](navigation).
+
+## The Problem
+
+On iOS, the `initialDetentIndex` sheet presents while the deep-linked screen is still opening. It ends up on top of the deep-linked screen, or doesn't present at all.
+
+## Present When Focused
+
+Hold `initialDetentIndex` at `-1` until the screen is focused:
+
+```tsx {5-11,14}
+import { useFocusEffect } from '@react-navigation/native'; // or 'expo-router'
+import { useCallback, useState } from 'react';
+
+function HomeScreen() {
+  const [initialDetentIndex, setInitialDetentIndex] = useState(-1);
+
+  useFocusEffect(
+    useCallback(() => {
+      setInitialDetentIndex(0);
+    }, [])
+  );
+
+  return (
+    <TrueSheet initialDetentIndex={initialDetentIndex}>
+      {/* ... */}
+    </TrueSheet>
+  );
+}
+```
+
+On a normal launch the screen is focused on mount, so the sheet presents right away. When a deep link opens another screen on top, the screen isn't focused, so the sheet waits until that screen closes.
+
+:::tip
+Flip `initialDetentIndex` instead of calling `present()` on focus. A screen behind a `fullScreenModal` gains focus before it's back in the window, so `present()` rejects with "No presenting view controller found".
+:::
+
+## Example
+
+The [repro routes](https://github.com/lodev09/react-native-true-sheet/tree/main/example/expo/app/repro) in the Expo example use this pattern. They're only reachable by deep link — terminate the app, then open one:
+
+```sh
+yarn expo open repro/modal         # fullScreenModal
+yarn expo open repro/page-sheet    # pageSheet modal
+yarn expo open repro/sheet/details # sheet navigator
+```

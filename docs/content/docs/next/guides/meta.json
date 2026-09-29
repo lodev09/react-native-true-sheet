@@ -2,6 +2,7 @@
   "title": "Guides",
   "pages": [
     "backgrounds",
+    "deep-linking",
     "dimming",
     "edge-to-edge",
     "footer",

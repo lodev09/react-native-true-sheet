@@ -33,5 +33,5 @@ You may want to disable the present animation. To do this, simply set [`initialD
 ### Deep Linking on iOS
 
 :::warning[iOS Limitation]
-`initialDetentIndex` may not work when deep linking to a modal screen from a cold start. See [troubleshooting](../troubleshooting#initial-present-and-deep-linking) for workaround.
+When a deep link opens another screen over the sheet's screen on a cold start, the sheet may present on top of it or not at all. See [Deep Linking](deep-linking) for the workaround.
 :::
