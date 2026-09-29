@@ -453,6 +453,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun scrollToFocusedInput(smooth: Boolean = true) {
     val scrollView = detectedScrollView ?: findScrollView() ?: return
     val focusedView = findFocus() ?: return
+    if (!focusedView.isDescendantOf(scrollView)) return
 
     val focusedLocation = IntArray(2)
     val scrollViewLocation = IntArray(2)

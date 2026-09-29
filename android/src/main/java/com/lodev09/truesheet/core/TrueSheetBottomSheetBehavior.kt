@@ -7,6 +7,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
   var scrollingExpandsSheet: Boolean = true
 
+  init {
+    // Material hides once the release point, projected by velocity * friction, passes half
+    // the lowest detent. A higher friction lets short flicks dismiss, closer to iOS sheets.
+    hideFriction = HIDE_FRICTION
+  }
+
   override fun onNestedPreScroll(
     coordinatorLayout: CoordinatorLayout,
     child: V,
@@ -32,5 +38,9 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     // Don't consume flings — let the ScrollView decelerate naturally
     if (!scrollingExpandsSheet) return false
     return super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)
+  }
+
+  companion object {
+    private const val HIDE_FRICTION = 0.3f
   }
 }
