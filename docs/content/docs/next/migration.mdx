@@ -407,6 +407,20 @@ Supported iOS 26.1+ devices transition natively. Other devices cross-fade after 
 Android and Web inherit the sheet background for blur entries.
 See [`detentBackgrounds`](reference/configuration#detentbackgrounds).
 
+### 11. Swipe-to-Dismiss Threshold
+
+On Android, a quick downward flick now dismisses the sheet from its lowest detent, like on iOS. A slow drag still has to pass half of the lowest detent.
+
+Set the new `dismissThreshold` prop to `'short'` to dismiss on a short drag or any downward fling instead, like Compose Material3's `ModalBottomSheet`:
+
+```tsx
+<TrueSheet detents={[0.75]} dismissThreshold="short">
+  {/* content */}
+</TrueSheet>
+```
+
+Works on Android and Web. iOS always uses the system behavior. See [`dismissThreshold`](reference/configuration#dismissthreshold).
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.

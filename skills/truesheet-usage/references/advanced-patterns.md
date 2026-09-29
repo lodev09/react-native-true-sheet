@@ -642,3 +642,4 @@ On iOS 26.0, color/blur still sits above glass.
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
 - Element inspector works inside a presented sheet (dev builds, no setup) — header, content, and footer are inspectable
+- Android: a quick downward flick dismisses from the lowest detent, like iOS. `dismissThreshold="short"` (Android/Web) dismisses on a short drag or any fling, like Compose Material3

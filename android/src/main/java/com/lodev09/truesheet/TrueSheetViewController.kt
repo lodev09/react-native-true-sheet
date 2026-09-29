@@ -35,6 +35,7 @@ import com.lodev09.truesheet.core.TrueSheetDetentCalculator
 import com.lodev09.truesheet.core.TrueSheetDetentCalculatorDelegate
 import com.lodev09.truesheet.core.TrueSheetDimView
 import com.lodev09.truesheet.core.TrueSheetDimViewDelegate
+import com.lodev09.truesheet.core.TrueSheetDismissThreshold
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserver
 import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
@@ -269,6 +270,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       field = value
       behavior?.isDraggable = value
       if (isPresented) sheetView?.setupGrabber()
+    }
+
+  var dismissThreshold: TrueSheetDismissThreshold = TrueSheetDismissThreshold.HALF
+    set(value) {
+      field = value
+      behavior?.dismissThreshold = value
     }
 
   // =============================================================================
@@ -915,6 +922,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.isHideable = true
     behavior.isDraggable = draggable
     behavior.scrollingExpandsSheet = scrollableOptions?.scrollingExpandsSheet ?: true
+    behavior.dismissThreshold = dismissThreshold
+    behavior.lowestSheetTop = { detentCalculator.getLowestSheetTop() }
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 

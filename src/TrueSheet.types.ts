@@ -319,6 +319,20 @@ export type InsetAdjustment =
   | 'never';
 
 /**
+ * How far the sheet must be swiped down from its lowest detent to dismiss.
+ */
+export type DismissThreshold =
+  /**
+   * Past half of the lowest detent, or a quick flick. Matches iOS.
+   */
+  | 'half'
+  /**
+   * A short drag (56 dp) or any downward fling (125 dp/s),
+   * like Compose Material3's `ModalBottomSheet`.
+   */
+  | 'short';
+
+/**
  * Blur style mapped to native values in IOS.
  *
  * @platform ios
@@ -470,6 +484,16 @@ export interface TrueSheetProps extends ViewProps {
    * @default true
    */
   dismissible?: boolean;
+
+  /**
+   * How far the sheet must be swiped down from its lowest detent to dismiss.
+   * Set to `'short'` to dismiss on a short drag or fling, like Compose Material3's sheet.
+   *
+   * @platform android
+   * @platform web
+   * @default 'half'
+   */
+  dismissThreshold?: DismissThreshold;
 
   /**
    * Enables or disables dragging the sheet to resize it.

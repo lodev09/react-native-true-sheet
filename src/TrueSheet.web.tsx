@@ -80,6 +80,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     name,
     dismissible = true,
     draggable = true,
+    dismissThreshold = 'half',
     cornerRadius,
     style,
     backgroundColor: backgroundColorProp,
@@ -1209,6 +1210,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         onDrag={handleDrag}
         onRelease={handleRelease}
         dismissible={dismissible}
+        dismissThreshold={dismissThreshold}
         onDismissAttempt={handleDismissAttempt}
         draggable={draggable}
         repositionInputs={false}

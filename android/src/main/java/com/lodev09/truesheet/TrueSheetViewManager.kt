@@ -199,6 +199,11 @@ class TrueSheetViewManager :
     view.setDraggable(draggable)
   }
 
+  @ReactProp(name = "dismissThreshold")
+  override fun setDismissThreshold(view: TrueSheetView, value: String?) {
+    view.setDismissThreshold(value)
+  }
+
   @ReactProp(name = "dimmed", defaultBoolean = true)
   override fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)

@@ -1,7 +1,13 @@
 // @ts-nocheck — vendored upstream, incompatible with noUncheckedIndexedAccess
 import React from 'react';
 import { set, isVertical, getSnapPointTransform } from './helpers';
-import { DEFAULT_PEEK_HEIGHT, TRANSITIONS, VELOCITY_THRESHOLD } from './constants';
+import {
+  DEFAULT_PEEK_HEIGHT,
+  SHORT_DISMISS_DISTANCE,
+  SHORT_DISMISS_VELOCITY,
+  TRANSITIONS,
+  VELOCITY_THRESHOLD,
+} from './constants';
 import { useControllableState } from './use-controllable-state';
 import type { DrawerDirection } from './types';
 
@@ -253,11 +259,13 @@ export function useSnapPoints({
     closeDrawer,
     velocity,
     dismissible,
+    dismissThreshold,
   }: {
     draggedDistance: number;
     closeDrawer: () => void;
     velocity: number;
     dismissible: boolean;
+    dismissThreshold: 'half' | 'short';
   }) {
     if (fadeFromIndex === undefined) return;
 
@@ -273,6 +281,23 @@ export function useSnapPoints({
       set(overlayRef.current, {
         transition: `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
       });
+    }
+
+    // Short threshold: below the lowest detent, close on a short drag or any
+    // downward fling, like Compose Material3's sheet.
+    if (
+      dismissThreshold === 'short' &&
+      dismissible &&
+      (direction === 'bottom' || direction === 'right') &&
+      currentPosition > snapPointsOffset[0]
+    ) {
+      const overshoot = currentPosition - snapPointsOffset[0];
+      if (velocity > SHORT_DISMISS_VELOCITY || overshoot > SHORT_DISMISS_DISTANCE) {
+        closeDrawer();
+      } else {
+        snapToPoint(snapPointsOffset[0]);
+      }
+      return;
     }
 
     // Distance-based dismiss: when overshooting past the lowest detent by more

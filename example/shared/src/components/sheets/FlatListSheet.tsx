@@ -42,6 +42,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
     <TrueSheet
       ref={ref}
       detents={['auto']}
+      dismissThreshold="short"
       backgroundColor={DARK}
       scrollableRef={scrollRef}
       scrollableOptions={{

@@ -235,6 +235,14 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 Blocked attempts fire [`onDismissAttempt`](events#ondismissattempt). Use it to confirm before dismissing programmatically, e.g. when a form has unsaved changes.
 :::
 
+## `dismissThreshold`
+
+How far the sheet must be swiped down from its lowest detent to dismiss. The default `'half'` matches iOS. Use `'short'` for Compose Material3's `ModalBottomSheet` feel.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`DismissThreshold`](types#dismissthreshold) | `'half'` | | ✅ | ✅ |
+
 ## `draggable`
 
 If set to `false`, the sheet will disable dragging to resize. The sheet can only be resized programmatically using the [`resize`](methods#resize) method.
