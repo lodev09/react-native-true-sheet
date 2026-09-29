@@ -42,7 +42,6 @@ import {
   GestureSheet,
   PromptSheet,
   ScrollViewSheet,
-  SearchListSheet,
 } from '../components/sheets';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
@@ -103,7 +102,6 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const searchListSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -284,7 +282,6 @@ const MapScreenInner = ({
             />
             <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
           </ButtonGroup>
-          <Button text="Search + List" onPress={() => searchListSheet.current?.present()} />
           <Spacer />
           {showExtraContent && <DemoContent text="Extra content that changes height" />}
           <ButtonGroup>
@@ -307,7 +304,6 @@ const MapScreenInner = ({
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
           <GestureSheet ref={gestureSheet} />
-          <SearchListSheet ref={searchListSheet} />
         </ScrollView>
       </ReanimatedTrueSheet>
     </View>
