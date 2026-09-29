@@ -915,7 +915,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.isHideable = true
     behavior.isDraggable = draggable
     behavior.scrollingExpandsSheet = scrollableOptions?.scrollingExpandsSheet ?: true
-    behavior.lowestSheetTop = { detentCalculator.getLowestSheetTop() }
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 
