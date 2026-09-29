@@ -1,7 +1,5 @@
 package com.lodev09.truesheet.core
 
-import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
@@ -15,14 +13,10 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
 
   private var nestedDragged = false
   private var nestedReleaseVelocity = 0f
-  private var touchPointerId = MotionEvent.INVALID_POINTER_ID
-  private var trackedEventTime = -1L
-  private var trackedAction = -1
-  private var velocityTracker: VelocityTracker? = null
 
   // Material's hide decision measures against the collapsed height, so a sheet
   // whose lowest detent is tall needs a long drag to dismiss. At or below the
-  // lowest detent, settle like Compose Material3's sheet instead.
+  // lowest detent, settle nested scrolls like Compose Material3's sheet instead.
   private fun releaseState(child: V, dragged: Boolean, velocityY: Float): Int? {
     if (!isDraggable || !dragged) return null
     val lowestTop = lowestSheetTop?.invoke() ?: return null
@@ -95,41 +89,6 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
       }
     }
     super.onStopNestedScroll(coordinatorLayout, child, target, type)
-  }
-
-  private fun trackTouch(event: MotionEvent) {
-    if (event.eventTime == trackedEventTime && event.actionMasked == trackedAction) return
-    trackedEventTime = event.eventTime
-    trackedAction = event.actionMasked
-    if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-      velocityTracker?.recycle()
-      velocityTracker = VelocityTracker.obtain()
-      touchPointerId = event.getPointerId(0)
-    }
-    velocityTracker?.addMovement(event)
-  }
-
-  override fun onInterceptTouchEvent(parent: CoordinatorLayout, child: V, event: MotionEvent): Boolean {
-    trackTouch(event)
-    return super.onInterceptTouchEvent(parent, child, event)
-  }
-
-  override fun onTouchEvent(parent: CoordinatorLayout, child: V, event: MotionEvent): Boolean {
-    trackTouch(event)
-    val wasDragging = state == STATE_DRAGGING
-    val handled = super.onTouchEvent(parent, child, event)
-    if (event.actionMasked == MotionEvent.ACTION_UP) {
-      val velocityY = velocityTracker?.run {
-        computeCurrentVelocity(1000)
-        getYVelocity(touchPointerId)
-      } ?: 0f
-      releaseState(child, wasDragging, velocityY)?.let { state = it }
-    }
-    if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-      velocityTracker?.recycle()
-      velocityTracker = null
-    }
-    return handled
   }
 
   companion object {
