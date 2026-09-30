@@ -255,6 +255,10 @@ If set to `false`, the sheet will disable dragging to resize. The sheet can only
 When `draggable` is `false`, the [`grabber`](#grabber) is automatically hidden.
 :::
 
+:::note
+On iOS 26+, `draggable={false}` doesn't turn off Liquid Glass's touch response: the sheet still stretches slightly and follows the finger while a touch moves over it (e.g. a slider inside the sheet). Set [`backgroundColor`](#backgroundcolor) to replace the glass with a native color effect on iOS 26.1+, which doesn't react to touches.
+:::
+
 ## `dimmed`
 
 Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.
