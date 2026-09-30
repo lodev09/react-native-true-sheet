@@ -35,7 +35,7 @@ export function useSnapPoints({
   fadeFromIndex?: number;
   drawerRef: React.RefObject<HTMLDivElement | null>;
   overlayRef: React.RefObject<HTMLDivElement | null>;
-  onSnapPointChange(activeSnapPointIndex: number): void;
+  onSnapPointChange(activeSnapPointIndex: number, animated: boolean): void;
   direction?: DrawerDirection;
   container?: HTMLElement | null | undefined;
   snapToSequentialPoint?: boolean;
@@ -193,17 +193,31 @@ export function useSnapPoints({
     });
   };
 
-  // Skip the transition on the very first snap when the consumer opts out of
-  // the initial presentation animation. All subsequent snaps still animate.
+  // Initial measurements can take several commits before the first paint.
+  // Keep all of them unanimated when initial presentation animation is disabled.
   const hasSnappedRef = React.useRef(false);
+  const initialSnapFrameRef = React.useRef<number | null>(null);
+  React.useEffect(
+    () => () => {
+      if (initialSnapFrameRef.current !== null) {
+        window.cancelAnimationFrame(initialSnapFrameRef.current);
+        initialSnapFrameRef.current = null;
+      }
+    },
+    []
+  );
   const snapToPoint = React.useCallback(
     (dimension: number) => {
+      if (!drawerRef.current) return;
       const newSnapPointIndex =
         snapPointsOffset?.findIndex((snapPointDim) => snapPointDim === dimension) ?? null;
-      onSnapPointChange(newSnapPointIndex);
 
       const animateThisSnap = hasSnappedRef.current || initialAnimated;
-      hasSnappedRef.current = true;
+      if (initialSnapFrameRef.current === null) {
+        initialSnapFrameRef.current = window.requestAnimationFrame(() => {
+          hasSnappedRef.current = true;
+        });
+      }
       // One animated value drives both the translation and the visible height.
       set(drawerRef.current, {
         'transition': animateThisSnap
@@ -216,6 +230,9 @@ export function useSnapPoints({
       // Snapping implies drag overshoot (if any) should be undone.
       setDetachedWrapperTransform(0, animateThisSnap);
 
+      const overlayTransition = animateThisSnap
+        ? `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`
+        : 'none';
       if (
         snapPointsOffset &&
         newSnapPointIndex !== snapPointsOffset.length - 1 &&
@@ -224,24 +241,33 @@ export function useSnapPoints({
         newSnapPointIndex < fadeFromIndex
       ) {
         set(overlayRef.current, {
-          transition: `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
+          transition: overlayTransition,
           opacity: '0',
           pointerEvents: 'none',
         });
       } else {
         set(overlayRef.current, {
-          transition: `opacity ${TRANSITIONS.DURATION}s cubic-bezier(${TRANSITIONS.EASE.join(',')})`,
+          transition: overlayTransition,
           opacity: '1',
           pointerEvents: 'auto',
         });
       }
 
+      onSnapPointChange(newSnapPointIndex, animateThisSnap);
       setActiveSnapPoint(snapPoints?.[Math.max(newSnapPointIndex, 0)]);
     },
-    [drawerRef.current, snapPoints, snapPointsOffset, fadeFromIndex, overlayRef, setActiveSnapPoint]
+    [
+      drawerRef.current,
+      snapPoints,
+      snapPointsOffset,
+      fadeFromIndex,
+      overlayRef,
+      setActiveSnapPoint,
+      initialAnimated,
+    ]
   );
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!isOpen) return;
     if (activeSnapPoint || activeSnapPointProp) {
       const newIndex =

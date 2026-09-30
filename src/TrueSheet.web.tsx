@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -159,6 +160,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const colorScheme = useColorScheme();
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
+  const didInitiallyPresentRef = useRef(shouldAutoPresent);
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
@@ -283,10 +285,23 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   useImperativeHandle(ref, () => methods, [methods]);
 
+  useEffect(() => {
+    if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
+    didInitiallyPresentRef.current = true;
+    if (!isOpenRef.current) {
+      methods.present(initialDetentIndex);
+    }
+  }, [initialDetentIndex, shouldAutoPresent, methods]);
+
   const methodsRef = useRef<TrueSheetMethods | null>(methods);
   useRegisterSheet(name, methodsRef);
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
+  const [drawerContent, setDrawerContent] = useState<HTMLDivElement | null>(null);
+  const handleDrawerRef = useCallback((node: HTMLDivElement | null) => {
+    drawerContentRef.current = node;
+    setDrawerContent(node);
+  }, []);
 
   // Measured header/footer heights drive the 'peek' snap point — mirrors
   // native, where the controller tracks headerHeight/footerHeight.
@@ -395,50 +410,36 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     (insetBehavior === 'automatic' || insetBehavior === 'footer');
   const measureContent = validDetents.includes('auto') || isFormSheet;
 
-  useEffect(() => {
-    if (!isOpen) return undefined;
+  useLayoutEffect(() => {
+    const layoutEl = sizedLayoutRef.current;
+    if (!isOpen || !drawerContent || !layoutEl?.isConnected) return undefined;
 
-    let canceled = false;
-    let rafId = 0;
-    let observer: ReturnType<typeof observeSheetLayout> | undefined;
+    setHeaderHeight(getDOMElement(headerElRef.current)?.offsetHeight ?? 0);
+    setFooterHeight(getDOMElement(footerElRef.current)?.offsetHeight ?? 0);
+    measurePeek();
 
-    const attach = () => {
-      if (canceled) return;
-      const layoutEl = sizedLayoutRef.current;
-      const drawer = drawerContentRef.current;
-      if (!drawer || !layoutEl?.isConnected) {
-        // Radix Presence defers the portal mount; poll until the drawer is live.
-        rafId = window.requestAnimationFrame(attach);
-        return;
-      }
+    const observer = observeSheetLayout({
+      drawer: drawerContent,
+      layout: layoutEl,
+      getContent: () => getDOMElement(contentRef.current),
+      getHeader: () => getDOMElement(headerElRef.current),
+      getFooter: () => getDOMElement(footerElRef.current),
+      getScrollable: () => getScrollableElement(scrollableRef?.current),
+      absoluteHeader,
+      absoluteFooter,
+      footerInsetAdjustment,
+      measureContent,
+      onHeightChange: (height) => {
+        naturalHeightRef.current = height;
+        setMeasuredContentHeight(height);
+      },
+    });
 
-      observer = observeSheetLayout({
-        drawer,
-        layout: layoutEl,
-        getContent: () => getDOMElement(contentRef.current),
-        getHeader: () => getDOMElement(headerElRef.current),
-        getFooter: () => getDOMElement(footerElRef.current),
-        getScrollable: () => getScrollableElement(scrollableRef?.current),
-        absoluteHeader,
-        absoluteFooter,
-        footerInsetAdjustment,
-        measureContent,
-        onHeightChange: (height) => {
-          naturalHeightRef.current = height;
-          setMeasuredContentHeight(height);
-        },
-      });
-    };
-
-    rafId = window.requestAnimationFrame(attach);
-
-    return () => {
-      canceled = true;
-      window.cancelAnimationFrame(rafId);
-      observer?.disconnect();
-    };
+    return () => observer.disconnect();
   }, [
     isOpen,
+    drawerContent,
+    measurePeek,
     absoluteHeader,
     absoluteFooter,
     footerInsetAdjustment,
@@ -1221,7 +1222,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         detachedRadius={effectiveCornerRadius}
         maxContentHeight={effectiveMaxContentHeight}
         peekHeight={peekHeight}
-        initialAnimated={initialDetentAnimated}
+        initialAnimated={shouldAutoPresent ? initialDetentAnimated : true}
         detachedWrapperStyle={wrapperStyle}
         contentHeight={measuredContentHeight}
         activeSnapPoint={activeSnapPoint}
@@ -1231,7 +1232,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         <Drawer.Portal container={portalContainer ?? undefined}>
           <Drawer.Overlay style={overlayStyle} />
           <Drawer.Content
-            ref={drawerContentRef}
+            ref={handleDrawerRef}
             style={mergedContentStyle}
             onPointerDownOutside={handlePointerDownOutside}
             detachedSiblings={

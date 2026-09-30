@@ -46,6 +46,8 @@ interface DrawerContextValue {
   container?: HTMLElement | null;
   autoFocus?: boolean;
   shouldAnimate?: React.RefObject<boolean>;
+  initialAnimated: boolean;
+  hasPresented: React.RefObject<boolean>;
   onPositionChangeRef: React.RefObject<((position: number) => void) | undefined>;
   setContentHeight: (height: number) => void;
   detached: boolean;
@@ -81,6 +83,8 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   closeDrawer: () => {},
   direction: 'bottom',
   shouldAnimate: { current: true },
+  initialAnimated: true,
+  hasPresented: { current: false },
   shouldScaleBackground: false,
   setBackgroundColorOnScale: true,
   noBodyStyles: false,
