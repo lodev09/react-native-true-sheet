@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { LARGE_TITLE_HEADER_OPTIONS } from '@example/shared/utils';
 
 /**
  * A nested stack navigator with a single screen.
@@ -15,8 +16,7 @@ export default function TestStackLayout() {
         name="index"
         options={{
           title: 'Test Stack',
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: { color: 'white' },
+          ...LARGE_TITLE_HEADER_OPTIONS,
         }}
       />
     </Stack>

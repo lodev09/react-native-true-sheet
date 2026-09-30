@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TestScreen } from '@example/shared/screens';
+import { LARGE_TITLE_HEADER_OPTIONS } from '@example/shared/utils';
 
 type NestedStackParamList = {
   Test: undefined;
@@ -31,8 +32,7 @@ export const TestStackNavigator = () => {
         component={TestScreenWrapper}
         options={{
           title: 'Nested Stack',
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: { color: 'white' },
+          ...LARGE_TITLE_HEADER_OPTIONS,
         }}
       />
     </Stack.Navigator>

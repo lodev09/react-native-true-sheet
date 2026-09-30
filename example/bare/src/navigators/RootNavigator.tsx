@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { MapScreen, StandardScreen, TestScreen } from '@example/shared/screens';
-import { DARK_BLUE } from '@example/shared/utils';
+import { DARK_BLUE, LARGE_TITLE_HEADER_OPTIONS } from '@example/shared/utils';
 import { Map } from '@example/shared/components';
 import { ModalStackNavigator } from './ModalStackNavigator';
 import { SheetNavigator } from './SheetNavigator';
@@ -69,9 +69,7 @@ export const RootNavigator = () => {
         component={TestScreenWrapper}
         options={{
           title: 'Test',
-          headerStyle: undefined,
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: { color: 'white' },
+          ...LARGE_TITLE_HEADER_OPTIONS,
         }}
       />
       <Stack.Screen
