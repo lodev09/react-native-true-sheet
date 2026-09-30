@@ -76,6 +76,7 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "EDGE_TO_EDGE_ENABLED", "${getEdgeToEdgeEnabled()}"
+    consumerProguardFiles "proguard-rules.pro"
   }
 
   buildTypes {
