@@ -64,7 +64,16 @@ export const RootNavigator = () => {
         component={ModalStackNavigator}
         options={{ presentation: 'fullScreenModal', headerShown: false }}
       />
-      <Stack.Screen name="Test" component={TestScreenWrapper} options={{ title: 'Test' }} />
+      <Stack.Screen
+        name="Test"
+        component={TestScreenWrapper}
+        options={{
+          title: 'Test',
+          headerStyle: undefined,
+          headerLargeTitleEnabled: true,
+          headerLargeTitleStyle: { color: 'white' },
+        }}
+      />
       <Stack.Screen
         name="TestStack"
         component={TestStackNavigator}

@@ -61,7 +61,15 @@ function RootLayoutNav() {
           >
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
-            <Stack.Screen name="test" options={{ title: 'Test' }} />
+            <Stack.Screen
+              name="test"
+              options={{
+                title: 'Test',
+                headerStyle: undefined,
+                headerLargeTitleEnabled: true,
+                headerLargeTitleStyle: { color: 'white' },
+              }}
+            />
             <Stack.Screen
               name="modal"
               options={{
