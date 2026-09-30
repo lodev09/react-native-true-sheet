@@ -67,6 +67,16 @@ function setup(initialDetentIndex = 0) {
 }
 
 describe('web initial presentation', () => {
+  it('applies initialDetentAnimated only to auto-presentation', () => {
+    const sheet = setup(-1);
+    sheet.rerender(<TrueSheet {...sheet.props} initialDetentAnimated={false} />);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(true);
+    sheet.rerender(
+      <TrueSheet {...sheet.props} initialDetentIndex={0} initialDetentAnimated={false} />
+    );
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(false);
+  });
+
   it('presents at a deferred index only once, including after dismissal', async () => {
     const sheet = setup(-1);
     const onWillPresent = jest.fn();

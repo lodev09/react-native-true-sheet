@@ -299,6 +299,7 @@ export function Root({
   const dismissAttempted = React.useRef(false);
   const keyboardIsOpen = React.useRef(false);
   const shouldAnimate = React.useRef(!defaultOpen);
+  const hasPresented = React.useRef(false);
   const previousDiffFromInitial = React.useRef(0);
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const drawerHeightRef = React.useRef(drawerRef.current?.getBoundingClientRect().height || 0);
@@ -315,10 +316,14 @@ export function Root({
     onContentHeightChangeRef.current?.(measuredContentHeight);
   }, [measuredContentHeight]);
 
-  const onSnapPointChange = React.useCallback((activeSnapPointIndex: number) => {
+  const onSnapPointChange = React.useCallback((activeSnapPointIndex: number, animated: boolean) => {
     // Change openTime ref when we reach the last snap point to prevent dragging for 500ms incase it's scrollable.
     if (snapPoints && activeSnapPointIndex === snapPointsOffset.length - 1)
       openTime.current = new Date();
+    // Instant snaps do not emit transition events for position tracking.
+    if (!animated && drawerRef.current) {
+      onPositionChangeRef.current?.(drawerRef.current.getBoundingClientRect().top);
+    }
   }, []);
 
   const {
@@ -1017,6 +1022,8 @@ export function Root({
           dismissible,
           onDismissAttempt,
           shouldAnimate,
+          initialAnimated,
+          hasPresented,
           handleOnly,
           isOpen,
           isDragging,
@@ -1175,6 +1182,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       container,
       handleOnly,
       shouldAnimate,
+      initialAnimated,
+      hasPresented,
       autoFocus,
       onPositionChangeRef,
       setContentHeight,
@@ -1423,15 +1432,18 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
           wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
         } else if (isOpen && !wasOpenRef.current) {
           wrapper.style.transition = 'none';
-          wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
-          // eslint-disable-next-line no-void
-          void wrapper.offsetHeight;
-          wrapper.style.transition = transition;
+          if (hasPresented.current || initialAnimated) {
+            wrapper.style.transform = `translate3d(0, ${viewportH}px, 0)`;
+            // eslint-disable-next-line no-void
+            void wrapper.offsetHeight;
+            wrapper.style.transition = transition;
+          }
           wrapper.style.transform = 'translate3d(0, 0, 0)';
+          hasPresented.current = true;
         }
       }
       wasOpenRef.current = isOpen;
-    }, [isOpen, detached, drawerRef]);
+    }, [isOpen, detached, drawerRef, initialAnimated, hasPresented]);
 
     // Subsequent snap writes belong to useSnapPoints. A React style update on
     // release would overwrite the live drag value before its transition starts.
