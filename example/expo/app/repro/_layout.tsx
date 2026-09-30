@@ -23,6 +23,15 @@ export default function ReproLayout() {
       />
       <Stack.Screen name="page-sheet" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="sheet" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="large-title"
+        options={{
+          headerLargeTitleEnabled: true,
+          headerTitle: 'Large title',
+          headerTintColor: undefined,
+          headerStyle: undefined,
+        }}
+      />
     </Stack>
   );
 }
