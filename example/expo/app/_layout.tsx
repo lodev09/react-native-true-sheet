@@ -6,7 +6,7 @@ import { useColorScheme } from 'react-native';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 import { MapProvider } from '@lugg/maps';
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
-import { DARK_BLUE } from '@example/shared/utils';
+import { DARK_BLUE, LARGE_TITLE_HEADER_OPTIONS } from '@example/shared/utils';
 import 'react-native-reanimated';
 
 export {
@@ -61,7 +61,13 @@ function RootLayoutNav() {
           >
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="standard" options={{ headerShown: false, title: 'Standard' }} />
-            <Stack.Screen name="test" options={{ title: 'Test' }} />
+            <Stack.Screen
+              name="test"
+              options={{
+                title: 'Test',
+                ...LARGE_TITLE_HEADER_OPTIONS,
+              }}
+            />
             <Stack.Screen
               name="modal"
               options={{

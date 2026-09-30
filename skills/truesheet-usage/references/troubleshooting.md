@@ -12,6 +12,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
 - [Gesture handler not working (Android)](#gesture-handler-not-working-android)
 - [initialDetentIndex sheet covers or misses a deep-linked screen (iOS)](#initialdetentindex-sheet-covers-or-misses-a-deep-linked-screen-ios)
+- [Large title doesn't collapse on scroll (iOS)](#large-title-doesnt-collapse-on-scroll-ios)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
@@ -121,6 +122,14 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** The sheet presents while the deep-linked screen is still opening.
 
 **Fix:** Hold `initialDetentIndex` at `-1` until the screen is focused, then flip it to `0` — don't call `present()` on focus. See [Deep linking](./advanced-patterns.md#deep-linking).
+
+## Large title doesn't collapse on scroll (iOS)
+
+**Symptom:** With a native stack's `headerLargeTitleEnabled`, the large title stays expanded while the screen scrolls.
+
+**Cause:** iOS tracks the scroll view through the screen's first child. A `TrueSheet` rendered before the scroll view takes that spot.
+
+**Fix:** Render `<TrueSheet>` after the scroll view.
 
 ## Gap above the keyboard
 

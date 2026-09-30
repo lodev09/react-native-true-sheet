@@ -764,8 +764,7 @@ TrueSheet satisfies TrueSheetStaticMethods;
 const styles = StyleSheet.create({
   sheetView: {
     ...StyleSheet.absoluteFill,
-    zIndex: -9999,
-    pointerEvents: 'box-none',
+    pointerEvents: 'none',
   },
   // Fill the sheet so flex layouts track the sheet's size per detent
   container: {
