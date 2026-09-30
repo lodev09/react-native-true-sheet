@@ -70,6 +70,19 @@ On iOS, a deep link on a cold start can open another screen over the one hosting
 
 Hold `initialDetentIndex` until the screen is focused. See [Deep Linking](guides/deep-linking) for the pattern and a runnable example.
 
+## Large Title Doesn't Collapse on Scroll (iOS)
+
+With a native stack's `headerLargeTitleEnabled`, iOS tracks the screen's scroll view through its first child. A `TrueSheet` rendered before the scroll view takes that spot, so the large title stays expanded.
+
+Render the sheet after the scroll view:
+
+```tsx
+<>
+  <ScrollView contentInsetAdjustmentBehavior="automatic">{/* ... */}</ScrollView>
+  <TrueSheet ref={sheet}>{/* ... */}</TrueSheet>
+</>
+```
+
 ## Weird layout render
 
 The sheet's content lays out naturally — like a regular view or a screen — wrapping its children's natural height. Common symptoms and fixes:
