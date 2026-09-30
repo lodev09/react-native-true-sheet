@@ -6,6 +6,7 @@ Deeper integration guides for Navigation, Reanimated, Web, Side sheets, Backgrou
 
 - [React Navigation](#react-navigation)
 - [Expo Router](#expo-router)
+- [Deep linking](#deep-linking)
 - [Reanimated](#reanimated)
 - [Web](#web)
 - [Side sheets](#side-sheets)
@@ -211,6 +212,26 @@ app/
 ├── settings.tsx  # Sheet screen
 └── profile.tsx   # Sheet screen, pushed from settings via router.push('/profile')
 ```
+
+---
+
+## Deep linking
+
+On iOS, a cold start deep link can open a modal or a sheet-navigator sheet over a screen whose sheet uses `initialDetentIndex`. That sheet then presents on top of the deep-linked screen, or not at all. Hold `initialDetentIndex` until the screen is focused:
+
+```tsx
+import { useFocusEffect } from '@react-navigation/native' // or 'expo-router'
+
+function HomeScreen() {
+  const [initialDetentIndex, setInitialDetentIndex] = useState(-1)
+
+  useFocusEffect(useCallback(() => setInitialDetentIndex(0), []))
+
+  return <TrueSheet initialDetentIndex={initialDetentIndex}>{/* ... */}</TrueSheet>
+}
+```
+
+A normal launch is focused on mount, so the sheet presents immediately; under a deep-linked screen it waits until that screen closes. Flip the prop — don't call `present()` on focus, which rejects behind a `fullScreenModal` ("No presenting view controller found").
 
 ---
 

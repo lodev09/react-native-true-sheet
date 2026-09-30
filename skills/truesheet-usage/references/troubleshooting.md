@@ -11,7 +11,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Blank screen after modal dismiss (iOS)](#blank-screen-after-modal-dismiss-ios)
 - [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
 - [Gesture handler not working (Android)](#gesture-handler-not-working-android)
-- [initialDetentIndex not working from deep link (iOS)](#initialdetentindex-not-working-from-deep-link-ios)
+- [initialDetentIndex sheet covers or misses a deep-linked screen (iOS)](#initialdetentindex-sheet-covers-or-misses-a-deep-linked-screen-ios)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
@@ -114,29 +114,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural height by default, so a `flex: 1` child collapses to zero height. Alternatively, pass `flex: 1` via the sheet's `style` prop to fill the sheet.
 
-## initialDetentIndex not working from deep link (iOS)
+## initialDetentIndex sheet covers or misses a deep-linked screen (iOS)
 
-**Symptom:** `initialDetentIndex` has no effect when the app is opened via a deep link to a modal screen from a cold start.
+**Symptom:** On a cold start, a deep link opens a modal or a sheet-navigator sheet over a screen with an `initialDetentIndex` sheet. That sheet presents on top of the deep-linked screen, or doesn't present at all.
 
-**Cause:** The view wasn't attached to the correct window during the initial render.
+**Cause:** The sheet presents while the deep-linked screen is still opening.
 
-**Fix:** Use `useFocusEffect` to present when the screen gains focus, conditioned on whether the initial present succeeded:
-
-```tsx
-import { useFocusEffect } from '@react-navigation/native'
-
-const [didPresent, setDidPresent] = useState(false)
-
-useFocusEffect(
-  useCallback(() => {
-    if (!didPresent) {
-      sheet.current?.present()
-    }
-  }, [didPresent])
-)
-
-<TrueSheet ref={sheet} initialDetentIndex={0} onDidPresent={() => setDidPresent(true)}>
-```
+**Fix:** Hold `initialDetentIndex` at `-1` until the screen is focused, then flip it to `0` — don't call `present()` on focus. See [Deep linking](./advanced-patterns.md#deep-linking).
 
 ## Gap above the keyboard
 
