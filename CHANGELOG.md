@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Sheets now hide when their presenter screen disappears in R8-minified release builds. ([#889](https://github.com/lodev09/react-native-true-sheet/pull/889) by [@lodev09](https://github.com/lodev09))
+
 ## 3.11.16
 
 ### 🐛 Bug fixes
