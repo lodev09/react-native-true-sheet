@@ -268,6 +268,20 @@ describe('TrueSheet', () => {
       expect(queryByText('Lazy Content Negative')).toBeNull();
     });
 
+    it.each([true, false])('passes a deferred initial index to native with lazy=%s', (lazy) => {
+      const sheet = (
+        <TrueSheet lazy={lazy} initialDetentIndex={-1} testID="deferred-initial-host">
+          <Text>Deferred Content</Text>
+        </TrueSheet>
+      );
+      const { getByTestId, getByText, rerender } = render(sheet);
+
+      expect(getByTestId('deferred-initial-host').props.initialDetentIndex).toBe(-1);
+      rerender(<TrueSheet {...sheet.props} initialDetentIndex={0} />);
+      expect(getByText('Deferred Content')).toBeDefined();
+      expect(getByTestId('deferred-initial-host').props.initialDetentIndex).toBe(0);
+    });
+
     it('should render native view content immediately when initialDetentIndex is set to valid index', () => {
       const { getByText } = render(
         <TrueSheet name="eager-test" initialDetentIndex={0}>

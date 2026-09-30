@@ -66,6 +66,43 @@ function setup(initialDetentIndex = 0) {
   return { ...result, props, ref, color, move };
 }
 
+describe('web initial presentation', () => {
+  it('presents at a deferred index only once, including after dismissal', async () => {
+    const sheet = setup(-1);
+    const onWillPresent = jest.fn();
+    const onDidPresent = jest.fn();
+    const props = { ...sheet.props, onWillPresent, onDidPresent };
+    const drawer = () => sheet.UNSAFE_getByType(Drawer.Root).props;
+
+    expect(drawer().open).toBe(false);
+    sheet.rerender(<TrueSheet {...props} initialDetentIndex={2} />);
+    expect(drawer().open).toBe(true);
+    expect(drawer().activeSnapPoint).toBe(1);
+    expect(sheet.color()).toBe('#abcdef');
+    act(() => jest.runOnlyPendingTimers());
+    expect(onWillPresent).toHaveBeenCalledTimes(1);
+    expect(onDidPresent).toHaveBeenCalledTimes(1);
+    expect(onDidPresent.mock.calls[0]![0].nativeEvent.index).toBe(2);
+
+    sheet.rerender(<TrueSheet {...props} initialDetentIndex={1} />);
+    expect(drawer().activeSnapPoint).toBe(1);
+    await act(() => sheet.ref.current!.dismiss());
+    act(() => jest.runOnlyPendingTimers());
+    sheet.rerender(<TrueSheet {...props} initialDetentIndex={-1} />);
+    sheet.rerender(<TrueSheet {...props} initialDetentIndex={0} />);
+    expect(drawer().open).toBe(false);
+    expect(onDidPresent).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves an already presented sheet when the initial index arrives', async () => {
+    const sheet = setup(-1);
+    await act(() => sheet.ref.current!.present(1));
+    act(() => jest.runOnlyPendingTimers());
+    sheet.rerender(<TrueSheet {...sheet.props} initialDetentIndex={2} />);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.activeSnapPoint).toBe(0.4);
+  });
+});
+
 describe('web detent backgrounds', () => {
   it('starts at the presented entry and holds it during presentation', () => {
     const sheet = setup(2);

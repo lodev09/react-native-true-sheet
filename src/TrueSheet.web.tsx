@@ -159,6 +159,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const colorScheme = useColorScheme();
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
+  const didInitiallyPresentRef = useRef(shouldAutoPresent);
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
@@ -282,6 +283,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   useImperativeHandle(ref, () => methods, [methods]);
+
+  useEffect(() => {
+    if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
+    didInitiallyPresentRef.current = true;
+    if (!isOpenRef.current) {
+      methods.present(initialDetentIndex);
+    }
+  }, [initialDetentIndex, shouldAutoPresent, methods]);
 
   const methodsRef = useRef<TrueSheetMethods | null>(methods);
   useRegisterSheet(name, methodsRef);
