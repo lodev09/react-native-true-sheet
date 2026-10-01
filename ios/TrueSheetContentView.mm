@@ -442,11 +442,12 @@ using namespace facebook::react;
 
   TrueSheetViewController *sheetController = _keyboardObserver.viewController;
   UIView *firstResponder = sheetController ? [sheetController.view findFirstResponder] : nil;
-  if (!firstResponder) {
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  // An input outside the scrollable (e.g. in the footer) can't be revealed by scrolling it
+  if (!firstResponder || ![firstResponder isDescendantOfView:scrollView]) {
     return;
   }
 
-  UIScrollView *scrollView = _detectedScrollView.scrollView;
   CGRect targetRect = [firstResponder convertRect:firstResponder.bounds toView:scrollView];
 
   if ([firstResponder conformsToProtocol:@protocol(UITextInput)]) {
