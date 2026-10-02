@@ -5,6 +5,7 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Typing in an input outside the scrollable (e.g. a multiline input in the footer) no longer scrolls the scrollable on every keystroke. ([#895](https://github.com/lodev09/react-native-true-sheet/pull/895) by [@billouboq](https://github.com/billouboq))
+- **Android**: Presenting a sheet while another is still dismissing no longer leaves the new sheet without a dimmed background. ([#894](https://github.com/lodev09/react-native-true-sheet/pull/894) by [@shahidrogers](https://github.com/shahidrogers))
 
 ## 3.11.17
 
