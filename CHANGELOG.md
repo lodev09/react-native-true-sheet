@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Presenting a sheet while another is still dismissing no longer leaves the new sheet without a dimmed background. ([#893](https://github.com/lodev09/react-native-true-sheet/pull/893) by [@shahidrogers](https://github.com/shahidrogers))
+
 ## 3.11.17
 
 ### 🐛 Bug fixes
