@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Typing in an input outside the scrollable (e.g. a multiline input in the footer) no longer scrolls the scrollable on every keystroke. ([#891](https://github.com/lodev09/react-native-true-sheet/pull/891) by [@billouboq](https://github.com/billouboq))
+
 ## 3.11.17
 
 ### 🐛 Bug fixes
