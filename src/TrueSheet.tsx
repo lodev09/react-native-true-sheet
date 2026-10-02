@@ -197,7 +197,9 @@ export class TrueSheet
     let scrollableHandle: number | null = null;
     if (scrollableRef?.current) {
       try {
-        scrollableHandle = findNodeHandle(scrollableRef.current);
+        scrollableHandle = findNodeHandle(
+          scrollableRef.current as Parameters<typeof findNodeHandle>[0]
+        );
       } catch (error) {
         // A stale ref (e.g. a wrapper that never clears it on unmount) makes
         // findNodeHandle throw. Treat it as no scrollable instead of crashing.

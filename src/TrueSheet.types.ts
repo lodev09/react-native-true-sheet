@@ -1,6 +1,7 @@
 import type { Component, ComponentType, ReactElement, ReactNode, RefObject } from 'react';
 import type {
   ColorValue,
+  HostInstance,
   NativeSyntheticEvent,
   StyleProp,
   ViewProps,
@@ -689,7 +690,7 @@ export interface TrueSheetProps extends ViewProps {
    * </TrueSheet>
    * ```
    */
-  scrollableRef?: RefObject<Component<unknown> | null>;
+  scrollableRef?: RefObject<Component<unknown> | HostInstance | null>;
 
   /**
    * Options for scrollable behavior.
