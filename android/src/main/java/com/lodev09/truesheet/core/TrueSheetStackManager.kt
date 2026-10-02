@@ -23,12 +23,14 @@ object TrueSheetStackManager {
   }
 
   /**
-   * Returns the topmost presented and visible sheet.
+   * Returns the topmost presented and visible sheet, skipping sheets that are dismissing.
+   * A dismissing sheet can't parent a new one: its dim would suppress the child's own dim
+   * and then disappear with it, leaving the child undimmed.
    * Must be called within synchronized block.
    */
   private fun findTopmostSheet(): TrueSheetView? =
     presentedSheetStack.lastOrNull {
-      it.viewController.isPresented && it.viewController.isSheetVisible
+      it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed }
     }
 
   /**
