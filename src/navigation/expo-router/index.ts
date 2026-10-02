@@ -1,8 +1,10 @@
+import * as ExpoRouter from 'expo-router';
 import { StackRouter, unstable_integrateWithRouter, useNavigation } from 'expo-router';
 
 import { createTrueSheetRouter } from '../createTrueSheetRouter';
 import { trueSheetNavigator } from '../navigator';
 import type { ParamListBase } from './base-types';
+import { extendTrueSheetRouter, type ExtendRouter } from './extendTrueSheetRouter';
 import type {
   StackRouterFactory,
   TrueSheetNavigationOptions,
@@ -15,12 +17,18 @@ import type {
   TrueSheetStandardEventMap,
 } from './types';
 
-// expo-router's vendored StackRouter is structurally identical to @react-navigation's.
-// Pinned to this entry's own router types: `createTrueSheetRouter` is shared and typed
-// against React Navigation, which resolves to `any` in apps that only install expo-router.
-const sheetRouter: TrueSheetRouterFactory = createTrueSheetRouter(
-  StackRouter as StackRouterFactory
-);
+// Expo Router 58+ replaced the React Navigation router contract and ships `extendRouter`
+// for it. Before that, the vendored StackRouter is structurally identical to
+// @react-navigation's. Pinned to this entry's own router types: `createTrueSheetRouter` is
+// shared and typed against React Navigation, which resolves to `any` in apps that only
+// install expo-router.
+const extendRouter = (ExpoRouter as Record<string, unknown>).extendRouter as
+  | ExtendRouter
+  | undefined;
+
+const sheetRouter: TrueSheetRouterFactory = extendRouter
+  ? extendTrueSheetRouter(extendRouter, StackRouter as StackRouterFactory)
+  : createTrueSheetRouter(StackRouter as StackRouterFactory);
 
 // `routes`/`dispatch` are injected by `createProps`, so they are declared as
 // CreateProps (last generic) and excluded from the public navigator props

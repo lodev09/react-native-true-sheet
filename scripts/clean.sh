@@ -64,7 +64,7 @@ step() {
 }
 
 install() {
-  rm -rf node_modules example/bare/node_modules example/expo/node_modules docs/node_modules
+  rm -rf node_modules example/bare/node_modules example/expo/node_modules example/expo-58/node_modules docs/node_modules
   yarn
 }
 

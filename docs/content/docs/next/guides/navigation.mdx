@@ -368,6 +368,16 @@ export default function SheetLayout() {
 }
 ```
 
+:::note
+On **Expo SDK 58+**, Expo Router picks the base screen from the layout's `unstable_settings.anchor` and ignores the `initialRouteName` prop on `Sheet`:
+
+```tsx
+export const unstable_settings = {
+  anchor: 'index',
+};
+```
+:::
+
 Inside sheet screens, import `useTrueSheetNavigation` from the same entry point:
 
 ```tsx
