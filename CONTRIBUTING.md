@@ -10,7 +10,7 @@ This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/f
 
 - The library package in the root directory.
 - A bare React Native example app in `example/bare/`.
-- An Expo example app in `example/expo/`.
+- An Expo example app in `example/expo/` (SDK 57) and `example/expo-58/` (SDK 58).
 - Shared example code in `example/shared/`.
 
 To get started with the project, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See the [`.nvmrc`](./.nvmrc) file for the version used in this project.

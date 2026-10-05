@@ -214,6 +214,15 @@ using namespace facebook::react;
   return concreteComponentDescriptorProvider<TrueSheetViewComponentDescriptor>();
 }
 
+- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics {
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
+  // RN 0.88+ resets layout metrics on recycle, so the next mount force-applies
+  // `hidden` from the display type and would reveal this host over the screen.
+  self.hidden = YES;
+}
+
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
 

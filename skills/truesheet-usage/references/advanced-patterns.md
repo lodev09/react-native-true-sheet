@@ -195,6 +195,8 @@ export default function SheetLayout() {
 }
 ```
 
+On Expo SDK 58+, the base screen comes from the layout's `export const unstable_settings = { anchor: 'index' }` — the `initialRouteName` prop on `Sheet` is ignored.
+
 Inside sheet screens, import the hook from the **same entry point**:
 
 ```tsx
