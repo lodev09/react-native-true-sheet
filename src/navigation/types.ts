@@ -96,6 +96,8 @@ export type TrueSheetStateOf<State extends { routes: readonly unknown[] }> = Omi
     resizeIndex?: number;
     resizeKey?: number;
     closing?: boolean;
+    // Stacked above a `closing` route and dismissed natively with it
+    dismissing?: boolean;
   })[];
 };
 
@@ -151,7 +153,7 @@ export type TrueSheetEmitFn = NavigatorArgs<
 /**
  * Props injected into the navigator content by each adapter
  * (React Navigation's `mapper` / Expo Router's `createProps`).
- * Raw routes carry the custom fields (`closing`, `resizeIndex`, `resizeKey`)
+ * Raw routes carry the custom fields (`closing`, `dismissing`, `resizeIndex`, `resizeKey`)
  * that the standard state strips out.
  */
 export interface TrueSheetNavigatorContentExtraProps {

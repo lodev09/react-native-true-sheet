@@ -110,9 +110,11 @@ export const createTrueSheetRouter =
             return {
               ...state,
               index: closingIndex,
-              routes: state.routes.map((route, i) =>
-                i === closingIndex ? { ...route, closing: true } : route
-              ),
+              routes: state.routes.map((route, i) => {
+                if (i === closingIndex) return { ...route, closing: true };
+                if (i > closingIndex) return { ...route, dismissing: true };
+                return route;
+              }),
             };
           }
 
@@ -153,8 +155,13 @@ export const createTrueSheetRouter =
               return state;
             }
 
-            // Remove the route and all routes above it (they were dismissed together)
-            const routes = state.routes.filter((_, i) => i < routeIndex);
+            // Remove the route and the routes dismissed with it. A popped route keeps the
+            // routes pushed after the pop started: they aren't stacked on it natively.
+            const removed = state.routes[routeIndex]!;
+            const isPopped = removed.closing || removed.dismissing;
+            const routes = state.routes.filter(
+              (route, i) => i < routeIndex || (i > routeIndex && isPopped && !route.dismissing)
+            );
 
             return {
               ...state,

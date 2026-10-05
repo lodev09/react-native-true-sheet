@@ -124,6 +124,7 @@ describe('createTrueSheetRouter', () => {
       expect(nextState?.index).toBe(1);
       expect(nextState?.routes[1]?.closing).toBe(true);
       expect(nextState?.routes[2]?.closing).toBeUndefined();
+      expect(nextState?.routes[2]?.dismissing).toBe(true);
     });
 
     it('POP clamps count to keep the base route', () => {
@@ -170,9 +171,13 @@ describe('createTrueSheetRouter', () => {
       expect(getStateForAction(state, TrueSheetActions.popTo('Details'))).toBeNull();
     });
 
-    it('REMOVE with source removes the route and all routes above it', () => {
+    it('REMOVE with source removes the route and the routes dismissed with it', () => {
       const state = makeState(
-        [makeRoute('Home'), makeRoute('Details', { closing: true }), makeRoute('Settings')],
+        [
+          makeRoute('Home'),
+          makeRoute('Details', { closing: true }),
+          makeRoute('Settings', { dismissing: true }),
+        ],
         1
       );
       const nextState = getStateForAction(state, {
@@ -186,12 +191,58 @@ describe('createTrueSheetRouter', () => {
 
     it('REMOVE without source removes the first closing route', () => {
       const state = makeState(
-        [makeRoute('Home'), makeRoute('Details', { closing: true }), makeRoute('Settings')],
+        [
+          makeRoute('Home'),
+          makeRoute('Details', { closing: true }),
+          makeRoute('Settings', { dismissing: true }),
+        ],
         1
       );
       const nextState = getStateForAction(state, TrueSheetActions.remove());
 
       expect(nextState?.routes.map((r) => r.name)).toEqual(['Home']);
+    });
+
+    it('REMOVE of a popped route keeps a route pushed during the dismiss', () => {
+      const state = makeState([makeRoute('Home'), makeRoute('Details')]);
+      const popped = getStateForAction(state, TrueSheetActions.pop())!;
+      const pushed = getStateForAction(popped, TrueSheetActions.push('Settings'))!;
+      const nextState = getStateForAction(pushed, {
+        ...TrueSheetActions.remove(),
+        source: 'Details-test',
+      });
+
+      expect(nextState?.routes.map((r) => r.name)).toEqual(['Home', 'Settings']);
+      expect(nextState?.index).toBe(1);
+    });
+
+    it('REMOVE of a dismissing route keeps a route pushed during the dismiss', () => {
+      const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
+      const popped = getStateForAction(state, TrueSheetActions.pop(2))!;
+      const pushed = getStateForAction(popped, TrueSheetActions.push('Profile'))!;
+      const afterSettings = getStateForAction(pushed, {
+        ...TrueSheetActions.remove(),
+        source: 'Settings-test',
+      })!;
+      const nextState = getStateForAction(afterSettings, {
+        ...TrueSheetActions.remove(),
+        source: 'Details-test',
+      });
+
+      expect(afterSettings.routes.map((r) => r.name)).toEqual(['Home', 'Details', 'Profile']);
+      expect(nextState?.routes.map((r) => r.name)).toEqual(['Home', 'Profile']);
+      expect(nextState?.index).toBe(1);
+    });
+
+    it('REMOVE of a route that was not popped removes all routes above it', () => {
+      const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
+      const nextState = getStateForAction(state, {
+        ...TrueSheetActions.remove(),
+        source: 'Details-test',
+      });
+
+      expect(nextState?.routes.map((r) => r.name)).toEqual(['Home']);
+      expect(nextState?.index).toBe(0);
     });
 
     it('REMOVE returns the state unchanged when no route matches', () => {
