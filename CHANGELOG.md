@@ -39,6 +39,7 @@
 - **Web**: Sheets now open when `initialDetentIndex` is deferred until the screen is focused, and respect `initialDetentAnimated` without jumping. ([#887](https://github.com/lodev09/react-native-true-sheet/pull/887) by [@lodev09](https://github.com/lodev09))
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - The peek detent no longer collapses when swapping between two screens that each render a peek component — the last-mounted peek wins. ([#851](https://github.com/lodev09/react-native-true-sheet/pull/851) by [@SamuelBrucksch](https://github.com/SamuelBrucksch) and [@lodev09](https://github.com/lodev09))
+- Sheet navigator: a sheet pushed while another is still dismissing is no longer dropped. ([#898](https://github.com/lodev09/react-native-true-sheet/pull/898) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
