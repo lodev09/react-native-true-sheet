@@ -1,5 +1,5 @@
 import { TrueSheetActions, type TrueSheetActionType } from '../actions';
-import { getTrueSheetStateForAction } from '../createTrueSheetRouter';
+import { getResizeRouteIndex, getTrueSheetStateForAction } from '../createTrueSheetRouter';
 import type { StackRouterFactory, TrueSheetRouterFactory, TrueSheetRouterState } from './types';
 
 type ActionResult = { state: TrueSheetRouterState; affectedRouteKey?: string };
@@ -12,6 +12,7 @@ type RouterExtension = (context: {
       options: object
     ): ActionResult | null;
   };
+  options: { initialRouteName?: string };
 }) => object;
 
 /**
@@ -35,21 +36,36 @@ export const extendTrueSheetRouter = (
 ): TrueSheetRouterFactory =>
   extendRouter(
     stackRouter,
-    ({ baseRouter }) => ({
-      getStateForAction(
-        state: TrueSheetRouterState,
-        action: TrueSheetActionType,
-        options: object
-      ): ActionResult | null {
-        const result = getTrueSheetStateForAction(state, action);
+    ({ baseRouter, options }) => {
+      if (__DEV__ && options.initialRouteName === undefined) {
+        console.warn(
+          "TrueSheet: this Sheet layout has no `unstable_settings.anchor`. On Expo Router 58+, a sheet route opened directly (deep link or push from another navigator) renders without its base screen. Export `unstable_settings = { anchor: '<base route>' }` from the layout."
+        );
+      }
 
-        if (result === undefined) {
-          return baseRouter.getStateForAction(state, action, options);
-        }
+      return {
+        getStateForAction(
+          state: TrueSheetRouterState,
+          action: TrueSheetActionType,
+          config: object
+        ): ActionResult | null {
+          const result = getTrueSheetStateForAction(state, action);
 
-        return result && { state: result, affectedRouteKey: result.routes[result.index]?.key };
-      },
-      actionCreators: TrueSheetActions,
-    }),
+          if (result === undefined) {
+            return baseRouter.getStateForAction(state, action, config);
+          }
+
+          if (result === null) {
+            return null;
+          }
+
+          const affectedIndex =
+            action.type === 'RESIZE' ? getResizeRouteIndex(state, action) : result.index;
+
+          return { state: result, affectedRouteKey: result.routes[affectedIndex]?.key };
+        },
+        actionCreators: TrueSheetActions,
+      };
+    },
     { type: 'true-sheet' }
   );

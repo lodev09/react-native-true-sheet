@@ -41,6 +41,17 @@ type SheetRoute = {
 type SheetState = { key: string; index: number; routes: SheetRoute[] };
 
 /**
+ * Index of the route a `RESIZE` targets: the dispatching screen, else the focused route.
+ */
+export const getResizeRouteIndex = (
+  state: SheetState,
+  action: { source?: string; target?: string }
+): number =>
+  action.target === state.key && action.source
+    ? state.routes.findIndex((r) => r.key === action.source)
+    : state.index;
+
+/**
  * Reduces the sheet-specific actions shared by every router flavour.
  * Returns `undefined` for actions the base `StackRouter` should handle.
  */
@@ -50,10 +61,7 @@ export const getTrueSheetStateForAction = <State extends SheetState>(
 ): State | null | undefined => {
   switch (action.type) {
     case 'RESIZE': {
-      const routeIndex =
-        action.target === state.key && action.source
-          ? state.routes.findIndex((r) => r.key === action.source)
-          : state.index;
+      const routeIndex = getResizeRouteIndex(state, action);
 
       return {
         ...state,
