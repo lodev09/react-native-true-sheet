@@ -50,7 +50,7 @@ export type TrueSheetRoute = TrueSheetNavigationState<ParamListBase>['routes'][n
 
 /**
  * Props injected into the navigator content by Expo Router's `createProps`.
- * Raw routes carry the custom fields (`closing`, `resizeIndex`, `resizeKey`)
+ * Raw routes carry the custom fields (`closing`, `dismissing`, `resizeIndex`, `resizeKey`)
  * that the standard state strips out.
  */
 export interface TrueSheetNavigatorContentExtraProps {
