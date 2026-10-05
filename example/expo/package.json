@@ -14,7 +14,7 @@
   "dependencies": {
     "@example/shared": "*",
     "@lodev09/react-native-true-sheet": "workspace:*",
-    "@lugg/maps": "1.0.0-beta.14",
+    "@lugg/maps": "1.1.3",
     "@radix-ui/react-dialog": "^1.1.1",
     "@vis.gl/react-google-maps": "^1.7.1",
     "expo": "~57.0.23",

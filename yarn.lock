@@ -3526,7 +3526,7 @@ __metadata:
     "@babel/runtime": "npm:^7.25.0"
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.0.0-beta.14"
+    "@lugg/maps": "npm:1.1.3"
     "@react-native-community/cli": "npm:20.1.3"
     "@react-native-community/cli-platform-android": "npm:20.1.3"
     "@react-native-community/cli-platform-ios": "npm:20.1.3"
@@ -3556,7 +3556,7 @@ __metadata:
   dependencies:
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.0.0-beta.14"
+    "@lugg/maps": "npm:1.1.3"
     "@radix-ui/react-dialog": "npm:^1.1.1"
     "@types/react": "npm:~19.2.14"
     "@vis.gl/react-google-maps": "npm:^1.7.1"
@@ -3591,7 +3591,7 @@ __metadata:
   dependencies:
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.0.0-beta.14"
+    "@lugg/maps": "npm:1.1.3"
     "@radix-ui/react-dialog": "npm:^1.1.1"
     "@types/react": "npm:~19.2.14"
     "@vis.gl/react-google-maps": "npm:^1.7.1"
@@ -3624,7 +3624,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@example/shared@workspace:example/shared"
   dependencies:
-    "@lugg/maps": "npm:1.0.0-beta.14"
+    "@lugg/maps": "npm:1.1.3"
     "@types/react": "npm:~19.2.14"
     react-native-gesture-handler: "npm:~2.32.0"
     react-native-reanimated: "npm:4.5.1"
@@ -3817,27 +3817,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/config-plugins@npm:^56.0.8":
-  version: 56.0.8
-  resolution: "@expo/config-plugins@npm:56.0.8"
-  dependencies:
-    "@expo/config-types": "npm:^56.0.5"
-    "@expo/json-file": "npm:~10.2.0"
-    "@expo/plist": "npm:^0.7.0"
-    "@expo/require-utils": "npm:^56.1.3"
-    "@expo/sdk-runtime-versions": "npm:^1.0.0"
-    chalk: "npm:^4.1.2"
-    debug: "npm:^4.3.5"
-    getenv: "npm:^2.0.0"
-    glob: "npm:^13.0.0"
-    semver: "npm:^7.5.4"
-    slugify: "npm:^1.6.6"
-    xcode: "npm:^3.0.1"
-    xml2js: "npm:0.6.0"
-  checksum: 10c0/23b674922d20e44125fbfd2fae376a5a71d3ab776002cb98826bd31e862fc3cd502f3d12b472332fe91176be645d634c0903c451bff0e7174526411e460b35e7
-  languageName: node
-  linkType: hard
-
 "@expo/config-plugins@npm:~57.0.9":
   version: 57.0.9
   resolution: "@expo/config-plugins@npm:57.0.9"
@@ -3877,13 +3856,6 @@ __metadata:
     xcode: "npm:^3.0.1"
     xml2js: "npm:0.6.0"
   checksum: 10c0/e3d398eaefb9c964d76b31856b00e8d9b60bbb177fb0f1f24de6a8e654786c1d9ef4af7d1c6da9c837977914818841b69c18df4bde8e78c792fb42483d39af5c
-  languageName: node
-  linkType: hard
-
-"@expo/config-types@npm:^56.0.5":
-  version: 56.0.5
-  resolution: "@expo/config-types@npm:56.0.5"
-  checksum: 10c0/b6aa98e3cb4b66954e307640550a168290d1e843c9fdedce64077e286d77cfd7e33c40333672d6434c32ad5468fa723e251bc49897fd606f7c1b985dc2170a1d
   languageName: node
   linkType: hard
 
@@ -4153,16 +4125,6 @@ __metadata:
     "@babel/code-frame": "npm:^7.20.0"
     json5: "npm:^2.2.3"
   checksum: 10c0/45cc14ea1b4f4bc124d6ee2d5412e3f7d23832c82bd21180558c2a070df425d700c1e84d49de57ec946b06e1287ecb63eda15addc2bf5c582bad916ae8ab7b46
-  languageName: node
-  linkType: hard
-
-"@expo/json-file@npm:~10.2.0":
-  version: 10.2.0
-  resolution: "@expo/json-file@npm:10.2.0"
-  dependencies:
-    "@babel/code-frame": "npm:^7.20.0"
-    json5: "npm:^2.2.3"
-  checksum: 10c0/198058e18dea2f31083c2ae8a6831dddfc8fc01c4cb30020728da04f155a6b600b4219830b6df48195548fa29a450b5b775007ed8430fb8098fd9a1656188ea0
   languageName: node
   linkType: hard
 
@@ -4479,17 +4441,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/plist@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@expo/plist@npm:0.7.0"
-  dependencies:
-    "@xmldom/xmldom": "npm:^0.8.8"
-    base64-js: "npm:^1.5.1"
-    xmlbuilder: "npm:^15.1.1"
-  checksum: 10c0/b0d3df057f9a388a761a9261381d55e86ad0935ca15d32bd78da536c803bfc9334c2381fdced99f086e76f5d675535101bfb652d9a79a39c10b0c764c140dcc9
-  languageName: node
-  linkType: hard
-
 "@expo/plist@npm:^0.8.1":
   version: 0.8.1
   resolution: "@expo/plist@npm:0.8.1"
@@ -4534,22 +4485,6 @@ __metadata:
     resolve-from: "npm:^5.0.0"
     semver: "npm:^7.6.0"
   checksum: 10c0/b0cd8a1fdc5bf49fdf294fdc8f46d6f62b1a8c4914b770309509f8676b18904b2814929f680475c2c7b34fed6bf2510b0eed783e4dbaf006b0041e4d5cab038a
-  languageName: node
-  linkType: hard
-
-"@expo/require-utils@npm:^56.1.3":
-  version: 56.1.3
-  resolution: "@expo/require-utils@npm:56.1.3"
-  dependencies:
-    "@babel/code-frame": "npm:^7.20.0"
-    "@babel/core": "npm:^7.25.2"
-    "@babel/plugin-transform-modules-commonjs": "npm:^7.24.8"
-  peerDependencies:
-    typescript: ^5.0.0 || ^5.0.0-0 || ^6.0.0
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 10c0/b0fc61db4e45507508bf01524f42770a5bf1f53fab9b244a7dc6c9d8acce0e912940d9945716b8f0c747a07262d34128150c78d00bbe996b2efc5d522c45d874
   languageName: node
   linkType: hard
 
@@ -5752,19 +5687,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lugg/maps@npm:1.0.0-beta.14":
-  version: 1.0.0-beta.14
-  resolution: "@lugg/maps@npm:1.0.0-beta.14"
-  dependencies:
-    "@expo/config-plugins": "npm:^56.0.8"
+"@lugg/maps@npm:1.1.3":
+  version: 1.1.3
+  resolution: "@lugg/maps@npm:1.1.3"
   peerDependencies:
     "@vis.gl/react-google-maps": ">=1.0.0"
+    expo: "*"
     react: "*"
     react-native: "*"
   peerDependenciesMeta:
     "@vis.gl/react-google-maps":
       optional: true
-  checksum: 10c0/112df9e99abcdebac69ed59467933eb7fcfe89e7649532f00cfec7c4d3dc779b34ea5afa5ffff2ff6ab8c7aa524c3e74858373b411e59efd896988c9365ad8cc
+    expo:
+      optional: true
+  checksum: 10c0/c0aed60267b0ce11ca544c06e42671fe52e8c4beaa47c2afa8b2492297ce22a95547ecd9bb11370228cbe1845d6c0761c6a251a11fedc955c0ffddf773dbdeb6
   languageName: node
   linkType: hard
 
