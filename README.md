@@ -39,7 +39,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 npx expo install @lodev09/react-native-true-sheet@beta
 ```
 
-See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81+ and remains the `latest` release on npm.
+See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81-0.86 (Expo SDK 54-57) and remains the `latest` release on npm.
 
 ## Installation
 
@@ -58,7 +58,7 @@ See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still sup
 | TrueSheet  | React Native | Expo SDK |
 |------------|--------------|----------|
 | 4.0+       | 0.82+        | 55+      |
-| 3.7 - 3.11 | 0.81+        | 54+      |
+| 3.7 - 3.11 | 0.81-0.86    | 54-57    |
 | 3.6        | 0.80         | 52-53    |
 
 ### Expo
