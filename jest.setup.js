@@ -6,6 +6,7 @@ jest.mock('./src/specs/NativeTrueSheetModule', () => ({
   default: {
     presentByRef: jest.fn(),
     dismissByRef: jest.fn(),
+    dismissAll: jest.fn(),
     handleBackPress: jest.fn(),
   },
 }));

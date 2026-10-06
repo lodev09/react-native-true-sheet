@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
 } from 'react';
 import type { DimensionValue, LayoutChangeEvent } from 'react-native';
 import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -41,7 +42,12 @@ import {
   TrueSheetPeekContext,
   type TrueSheetPeekContextValue,
 } from './TrueSheetPeek.web';
-import { usePortalContainer, useRegisterSheet, useSheetStack } from './TrueSheetProvider.web';
+import {
+  usePortalContainer,
+  useRegisterSheet,
+  useSheetStack,
+  type SheetHandle,
+} from './TrueSheetProvider.web';
 import {
   COLOR_SURFACE_CONTAINER_LOW_DARK,
   COLOR_SURFACE_CONTAINER_LOW_LIGHT,
@@ -165,6 +171,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
   const isPresentingRef = useRef(shouldAutoPresent);
+  // Native's lifecycle state — updated synchronously so calls in the same tick see each other
+  const phaseRef = useRef<SheetPhase>(shouldAutoPresent ? 'presenting' : 'dismissed');
+  const resolvePresentRef = useRef<(() => void) | null>(null);
+  const resolveDismissRef = useRef<(() => void) | null>(null);
+  // Whether willPresent fired for the current open cycle — a present undone
+  // before it fires has nothing to pair a dismiss with.
+  const didEmitWillPresentRef = useRef(false);
+  // Whether the current open cycle came from initialDetentIndex. Native mounts those
+  // eagerly, so a dismiss before willPresent lands after the present instead of cancelling it.
+  const isAutoPresentRef = useRef(shouldAutoPresent);
+  const shouldDismissOnPresentRef = useRef(false);
   const [displayedBackgroundIndex, setDisplayedBackgroundIndex] = useState(
     shouldAutoPresent ? initialDetentIndex : 0
   );
@@ -199,13 +216,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     );
   }, []);
 
+  // Returns null when there's nothing to dismiss. Resolves on didDismiss.
+  const dismissSheet = useCallback((): Promise<void> | null => {
+    if (phaseRef.current === 'dismissed' || phaseRef.current === 'dismissing') return null;
+    settle(resolvePresentRef);
+    if (didEmitWillPresentRef.current) {
+      setIsOpen(false);
+    } else if (isAutoPresentRef.current) {
+      shouldDismissOnPresentRef.current = true;
+    } else {
+      // Mirror native's lazy-mount cancel: nothing shown yet, nothing to animate out
+      setIsOpen(false);
+      phaseRef.current = 'dismissed';
+      return Promise.resolve();
+    }
+    phaseRef.current = 'dismissing';
+    return new Promise((resolve) => {
+      resolveDismissRef.current = resolve;
+    });
+  }, []);
+
   const handleOpenChange = useCallback(
     (open: boolean) => {
-      if (!open && isOpen) {
-        setIsOpen(false);
-      }
+      if (!open) dismissSheet();
     },
-    [isOpen]
+    [dismissSheet]
   );
 
   const portalContainer = usePortalContainer();
@@ -248,24 +283,38 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
   const dismissDescendantsRef = useRef<() => void>(() => {});
 
+  const presentSheet = useCallback(async (index: number, auto: boolean) => {
+    const detent = validDetentsRef.current[index];
+    if (detent === undefined) {
+      throw new Error(
+        `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
+      );
+    }
+    if (phaseRef.current !== 'dismissed') {
+      console.warn(ALREADY_PRESENTED_WARNING);
+      return;
+    }
+    phaseRef.current = 'presenting';
+    isAutoPresentRef.current = auto;
+    isPresentingRef.current = true;
+    setDisplayedBackgroundIndex(index);
+    setActiveSnapPoint(detent);
+    setIsOpen(true);
+    await new Promise<void>((resolve) => {
+      resolvePresentRef.current = resolve;
+    });
+  }, []);
+
   const methods = useMemo<TrueSheetMethods>(
     () => ({
-      present: async (index = 0) => {
-        const detent = validDetentsRef.current[index];
-        if (detent === undefined) {
-          throw new Error(
-            `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
-          );
-        }
-        if (!isOpenRef.current) {
-          isPresentingRef.current = true;
-          setDisplayedBackgroundIndex(index);
-        }
-        setActiveSnapPoint(detent);
-        setIsOpen(true);
-      },
+      present: (index = 0) => presentSheet(index, false),
       dismiss: async () => {
-        setIsOpen(false);
+        const dismissal = dismissSheet();
+        if (!dismissal) {
+          console.warn(ALREADY_DISMISSED_WARNING);
+          return;
+        }
+        await dismissal;
       },
       resize: async (index) => {
         const detent = validDetentsRef.current[index];
@@ -277,10 +326,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         setActiveSnapPoint(detent);
       },
       dismissStack: async (animated) => {
+        if (phaseRef.current === 'dismissed' || phaseRef.current === 'dismissing') {
+          console.warn(ALREADY_DISMISSED_WARNING);
+          return;
+        }
         await dismissAboveRef.current(animated);
       },
     }),
-    []
+    [presentSheet, dismissSheet]
   );
 
   useImperativeHandle(ref, () => methods, [methods]);
@@ -288,13 +341,27 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   useEffect(() => {
     if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
     didInitiallyPresentRef.current = true;
-    if (!isOpenRef.current) {
-      methods.present(initialDetentIndex);
+    if (phaseRef.current === 'dismissed') {
+      presentSheet(initialDetentIndex, true);
     }
-  }, [initialDetentIndex, shouldAutoPresent, methods]);
+  }, [initialDetentIndex, shouldAutoPresent, presentSheet]);
 
-  const methodsRef = useRef<TrueSheetMethods | null>(methods);
-  useRegisterSheet(name, methodsRef);
+  // Unmounted mid-transition: don't leave callers awaiting forever
+  useEffect(
+    () => () => {
+      settle(resolvePresentRef);
+      settle(resolveDismissRef);
+    },
+    []
+  );
+
+  const handleRef = useRef<SheetHandle>({
+    methods,
+    dismissQuietly: async () => {
+      await dismissSheet();
+    },
+  });
+  useRegisterSheet(name, handleRef);
 
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
   const [drawerContent, setDrawerContent] = useState<HTMLDivElement | null>(null);
@@ -706,6 +773,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // Mirror native: dismissing a sheet takes every sheet stacked above it
       // (iOS dismisses from the presenter; Android runs dismissStack first).
       dismissDescendantsRef.current();
+      // Mirror native's lazy-mount cancel: dismissed before willPresent, no events
+      if (!didEmitWillPresentRef.current) return undefined;
+      didEmitWillPresentRef.current = false;
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
       // emitWillDismissEvents (blur fires before dismiss). willPresent is
       // deferred to `start()` below (needs the mounted drawer's geometry).
@@ -716,11 +786,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const fireDone = () => {
       if (present) {
         isPresentingRef.current = false;
+        // A dismiss may already be underway (it lands on the next commit)
+        if (phaseRef.current === 'presenting') phaseRef.current = 'presented';
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
         onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
+        settle(resolvePresentRef);
+        if (shouldDismissOnPresentRef.current) {
+          shouldDismissOnPresentRef.current = false;
+          setIsOpen(false);
+        }
       } else {
+        phaseRef.current = 'dismissed';
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
         onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
+        settle(resolveDismissRef);
       }
     };
 
@@ -746,6 +825,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         // willPresent mirrors native iOS where viewWillAppear dispatches
         // both; the descendant-stack focus effect handles subsequent
         // transitions.
+        didEmitWillPresentRef.current = true;
         onWillPresentRef.current?.({ nativeEvent: computeDetentInfo() } as WillPresentEvent);
         onWillFocusRef.current?.({ nativeEvent: null } as WillFocusEvent);
       }
@@ -812,7 +892,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   }, [computeDetentInfo]);
 
   const { isNested, dismissAbove, descendants } = useSheetStack(
-    methodsRef,
+    handleRef,
     drawerContentRef,
     isOpen,
     isFormSheet
@@ -822,7 +902,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // already been popped from the stack, so `dismissAbove` can't find it.
   dismissDescendantsRef.current = () => {
     for (let i = descendants.length - 1; i >= 0; i--) {
-      descendants[i]!.ref.current?.dismiss();
+      descendants[i]!.ref.current?.dismissQuietly();
     }
   };
 
@@ -1328,6 +1408,20 @@ const visuallyHiddenStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
   border: 0,
 };
+
+type SheetPhase = 'dismissed' | 'presenting' | 'presented' | 'dismissing';
+
+const settle = (resolveRef: RefObject<(() => void) | null>) => {
+  const resolve = resolveRef.current;
+  resolveRef.current = null;
+  resolve?.();
+};
+
+// Same as native
+const ALREADY_PRESENTED_WARNING =
+  'TrueSheet: sheet is already presented. Use resize() to change detent.';
+const ALREADY_DISMISSED_WARNING =
+  'TrueSheet: sheet is already dismissed. No need to dismiss it again.';
 
 const STATIC_METHOD_ERROR =
   'Static methods are not supported on web. Use the useTrueSheet() hook instead.';

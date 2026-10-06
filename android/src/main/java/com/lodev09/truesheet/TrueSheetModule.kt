@@ -125,6 +125,9 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   fun dismissAll(animated: Boolean, promise: Promise) {
     Handler(Looper.getMainLooper()).post {
       try {
+        // Drop presents still waiting on the keyboard
+        viewRegistry.values.forEach { it.cancelPendingPresent() }
+
         val rootSheet = TrueSheetStackManager.getRootSheet()
         if (rootSheet == null) {
           promise.resolve(null)
@@ -221,5 +224,15 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
      */
     @JvmStatic
     fun getSheetByTag(tag: Int): TrueSheetView? = viewRegistry[tag]
+
+    /**
+     * Drop presents still waiting on the keyboard that would stack on [parent]
+     */
+    @JvmStatic
+    fun cancelPendingPresents(parent: TrueSheetView, restoreFocus: Boolean = true) {
+      viewRegistry.values.forEach {
+        if (it.pendingPresentParent === parent) it.cancelPendingPresent(restoreFocus)
+      }
+    }
   }
 }

@@ -640,7 +640,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    if (!isPresented) return
+    // The slide-out owns the sheet now — a present settle landing mid-dismiss must not finish the present
+    if (!isPresented || isBeingDismissed) return
 
     when (newState) {
       BottomSheetBehavior.STATE_DRAGGING -> handleDragBegin(sheetView)
@@ -968,6 +969,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
+    // Bring the parent back alongside the slide-out (like iOS) instead of after it
+    parentSheetView?.resetTranslation()
+
     sheet.animate()
       .y(realScreenHeight.toFloat())
       .setDuration(DISMISS_DURATION)
@@ -1272,6 +1276,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       ?: reactContext.currentActivity?.currentFocus
   }
 
+  fun clearFocusedView() {
+    focusedViewBeforeBlur = null
+  }
+
   fun restoreFocusedView() {
     val viewToFocus = focusedViewBeforeBlur ?: return
     focusedViewBeforeBlur = null
@@ -1458,6 +1466,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerWillBlur()
     delegate?.viewControllerWillDismiss()
     parentSheetView?.viewControllerWillFocus()
+
+    // Dismissed mid-present: finishPresent() won't run. Settle the pending present well
+    // before didDismiss so JS clears isPresenting and unmounts the lazy native view
+    presentPromise?.invoke()
+    presentPromise = null
   }
 
   private fun emitDidDismissEvents() {

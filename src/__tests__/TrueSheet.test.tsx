@@ -8,6 +8,7 @@ import { TrueSheetBackground } from '../TrueSheetBackground';
 import TrueSheetContainerViewNativeComponent from '../fabric/TrueSheetContainerViewNativeComponent';
 import type {
   DidDismissEvent,
+  MountEvent,
   DismissAttemptEvent,
   WillFocusEvent,
   DidFocusEvent,
@@ -402,6 +403,141 @@ describe('TrueSheet', () => {
       // Content should be cleaned up after dismiss
       expect(queryByText('Dismiss Content')).toBeNull();
       expect(onDidDismissMock).toHaveBeenCalled();
+    });
+
+    it('should cancel a present still waiting on the lazy mount when dismissed', async () => {
+      jest.mocked(TrueSheetModule!.presentByRef).mockClear();
+      jest.mocked(TrueSheetModule!.dismissByRef).mockClear();
+      const sheetRef = createRef<TrueSheet>();
+      const { queryByText } = render(
+        <TrueSheet ref={sheetRef} name="cancel-present-test">
+          <Text>Cancelled Content</Text>
+        </TrueSheet>
+      );
+
+      await act(async () => {
+        const presenting = sheetRef.current!.present();
+        await sheetRef.current!.dismiss();
+        await presenting;
+      });
+
+      expect(TrueSheetModule?.presentByRef).not.toHaveBeenCalled();
+      expect(TrueSheetModule?.dismissByRef).not.toHaveBeenCalled();
+      expect(queryByText('Cancelled Content')).toBeNull();
+    });
+
+    it('should cancel presents still waiting on the lazy mount on dismissAll', async () => {
+      jest.mocked(TrueSheetModule!.presentByRef).mockClear();
+      const sheetRef = createRef<TrueSheet>();
+      render(
+        <TrueSheet ref={sheetRef}>
+          <Text>Unnamed Content</Text>
+        </TrueSheet>
+      );
+
+      await act(async () => {
+        const presenting = sheetRef.current!.present();
+        await TrueSheet.dismissAll();
+        await presenting;
+      });
+
+      expect(TrueSheetModule?.presentByRef).not.toHaveBeenCalled();
+      expect(TrueSheetModule?.dismissAll).toHaveBeenCalled();
+    });
+
+    it('should remount before presenting when the last dismiss has not unmounted yet', async () => {
+      jest.mocked(TrueSheetModule!.presentByRef).mockClear();
+      const sheetRef = createRef<TrueSheet>();
+      const { queryByText } = render(
+        <TrueSheet ref={sheetRef} name="remount-present-test" initialDetentIndex={0}>
+          <Text>Remount Content</Text>
+        </TrueSheet>
+      );
+      const sheet = sheetRef.current!;
+
+      let presenting!: Promise<void>;
+      await act(async () => {
+        // The next present runs before the dismiss unmount commits
+        sheet['onDidDismiss']({} as DidDismissEvent);
+        presenting = sheet.present();
+      });
+
+      expect(TrueSheetModule?.presentByRef).not.toHaveBeenCalled();
+      expect(queryByText('Remount Content')).not.toBeNull();
+
+      await act(async () => {
+        sheet['onMount']({} as MountEvent);
+        await presenting;
+      });
+
+      expect(TrueSheetModule?.presentByRef).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ignore a mount event from the view a pending unmount removes', async () => {
+      jest.mocked(TrueSheetModule!.presentByRef).mockClear();
+      const sheetRef = createRef<TrueSheet>();
+      render(
+        <TrueSheet ref={sheetRef} name="stale-mount-test">
+          <Text>Stale Mount Content</Text>
+        </TrueSheet>
+      );
+      const sheet = sheetRef.current!;
+
+      await act(async () => {
+        sheet.present();
+      });
+      await act(async () => {
+        sheet.dismiss();
+        sheet.present();
+        // Mount event from the first native view lands after the re-present
+        sheet['onMount']({} as MountEvent);
+      });
+
+      expect(TrueSheetModule?.presentByRef).not.toHaveBeenCalled();
+    });
+
+    it('should ignore a second present while the first waits on the lazy mount', async () => {
+      jest.mocked(TrueSheetModule!.presentByRef).mockClear();
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const sheetRef = createRef<TrueSheet>();
+      render(
+        <TrueSheet ref={sheetRef} name="double-present-test">
+          <Text>Double Present Content</Text>
+        </TrueSheet>
+      );
+      const sheet = sheetRef.current!;
+
+      let first!: Promise<void>;
+      await act(async () => {
+        first = sheet.present();
+        await sheet.present(1);
+      });
+      await act(async () => {
+        sheet['onMount']({} as MountEvent);
+        await first;
+      });
+
+      expect(TrueSheetModule?.presentByRef).toHaveBeenCalledTimes(1);
+      expect(TrueSheetModule?.presentByRef).toHaveBeenCalledWith(expect.any(Number), 0, true);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('already presented'));
+      warn.mockRestore();
+    });
+
+    it('should settle a present waiting on the lazy mount when unmounted', async () => {
+      const sheetRef = createRef<TrueSheet>();
+      const { unmount } = render(
+        <TrueSheet ref={sheetRef} name="unmount-present-test">
+          <Text>Unmount Content</Text>
+        </TrueSheet>
+      );
+
+      let presenting!: Promise<void>;
+      await act(async () => {
+        presenting = sheetRef.current!.present();
+      });
+      unmount();
+
+      await expect(presenting).resolves.toBeUndefined();
     });
 
     it('should render footer only when native view is rendered', () => {

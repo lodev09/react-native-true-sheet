@@ -139,9 +139,19 @@ export class TrueSheet
   private static readonly instances: { [name: string]: TrueSheet } = {};
 
   /**
-   * Resolver to be called when mount event is received
+   * All mounted sheets, named or not.
    */
-  private presentationResolver: (() => void) | null = null;
+  private static readonly mountedInstances = new Set<TrueSheet>();
+
+  /**
+   * Resolver to be called when mount event is received, or with `false` when the present is cancelled
+   */
+  private presentationResolver: ((mounted: boolean) => void) | null = null;
+
+  /**
+   * Settles once a scheduled lazy unmount has committed
+   */
+  private nativeViewUnmount: Promise<void> | null = null;
 
   /**
    * Tracks if a present operation is in progress
@@ -343,6 +353,7 @@ export class TrueSheet
    * @returns Promise that resolves when all sheets are dismissed
    */
   public static async dismissAll(animated: boolean = true): Promise<void> {
+    TrueSheet.mountedInstances.forEach((sheet) => sheet.cancelPendingPresent());
     return TrueSheetModule?.dismissAll(animated);
   }
 
@@ -396,16 +407,17 @@ export class TrueSheet
 
     // Non-lazy content stays mounted; otherwise clean it up unless another presentation is active.
     if (!this.isPresenting && this.props.lazy !== false) {
-      this.setState({ shouldRenderNativeView: false });
+      this.unmountNativeView();
     }
 
     this.props.onDidDismiss?.(event);
   }
 
   private onMount(event: MountEvent): void {
-    // Resolve the mount promise if waiting
-    if (this.presentationResolver) {
-      this.presentationResolver();
+    // Resolve the mount promise if waiting. While an unmount is pending, the event is from
+    // the outgoing view — present() waits for the remount instead.
+    if (this.presentationResolver && !this.nativeViewUnmount) {
+      this.presentationResolver(true);
       this.presentationResolver = null;
     }
 
@@ -482,18 +494,65 @@ export class TrueSheet
       );
     }
 
+    // Still waiting on the lazy mount — like native, a second present is a no-op
+    if (this.presentationResolver) {
+      console.warn('TrueSheet: sheet is already presented. Use resize() to change detent.');
+      return;
+    }
+
     this.isPresenting = true;
 
     // Lazy load: render native view if not already rendered
-    if (!this.state.shouldRenderNativeView) {
-      await new Promise<void>((resolve) => {
+    const unmount = this.nativeViewUnmount;
+    if (unmount || !this.state.shouldRenderNativeView) {
+      const mounted = await new Promise<boolean>((resolve) => {
         this.presentationResolver = resolve;
-        this.setState({ shouldRenderNativeView: true });
+
+        const mount = () => {
+          if (this.presentationResolver === resolve) {
+            this.setState({ shouldRenderNativeView: true });
+          }
+        };
+
+        // An unmount from the last dismiss may not have committed yet — state still reads
+        // mounted, and presenting now would lose the sheet when it lands. Remount after it.
+        if (unmount) {
+          unmount.then(mount);
+        } else {
+          mount();
+        }
       });
+
+      // Dismissed before the native view mounted
+      if (!mounted) {
+        this.isPresenting = false;
+        return;
+      }
     }
 
     await TrueSheetModule?.presentByRef(this.handle, index, animated);
     this.isPresenting = false;
+  }
+
+  /**
+   * Cancels a present still waiting on the lazy mount. Returns whether one was pending.
+   */
+  private cancelPendingPresent(): boolean {
+    if (!this.presentationResolver) return false;
+
+    this.presentationResolver(false);
+    this.presentationResolver = null;
+    this.unmountNativeView();
+    return true;
+  }
+
+  private unmountNativeView(): void {
+    this.nativeViewUnmount = new Promise((resolve) => {
+      this.setState({ shouldRenderNativeView: false }, () => {
+        this.nativeViewUnmount = null;
+        resolve();
+      });
+    });
   }
 
   /**
@@ -509,6 +568,9 @@ export class TrueSheet
    * @param animated - Whether to animate the dismissal (default: true)
    */
   public async dismiss(animated: boolean = true): Promise<void> {
+    // Dismissing before the lazy mount finishes cancels the present — nothing was presented
+    if (this.cancelPendingPresent()) return;
+
     return TrueSheetModule?.dismissByRef(this.handle, animated);
   }
 
@@ -522,6 +584,7 @@ export class TrueSheet
   }
 
   componentDidMount(): void {
+    TrueSheet.mountedInstances.add(this);
     this.registerInstance();
     this.updateScrollableHandle();
   }
@@ -558,9 +621,12 @@ export class TrueSheet
   }
 
   componentWillUnmount(): void {
+    TrueSheet.mountedInstances.delete(this);
     this.unregisterInstance();
     this.backHandlerSubscription?.remove();
     this.backHandlerSubscription = null;
+    // Don't leave a present waiting on the lazy mount hanging
+    this.presentationResolver?.(false);
     this.presentationResolver = null;
   }
 
