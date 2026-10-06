@@ -164,6 +164,32 @@ describe('web present and dismiss', () => {
     expect(sheet.events).toEqual(['presented', 'dismissed']);
   });
 
+  it('dismisses an auto-presented sheet once it lands when dismissed before willPresent', async () => {
+    const sheet = setup(0);
+    const events: string[] = [];
+    const log = (event: string) => () => {
+      events.push(event);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onWillDismiss={log('willDismiss')}
+        onDidDismiss={log('didDismiss')}
+      />
+    );
+    fire(() => sheet.ref.current!.dismiss().then(log('dismissed')));
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(events).toEqual(['willPresent', 'didPresent', 'willDismiss', 'didDismiss', 'dismissed']);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+
   it('ignores present while presented or dismissing, and dismiss while dismissed', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const sheet = setupEvents();

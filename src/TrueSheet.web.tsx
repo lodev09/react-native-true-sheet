@@ -178,6 +178,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Whether willPresent fired for the current open cycle — a present undone
   // before it fires has nothing to pair a dismiss with.
   const didEmitWillPresentRef = useRef(false);
+  // Whether the current open cycle came from initialDetentIndex. Native mounts those
+  // eagerly, so a dismiss before willPresent lands after the present instead of cancelling it.
+  const isAutoPresentRef = useRef(shouldAutoPresent);
+  const shouldDismissOnPresentRef = useRef(false);
   const [displayedBackgroundIndex, setDisplayedBackgroundIndex] = useState(
     shouldAutoPresent ? initialDetentIndex : 0
   );
@@ -216,9 +220,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissSheet = useCallback((): Promise<void> | null => {
     if (phaseRef.current === 'dismissed' || phaseRef.current === 'dismissing') return null;
     settle(resolvePresentRef);
-    setIsOpen(false);
-    // Mirror native's lazy-mount cancel: nothing shown yet, nothing to animate out
-    if (!didEmitWillPresentRef.current) {
+    if (didEmitWillPresentRef.current) {
+      setIsOpen(false);
+    } else if (isAutoPresentRef.current) {
+      shouldDismissOnPresentRef.current = true;
+    } else {
+      // Mirror native's lazy-mount cancel: nothing shown yet, nothing to animate out
+      setIsOpen(false);
       phaseRef.current = 'dismissed';
       return Promise.resolve();
     }
@@ -275,28 +283,31 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
   const dismissDescendantsRef = useRef<() => void>(() => {});
 
+  const presentSheet = useCallback(async (index: number, auto: boolean) => {
+    const detent = validDetentsRef.current[index];
+    if (detent === undefined) {
+      throw new Error(
+        `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
+      );
+    }
+    if (phaseRef.current !== 'dismissed') {
+      console.warn(ALREADY_PRESENTED_WARNING);
+      return;
+    }
+    phaseRef.current = 'presenting';
+    isAutoPresentRef.current = auto;
+    isPresentingRef.current = true;
+    setDisplayedBackgroundIndex(index);
+    setActiveSnapPoint(detent);
+    setIsOpen(true);
+    await new Promise<void>((resolve) => {
+      resolvePresentRef.current = resolve;
+    });
+  }, []);
+
   const methods = useMemo<TrueSheetMethods>(
     () => ({
-      present: async (index = 0) => {
-        const detent = validDetentsRef.current[index];
-        if (detent === undefined) {
-          throw new Error(
-            `TrueSheet: present index (${index}) is out of bounds. detents array has ${validDetentsRef.current.length} item(s)`
-          );
-        }
-        if (phaseRef.current !== 'dismissed') {
-          console.warn(ALREADY_PRESENTED_WARNING);
-          return;
-        }
-        phaseRef.current = 'presenting';
-        isPresentingRef.current = true;
-        setDisplayedBackgroundIndex(index);
-        setActiveSnapPoint(detent);
-        setIsOpen(true);
-        await new Promise<void>((resolve) => {
-          resolvePresentRef.current = resolve;
-        });
-      },
+      present: (index = 0) => presentSheet(index, false),
       dismiss: async () => {
         const dismissal = dismissSheet();
         if (!dismissal) {
@@ -322,7 +333,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         await dismissAboveRef.current(animated);
       },
     }),
-    [dismissSheet]
+    [presentSheet, dismissSheet]
   );
 
   useImperativeHandle(ref, () => methods, [methods]);
@@ -331,9 +342,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
     didInitiallyPresentRef.current = true;
     if (phaseRef.current === 'dismissed') {
-      methods.present(initialDetentIndex);
+      presentSheet(initialDetentIndex, true);
     }
-  }, [initialDetentIndex, shouldAutoPresent, methods]);
+  }, [initialDetentIndex, shouldAutoPresent, presentSheet]);
 
   // Unmounted mid-transition: don't leave callers awaiting forever
   useEffect(
@@ -780,6 +791,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
         onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
         settle(resolvePresentRef);
+        if (shouldDismissOnPresentRef.current) {
+          shouldDismissOnPresentRef.current = false;
+          setIsOpen(false);
+        }
       } else {
         phaseRef.current = 'dismissed';
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);

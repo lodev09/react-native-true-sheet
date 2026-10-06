@@ -414,8 +414,9 @@ export class TrueSheet
   }
 
   private onMount(event: MountEvent): void {
-    // Resolve the mount promise if waiting
-    if (this.presentationResolver) {
+    // Resolve the mount promise if waiting. While an unmount is pending, the event is from
+    // the outgoing view — present() waits for the remount instead.
+    if (this.presentationResolver && !this.nativeViewUnmount) {
       this.presentationResolver(true);
       this.presentationResolver = null;
     }
@@ -491,6 +492,12 @@ export class TrueSheet
       throw new Error(
         `TrueSheet: present index (${index}) is out of bounds. detents array has ${detentsLength} item(s)`
       );
+    }
+
+    // Still waiting on the lazy mount — like native, a second present is a no-op
+    if (this.presentationResolver) {
+      console.warn('TrueSheet: sheet is already presented. Use resize() to change detent.');
+      return;
     }
 
     this.isPresenting = true;
@@ -618,6 +625,8 @@ export class TrueSheet
     this.unregisterInstance();
     this.backHandlerSubscription?.remove();
     this.backHandlerSubscription = null;
+    // Don't leave a present waiting on the lazy mount hanging
+    this.presentationResolver?.(false);
     this.presentationResolver = null;
   }
 

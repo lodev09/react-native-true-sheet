@@ -72,6 +72,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   // Present deferred until the keyboard hides; a dismiss before then cancels it
   private var pendingPresentCallback: (() -> Unit)? = null
+  private var pendingPresentGeneration = 0
+
+  // Sheet the deferred present will stack on — dismissing it drops the present, like iOS
+  internal var pendingPresentParent: TrueSheetView? = null
+    private set
 
   // ==================== Initialization ====================
 
@@ -419,10 +424,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (shouldDismissKeyboard && KeyboardUtils.isKeyboardVisible(reactContext)) {
       viewController.saveFocusedView()
       pendingPresentCallback = promiseCallback
+      pendingPresentParent = parentSheet
+      // A cancelled request's callback can still land (a timer below API 30) — only the latest may present
+      val generation = ++pendingPresentGeneration
       KeyboardUtils.dismiss(this) {
         post {
+          if (generation != pendingPresentGeneration) return@post
           val callback = pendingPresentCallback ?: return@post
           pendingPresentCallback = null
+          pendingPresentParent = null
           presentSheet(detentIndex, animated, callback)
         }
       }
@@ -458,11 +468,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   /**
    * Drops a present still waiting on the keyboard and resolves its caller. Returns whether one was pending.
+   * Skip [restoreFocus] when the focused view is going away with its dismissing sheet.
    */
-  fun cancelPendingPresent(): Boolean {
+  fun cancelPendingPresent(restoreFocus: Boolean = true): Boolean {
     val callback = pendingPresentCallback ?: return false
     pendingPresentCallback = null
-    viewController.restoreFocusedView()
+    pendingPresentParent = null
+    if (restoreFocus) {
+      viewController.restoreFocusedView()
+    } else {
+      viewController.clearFocusedView()
+    }
     callback()
     return true
   }
@@ -496,6 +512,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       promiseCallback()
       return
     }
+
+    // A present waiting on the keyboard would stack above this sheet — drop it with the rest
+    TrueSheetModule.cancelPendingPresents(parent = this)
 
     val sheetsAbove = TrueSheetStackManager.getSheetsAbove(this)
     // Create snapshot only for topmost sheet (first in reversed list)
@@ -641,6 +660,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerWillDismiss() {
+    // Covers every dismiss path (swipe, back press, stack); the focused view leaves with this sheet
+    TrueSheetModule.cancelPendingPresents(parent = this, restoreFocus = false)
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillDismissEvent(surfaceId, id))
   }
