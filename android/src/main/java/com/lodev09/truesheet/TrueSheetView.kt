@@ -70,6 +70,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Screen event observer for react-native-screens integration
   internal var screensEventObserver: RNScreensEventObserver? = null
 
+  // Present deferred until the keyboard hides; a dismiss before then cancels it
+  private var pendingPresentCallback: (() -> Unit)? = null
+
   // ==================== Initialization ====================
 
   init {
@@ -189,6 +192,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     cleanupScreenEventObserver()
     didInitiallyPresent = false
+    cancelPendingPresent()
 
     viewController.dismissPromise = { viewController.delegate = null }
 
@@ -399,7 +403,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun present(detentIndex: Int, animated: Boolean = true, promiseCallback: () -> Unit) {
-    if (viewController.isPresented) {
+    if (viewController.isPresented || pendingPresentCallback != null) {
       RNLog.w(reactContext, "TrueSheet: sheet is already presented. Use resize() to change detent.")
       promiseCallback()
       return
@@ -414,8 +418,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val shouldDismissKeyboard = isFocusedViewWithinSheet || viewController.isDimmedAtDetentIndex(detentIndex)
     if (shouldDismissKeyboard && KeyboardUtils.isKeyboardVisible(reactContext)) {
       viewController.saveFocusedView()
+      pendingPresentCallback = promiseCallback
       KeyboardUtils.dismiss(this) {
-        post { presentSheet(detentIndex, animated, promiseCallback) }
+        post {
+          val callback = pendingPresentCallback ?: return@post
+          pendingPresentCallback = null
+          presentSheet(detentIndex, animated, callback)
+        }
       }
       // Blur like iOS so JS focus state stays in sync until restoreFocusedView() refocuses it
       rootView.findFocus()?.clearFocus()
@@ -447,8 +456,25 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.handleBackPress()
   }
 
+  /**
+   * Drops a present still waiting on the keyboard and resolves its caller. Returns whether one was pending.
+   */
+  fun cancelPendingPresent(): Boolean {
+    val callback = pendingPresentCallback ?: return false
+    pendingPresentCallback = null
+    viewController.restoreFocusedView()
+    callback()
+    return true
+  }
+
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
+    // Dismissing before a deferred present starts cancels it — nothing was presented
+    if (cancelPendingPresent()) {
+      promiseCallback()
+      return
+    }
+
     if (viewController.isBeingDismissed || !viewController.isPresented) {
       RNLog.w(reactContext, "TrueSheet: sheet is already dismissed. No need to dismiss it again.")
       promiseCallback()
@@ -599,6 +625,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // ==================== TrueSheetViewControllerDelegate ====================
 
   override fun viewControllerWillPresent(index: Int, position: Float, detent: Float) {
+    // Observe from the start so navigating away mid-present still hides the sheet
+    setupScreenEventObserver()
+
     // Update parent sheet translation now that content is measured
     TrueSheetStackManager.updateParentTranslation(this)
 
@@ -607,8 +636,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidPresent(index: Int, position: Float, detent: Float) {
-    setupScreenEventObserver()
-
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(DidPresentEvent(surfaceId, id, index, position, detent))
   }

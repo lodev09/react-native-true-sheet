@@ -149,11 +149,17 @@ RCT_EXPORT_MODULE(TrueSheetModule)
 - (void)dismissAll:(BOOL)animated resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   RCTExecuteOnMainQueue(^{
     @synchronized(viewRegistry) {
+      // Drop presents still waiting on another sheet's dismissal
+      for (TrueSheetView *view in viewRegistry.objectEnumerator) {
+        [view cancelPendingPresent];
+      }
+
       // Find the root presented sheet (one without a parent TrueSheet)
       TrueSheetView *rootSheet = nil;
 
       for (TrueSheetView *view in viewRegistry.objectEnumerator) {
-        if (!view.viewController.isPresented) {
+        // A sheet still animating in counts too — dismissAnimated waits for it to land
+        if (!view.viewController.isPresented && !view.viewController.isBeingPresented) {
           continue;
         }
 
@@ -171,7 +177,10 @@ RCT_EXPORT_MODULE(TrueSheetModule)
         return;
       }
 
-      [rootSheet emitDismissedPosition];
+      // Mid-present, the deferred dismiss tracks its own position like a regular dismiss
+      if (rootSheet.viewController.isPresented) {
+        [rootSheet emitDismissedPosition];
+      }
       [rootSheet dismissAnimated:animated
                       completion:^(BOOL success, NSError *_Nullable error) {
                         if (success) {

@@ -125,6 +125,9 @@ class TrueSheetModule(reactContext: ReactApplicationContext) :
   fun dismissAll(animated: Boolean, promise: Promise) {
     Handler(Looper.getMainLooper()).post {
       try {
+        // Drop presents still waiting on the keyboard
+        viewRegistry.values.forEach { it.cancelPendingPresent() }
+
         val rootSheet = TrueSheetStackManager.getRootSheet()
         if (rootSheet == null) {
           promise.resolve(null)

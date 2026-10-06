@@ -719,6 +719,20 @@ using namespace facebook::react;
     return;
   }
 
+  // Still animating in (isPresented flips at viewDidAppear): dismiss once the presentation lands
+  id<UIViewControllerTransitionCoordinator> presentCoordinator =
+    _controller.isBeingPresented ? _controller.transitionCoordinator : nil;
+  if (presentCoordinator) {
+    __weak __typeof(self) weakSelf = self;
+    [presentCoordinator animateAlongsideTransition:nil
+                                        completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                          dispatch_async(dispatch_get_main_queue(), ^{
+                                            [weakSelf dismissAnimated:animated completion:completion];
+                                          });
+                                        }];
+    return;
+  }
+
   if (_controller.isBeingDismissed || !_controller.isPresented) {
     RCTLogWarn(@"TrueSheet: sheet is already dismissed. No need to dismiss it again.");
 
