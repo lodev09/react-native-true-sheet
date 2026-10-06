@@ -1,7 +1,8 @@
 import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
-import type { TrueSheetMethods } from '../TrueSheet.types';
+import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
+import type { TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
 
 jest.mock('../web/vaul', () => {
@@ -13,12 +14,6 @@ jest.mock('../web/vaul', () => {
     React.createElement('div', props, children);
   return { Drawer: { Root, Content, Portal: Root, Overlay: Root, Title: Root, Handle: Root } };
 });
-
-jest.mock('../TrueSheetProvider.web', () => ({
-  usePortalContainer: () => null,
-  useRegisterSheet: () => {},
-  useSheetStack: () => ({ descendants: [], isNested: false, dismissAbove: jest.fn() }),
-}));
 
 jest.mock('../web/layout', () => ({
   observeSheetLayout: () => ({ disconnect: jest.fn() }),
@@ -46,6 +41,12 @@ beforeEach(() => {
 afterEach(() => {
   jest.useRealTimers();
 });
+
+// present()/dismiss() settle on didPresent/didDismiss, which wait on (fake) timers
+const fire = (call: () => Promise<void>) =>
+  act(() => {
+    call();
+  });
 
 function setup(initialDetentIndex = 0) {
   const ref = createRef<TrueSheetMethods>();
@@ -96,7 +97,7 @@ describe('web initial presentation', () => {
 
     sheet.rerender(<TrueSheet {...props} initialDetentIndex={1} />);
     expect(drawer().activeSnapPoint).toBe(1);
-    await act(() => sheet.ref.current!.dismiss());
+    fire(() => sheet.ref.current!.dismiss());
     act(() => jest.runOnlyPendingTimers());
     sheet.rerender(<TrueSheet {...props} initialDetentIndex={-1} />);
     sheet.rerender(<TrueSheet {...props} initialDetentIndex={0} />);
@@ -104,12 +105,117 @@ describe('web initial presentation', () => {
     expect(onDidPresent).toHaveBeenCalledTimes(1);
   });
 
-  it('preserves an already presented sheet when the initial index arrives', async () => {
+  it('preserves an already presented sheet when the initial index arrives', () => {
     const sheet = setup(-1);
-    await act(() => sheet.ref.current!.present(1));
+    fire(() => sheet.ref.current!.present(1));
     act(() => jest.runOnlyPendingTimers());
     sheet.rerender(<TrueSheet {...sheet.props} initialDetentIndex={2} />);
     expect(sheet.UNSAFE_getByType(Drawer.Root).props.activeSnapPoint).toBe(0.4);
+  });
+});
+
+describe('web present and dismiss', () => {
+  function setupEvents() {
+    const sheet = setup(-1);
+    const events: string[] = [];
+    const log = (event: string) => () => {
+      events.push(event);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onWillDismiss={log('willDismiss')}
+        onDidDismiss={log('didDismiss')}
+      />
+    );
+    const present = () => fire(() => sheet.ref.current!.present().then(log('presented')));
+    const dismiss = () => fire(() => sheet.ref.current!.dismiss().then(log('dismissed')));
+    const flush = () =>
+      act(async () => {
+        jest.runOnlyPendingTimers();
+      });
+    return { ...sheet, events, present, dismiss, flush };
+  }
+
+  it('resolves present on didPresent and dismiss on didDismiss', async () => {
+    const sheet = setupEvents();
+    sheet.present();
+    expect(sheet.events).toEqual([]);
+    await sheet.flush();
+    sheet.dismiss();
+    await sheet.flush();
+    expect(sheet.events).toEqual([
+      'willPresent',
+      'didPresent',
+      'presented',
+      'willDismiss',
+      'didDismiss',
+      'dismissed',
+    ]);
+  });
+
+  it('cancels without events when dismissed before willPresent', async () => {
+    const sheet = setupEvents();
+    sheet.present();
+    sheet.dismiss();
+    await sheet.flush();
+    expect(sheet.events).toEqual(['presented', 'dismissed']);
+  });
+
+  it('ignores present while presented or dismissing, and dismiss while dismissed', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const sheet = setupEvents();
+    sheet.present();
+    await sheet.flush();
+    sheet.present();
+    sheet.dismiss();
+    sheet.present();
+    sheet.dismiss();
+    await sheet.flush();
+    const resolved = ['presented', 'dismissed'];
+    expect(sheet.events.filter((e) => !resolved.includes(e))).toEqual([
+      'willPresent',
+      'didPresent',
+      'willDismiss',
+      'didDismiss',
+    ]);
+    expect(sheet.events.filter((e) => resolved.includes(e)).sort()).toEqual([
+      'dismissed',
+      'dismissed',
+      'presented',
+      'presented',
+      'presented',
+    ]);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining('already presented'),
+      expect.stringContaining('already presented'),
+      expect.stringContaining('already dismissed'),
+    ]);
+    warn.mockRestore();
+  });
+
+  it('dismissAll cancels a present that has not committed yet', async () => {
+    const ref = createRef<TrueSheetMethods>();
+    let methods: TrueSheetStaticMethods;
+    const Methods = () => {
+      methods = useTrueSheet();
+      return null;
+    };
+    const result = render(
+      <TrueSheetProvider>
+        <TrueSheet ref={ref} />
+        <Methods />
+      </TrueSheetProvider>,
+      { createNodeMock: () => new MockElement() }
+    );
+    await act(async () => {
+      ref.current!.present();
+      await methods.dismissAll();
+    });
+    expect(result.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
   });
 });
 
@@ -157,10 +263,10 @@ describe('web detent backgrounds', () => {
     expect(sheet.color()).toBe('transparent');
     sheet.rerender(<TrueSheet {...sheet.props} detentBackgrounds={undefined} />);
     expect(sheet.color()).toBe('#eeeeee');
-    await act(() => sheet.ref.current!.dismiss());
+    fire(() => sheet.ref.current!.dismiss());
     act(() => jest.runOnlyPendingTimers());
     sheet.rerender(<TrueSheet {...sheet.props} />);
-    await act(() => sheet.ref.current!.present(1));
+    fire(() => sheet.ref.current!.present(1));
     expect(sheet.color()).toBe('#123456');
   });
 });

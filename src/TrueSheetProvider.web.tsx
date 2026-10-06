@@ -13,7 +13,13 @@ import {
 
 import type { TrueSheetMethods, TrueSheetStaticMethods } from './TrueSheet.types';
 
-type SheetRef = RefObject<TrueSheetMethods | null>;
+export interface SheetHandle {
+  methods: TrueSheetMethods;
+  // dismiss() without the already-dismissed warning, for stack-wide dismissals
+  dismissQuietly: (animated?: boolean) => Promise<void>;
+}
+
+type SheetRef = RefObject<SheetHandle | null>;
 type NodeRef = RefObject<HTMLDivElement | null>;
 
 interface StackEntry {
@@ -23,7 +29,8 @@ interface StackEntry {
 }
 
 interface SheetContextValue {
-  registerByName: (name: string, ref: SheetRef) => () => void;
+  registerSheet: (ref: SheetRef, name?: string) => () => void;
+  getSheets: () => ReadonlySet<SheetRef>;
   resolveByName: (name: string) => TrueSheetMethods;
   pushOpen: (entry: StackEntry) => void;
   popOpen: (entry: StackEntry) => void;
@@ -44,6 +51,7 @@ export interface TrueSheetProviderProps {
 }
 
 export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
+  const sheetsRef = useRef<Set<SheetRef>>(new Set());
   const namedSheetsRef = useRef<Map<string, SheetRef>>(new Map());
   const stackRef = useRef<readonly StackEntry[]>(EMPTY_STACK);
   const listenersRef = useRef<Set<() => void>>(new Set());
@@ -72,17 +80,20 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
     const notify = () => listenersRef.current.forEach((listener) => listener());
 
     return {
-      registerByName: (name, ref) => {
-        namedSheetsRef.current.set(name, ref);
+      registerSheet: (ref, name) => {
+        sheetsRef.current.add(ref);
+        if (name) namedSheetsRef.current.set(name, ref);
         return () => {
-          if (namedSheetsRef.current.get(name) === ref) {
+          sheetsRef.current.delete(ref);
+          if (name && namedSheetsRef.current.get(name) === ref) {
             namedSheetsRef.current.delete(name);
           }
         };
       },
+      getSheets: () => sheetsRef.current,
       resolveByName: (name) => {
         const ref = namedSheetsRef.current.get(name);
-        const methods = ref?.current;
+        const methods = ref?.current?.methods;
         if (!methods) {
           throw new Error(`TrueSheet: no sheet registered with name "${name}"`);
         }
@@ -145,11 +156,9 @@ export function useTrueSheet(): TrueSheetStaticMethods {
       resize: (name, index) => ctx.resolveByName(name).resize(index),
       dismiss: (name, animated) => ctx.resolveByName(name).dismiss(animated),
       dismissStack: (name, animated) => ctx.resolveByName(name).dismissStack(animated),
+      // Every sheet, not just the open stack — it misses a present() that hasn't committed yet
       dismissAll: async (animated) => {
-        const stack = ctx.getStackSnapshot();
-        await Promise.all(
-          [...stack].reverse().map((entry) => entry.ref.current?.dismiss(animated))
-        );
+        await Promise.all([...ctx.getSheets()].map((ref) => ref.current?.dismissQuietly(animated)));
       },
     };
   }, [ctx]);
@@ -158,8 +167,8 @@ export function useTrueSheet(): TrueSheetStaticMethods {
 export function useRegisterSheet(name: string | undefined, ref: SheetRef): void {
   const ctx = useContext(SheetContext);
   useEffect(() => {
-    if (!ctx || !name) return;
-    return ctx.registerByName(name, ref);
+    if (!ctx) return;
+    return ctx.registerSheet(ref, name);
   }, [ctx, name, ref]);
 }
 
@@ -211,7 +220,7 @@ export function useSheetStack(
       const idx = snapshot.findIndex((e) => e.ref === ref);
       if (idx < 0) return;
       const above = snapshot.slice(idx + 1);
-      await Promise.all([...above].reverse().map((e) => e.ref.current?.dismiss(animated)));
+      await Promise.all([...above].reverse().map((e) => e.ref.current?.dismissQuietly(animated)));
     },
     [ctx, ref]
   );

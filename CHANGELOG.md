@@ -41,7 +41,7 @@
 - The keyboard-driven scroll inset now accounts for a floating footer's height. ([#752](https://github.com/lodev09/react-native-true-sheet/pull/752) by [@lodev09](https://github.com/lodev09))
 - The peek detent no longer collapses when swapping between two screens that each render a peek component — the last-mounted peek wins. ([#851](https://github.com/lodev09/react-native-true-sheet/pull/851) by [@SamuelBrucksch](https://github.com/SamuelBrucksch) and [@lodev09](https://github.com/lodev09))
 - Sheet navigator: a sheet pushed while another is still dismissing is no longer dropped. ([#898](https://github.com/lodev09/react-native-true-sheet/pull/898) by [@lodev09](https://github.com/lodev09))
-- Dismissing a sheet before its present finishes now always dismisses it and settles `present()` — previously the sheet could stay open, or `present()` hung on Android and broke later presents. On Android, a stacked parent also returns alongside its child's dismissal, like iOS. ([#900](https://github.com/lodev09/react-native-true-sheet/pull/900) by [@lodev09](https://github.com/lodev09))
+- Dismissing a sheet before its present finishes now always dismisses it and settles `present()` — previously the sheet could stay open, or `present()` hung on Android and broke later presents. On Android, a stacked parent also returns alongside its child's dismissal, like iOS. On web, `present()`/`dismiss()` now resolve when the animation ends and ignore calls on an already presented or dismissed sheet, like native. ([#900](https://github.com/lodev09/react-native-true-sheet/pull/900) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
