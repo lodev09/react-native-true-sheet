@@ -90,5 +90,7 @@ android/generated
 coverage
 
 # Agents
-.claude
+.claude/*
+!.claude/skills
+.argent
 superpowers
