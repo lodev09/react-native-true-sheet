@@ -190,6 +190,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var detentIndexBeforeKeyboard: Int = -1
   private var isKeyboardDismissProgrammatic = false
 
+  // The keyboard hid under a touch (e.g. keyboardDismissMode="on-drag") — the
+  // keyboard stops stay until it lifts. Settling or moving the stops under a
+  // scrolling finger makes the behavior's nested pre-scroll snap the sheet and
+  // jump the content.
+  private var isKeyboardSettleDeferred = false
+
   // Sheet top when a keyboard-floor drag was released; -1 once the settle target is known
   private var keyboardSettleStartTop = -1
   private var focusedViewBeforeBlur: View? = null
@@ -473,6 +479,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     detentIndexBeforeKeyboard = -1
     pendingDetentIndex = -1
     isKeyboardDismissProgrammatic = false
+    isKeyboardSettleDeferred = false
     focusedViewBeforeBlur = null
     shouldAnimatePresent = true
   }
@@ -550,6 +557,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
 
     delegate?.viewControllerDidAttemptDismiss()
+  }
+
+  override fun coordinatorLayoutDidEndTouch() {
+    if (!isKeyboardSettleDeferred) return
+    isKeyboardSettleDeferred = false
+    setupSheetDetentsForSizeChange()
   }
 
   // =============================================================================
@@ -1105,8 +1118,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun setupSheetDetentsForSizeChange() {
     // Reconfiguring while the container tracks the sheet can interrupt its
-    // motion. Apply content size changes once the drag or resize settles.
-    if (interactionState is InteractionState.Dragging || isSettling) {
+    // motion. Apply content size changes once the drag or resize settles, or
+    // the touch holding a deferred keyboard settle lifts.
+    if (interactionState is InteractionState.Dragging || isSettling || isKeyboardSettleDeferred) {
       hasPendingSizeChange = true
       return
     }
@@ -1322,13 +1336,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             return
           }
           val restoring = !isBeingDismissed && detentIndexBeforeKeyboard >= 0
+          if (restoring) {
+            currentDetentIndex = detentIndexBeforeKeyboard
+          }
 
-          // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
-          // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
-          if (restoring || isKeyboardDismissProgrammatic) {
-            if (restoring) {
-              currentDetentIndex = detentIndexBeforeKeyboard
-            }
+          // A scroll-committed keyboard detent still holds the keyboard-shifted
+          // top too — reconfigure so the sheet settles with the keyboard, once
+          // any touch on the sheet lifts
+          if (!isBeingDismissed && coordinatorLayout?.isTouchingSheet == true) {
+            isKeyboardSettleDeferred = true
+          } else if (!isBeingDismissed || isKeyboardDismissProgrammatic) {
             setupSheetDetents()
           }
 
@@ -1351,7 +1368,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
             return
           }
           detentIndexBeforeKeyboard = -1
-          setupSheetDetents(applyState = false)
+          if (!isKeyboardSettleDeferred) {
+            setupSheetDetents(applyState = false)
+          }
           positionFooter()
           updateDimAmount(
             sheetTop = detentCalculator.getSheetTopForDetentIndex(currentDetentIndex),
