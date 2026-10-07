@@ -419,7 +419,8 @@ using namespace facebook::react;
   [self setupScrollable];
 
   if (_controller.isPresented) {
-    [self applySheetPropsUpdate];
+    _pendingPropsUpdate = YES;
+    [self setupSheetDetentsForSizeChange];
   } else if (_controller.isBeingPresented) {
     _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
@@ -630,6 +631,8 @@ using namespace facebook::react;
     _controller.peekContentHeight = @([_containerView peekContentHeight]);
   }
   _pendingSizeChange = NO;
+  // Props queued while the previous presentation dismissed — applied above.
+  _pendingPropsUpdate = NO;
 
   [self refreshFooterBottomInset];
   [_controller setupSheetDetents];
@@ -782,7 +785,8 @@ using namespace facebook::react;
 #pragma mark - TrueSheetContainerViewDelegate
 
 /**
- * Debounced sheet update to handle rapid content/header size changes.
+ * Coalesces prop and size changes outside Fabric's mount transaction so
+ * the footer's layout can mount inside UIKit's resize animation.
  */
 - (void)setupSheetDetentsForSizeChange {
   // Keep the footer's absorbed inset in sync with the latest measured heights
@@ -798,26 +802,52 @@ using namespace facebook::react;
   }
 
   // Not presented: presentAtIndex measures at present time.
-  // Dismissing: the sheet is going away — touching detents perturbs the
-  // presentation stack, visibly glitching the sheet behind.
-  if (!_controller.isPresented || _controller.isBeingDismissed)
+  if (!_controller.isPresented || _isSheetUpdatePending)
     return;
 
-  if (_isSheetUpdatePending)
+  // Dismissing: the sheet is going away — touching detents perturbs the
+  // presentation stack, visibly glitching the sheet behind. An interactive
+  // dismiss can still cancel, so retry once the transition resolves.
+  if (_controller.isBeingDismissed) {
+    id<UIViewControllerTransitionCoordinator> coordinator = _controller.transitionCoordinator;
+    if (coordinator) {
+      _isSheetUpdatePending = YES;
+
+      __weak __typeof(self) weakSelf = self;
+      [coordinator animateAlongsideTransition:nil
+                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                     dispatch_async(dispatch_get_main_queue(), ^{
+                                       __typeof(self) strongSelf = weakSelf;
+                                       if (!strongSelf)
+                                         return;
+
+                                       strongSelf->_isSheetUpdatePending = NO;
+                                       [strongSelf setupSheetDetentsForSizeChange];
+                                     });
+                                   }];
+    }
     return;
+  }
 
   _isSheetUpdatePending = YES;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_isSheetUpdatePending = NO;
-    if (!self->_containerView || self->_controller.isBeingDismissed)
+    if (!self->_containerView || !self->_controller.isPresented || self->_controller.isBeingDismissed)
       return;
 
     // Refresh here (not just on peek size events) since the peek's offset
     // within the content can change without its own size changing.
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
     [self refreshFooterBottomInset];
+
+    // Size first: the props rebuild refreshes the heights itself, hiding the
+    // change from the controller and skipping its post-resize settle.
     [self->_controller setupSheetDetentsForSizeChange];
+    if (self->_pendingPropsUpdate) {
+      self->_pendingPropsUpdate = NO;
+      [self applySheetPropsUpdate];
+    }
   });
 }
 
