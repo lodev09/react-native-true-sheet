@@ -91,6 +91,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   // for the next present (beats the float-threshold guess for re-presents).
   BOOL _hasObservedBottomInset;
   CGFloat _observedBottomInset;
+  BOOL _isRefreshingSafeArea;
 
   BOOL _isInteractiveDismiss;
   CGFloat _interactiveStartPosition;
@@ -316,6 +317,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // wrong leaves the safe-area region unfilled (gap) or double-padded.
   UIView *view = self.viewIfLoaded;
   if (view.window) {
+    // Mid-present, hold the expected inset over a stale zero so the footer
+    // doesn't shrink and regrow — viewDidAppear forces the real value.
+    if (!_isPresented && [self hasStaleBottomSafeArea]) {
+      return [self bottomSafeAreaForHeight:view.bounds.size.height];
+    }
+
     _hasObservedBottomInset = YES;
     _observedBottomInset = view.safeAreaInsets.bottom;
     return _observedBottomInset;
@@ -475,9 +482,39 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
     [self setupGestureRecognizer];
     _isPresented = YES;
+    [self refreshStaleBottomSafeArea];
   }
 
   [self setupAccessibilityContainer];
+}
+
+/**
+ * A present that overlaps another transition (e.g. re-presenting while a
+ * native stack pops) can leave the root view's bottom safe area at zero, and
+ * UIKit doesn't recompute it until the sheet's frame next changes. Suspect a
+ * zero the presented height says shouldn't be there — a small floating sheet
+ * legitimately has none.
+ */
+- (BOOL)hasStaleBottomSafeArea {
+  UIView *view = self.viewIfLoaded;
+  return view.window && view.safeAreaInsets.bottom <= 0 && [self bottomSafeAreaForHeight:view.bounds.size.height] > 0;
+}
+
+// Toggling additionalSafeAreaInsets forces UIKit to recompute the safe area.
+// The toggle's intermediate value isn't reported, so the footer only sees the
+// settled one.
+- (void)refreshStaleBottomSafeArea {
+  if (![self hasStaleBottomSafeArea]) {
+    return;
+  }
+
+  _isRefreshingSafeArea = YES;
+  UIEdgeInsets insets = self.additionalSafeAreaInsets;
+  self.additionalSafeAreaInsets = UIEdgeInsetsMake(insets.top, insets.left, insets.bottom + 1, insets.right);
+  self.additionalSafeAreaInsets = insets;
+  _isRefreshingSafeArea = NO;
+
+  [self.delegate viewControllerSafeAreaInsetsDidChange];
 }
 
 - (void)setupAccessibilityContainer {
@@ -779,7 +816,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   // Mid-dismiss the frame moves off-screen and reports transient insets —
   // don't let them pollute the observed value (matches viewDidLayoutSubviews).
-  if (!self.isBeingDismissed) {
+  if (!self.isBeingDismissed && !_isRefreshingSafeArea) {
     [self.delegate viewControllerSafeAreaInsetsDidChange];
   }
 }
