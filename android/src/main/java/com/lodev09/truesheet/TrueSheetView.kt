@@ -53,11 +53,25 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var stateWrapper: StateWrapper? = null
     set(value) {
       field = value
+      if (value == null) return
 
-      // On first state wrapper assignment, immediately update state with screen dimensions.
-      // This ensures Yoga has initial width/height for content layout before presenting.
-      if (value != null && lastContainerWidth == 0 && lastContainerHeight == 0) {
-        updateState(viewController.screenWidth, viewController.screenHeight)
+      // Push the container size whenever the committed state lacks it (first assignment, or a
+      // fresh state after recycling). Without it Yoga sizes the sheet to its parent and the
+      // content gets clipped. Reading the committed state keeps this from re-sending every commit.
+      val committedState = value.stateData
+      val isMissingSize =
+        if (committedState != null) {
+          !committedState.hasKey("containerHeight") || committedState.getDouble("containerHeight") <= 0.0
+        } else {
+          lastContainerWidth == 0 && lastContainerHeight == 0
+        }
+
+      if (isMissingSize) {
+        val width = lastContainerWidth.takeIf { it > 0 } ?: viewController.screenWidth
+        val height = lastContainerHeight.takeIf { it > 0 } ?: viewController.screenHeight
+        lastContainerWidth = 0
+        lastContainerHeight = 0
+        updateState(width, height)
       }
     }
 
@@ -398,10 +412,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun updateState(width: Int, height: Int) {
     if (width == lastContainerWidth && height == lastContainerHeight) return
 
+    // Only remember sizes actually sent: one recorded without a state wrapper would dedupe the real send
+    val sw = stateWrapper ?: return
+
     lastContainerWidth = width
     lastContainerHeight = height
 
-    stateWrapper?.let { TrueSheetStateUpdater.updateContainerSize(it, width, height) }
+    TrueSheetStateUpdater.updateContainerSize(sw, width, height)
   }
 
   // ==================== Sheet Actions ====================

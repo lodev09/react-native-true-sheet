@@ -21,6 +21,7 @@
 
 ### 🐛 Bug fixes
 
+- **Android**: Sheet content is no longer laid out at its parent's size (clipping `auto` sheets) when a container size update arrives before the Fabric state wrapper. ([#000](https://github.com/lodev09/react-native-true-sheet/pull/000) by [@MAVERlCK](https://github.com/MAVERlCK))
 - **iOS**: Typing in an input outside the scrollable (e.g. a multiline input in the footer) no longer scrolls the scrollable on every keystroke. ([#891](https://github.com/lodev09/react-native-true-sheet/pull/891) by [@billouboq](https://github.com/billouboq))
 - **iOS**: A mounted sheet no longer breaks the native stack's large title collapsing on scroll. ([#890](https://github.com/lodev09/react-native-true-sheet/pull/890) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Presenting a sheet while a modal is still dismissing now waits for the modal to close, so the sheet opens at the correct size. ([#881](https://github.com/lodev09/react-native-true-sheet/pull/881) by [@lodev09](https://github.com/lodev09))
