@@ -28,6 +28,9 @@ interface TrueSheetCoordinatorLayoutDelegate {
    * didn't follow, `keyboardWasVisible` whether the keyboard was up when it began.
    */
   fun coordinatorLayoutDidPullDown(overdragPx: Int, keyboardWasVisible: Boolean)
+
+  // A touch that began inside the sheet ended, after the behavior handled the release
+  fun coordinatorLayoutDidEndTouch()
 }
 
 /**
@@ -85,6 +88,10 @@ class TrueSheetCoordinatorLayout(context: Context) :
   private var pullLastY = 0f
   private var pullOverdrag = 0f
   private var pullKeyboardVisible = false
+
+  // A touch that began inside the sheet is still down
+  val isTouchingSheet: Boolean
+    get() = pullTracking
 
   init {
     layoutParams = LayoutParams(
@@ -150,10 +157,16 @@ class TrueSheetCoordinatorLayout(context: Context) :
         if (dy > dx && pullOverdrag > PULL_DOWN_THRESHOLD_DP.dpToPx()) {
           delegate?.coordinatorLayoutDidPullDown(pullOverdrag.toInt(), pullKeyboardVisible)
         }
+        delegate?.coordinatorLayoutDidEndTouch()
         return handled
       }
 
-      MotionEvent.ACTION_CANCEL -> pullTracking = false
+      MotionEvent.ACTION_CANCEL -> if (pullTracking) {
+        pullTracking = false
+        val handled = super.dispatchTouchEvent(ev)
+        delegate?.coordinatorLayoutDidEndTouch()
+        return handled
+      }
     }
     return super.dispatchTouchEvent(ev)
   }
