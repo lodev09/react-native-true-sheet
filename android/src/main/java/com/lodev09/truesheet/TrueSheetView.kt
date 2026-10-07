@@ -49,16 +49,23 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
+  private var hasCommittedContainerSize: Boolean = false
 
   var stateWrapper: StateWrapper? = null
     set(value) {
       field = value
+      if (value == null || hasCommittedContainerSize) return
 
-      // On first state wrapper assignment, immediately update state with screen dimensions.
-      // This ensures Yoga has initial width/height for content layout before presenting.
-      if (value != null && lastContainerWidth == 0 && lastContainerHeight == 0) {
-        updateState(viewController.screenWidth, viewController.screenHeight)
+      // A preallocated view gets its initial state before the node is committed, so the size
+      // update is dropped. Resend until a committed state has it, or Yoga sizes the sheet to its parent.
+      if ((value.stateData?.getDouble("containerHeight") ?: 0.0) > 0.0) {
+        hasCommittedContainerSize = true
+        return
       }
+
+      lastContainerWidth = 0
+      lastContainerHeight = 0
+      updateState(viewController.screenWidth, viewController.screenHeight)
     }
 
   // Debounce flag to coalesce rapid layout changes into a single sheet update
