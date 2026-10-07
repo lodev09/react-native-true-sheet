@@ -1323,9 +1323,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           }
           val restoring = !isBeingDismissed && detentIndexBeforeKeyboard >= 0
 
-          // Skip reconfigure during interactive keyboard dismiss (e.g. keyboardDismissMode="on-drag")
-          // to prevent the sheet from jumping. keyboardDidHide will reconfigure after.
-          if (restoring || isKeyboardDismissProgrammatic) {
+          // A keyboard detent committed by scrolling still holds the keyboard-shifted
+          // top — reconfigure so the sheet settles with the IME. A drag-driven dismiss
+          // is handled by the Dragging guard above.
+          if (!isBeingDismissed || isKeyboardDismissProgrammatic) {
             if (restoring) {
               currentDetentIndex = detentIndexBeforeKeyboard
             }
