@@ -21,13 +21,13 @@
 
 ### 🐛 Bug fixes
 
-- **Android**: Sheet content is no longer laid out at its parent's size (clipping `auto` sheets) when a container size update arrives before the Fabric state wrapper. ([#000](https://github.com/lodev09/react-native-true-sheet/pull/000) by [@MAVERlCK](https://github.com/MAVERlCK))
 - **iOS**: Typing in an input outside the scrollable (e.g. a multiline input in the footer) no longer scrolls the scrollable on every keystroke. ([#891](https://github.com/lodev09/react-native-true-sheet/pull/891) by [@billouboq](https://github.com/billouboq))
 - **iOS**: A mounted sheet no longer breaks the native stack's large title collapsing on scroll. ([#890](https://github.com/lodev09/react-native-true-sheet/pull/890) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Presenting a sheet while a modal is still dismissing now waits for the modal to close, so the sheet opens at the correct size. ([#881](https://github.com/lodev09/react-native-true-sheet/pull/881) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fix keyboard alignment for absolute footers on iPad and iPhone. ([#855](https://github.com/lodev09/react-native-true-sheet/pull/855) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Unmounting a sheet mid-dismissal and mounting a new one no longer leaks the old sheet's `onDidDismiss` into the new mount or blocks its auto-present. ([#818](https://github.com/lodev09/react-native-true-sheet/pull/818) by [@lodev09](https://github.com/lodev09))
 - **iOS**: Fractional detents now resolve against the app's window instead of the full screen, fixing full-height sheets in windowed iPad apps (Stage Manager, iPadOS 26 windowing), and re-resolve when the window is resized or rotated. ([#815](https://github.com/lodev09/react-native-true-sheet/pull/815) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
+- **Android**: A sheet mounted during a busy render no longer lays out its content at its parent's size. ([#905](https://github.com/lodev09/react-native-true-sheet/pull/905) by [@MAVERlCK](https://github.com/MAVERlCK))
 - **Android**: Presenting a sheet while another is still dismissing no longer leaves the new sheet without a dimmed background. ([#893](https://github.com/lodev09/react-native-true-sheet/pull/893) by [@shahidrogers](https://github.com/shahidrogers))
 - **Android**: A stacked parent sheet now follows its child frame-by-frame when the child resizes, and no longer gets stuck at stale detents after a half-expanded settle. ([#797](https://github.com/lodev09/react-native-true-sheet/pull/797) by [@lodev09](https://github.com/lodev09))
 - **Android**: The scrollable content now tracks the keyboard frame-by-frame — the focused input rides the keyboard up smoothly, and the scroll position eases back on dismiss instead of snapping. ([#798](https://github.com/lodev09/react-native-true-sheet/pull/798) by [@lodev09](https://github.com/lodev09))
