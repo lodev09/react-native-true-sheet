@@ -22,9 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Adds the dim view behind everything in the presentation container
 - (void)addToView:(UIView *)parentView;
 
-/// Fades to the given alpha, alongside the transition if there is one
-- (void)fadeToAlpha:(CGFloat)alpha coordinator:(nullable id<UIViewControllerTransitionCoordinator>)coordinator;
-
 @end
 
 NS_ASSUME_NONNULL_END

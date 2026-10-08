@@ -30,19 +30,6 @@
   [parentView insertSubview:self atIndex:0];
 }
 
-- (void)fadeToAlpha:(CGFloat)alpha coordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-  if (!coordinator) {
-    self.alpha = alpha;
-    return;
-  }
-
-  [coordinator
-    animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      self.alpha = alpha;
-    }
-                    completion:nil];
-}
-
 #pragma mark - Actions
 
 - (void)handleTap {

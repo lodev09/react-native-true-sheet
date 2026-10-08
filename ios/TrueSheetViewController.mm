@@ -82,6 +82,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   // coordinator — started alongside the transition, stopped in its completion.
   CADisplayLink *_transitionLink;
   BOOL _isTransitioning;
+  // Where the sheet rests during the transition: the target on present, the start on dismiss
+  CGFloat _transitionRestPosition;
 
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -449,6 +451,27 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return self.dimmed && (self.dimColor != nil || self.dimOpacity != 0.5);
 }
 
+// Like the system dim, fades in between the detent below `dimmedDetentIndex` and the dimmed detent.
+- (CGFloat)dimAlphaForIndex:(CGFloat)index {
+  if (![self useCustomDimming]) {
+    return 0;
+  }
+
+  CGFloat progress = index - [self.dimmedDetentIndex integerValue] + 1;
+  return self.dimOpacity * fmax(0, fmin(1, progress));
+}
+
+// Present and dismiss fade the dim over the whole travel below the resting position.
+- (CGFloat)dimAlphaForPosition:(CGFloat)position index:(CGFloat)index {
+  if (!_isTransitioning || position <= _transitionRestPosition) {
+    return [self dimAlphaForIndex:index];
+  }
+
+  CGFloat travel = self.screenHeight - _transitionRestPosition;
+  CGFloat progress = travel > 0 ? fmax(0, (self.screenHeight - position) / travel) : 0;
+  return [self dimAlphaForIndex:[self interpolatedIndexForPosition:_transitionRestPosition]] * progress;
+}
+
 - (void)setupDimView {
   UIView *container = self.presentationController.containerView;
   if (!container || (!_dimView && ![self useCustomDimming])) {
@@ -488,7 +511,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
 
     [self setupDimView];
-    [_dimView fadeToAlpha:self.dimOpacity coordinator:self.transitionCoordinator];
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = self.currentDetentIndex;
@@ -764,8 +786,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self restoreWindowAccessibilityElements];
   [self setSheetAccessibilityElementsHidden:YES];
 
-  if (self.isBeingDismissed) {
-    [_dimView fadeToAlpha:0 coordinator:self.transitionCoordinator];
+  // Dismissing with a child on top only animates the child out — this sheet
+  // doesn't move and isn't part of that transition, so fade its dim over it.
+  if (self.isBeingDismissed && self.presentedViewController) {
+    [UIView animateWithDuration:self.transitionCoordinator.transitionDuration
+                     animations:^{
+                       self->_dimView.alpha = 0;
+                     }];
   }
 
   // Dispatch to allow pan gesture to set _isDragging before checking;
@@ -1012,6 +1039,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   _isTransitioning = YES;
+  _transitionRestPosition = self.isBeingDismissed ? self.livePosition : self.currentPosition;
 
   // Learn the resolver-vs-actual offset before emitting transition positions so
   // the interpolated index lands exactly on the target detent. The presented
@@ -1047,10 +1075,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       // Settle after a present, cancelled dismiss, or detent-snap transition.
       // Delayed because the presentedView frame isn't final until UIKit
       // completes its layout pass after the transition animation — learning
-      // here absorbs any sub-pixel drift since the earlier learns.
+      // here absorbs any sub-pixel drift since the earlier learns. A dismiss
+      // cancelled mid-drag leaves the finger down, so the drag end settles instead.
       if (strongSelf->_isPresented && !strongSelf.isBeingDismissed) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-          [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
+          if (!strongSelf->_isDragging) {
+            [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
+          }
         });
       }
     }];
@@ -1228,6 +1259,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     .detent = [self interpolatedDetentForPosition:position],
     .index = [self interpolatedIndexForPosition:position],
   };
+
+  // A child on top only pushes this sheet back, its detent stays.
+  if (!presented) {
+    _dimView.alpha = [self dimAlphaForPosition:position index:state.index];
+  }
 
   // Settle (non-realtime) emits are authoritative and bypass the dedupe — a
   // learn right before them can correct the interpolated index by less than
@@ -1793,7 +1829,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // at alpha 0 it no longer takes touches.
   if (_isPresented) {
     [self setupDimView];
-    _dimView.alpha = [self useCustomDimming] ? self.dimOpacity : 0;
+    _dimView.alpha = [self dimAlphaForIndex:self.currentDetentIndex];
   }
 }
 
