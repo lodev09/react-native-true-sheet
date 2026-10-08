@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: Unmounting a sheet while it is presented or still presenting now dismisses it, instead of leaving it stuck on screen and blocking touches. ([#913](https://github.com/lodev09/react-native-true-sheet/pull/913) by [@Aqua-123](https://github.com/Aqua-123))
+
 ## 3.11.18
 
 ### 🐛 Bug fixes
