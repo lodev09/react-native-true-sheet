@@ -66,6 +66,12 @@ export const App = () => {
 }
 ```
 
+`dimOpacity={0}` hides the dim, but it still blocks touches to the background and a tap still dismisses the sheet. Set `dimmed={false}` to let touches through.
+
+:::note
+On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+:::
+
 ## Customizing Dimming Alpha
 
 You can dynamically control the dimming opacity based on the sheet's position using `ReanimatedTrueSheet` with `animatedPosition`.

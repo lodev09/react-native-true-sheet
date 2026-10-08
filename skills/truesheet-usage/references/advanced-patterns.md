@@ -660,6 +660,7 @@ On iOS 26.0, color/blur still sits above glass.
 - `headerOptions` (floating header)
 - `footerOptions={{ position: 'absolute', avoidKeyboard: false }}` keeps native absolute footers behind the keyboard. The default is `true`. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height.
 - `accessibilityOptions`
+- `dimColor` / `dimOpacity` — customize the dim. On iOS they replace the system dim with a custom layer
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `background` / `backgroundStyle` — custom nodes, exact colors, and glass/blur tints on all platforms
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content

@@ -305,6 +305,9 @@ Content mounts on first `present()` by default. If it settles asynchronously (da
 
 // Custom dim color and opacity
 <TrueSheet detents={['auto']} dimColor="#1b0a3c" dimOpacity={0.3} />
+
+// Invisible dim that still blocks touches and dismisses on tap
+<TrueSheet detents={['auto']} dimOpacity={0} />
 ```
 
 ### Resize programmatically
@@ -352,6 +355,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `scrollableRef` | Yes | Yes | Yes |
 | Scroll edge effects | iOS 26+ | No | No |
 | `grabberOptions` | Yes | Yes | No |
+| `dimColor` / `dimOpacity` | Custom dim layer replaces the system dim; stacked sheets each add one | Yes | Yes |
 | `placement` / side sheets | System-controlled margins; `'automatic'` vs `'center'` differ on iOS 27+ | `placementOffset` prop | `placementOffset` prop |
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `detached` mode | No | No | Yes |
