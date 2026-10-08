@@ -45,6 +45,7 @@ import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
+import kotlin.math.roundToInt
 
 // =============================================================================
 // MARK: - Data Types & Delegate Protocol
@@ -1252,10 +1253,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
     }
 
-    val alpha = dimProgress * opacity
+    // Keep opacity in the color so a transparent dim still receives touches.
+    color = ColorUtils.setAlphaComponent(color, (Color.alpha(color) * opacity).roundToInt())
     dimViews.forEach {
       it.setDimColor(color)
-      if (animated) it.animate().alpha(alpha).setDuration(200).start() else it.alpha = alpha
+      if (animated) it.animate().alpha(dimProgress).setDuration(200).start() else it.alpha = dimProgress
     }
   }
 

@@ -458,7 +458,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   CGFloat progress = index - [self.dimmedDetentIndex integerValue] + 1;
-  return self.dimOpacity * fmax(0, fmin(1, progress));
+  return fmax(0, fmin(1, progress));
 }
 
 // Present and dismiss fade the dim over the whole travel below the resting position.
@@ -487,7 +487,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     };
   }
 
-  _dimView.backgroundColor = self.dimColor ?: [UIColor blackColor];
+  // Keep opacity in the color so a transparent dim still receives touches.
+  UIColor *color = self.dimColor ?: [UIColor blackColor];
+  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * self.dimOpacity];
   [_dimView addToView:container];
 }
 
