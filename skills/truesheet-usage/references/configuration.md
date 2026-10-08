@@ -147,6 +147,8 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
 | `dimmed` | `boolean` | `true` | 🍎🤖🌐 | Show background dim overlay |
+| `dimColor` | `ColorValue` | `"black"` | 🍎🤖🌐 | Color of the dim overlay |
+| `dimOpacity` | `number` | `0.5` | 🍎🤖🌐 | Opacity of the dim overlay (0–1). On iOS a custom `dimColor`/`dimOpacity` dims every detent, ignoring `dimmedDetentIndex` |
 | `dimmedDetentIndex` | `number` | `0` | 🍎🤖🌐 | Detent index at which dimming activates. Set to `1` to keep background interactive at the first detent |
 
 ## Header and Footer

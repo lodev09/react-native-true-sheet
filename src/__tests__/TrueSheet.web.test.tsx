@@ -245,6 +245,25 @@ describe('web present and dismiss', () => {
   });
 });
 
+describe('web dim', () => {
+  const dimColor = (props: { dimColor?: string; dimOpacity?: number }) =>
+    render(<TrueSheet initialDetentIndex={0} {...props} />, {
+      createNodeMock: () => new MockElement(),
+    }).UNSAFE_root.findAll((node) => node.props.style?.inset === 0)[0]!.props.style.backgroundColor;
+
+  it('keeps the default dim unless a color or opacity is set', () => {
+    expect(dimColor({})).toBe('rgba(0, 0, 0, 0.5)');
+  });
+
+  it('mixes the color and the clamped opacity into the overlay color', () => {
+    expect(dimColor({ dimColor: '#1b0a3c', dimOpacity: 0.3 })).toBe(
+      'color-mix(in srgb, #1b0a3c 30%, transparent)'
+    );
+    expect(dimColor({ dimColor: 'red' })).toBe('color-mix(in srgb, red 50%, transparent)');
+    expect(dimColor({ dimOpacity: 2 })).toBe('color-mix(in srgb, black 100%, transparent)');
+  });
+});
+
 describe('web detent backgrounds', () => {
   it('starts at the presented entry and holds it during presentation', () => {
     const sheet = setup(2);

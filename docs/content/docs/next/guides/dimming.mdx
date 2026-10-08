@@ -48,6 +48,28 @@ export const App = () => {
 `dimmedDetentIndex` is ignored if `dimmed` is set to `false`.
 :::
 
+## Dim Color and Opacity
+
+Use [`dimColor`](../reference/configuration#dimcolor) and [`dimOpacity`](../reference/configuration#dimopacity) to change the dim's color and how strong it is.
+
+```tsx {5-6}
+export const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto', 1]}
+      dimColor="#1b0a3c"
+      dimOpacity={0.3}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+:::info
+On iOS, a custom dim covers every detent, so `dimmedDetentIndex` has no effect when `dimColor` or `dimOpacity` is set.
+:::
+
 ## Customizing Dimming Alpha
 
 You can dynamically control the dimming opacity based on the sheet's position using `ReanimatedTrueSheet` with `animatedPosition`.

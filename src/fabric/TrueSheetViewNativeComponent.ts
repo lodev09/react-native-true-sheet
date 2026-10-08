@@ -82,6 +82,8 @@ export interface NativeProps extends ViewProps {
   // Color properties
   backgroundColor?: ColorValue;
   initialDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
+  dimColor?: ColorValue;
+  dimOpacity?: CodegenTypes.WithDefault<CodegenTypes.Double, 0.5>;
   dimmedDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, 0>;
 
   // String properties - use empty string as default to avoid nil insertion

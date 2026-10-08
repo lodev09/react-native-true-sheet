@@ -105,6 +105,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     accessibilityOptions,
     detents = [0.5, 1],
     dimmed = true,
+    dimColor,
+    dimOpacity,
     dimmedDetentIndex = 0,
     initialDetentIndex = -1,
     header,
@@ -1137,6 +1139,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     transition: isPresentingRef.current ? 'none' : 'background-color 200ms',
   };
 
+  // Vaul fades the overlay through its opacity, so the dim opacity goes into the color
+  const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
+    if (dimColor == null && dimOpacity == null) return overlayStyle;
+    const percentage = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY)) * 100;
+    return {
+      ...overlayStyle,
+      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${percentage}%, transparent)`,
+    };
+  }, [dimColor, dimOpacity]);
+
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
@@ -1310,7 +1322,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         {...snapPointsProps}
       >
         <Drawer.Portal container={portalContainer ?? undefined}>
-          <Drawer.Overlay style={overlayStyle} />
+          <Drawer.Overlay style={resolvedOverlayStyle} />
           <Drawer.Content
             ref={handleDrawerRef}
             style={mergedContentStyle}
@@ -1360,6 +1372,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     </TrueSheetPeekContext.Provider>
   );
 });
+
+const DEFAULT_DIM_OPACITY = 0.5;
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',

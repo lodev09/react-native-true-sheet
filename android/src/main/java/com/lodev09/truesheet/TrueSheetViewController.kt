@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
@@ -153,8 +154,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // CoordinatorLayout components (replaces DialogFragment)
   internal var sheetView: TrueSheetBottomSheetView? = null
   internal var coordinatorLayout: TrueSheetCoordinatorLayout? = null
-  private var dimView: TrueSheetDimView? = null
-  private var parentDimView: TrueSheetDimView? = null
+  var dimView: TrueSheetDimView? = null
+    private set
+  var parentDimView: TrueSheetDimView? = null
+    private set
 
   // Presentation State
   var isPresented = false
@@ -232,6 +235,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Appearance Configuration
   var dimmed = true
   var dimmedDetentIndex = 0
+  var dimColor: Int = Color.BLACK
+  var dimOpacity: Float = 0.5f
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
   override var accessibilityOptions: AccessibilityOptions? = null
@@ -1174,6 +1179,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (dimView == null) {
         dimView = TrueSheetDimView(reactContext).apply {
           delegate = this@TrueSheetViewController
+          setDimColor(dimColor)
+          setMaxAlpha(dimOpacity)
         }
       }
       if (!parentDimVisible) {
@@ -1187,6 +1194,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         if (parentDimView == null) {
           parentDimView = TrueSheetDimView(reactContext).apply {
             delegate = this@TrueSheetViewController
+            setDimColor(dimColor)
+            setMaxAlpha(dimOpacity)
           }
         }
         parentDimView?.attach(parentBottomSheet, parentController.sheetCornerRadius)

@@ -108,6 +108,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
+
+  UIView *_customDimView;
 }
 
 #pragma mark - Initialization
@@ -127,6 +129,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _footerAvoidsKeyboard = YES;
     _dismissible = YES;
     _dimmed = YES;
+    _dimColor = nil;
+    _dimOpacity = 0.5;
     _dimmedDetentIndex = @(0);
     _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
@@ -437,6 +441,67 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_grabberView addToView:self.view];
 }
 
+#pragma mark - Custom Dimming
+
+// UISheetPresentationController has no API for the dim's color or opacity, so a custom
+// color/opacity turns the native dim off and fades in our own view behind the sheet.
+- (BOOL)useCustomDimming {
+  return self.dimmed && (self.dimColor != nil || self.dimOpacity != 0.5);
+}
+
+- (void)setupCustomDimView {
+  if (![self useCustomDimming]) {
+    return;
+  }
+
+  UIView *container = self.presentationController.containerView;
+  if (!container) {
+    return;
+  }
+
+  if (!_customDimView) {
+    _customDimView = [[UIView alloc] initWithFrame:container.bounds];
+    _customDimView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _customDimView.backgroundColor = self.dimColor ?: [UIColor blackColor];
+    _customDimView.alpha = 0;
+
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                          action:@selector(handleCustomDimViewTap)];
+    [_customDimView addGestureRecognizer:tap];
+  }
+
+  [container insertSubview:_customDimView atIndex:0];
+}
+
+- (void)handleCustomDimViewTap {
+  if (self.dismissible) {
+    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  } else {
+    [self.delegate viewControllerDidAttemptDismiss];
+  }
+}
+
+- (void)fadeCustomDimViewToAlpha:(CGFloat)alpha {
+  if (!_customDimView) {
+    return;
+  }
+
+  id<UIViewControllerTransitionCoordinator> coordinator = self.transitionCoordinator;
+  if (coordinator) {
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+      self->_customDimView.alpha = alpha;
+    }
+                                 completion:nil];
+  } else {
+    _customDimView.alpha = alpha;
+  }
+}
+
+- (void)removeCustomDimView {
+  [_customDimView removeFromSuperview];
+  _customDimView = nil;
+}
+
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
@@ -449,6 +514,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       [_parentSheetController.delegate viewControllerWillBlur];
       [_parentSheetController setAccessibilityContentElement:self.accessibilityContentView ?: self.view];
     }
+
+    [self setupCustomDimView];
+    [self fadeCustomDimViewToAlpha:self.dimOpacity];
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = self.currentDetentIndex;
@@ -703,6 +771,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _isWillDismissEmitted = NO;
     _hasObservedBottomInset = NO;
 
+    [self removeCustomDimView];
+
     [_anchorView removeFromSuperview];
     _anchorView = nil;
 
@@ -720,6 +790,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [super viewWillDisappear:animated];
   [self restoreWindowAccessibilityElements];
   [self setSheetAccessibilityElementsHidden:YES];
+
+  [self fadeCustomDimViewToAlpha:0];
 
   // Dispatch to allow pan gesture to set _isDragging before checking;
   // the transition tracker emits when the sheet is transitioning to dismiss
@@ -1300,7 +1372,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   sheet.detents = detents;
 
-  if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
+  if ([self useCustomDimming]) {
+    sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
+  } else if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
     sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;

@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
@@ -260,6 +261,25 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
       TrueSheetStackManager.updateBackgroundAccessibility()
+    }
+  }
+
+  fun setDimColor(color: Int?) {
+    val resolved = color ?: Color.BLACK
+    if (viewController.dimColor == resolved) return
+    viewController.dimColor = resolved
+    viewController.dimView?.setDimColor(resolved)
+    viewController.parentDimView?.setDimColor(resolved)
+  }
+
+  fun setDimOpacity(opacity: Float) {
+    val clamped = opacity.coerceIn(0f, 1f)
+    if (viewController.dimOpacity == clamped) return
+    viewController.dimOpacity = clamped
+    viewController.dimView?.setMaxAlpha(clamped)
+    viewController.parentDimView?.setMaxAlpha(clamped)
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
     }
   }
 

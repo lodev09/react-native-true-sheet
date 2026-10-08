@@ -209,6 +209,16 @@ class TrueSheetViewManager :
     view.setDimmed(dimmed)
   }
 
+  @ReactProp(name = "dimColor", customType = "Color")
+  override fun setDimColor(view: TrueSheetView, color: Int?) {
+    view.setDimColor(color)
+  }
+
+  @ReactProp(name = "dimOpacity", defaultDouble = 0.5)
+  override fun setDimOpacity(view: TrueSheetView, opacity: Double) {
+    view.setDimOpacity(opacity.toFloat())
+  }
+
   @ReactProp(name = "dimmedDetentIndex", defaultInt = 0)
   override fun setDimmedDetentIndex(view: TrueSheetView, index: Int) {
     view.setDimmedDetentIndex(index)

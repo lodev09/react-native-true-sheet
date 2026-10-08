@@ -34,19 +34,24 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   View(reactContext),
   ReactPointerEventsView {
 
-  companion object {
-    private const val MAX_ALPHA = 0.5f
-  }
-
   var delegate: TrueSheetDimViewDelegate? = null
 
   private var targetView: ViewGroup? = null
+  private var maxAlpha: Float = 0.5f
 
   /**
    * Whether this view should block gestures (when dimmed).
    */
   private val blockGestures: Boolean
     get() = alpha > 0f
+
+  fun setDimColor(color: Int) {
+    setBackgroundColor(color)
+  }
+
+  fun setMaxAlpha(value: Float) {
+    maxAlpha = value.coerceIn(0f, 1f)
+  }
 
   init {
     layoutParams = ViewGroup.LayoutParams(
@@ -118,13 +123,13 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
     val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
 
     return when {
-      sheetTop <= dimmedDetentTop -> MAX_ALPHA
+      sheetTop <= dimmedDetentTop -> maxAlpha
 
       sheetTop >= belowDimmedTop -> 0f
 
       else -> {
         val progress = 1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)
-        (progress * MAX_ALPHA).coerceIn(0f, MAX_ALPHA)
+        (progress * maxAlpha).coerceIn(0f, maxAlpha)
       }
     }
   }

@@ -302,6 +302,9 @@ Content mounts on first `present()` by default. If it settles asynchronously (da
 
 // Dim only above a certain detent
 <TrueSheet detents={['auto', 0.7, 1]} dimmedDetentIndex={1} />
+
+// Custom dim color and opacity
+<TrueSheet detents={['auto']} dimColor="#1b0a3c" dimOpacity={0.3} />
 ```
 
 ### Resize programmatically
