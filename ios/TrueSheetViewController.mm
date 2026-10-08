@@ -476,8 +476,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 - (void)handleCustomDimViewTap {
   if (self.dismissible) {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
-  } else {
-    [self.delegate viewControllerDidAttemptDismiss];
   }
 }
 
