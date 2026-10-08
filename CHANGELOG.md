@@ -18,6 +18,7 @@
 - Added `detentBackgrounds` with color strings or color/blur objects, native iOS transitions, and cross-fades elsewhere. ([#876](https://github.com/lodev09/react-native-true-sheet/pull/876) by [@lodev09](https://github.com/lodev09))
 - Added `dismissThreshold` on Android and Web. Set it to `'short'` to dismiss on a short drag or fling, like Compose Material3's sheet. ([#880](https://github.com/lodev09/react-native-true-sheet/pull/880) by [@lodev09](https://github.com/lodev09))
 - Support Expo SDK 58 and React Native 0.88. The Expo Router `Sheet` navigator works on Router 58, and reopening a sheet on iOS no longer shows a blank screen. ([#896](https://github.com/lodev09/react-native-true-sheet/pull/896) by [@lodev09](https://github.com/lodev09))
+- Added `dimColor` and `dimOpacity` to customize the color and opacity of the dim behind the sheet. ([#911](https://github.com/lodev09/react-native-true-sheet/pull/911) by [@IjzerenHein](https://github.com/IjzerenHein) and [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
 

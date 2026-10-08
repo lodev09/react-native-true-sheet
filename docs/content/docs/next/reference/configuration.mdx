@@ -267,6 +267,38 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 | - | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ | ✅ |
 
+## `dimColor`
+
+The color of the dim behind the sheet.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ColorValue` | `"black"` | ✅ | ✅ | ✅ |
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+## `dimOpacity`
+
+The opacity of the dim behind the sheet, from `0` to `1`.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | `0.5` | ✅ | ✅ | ✅ |
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+:::note
+At `0`, the dim is invisible but still blocks touches to the background. Set [`dimmed`](#dimmed) to `false` to allow interaction instead.
+:::
+
+:::note
+On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+:::
+
 ## `dimmedDetentIndex`
 
 The detent index that the sheet should start to dim the background.

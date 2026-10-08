@@ -1,6 +1,7 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
@@ -260,6 +261,24 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupDimmedBackground()
       viewController.updateDimAmount()
       TrueSheetStackManager.updateBackgroundAccessibility()
+    }
+  }
+
+  fun setDimColor(color: Int?) {
+    val resolved = color ?: Color.BLACK
+    if (viewController.dimColor == resolved) return
+    viewController.dimColor = resolved
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
+    }
+  }
+
+  fun setDimOpacity(opacity: Float) {
+    val resolved = if (opacity < 0f) TrueSheetViewController.DEFAULT_DIM_OPACITY else opacity.coerceIn(0f, 1f)
+    if (viewController.dimOpacity == resolved) return
+    viewController.dimOpacity = resolved
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
     }
   }
 
@@ -690,6 +709,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
     TrueSheetStackManager.unregisterSheet(this)
+
+    // The sheets below stop blending this sheet's dim
+    parent?.viewController?.takeIf { it.isPresented }?.updateDimAmount()
 
     parent?.resetTranslation {
       val parentController = parent.viewController

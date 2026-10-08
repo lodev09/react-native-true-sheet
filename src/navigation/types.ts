@@ -218,6 +218,8 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'grabberOptions'
   | 'accessibilityOptions'
   | 'dimmed'
+  | 'dimColor'
+  | 'dimOpacity'
   | 'dimmedDetentIndex'
   | 'backgroundBlur'
   | 'maxContentHeight'

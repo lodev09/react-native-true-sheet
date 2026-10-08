@@ -317,6 +317,8 @@ using namespace facebook::react;
   _controller.dismissible = newProps.dismissible;
   _controller.draggable = newProps.draggable;
   _controller.dimmed = newProps.dimmed;
+  _controller.dimOpacity = newProps.dimOpacity < 0 ? nil : @(newProps.dimOpacity);
+  _controller.dimColor = RCTUIColorFromSharedColor(newProps.dimColor);
 
   if (newProps.dimmedDetentIndex >= 0) {
     _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);

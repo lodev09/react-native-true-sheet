@@ -440,6 +440,22 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean;
 
   /**
+   * The color of the dim overlay behind the sheet.
+   * This is ignored if `dimmed` is set to `false`.
+   *
+   * @default '#000000'
+   */
+  dimColor?: ColorValue;
+
+  /**
+   * The maximum opacity of the dim overlay behind the sheet (0 to 1).
+   * This is ignored if `dimmed` is set to `false`.
+   *
+   * @default 0.5
+   */
+  dimOpacity?: number;
+
+  /**
    * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.

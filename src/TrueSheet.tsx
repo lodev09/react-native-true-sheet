@@ -644,6 +644,8 @@ export class TrueSheet
       grabberOptions,
       accessibilityOptions,
       dimmed = true,
+      dimColor,
+      dimOpacity,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
       dimmedDetentIndex,
@@ -752,6 +754,8 @@ export class TrueSheet
         grabberOptions={this.resolvedGrabberOptions}
         accessibilityOptions={accessibilityOptions}
         dimmed={dimmed}
+        dimColor={dimColor}
+        dimOpacity={dimOpacity}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={gatedInitialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}

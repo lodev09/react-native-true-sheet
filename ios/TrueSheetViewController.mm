@@ -11,6 +11,7 @@
 #import "TrueSheetContentView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
+#import "core/TrueSheetDimView.h"
 #import "core/TrueSheetGrabberView.h"
 #import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
@@ -81,6 +82,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   // coordinator — started alongside the transition, stopped in its completion.
   CADisplayLink *_transitionLink;
   BOOL _isTransitioning;
+  // Where the sheet rests during the transition: the target on present, the start on dismiss
+  CGFloat _transitionRestPosition;
 
   BOOL _pendingContentSizeChange;
   BOOL _pendingDetentsChange;
@@ -108,6 +111,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
+  TrueSheetDimView *_dimView;
 }
 
 #pragma mark - Initialization
@@ -127,6 +131,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _footerAvoidsKeyboard = YES;
     _dismissible = YES;
     _dimmed = YES;
+    _dimColor = nil;
+    _dimOpacity = nil;
     _dimmedDetentIndex = @(0);
     _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
@@ -437,6 +443,63 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_grabberView addToView:self.view];
 }
 
+#pragma mark - Custom Dimming
+
+// UISheetPresentationController has no API for the dim's color or opacity, so a custom
+// color/opacity turns the native dim off and fades in our own view behind the sheet.
+- (BOOL)useCustomDimming {
+  return self.dimmed && (self.dimColor != nil || self.dimOpacity != nil);
+}
+
+// Like the system dim, fades in between the detent below `dimmedDetentIndex` and the dimmed detent.
+- (CGFloat)dimAlphaForIndex:(CGFloat)index {
+  if (![self useCustomDimming]) {
+    return 0;
+  }
+
+  CGFloat progress = index - [self.dimmedDetentIndex integerValue] + 1;
+  return fmax(0, fmin(1, progress));
+}
+
+// Present and dismiss fade the dim over the whole travel below the resting position.
+- (CGFloat)dimAlphaForPosition:(CGFloat)position index:(CGFloat)index {
+  if (!_isTransitioning || position <= _transitionRestPosition) {
+    return [self dimAlphaForIndex:index];
+  }
+
+  CGFloat travel = self.screenHeight - _transitionRestPosition;
+  CGFloat progress = travel > 0 ? fmax(0, (self.screenHeight - position) / travel) : 0;
+  return [self dimAlphaForIndex:[self interpolatedIndexForPosition:_transitionRestPosition]] * progress;
+}
+
+- (void)setupDimView {
+  UIView *container = self.presentationController.containerView;
+  if (!container || (!_dimView && ![self useCustomDimming])) {
+    return;
+  }
+
+  if (!_dimView) {
+    _dimView = [[TrueSheetDimView alloc] init];
+
+    __weak __typeof(self) weakSelf = self;
+    _dimView.onTap = ^{
+      [weakSelf handleDimViewTap];
+    };
+  }
+
+  // Keep opacity in the color so a transparent dim still receives touches.
+  UIColor *color = self.dimColor ?: [UIColor blackColor];
+  CGFloat opacity = self.dimOpacity ? [self.dimOpacity doubleValue] : 0.5;
+  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
+  [_dimView addToView:container];
+}
+
+- (void)handleDimViewTap {
+  if (self.dismissible) {
+    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  }
+}
+
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
@@ -449,6 +512,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       [_parentSheetController.delegate viewControllerWillBlur];
       [_parentSheetController setAccessibilityContentElement:self.accessibilityContentView ?: self.view];
     }
+
+    [self setupDimView];
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = self.currentDetentIndex;
@@ -703,6 +768,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _isWillDismissEmitted = NO;
     _hasObservedBottomInset = NO;
 
+    [_dimView removeFromSuperview];
+    _dimView = nil;
+
     [_anchorView removeFromSuperview];
     _anchorView = nil;
 
@@ -720,6 +788,15 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [super viewWillDisappear:animated];
   [self restoreWindowAccessibilityElements];
   [self setSheetAccessibilityElementsHidden:YES];
+
+  // Dismissing with a child on top only animates the child out — this sheet
+  // doesn't move and isn't part of that transition, so fade its dim over it.
+  if (self.isBeingDismissed && self.presentedViewController) {
+    [UIView animateWithDuration:self.transitionCoordinator.transitionDuration
+                     animations:^{
+                       self->_dimView.alpha = 0;
+                     }];
+  }
 
   // Dispatch to allow pan gesture to set _isDragging before checking;
   // the transition tracker emits when the sheet is transitioning to dismiss
@@ -965,6 +1042,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   _isTransitioning = YES;
+  _transitionRestPosition = self.isBeingDismissed ? self.livePosition : self.currentPosition;
 
   // Learn the resolver-vs-actual offset before emitting transition positions so
   // the interpolated index lands exactly on the target detent. The presented
@@ -1000,10 +1078,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       // Settle after a present, cancelled dismiss, or detent-snap transition.
       // Delayed because the presentedView frame isn't final until UIKit
       // completes its layout pass after the transition animation — learning
-      // here absorbs any sub-pixel drift since the earlier learns.
+      // here absorbs any sub-pixel drift since the earlier learns. A dismiss
+      // cancelled mid-drag leaves the finger down, so the drag end settles instead.
       if (strongSelf->_isPresented && !strongSelf.isBeingDismissed) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-          [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
+          if (!strongSelf->_isDragging) {
+            [strongSelf settleAtDetentIndex:strongSelf.currentDetentIndex debug:@"transition end"];
+          }
         });
       }
     }];
@@ -1182,6 +1263,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     .index = [self interpolatedIndexForPosition:position],
   };
 
+  // A child on top only pushes this sheet back, its detent stays.
+  if (!presented) {
+    _dimView.alpha = [self dimAlphaForPosition:position index:state.index];
+  }
+
   // Settle (non-realtime) emits are authoritative and bypass the dedupe — a
   // learn right before them can correct the interpolated index by less than
   // the tolerance, and the corrected value must still reach JS.
@@ -1300,7 +1386,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   sheet.detents = detents;
 
-  if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
+  if ([self useCustomDimming]) {
+    sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
+  } else if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
     sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
@@ -1739,6 +1827,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   [self setupBackground];
   [self setupGrabber];
+
+  // Dim props changed while presented. A hidden custom dim stays until dismiss;
+  // at alpha 0 it no longer takes touches.
+  if (_isPresented) {
+    [self setupDimView];
+    _dimView.alpha = [self dimAlphaForIndex:self.currentDetentIndex];
+  }
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
