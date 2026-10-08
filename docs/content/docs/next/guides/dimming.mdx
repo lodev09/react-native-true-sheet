@@ -67,7 +67,7 @@ export const App = () => {
 ```
 
 :::info
-On iOS, a custom dim covers every detent, so `dimmedDetentIndex` has no effect when `dimColor` or `dimOpacity` is set.
+On iOS, setting `dimColor` or a `dimOpacity` other than `0.5` replaces the system dim with a custom one that covers every detent, so `dimmedDetentIndex` has no effect.
 :::
 
 ## Customizing Dimming Alpha
