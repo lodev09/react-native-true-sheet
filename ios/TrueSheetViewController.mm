@@ -132,7 +132,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _dismissible = YES;
     _dimmed = YES;
     _dimColor = nil;
-    _dimOpacity = 0.5;
+    _dimOpacity = nil;
     _dimmedDetentIndex = @(0);
     _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
@@ -448,7 +448,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 // UISheetPresentationController has no API for the dim's color or opacity, so a custom
 // color/opacity turns the native dim off and fades in our own view behind the sheet.
 - (BOOL)useCustomDimming {
-  return self.dimmed && (self.dimColor != nil || self.dimOpacity != 0.5);
+  return self.dimmed && (self.dimColor != nil || self.dimOpacity != nil);
 }
 
 // Like the system dim, fades in between the detent below `dimmedDetentIndex` and the dimmed detent.
@@ -489,7 +489,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   // Keep opacity in the color so a transparent dim still receives touches.
   UIColor *color = self.dimColor ?: [UIColor blackColor];
-  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * self.dimOpacity];
+  CGFloat opacity = self.dimOpacity ? [self.dimOpacity doubleValue] : 0.5;
+  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
   [_dimView addToView:container];
 }
 

@@ -125,6 +125,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   TrueSheetBottomSheetViewDelegate {
 
   companion object {
+    const val DEFAULT_DIM_OPACITY = 0.5f
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val DEFAULT_PLACEMENT_OFFSET = 16 // dp
@@ -236,7 +237,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmed = true
   var dimmedDetentIndex = 0
   var dimColor: Int = Color.BLACK
-  var dimOpacity: Float = 0.5f
+  var dimOpacity: Float = DEFAULT_DIM_OPACITY
   private var dimProgress = 0f
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null

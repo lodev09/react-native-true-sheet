@@ -214,7 +214,7 @@ class TrueSheetViewManager :
     view.setDimColor(color)
   }
 
-  @ReactProp(name = "dimOpacity", defaultDouble = 0.5)
+  @ReactProp(name = "dimOpacity", defaultDouble = -1.0)
   override fun setDimOpacity(view: TrueSheetView, opacity: Double) {
     view.setDimOpacity(opacity.toFloat())
   }

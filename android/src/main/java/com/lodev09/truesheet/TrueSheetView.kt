@@ -274,9 +274,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   fun setDimOpacity(opacity: Float) {
-    val clamped = opacity.coerceIn(0f, 1f)
-    if (viewController.dimOpacity == clamped) return
-    viewController.dimOpacity = clamped
+    val resolved = if (opacity < 0f) TrueSheetViewController.DEFAULT_DIM_OPACITY else opacity.coerceIn(0f, 1f)
+    if (viewController.dimOpacity == resolved) return
+    viewController.dimOpacity = resolved
     if (viewController.isPresented) {
       viewController.updateDimAmount()
     }
