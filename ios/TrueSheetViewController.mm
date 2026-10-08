@@ -791,7 +791,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self restoreWindowAccessibilityElements];
   [self setSheetAccessibilityElementsHidden:YES];
 
-  [self fadeCustomDimViewToAlpha:0];
+  if (self.isBeingDismissed) {
+    [self fadeCustomDimViewToAlpha:0];
+  }
 
   // Dispatch to allow pan gesture to set _isDragging before checking;
   // the transition tracker emits when the sheet is transitioning to dismiss
@@ -1373,7 +1375,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   sheet.detents = detents;
 
   if ([self useCustomDimming]) {
-    sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
+    sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
   } else if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
