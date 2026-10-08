@@ -12,6 +12,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.R
@@ -154,10 +155,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // CoordinatorLayout components (replaces DialogFragment)
   internal var sheetView: TrueSheetBottomSheetView? = null
   internal var coordinatorLayout: TrueSheetCoordinatorLayout? = null
-  var dimView: TrueSheetDimView? = null
-    private set
-  var parentDimView: TrueSheetDimView? = null
-    private set
+  private var dimView: TrueSheetDimView? = null
+  private var parentDimView: TrueSheetDimView? = null
 
   // Presentation State
   var isPresented = false
@@ -237,6 +236,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmedDetentIndex = 0
   var dimColor: Int = Color.BLACK
   var dimOpacity: Float = 0.5f
+  private var dimProgress = 0f
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
   override var accessibilityOptions: AccessibilityOptions? = null
@@ -1180,7 +1180,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         dimView = TrueSheetDimView(reactContext).apply {
           delegate = this@TrueSheetViewController
           setDimColor(dimColor)
-          setMaxAlpha(dimOpacity)
         }
       }
       if (!parentDimVisible) {
@@ -1195,7 +1194,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           parentDimView = TrueSheetDimView(reactContext).apply {
             delegate = this@TrueSheetViewController
             setDimColor(dimColor)
-            setMaxAlpha(dimOpacity)
           }
         }
         parentDimView?.attach(parentBottomSheet, parentController.sheetCornerRadius)
@@ -1209,25 +1207,55 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
-    if (!dimmed) return
+    if (dimmed) {
+      // While keyboard is active or transitioning, use the target detent position for dim
+      val top = if (isKeyboardActive) {
+        detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
+      } else {
+        val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
+        (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
+      }
 
-    // While keyboard is active or transitioning, use the target detent position for dim
-    val top = if (isKeyboardActive) {
-      detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
-    } else {
-      val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
-      (sheetTop ?: sheetView?.top ?: return) + keyboardOffset
-    }
-
-    if (animated) {
-      val targetAlpha = dimView?.calculateAlpha(
+      dimProgress = dimView?.calculateProgress(
         top,
         dimmedDetentIndex,
         detentCalculator::getSheetTopForDetentIndex
       ) ?: 0f
-      dimViews.forEach { it.animate().alpha(targetAlpha).setDuration(200).start() }
-    } else {
-      dimViews.forEach { it.interpolateAlpha(top, dimmedDetentIndex, detentCalculator::getSheetTopForDetentIndex) }
+      applyDimAmount(animated)
+    }
+
+    // The sheets below blend this sheet's dim into theirs
+    var parent = parentSheetView?.viewController
+    while (parent != null) {
+      parent.applyDimAmount(animated)
+      parent = parent.parentSheetView?.viewController
+    }
+  }
+
+  /**
+   * Dims by this sheet's progress, blending in the dim of the sheets presented on top by theirs,
+   * so everything below the topmost sheet dims with its color and opacity.
+   */
+  private fun applyDimAmount(animated: Boolean) {
+    if (!dimmed) return
+
+    var color = dimColor
+    var opacity = dimOpacity
+    (delegate as? TrueSheetView)?.let { hostView ->
+      TrueSheetStackManager.getSheetsAbove(hostView).asReversed().forEach {
+        val child = it.viewController
+        if (!child.dimmed) return@forEach
+        val below = (1f - child.dimProgress) * opacity
+        val above = child.dimProgress * child.dimOpacity
+        if (below + above > 0f) color = ColorUtils.blendARGB(color, child.dimColor, above / (below + above))
+        opacity = below + above
+      }
+    }
+
+    val alpha = dimProgress * opacity
+    dimViews.forEach {
+      it.setDimColor(color)
+      if (animated) it.animate().alpha(alpha).setDuration(200).start() else it.alpha = alpha
     }
   }
 

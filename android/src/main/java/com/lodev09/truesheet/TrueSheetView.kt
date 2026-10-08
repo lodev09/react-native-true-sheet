@@ -268,16 +268,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val resolved = color ?: Color.BLACK
     if (viewController.dimColor == resolved) return
     viewController.dimColor = resolved
-    viewController.dimView?.setDimColor(resolved)
-    viewController.parentDimView?.setDimColor(resolved)
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
+    }
   }
 
   fun setDimOpacity(opacity: Float) {
     val clamped = opacity.coerceIn(0f, 1f)
     if (viewController.dimOpacity == clamped) return
     viewController.dimOpacity = clamped
-    viewController.dimView?.setMaxAlpha(clamped)
-    viewController.parentDimView?.setMaxAlpha(clamped)
     if (viewController.isPresented) {
       viewController.updateDimAmount()
     }
@@ -710,6 +709,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     eventDispatcher?.dispatchEvent(DidDismissEvent(surfaceId, id))
 
     TrueSheetStackManager.unregisterSheet(this)
+
+    // The sheets below stop blending this sheet's dim
+    parent?.viewController?.takeIf { it.isPresented }?.updateDimAmount()
 
     parent?.resetTranslation {
       val parentController = parent.viewController

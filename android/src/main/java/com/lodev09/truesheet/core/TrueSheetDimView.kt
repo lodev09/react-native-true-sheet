@@ -37,7 +37,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   var delegate: TrueSheetDimViewDelegate? = null
 
   private var targetView: ViewGroup? = null
-  private var maxAlpha: Float = 0.5f
 
   /**
    * Whether this view should block gestures (when dimmed).
@@ -47,10 +46,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
 
   fun setDimColor(color: Int) {
     setBackgroundColor(color)
-  }
-
-  fun setMaxAlpha(value: Float) {
-    maxAlpha = value.coerceIn(0f, 1f)
   }
 
   init {
@@ -114,28 +109,22 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Alpha Calculation
+  // MARK: - Progress Calculation
   // =============================================================================
 
-  fun calculateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
+  /**
+   * How far the sheet is into its dimmed range, from 0 (undimmed) to 1 (fully dimmed).
+   */
+  fun calculateProgress(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
     val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
 
     return when {
-      sheetTop <= dimmedDetentTop -> maxAlpha
-
+      sheetTop <= dimmedDetentTop -> 1f
       sheetTop >= belowDimmedTop -> 0f
-
-      else -> {
-        val progress = 1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)
-        (progress * maxAlpha).coerceIn(0f, maxAlpha)
-      }
+      else -> (1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)).coerceIn(0f, 1f)
     }
-  }
-
-  fun interpolateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int) {
-    alpha = calculateAlpha(sheetTop, dimmedDetentIndex, getSheetTopForDetentIndex)
   }
 
   // =============================================================================
