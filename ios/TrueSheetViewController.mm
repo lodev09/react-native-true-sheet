@@ -11,6 +11,7 @@
 #import "TrueSheetContentView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
+#import "core/TrueSheetDimView.h"
 #import "core/TrueSheetGrabberView.h"
 #import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
@@ -108,8 +109,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
-
-  UIView *_customDimView;
+  TrueSheetDimView *_dimView;
 }
 
 #pragma mark - Initialization
@@ -449,55 +449,29 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return self.dimmed && (self.dimColor != nil || self.dimOpacity != 0.5);
 }
 
-- (void)setupCustomDimView {
-  if (![self useCustomDimming]) {
-    return;
-  }
-
+- (void)setupDimView {
   UIView *container = self.presentationController.containerView;
-  if (!container) {
+  if (!container || (!_dimView && ![self useCustomDimming])) {
     return;
   }
 
-  if (!_customDimView) {
-    _customDimView = [[UIView alloc] initWithFrame:container.bounds];
-    _customDimView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    _customDimView.backgroundColor = self.dimColor ?: [UIColor blackColor];
-    _customDimView.alpha = 0;
+  if (!_dimView) {
+    _dimView = [[TrueSheetDimView alloc] init];
 
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                          action:@selector(handleCustomDimViewTap)];
-    [_customDimView addGestureRecognizer:tap];
+    __weak __typeof(self) weakSelf = self;
+    _dimView.onTap = ^{
+      [weakSelf handleDimViewTap];
+    };
   }
 
-  [container insertSubview:_customDimView atIndex:0];
+  _dimView.backgroundColor = self.dimColor ?: [UIColor blackColor];
+  [_dimView addToView:container];
 }
 
-- (void)handleCustomDimViewTap {
+- (void)handleDimViewTap {
   if (self.dismissible) {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
   }
-}
-
-- (void)fadeCustomDimViewToAlpha:(CGFloat)alpha {
-  if (!_customDimView) {
-    return;
-  }
-
-  id<UIViewControllerTransitionCoordinator> coordinator = self.transitionCoordinator;
-  if (coordinator) {
-    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-      self->_customDimView.alpha = alpha;
-    }
-                                 completion:nil];
-  } else {
-    _customDimView.alpha = alpha;
-  }
-}
-
-- (void)removeCustomDimView {
-  [_customDimView removeFromSuperview];
-  _customDimView = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -513,8 +487,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       [_parentSheetController setAccessibilityContentElement:self.accessibilityContentView ?: self.view];
     }
 
-    [self setupCustomDimView];
-    [self fadeCustomDimViewToAlpha:self.dimOpacity];
+    [self setupDimView];
+    [_dimView fadeToAlpha:self.dimOpacity coordinator:self.transitionCoordinator];
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = self.currentDetentIndex;
@@ -769,7 +743,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _isWillDismissEmitted = NO;
     _hasObservedBottomInset = NO;
 
-    [self removeCustomDimView];
+    [_dimView removeFromSuperview];
+    _dimView = nil;
 
     [_anchorView removeFromSuperview];
     _anchorView = nil;
@@ -790,7 +765,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self setSheetAccessibilityElementsHidden:YES];
 
   if (self.isBeingDismissed) {
-    [self fadeCustomDimViewToAlpha:0];
+    [_dimView fadeToAlpha:0 coordinator:self.transitionCoordinator];
   }
 
   // Dispatch to allow pan gesture to set _isDragging before checking;
@@ -1813,6 +1788,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   [self setupBackground];
   [self setupGrabber];
+
+  // Dim props changed while presented. A hidden custom dim stays until dismiss;
+  // at alpha 0 it no longer takes touches.
+  if (_isPresented) {
+    [self setupDimView];
+    _dimView.alpha = [self useCustomDimming] ? self.dimOpacity : 0;
+  }
 }
 
 #pragma mark - UISheetPresentationControllerDelegate
