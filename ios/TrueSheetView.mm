@@ -340,11 +340,35 @@ using namespace facebook::react;
   [super prepareForRecycle];
 
   [TrueSheetModule unregisterViewWithTag:@(self.tag)];
+  [self dismissControllerForRecycle];
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
+}
+
+// Fabric recycles this view on unmount instead of deallocating it, so the dismissal in
+// dealloc never runs and a sheet unmounted while presented stays on screen.
+- (void)dismissControllerForRecycle {
+  TrueSheetViewController *controller = _controller;
+  if (!controller.presentingViewController || controller.isBeingDismissed)
+    return;
+
+  id<UIViewControllerTransitionCoordinator> coordinator = controller.transitionCoordinator;
+  if (controller.isBeingPresented && coordinator) {
+    // UIKit ignores a dismiss issued while the presentation transition is still running.
+    [coordinator animateAlongsideTransition:nil
+                                 completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                   if (controller.presentingViewController && !controller.isBeingDismissed) {
+                                     [controller.presentingViewController dismissViewControllerAnimated:YES
+                                                                                             completion:nil];
+                                   }
+                                 }];
+    return;
+  }
+
+  [controller.presentingViewController dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - Child Component Mounting
