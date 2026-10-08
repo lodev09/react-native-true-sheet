@@ -241,6 +241,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         detents={['auto', 1]}
         dimColor="#ff0000"
         dimOpacity={0.4}
+        dimmedDetentIndex={1}
         backgroundColor={DARK}
         style={styles.childContent}
         footer={<Footer />}
