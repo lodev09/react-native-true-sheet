@@ -98,6 +98,25 @@ const stopResponderNegotiation = (event: GestureResponderEvent) => {
   return false;
 };
 
+interface ScrollableAccessors {
+  getScrollableNode?: () => unknown;
+  getNativeScrollRef?: () => unknown;
+  getScrollResponder?: () => unknown;
+}
+
+// Scrollable refs that are not host components (e.g. LegendList's imperative
+// handle) cannot go through findNodeHandle directly — they expose the
+// scrollable through the same accessors ScrollView/FlatList do.
+const resolveScrollableNode = (scrollable: object): unknown => {
+  const accessors = scrollable as ScrollableAccessors;
+  return (
+    accessors.getScrollableNode?.() ??
+    accessors.getNativeScrollRef?.() ??
+    accessors.getScrollResponder?.() ??
+    scrollable
+  );
+};
+
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
   initialPresentReady: boolean;
@@ -208,7 +227,7 @@ export class TrueSheet
     if (scrollableRef?.current) {
       try {
         scrollableHandle = findNodeHandle(
-          scrollableRef.current as Parameters<typeof findNodeHandle>[0]
+          resolveScrollableNode(scrollableRef.current) as Parameters<typeof findNodeHandle>[0]
         );
       } catch (error) {
         // A stale ref (e.g. a wrapper that never clears it on unmount) makes

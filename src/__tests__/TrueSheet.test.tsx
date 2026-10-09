@@ -14,6 +14,7 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
+  TrueSheetProps,
 } from '../TrueSheet.types';
 
 describe('TrueSheet', () => {
@@ -589,6 +590,44 @@ describe('TrueSheet', () => {
 
       // Content should now be rendered after state update
       expect(queryByText('Lifecycle Content')).not.toBeNull();
+    });
+  });
+
+  describe('scrollableRef', () => {
+    it('resolves a ref that is not a ReactComponent through its scrollable accessors', () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      // LegendList-style ref: an imperative handle, not a host component —
+      // findNodeHandle throws on it directly, so resolve via its accessors.
+      const scrollableRef = {
+        current: {
+          getScrollableNode: () => ({ _nativeTag: 7 }),
+          getNativeScrollRef: () => null,
+          getScrollResponder: () => null,
+        },
+      };
+      const { getByTestId, rerender } = render(
+        <TrueSheet
+          testID="scrollable-host"
+          scrollableRef={scrollableRef as unknown as TrueSheetProps['scrollableRef']}
+        />
+      );
+
+      expect(getByTestId('scrollable-host').props.scrollableHandle).toBe(7);
+      expect(warn).not.toHaveBeenCalled();
+
+      const nativeScrollRef = {
+        current: { getNativeScrollRef: () => ({ _nativeTag: 9 }) },
+      };
+      rerender(
+        <TrueSheet
+          testID="scrollable-host"
+          scrollableRef={nativeScrollRef as unknown as TrueSheetProps['scrollableRef']}
+        />
+      );
+
+      expect(getByTestId('scrollable-host').props.scrollableHandle).toBe(9);
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 
