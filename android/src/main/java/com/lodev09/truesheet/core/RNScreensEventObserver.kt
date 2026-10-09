@@ -22,6 +22,11 @@ class RNScreensEventObserver : EventDispatcherListener {
   private var eventDispatcher: EventDispatcher? = null
   var presenterScreenTag: Int = 0
 
+  // Screens enclosing the presenter. react-native-screens only dispatches lifecycle
+  // events for stack screens, so a presenter inside a plain screen container (e.g. a
+  // bottom tab) never receives them and an enclosing stack screen has to stand in.
+  var ancestorScreenTags: Set<Int> = emptySet()
+
   fun startObserving(dispatcher: EventDispatcher?) {
     if (eventDispatcher != null || dispatcher == null) return
 
@@ -36,20 +41,27 @@ class RNScreensEventObserver : EventDispatcherListener {
 
   fun capturePresenterScreenFromView(view: View?) {
     presenterScreenTag = 0
+    val ancestors = mutableSetOf<Int>()
 
     var current: View? = view
     while (current != null) {
       if (isScreenView(current)) {
-        presenterScreenTag = current.id
-        break
+        if (presenterScreenTag == 0) {
+          presenterScreenTag = current.id
+        } else {
+          ancestors.add(current.id)
+        }
       }
       current = (current.parent as? View)
     }
+
+    ancestorScreenTags = ancestors
   }
 
   override fun onEventDispatch(event: Event<*>) {
     // Only process events for the presenter screen
-    if (presenterScreenTag == 0 || event.viewTag != presenterScreenTag) return
+    if (presenterScreenTag == 0) return
+    if (event.viewTag != presenterScreenTag && event.viewTag !in ancestorScreenTags) return
 
     when (event.eventName) {
       "topWillDisappear" -> delegate?.presenterScreenWillDisappear()
