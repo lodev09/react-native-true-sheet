@@ -1,6 +1,6 @@
 /* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
-import { createRef } from 'react';
-import { processColor, StyleSheet, Text, View } from 'react-native';
+import { createRef, type ReactNode } from 'react';
+import { FlatList, processColor, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
@@ -594,40 +594,86 @@ describe('TrueSheet', () => {
   });
 
   describe('scrollableRef', () => {
-    it('resolves a ref that is not a ReactComponent through its scrollable accessors', () => {
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      // LegendList-style ref: an imperative handle, not a host component —
-      // findNodeHandle throws on it directly, so resolve via its accessors.
+    let warn: jest.SpyInstance;
+    beforeEach(() => {
+      warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    // The jest preset mocks ScrollView without native tags, so use the real one
+    const RealScrollView = jest.requireActual(
+      'react-native/Libraries/Components/ScrollView/ScrollView'
+    ).default;
+
+    const handleOf = (scrollableRef: TrueSheetProps['scrollableRef'], children?: ReactNode) =>
+      render(
+        <TrueSheet testID="scrollable-host" initialDetentIndex={0} scrollableRef={scrollableRef}>
+          {children}
+        </TrueSheet>
+      ).getByTestId('scrollable-host').props.scrollableHandle;
+
+    it('resolves an imperative handle through getScrollableNode', () => {
+      // LegendList-style ref: not a host component, so findNodeHandle throws on it directly
+      const scrollableRef = {
+        current: { getScrollableNode: () => 7, getNativeScrollRef: () => null },
+      };
+      expect(handleOf(scrollableRef)).toBe(7);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('falls through to getNativeScrollRef when getScrollableNode throws', () => {
       const scrollableRef = {
         current: {
-          getScrollableNode: () => ({ _nativeTag: 7 }),
-          getNativeScrollRef: () => null,
-          getScrollResponder: () => null,
+          getScrollableNode: (): number => {
+            throw new Error('inner scroller lacks getScrollableNode');
+          },
+          getNativeScrollRef: () => ({ getScrollableNode: () => 9 }),
         },
       };
-      const { getByTestId, rerender } = render(
-        <TrueSheet
-          testID="scrollable-host"
-          scrollableRef={scrollableRef as unknown as TrueSheetProps['scrollableRef']}
+      expect(handleOf(scrollableRef)).toBe(9);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('resolves real ScrollView and FlatList refs to their scroll view tags', () => {
+      const scrollViewRef = createRef<ScrollView>();
+      const flatListRef = createRef<FlatList>();
+      const scrollViewHandle = handleOf(scrollViewRef, <RealScrollView ref={scrollViewRef} />);
+      const flatListHandle = handleOf(
+        flatListRef,
+        <FlatList
+          ref={flatListRef}
+          data={[]}
+          renderItem={() => null}
+          renderScrollComponent={(props) => <RealScrollView {...props} />}
         />
       );
 
-      expect(getByTestId('scrollable-host').props.scrollableHandle).toBe(7);
+      expect(scrollViewHandle).toBe(scrollViewRef.current!.getScrollableNode());
+      expect(flatListHandle).toBe(flatListRef.current!.getScrollableNode());
+      expect(typeof scrollViewHandle).toBe('number');
+      expect(typeof flatListHandle).toBe('number');
       expect(warn).not.toHaveBeenCalled();
+    });
 
-      const nativeScrollRef = {
-        current: { getNativeScrollRef: () => ({ _nativeTag: 9 }) },
-      };
-      rerender(
-        <TrueSheet
-          testID="scrollable-host"
-          scrollableRef={nativeScrollRef as unknown as TrueSheetProps['scrollableRef']}
+    it('warns and passes no handle for a stale ref', () => {
+      // A wrapper that never clears its ref on unmount
+      const scrollableRef: { current: FlatList<number> | null } = { current: null };
+      render(
+        <FlatList
+          ref={(instance) => {
+            if (instance) scrollableRef.current = instance;
+          }}
+          data={[] as number[]}
+          renderItem={() => null}
         />
+      ).unmount();
+      expect(handleOf(scrollableRef)).toBe(-1);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('could not be resolved'),
+        expect.any(Error)
       );
-
-      expect(getByTestId('scrollable-host').props.scrollableHandle).toBe(9);
-      expect(warn).not.toHaveBeenCalled();
-      warn.mockRestore();
     });
   });
 

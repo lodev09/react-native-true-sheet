@@ -67,17 +67,14 @@ import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
 import { observeSheetLayout } from './web/layout';
+import { resolveScrollable } from './scrollable';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
 
-// Resolves the user's `scrollableRef` to its scrollable DOM element — RN-web
-// ScrollView refs expose the scroll node directly (with helpers attached);
-// list refs (e.g. FlatList) expose it via getScrollableNode(). The node's
-// first child is the content container.
+// Resolves the user's `scrollableRef` to its scrollable DOM element. The
+// node's first child is the content container.
 const getScrollableElement = (scrollable: unknown): HTMLElement | null => {
-  if (!scrollable) return null;
-  if (scrollable instanceof HTMLElement) return scrollable;
-  const node = (scrollable as { getScrollableNode?: () => unknown }).getScrollableNode?.();
+  const node = resolveScrollable(scrollable);
   return node instanceof HTMLElement ? node : null;
 };
 
