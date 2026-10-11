@@ -164,7 +164,12 @@ class TrueSheetViewManager :
       } else {
         null
       },
-      color = if (options.hasKey("color") && !options.isNull("color")) options.getInt("color") else null,
+      color = if (options.hasKey("color") && !options.isNull("color")) {
+        val color = if (options.getType("color") == ReadableType.Map) options.getMap("color") else options.getDouble("color")
+        ColorPropConverter.getColor(color, view.context)
+      } else {
+        null
+      },
       adaptive = if (options.hasKey("adaptive")) options.getBoolean("adaptive") else true
     )
     view.setGrabberOptions(grabberOptions)
