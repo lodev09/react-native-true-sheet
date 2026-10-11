@@ -1,13 +1,5 @@
-import { useRef, useState } from 'react';
-import {
-  Platform,
-  PlatformColor,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type ColorValue,
-} from 'react-native';
+import { useRef } from 'react';
+import { Platform, PlatformColor, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
@@ -23,8 +15,6 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
   const promptSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const backgroundSheet = useRef<TrueSheet>(null);
-  const grabberSheet = useRef<TrueSheet>(null);
-  const [grabberColor, setGrabberColor] = useState<ColorValue>();
 
   return (
     <TrueSheetProvider>
@@ -45,37 +35,20 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
         <Button text="Prompt Sheet" onPress={() => promptSheet.current?.present()} />
         <Button text="FlatList Sheet" onPress={() => flatListSheet.current?.present()} />
         <Button text="Custom Background" onPress={() => backgroundSheet.current?.present()} />
-        <Button text="Grabber Colors" onPress={() => grabberSheet.current?.present()} />
       </ScrollView>
 
       <BasicSheet dismissible={false} initialDetentIndex={0} dimmed={false} ref={basicSheet} />
       <PromptSheet ref={promptSheet} />
       <FlatListSheet ref={flatListSheet} />
       <TrueSheet
-        ref={grabberSheet}
-        detents={['auto']}
-        grabberOptions={{ color: grabberColor, adaptive: false }}
-        style={styles.sheetContent}
-      >
-        <Text>Change the grabber color while the sheet is open.</Text>
-        <Button
-          text="Platform color"
-          onPress={() =>
-            setGrabberColor(
-              Platform.select<ColorValue>({
-                android: PlatformColor('?android:attr/textColorSecondary'),
-                ios: PlatformColor('secondaryLabel'),
-                default: '#FF0000',
-              })
-            )
-          }
-        />
-        <Button text="Static red" onPress={() => setGrabberColor('#FF0000')} />
-        <Button text="Default color" onPress={() => setGrabberColor(undefined)} />
-        <Button text="Close" onPress={() => grabberSheet.current?.dismiss()} />
-      </TrueSheet>
-      <TrueSheet
         ref={backgroundSheet}
+        grabberOptions={{
+          color: Platform.select({
+            android: PlatformColor('?android:attr/textColorSecondary'),
+            ios: PlatformColor('secondaryLabel'),
+          }),
+          adaptive: false,
+        }}
         detents={['auto', 1]}
         backgroundStyle={{ backgroundColor: DARK }}
         background={
