@@ -23,6 +23,9 @@ export default function ReproLayout() {
       />
       <Stack.Screen name="page-sheet" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="sheet" options={{ headerShown: false }} />
+      <Stack.Screen name="tabs" options={{ headerShown: false }} />
+      <Stack.Screen name="nested" options={{ headerShown: false }} />
+      <Stack.Screen name="pushed" options={{ title: 'Pushed' }} />
     </Stack>
   );
 }
