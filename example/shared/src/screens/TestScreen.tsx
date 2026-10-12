@@ -43,10 +43,12 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
       <TrueSheet
         ref={backgroundSheet}
         grabberOptions={{
-          color: Platform.select({
-            android: PlatformColor('?android:attr/textColorSecondary'),
-            ios: PlatformColor('secondaryLabel'),
-          }),
+          color:
+            Platform.OS === 'web'
+              ? undefined
+              : PlatformColor(
+                  Platform.OS === 'ios' ? 'secondaryLabel' : '?android:attr/colorAccent'
+                ),
           adaptive: false,
         }}
         detents={['auto', 1]}
