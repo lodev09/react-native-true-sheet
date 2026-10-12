@@ -60,14 +60,6 @@
 }
 
 - (void)keyboardWillChangeFrame:(NSNotification *)notification {
-  if (_viewController && !_viewController.isTopmostPresentedController) {
-    return;
-  }
-
-  if (![self isFirstResponderWithinSheet]) {
-    return;
-  }
-
   NSDictionary *userInfo = notification.userInfo;
   CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
   NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
@@ -80,6 +72,18 @@
 
   CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
   CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+
+  // A hide reaches every sheet: a sheet covered by a stacked sheet when the
+  // keyboard closes would otherwise keep its keyboard layout (e.g. a raised footer).
+  if (keyboardHeight > 0) {
+    if (_viewController && !_viewController.isTopmostPresentedController) {
+      return;
+    }
+
+    if (![self isFirstResponderWithinSheet]) {
+      return;
+    }
+  }
 
   _currentHeight = keyboardHeight;
 
