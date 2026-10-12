@@ -176,7 +176,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private var pendingDetentIndex: Int = -1
 
   private val isSettlingInPlace: Boolean
-    get() = pendingDetentIndex >= 0 && pendingDetentIndex == currentDetentIndex
+    get() = !isBeingDismissed && pendingDetentIndex >= 0 && pendingDetentIndex == currentDetentIndex
 
   private var interactionState: InteractionState = InteractionState.Idle
 
