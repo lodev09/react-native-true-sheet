@@ -2,7 +2,6 @@ package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -13,6 +12,7 @@ import android.widget.FrameLayout
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import com.facebook.react.uimanager.PixelUtil.dpToPx
+import com.lodev09.truesheet.utils.isDarkMode
 
 /**
  * Options for customizing the grabber appearance.
@@ -165,9 +165,7 @@ class TrueSheetGrabberView(
   }
 
   private fun getAdaptiveColor(baseColor: Int? = null): Int {
-    val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-    val isDarkMode = nightMode == Configuration.UI_MODE_NIGHT_YES
-    val modeColor = if (isDarkMode) Color.WHITE else Color.BLACK
+    val modeColor = if (context.isDarkMode) Color.WHITE else Color.BLACK
 
     return if (baseColor != null) {
       // Blend user color with mode color for adaptive effect

@@ -1,7 +1,6 @@
 package com.lodev09.truesheet.core
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
@@ -20,6 +19,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.TrueSheetPlacement
 import com.lodev09.truesheet.utils.ScreenUtils
+import com.lodev09.truesheet.utils.isDarkMode
 
 interface TrueSheetBottomSheetViewDelegate {
   val isTopmostSheet: Boolean
@@ -186,13 +186,8 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     }
   }
 
-  fun getDefaultBackgroundColor(): Int {
-    val isNight = (
-      reactContext.resources.configuration.uiMode and
-        Configuration.UI_MODE_NIGHT_MASK
-      ) == Configuration.UI_MODE_NIGHT_YES
-    return if (isNight) COLOR_SURFACE_CONTAINER_LOW_DARK else COLOR_SURFACE_CONTAINER_LOW_LIGHT
-  }
+  fun getDefaultBackgroundColor(): Int =
+    if (reactContext.isDarkMode) COLOR_SURFACE_CONTAINER_LOW_DARK else COLOR_SURFACE_CONTAINER_LOW_LIGHT
 
   fun setupElevation() {
     val value = delegate?.sheetElevation ?: DEFAULT_ELEVATION
