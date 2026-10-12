@@ -175,6 +175,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // animation doesn't snap the sheet back to the stale currentDetentIndex.
   private var pendingDetentIndex: Int = -1
 
+  private val isSettlingInPlace: Boolean
+    get() = !isBeingDismissed && pendingDetentIndex >= 0 && pendingDetentIndex == currentDetentIndex
+
   private var interactionState: InteractionState = InteractionState.Idle
 
   // A content/header/footer size change arrived mid-drag — reconfiguring then
@@ -1210,8 +1213,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   fun updateDimAmount(sheetTop: Int? = null, animated: Boolean = false) {
     if (dimmed) {
-      // While keyboard is active or transitioning, use the target detent position for dim
-      val top = if (isKeyboardActive) {
+      // While keyboard is active or transitioning, or settling in place after a content
+      // resize (the detent top moves before the sheet does), use the target detent position
+      val top = if (isKeyboardActive || isSettlingInPlace) {
         detentCalculator.getSheetTopForDetentIndex(currentDetentIndex)
       } else {
         val keyboardOffset = if (isBeingDismissed) 0 else currentKeyboardInset
