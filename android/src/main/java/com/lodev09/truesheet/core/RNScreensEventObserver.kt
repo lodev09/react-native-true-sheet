@@ -27,6 +27,10 @@ class RNScreensEventObserver : EventDispatcherListener {
   // bottom tab) never receives them and an enclosing stack screen has to stand in.
   var ancestorScreenTags: Set<Int> = emptySet()
 
+  // Only the screen that hid the sheet brings it back. An enclosing screen reappearing
+  // must not reveal a sheet whose own screen is still covered inside it.
+  private var disappearedScreenTag: Int = 0
+
   fun startObserving(dispatcher: EventDispatcher?) {
     if (eventDispatcher != null || dispatcher == null) return
 
@@ -59,13 +63,22 @@ class RNScreensEventObserver : EventDispatcherListener {
   }
 
   override fun onEventDispatch(event: Event<*>) {
-    // Only process events for the presenter screen
+    // Only process events for the presenter screen and the screens enclosing it
     if (presenterScreenTag == 0) return
     if (event.viewTag != presenterScreenTag && event.viewTag !in ancestorScreenTags) return
 
     when (event.eventName) {
-      "topWillDisappear" -> delegate?.presenterScreenWillDisappear()
-      "topWillAppear" -> delegate?.presenterScreenWillAppear()
+      "topWillDisappear" -> {
+        if (disappearedScreenTag != 0) return
+        disappearedScreenTag = event.viewTag
+        delegate?.presenterScreenWillDisappear()
+      }
+
+      "topWillAppear" -> {
+        if (event.viewTag != disappearedScreenTag) return
+        disappearedScreenTag = 0
+        delegate?.presenterScreenWillAppear()
+      }
     }
   }
 
