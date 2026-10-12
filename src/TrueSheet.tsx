@@ -39,6 +39,7 @@ import TrueSheetFooterViewNativeComponent from './fabric/TrueSheetFooterViewNati
 import TrueSheetModule from './specs/NativeTrueSheetModule';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { normalizeDetentBackground } from './detentBackgrounds';
+import { resolveScrollable } from './scrollable';
 
 import {
   Platform,
@@ -208,13 +209,17 @@ export class TrueSheet
     if (scrollableRef?.current) {
       try {
         scrollableHandle = findNodeHandle(
-          scrollableRef.current as Parameters<typeof findNodeHandle>[0]
+          resolveScrollable(scrollableRef.current) as Parameters<typeof findNodeHandle>[0]
         );
       } catch (error) {
-        // A stale ref (e.g. a wrapper that never clears it on unmount) makes
-        // findNodeHandle throw. Treat it as no scrollable instead of crashing.
+        // findNodeHandle throws on a stale ref (e.g. a wrapper that never clears
+        // it on unmount) or a handle with no usable scroll accessor. Treat it as
+        // no scrollable instead of crashing.
         if (__DEV__) {
-          console.warn('TrueSheet: scrollableRef points to an unmounted component.', error);
+          console.warn(
+            'TrueSheet: scrollableRef could not be resolved to a native view. It may be stale or expose no scroll node.',
+            error
+          );
         }
       }
     }
