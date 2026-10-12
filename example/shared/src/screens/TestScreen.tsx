@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, PlatformColor, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet, TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, GAP, LIGHT_GRAY, SPACING } from '../utils';
@@ -42,6 +42,15 @@ export const TestScreen = ({ onGoBack }: TestScreenProps) => {
       <FlatListSheet ref={flatListSheet} />
       <TrueSheet
         ref={backgroundSheet}
+        grabberOptions={{
+          color:
+            Platform.OS === 'web'
+              ? undefined
+              : PlatformColor(
+                  Platform.OS === 'ios' ? 'secondaryLabel' : '?android:attr/colorAccent'
+                ),
+          adaptive: false,
+        }}
         detents={['auto', 1]}
         backgroundStyle={{ backgroundColor: DARK }}
         background={
