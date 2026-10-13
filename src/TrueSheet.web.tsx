@@ -66,6 +66,7 @@ import {
 import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
+import { revealFocusedElement, useKeyboardViewport } from './web/keyboard';
 import { observeSheetLayout } from './web/layout';
 import { resolveScrollable } from './scrollable';
 import { Drawer } from './web/vaul';
@@ -169,6 +170,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
+  const keyboardViewport = useKeyboardViewport(isOpen);
   const isPresentingRef = useRef(shouldAutoPresent);
   // Native's lifecycle state — updated synchronously so calls in the same tick see each other
   const phaseRef = useRef<SheetPhase>(shouldAutoPresent ? 'presenting' : 'dismissed');
@@ -513,6 +515,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     scrollableRef,
   ]);
 
+  // Re-reveal the focused field once the sheet settles above the keyboard
+  useEffect(() => {
+    const drawer = drawerContentRef.current;
+    if (!keyboardViewport || !drawer) return undefined;
+    let canceled = false;
+    // Flush styles so this commit's snap transition shows up in getAnimations()
+    // eslint-disable-next-line no-void
+    void drawer.offsetHeight;
+    Promise.allSettled(drawer.getAnimations().map((a) => a.finished)).then(() => {
+      if (!canceled) revealFocusedElement(drawer);
+    });
+    return () => {
+      canceled = true;
+    };
+  }, [keyboardViewport]);
+
   // Below the last detent a vertical touch pan moves the sheet, not the
   // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
   // the scroll container and everything inside it (see vaul/style.css).
@@ -585,6 +603,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     effectiveMaxContentHeight,
     peekHeight,
     peekContentHeight,
+    keyboardViewport,
   });
   geometryInputsRef.current = {
     effectiveDetached,
@@ -592,14 +611,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     effectiveMaxContentHeight,
     peekHeight,
     peekContentHeight,
+    keyboardViewport,
   };
 
   const computeDetentGeometry = useCallback(() => {
     const inputs = geometryInputsRef.current;
-    const windowH = window.innerHeight;
-    const effectiveH = inputs.effectiveDetached
-      ? windowH - inputs.effectiveDetachedOffset
-      : windowH;
+    const windowH = inputs.keyboardViewport?.height ?? window.innerHeight;
+    const bottomGap = inputs.effectiveDetached ? inputs.effectiveDetachedOffset : 0;
+    const effectiveH = windowH - bottomGap;
+    // Above a keyboard, fractions keep their full-height size (see vaul).
+    const fractionH = inputs.keyboardViewport
+      ? inputs.keyboardViewport.layoutHeight - bottomGap
+      : effectiveH;
     // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
     const ceiling =
       inputs.effectiveMaxContentHeight !== undefined
@@ -635,7 +658,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     for (const d of validDetentsRef.current) {
       const h =
         typeof d === 'number'
-          ? Math.min(d * effectiveH, ceiling)
+          ? Math.min(d * fractionH, ceiling)
           : d === 'peek'
             ? Math.min(livePeekHeight, ceiling)
             : autoHeight;
@@ -1314,6 +1337,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         initialAnimated={shouldAutoPresent ? initialDetentAnimated : true}
         detachedWrapperStyle={wrapperStyle}
         contentHeight={measuredContentHeight}
+        keyboardViewport={keyboardViewport}
         activeSnapPoint={activeSnapPoint}
         setActiveSnapPoint={handleSetActiveSnapPoint}
         {...snapPointsProps}

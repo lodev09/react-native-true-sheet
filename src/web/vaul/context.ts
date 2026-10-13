@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DrawerDirection } from './types';
+import type { DrawerDirection, KeyboardViewport } from './types';
 
 export interface DragEvent {
   target: EventTarget;
@@ -54,6 +54,7 @@ interface DrawerContextValue {
   detachedOffset: number;
   detachedRadius: number;
   detachedWrapperStyle?: React.CSSProperties;
+  keyboardViewport?: KeyboardViewport;
 }
 
 export const DrawerContext = React.createContext<DrawerContextValue>({
