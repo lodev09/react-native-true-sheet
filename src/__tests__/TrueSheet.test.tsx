@@ -737,6 +737,27 @@ describe('TrueSheet', () => {
     });
   });
 
+  describe('Back Press', () => {
+    it('should handle the rejection when the native view is gone', () => {
+      render(
+        <TrueSheet name="back-press-view-gone-test" initialDetentIndex={0}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      const sheetRef = TrueSheet['instances']['back-press-view-gone-test']!;
+      sheetRef['isPresented'] = true;
+      sheetRef['isSheetVisible'] = true;
+
+      const rejection = Promise.reject(new Error('TrueSheetView with tag 1 not found'));
+      const catchSpy = jest.spyOn(rejection, 'catch');
+      jest.mocked(TrueSheetModule!.handleBackPress).mockReturnValueOnce(rejection);
+
+      expect(sheetRef['handleBackPress']()).toBe(true);
+      expect(catchSpy).toHaveBeenCalled();
+    });
+  });
+
   describe('Focus/Blur Events', () => {
     it('should call onWillFocus when triggered', async () => {
       const onWillFocusMock = jest.fn();

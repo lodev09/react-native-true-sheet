@@ -482,7 +482,9 @@ export class TrueSheet
       return onBackPress?.() ?? onDismissAttempt != null;
     }
 
-    TrueSheetModule?.handleBackPress(nodeHandle);
+    // Rejects when the native view is gone but JS hasn't unmounted yet (e.g. the surface
+    // stopped while this back press was queued). Nothing is left to dismiss.
+    TrueSheetModule?.handleBackPress(nodeHandle).catch(() => {});
     return this.props.onBackPress?.() ?? true;
   }
 
