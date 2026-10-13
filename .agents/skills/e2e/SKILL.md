@@ -7,7 +7,7 @@ description: End-to-end test TrueSheet on the iOS simulator, the Android emulato
 
 Verify TrueSheet's behavior on the iOS simulator, the Android emulator, and mobile web with evidence, not eyeballing. Every claim — "fixed", "regression", "pre-existing" — should come with a frame trace, an event log, a debug log line, a viewport readout, or an A/B result against HEAD.
 
-Follow AGENTS.md: build only when the user asked for builds or e2e. Read `argent-device-interact` before driving a device.
+Read `argent-device-interact` before driving a device.
 
 ## When to use
 
