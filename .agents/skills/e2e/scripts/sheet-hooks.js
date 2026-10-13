@@ -12,6 +12,13 @@
   const renderer = hook.renderers.get(1);
   const ts = { insts: {}, log: [], drag: null };
 
+  // overrideProps copies the fiber's memoizedProps, and `_reactInternals` can be the
+  // stale alternate, which would drop earlier overrides.
+  function fiberOf(s) {
+    const fiber = s._reactInternals;
+    return fiber.memoizedProps === s.props || !fiber.alternate ? fiber : fiber.alternate;
+  }
+
   // One function per instance: Hermes scopes loop `const` to the enclosing function,
   // so closures created directly in the walk loop would all share the last sheet.
   function wrap(s, label) {
@@ -35,7 +42,7 @@
       const drag = ts.drag;
       if (drag && drag.label === label) {
         drag.last = drag.values[drag.count++ % drag.values.length];
-        renderer.overrideProps(s._reactInternals, [drag.prop], drag.last);
+        renderer.overrideProps(fiberOf(s), [drag.prop], drag.last);
       }
       return onDragChange(e);
     };
@@ -74,7 +81,7 @@
   };
 
   ts.set = function (label, prop, value) {
-    renderer.overrideProps(ts.insts[label]._reactInternals, [prop], value);
+    renderer.overrideProps(fiberOf(ts.insts[label]), [prop], value);
     return 'ok';
   };
 

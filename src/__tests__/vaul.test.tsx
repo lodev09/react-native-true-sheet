@@ -1,6 +1,7 @@
 import { act, render, renderHook } from '@testing-library/react-native';
 import { Drawer } from '../web/vaul';
 import { useSnapPoints } from '../web/vaul/use-snap-points';
+import type { KeyboardViewport } from '../web/vaul/types';
 
 jest.mock('../web/vaul/style.css', () => ({}));
 jest.mock('../web/vaul/use-prevent-scroll', () => ({ usePreventScroll: () => {} }));
@@ -147,5 +148,26 @@ describe('initial drawer animation', () => {
     rerender({ ...props, peekHeight: 128 });
     expect(drawer.style.transition).toContain('--snap-point-height 0.5s');
     expect(props.onSnapPointChange).toHaveBeenLastCalledWith(0, true);
+  });
+});
+
+describe('keyboard viewport', () => {
+  it('fits snap points above the keyboard without shrinking fractions', () => {
+    const props = {
+      drawerRef: { current: new MockElement() as unknown as HTMLDivElement },
+      overlayRef: { current: null },
+      snapPoints: [0.4, 1, 'auto'],
+      onSnapPointChange: jest.fn(),
+      isOpen: true,
+      contentHeight: 300,
+      keyboardViewport: undefined as KeyboardViewport | undefined,
+    };
+    const { result, rerender } = renderHook((options: typeof props) => useSnapPoints(options), {
+      initialProps: props,
+    });
+    expect(result.current.snapPointsOffset).toEqual([600, 0, 700]);
+
+    rerender({ ...props, keyboardViewport: { top: 100, height: 600, layoutHeight: 1000 } });
+    expect(result.current.snapPointsOffset).toEqual([200, 0, 300]);
   });
 });

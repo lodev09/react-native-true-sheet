@@ -7,10 +7,12 @@ put prints once and a 1-frame jump shows up as its own line.
 Modes (pixel values are 8-bit gray):
   bright  (first, last) y of pixels in [lo, hi)       e.g. a white pill in the footer
   band    first y of a pixel in [lo, hi)              e.g. the gray grabber
-  edge    first y where --run consecutive px >= lo    e.g. a sheet top over a dark map
+  edge    first y where --run consecutive px are in [lo, hi)
+          e.g. a sheet top over a dark map, or a dark sheet over a bright one
 
-Example (footer "Default" pill on an iPhone 17 Pro Max recording):
-  track_column.py rec.mp4 --x 1155 --y0 2300 --mode bright --lo 200
+Examples:
+  track_column.py rec.mp4 --x 1155 --y0 2300 --mode bright --lo 200        # iOS footer pill
+  track_column.py rec.mp4 --x 20 --mode edge --lo 35 --hi 55 --run 40       # Android dark sheet top
 """
 import argparse
 import json
@@ -45,7 +47,7 @@ def measure(col, args, y1):
     if args.mode == 'band':
         return next((y for y in rng if args.lo <= col[y] < args.hi), None)
     return next(
-        (y for y in rng if y + args.run <= y1 and all(col[y + k] >= args.lo for k in range(args.run))),
+        (y for y in rng if y + args.run <= y1 and all(args.lo <= col[y + k] < args.hi for k in range(args.run))),
         None,
     )
 

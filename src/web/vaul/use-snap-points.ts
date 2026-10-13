@@ -9,7 +9,7 @@ import {
   VELOCITY_THRESHOLD,
 } from './constants';
 import { useControllableState } from './use-controllable-state';
-import type { DrawerDirection } from './types';
+import type { DrawerDirection, KeyboardViewport } from './types';
 
 export function useSnapPoints({
   activeSnapPointProp,
@@ -28,6 +28,7 @@ export function useSnapPoints({
   maxContentHeight,
   peekHeight,
   initialAnimated = true,
+  keyboardViewport,
 }: {
   activeSnapPointProp?: number | string | null;
   setActiveSnapPointProp?(snapPoint: number | null | string): void;
@@ -45,6 +46,7 @@ export function useSnapPoints({
   maxContentHeight?: number;
   peekHeight?: number;
   initialAnimated?: boolean;
+  keyboardViewport?: KeyboardViewport;
 }) {
   const [activeSnapPoint, setActiveSnapPoint] = useControllableState<string | number | null>({
     prop: activeSnapPointProp,
@@ -98,13 +100,18 @@ export function useSnapPoints({
           height: container.getBoundingClientRect().height,
         }
       : typeof window !== 'undefined'
-        ? { width: window.innerWidth, height: window.innerHeight }
+        ? { width: window.innerWidth, height: keyboardViewport?.height ?? window.innerHeight }
         : { width: 0, height: 0 };
 
     // Shrink the effective vertical area by detachedOffset so snap math
     // reserves a fixed gap at the bottom — the floating card stays offset
     // from the viewport edge through drag, snap and resize.
     const effectiveHeight = Math.max(0, containerSize.height - (detachedOffset || 0));
+    // Above a keyboard, fractional snap points keep their full-height size and
+    // only cap at the visible area — mirrors native, where the sheet rises.
+    const fractionHeight = keyboardViewport
+      ? Math.max(0, keyboardViewport.layoutHeight - (detachedOffset || 0))
+      : effectiveHeight;
 
     return (
       snapPoints?.map((snapPoint) => {
@@ -129,11 +136,11 @@ export function useSnapPoints({
           const rawHeight = isPx
             ? snapPointAsNumber
             : windowDimensions
-              ? resolved * effectiveHeight
+              ? resolved * fractionHeight
               : 0;
-          // Cap px/'auto' snap points so a content taller than the viewport
-          // doesn't push the drawer past the top edge (offset would go
-          // negative). Fractional detents are already ≤ effectiveHeight.
+          // Cap snap points so content taller than the viewport (or a
+          // fraction above a keyboard) doesn't push the drawer past the top
+          // edge (offset would go negative).
           // `maxContentHeight`, when set, caps the visible sheet further so
           // full/'auto' detents respect the user's ceiling.
           const ceiling =
@@ -170,7 +177,10 @@ export function useSnapPoints({
     detachedOffset,
     maxContentHeight,
     peekHeight,
+    keyboardViewport,
   ]);
+
+  const getViewportHeight = () => keyboardViewport?.height ?? window.innerHeight;
 
   const activeSnapPointOffset = React.useMemo(
     () => (activeSnapPointIndex !== null ? snapPointsOffset?.[activeSnapPointIndex] : null),
@@ -334,7 +344,7 @@ export function useSnapPoints({
       (direction === 'bottom' || direction === 'right') &&
       currentPosition > snapPointsOffset[0]
     ) {
-      const viewportDim = isVertical(direction) ? window.innerHeight : window.innerWidth;
+      const viewportDim = isVertical(direction) ? getViewportHeight() : window.innerWidth;
       const effectiveDim = Math.max(0, viewportDim - (detachedOffset || 0));
       const visibleAtLowest = Math.max(0, effectiveDim - snapPointsOffset[0]);
       const overshoot = currentPosition - snapPointsOffset[0];
@@ -362,7 +372,7 @@ export function useSnapPoints({
       return Math.abs(curr - currentPosition) < Math.abs(prev - currentPosition) ? curr : prev;
     });
 
-    const dim = isVertical(direction) ? window.innerHeight : window.innerWidth;
+    const dim = isVertical(direction) ? getViewportHeight() : window.innerWidth;
     if (velocity > VELOCITY_THRESHOLD && Math.abs(draggedDistance) < dim * 0.4) {
       const dragDirection = hasDraggedUp ? 1 : -1; // 1 = up, -1 = down
 
@@ -444,7 +454,7 @@ export function useSnapPoints({
       if (activeSnapPointIndex === 0 && !isDraggingDown) {
         const activeOffset = snapPointsOffset[activeSnapPointIndex];
         if (activeOffset === undefined) return 0;
-        const windowDim = isVertical(direction) ? window.innerHeight : window.innerWidth;
+        const windowDim = isVertical(direction) ? getViewportHeight() : window.innerWidth;
         const dismissOffset =
           direction === 'bottom' || direction === 'right' ? windowDim : -windowDim;
         const dismissRange = Math.abs(dismissOffset - activeOffset);

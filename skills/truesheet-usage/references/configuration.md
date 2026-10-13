@@ -190,7 +190,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `scrollableRef` | `RefObject<Component>` | — | 🍎🤖🌐 | Ref to the ScrollView/FlatList inside the content. Wires nested scrolling, keyboard insets, and `'auto'` detent sizing. Replaces the v3 `scrollable` prop |
+| `scrollableRef` | `RefObject<Component>` | — | 🍎🤖🌐 | Ref to the ScrollView/FlatList inside the content (imperative-handle lists like LegendList/FlashList work too). Wires nested scrolling, keyboard insets, and `'auto'` detent sizing. Replaces the v3 `scrollable` prop |
 | `scrollableOptions` | `ScrollableOptions` | — | 🍎🤖🌐 | Fine-tune scrollable behavior |
 
 **`ScrollableOptions`:**
