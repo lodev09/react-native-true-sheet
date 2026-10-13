@@ -73,16 +73,15 @@
   CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
   CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
 
-  // A hide reaches every sheet: a sheet covered by a stacked sheet when the
-  // keyboard closes would otherwise keep its keyboard layout (e.g. a raised footer).
+  // Not gated on being topmost: UIKit restores (and an app may blur) a sheet's
+  // input while a stacked child is still dismissing over it. A hide reaches
+  // every sheet that rose, even one that no longer holds the first responder.
   if (keyboardHeight > 0) {
-    if (_viewController && !_viewController.isTopmostPresentedController) {
-      return;
-    }
-
     if (![self isFirstResponderWithinSheet]) {
       return;
     }
+  } else if (_currentHeight == 0) {
+    return;
   }
 
   _currentHeight = keyboardHeight;
