@@ -16,6 +16,7 @@
 #import "utils/BlurUtil.h"
 #import "utils/GestureUtil.h"
 #import "utils/PlatformUtil.h"
+#import "utils/UIView+FirstResponder.h"
 #import "utils/WindowUtil.h"
 
 #import <React/RCTLog.h>
@@ -103,6 +104,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CADisplayLink *_interactivePositionLink;
 
   __weak TrueSheetViewController *_parentSheetController;
+  __weak UIView *_presenterFirstResponder;
 
   UIView *_anchorView;
 
@@ -451,6 +453,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return self.dimmed && (self.dimColor != nil || self.dimOpacity != nil);
 }
 
+- (BOOL)isDimmedAtEveryDetent {
+  return self.dimmed && [self.dimmedDetentIndex integerValue] == 0;
+}
+
 // Like the system dim, fades in between the detent below `dimmedDetentIndex` and the dimmed detent.
 - (CGFloat)dimAlphaForIndex:(CGFloat)index {
   if (![self useCustomDimming]) {
@@ -514,6 +520,15 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
 
     [self setupDimView];
+
+    // UIKit hides the presenter's keyboard under a sheet dimmed at every detent and
+    // brings it back on dismiss, but custom dimming leaves the native sheet undimmed.
+    if ([self useCustomDimming] && [self isDimmedAtEveryDetent]) {
+      UIView *firstResponder = [presenter.view findFirstResponder];
+      if ([firstResponder resignFirstResponder]) {
+        _presenterFirstResponder = firstResponder;
+      }
+    }
 
     dispatch_async(dispatch_get_main_queue(), ^{
       NSInteger index = self.currentDetentIndex;
@@ -758,6 +773,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     [self.delegate viewControllerWillBlur];
     [self.delegate viewControllerWillDismiss];
     [_parentSheetController.delegate viewControllerWillFocus];
+
+    // Restored once the dismiss commits, like UIKit's own keyboard preservation.
+    UIView *firstResponder = _presenterFirstResponder;
+    _presenterFirstResponder = nil;
+    if (!self.presentingViewController.isBeingDismissed) {
+      [firstResponder becomeFirstResponder];
+    }
   }
 }
 
@@ -1388,7 +1410,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   if ([self useCustomDimming]) {
     sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
-  } else if (self.dimmed && [self.dimmedDetentIndex integerValue] == 0) {
+  } else if ([self isDimmedAtEveryDetent]) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
     sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
