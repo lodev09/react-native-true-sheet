@@ -421,6 +421,18 @@ Set the new `dismissThreshold` prop to `'short'` to dismiss on a short drag or a
 
 Works on Android and Web. iOS always uses the system behavior. See [`dismissThreshold`](reference/configuration#dismissthreshold).
 
+### 12. Dim Color and Opacity
+
+The new `dimColor` and `dimOpacity` props change the color and strength of the dim behind the sheet:
+
+```tsx
+<TrueSheet detents={['auto', 1]} dimColor="#1b0a3c" dimOpacity={0.3}>
+  {/* content */}
+</TrueSheet>
+```
+
+On iOS, they replace the system dim with a custom dim layer. See the [Dimming guide](guides/dimming#dim-color-and-opacity).
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.

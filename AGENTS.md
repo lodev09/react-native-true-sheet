@@ -2,10 +2,9 @@
 
 ## Rules
 
-1. YOU MUST NOT do builds unless you are told to.
-2. YOU MUST NOT commit changes yourself until I explicitly tell you to.
-3. YOU MUST NOT create summary documents unless you are told to.
-4. YOU MUST NOT add code comments that are obvious.
+1. YOU MUST NOT commit changes yourself until I explicitly tell you to.
+2. YOU MUST NOT create summary documents unless you are told to.
+3. YOU MUST NOT add code comments that are obvious.
 
 ## Project Overview
 
@@ -91,17 +90,4 @@ When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`.
 
 ### Changelog
 
-Add entry to `Unreleased` section in `CHANGELOG.md` for user-facing changes:
-
-- `🎉 New features` - New functionality
-- `🐛 Bug fixes` - Bug fixes
-- `💥 Breaking changes` - Changes requiring user action to upgrade
-- `💡 Others` - Refactors, internal changes
-
-Format: `- **Platform**: Description. ([#123](https://github.com/lodev09/react-native-true-sheet/pull/123) by [@username](https://github.com/username))`
-
-One entry per PR — summarize the PR's user-facing change in a single entry under its primary section.
-
-Be concise — one or two short sentences stating the change and what it means for the user. No implementation details.
-
-Sort entries by platform: **iOS** first, then **Android**, then **Web**, then cross-platform or unscoped entries last.
+Follow the `changelog` skill (`.agents/skills/changelog`) to add, extend, or skip the PR's entry in the `Unreleased` section of `CHANGELOG.md`.

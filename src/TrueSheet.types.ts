@@ -440,6 +440,22 @@ export interface TrueSheetProps extends ViewProps {
   dimmed?: boolean;
 
   /**
+   * The color of the dim overlay behind the sheet.
+   * This is ignored if `dimmed` is set to `false`.
+   *
+   * @default '#000000'
+   */
+  dimColor?: ColorValue;
+
+  /**
+   * The maximum opacity of the dim overlay behind the sheet (0 to 1).
+   * This is ignored if `dimmed` is set to `false`.
+   *
+   * @default 0.5
+   */
+  dimOpacity?: number;
+
+  /**
    * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.
@@ -677,7 +693,9 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * A ref to the scrollable component (e.g. `ScrollView`, `FlatList`)
-   * rendered within the sheet content.
+   * rendered within the sheet content. Lists that expose an imperative handle
+   * (e.g. `LegendList`, `FlashList`) work too, through their
+   * `getScrollableNode()` or `getNativeScrollRef()`.
    * Required for scrollable handling — nested scrolling, keyboard insets,
    * and `auto` detent sizing are wired to this scrollable.
    *
@@ -690,7 +708,13 @@ export interface TrueSheetProps extends ViewProps {
    * </TrueSheet>
    * ```
    */
-  scrollableRef?: RefObject<Component<unknown> | HostInstance | null>;
+  scrollableRef?: RefObject<
+    | Component<unknown>
+    | HostInstance
+    | { getScrollableNode(): unknown }
+    | { getNativeScrollRef(): unknown }
+    | null
+  >;
 
   /**
    * Options for scrollable behavior.

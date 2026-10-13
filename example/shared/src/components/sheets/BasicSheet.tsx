@@ -106,6 +106,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       ref={sheetRef}
       detached
       presentation="form"
+      dimColor="#1b0a3c"
+      dimOpacity={0.3}
       grabberOptions={{
         width: 60,
       }}
@@ -237,6 +239,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         ref={childSheet}
         name="basic-child"
         detents={['auto', 1]}
+        dimColor="#ff0000"
+        dimOpacity={0.4}
+        dimmedDetentIndex={1}
         backgroundColor={DARK}
         style={styles.childContent}
         footer={<Footer />}

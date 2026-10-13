@@ -1,10 +1,8 @@
 package com.lodev09.truesheet
 
 import android.view.WindowManager
-import com.facebook.react.bridge.ColorPropConverter
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.bridge.ReadableType
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PointerEvents
@@ -20,6 +18,7 @@ import com.facebook.react.viewmanagers.TrueSheetViewManagerInterface
 import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.events.*
+import com.lodev09.truesheet.utils.getColorOrNull
 
 /**
  * ViewManager for TrueSheetView - Fabric architecture
@@ -120,13 +119,7 @@ class TrueSheetViewManager :
   override fun setDetentBackgrounds(view: TrueSheetView, value: ReadableArray?) {
     view.setDetentBackgrounds(
       (0 until (value?.size() ?: 0)).map { index ->
-        val entry = value?.getMap(index)
-        if (entry != null && entry.hasKey("color") && !entry.isNull("color")) {
-          val color = if (entry.getType("color") == ReadableType.Map) entry.getMap("color") else entry.getDouble("color")
-          ColorPropConverter.getColor(color, view.context)
-        } else {
-          null
-        }
+        value?.getMap(index)?.getColorOrNull("color", view.context)
       }
     )
   }
@@ -164,7 +157,7 @@ class TrueSheetViewManager :
       } else {
         null
       },
-      color = if (options.hasKey("color") && !options.isNull("color")) options.getInt("color") else null,
+      color = options.getColorOrNull("color", view.context),
       adaptive = if (options.hasKey("adaptive")) options.getBoolean("adaptive") else true
     )
     view.setGrabberOptions(grabberOptions)
@@ -207,6 +200,16 @@ class TrueSheetViewManager :
   @ReactProp(name = "dimmed", defaultBoolean = true)
   override fun setDimmed(view: TrueSheetView, dimmed: Boolean) {
     view.setDimmed(dimmed)
+  }
+
+  @ReactProp(name = "dimColor", customType = "Color")
+  override fun setDimColor(view: TrueSheetView, color: Int?) {
+    view.setDimColor(color)
+  }
+
+  @ReactProp(name = "dimOpacity", defaultDouble = -1.0)
+  override fun setDimOpacity(view: TrueSheetView, opacity: Double) {
+    view.setDimOpacity(opacity.toFloat())
   }
 
   @ReactProp(name = "dimmedDetentIndex", defaultInt = 0)

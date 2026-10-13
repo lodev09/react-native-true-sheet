@@ -34,10 +34,6 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   View(reactContext),
   ReactPointerEventsView {
 
-  companion object {
-    private const val MAX_ALPHA = 0.5f
-  }
-
   var delegate: TrueSheetDimViewDelegate? = null
 
   private var targetView: ViewGroup? = null
@@ -47,6 +43,10 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
    */
   private val blockGestures: Boolean
     get() = alpha > 0f
+
+  fun setDimColor(color: Int) {
+    setBackgroundColor(color)
+  }
 
   init {
     layoutParams = ViewGroup.LayoutParams(
@@ -109,28 +109,22 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   }
 
   // =============================================================================
-  // MARK: - Alpha Calculation
+  // MARK: - Progress Calculation
   // =============================================================================
 
-  fun calculateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
+  /**
+   * How far the sheet is into its dimmed range, from 0 (undimmed) to 1 (fully dimmed).
+   */
+  fun calculateProgress(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
     val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
     val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
     val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
 
     return when {
-      sheetTop <= dimmedDetentTop -> MAX_ALPHA
-
+      sheetTop <= dimmedDetentTop -> 1f
       sheetTop >= belowDimmedTop -> 0f
-
-      else -> {
-        val progress = 1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)
-        (progress * MAX_ALPHA).coerceIn(0f, MAX_ALPHA)
-      }
+      else -> (1f - (sheetTop - dimmedDetentTop).toFloat() / (belowDimmedTop - dimmedDetentTop)).coerceIn(0f, 1f)
     }
-  }
-
-  fun interpolateAlpha(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int) {
-    alpha = calculateAlpha(sheetTop, dimmedDetentIndex, getSheetTopForDetentIndex)
   }
 
   // =============================================================================

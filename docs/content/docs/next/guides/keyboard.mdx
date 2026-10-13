@@ -4,16 +4,17 @@ description: How TrueSheet handles keyboard visibility.
 keywords: [bottom sheet keyboard, bottom sheet input, bottom sheet text input]
 ---
 
-TrueSheet handles keyboard visibility natively on both iOS and Android. When a `TextInput` inside the sheet is focused, the sheet automatically adjusts to keep the input visible above the keyboard.
+TrueSheet handles keyboard visibility on iOS, Android, and mobile web. When a `TextInput` inside the sheet is focused, the sheet automatically adjusts to keep the input visible above the keyboard.
 
 <img alt="keyboard" src="/img/guides/keyboard.gif" width="300"/>
 
 ## How?
 
-The keyboard handling is built into the native implementation:
+The keyboard handling is built into each platform's implementation:
 
 - **iOS**: Uses `UISheetPresentationController`'s built-in keyboard avoidance
 - **Android**: Tracks keyboard height via `WindowInsetsAnimationCompat` and reconfigures sheet detents in real-time
+- **Web**: Fits the sheet to the visible area above the soft keyboard (the [visual viewport](https://developer.mozilla.org/en-US/docs/Web/API/Visual_Viewport_API)). Detents keep their size and cap at the visible height, and a focused input is scrolled back into view
 
 No additional configuration is required. Simply add your `TextInput` components inside the sheet:
 

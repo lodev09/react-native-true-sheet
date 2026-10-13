@@ -147,6 +147,8 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
 | `dimmed` | `boolean` | `true` | 🍎🤖🌐 | Show background dim overlay |
+| `dimColor` | `ColorValue` | `"black"` | 🍎🤖🌐 | Color of the dim overlay |
+| `dimOpacity` | `number` | `0.5` | 🍎🤖🌐 | Opacity of the dim overlay (0–1). `0` is invisible but still blocks touches — use `dimmed={false}` for background interaction. On iOS a custom `dimColor`/`dimOpacity` replaces the system dim with its own layer; stacked sheets each add one, darkening the background |
 | `dimmedDetentIndex` | `number` | `0` | 🍎🤖🌐 | Detent index at which dimming activates. Set to `1` to keep background interactive at the first detent |
 
 ## Header and Footer
@@ -188,7 +190,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 
 | Prop | Type | Default | Platforms | Description |
 |------|------|---------|-----------|-------------|
-| `scrollableRef` | `RefObject<Component>` | — | 🍎🤖🌐 | Ref to the ScrollView/FlatList inside the content. Wires nested scrolling, keyboard insets, and `'auto'` detent sizing. Replaces the v3 `scrollable` prop |
+| `scrollableRef` | `RefObject<Component>` | — | 🍎🤖🌐 | Ref to the ScrollView/FlatList inside the content (imperative-handle lists like LegendList/FlashList work too). Wires nested scrolling, keyboard insets, and `'auto'` detent sizing. Replaces the v3 `scrollable` prop |
 | `scrollableOptions` | `ScrollableOptions` | — | 🍎🤖🌐 | Fine-tune scrollable behavior |
 
 **`ScrollableOptions`:**

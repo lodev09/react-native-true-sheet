@@ -66,18 +66,16 @@ import {
 import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
+import { revealFocusedElement, useKeyboardViewport } from './web/keyboard';
 import { observeSheetLayout } from './web/layout';
+import { resolveScrollable } from './scrollable';
 import { Drawer } from './web/vaul';
 import { DEFAULT_PEEK_HEIGHT, DRAG_CLASS, TRANSITIONS } from './web/vaul/constants';
 
-// Resolves the user's `scrollableRef` to its scrollable DOM element — RN-web
-// ScrollView refs expose the scroll node directly (with helpers attached);
-// list refs (e.g. FlatList) expose it via getScrollableNode(). The node's
-// first child is the content container.
+// Resolves the user's `scrollableRef` to its scrollable DOM element. The
+// node's first child is the content container.
 const getScrollableElement = (scrollable: unknown): HTMLElement | null => {
-  if (!scrollable) return null;
-  if (scrollable instanceof HTMLElement) return scrollable;
-  const node = (scrollable as { getScrollableNode?: () => unknown }).getScrollableNode?.();
+  const node = resolveScrollable(scrollable);
   return node instanceof HTMLElement ? node : null;
 };
 
@@ -105,6 +103,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     accessibilityOptions,
     detents = [0.5, 1],
     dimmed = true,
+    dimColor,
+    dimOpacity,
     dimmedDetentIndex = 0,
     initialDetentIndex = -1,
     header,
@@ -170,6 +170,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
+  const keyboardViewport = useKeyboardViewport(isOpen);
   const isPresentingRef = useRef(shouldAutoPresent);
   // Native's lifecycle state — updated synchronously so calls in the same tick see each other
   const phaseRef = useRef<SheetPhase>(shouldAutoPresent ? 'presenting' : 'dismissed');
@@ -514,6 +515,22 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     scrollableRef,
   ]);
 
+  // Re-reveal the focused field once the sheet settles above the keyboard
+  useEffect(() => {
+    const drawer = drawerContentRef.current;
+    if (!keyboardViewport || !drawer) return undefined;
+    let canceled = false;
+    // Flush styles so this commit's snap transition shows up in getAnimations()
+    // eslint-disable-next-line no-void
+    void drawer.offsetHeight;
+    Promise.allSettled(drawer.getAnimations().map((a) => a.finished)).then(() => {
+      if (!canceled) revealFocusedElement(drawer);
+    });
+    return () => {
+      canceled = true;
+    };
+  }, [keyboardViewport]);
+
   // Below the last detent a vertical touch pan moves the sheet, not the
   // content — `[data-vaul-scroll-locked]` disables vertical touch panning on
   // the scroll container and everything inside it (see vaul/style.css).
@@ -586,6 +603,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     effectiveMaxContentHeight,
     peekHeight,
     peekContentHeight,
+    keyboardViewport,
   });
   geometryInputsRef.current = {
     effectiveDetached,
@@ -593,14 +611,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     effectiveMaxContentHeight,
     peekHeight,
     peekContentHeight,
+    keyboardViewport,
   };
 
   const computeDetentGeometry = useCallback(() => {
     const inputs = geometryInputsRef.current;
-    const windowH = window.innerHeight;
-    const effectiveH = inputs.effectiveDetached
-      ? windowH - inputs.effectiveDetachedOffset
-      : windowH;
+    const windowH = inputs.keyboardViewport?.height ?? window.innerHeight;
+    const bottomGap = inputs.effectiveDetached ? inputs.effectiveDetachedOffset : 0;
+    const effectiveH = windowH - bottomGap;
+    // Above a keyboard, fractions keep their full-height size (see vaul).
+    const fractionH = inputs.keyboardViewport
+      ? inputs.keyboardViewport.layoutHeight - bottomGap
+      : effectiveH;
     // Matches vaul's height ceiling: min(effectiveH, maxContentHeight).
     const ceiling =
       inputs.effectiveMaxContentHeight !== undefined
@@ -636,7 +658,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     for (const d of validDetentsRef.current) {
       const h =
         typeof d === 'number'
-          ? Math.min(d * effectiveH, ceiling)
+          ? Math.min(d * fractionH, ceiling)
           : d === 'peek'
             ? Math.min(livePeekHeight, ceiling)
             : autoHeight;
@@ -1137,6 +1159,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     transition: isPresentingRef.current ? 'none' : 'background-color 200ms',
   };
 
+  // Vaul fades the overlay through its opacity, so the dim opacity goes into the color
+  const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
+    if (dimColor == null && dimOpacity == null) return overlayStyle;
+    const percentage = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY)) * 100;
+    return {
+      ...overlayStyle,
+      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${percentage}%, transparent)`,
+    };
+  }, [dimColor, dimOpacity]);
+
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({
       position: 'fixed',
@@ -1305,12 +1337,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         initialAnimated={shouldAutoPresent ? initialDetentAnimated : true}
         detachedWrapperStyle={wrapperStyle}
         contentHeight={measuredContentHeight}
+        keyboardViewport={keyboardViewport}
         activeSnapPoint={activeSnapPoint}
         setActiveSnapPoint={handleSetActiveSnapPoint}
         {...snapPointsProps}
       >
         <Drawer.Portal container={portalContainer ?? undefined}>
-          <Drawer.Overlay style={overlayStyle} />
+          <Drawer.Overlay style={resolvedOverlayStyle} />
           <Drawer.Content
             ref={handleDrawerRef}
             style={mergedContentStyle}
@@ -1360,6 +1393,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     </TrueSheetPeekContext.Provider>
   );
 });
+
+const DEFAULT_DIM_OPACITY = 0.5;
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
