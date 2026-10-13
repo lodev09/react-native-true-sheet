@@ -3,6 +3,7 @@ package com.lodev09.truesheet
 import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
@@ -50,12 +51,22 @@ class TrueSheetOverlayView(private val reactContext: ThemedReactContext) :
 
   // ==================== View Hierarchy Management ====================
 
+  // When the whole window goes away (e.g. activity destroyed), the container is mid-way through
+  // detaching its children by then, so removing the root view in onDetachedFromWindow crashes.
+  // This fires before that pass begins.
+  private val windowAttachListener = object : ViewTreeObserver.OnWindowAttachListener {
+    override fun onWindowAttached() {}
+    override fun onWindowDetached() = detachRootView()
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    viewTreeObserver.addOnWindowAttachListener(windowAttachListener)
     attachRootView()
   }
 
   override fun onDetachedFromWindow() {
+    viewTreeObserver.removeOnWindowAttachListener(windowAttachListener)
     detachRootView()
     super.onDetachedFromWindow()
   }
