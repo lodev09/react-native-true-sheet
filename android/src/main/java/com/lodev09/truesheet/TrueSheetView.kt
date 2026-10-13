@@ -399,10 +399,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
       // For stacked sheets on the same screen, inherit parent's presenter screen tag.
       // If parent was hidden by screen navigation, this sheet is on a different screen.
-      val parentScreenTag = viewController.parentSheetView?.screensEventObserver?.presenterScreenTag ?: 0
+      val parentObserver = viewController.parentSheetView?.screensEventObserver
+      val parentScreenTag = parentObserver?.presenterScreenTag ?: 0
       val parentHiddenByScreen = viewController.parentSheetView?.viewController?.wasHiddenByScreen == true
       if (parentScreenTag != 0 && !parentHiddenByScreen) {
         presenterScreenTag = parentScreenTag
+        ancestorScreenTags = parentObserver?.ancestorScreenTags ?: emptySet()
       } else {
         capturePresenterScreenFromView(this@TrueSheetView)
       }

@@ -50,6 +50,7 @@
 - Sheet navigator: a sheet pushed while another is still dismissing is no longer dropped. ([#898](https://github.com/lodev09/react-native-true-sheet/pull/898) by [@lodev09](https://github.com/lodev09))
 - Dismissing a sheet before its present finishes now always dismisses it and settles `present()`, instead of leaving the sheet open or `present()` hanging. On web, `present()`/`dismiss()` now resolve when the animation ends and ignore calls on an already presented or dismissed sheet, like native. ([#900](https://github.com/lodev09/react-native-true-sheet/pull/900) by [@lodev09](https://github.com/lodev09))
 - `scrollableRef` now resolves scrollables that expose their scroll node through an imperative handle, such as LegendList. ([#914](https://github.com/lodev09/react-native-true-sheet/pull/914) by [@cpruijsen](https://github.com/cpruijsen))
+- A sheet hosted in a bottom-tab screen is now hidden when the stack enclosing the tabs pushes a screen, and restored on return, instead of covering the pushed screen. ([#910](https://github.com/lodev09/react-native-true-sheet/pull/910) by [@IjzerenHein](https://github.com/IjzerenHein))
 
 ### 💥 Breaking changes
 

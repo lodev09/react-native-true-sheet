@@ -272,7 +272,24 @@ using namespace facebook::react;
 
   // Dismiss if presenter is no longer top of nav stack (pushed/popped)
   // Skip if still top (e.g. modal dismiss - sheet dismisses naturally)
-  return navController.topViewController != _presenterScreenController;
+  if (navController.topViewController != _presenterScreenController) {
+    return YES;
+  }
+
+  // A presenter inside a screen container (e.g. a bottom tab) stays the top of
+  // that container while an enclosing stack pushes a screen over it.
+  for (UINavigationController *outerNav = navController.navigationController; outerNav;
+       outerNav = outerNav.navigationController) {
+    UIViewController *ancestor = _presenterScreenController;
+    while (ancestor && ancestor != outerNav.topViewController) {
+      ancestor = ancestor.parentViewController;
+    }
+    if (!ancestor) {
+      return YES;
+    }
+  }
+
+  return NO;
 }
 
 @end
