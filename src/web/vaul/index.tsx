@@ -28,7 +28,7 @@ import {
   reset,
   set,
 } from './helpers';
-import type { DrawerDirection } from './types';
+import type { DrawerDirection, KeyboardViewport } from './types';
 import { useComposedRefs } from './use-composed-refs';
 import { useControllableState } from './use-controllable-state';
 import { usePositionFixed } from './use-position-fixed';
@@ -224,6 +224,12 @@ export type DialogProps = {
    * from natural flow.
    */
   contentHeight?: number;
+  /**
+   * Lays the drawer out in the visual viewport above a soft keyboard. The
+   * wrapper and snap offsets fit the visible area, while fractional snap
+   * points keep scaling against the full layout height.
+   */
+  keyboardViewport?: KeyboardViewport;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -269,6 +275,7 @@ export function Root({
   initialAnimated = true,
   onContentHeightChange,
   contentHeight: contentHeightProp,
+  keyboardViewport,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -352,6 +359,7 @@ export function Root({
     maxContentHeight,
     peekHeight,
     initialAnimated,
+    keyboardViewport,
   });
 
   usePreventScroll({
@@ -1049,6 +1057,7 @@ export function Root({
           detachedOffset: detached ? detachedOffset : 0,
           detachedRadius: detached ? detachedRadius : 0,
           detachedWrapperStyle,
+          keyboardViewport,
         }}
       >
         {children}
@@ -1191,6 +1200,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       detachedOffset,
       detachedRadius,
       detachedWrapperStyle: detachedWrapperStyleProp,
+      keyboardViewport,
     } = useDrawerContext();
     // Always measure the inner wrapper's natural height. The drawer itself may
     // be styled to a fixed viewport height, so we measure an inner wrapper
@@ -1393,14 +1403,19 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
     // with a bottom gap and rounded bottom corners; otherwise it sits flush.
     // Transform/transition are managed imperatively (via drag overshoot and the
     // dismiss effect) so React doesn't skip DOM writes for values it thinks it
-    // already owns.
+    // already owns. Above a soft keyboard the wrapper fits the visual viewport,
+    // which the full-height layout viewport extends behind.
     const wrapperStyle = React.useMemo<React.CSSProperties>(
       () => ({
         position: 'fixed',
-        top: 0,
         left: 0,
         right: 0,
-        bottom: detached ? detachedOffset : 0,
+        ...(keyboardViewport
+          ? {
+              top: keyboardViewport.top,
+              height: Math.max(0, keyboardViewport.height - (detached ? detachedOffset : 0)),
+            }
+          : { top: 0, bottom: detached ? detachedOffset : 0 }),
         overflow: 'hidden',
         contain: 'paint',
         pointerEvents: 'none',
@@ -1408,7 +1423,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         borderBottomRightRadius: detached ? detachedRadius : 0,
         ...detachedWrapperStyleProp,
       }),
-      [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp]
+      [detached, detachedOffset, detachedRadius, detachedWrapperStyleProp, keyboardViewport]
     );
 
     // Translate the wrapper off-screen on dismiss so the whole card slides out

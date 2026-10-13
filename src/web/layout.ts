@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-const FOOTER_INSET = '--truesheet-footer-inset';
+export const FOOTER_INSET = '--truesheet-footer-inset';
 
 interface SheetLayoutOptions {
   drawer: HTMLElement;
