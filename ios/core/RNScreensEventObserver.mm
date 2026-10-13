@@ -279,7 +279,7 @@ using namespace facebook::react;
   // A presenter inside a screen container (e.g. a bottom tab) stays the top of
   // that container while an enclosing stack pushes a screen over it.
   for (UINavigationController *outerNav = navController.navigationController; outerNav;
-       outerNav = outerNav.navigationController) {
+    outerNav = outerNav.navigationController) {
     UIViewController *ancestor = _presenterScreenController;
     while (ancestor && ancestor != outerNav.topViewController) {
       ancestor = ancestor.parentViewController;
