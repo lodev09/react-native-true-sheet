@@ -78,6 +78,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSInteger _pendingDetentIndex;
   NSInteger _displayedBackgroundIndex;
   BOOL _usesBackgroundEffects;
+  BOOL _refusedPanDismiss;
 
   // Present/dismiss tracking: a display link scoped to the transition
   // coordinator — started alongside the transition, stopped in its completion.
@@ -1861,13 +1862,43 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 #pragma mark - UISheetPresentationControllerDelegate
 
 - (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
-  return self.dismissible;
+  // A sheet that can't be dragged can't be swiped away either, including by
+  // pulling down its scroll view: refuse a dismissal while any pan is under
+  // way, and keep the one from a tap outside the sheet. Reset on every call:
+  // UIKit skips didAttemptToDismiss for a short pull.
+  _refusedPanDismiss =
+    self.dismissible && !self.draggable && [self hasActivePanInView:presentationController.containerView];
+  return self.dismissible && !_refusedPanDismiss;
+}
+
+- (BOOL)hasActivePanInView:(UIView *)view {
+  if (!view) {
+    return NO;
+  }
+  for (UIGestureRecognizer *recognizer in view.gestureRecognizers ?: @[]) {
+    if ([recognizer isKindOfClass:[UIPanGestureRecognizer class]] &&
+        (recognizer.state == UIGestureRecognizerStateBegan || recognizer.state == UIGestureRecognizerStateChanged)) {
+      return YES;
+    }
+  }
+  for (UIView *subview in view.subviews) {
+    if ([self hasActivePanInView:subview]) {
+      return YES;
+    }
+  }
+  return NO;
 }
 
 // UIKit calls this after shouldDismiss returns NO — the sheet has already
 // bounced back, so JS can confirm and dismiss programmatically (Apple's
 // unsaved-changes pattern).
 - (void)presentationControllerDidAttemptToDismiss:(UIPresentationController *)presentationController {
+  // A swipe refused only because the sheet can't be dragged isn't an attempt
+  // to dismiss a non-dismissible sheet.
+  if (_refusedPanDismiss) {
+    _refusedPanDismiss = NO;
+    return;
+  }
   [self.delegate viewControllerDidAttemptDismiss];
 }
 
