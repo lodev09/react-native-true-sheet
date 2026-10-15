@@ -1862,17 +1862,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 #pragma mark - UISheetPresentationControllerDelegate
 
 - (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
-  if (!self.dismissible) {
-    return NO;
-  }
   // A sheet that can't be dragged can't be swiped away either, including by
   // pulling down its scroll view: refuse a dismissal while any pan is under
-  // way, and keep the one from a tap outside the sheet.
-  if (!self.draggable && [self hasActivePanInView:presentationController.containerView]) {
-    _refusedPanDismiss = YES;
-    return NO;
-  }
-  return YES;
+  // way, and keep the one from a tap outside the sheet. Reset on every call:
+  // UIKit skips didAttemptToDismiss for a short pull.
+  _refusedPanDismiss =
+    self.dismissible && !self.draggable && [self hasActivePanInView:presentationController.containerView];
+  return self.dismissible && !_refusedPanDismiss;
 }
 
 - (BOOL)hasActivePanInView:(UIView *)view {
