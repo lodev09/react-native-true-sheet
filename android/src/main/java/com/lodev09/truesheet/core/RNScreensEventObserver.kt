@@ -84,5 +84,14 @@ class RNScreensEventObserver : EventDispatcherListener {
 
   companion object {
     private fun isScreenView(view: View): Boolean = view.javaClass.name == RN_SCREENS_VIEW_CLASS
+
+    fun findPresenterScreenTag(view: View?): Int {
+      var current: View? = view
+      while (current != null) {
+        if (isScreenView(current)) return current.id
+        current = current.parent as? View
+      }
+      return 0
+    }
   }
 }

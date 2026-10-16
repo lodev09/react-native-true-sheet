@@ -34,13 +34,30 @@ object TrueSheetStackManager {
     }
 
   /**
+   * Returns the topmost sheet hidden by screen navigation that was presented from the same
+   * screen as the given sheet. Sheets presented on the covering screen must not parent to it,
+   * or the hidden sheet would receive focus and blur events while it can't be seen.
+   * Must be called within synchronized block.
+   */
+  private fun findScreenHiddenSheet(sheetView: TrueSheetView): TrueSheetView? {
+    val screenTag = RNScreensEventObserver.findPresenterScreenTag(sheetView)
+    if (screenTag == 0) return null
+
+    return presentedSheetStack.lastOrNull {
+      it.viewController.run { isPresented && wasHiddenByScreen && !isBeingDismissed } &&
+        it.screensEventObserver?.presenterScreenTag == screenTag
+    }
+  }
+
+  /**
    * Registers a sheet in the stack and returns its parent sheet if any.
    * Only returns a parent if it's in the same container (e.g., same Screen).
    */
   @JvmStatic
   fun registerSheet(sheetView: TrueSheetView): TrueSheetView? {
     synchronized(presentedSheetStack) {
-      val parentSheet = findTopmostSheet()?.takeIf { it.rootContainerView == sheetView.rootContainerView }
+      val parentSheet = (findTopmostSheet() ?: findScreenHiddenSheet(sheetView))
+        ?.takeIf { it.rootContainerView == sheetView.rootContainerView }
 
       if (!presentedSheetStack.contains(sheetView)) {
         presentedSheetStack.add(sheetView)
