@@ -610,7 +610,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Propagate any additional translation up the stack
     if (additionalTranslation > 0) {
-      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation)
+      viewController.parentSheetView?.addTranslation(additionalTranslation)
     }
   }
 
@@ -642,7 +642,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     val additionalTranslation = newTranslation - currentTranslation
     if (additionalTranslation > 0) {
-      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation, animated = false)
+      viewController.parentSheetView?.addTranslation(additionalTranslation, animated = false)
     }
   }
 
@@ -653,7 +653,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isExpanded) return
 
     viewController.translateSheet(viewController.currentTranslationY + amount, animated)
-    TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount, animated)
+    viewController.parentSheetView?.addTranslation(amount, animated)
   }
 
   /**
@@ -666,7 +666,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Parent should recalculate its translation based on this sheet's position
     val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
-    TrueSheetStackManager.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
+    viewController.parentSheetView?.updateTranslationForChild(mySheetTop)
   }
 
   // ==================== TrueSheetViewControllerDelegate ====================
