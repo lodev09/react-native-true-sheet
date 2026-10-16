@@ -13,16 +13,6 @@ object TrueSheetStackManager {
   private val presentedSheetStack = mutableListOf<TrueSheetView>()
 
   /**
-   * Gets the parent sheet at the given index, if any.
-   * Only returns a parent if it's in the same container.
-   * Must be called within synchronized block.
-   */
-  private fun getParentSheetAt(index: Int, rootContainer: ViewGroup?): TrueSheetView? {
-    if (index <= 0) return null
-    return presentedSheetStack[index - 1].takeIf { it.rootContainerView == rootContainer }
-  }
-
-  /**
    * Returns the topmost presented and visible sheet, skipping sheets that are dismissing.
    * A dismissing sheet can't parent a new one: its dim would suppress the child's own dim
    * and then disappear with it, leaving the child undimmed.
@@ -79,24 +69,20 @@ object TrueSheetStackManager {
 
   /**
    * Updates parent sheet translation based on the child sheet's position.
-   * Only affects parent sheets in the same container.
    */
   @JvmStatic
   fun updateParentTranslation(sheetView: TrueSheetView) {
-    synchronized(presentedSheetStack) {
-      val index = presentedSheetStack.indexOf(sheetView)
-      val parentSheet = getParentSheetAt(index, sheetView.rootContainerView) ?: return
+    val parentSheet = sheetView.viewController.parentSheetView ?: return
 
-      // Post to ensure layout is complete before reading position
-      sheetView.viewController.post {
-        val childMinSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(0)
-        val childCurrentSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(
-          sheetView.viewController.currentDetentIndex
-        )
-        // Cap to minimum detent position
-        val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
-        parentSheet.updateTranslationForChild(childSheetTop)
-      }
+    // Post to ensure layout is complete before reading position
+    sheetView.viewController.post {
+      val childMinSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(0)
+      val childCurrentSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(
+        sheetView.viewController.currentDetentIndex
+      )
+      // Cap to minimum detent position
+      val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
+      parentSheet.updateTranslationForChild(childSheetTop)
     }
   }
 
@@ -127,18 +113,6 @@ object TrueSheetStackManager {
   fun clear() {
     synchronized(presentedSheetStack) {
       presentedSheetStack.clear()
-    }
-  }
-
-  /**
-   * Gets the parent sheet of the given sheet, if any.
-   * Only returns a parent if it's in the same container.
-   */
-  @JvmStatic
-  fun getParentSheet(sheetView: TrueSheetView): TrueSheetView? {
-    synchronized(presentedSheetStack) {
-      val index = presentedSheetStack.indexOf(sheetView)
-      return getParentSheetAt(index, sheetView.rootContainerView)
     }
   }
 

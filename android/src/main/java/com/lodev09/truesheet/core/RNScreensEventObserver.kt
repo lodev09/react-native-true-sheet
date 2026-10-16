@@ -44,22 +44,9 @@ class RNScreensEventObserver : EventDispatcherListener {
   }
 
   fun capturePresenterScreenFromView(view: View?) {
-    presenterScreenTag = 0
-    val ancestors = mutableSetOf<Int>()
-
-    var current: View? = view
-    while (current != null) {
-      if (isScreenView(current)) {
-        if (presenterScreenTag == 0) {
-          presenterScreenTag = current.id
-        } else {
-          ancestors.add(current.id)
-        }
-      }
-      current = (current.parent as? View)
-    }
-
-    ancestorScreenTags = ancestors
+    val tags = screenTags(view).toList()
+    presenterScreenTag = tags.firstOrNull() ?: 0
+    ancestorScreenTags = tags.drop(1).toSet()
   }
 
   override fun onEventDispatch(event: Event<*>) {
@@ -85,13 +72,9 @@ class RNScreensEventObserver : EventDispatcherListener {
   companion object {
     private fun isScreenView(view: View): Boolean = view.javaClass.name == RN_SCREENS_VIEW_CLASS
 
-    fun findPresenterScreenTag(view: View?): Int {
-      var current: View? = view
-      while (current != null) {
-        if (isScreenView(current)) return current.id
-        current = current.parent as? View
-      }
-      return 0
-    }
+    // Tags of the screens enclosing the view, innermost first
+    private fun screenTags(view: View?): Sequence<Int> = generateSequence(view) { it.parent as? View }.filter(::isScreenView).map { it.id }
+
+    fun findPresenterScreenTag(view: View?): Int = screenTags(view).firstOrNull() ?: 0
   }
 }
