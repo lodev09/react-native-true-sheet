@@ -1075,6 +1075,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   __weak __typeof(self) weakSelf = self;
+
+  // A swipe dismiss commits on release. The tick's off-screen check misses
+  // sheets whose dismissed frame stays above the screen bottom (e.g. a short
+  // floating sheet), so emit when UIKit reports the interaction finished.
+  if (self.isBeingDismissed && coordinator.isInteractive) {
+    [coordinator
+      notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+        if (!context.isCancelled) {
+          [weakSelf emitWillDismissEvents];
+        }
+      }];
+  }
+
   [coordinator
     animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
       __strong __typeof(weakSelf) strongSelf = weakSelf;
