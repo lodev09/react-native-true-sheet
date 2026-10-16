@@ -1011,8 +1011,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     containerView?.setupKeyboardHandler()
 
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
-    delegate?.viewControllerDidPresent(index, position, detent)
     parentSheetView?.viewControllerDidBlur()
+    delegate?.viewControllerDidPresent(index, position, detent)
     delegate?.viewControllerDidFocus()
     sheetView?.updateGrabberAccessibilityValue(index, detents.size)
 
