@@ -67,7 +67,7 @@ class TrueSheetOverlayView(private val reactContext: ThemedReactContext) :
 
   override fun onDetachedFromWindow() {
     viewTreeObserver.removeOnWindowAttachListener(windowAttachListener)
-    detachRootView()
+    rootContainerView?.post { if (!isAttachedToWindow) detachRootView() }
     super.onDetachedFromWindow()
   }
 
