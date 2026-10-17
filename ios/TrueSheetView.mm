@@ -882,11 +882,12 @@ using namespace facebook::react;
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
   _controller.activeDetentIndex = index;
+  // Before emitting, so an input focused in onWillPresent raises a tracked keyboard
+  [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitWillPresent:_eventEmitter index:index position:position detent:detent];
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
-  [_containerView setupKeyboardObserverWithViewController:_controller];
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 
   if (_pendingPropsUpdate) {
