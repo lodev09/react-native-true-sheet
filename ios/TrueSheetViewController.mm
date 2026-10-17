@@ -821,13 +821,20 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
                      }];
   }
 
-  // Dispatch to allow pan gesture to set _isDragging before checking;
-  // the transition tracker emits when the sheet is transitioning to dismiss
-  dispatch_async(dispatch_get_main_queue(), ^{
-    if (!self->_isDragging) {
-      [self emitWillDismissEvents];
-    }
-  });
+  // A swipe can still be cancelled, so emit once it commits on release. Any
+  // other dismiss (programmatic, outside tap, navigation) is already committed.
+  id<UIViewControllerTransitionCoordinator> coordinator = self.transitionCoordinator;
+  if (coordinator.isInteractive) {
+    __weak __typeof(self) weakSelf = self;
+    [coordinator
+      notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+        if (!context.isCancelled) {
+          [weakSelf emitWillDismissEvents];
+        }
+      }];
+  } else {
+    [self emitWillDismissEvents];
+  }
 
   [self setupTransitionTracker];
 }
@@ -1119,13 +1126,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   CGFloat position = self.livePosition;
 
   if (self.isBeingDismissed) {
-    // Emit only once the dismiss is committed: on release UIKit moves the
-    // model frame off-screen, while a cancelled drag rewinds it back to the
-    // detent (isBeingDismissed stays YES during the rewind).
-    if (self.currentPosition >= self.screenHeight) {
-      [self emitWillDismissEvents];
-    }
-
     // Hide blur at the end of dismiss to prevent UIVisualEffectView
     // from causing a flicker/flash at the bottom edge of the sheet.
     if (self.screenHeight - position < 1) {

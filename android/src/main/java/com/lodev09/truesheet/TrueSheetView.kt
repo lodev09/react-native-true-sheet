@@ -72,6 +72,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   // Debounce flag to coalesce rapid layout changes into a single sheet update
   private var isSheetUpdatePending: Boolean = false
 
+  // didFocus waiting for the slide-back after a child dismissed
+  private var isDidFocusPending: Boolean = false
+
   // Root container for the coordinator layout (activity or Modal dialog content view)
   internal var rootContainerView: ViewGroup? = null
 
@@ -610,7 +613,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Propagate any additional translation up the stack
     if (additionalTranslation > 0) {
-      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation)
+      viewController.parentSheetView?.addTranslation(additionalTranslation)
     }
   }
 
@@ -642,7 +645,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     val additionalTranslation = newTranslation - currentTranslation
     if (additionalTranslation > 0) {
-      TrueSheetStackManager.getParentSheet(this)?.addTranslation(additionalTranslation, animated = false)
+      viewController.parentSheetView?.addTranslation(additionalTranslation, animated = false)
     }
   }
 
@@ -653,7 +656,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.isExpanded) return
 
     viewController.translateSheet(viewController.currentTranslationY + amount, animated)
-    TrueSheetStackManager.getParentSheet(this)?.addTranslation(amount, animated)
+    viewController.parentSheetView?.addTranslation(amount, animated)
   }
 
   /**
@@ -666,7 +669,25 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     // Parent should recalculate its translation based on this sheet's position
     val mySheetTop = viewController.detentCalculator.getSheetTopForDetentIndex(viewController.currentDetentIndex)
-    TrueSheetStackManager.getParentSheet(this)?.updateTranslationForChild(mySheetTop)
+    viewController.parentSheetView?.updateTranslationForChild(mySheetTop)
+  }
+
+  /**
+   * Resets translation after a child dismissed and emits didFocus once the sheet settles.
+   * A sheet presented on top before then cancels the slide-back, so the next blur flushes it.
+   */
+  private fun focusAfterResetTranslation() {
+    isDidFocusPending = true
+    resetTranslation { emitPendingDidFocus() }
+  }
+
+  private fun emitPendingDidFocus() {
+    if (!isDidFocusPending) return
+    isDidFocusPending = false
+
+    if (viewController.isPresented && !viewController.isBeingDismissed) {
+      viewControllerDidFocus()
+    }
   }
 
   // ==================== TrueSheetViewControllerDelegate ====================
@@ -701,6 +722,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerDidDismiss(parent: TrueSheetView?) {
+    // A slide-back cut short by this sheet's own dismissal never emits; don't carry it over
+    isDidFocusPending = false
+
     // Detach coordinator from the root container view
     viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
     rootContainerView = null
@@ -715,12 +739,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // The sheets below stop blending this sheet's dim
     parent?.viewController?.takeIf { it.isPresented }?.updateDimAmount()
 
-    parent?.resetTranslation {
-      val parentController = parent.viewController
-      if (parentController.isPresented && !parentController.isBeingDismissed) {
-        parent.viewControllerDidFocus()
-      }
-    }
+    parent?.focusAfterResetTranslation()
   }
 
   override fun viewControllerDidChangeDetent(index: Int, position: Float, detent: Float) {
@@ -763,6 +782,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   }
 
   override fun viewControllerWillBlur() {
+    emitPendingDidFocus()
+
     val surfaceId = UIManagerHelper.getSurfaceId(this)
     eventDispatcher?.dispatchEvent(WillBlurEvent(surfaceId, id))
   }
