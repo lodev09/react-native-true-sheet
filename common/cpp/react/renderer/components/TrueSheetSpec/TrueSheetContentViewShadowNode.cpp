@@ -1,6 +1,5 @@
 #include "TrueSheetContentViewShadowNode.h"
 
-#include <folly/ScopeGuard.h>
 #include <react/renderer/components/view/conversions.h>
 #include <react/renderer/core/ComponentDescriptor.h>
 #include <react/renderer/core/LayoutConstraints.h>
@@ -95,7 +94,12 @@ void TrueSheetContentViewShadowNode::updateNaturalHeightIfNeeded(const LayoutCon
     if (contentChanged_ || !measurement_ || !(measurement_->constraints == constraints) ||
         !(measurement_->context == measurementContext) || measurement_->errata != errata) {
       gIsMeasuringNaturalHeight = true;
-      auto restoreMeasurement = folly::makeGuard([] { gIsMeasuringNaturalHeight = false; });
+      // Not folly::makeGuard: its terminate() isn't linked into RN < 0.86 on Android.
+      struct RestoreMeasurement {
+        ~RestoreMeasurement() {
+          gIsMeasuringNaturalHeight = false;
+        }
+      } restoreMeasurement;
       auto measurementNode =
         measurement_ ? cloneForMeasurement(*this, *measurementSourceChildren_, measurement_->root->getChildren())
                      : cloneForMeasurement(*this, {}, {});
