@@ -886,6 +886,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     setupSheetDetents()
     setupDimmedBackground()
     setupKeyboardObserver()
+    // Before the slide, so an input focused in onWillPresent insets the scrollable
+    containerView?.setupKeyboardHandler()
 
     displayedBackgroundIndex = detentIndex
     setupBackground(animated = false)
@@ -1007,8 +1009,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun finishPresent() {
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
-
-    containerView?.setupKeyboardHandler()
 
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     parentSheetView?.viewControllerDidBlur()

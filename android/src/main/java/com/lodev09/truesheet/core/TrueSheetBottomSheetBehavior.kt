@@ -40,6 +40,15 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     hideFriction = HIDE_FRICTION
   }
 
+  // Material's first layout registers an IME callback that rides the sheet's translationY
+  // with the keyboard. TrueSheet positions sheets for the keyboard itself, and the callback
+  // overwrites a parent's stack translation when the keyboard rises mid-translation.
+  override fun onLayoutChild(parent: CoordinatorLayout, child: V, layoutDirection: Int): Boolean {
+    val handled = super.onLayoutChild(parent, child, layoutDirection)
+    ViewCompat.setWindowInsetsAnimationCallback(child, null)
+    return handled
+  }
+
   // With the short threshold, settle at or below the lowest detent like
   // Compose Material3's sheet instead of Material's half-height rule.
   private fun releaseState(child: V, dragged: Boolean, velocityY: Float): Int? {
