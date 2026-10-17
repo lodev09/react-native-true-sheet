@@ -253,6 +253,16 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "hingeDetentIndex", defaultInt = -1)
+  override fun setHingeDetentIndex(view: TrueSheetView, index: Int) {
+    // iOS-specific prop - no-op on Android
+  }
+
+  @ReactProp(name = "hingeBehavior")
+  override fun setHingeBehavior(view: TrueSheetView, value: String?) {
+    // iOS-specific prop - no-op on Android
+  }
+
   @ReactProp(name = "insetAdjustment")
   override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
     view.setInsetAdjustment(insetAdjustment ?: "automatic")

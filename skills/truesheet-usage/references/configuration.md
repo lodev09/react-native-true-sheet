@@ -219,6 +219,8 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 |------|------|---------|-----------|-------------|
 | `placement` | `'automatic' \| 'leading' \| 'center' \| 'trailing'` | `'automatic'` | 🍎🤖🌐 | Horizontal placement, follows layout direction. `'automatic'` vs `'center'` only differ on iOS 27+. Ignored on phones in portrait |
 | `placementOffset` | `number` | `16` | 🤖🌐 | Edge margin when placement is leading/trailing |
+| `hingeDetentIndex` | `number` | — | 🍎 | Foldable tabletop (iOS 27.1+): this detent rests on the hinge; other postures keep its value |
+| `hingeBehavior` | `'none' \| 'avoid' \| 'snap'` | `'none'` | 🍎 | Foldable tabletop (iOS 27.1+): `'avoid'` caps detents at the hinge; `'snap'` also moves to `hingeDetentIndex` on fold and back on unfold. Book posture is system-handled via `placement` |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
 

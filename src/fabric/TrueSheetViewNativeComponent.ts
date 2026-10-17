@@ -85,6 +85,7 @@ export interface NativeProps extends ViewProps {
   dimColor?: ColorValue;
   dimOpacity?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   dimmedDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, 0>;
+  hingeDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
 
   // String properties - use empty string as default to avoid nil insertion
   backgroundBlur?: CodegenTypes.WithDefault<
@@ -118,6 +119,7 @@ export interface NativeProps extends ViewProps {
     'automatic'
   >;
   placementOffset?: CodegenTypes.WithDefault<CodegenTypes.Double, 16>;
+  hingeBehavior?: CodegenTypes.WithDefault<'none' | 'avoid' | 'snap', 'none'>;
   insetAdjustment?: CodegenTypes.WithDefault<'automatic' | 'never', 'automatic'>;
   dismissThreshold?: CodegenTypes.WithDefault<'half' | 'short', 'half'>;
 

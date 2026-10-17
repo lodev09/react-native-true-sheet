@@ -662,6 +662,8 @@ export class TrueSheet
       maxContentWidth,
       placement = 'automatic',
       placementOffset,
+      hingeDetentIndex,
+      hingeBehavior,
       scrollableOptions,
       footerOptions,
       presentation = 'page',
@@ -773,6 +775,8 @@ export class TrueSheet
         maxContentWidth={maxContentWidth}
         placement={placement}
         placementOffset={placementOffset}
+        hingeDetentIndex={hingeDetentIndex}
+        hingeBehavior={hingeBehavior}
         scrollableHandle={this.state.scrollableHandle ?? -1}
         scrollableOptions={scrollableOptions}
         headerOptions={headerOptions}
