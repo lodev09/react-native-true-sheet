@@ -84,6 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPresentation presentation;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPlacement placement;
+@property (nonatomic, assign) facebook::react::TrueSheetViewFoldOptionsStruct foldOptions;
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) CGFloat footerKeyboardOffset;

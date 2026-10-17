@@ -80,13 +80,18 @@
   return detentValue * self.delegate.screenHeight;
 }
 
+- (CGFloat)learnedOffsetForIndex:(NSInteger)index {
+  if (index >= 0 && index < (NSInteger)_resolvedDetentOffsets.count) {
+    return [_resolvedDetentOffsets[index] doubleValue];
+  }
+  return 0;
+}
+
 - (CGFloat)offsetForIndex:(NSInteger)index {
   // Use this detent's own offset if available
-  if (index >= 0 && index < (NSInteger)_resolvedDetentOffsets.count) {
-    CGFloat offset = [_resolvedDetentOffsets[index] doubleValue];
-    if (offset != 0)
-      return offset;
-  }
+  CGFloat learnedOffset = [self learnedOffsetForIndex:index];
+  if (learnedOffset != 0)
+    return learnedOffset;
 
   // Fall back to any known offset
   for (NSInteger i = 0; i < (NSInteger)_resolvedDetentOffsets.count; i++) {

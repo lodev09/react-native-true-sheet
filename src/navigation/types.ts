@@ -237,6 +237,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'insetAdjustment'
   | 'placement'
   | 'placementOffset'
+  | 'foldOptions'
   | 'elevation'
   | 'detached'
   | 'detachedOffset'

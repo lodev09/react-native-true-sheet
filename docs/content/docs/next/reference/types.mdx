@@ -138,6 +138,27 @@ Options for customizing footer behavior.
 | `keyboardOffset` | `number` | Adjusts how far an `absolute` footer rises when the keyboard opens. Positive values raise it higher; negative values tuck the footer's own bottom padding behind the keyboard instead of leaving a gap. The built-in safe-area inset is skipped automatically while the keyboard is open. A `relative` footer stays in the layout flow behind the keyboard, so this has no effect. | `0` |
 | `avoidKeyboard` | `boolean` | Whether an `absolute` footer rises above the keyboard. Set to `false` to keep it at the bottom edge of the sheet. With footer inset adjustment enabled, any footer portion above the keyboard still adds scroll padding and contributes to the expanded `auto` height. The pinned footer keeps its safe-area padding and ignores `keyboardOffset`. No effect on relative footers. Native only. | `true` |
 
+## `FoldOptions`
+
+Options for foldables. They apply while the device is half-open with a horizontal fold (tabletop). Requires iOS 27.1+.
+
+```tsx
+<TrueSheet
+  detents={['peek', 0.6, 1]}
+  foldOptions={{
+    hingeDetentIndex: 1,
+    hingeBehavior: 'snap',
+  }}
+>
+  {/* ... */}
+</TrueSheet>
+```
+
+| Property | Type | Description | Default |
+| - | - | - | - |
+| `hingeDetentIndex` | `number` | The detent that rests on the hinge in tabletop, so the sheet fills the panel below it. In any other posture the detent keeps its own value. Other detents keep their values, so the sheet can still expand past the hinge unless `hingeBehavior` keeps it below. | |
+| `hingeBehavior` | `'none' \| 'avoid' \| 'snap'` | How the sheet treats the hinge in tabletop. `'none'` lets detents cross it. `'avoid'` caps every detent at the hinge, so the sheet never crosses it. `'snap'` is like `'avoid'`, and also moves the sheet to `hingeDetentIndex` when the device enters tabletop, then back to its previous detent when it leaves. Detents that reach above the hinge collapse onto it, so `'avoid'` works best with one detent above the hinge. | `'none'` |
+
 ## `ContentInsetAdjustment`
 
 What the sheet insets the bottom of a plugged scrollable's content for. Set via [`ScrollableOptions`](#scrollableoptions).

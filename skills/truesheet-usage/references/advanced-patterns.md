@@ -10,6 +10,7 @@ Deeper integration guides for Navigation, Reanimated, Web, Side sheets, Backgrou
 - [Reanimated](#reanimated)
 - [Web](#web)
 - [Side sheets](#side-sheets)
+- [Foldables (iOS 27.1+)](#foldables-ios-271)
 - [Backgrounds](#backgrounds)
 - [Liquid Glass (iOS 26+)](#liquid-glass-ios-26)
 - [Overlays on sheets](#overlays-on-sheets)
@@ -360,6 +361,29 @@ Place a sheet on the leading or trailing edge (follows layout direction). Useful
 
 ---
 
+## Foldables (iOS 27.1+)
+
+`foldOptions` acts in tabletop only (half-open, horizontal fold). No-op elsewhere.
+
+```tsx
+<TrueSheet
+  detents={['peek', 0.6, 1]}
+  foldOptions={{ hingeDetentIndex: 1, hingeBehavior: 'snap' }}
+>
+  <TrueSheetPeek><MiniPlayer /></TrueSheetPeek>
+  <PlayerControls />
+</TrueSheet>
+```
+
+- `hingeDetentIndex`: that detent rests on the hinge (fills the bottom panel); in other postures it keeps its value — the detent is its own fallback
+- `hingeBehavior: 'avoid'`: caps every detent at the hinge. Detents above it collapse onto it — keep one detent above the hinge
+- `hingeBehavior: 'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold
+- Book posture (vertical fold): iOS docks the sheet to one panel natively — pick it with `placement` (`'automatic'`/`'center'` → leading)
+- Navigator: `foldOptions` is a regular screen option
+- Test on the iPhone Duo simulator: unfold, rotate to a portrait UI, then half-fold
+
+---
+
 ## Backgrounds
 
 Two layers:
@@ -662,6 +686,7 @@ On iOS 26.0, color/blur still sits above glass.
 - `accessibilityOptions`
 - `dimColor` / `dimOpacity` — customize the dim. On iOS they replace the system dim with a custom layer
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
+- `foldOptions` — iOS 27.1+ foldables: rest the sheet on the hinge in tabletop. See [Foldables](#foldables-ios-271)
 - `background` / `backgroundStyle` — custom nodes, exact colors, and glass/blur tints on all platforms
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging

@@ -5,6 +5,7 @@
 ### 🎉 New features
 
 - **iOS**: Smoother `onPositionChange`, and `onWillDismiss` now fires only when a drag-to-dismiss is committed. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744), [#756](https://github.com/lodev09/react-native-true-sheet/pull/756) by [@lodev09](https://github.com/lodev09))
+- **iOS**: Added `foldOptions` for foldables on iOS 27.1+. In tabletop, `hingeDetentIndex` rests that detent on the hinge; `hingeBehavior: 'avoid'` keeps the sheet below the hinge, and `'snap'` also moves it there when the device folds. ([#939](https://github.com/lodev09/react-native-true-sheet/pull/939) by [@lodev09](https://github.com/lodev09))
 - New `TrueSheetOverlay` component renders its children above every presented sheet — for toasts, dialogs, and other overlays. Replaces the `FullWindowOverlay`/`Modal` workaround. ([#817](https://github.com/lodev09/react-native-true-sheet/pull/817) by [@lodev09](https://github.com/lodev09) and [@SamuelBrucksch](https://github.com/SamuelBrucksch))
 - Added a JS-only `lazy` prop — set to `false` to mount sheet content before presentation, allowing `auto` detents to measure settled content before the sheet opens. ([#792](https://github.com/lodev09/react-native-true-sheet/pull/792) by [@maxlapides](https://github.com/maxlapides))
 - The `auto` detent now works with plugged scrollables — the sheet sizes to the scrollable's content height. ([#743](https://github.com/lodev09/react-native-true-sheet/pull/743) by [@lodev09](https://github.com/lodev09))
@@ -71,7 +72,7 @@
 ### 💡 Others
 
 - Upgrade the examples to Expo SDK 57 and React Native 0.86. ([#755](https://github.com/lodev09/react-native-true-sheet/pull/755) by [@lodev09](https://github.com/lodev09))
-- Update the `truesheet-usage` AI skill for the v4 API. ([#799](https://github.com/lodev09/react-native-true-sheet/pull/799), [#848](https://github.com/lodev09/react-native-true-sheet/pull/848), [#877](https://github.com/lodev09/react-native-true-sheet/pull/877) by [@lodev09](https://github.com/lodev09))
+- Update the `truesheet-usage` AI skill for the v4 API. ([#799](https://github.com/lodev09/react-native-true-sheet/pull/799), [#848](https://github.com/lodev09/react-native-true-sheet/pull/848), [#877](https://github.com/lodev09/react-native-true-sheet/pull/877), [#939](https://github.com/lodev09/react-native-true-sheet/pull/939) by [@lodev09](https://github.com/lodev09))
 - Document that native stacks can't be nested inside sheet screens, with stacked sheets as the recommended alternative. ([#822](https://github.com/lodev09/react-native-true-sheet/pull/822) by [@lodev09](https://github.com/lodev09))
 - New Deep Linking guide and updated AI skill: hold `initialDetentIndex` until the screen is focused, so a cold start deep link to a modal or sheet-navigator sheet no longer gets the sheet stacked on top. Includes deep-link-only repro routes in the Expo example. ([#882](https://github.com/lodev09/react-native-true-sheet/pull/882) by [@lodev09](https://github.com/lodev09))
 - The docs site moved from Docusaurus to Fumadocs, with built-in search, a redesigned blog and landing page, and the latest docs served at the root — old `/v3` links redirect. ([#826](https://github.com/lodev09/react-native-true-sheet/pull/826) by [@lodev09](https://github.com/lodev09))

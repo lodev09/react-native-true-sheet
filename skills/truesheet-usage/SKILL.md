@@ -358,6 +358,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `dimColor` / `dimOpacity` | Custom dim layer replaces the system dim; stacked sheets each add one | Yes | Yes |
 | `placement` / side sheets | System-controlled margins; `'automatic'` vs `'center'` differ on iOS 27+ | `placementOffset` prop | `placementOffset` prop |
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
+| `foldOptions` | iOS 27.1+ foldables (tabletop) | No | No |
 | `detached` mode | No | No | Yes |
 | `insetAdjustment` | Yes | Yes | No |
 | `dismissThreshold` | No (system-controlled) | Yes | Yes |

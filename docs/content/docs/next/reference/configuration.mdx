@@ -223,6 +223,26 @@ The offset from the screen edge. Only applies when [`placement`](#placement) is 
 | - | - | - | - | - |
 | `number` | `16` | | ✅ | ✅ |
 
+## `foldOptions`
+
+How the sheet behaves on a foldable while it's half-open with a horizontal fold (tabletop). See [this guide](../guides/foldables) for example.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`FoldOptions`](types#foldoptions) | | ✅ | | |
+
+```tsx
+<TrueSheet detents={[0.5, 1]} foldOptions={{ hingeDetentIndex: 0, hingeBehavior: 'snap' }} />
+```
+
+:::info
+Requires iOS 27.1+ on a foldable.
+:::
+
+:::note
+In book posture (vertical fold), iOS already docks every sheet to one panel. Use [`placement`](#placement) to pick the side.
+:::
+
 ## `dismissible`
 
 If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it.

@@ -49,6 +49,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 - (NSArray *)accessibilityGrabberElements;
 - (void)endInteractiveDismissState;
+- (void)updateHingeState;
+- (void)correctHingeOffsetForIndex:(NSInteger)index;
+- (CGFloat)tabletopHingeEdge;
+- (CGFloat)hingeOffsetForIndex:(NSInteger)index;
 - (void)animateInteractiveContainerToTransform:(CGAffineTransform)transform
                                       duration:(NSTimeInterval)duration
                           allowUserInteraction:(BOOL)allowUserInteraction
@@ -115,6 +119,16 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
   TrueSheetDimView *_dimView;
+
+  // Foldable hinge (iOS 27.1+). Tabletop resolves on demand from the window's
+  // division region; these track the last applied posture to detect changes.
+  BOOL _hingeStateKnown;
+  BOOL _isTabletop;
+  CGFloat _hingeEdge;
+  NSInteger _hingeRestoreIndex;
+  NSInteger _hingeCorrections;
+  // Offset each hinge-placed detent last resolved with, checked on settle
+  NSMutableDictionary<NSNumber *, NSNumber *> *_hingeOffsets;
 }
 
 #pragma mark - Initialization
@@ -149,6 +163,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _pendingDetentIndex = -1;
 
     _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
+    _hingeRestoreIndex = -1;
+    _hingeOffsets = [NSMutableDictionary dictionary];
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
   }
@@ -242,6 +258,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   UIWindow *window = self.view.window ?: self.presentingViewController.view.window;
   return window ? window.bounds.size.height : UIScreen.mainScreen.bounds.size.height;
 }
+
+// Gap UIKit leaves between a floating sheet (iOS 26+) and the screen's bottom edge
+static const CGFloat TrueSheetFloatingSheetInset = 8;
 
 // Only phone sheets absorb the bottom safe-area inset — non-phone idioms
 // (iPad form sheets) are inset from the screen edge by UIKit.
@@ -444,6 +463,20 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _grabberView = [[TrueSheetGrabberView alloc] init];
   _grabberView.hidden = YES;
   [_grabberView addToView:self.view];
+
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
+  if (@available(iOS 27.1, *)) {
+    __weak __typeof(self) weakSelf = self;
+    UIHingeInteraction *hingeInteraction =
+      [[UIHingeInteraction alloc] initWithUpdateHandler:^(UIHingeInteraction *_, UIHingeInteractionUpdate *__) {
+        // Next run loop, so the division region reflects the new posture
+        dispatch_async(dispatch_get_main_queue(), ^{
+          [weakSelf updateHingeState];
+        });
+      }];
+    [self.view addInteraction:hingeInteraction];
+  }
+#endif
 }
 
 #pragma mark - Custom Dimming
@@ -855,6 +888,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _keyboardSheetGrown = NO;
   _keyboardHeight = 0;
 
+  _hingeStateKnown = NO;
+  _isTabletop = NO;
+  _hingeRestoreIndex = -1;
+
   [self emitDidDismissEvents];
 }
 
@@ -910,7 +947,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
         [self.sheet invalidateDetents];
       }
-                      completion:nil];
+      completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        // Rotating a half-open foldable swaps between book and tabletop
+        [self updateHingeState];
+      }];
   }
 }
 
@@ -949,6 +989,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       _lastReportedSize = size;
       [self.delegate viewControllerDidChangeSize:size];
     }
+  }
+
+  // The hinge callback can run before the division region updates; the
+  // relayout UIKit does for the posture change always sees the new region.
+  if (!self.isBeingDismissed) {
+    [self updateHingeState];
   }
 
   if (_pendingDetentIndex >= 0) {
@@ -1146,6 +1192,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // measured frame; the next unobstructed settle learns.
   if (self.presentedViewController == nil) {
     [self learnOffsetForDetentIndex:index];
+    [self correctHingeOffsetForIndex:index];
   }
 
   [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
@@ -1339,6 +1386,136 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return [_detentCalculator detentValueForIndex:index];
 }
 
+#pragma mark - Hinge
+
+/**
+ * Bottom edge (window coordinates) of an active horizontal fold, or 0 when the
+ * device isn't in tabletop. The division region is only active while the hinge
+ * is partially open, so this also excludes flat and closed postures.
+ */
+- (CGFloat)tabletopHingeEdge {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
+  if (@available(iOS 27.1, *)) {
+    UIWindow *window = self.view.window ?: self.presentingViewController.view.window;
+    for (UIViewReservedRegion *region in [window reservedRegionsOfKind:[UIViewReservedRegionKind divisionRegionKind]]) {
+      CGRect frame = region.frame;
+      if (region.isActive && frame.size.width > frame.size.height) {
+        return CGRectGetMaxY(frame);
+      }
+    }
+  }
+#endif
+  return 0;
+}
+
+/**
+ * Gap between the resolved height and the sheet's actual top edge: UIKit adds
+ * the bottom safe area, plus the floating sheet's inset, on top of the resolved
+ * height. The detent's learned offset measures exactly that. Until it's learned,
+ * guess high so the sheet lands below the hinge rather than across it — the
+ * first settle learns the real offset and corrects it.
+ */
+- (CGFloat)hingeOffsetForIndex:(NSInteger)index {
+  CGFloat learnedOffset = [_detentCalculator learnedOffsetForIndex:index];
+  if (learnedOffset != 0) {
+    return learnedOffset;
+  }
+
+  UIWindow *window = self.view.window ?: self.presentingViewController.view.window;
+  CGFloat guess = fmax([_detentCalculator offsetForIndex:index], window ? window.safeAreaInsets.bottom : 0);
+  return guess + TrueSheetFloatingSheetInset;
+}
+
+// A hinge-placed detent resolved with a guessed or stale offset lands a few
+// points off the hinge — re-resolve once the settle has learned the real one.
+- (void)correctHingeOffsetForIndex:(NSInteger)index {
+  NSNumber *usedOffset = _hingeOffsets[@(index)];
+  if (!usedOffset || _hingeCorrections >= 2) {
+    return;
+  }
+
+  CGFloat learnedOffset = [_detentCalculator learnedOffsetForIndex:index];
+  if (learnedOffset == 0 || fabs(learnedOffset - usedOffset.doubleValue) <= 1) {
+    return;
+  }
+
+  _hingeCorrections++;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self invalidateDetentsAnimated];
+  });
+}
+
+- (void)invalidateDetentsAnimated {
+  if (@available(iOS 16.0, *)) {
+    [self.sheet animateChanges:^{
+      self->_pendingContentSizeChange = YES;
+      [self.sheet invalidateDetents];
+    }];
+  }
+}
+
+/**
+ * Re-resolves hinge-placed detents when the posture changes, and runs 'snap':
+ * entering tabletop moves the sheet to the hinge detent, leaving it restores the
+ * previous detent. The first posture seen after presenting only records state,
+ * so presenting while already in tabletop doesn't jump the sheet.
+ */
+- (void)updateHingeState {
+  if (self.foldOptions.hingeDetentIndex < 0 && self.foldOptions.hingeBehavior == TrueSheetViewHingeBehavior::None) {
+    return;
+  }
+
+  CGFloat edge = [self tabletopHingeEdge];
+  BOOL tabletop = edge > 0;
+  BOOL changed = tabletop != _isTabletop || fabs(edge - _hingeEdge) >= 0.5;
+  BOOL entered = _hingeStateKnown && tabletop && !_isTabletop;
+  BOOL left = _hingeStateKnown && !tabletop && _isTabletop;
+
+  _hingeStateKnown = YES;
+  _isTabletop = tabletop;
+  _hingeEdge = edge;
+
+  if (!changed || !self.isPresented) {
+    return;
+  }
+
+  _hingeCorrections = 0;
+
+  NSInteger targetIndex = -1;
+  NSInteger detentCount = (NSInteger)self.detents.count;
+  if (entered && self.foldOptions.hingeBehavior == TrueSheetViewHingeBehavior::Snap &&
+      self.foldOptions.hingeDetentIndex < detentCount) {
+    _hingeRestoreIndex = self.currentDetentIndex;
+    targetIndex = self.foldOptions.hingeDetentIndex;
+  } else if (left && _hingeRestoreIndex >= 0) {
+    targetIndex = MIN(_hingeRestoreIndex, detentCount - 1);
+    _hingeRestoreIndex = -1;
+  }
+
+  // A resize settles through the pending detent change
+  BOOL resizes = targetIndex >= 0 && targetIndex != self.activeDetentIndex;
+
+  if (@available(iOS 16.0, *)) {
+    [self.sheet animateChanges:^{
+      [self.sheet invalidateDetents];
+      if (resizes) {
+        [self resizeToDetentIndex:targetIndex];
+      }
+    }];
+  }
+
+  // UIKit often re-resolves detents for the posture change on its own before
+  // this runs, so the invalidation above triggers no layout pass to settle in.
+  // Settle once the frame is final, same as a pending detent change.
+  if (!resizes) {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if (self.isPresented && !self->_isDragging && !self->_isTransitioning) {
+        [self settleAtDetentIndex:self.currentDetentIndex debug:@"hinge"];
+      }
+    });
+  }
+}
+
 #pragma mark - Sheet Configuration
 
 /**
@@ -1382,6 +1559,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   NSMutableArray<UISheetPresentationControllerDetent *> *detents = [NSMutableArray array];
   [_detentCalculator clearResolvedHeights];
+  _hingeCorrections = 0;
 
   _autoDetentHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight];
   _peekDetentHeight = [_detentCalculator peekHeight];
@@ -1505,6 +1683,24 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
                         CGFloat adjustedHeight = height - bottomAdjustment;
 
+                        // Tabletop: the hinge detent rests on the hinge, and 'avoid'/'snap'
+                        // cap every detent there.
+                        BOOL avoidsHinge = self.foldOptions.hingeBehavior != TrueSheetViewHingeBehavior::None;
+                        BOOL isHingeDetent = index == self.foldOptions.hingeDetentIndex;
+                        CGFloat hingeEdge = (isHingeDetent || avoidsHinge) ? [self tabletopHingeEdge] : 0;
+                        CGFloat hingeOffset = 0;
+                        CGFloat hingeHeight = 0;
+                        if (hingeEdge > 0) {
+                          hingeOffset = [self hingeOffsetForIndex:index];
+                          hingeHeight = self.screenHeight - hingeEdge - hingeOffset;
+                          if (isHingeDetent) {
+                            adjustedHeight = hingeHeight;
+                          }
+                          if (avoidsHinge) {
+                            maxValue = fmin(maxValue, hingeHeight);
+                          }
+                        }
+
                         // Only the last detent may occupy the full maximum. Two detents
                         // resolving to the same height (e.g. a capped auto and 1) make
                         // UIKit skip the stack's deck animation when presenting a child
@@ -1515,6 +1711,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
                         }
 
                         CGFloat resolved = fmin(adjustedHeight, maxValue);
+
+                        // Detents within the collapse spacing of the hinge are hinge-placed
+                        if (hingeHeight > 0 && resolved >= hingeHeight - lastIndex - 0.5) {
+                          self->_hingeOffsets[@(index)] = @(hingeOffset);
+                        } else {
+                          [self->_hingeOffsets removeObjectForKey:@(index)];
+                        }
 
                         NSMutableArray *heights = self->_detentCalculator.resolvedDetentHeights;
                         if (heights && index >= 0 && index < (NSInteger)heights.count) {

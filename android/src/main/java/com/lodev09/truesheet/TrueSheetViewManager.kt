@@ -253,6 +253,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "foldOptions")
+  override fun setFoldOptions(view: TrueSheetView, options: ReadableMap?) {
+    // iOS-specific prop - no-op on Android
+  }
+
   @ReactProp(name = "insetAdjustment")
   override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
     view.setInsetAdjustment(insetAdjustment ?: "automatic")

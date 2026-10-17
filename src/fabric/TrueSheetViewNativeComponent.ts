@@ -50,6 +50,11 @@ type HeaderOptionsType = Readonly<{
   position?: CodegenTypes.WithDefault<'relative' | 'absolute', 'relative'>;
 }>;
 
+type FoldOptionsType = Readonly<{
+  hingeDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
+  hingeBehavior?: CodegenTypes.WithDefault<'none' | 'avoid' | 'snap', 'none'>;
+}>;
+
 export interface DetentInfoEventPayload {
   index: CodegenTypes.Int32;
   position: CodegenTypes.Double;
@@ -134,6 +139,7 @@ export interface NativeProps extends ViewProps {
   scrollableOptions?: ScrollableOptionsType;
   headerOptions?: HeaderOptionsType;
   footerOptions?: FooterOptionsType;
+  foldOptions?: FoldOptionsType;
   presentation?: CodegenTypes.WithDefault<'page' | 'form', 'page'>;
 
   // Event handlers
