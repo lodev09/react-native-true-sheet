@@ -91,18 +91,18 @@ The keyboard covers the pinned footer. With footer inset adjustment enabled, any
 
 ## Autofocus Limitation
 
-Avoid using `autoFocus` on `TextInput` components inside the sheet. The keyboard may appear before the sheet has finished presenting, causing layout issues.
+Avoid using `autoFocus` on `TextInput` components inside the sheet. The input can focus before the sheet starts presenting, causing layout issues.
 
-Instead, focus the input programmatically after the sheet has presented:
+Instead, focus the input programmatically. Focus it in `onWillPresent` to raise the keyboard together with the sheet, or in `onDidPresent` to raise it after the sheet lands:
 
 ```tsx {4,7}
 const inputRef = useRef<TextInput>(null)
 
-const handlePresent = () => {
+const handleWillPresent = () => {
   inputRef.current?.focus()
 }
 
-<TrueSheet onDidPresent={handlePresent}>
+<TrueSheet onWillPresent={handleWillPresent}>
   <TextInput ref={inputRef} placeholder="Type something..." />
 </TrueSheet>
 ```
