@@ -253,13 +253,8 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
-  @ReactProp(name = "hingeDetentIndex", defaultInt = -1)
-  override fun setHingeDetentIndex(view: TrueSheetView, index: Int) {
-    // iOS-specific prop - no-op on Android
-  }
-
-  @ReactProp(name = "hingeBehavior")
-  override fun setHingeBehavior(view: TrueSheetView, value: String?) {
+  @ReactProp(name = "foldOptions")
+  override fun setFoldOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
   }
 

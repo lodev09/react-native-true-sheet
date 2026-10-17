@@ -74,7 +74,7 @@ Launch (or `/` on web) lands on MapScreen with the `main` ReanimatedTrueSheet (`
 | Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                      | Main sheet → Sheet Navigator |
 | Test Screen → back                                    | Sheet dismissed by navigation and re-presented                                                                        | Main sheet → Test Screen     |
 | Basic                                                 | Two `TrueSheetOverlay`s mounted with the sheet (activity-destroy paths on Android)                                    | Main sheet → TrueSheet View  |
-| Foldable (iOS 27.1 iPhone Duo)                        | `hingeDetentIndex` + `hingeBehavior` picker; tabletop needs a portrait UI (`rotate` LandscapeLeft) + `fold` half-open | Main sheet → Foldable        |
+| Foldable (iOS 27.1 iPhone Duo)                        | `foldOptions` with a `hingeBehavior` picker; tabletop needs a portrait UI (`rotate` LandscapeLeft) + `fold` half-open | Main sheet → Foldable        |
 
 RN deep-diffs props: a parent re-render sends a native props update only when a value really changes (deep-equal inline objects and arrays do not). To hit the props path, change a real prop (the FlatList switch) or override one live (§3). For a repro the example doesn't cover (e.g. a keyboard case with `detents={[0.6]}` and a search input in the header), edit the example screen temporarily and revert it before finishing.
 

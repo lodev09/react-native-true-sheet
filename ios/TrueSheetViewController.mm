@@ -163,8 +163,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _pendingDetentIndex = -1;
 
     _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
-    _hingeDetentIndex = -1;
-    _hingeBehavior = TrueSheetViewHingeBehavior::None;
     _hingeRestoreIndex = -1;
     _hingeOffsets = [NSMutableDictionary dictionary];
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
@@ -1463,7 +1461,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  * so presenting while already in tabletop doesn't jump the sheet.
  */
 - (void)updateHingeState {
-  if (self.hingeDetentIndex < 0 && self.hingeBehavior == TrueSheetViewHingeBehavior::None) {
+  if (self.foldOptions.hingeDetentIndex < 0 && self.foldOptions.hingeBehavior == TrueSheetViewHingeBehavior::None) {
     return;
   }
 
@@ -1485,9 +1483,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   NSInteger targetIndex = -1;
   NSInteger detentCount = (NSInteger)self.detents.count;
-  if (entered && self.hingeBehavior == TrueSheetViewHingeBehavior::Snap && self.hingeDetentIndex < detentCount) {
+  if (entered && self.foldOptions.hingeBehavior == TrueSheetViewHingeBehavior::Snap &&
+      self.foldOptions.hingeDetentIndex < detentCount) {
     _hingeRestoreIndex = self.currentDetentIndex;
-    targetIndex = self.hingeDetentIndex;
+    targetIndex = self.foldOptions.hingeDetentIndex;
   } else if (left && _hingeRestoreIndex >= 0) {
     targetIndex = MIN(_hingeRestoreIndex, detentCount - 1);
     _hingeRestoreIndex = -1;
@@ -1686,8 +1685,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
                         // Tabletop: the hinge detent rests on the hinge, and 'avoid'/'snap'
                         // cap every detent there.
-                        BOOL avoidsHinge = self.hingeBehavior != TrueSheetViewHingeBehavior::None;
-                        BOOL isHingeDetent = index == self.hingeDetentIndex;
+                        BOOL avoidsHinge = self.foldOptions.hingeBehavior != TrueSheetViewHingeBehavior::None;
+                        BOOL isHingeDetent = index == self.foldOptions.hingeDetentIndex;
                         CGFloat hingeEdge = (isHingeDetent || avoidsHinge) ? [self tabletopHingeEdge] : 0;
                         CGFloat hingeOffset = 0;
                         CGFloat hingeHeight = 0;

@@ -1,12 +1,17 @@
 import { forwardRef, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { TrueSheet, TrueSheetPeek, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import {
+  TrueSheet,
+  TrueSheetPeek,
+  type FoldOptions,
+  type TrueSheetProps,
+} from '@lodev09/react-native-true-sheet';
 
 import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, GRAY, LIGHT_GRAY, SPACING } from '../../utils';
 import { Button } from '../Button';
 import { ButtonGroup } from '../ButtonGroup';
 
-type HingeBehavior = NonNullable<TrueSheetProps['hingeBehavior']>;
+type HingeBehavior = NonNullable<FoldOptions['hingeBehavior']>;
 
 const BEHAVIORS: HingeBehavior[] = ['none', 'avoid', 'snap'];
 
@@ -38,8 +43,7 @@ export const FoldableSheet = forwardRef((props: FoldableSheetProps, ref: Ref<Tru
       ref={sheetRef}
       name="foldable"
       detents={['peek', 0.6, 1]}
-      hingeDetentIndex={1}
-      hingeBehavior={behavior}
+      foldOptions={{ hingeDetentIndex: 1, hingeBehavior: behavior }}
       dimmedDetentIndex={1}
       backgroundColor={DARK}
       {...props}
@@ -75,7 +79,7 @@ export const FoldableSheet = forwardRef((props: FoldableSheetProps, ref: Ref<Tru
         </ButtonGroup>
 
         <View style={styles.section}>
-          <Text style={styles.label}>hingeBehavior</Text>
+          <Text style={styles.label}>foldOptions.hingeBehavior</Text>
           <ButtonGroup>
             {BEHAVIORS.map((value) => (
               <Button

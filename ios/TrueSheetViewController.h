@@ -84,11 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPresentation presentation;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPlacement placement;
-/**
- * Detent that rests on the hinge while a foldable is in tabletop (-1 for none).
- */
-@property (nonatomic, assign) NSInteger hingeDetentIndex;
-@property (nonatomic, assign) facebook::react::TrueSheetViewHingeBehavior hingeBehavior;
+@property (nonatomic, assign) facebook::react::TrueSheetViewFoldOptionsStruct foldOptions;
 @property (nonatomic, assign) facebook::react::TrueSheetViewInsetAdjustment insetAdjustment;
 @property (nonatomic, assign) BOOL scrollingExpandsSheet;
 @property (nonatomic, assign) CGFloat footerKeyboardOffset;

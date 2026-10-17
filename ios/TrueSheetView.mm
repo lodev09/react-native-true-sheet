@@ -284,8 +284,7 @@ using namespace facebook::react;
 
   _controller.placement = newProps.placement;
 
-  _controller.hingeDetentIndex = newProps.hingeDetentIndex;
-  _controller.hingeBehavior = newProps.hingeBehavior;
+  _controller.foldOptions = newProps.foldOptions;
 
   _controller.grabber = newProps.grabber;
 

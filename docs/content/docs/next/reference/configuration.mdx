@@ -223,37 +223,20 @@ The offset from the screen edge. Only applies when [`placement`](#placement) is 
 | - | - | - | - | - |
 | `number` | `16` | | ✅ | ✅ |
 
-## `hingeDetentIndex`
+## `foldOptions`
 
-The detent that rests on the hinge while a foldable is half-open with a horizontal fold (tabletop), so the sheet fills the panel below it. In any other posture, the detent keeps its own value.
+How the sheet behaves on a foldable while it's half-open with a horizontal fold (tabletop).
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `number` | | ✅ | | |
+| [`FoldOptions`](types#foldoptions) | | ✅ | | |
 
 ```tsx
-// Tabletop: detent 0 sits on the hinge. Otherwise it's 0.5.
-<TrueSheet detents={[0.5, 1]} hingeDetentIndex={0} />
+<TrueSheet detents={[0.5, 1]} foldOptions={{ hingeDetentIndex: 0, hingeBehavior: 'snap' }} />
 ```
 
 :::info
-Requires iOS 27.1+ on a foldable. Other detents keep their values, so the sheet can still expand past the hinge — use [`hingeBehavior`](#hingebehavior) to keep it below.
-:::
-
-## `hingeBehavior`
-
-How the sheet treats the hinge while a foldable is in tabletop.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| `'none' \| 'avoid' \| 'snap'` | `'none'` | ✅ | | |
-
-- `'none'`: Detents are free to cross the hinge.
-- `'avoid'`: Caps every detent at the hinge, so the sheet never crosses it.
-- `'snap'`: Like `'avoid'`, and also moves the sheet to [`hingeDetentIndex`](#hingedetentindex) when the device enters tabletop, then back to its previous detent when it leaves.
-
-:::info
-Requires iOS 27.1+ on a foldable. Detents that reach above the hinge collapse onto it, kept 1pt apart, so `'avoid'` works best with one detent above the hinge.
+Requires iOS 27.1+ on a foldable.
 :::
 
 :::note
