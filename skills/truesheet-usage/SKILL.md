@@ -330,9 +330,9 @@ await sheet.current?.resize(2) // expands to full (index 2)
 5. **Sheet names must be unique** across your entire app.
 6. **Static methods are native-only** — use `useTrueSheet()` on web.
 7. **Don't add manual safe-area padding** to footers or plugged scroll content — the footer absorbs the bottom inset and the scrollable gets it natively. Doubling up is the most common v4 layout bug.
-8. **Don't use `autoFocus` on TextInputs** inside sheets. Focus in `onDidPresent` instead:
+8. **Don't use `autoFocus` on TextInputs** inside sheets. Focus in `onWillPresent` (keyboard rises with the sheet) or `onDidPresent` (after it lands) instead:
    ```tsx
-   <TrueSheet onDidPresent={() => inputRef.current?.focus()}>
+   <TrueSheet onWillPresent={() => inputRef.current?.focus()}>
    ```
 9. **Use `flexGrow: 1`** (not `flex: 1`) on `GestureHandlerRootView` inside the sheet on Android — unless the sheet itself has `style={{ flex: 1 }}`.
 10. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.

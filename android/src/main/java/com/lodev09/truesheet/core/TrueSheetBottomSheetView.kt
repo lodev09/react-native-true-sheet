@@ -81,14 +81,6 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
     clipToPadding = false
   }
 
-  override fun setTranslationY(translationY: Float) {
-    // This prevents keyboard inset animations from resetting parent sheet translation
-    if (translationY == 0f && this.translationY != 0f) {
-      return
-    }
-    super.setTranslationY(translationY)
-  }
-
   // =============================================================================
   // MARK: - Layout
   // =============================================================================

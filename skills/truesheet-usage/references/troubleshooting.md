@@ -211,7 +211,7 @@ const [height, setHeight] = useState(480);
 
 TrueSheet has built-in keyboard avoidance — this usually means something else is wrong:
 
-1. **Don't use `autoFocus`** on TextInputs. Focus the input in `onDidPresent` instead.
+1. **Don't use `autoFocus`** on TextInputs. Focus the input in `onWillPresent` or `onDidPresent` instead.
 2. **Plug the scroll view via `scrollableRef`** — the sheet auto-scrolls to keep the focused input visible. Add `keyboardScrollOffset` for extra spacing:
    ```tsx
    <TrueSheet scrollableRef={scrollableRef} scrollableOptions={{ keyboardScrollOffset: 16 }}>
