@@ -77,6 +77,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)resolvedHeightForIndex:(NSInteger)index;
 
 /**
+ Returns the offset learned for this detent itself, or 0 when none is learned.
+ */
+- (CGFloat)learnedOffsetForIndex:(NSInteger)index;
+
+/**
+ Sets the offset this detent is expected to rest with, unless its learned
+ offset is already within a point of it.
+ */
+- (void)assumeOffset:(CGFloat)offset forIndex:(NSInteger)index;
+
+/**
  Finds the segment between detents for a given position.
  Returns YES if position is between two detents, NO if at edges.
  outIndex: The lower detent index of the segment (-1 if above first detent)

@@ -35,6 +35,7 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🍞 **`TrueSheetOverlay`** - Render toasts, dialogs, and other [overlays above your sheets](https://sheet.lodev09.com/guides/overlays) — no more `FullWindowOverlay`/`Modal` workarounds
 * 🔍 **Element inspector** - React Native's dev menu inspector now works inside a presented sheet
 * 🎨 **Dim color and opacity** - [Customize the dim](https://sheet.lodev09.com/guides/dimming#dim-color-and-opacity) behind the sheet with `dimColor` and `dimOpacity`
+* 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone with `foldOptions` (iOS 27.1+)
 
 ```sh
 npx expo install @lodev09/react-native-true-sheet@beta

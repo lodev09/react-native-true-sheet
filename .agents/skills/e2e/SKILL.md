@@ -64,16 +64,17 @@ No build: serve the expo example on web (`yarn expo web --port 8090`) and open i
 
 Launch (or `/` on web) lands on MapScreen with the `main` ReanimatedTrueSheet (`dismissible={false}`) at peek. Reveal its buttons by swiping the grabber up (iOS: `fromY 0.905 → 0.45`, `durationMs 600`, `momentum: false`; take the grabber position from `describe` elsewhere). A swipe right after launch is often ignored — retry it, or on iOS/Android resize through the runtime hooks (`__ts.insts['main["peek","auto",1]'].resize(1)`).
 
-| Scenario                                              | Exercises                                                                                                         | Where                        |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| FlatList → "Switch to View/List"                      | Prop + size change in one commit (`scrollableHandle` flips with the content) — the coalesced deferred-update path | Main sheet → FlatList        |
-| FlatList → Add/Remove Item                            | Size-only change                                                                                                  | Same sheet                   |
-| FlatList → "OPEN BLANK SHEET"                         | Stacked child sheet (0.3 detent)                                                                                  | Footer button                |
-| Main → Add/Remove Content                             | Size-only change; the floating button follows `animatedPosition`                                                  | Main sheet buttons           |
-| ScrollView → Show ScrollView / Toggle ListView        | Late scrollable mount and remount, scroll edge effects                                                            | Main sheet → ScrollView      |
-| Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                  | Main sheet → Sheet Navigator |
-| Test Screen → back                                    | Sheet dismissed by navigation and re-presented                                                                    | Main sheet → Test Screen     |
-| Basic                                                 | Two `TrueSheetOverlay`s mounted with the sheet (activity-destroy paths on Android)                                | Main sheet → TrueSheet View  |
+| Scenario                                              | Exercises                                                                                                                 | Where                        |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| FlatList → "Switch to View/List"                      | Prop + size change in one commit (`scrollableHandle` flips with the content) — the coalesced deferred-update path         | Main sheet → FlatList        |
+| FlatList → Add/Remove Item                            | Size-only change                                                                                                          | Same sheet                   |
+| FlatList → "OPEN BLANK SHEET"                         | Stacked child sheet (0.3 detent)                                                                                          | Footer button                |
+| Main → Add/Remove Content                             | Size-only change; the floating button follows `animatedPosition`                                                          | Main sheet buttons           |
+| ScrollView → Show ScrollView / Toggle ListView        | Late scrollable mount and remount, scroll edge effects                                                                    | Main sheet → ScrollView      |
+| Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                          | Main sheet → Sheet Navigator |
+| Test Screen → back                                    | Sheet dismissed by navigation and re-presented                                                                            | Main sheet → Test Screen     |
+| Basic                                                 | Two `TrueSheetOverlay`s mounted with the sheet (activity-destroy paths on Android)                                        | Main sheet → TrueSheet View  |
+| Basic on iPhone Duo (iOS 27.1)                        | `foldOptions` (`hingeDetentIndex: 1`, `'snap'`); tabletop needs a portrait UI (`rotate` LandscapeLeft) + `fold` half-open | Main sheet → TrueSheet View  |
 
 RN deep-diffs props: a parent re-render sends a native props update only when a value really changes (deep-equal inline objects and arrays do not). To hit the props path, change a real prop (the FlatList switch) or override one live (§3). For a repro the example doesn't cover (e.g. a keyboard case with `detents={[0.6]}` and a search input in the header), edit the example screen temporarily and revert it before finishing.
 
@@ -119,3 +120,7 @@ Never `git stash` the user's work. Restore immediately after the build so the tr
 2. Format what you touched: `clang-format ios/<File>.mm | diff -q ios/<File>.mm -` (iOS), `scripts/ktlint.sh` (Android, formats in place), `yarn typecheck && yarn lint` (TS).
 3. Final build and reinstall (native) or fresh load (web), then a short sanity pass over the scenarios the change touches on each affected platform.
 4. Report each finding with its evidence (frame trace, event log, A/B), including pre-existing bugs found on HEAD.
+5. After the pass, or after the commit and push when one was asked for, tear everything down:
+   - Metro and the expo web server: kill the PIDs listening on their ports (`lsof -nP -iTCP:8081 -sTCP:LISTEN`, plus 8082/8090 if used), after checking with `ps -o command -p <pid>` that each one serves this repo.
+   - Simulator servers: `stop-all-simulator-servers` with `devices: [...]` naming the devices this session used.
+   - Devices this session used: `xcrun simctl shutdown <UDID>` (iOS) and `adb -s <serial> emu kill` (Android).

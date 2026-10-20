@@ -263,6 +263,33 @@ export interface HeaderOptions {
 }
 
 /**
+ * Options for foldables. Applies while the device is half-open with a horizontal
+ * fold (tabletop). In book posture (vertical fold), iOS already keeps sheets on
+ * one panel — use `placement` to pick the side.
+ */
+export interface FoldOptions {
+  /**
+   * The detent that rests on the hinge in tabletop, so the sheet fills the panel
+   * below it. In any other posture the detent keeps its own value. Lower detents
+   * stay below it and higher ones above it, so the detents keep their order.
+   */
+  hingeDetentIndex?: number;
+
+  /**
+   * How the sheet treats the hinge in tabletop.
+   *
+   * - `'none'`: Detents are free to cross the hinge.
+   * - `'avoid'`: Caps every detent at the hinge, so the sheet never crosses it.
+   * - `'snap'`: Like `'avoid'`, and also moves the sheet to `hingeDetentIndex` when
+   *    the device enters tabletop, then back to its previous detent when it leaves,
+   *    unless the sheet was moved off the hinge in between.
+   *
+   * @default 'none'
+   */
+  hingeBehavior?: 'none' | 'avoid' | 'snap';
+}
+
+/**
  * Options for footer behavior
  */
 export interface FooterOptions {
@@ -644,6 +671,13 @@ export interface TrueSheetProps extends ViewProps {
    * @default 16
    */
   placementOffset?: number;
+
+  /**
+   * How the sheet behaves on a foldable.
+   *
+   * @platform ios 27.1+
+   */
+  foldOptions?: FoldOptions;
 
   /**
    * Controls how the sheet adjusts its height for system insets (safe area).

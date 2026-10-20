@@ -219,8 +219,20 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 |------|------|---------|-----------|-------------|
 | `placement` | `'automatic' \| 'leading' \| 'center' \| 'trailing'` | `'automatic'` | 🍎🤖🌐 | Horizontal placement, follows layout direction. `'automatic'` vs `'center'` only differ on iOS 27+. Ignored on phones in portrait |
 | `placementOffset` | `number` | `16` | 🤖🌐 | Edge margin when placement is leading/trailing |
+| `foldOptions` | `FoldOptions` | — | 🍎 | Foldable tabletop behavior (iOS 27.1+). Book posture is system-handled via `placement` |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
+
+**`FoldOptions`:** (tabletop = half-open with a horizontal fold)
+```tsx
+{
+  hingeDetentIndex?: number                  // this detent rests on the hinge; other postures keep its value
+  hingeBehavior?: 'none' | 'avoid' | 'snap'  // default: 'none'
+}
+```
+- `'avoid'`: caps every detent at the hinge. Detents above it collapse onto it, so keep one detent above the hinge.
+- `'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold (unless the user moved it off the hinge).
+- Detents keep their order around `hingeDetentIndex`: lower ones stay below it, higher ones above it.
 
 ## Initial presentation
 

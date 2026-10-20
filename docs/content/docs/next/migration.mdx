@@ -433,6 +433,21 @@ The new `dimColor` and `dimOpacity` props change the color and strength of the d
 
 On iOS, they replace the system dim with a custom dim layer. See the [Dimming guide](guides/dimming#dim-color-and-opacity).
 
+### 13. Foldables
+
+On iOS 27.1+ foldables like the iPhone Duo, the new `foldOptions` prop rests the sheet on the hinge when the device is half-folded (tabletop), so it fills the panel below it:
+
+```tsx
+<TrueSheet
+  detents={['peek', 0.6, 1]}
+  foldOptions={{ hingeDetentIndex: 1, hingeBehavior: 'snap' }}
+>
+  {/* content */}
+</TrueSheet>
+```
+
+`hingeBehavior: 'avoid'` keeps the sheet below the hinge, and `'snap'` also moves it there when the device folds. Nothing changes on other devices. See the [Foldables guide](guides/foldables).
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.
