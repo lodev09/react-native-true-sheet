@@ -48,6 +48,16 @@ On Android, nested scrolling is managed internally — any `nestedScrollEnabled`
 The [`auto`](../reference/types#sheetdetent) detent works with scrolling content too — no `flex: 1` needed. The sheet sizes to the scroll view's content height and resizes as content grows or shrinks, while the viewport is automatically bounded to the sheet's visible height.
 :::
 
+:::warning
+Lists that wrap their scroll view in a `flex: 1` view, like [`FlashList`](https://shopify.github.io/flash-list/), still need `flex: 1` on the sheet's `style` with `auto`. Without it, the wrapper collapses to zero height and the list renders blank. The sheet still sizes to the list's content:
+
+```tsx
+<TrueSheet detents={['auto']} scrollableRef={listRef} style={{ flex: 1 }}>
+  <FlashList ref={listRef} data={data} renderItem={renderItem} />
+</TrueSheet>
+```
+:::
+
 ## Bottom Safe-Area Inset
 
 The sheet applies the bottom safe-area inset to your scroll content automatically while the content can scroll — the last item clears the home indicator (iOS) and navigation bar (Android):

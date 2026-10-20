@@ -89,6 +89,7 @@ The sheet's content lays out naturally — like a regular view or a screen — w
 
 - **`flex: 1` children render with zero height** — the content isn't filled by default. Pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop so the content fills the sheet's visible height. See [Content Layout](usage#content-layout).
 - **Content taller than the sheet gets clipped** — use a `ScrollView` with `flex: 1` on the sheet's `style` (see [Scrolling Content](guides/scrolling)) or size your layout with `flexGrow`, `flexBasis`, or fixed heights.
+- **`FlashList` renders blank with `auto`** — it wraps its scroll view in a `flex: 1` view, which collapses to zero height when the content isn't filled. Pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop; the `auto` detent still sizes the sheet to the list. See [Scrolling Content](guides/scrolling).
 
 If layout still misbehaves, try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
 
