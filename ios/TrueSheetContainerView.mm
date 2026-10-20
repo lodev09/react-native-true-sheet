@@ -112,7 +112,7 @@ using namespace facebook::react;
 }
 
 - (BOOL)hasAccessibilityFooterElements {
-  return _footerView && _footerView.accessibilityElements.count > 0;
+  return _footerView && [_footerView hasAccessibilityElements];
 }
 
 #pragma mark - Layout
@@ -303,6 +303,12 @@ using namespace facebook::react;
   [_contentView updateBottomInset];
   if (@available(iOS 26.0, *)) {
     [self setupEdgeInteractions];
+  }
+}
+
+- (void)footerViewDidMountTransaction {
+  if ([self.delegate respondsToSelector:@selector(containerViewFooterDidMountTransaction)]) {
+    [self.delegate containerViewFooterDidMountTransaction];
   }
 }
 

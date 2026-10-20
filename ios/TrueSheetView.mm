@@ -869,6 +869,10 @@ using namespace facebook::react;
   [_controller setupAccessibilityContainer];
 }
 
+- (void)containerViewFooterDidMountTransaction {
+  [_controller refreshAccessibilityContainerIfFooterChanged];
+}
+
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize {
   [self setupSheetDetentsForSizeChange];
 }

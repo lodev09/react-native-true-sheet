@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)containerViewHeaderDidChangeSize:(CGSize)newSize;
 - (void)containerViewFooterDidChangeSize:(CGSize)newSize;
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize;
+- (void)containerViewFooterDidMountTransaction;
 
 @end
 

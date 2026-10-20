@@ -110,6 +110,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   UIView *_anchorView;
 
   __weak UIWindow *_accessibilityWindow;
+  BOOL _appliedAccessibilityFooterElements;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -607,6 +608,23 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self setAccessibilityContentElement:contentView];
 }
 
+- (void)refreshAccessibilityContainerIfFooterChanged {
+  // Only a dimmed sheet's boundary depends on the footer. Only the topmost
+  // sheet may refresh, or it would steal the window override from a child.
+  if (!_dimmed || !_isPresented || self.isBeingDismissed || !self.isTopmostPresentedController) {
+    return;
+  }
+
+  UIView *contentView = self.accessibilityContentView;
+  if (![contentView isKindOfClass:[TrueSheetContainerView class]]) {
+    return;
+  }
+
+  if ([(TrueSheetContainerView *)contentView hasAccessibilityFooterElements] != _appliedAccessibilityFooterElements) {
+    [self setAccessibilityContentElement:contentView];
+  }
+}
+
 - (UIViewController *)accessibilityPresentingViewController {
   UIViewController *presentingViewController = self.presentingViewController;
   while ([presentingViewController isKindOfClass:[TrueSheetViewController class]] &&
@@ -680,6 +698,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // Footer controls exposed as separate accessibility elements can be skipped
   // by XCTest when the presented sheet is a hard modal accessibility boundary.
   BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
+  _appliedAccessibilityFooterElements = hasAccessibilityFooterElements;
 
   // At a hard modal boundary XCTest skips nested elements, so flatten the
   // container's children into the array. Otherwise expose the container itself:

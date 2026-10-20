@@ -8,6 +8,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#import <React/RCTMountingTransactionObserving.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
@@ -20,9 +21,11 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetFooterViewDelegate <NSObject>
 @optional
 - (void)footerViewDidChangeSize:(CGSize)size;
+- (void)footerViewDidMountTransaction;
 @end
 
-@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
+@interface TrueSheetFooterView
+    : RCTViewComponentView <TrueSheetKeyboardObserverDelegate, RCTMountingTransactionObserving>
 
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 @property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;
@@ -50,6 +53,11 @@ NS_ASSUME_NONNULL_BEGIN
  * the safe-area inset it drops while the keyboard is open.
  */
 - (CGFloat)keyboardOcclusionHeight;
+
+/**
+ * Whether the footer subtree exposes any accessibility elements.
+ */
+- (BOOL)hasAccessibilityElements;
 
 @end
 
