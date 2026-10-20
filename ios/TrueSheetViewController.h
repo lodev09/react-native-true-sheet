@@ -109,6 +109,13 @@ NS_ASSUME_NONNULL_BEGIN
  * announced — ahead of the grow/shrink animation, unlike keyboardSheetGrown.
  */
 @property (nonatomic, assign) CGFloat keyboardHeight;
+
+/**
+ * How far UIKit grows the sheet for the iPadOS minimized keyboard, which it
+ * treats as docked. Taken off every detent so the sheet stays put.
+ */
+@property (nonatomic, assign) CGFloat minimizedKeyboardOverlap;
+
 @property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
@@ -141,6 +148,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupSheetDetents;
 - (void)setupSheetDetentsForSizeChange;
 - (void)setupSheetDetentsForDetentsChange;
+- (void)invalidateDetents;
 - (void)setupDraggable;
 - (void)setupAnchorViewInView:(UIView *)parentView;
 
