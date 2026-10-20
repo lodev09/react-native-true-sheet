@@ -87,6 +87,13 @@
   return 0;
 }
 
+- (void)assumeOffset:(CGFloat)offset forIndex:(NSInteger)index {
+  if (index >= 0 && index < (NSInteger)_resolvedDetentOffsets.count &&
+      fabs([_resolvedDetentOffsets[index] doubleValue] - offset) > 1) {
+    _resolvedDetentOffsets[index] = @(offset);
+  }
+}
+
 - (CGFloat)offsetForIndex:(NSInteger)index {
   // Use this detent's own offset if available
   CGFloat learnedOffset = [self learnedOffsetForIndex:index];

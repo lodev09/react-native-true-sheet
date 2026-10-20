@@ -156,8 +156,8 @@ Options for foldables. They apply while the device is half-open with a horizonta
 
 | Property | Type | Description | Default |
 | - | - | - | - |
-| `hingeDetentIndex` | `number` | The detent that rests on the hinge in tabletop, so the sheet fills the panel below it. In any other posture the detent keeps its own value. Other detents keep their values, so the sheet can still expand past the hinge unless `hingeBehavior` keeps it below. | |
-| `hingeBehavior` | `'none' \| 'avoid' \| 'snap'` | How the sheet treats the hinge in tabletop. `'none'` lets detents cross it. `'avoid'` caps every detent at the hinge, so the sheet never crosses it. `'snap'` is like `'avoid'`, and also moves the sheet to `hingeDetentIndex` when the device enters tabletop, then back to its previous detent when it leaves. Detents that reach above the hinge collapse onto it, so `'avoid'` works best with one detent above the hinge. | `'none'` |
+| `hingeDetentIndex` | `number` | The detent that rests on the hinge in tabletop, so the sheet fills the panel below it. In any other posture the detent keeps its own value. Other detents keep their values, so the sheet can still expand past the hinge unless `hingeBehavior` keeps it below. Lower detents stay below it and higher ones above it, so the detents keep their order. | |
+| `hingeBehavior` | `'none' \| 'avoid' \| 'snap'` | How the sheet treats the hinge in tabletop. `'none'` lets detents cross it. `'avoid'` caps every detent at the hinge, so the sheet never crosses it. `'snap'` is like `'avoid'`, and also moves the sheet to `hingeDetentIndex` when the device enters tabletop, then back to its previous detent when it leaves, unless the sheet was moved off the hinge in between. Detents that reach above the hinge collapse onto it, so `'avoid'` works best with one detent above the hinge. | `'none'` |
 
 ## `ContentInsetAdjustment`
 

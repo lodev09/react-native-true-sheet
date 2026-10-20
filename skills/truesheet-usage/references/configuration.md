@@ -231,7 +231,8 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 }
 ```
 - `'avoid'`: caps every detent at the hinge. Detents above it collapse onto it, so keep one detent above the hinge.
-- `'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold.
+- `'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold (unless the user moved it off the hinge).
+- Detents keep their order around `hingeDetentIndex`: lower ones stay below it, higher ones above it.
 
 ## Initial presentation
 

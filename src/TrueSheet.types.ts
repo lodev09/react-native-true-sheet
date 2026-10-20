@@ -270,7 +270,8 @@ export interface HeaderOptions {
 export interface FoldOptions {
   /**
    * The detent that rests on the hinge in tabletop, so the sheet fills the panel
-   * below it. In any other posture the detent keeps its own value.
+   * below it. In any other posture the detent keeps its own value. Lower detents
+   * stay below it and higher ones above it, so the detents keep their order.
    */
   hingeDetentIndex?: number;
 
@@ -280,7 +281,8 @@ export interface FoldOptions {
    * - `'none'`: Detents are free to cross the hinge.
    * - `'avoid'`: Caps every detent at the hinge, so the sheet never crosses it.
    * - `'snap'`: Like `'avoid'`, and also moves the sheet to `hingeDetentIndex` when
-   *    the device enters tabletop, then back to its previous detent when it leaves.
+   *    the device enters tabletop, then back to its previous detent when it leaves,
+   *    unless the sheet was moved off the hinge in between.
    *
    * @default 'none'
    */

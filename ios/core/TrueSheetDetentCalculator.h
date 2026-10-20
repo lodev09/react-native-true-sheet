@@ -82,9 +82,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)learnedOffsetForIndex:(NSInteger)index;
 
 /**
- Returns this detent's learned offset, falling back to any learned offset.
+ Sets the offset this detent is expected to rest with, unless its learned
+ offset is already within a point of it.
  */
-- (CGFloat)offsetForIndex:(NSInteger)index;
+- (void)assumeOffset:(CGFloat)offset forIndex:(NSInteger)index;
 
 /**
  Finds the segment between detents for a given position.

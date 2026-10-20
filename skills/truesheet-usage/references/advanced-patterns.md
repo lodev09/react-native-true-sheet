@@ -377,7 +377,8 @@ Place a sheet on the leading or trailing edge (follows layout direction). Useful
 
 - `hingeDetentIndex`: that detent rests on the hinge (fills the bottom panel); in other postures it keeps its value — the detent is its own fallback
 - `hingeBehavior: 'avoid'`: caps every detent at the hinge. Detents above it collapse onto it — keep one detent above the hinge
-- `hingeBehavior: 'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold
+- `hingeBehavior: 'snap'`: like `'avoid'`, and moves to `hingeDetentIndex` on fold, back to the previous detent on unfold (unless the user moved it off the hinge)
+- Detents keep their order around `hingeDetentIndex`: lower ones stay below it, higher ones above it
 - Book posture (vertical fold): iOS docks the sheet to one panel natively — pick it with `placement` (`'automatic'`/`'center'` → leading)
 - Navigator: `foldOptions` is a regular screen option
 - Test on the iPhone Duo simulator: unfold, rotate to a portrait UI, then half-fold
