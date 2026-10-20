@@ -61,7 +61,7 @@ See the [custom blur example](advanced-patterns.md#custom-blur). The blur librar
 
 ## Content renders with zero height or gets clipped
 
-**Symptom:** `flex: 1` children render with zero height, or content taller than the sheet gets clipped.
+**Symptom:** `flex: 1` children render with zero height, content taller than the sheet gets clipped, or a `FlashList` renders a blank sheet.
 
 **Cause:** In v4, the sheet's content lays out naturally — it wraps its children's height like a regular view, instead of filling the sheet.
 
@@ -74,7 +74,13 @@ See the [custom blur example](advanced-patterns.md#custom-blur). The blur librar
    </TrueSheet>
    ```
 2. **Content taller than the sheet gets clipped** — use a ScrollView plugged via `scrollableRef` with `flex: 1` on the sheet's `style`, or size your layout with `flexGrow`, `flexBasis`, or fixed heights.
-3. **Still misbehaving?** Move the sheet higher in the component tree — a container may interfere with the sheet's content rendering.
+3. **`FlashList` blank with `'auto'`** (rows exist in the accessibility tree but nothing draws) — FlashList wraps its scroll view in a `flex: 1` view that collapses to zero height. Add `style={{ flex: 1 }}` to the sheet; `'auto'` still sizes it to the list:
+   ```tsx
+   <TrueSheet detents={['auto']} scrollableRef={listRef} style={{ flex: 1 }}>
+     <FlashList ref={listRef} data={data} renderItem={renderItem} />
+   </TrueSheet>
+   ```
+4. **Still misbehaving?** Move the sheet higher in the component tree — a container may interfere with the sheet's content rendering.
 
 ## Blank screen after modal dismiss (iOS)
 

@@ -931,6 +931,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // the footer out of the auto detent.
   _keyboardSheetGrown = NO;
   _keyboardHeight = 0;
+  _minimizedKeyboardOverlap = 0;
 
   [self emitDidDismissEvents];
 }
@@ -1390,7 +1391,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)learnOffsetForDetentIndex:(NSInteger)index {
-  if (_keyboardSheetGrown) {
+  if (_keyboardSheetGrown || _minimizedKeyboardOverlap > 0) {
     return;
   }
   [_detentCalculator learnOffsetForDetentIndex:index];
@@ -1590,6 +1591,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // iOS 15: detents are fixed medium/large — size changes can't affect them.
 }
 
+// Re-resolves the detents in place, e.g. when an input to the resolver
+// changes after UIKit has already laid out the sheet.
+- (void)invalidateDetents {
+  if (@available(iOS 16.0, *)) {
+    [self.sheet animateChanges:^{
+      [self.sheet invalidateDetents];
+    }];
+  }
+}
+
 - (void)setupSheetDetentsForDetentsChange {
   _pendingDetentsChange = YES;
   [self setupSheetDetents];
@@ -1784,7 +1795,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
                           heights[index] = @(resolved);
                         }
 
-                        return resolved;
+                        // Recorded uncompensated above: UIKit adds the overlap back on
+                        // top. A sheet shorter than the overlap still grows by the rest.
+                        return fmax(resolved - self.minimizedKeyboardOverlap, 0);
                       }];
 }
 

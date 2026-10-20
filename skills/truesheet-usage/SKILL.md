@@ -165,6 +165,7 @@ const scrollableRef = useRef<ScrollView>(null)
 ```
 
 - With `detents={['auto']}` no `flex: 1` is needed — the sheet sizes to the scroll content and bounds the viewport automatically
+- Exception: lists that wrap their scroll view in `flex: 1` (e.g. `FlashList`) render blank with `'auto'` unless the sheet has `style={{ flex: 1 }}` — the sheet still sizes to the list
 - The scroll view doesn't have to be a direct child — a wrapping `View` works
 - Keyboard handling, nested scrolling (Android), and the bottom safe-area inset are wired automatically
 - Scrolling to top expands to the next detent — disable with `scrollableOptions={{ scrollingExpandsSheet: false }}` (YouTube-style comments)
@@ -325,7 +326,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 
 1. **Max 3 detents**, sorted smallest → largest.
 2. **Content doesn't fill the sheet by default** — pass `style={{ flex: 1 }}` on the sheet when children use `flex: 1`, or they render with zero height.
-3. **`scrollableRef` replaces the v3 `scrollable` prop** — pass a ref of the ScrollView/FlatList. Bound it with `flex: 1` on the sheet `style` for fixed detents; `'auto'` needs no flex.
+3. **`scrollableRef` replaces the v3 `scrollable` prop** — pass a ref of the ScrollView/FlatList. Bound it with `flex: 1` on the sheet `style` for fixed detents; `'auto'` needs no flex, except for `FlashList` and other lists wrapped in `flex: 1`.
 4. **`resize()` takes an index**, not a fraction. `resize(1)` means "go to the second detent."
 5. **Sheet names must be unique** across your entire app.
 6. **Static methods are native-only** — use `useTrueSheet()` on web.
