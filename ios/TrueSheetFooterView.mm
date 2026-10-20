@@ -121,22 +121,6 @@ using namespace facebook::react;
   return [super accessibilityElements];
 }
 
-// Mirrors accessibilityElements without building the array — runs after
-// every mount transaction while a dimmed sheet is on top.
-- (BOOL)hasAccessibilityElements {
-  return [self hasAccessibilityElementsInView:self] || [super accessibilityElements].count > 0;
-}
-
-- (BOOL)hasAccessibilityElementsInView:(UIView *)view {
-  for (UIView *subview in view.subviews) {
-    if (subview.isAccessibilityElement || subview.accessibilityLabel || subview.accessibilityIdentifier ||
-        subview.accessibilityElements.count > 0 || [self hasAccessibilityElementsInView:subview]) {
-      return YES;
-    }
-  }
-  return NO;
-}
-
 - (void)collectAccessibilityElementsFromView:(UIView *)view into:(NSMutableArray *)elements {
   for (UIView *subview in view.subviews) {
     if (subview.isAccessibilityElement || subview.accessibilityLabel || subview.accessibilityIdentifier) {

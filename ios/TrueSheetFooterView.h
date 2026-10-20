@@ -54,11 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CGFloat)keyboardOcclusionHeight;
 
-/**
- * Whether the footer subtree exposes any accessibility elements.
- */
-- (BOOL)hasAccessibilityElements;
-
 @end
 
 NS_ASSUME_NONNULL_END

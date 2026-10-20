@@ -112,7 +112,7 @@ using namespace facebook::react;
 }
 
 - (BOOL)hasAccessibilityFooterElements {
-  return _footerView && [_footerView hasAccessibilityElements];
+  return _footerView && _footerView.accessibilityElements.count > 0;
 }
 
 #pragma mark - Layout
@@ -307,9 +307,7 @@ using namespace facebook::react;
 }
 
 - (void)footerViewDidMountTransaction {
-  if ([self.delegate respondsToSelector:@selector(containerViewFooterDidMountTransaction)]) {
-    [self.delegate containerViewFooterDidMountTransaction];
-  }
+  [self.delegate containerViewFooterDidMountTransaction];
 }
 
 #pragma mark - TrueSheetPeekViewDelegate
