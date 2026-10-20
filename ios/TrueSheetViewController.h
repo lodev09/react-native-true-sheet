@@ -131,6 +131,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat appliedFooterBottomInset;
 
 - (void)setupAccessibilityContainer;
+- (void)refreshAccessibilityContainer;
+- (void)refreshAccessibilityContainerIfFooterChanged;
+
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
 - (void)resizeToDetentIndex:(NSInteger)index;

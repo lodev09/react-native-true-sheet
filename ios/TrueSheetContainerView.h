@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)containerViewContentDidChangeSize:(CGSize)newSize;
 - (void)containerViewScrollViewDidChange;
+- (void)containerViewDidMountTransaction;
 
 @optional
 

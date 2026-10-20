@@ -181,6 +181,8 @@ using namespace facebook::react;
   // Layout has settled for the whole tree — the footer overlap (sheet height,
   // scroll view frame) and the keyboard inset are current here
   [self updateBottomInset];
+
+  [self.delegate contentViewDidMountTransaction];
 }
 
 #pragma mark - Scrollable

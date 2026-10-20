@@ -287,6 +287,12 @@ using namespace facebook::react;
   [self.delegate containerViewScrollViewDidChange];
 }
 
+// Footer controls can mount, unmount, or hide deep in its subtree without
+// passing through its own mount hooks or changing its size.
+- (void)contentViewDidMountTransaction {
+  [self.delegate containerViewDidMountTransaction];
+}
+
 #pragma mark - TrueSheetHeaderViewDelegate
 
 - (void)headerViewDidChangeSize:(CGSize)newSize {
