@@ -120,3 +120,7 @@ Never `git stash` the user's work. Restore immediately after the build so the tr
 2. Format what you touched: `clang-format ios/<File>.mm | diff -q ios/<File>.mm -` (iOS), `scripts/ktlint.sh` (Android, formats in place), `yarn typecheck && yarn lint` (TS).
 3. Final build and reinstall (native) or fresh load (web), then a short sanity pass over the scenarios the change touches on each affected platform.
 4. Report each finding with its evidence (frame trace, event log, A/B), including pre-existing bugs found on HEAD.
+5. After the pass, or after the commit and push when one was asked for, tear everything down:
+   - Metro and the expo web server: kill the PIDs listening on their ports (`lsof -nP -iTCP:8081 -sTCP:LISTEN`, plus 8082/8090 if used), after checking with `ps -o command -p <pid>` that each one serves this repo.
+   - Simulator servers: `stop-all-simulator-servers` with `devices: [...]` naming the devices this session used.
+   - Devices this session used: `xcrun simctl shutdown <UDID>` (iOS) and `adb -s <serial> emu kill` (Android).
