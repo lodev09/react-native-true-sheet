@@ -44,6 +44,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       detents={['auto']}
       dismissThreshold="short"
       backgroundColor={DARK}
+      style={styles.sheet}
       scrollableRef={scrollRef}
       scrollableOptions={{
         bottomScrollEdgeEffect: 'soft',
@@ -75,6 +76,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
       {showList ? (
         <FlatList
           ref={scrollRef}
+          style={styles.list}
           data={times(itemCount, (i) => i)}
           contentContainerStyle={styles.content}
           indicatorStyle="white"
@@ -131,6 +133,13 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
 FlatListSheet.displayName = 'FlatListSheet';
 
 const styles = StyleSheet.create({
+  // The list shares the sheet with the search bar — flex bounds it to the space left
+  sheet: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
   footer: {
     backgroundColor: DARK,
     borderTopWidth: StyleSheet.hairlineWidth,

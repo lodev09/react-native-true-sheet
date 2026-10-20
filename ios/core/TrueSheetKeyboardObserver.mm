@@ -12,9 +12,16 @@
 #import "../TrueSheetViewController.h"
 #import "../utils/UIView+FirstResponder.h"
 
+// Between the minimized keyboard (up to ~180pt) and the shortest docked iPad
+// keyboard (~340pt)
+static const CGFloat kMinimizedKeyboardMaxHeight = 250.0;
+
+static const NSTimeInterval kUnanimatedKeyboardDuration = 0.25;
+
 @implementation TrueSheetKeyboardObserver {
   NSHashTable<id<TrueSheetKeyboardObserverDelegate>> *_delegates;
   CGFloat _currentHeight;
+  CGFloat _pendingMinimizedKeyboardOverlap;
 }
 
 - (CGFloat)currentHeight {
@@ -37,14 +44,20 @@
 }
 
 - (void)start {
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(keyboardWillChangeFrame:)
-                                               name:UIKeyboardWillChangeFrameNotification
-                                             object:nil];
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  [center addObserver:self
+             selector:@selector(keyboardWillChangeFrame:)
+                 name:UIKeyboardWillChangeFrameNotification
+               object:nil];
+  [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+  [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
 }
 
 - (void)stop {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  [center removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+  [center removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+  [center removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 }
 
 - (void)dealloc {
@@ -59,6 +72,20 @@
   return firstResponder != nil;
 }
 
+// iPadOS 26 reports its minimized keyboard (the pill left after hiding the
+// keyboard while the input keeps focus) as a short docked keyboard. An input
+// accessory view does stay docked across the bottom edge, so it still counts.
+- (BOOL)isMinimizedKeyboardFrame:(CGRect)frame {
+  if (@available(iOS 26.0, *)) {
+    if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad) {
+      return NO;
+    }
+    UIView *firstResponder = [_viewController.view findFirstResponder];
+    return frame.size.height < kMinimizedKeyboardMaxHeight && !firstResponder.inputAccessoryView;
+  }
+  return NO;
+}
+
 - (void)keyboardWillChangeFrame:(NSNotification *)notification {
   NSDictionary *userInfo = notification.userInfo;
   CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
@@ -71,7 +98,12 @@
   }
 
   CGRect keyboardFrameInWindow = [window convertRect:keyboardFrame fromWindow:nil];
-  CGFloat keyboardHeight = MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+  // A floating iPad keyboard is narrower than the window: it covers no edge and
+  // UIKit doesn't grow the sheet for it, so it counts as hidden. Width only — a
+  // windowed app gets docked frames offset by the window's inset.
+  BOOL floating = CGRectGetWidth(keyboardFrameInWindow) < CGRectGetWidth(window.bounds) - 1;
+  CGFloat keyboardHeight = floating ? 0 : MAX(0, window.bounds.size.height - keyboardFrameInWindow.origin.y);
+  CGFloat minimizedKeyboardOverlap = 0;
 
   // Not gated on being topmost: UIKit restores (and an app may blur) a sheet's
   // input while a stacked child is still dismissing over it. A hide reaches
@@ -80,15 +112,47 @@
     if (![self isFirstResponderWithinSheet]) {
       return;
     }
-  } else if (_currentHeight == 0) {
+    // The minimized keyboard floats in a corner and covers nothing — treat it
+    // as hidden, and offset the growth UIKit still applies for it.
+    if ([self isMinimizedKeyboardFrame:keyboardFrameInWindow]) {
+      UIView *sheetView = _viewController.view;
+      CGFloat sheetBottom = CGRectGetMaxY([sheetView convertRect:sheetView.bounds toView:nil]);
+      minimizedKeyboardOverlap =
+        MAX(0, MIN(CGRectGetMaxY(keyboardFrameInWindow), sheetBottom) - CGRectGetMinY(keyboardFrameInWindow));
+      keyboardHeight = 0;
+    }
+  }
+
+  // Hiding a full keyboard ends either minimized or fully hidden, and UIKit
+  // only tells which (show or hide) after it has laid out the sheet for it.
+  _pendingMinimizedKeyboardOverlap = 0;
+  if (minimizedKeyboardOverlap > 0 && _currentHeight > 0) {
+    _pendingMinimizedKeyboardOverlap = minimizedKeyboardOverlap;
+    minimizedKeyboardOverlap = 0;
+  }
+
+  CGFloat previousOverlap = _viewController.minimizedKeyboardOverlap;
+  _viewController.minimizedKeyboardOverlap = minimizedKeyboardOverlap;
+
+  if (keyboardHeight == 0 && _currentHeight == 0 && minimizedKeyboardOverlap == previousOverlap) {
     return;
+  }
+
+  // Docking or undocking the floating keyboard comes unanimated — animate the
+  // footer and scrollable insets ourselves instead of snapping them.
+  if (duration == 0 && (keyboardHeight > 0) != (_currentHeight > 0)) {
+    duration = kUnanimatedKeyboardDuration;
   }
 
   _currentHeight = keyboardHeight;
 
-  if (keyboardHeight > 0) {
+  // UIKit also moves the sheet as the minimized keyboard comes and goes, by
+  // whatever the detents couldn't absorb — settle again once it's done.
+  if (keyboardHeight > 0 || minimizedKeyboardOverlap != previousOverlap) {
     _viewController.keyboardSheetGrown = YES;
-  } else {
+  }
+
+  if (keyboardHeight == 0) {
     // The sheet stays grown until UIKit finishes the shrink-back animation —
     // clear after it completes, unless the keyboard came back in the meantime.
     __weak __typeof(self) weakSelf = self;
@@ -110,6 +174,22 @@
       [delegate keyboardWillHide:duration curve:curve];
     }
   }
+}
+
+// Shown minimized: UIKit has grown the sheet for it already, take it back.
+- (void)keyboardWillShow:(NSNotification *)notification {
+  if (_pendingMinimizedKeyboardOverlap == 0) {
+    return;
+  }
+
+  _viewController.minimizedKeyboardOverlap = _pendingMinimizedKeyboardOverlap;
+  _pendingMinimizedKeyboardOverlap = 0;
+  _viewController.keyboardSheetGrown = YES;
+  [_viewController invalidateDetents];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification {
+  _pendingMinimizedKeyboardOverlap = 0;
 }
 
 @end
