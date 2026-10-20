@@ -110,6 +110,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   UIView *_anchorView;
 
   __weak UIWindow *_accessibilityWindow;
+  BOOL _appliedAccessibilityFooterElements;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -607,6 +608,34 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self setAccessibilityContentElement:contentView];
 }
 
+// Only the topmost sheet may refresh, or it would steal the window
+// accessibility override from the child presented over it.
+- (BOOL)canRefreshAccessibilityContainer {
+  return _isPresented && !self.isBeingDismissed && self.isTopmostPresentedController;
+}
+
+- (void)refreshAccessibilityContainer {
+  if (self.canRefreshAccessibilityContainer) {
+    [self setupAccessibilityContainer];
+  }
+}
+
+- (void)refreshAccessibilityContainerIfFooterChanged {
+  // Only a dimmed sheet's boundary depends on the footer
+  if (!_dimmed || !self.canRefreshAccessibilityContainer) {
+    return;
+  }
+
+  UIView *contentView = self.accessibilityContentView;
+  if (![contentView isKindOfClass:[TrueSheetContainerView class]] ||
+      [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements] == _appliedAccessibilityFooterElements) {
+    return;
+  }
+
+  [self setAccessibilityContentElement:contentView];
+  UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+}
+
 - (UIViewController *)accessibilityPresentingViewController {
   UIViewController *presentingViewController = self.presentingViewController;
   while ([presentingViewController isKindOfClass:[TrueSheetViewController class]] &&
@@ -680,6 +709,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // Footer controls exposed as separate accessibility elements can be skipped
   // by XCTest when the presented sheet is a hard modal accessibility boundary.
   BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
+  _appliedAccessibilityFooterElements = hasAccessibilityFooterElements;
 
   // At a hard modal boundary XCTest skips nested elements, so flatten the
   // container's children into the array. Otherwise expose the container itself:
@@ -1717,11 +1747,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _grabberView.onDecrement = nil;
   }
 
-  // Only the topmost sheet may refresh, or a parent's prop update would steal the
-  // window accessibility override from the child presented over it.
-  if (_isPresented && self.isTopmostPresentedController) {
-    [self setupAccessibilityContainer];
-  }
+  [self refreshAccessibilityContainer];
 }
 
 - (void)handleGrabberTap {

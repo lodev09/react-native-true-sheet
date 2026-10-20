@@ -123,6 +123,11 @@ using namespace facebook::react;
 
 - (void)collectAccessibilityElementsFromView:(UIView *)view into:(NSMutableArray *)elements {
   for (UIView *subview in view.subviews) {
+    // Fabric hides `display: none` views instead of unmounting them
+    if (subview.hidden) {
+      continue;
+    }
+
     if (subview.isAccessibilityElement || subview.accessibilityLabel || subview.accessibilityIdentifier) {
       [elements addObject:subview];
     } else if (subview.accessibilityElements.count > 0) {
