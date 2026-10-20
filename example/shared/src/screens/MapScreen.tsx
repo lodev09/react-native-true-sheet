@@ -39,7 +39,6 @@ import { BLUE, DARK, GAP, HEADER_HEIGHT, SPACING } from '../utils';
 import {
   BasicSheet,
   FlatListSheet,
-  FoldableSheet,
   GestureSheet,
   PromptSheet,
   ScrollViewSheet,
@@ -103,7 +102,6 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
-  const foldableSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -284,11 +282,6 @@ const MapScreenInner = ({
             />
             <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
           </ButtonGroup>
-          <Button
-            text="Foldable"
-            hint="Tabletop on iOS 27.1+"
-            onPress={() => foldableSheet.current?.present()}
-          />
           <Spacer />
           {showExtraContent && <DemoContent text="Extra content that changes height" />}
           <ButtonGroup>
@@ -311,7 +304,6 @@ const MapScreenInner = ({
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
           <GestureSheet ref={gestureSheet} />
-          <FoldableSheet ref={foldableSheet} />
         </ScrollView>
       </ReanimatedTrueSheet>
     </View>

@@ -102,6 +102,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   return (
     <TrueSheet
       detents={['peek', 'auto', 1]}
+      foldOptions={{ hingeDetentIndex: 1, hingeBehavior: 'snap' }}
       name="basic"
       ref={sheetRef}
       detached
