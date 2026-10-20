@@ -8,7 +8,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <React/RCTMountingTransactionObserving.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
@@ -21,11 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TrueSheetFooterViewDelegate <NSObject>
 @optional
 - (void)footerViewDidChangeSize:(CGSize)size;
-- (void)footerViewDidMountTransaction;
 @end
 
-@interface TrueSheetFooterView
-    : RCTViewComponentView <TrueSheetKeyboardObserverDelegate, RCTMountingTransactionObserving>
+@interface TrueSheetFooterView : RCTViewComponentView <TrueSheetKeyboardObserverDelegate>
 
 @property (nonatomic, weak, nullable) TrueSheetKeyboardObserver *keyboardObserver;
 @property (nonatomic, weak, nullable) id<TrueSheetFooterViewDelegate> delegate;

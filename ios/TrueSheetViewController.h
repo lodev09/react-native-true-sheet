@@ -130,11 +130,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat appliedFooterBottomInset;
 
 - (void)setupAccessibilityContainer;
-
-/**
- * Re-runs setupAccessibilityContainer when the footer gained or lost
- * accessibility elements since the boundary was last applied.
- */
+- (void)refreshAccessibilityContainer;
 - (void)refreshAccessibilityContainerIfFooterChanged;
 
 - (void)applyActiveDetent;

@@ -608,21 +608,32 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self setAccessibilityContentElement:contentView];
 }
 
+// Only the topmost sheet may refresh, or it would steal the window
+// accessibility override from the child presented over it.
+- (BOOL)canRefreshAccessibilityContainer {
+  return _isPresented && !self.isBeingDismissed && self.isTopmostPresentedController;
+}
+
+- (void)refreshAccessibilityContainer {
+  if (self.canRefreshAccessibilityContainer) {
+    [self setupAccessibilityContainer];
+  }
+}
+
 - (void)refreshAccessibilityContainerIfFooterChanged {
-  // Only a dimmed sheet's boundary depends on the footer. Only the topmost
-  // sheet may refresh, or it would steal the window override from a child.
-  if (!_dimmed || !_isPresented || self.isBeingDismissed || !self.isTopmostPresentedController) {
+  // Only a dimmed sheet's boundary depends on the footer
+  if (!_dimmed || !self.canRefreshAccessibilityContainer) {
     return;
   }
 
   UIView *contentView = self.accessibilityContentView;
-  if (![contentView isKindOfClass:[TrueSheetContainerView class]]) {
+  if (![contentView isKindOfClass:[TrueSheetContainerView class]] ||
+      [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements] == _appliedAccessibilityFooterElements) {
     return;
   }
 
-  if ([(TrueSheetContainerView *)contentView hasAccessibilityFooterElements] != _appliedAccessibilityFooterElements) {
-    [self setAccessibilityContentElement:contentView];
-  }
+  [self setAccessibilityContentElement:contentView];
+  UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 }
 
 - (UIViewController *)accessibilityPresentingViewController {
@@ -1736,11 +1747,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _grabberView.onDecrement = nil;
   }
 
-  // Only the topmost sheet may refresh, or a parent's prop update would steal the
-  // window accessibility override from the child presented over it.
-  if (_isPresented && self.isTopmostPresentedController) {
-    [self setupAccessibilityContainer];
-  }
+  [self refreshAccessibilityContainer];
 }
 
 - (void)handleGrabberTap {
