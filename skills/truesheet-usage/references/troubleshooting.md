@@ -21,6 +21,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
 - [@expo/ui Host opens small, then grows](#expoui-host-opens-small-then-grows)
 - [Keyboard hides input](#keyboard-hides-input)
+- [autoFocus input doesn't focus on the next present](#autofocus-input-doesnt-focus-on-the-next-present)
 - [Sheet doesn't build (Xcode version)](#sheet-doesnt-build-xcode-version)
 - [EAS Build fails](#eas-build-fails)
 - [Patched react-native-screens not applied on EAS](#patched-react-native-screens-not-applied-on-eas)
@@ -217,12 +218,23 @@ const [height, setHeight] = useState(480);
 
 TrueSheet has built-in keyboard avoidance — this usually means something else is wrong:
 
-1. **Don't use `autoFocus`** on TextInputs. Focus the input in `onWillPresent` or `onDidPresent` instead.
-2. **Plug the scroll view via `scrollableRef`** — the sheet auto-scrolls to keep the focused input visible. Add `keyboardScrollOffset` for extra spacing:
+1. **Plug the scroll view via `scrollableRef`** — the sheet auto-scrolls to keep the focused input visible. Add `keyboardScrollOffset` for extra spacing:
    ```tsx
    <TrueSheet scrollableRef={scrollableRef} scrollableOptions={{ keyboardScrollOffset: 16 }}>
    ```
-3. **Footer behavior**: an **absolute** footer (`footerOptions={{ position: 'absolute' }}`) rises above the keyboard automatically. Set `avoidKeyboard: false` to keep it behind the keyboard. With footer inset adjustment enabled, a tall footer retains scroll padding for the portion above the keyboard. A **relative** footer (default) stays in the layout flow behind the keyboard.
+2. **Footer behavior**: an **absolute** footer (`footerOptions={{ position: 'absolute' }}`) rises above the keyboard automatically. Set `avoidKeyboard: false` to keep it behind the keyboard. With footer inset adjustment enabled, a tall footer retains scroll padding for the portion above the keyboard. A **relative** footer (default) stays in the layout flow behind the keyboard.
+
+## autoFocus input doesn't focus on the next present
+
+**Symptom:** A `TextInput` with `autoFocus` focuses on the first present, but not after the sheet is dismissed and presented again.
+
+**Cause:** `autoFocus` only fires when the input mounts. With `lazy={false}`, content stays mounted after dismiss.
+
+**Fix:** Focus the input in `onWillPresent` (keyboard rises with the sheet) or `onDidPresent` (after it lands):
+
+```tsx
+<TrueSheet lazy={false} onWillPresent={() => inputRef.current?.focus()}>
+```
 
 ## Sheet doesn't build (Xcode version)
 
