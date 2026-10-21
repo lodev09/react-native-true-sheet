@@ -41,8 +41,8 @@ object TrueSheetStateUpdater {
   }
 
   /** Returns false when unavailable — caller should fall back to async updateState. */
-  fun updateFooterState(stateWrapper: StateWrapper, bottomInsetDp: Float): Boolean =
-    isAvailable && nativeUpdateFooterState(stateWrapper, bottomInsetDp)
+  fun updateFooterState(stateWrapper: StateWrapper, bottomInsetDp: Float, translateYDp: Float): Boolean =
+    isAvailable && nativeUpdateFooterState(stateWrapper, bottomInsetDp, translateYDp)
 
   /** Mirrors the footer's native translation so measure() matches where it's drawn. */
   fun updateFooterTranslation(stateWrapper: StateWrapper, translateYDp: Float) {
@@ -61,7 +61,7 @@ object TrueSheetStateUpdater {
   private external fun nativeUpdateState(stateWrapper: Any, width: Float, height: Float): Boolean
 
   @JvmStatic
-  private external fun nativeUpdateFooterState(stateWrapper: Any, bottomInset: Float): Boolean
+  private external fun nativeUpdateFooterState(stateWrapper: Any, bottomInset: Float, translateY: Float): Boolean
 
   @JvmStatic
   private external fun nativeUpdateFooterTranslation(stateWrapper: Any, translateY: Float)

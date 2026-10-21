@@ -58,7 +58,8 @@ static jboolean updateStateImmediate(
 static jboolean updateFooterStateImmediate(
     jni::alias_ref<jclass> /*clazz*/,
     jni::alias_ref<jobject> stateWrapper,
-    jfloat bottomInset) {
+    jfloat bottomInset,
+    jfloat translateY) {
   auto state = getStateFromWrapper(stateWrapper);
   if (!state) {
     return JNI_FALSE;
@@ -67,12 +68,13 @@ static jboolean updateFooterStateImmediate(
   auto concreteState =
       std::static_pointer_cast<const ConcreteState<TrueSheetFooterViewState>>(state);
 
-  // Applied to the data at commit time — the wrapper's copy may predate a
-  // pending translation update (see updateFooterTranslation)
+  // Carries the translation too — RN's EventQueue drops a still-queued update
+  // for the same view (see updateFooterTranslation) when this one is enqueued
   concreteState->updateState(
-      [bottomInset](const TrueSheetFooterViewState &oldData) -> StateData::Shared {
+      [bottomInset, translateY](const TrueSheetFooterViewState &oldData) -> StateData::Shared {
         auto newData = oldData;
         newData.bottomInset = bottomInset;
+        newData.translateY = translateY;
         newData.initialized = true;
         return std::make_shared<const TrueSheetFooterViewState>(newData);
       },
@@ -81,9 +83,8 @@ static jboolean updateFooterStateImmediate(
   return JNI_TRUE;
 }
 
-// Mirrors the footer's native translation into its state so measure() matches
-// where it's drawn. Async — it only feeds measure(), and positionFooter runs
-// every slide frame.
+// Mirrors the footer's resting translation into its state so measure()
+// matches where it's drawn. Async — it only feeds measure().
 static void updateFooterTranslation(
     jni::alias_ref<jclass> /*clazz*/,
     jni::alias_ref<jobject> stateWrapper,

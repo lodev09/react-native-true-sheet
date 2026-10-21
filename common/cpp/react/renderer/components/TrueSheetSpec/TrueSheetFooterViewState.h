@@ -21,7 +21,7 @@ class TrueSheetFooterViewState final {
 #ifdef ANDROID
   TrueSheetFooterViewState(TrueSheetFooterViewState const &previousState, folly::dynamic data)
       : bottomInset(static_cast<float>(data["bottomInset"].getDouble())),
-        translateY(previousState.translateY),
+        translateY(static_cast<float>(data["translateY"].getDouble())),
         initialized(true) {
   }
 #endif

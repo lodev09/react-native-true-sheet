@@ -67,7 +67,7 @@ using namespace facebook::react;
     return;
   }
   _bottomInset = bottomInset;
-  [self pushState];
+  [self pushStateWithMode:EventQueue::UpdateMode::unstable_Immediate];
 }
 
 // Skipped while the keyboard is open — an absolute footer rises above the
@@ -77,20 +77,23 @@ using namespace facebook::react;
     return;
   }
   _keyboardVisible = keyboardVisible;
-  [self pushState];
+  [self pushStateWithMode:EventQueue::UpdateMode::unstable_Immediate];
 }
 
 // The keyboard slide is a transform the shadow tree can't see — mirror it so
 // measure() (and Pressability's press region) match where the footer is drawn.
+// Async: no layout reads it.
 - (void)setKeyboardOffset:(CGFloat)keyboardOffset {
   if (_currentKeyboardOffset == keyboardOffset) {
     return;
   }
   _currentKeyboardOffset = keyboardOffset;
-  [self pushState];
+  [self pushStateWithMode:EventQueue::UpdateMode::Asynchronous];
 }
 
-- (void)pushState {
+// Every push carries all fields — RN's EventQueue drops a still-queued update
+// for the same view when the next one is enqueued.
+- (void)pushStateWithMode:(EventQueue::UpdateMode)mode {
   if (!_state) {
     return;
   }
@@ -99,11 +102,11 @@ using namespace facebook::react;
   newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
   newState.translateY = -_currentKeyboardOffset;
   newState.initialized = true;
-  // Immediate so the inset lands before anything reads the footer's height —
-  // the async path races the keyboard caret scroll and detent setup, leaving
-  // them an inset stale (same reason Android bridges through
-  // TrueSheetStateUpdater).
-  _state->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
+  // Inset changes go Immediate so they land before anything reads the
+  // footer's height — the async path races the keyboard caret scroll and
+  // detent setup, leaving them an inset stale (same reason Android bridges
+  // through TrueSheetStateUpdater).
+  _state->updateState(std::move(newState), mode);
   _didPushBottomInset = YES;
 }
 
@@ -241,8 +244,9 @@ using namespace facebook::react;
 }
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
-  [self setKeyboardVisible:NO];
+  // Offset first — the visible push replaces it in the queue, one commit
   [self setKeyboardOffset:0];
+  [self setKeyboardVisible:NO];
 
   [UIView animateWithDuration:duration
                         delay:0
@@ -277,8 +281,8 @@ using namespace facebook::react;
 
   // avoidKeyboard flipped off mid-keyboard — drop the slide already applied
   if (![self floatsAboveKeyboard]) {
-    [self setKeyboardVisible:NO];
     [self setKeyboardOffset:0];
+    [self setKeyboardVisible:NO];
     self.transform = CGAffineTransformIdentity;
     return;
   }
