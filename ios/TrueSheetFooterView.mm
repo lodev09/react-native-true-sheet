@@ -67,7 +67,7 @@ using namespace facebook::react;
     return;
   }
   _bottomInset = bottomInset;
-  [self pushBottomInsetState];
+  [self pushState];
 }
 
 // Skipped while the keyboard is open — an absolute footer rises above the
@@ -77,16 +77,27 @@ using namespace facebook::react;
     return;
   }
   _keyboardVisible = keyboardVisible;
-  [self pushBottomInsetState];
+  [self pushState];
 }
 
-- (void)pushBottomInsetState {
+// The keyboard slide is a transform the shadow tree can't see — mirror it so
+// measure() (and Pressability's press region) match where the footer is drawn.
+- (void)setKeyboardOffset:(CGFloat)keyboardOffset {
+  if (_currentKeyboardOffset == keyboardOffset) {
+    return;
+  }
+  _currentKeyboardOffset = keyboardOffset;
+  [self pushState];
+}
+
+- (void)pushState {
   if (!_state) {
     return;
   }
 
   TrueSheetFooterViewState newState;
   newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
+  newState.translateY = -_currentKeyboardOffset;
   newState.initialized = true;
   // Immediate so the inset lands before anything reads the footer's height —
   // the async path races the keyboard caret scroll and detent setup, leaving
@@ -215,7 +226,7 @@ using namespace facebook::react;
   [self setKeyboardVisible:YES];
 
   CGFloat slide = [self keyboardSlideForHeight:height];
-  _currentKeyboardOffset = slide;
+  [self setKeyboardOffset:slide];
 
   [UIView animateWithDuration:duration
     delay:0
@@ -231,7 +242,7 @@ using namespace facebook::react;
 
 - (void)keyboardWillHide:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   [self setKeyboardVisible:NO];
-  _currentKeyboardOffset = 0;
+  [self setKeyboardOffset:0];
 
   [UIView animateWithDuration:duration
                         delay:0
@@ -267,7 +278,7 @@ using namespace facebook::react;
   // avoidKeyboard flipped off mid-keyboard — drop the slide already applied
   if (![self floatsAboveKeyboard]) {
     [self setKeyboardVisible:NO];
-    _currentKeyboardOffset = 0;
+    [self setKeyboardOffset:0];
     self.transform = CGAffineTransformIdentity;
     return;
   }
@@ -275,7 +286,7 @@ using namespace facebook::react;
   [self setKeyboardVisible:YES];
 
   CGFloat slide = [self keyboardSlideForHeight:height];
-  _currentKeyboardOffset = slide;
+  [self setKeyboardOffset:slide];
   self.transform = CGAffineTransformMakeTranslation(0, -slide);
 }
 

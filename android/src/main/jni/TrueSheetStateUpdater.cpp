@@ -67,13 +67,42 @@ static jboolean updateFooterStateImmediate(
   auto concreteState =
       std::static_pointer_cast<const ConcreteState<TrueSheetFooterViewState>>(state);
 
-  // Copy the latest data so fields this bridge doesn't set survive the update
-  TrueSheetFooterViewState newState = concreteState->getData();
-  newState.bottomInset = bottomInset;
-  newState.initialized = true;
-  concreteState->updateState(std::move(newState), EventQueue::UpdateMode::unstable_Immediate);
+  // Applied to the data at commit time — the wrapper's copy may predate a
+  // pending translation update (see updateFooterTranslation)
+  concreteState->updateState(
+      [bottomInset](const TrueSheetFooterViewState &oldData) -> StateData::Shared {
+        auto newData = oldData;
+        newData.bottomInset = bottomInset;
+        newData.initialized = true;
+        return std::make_shared<const TrueSheetFooterViewState>(newData);
+      },
+      EventQueue::UpdateMode::unstable_Immediate);
 
   return JNI_TRUE;
+}
+
+// Mirrors the footer's native translation into its state so measure() matches
+// where it's drawn. Async — it only feeds measure(), and positionFooter runs
+// every slide frame.
+static void updateFooterTranslation(
+    jni::alias_ref<jclass> /*clazz*/,
+    jni::alias_ref<jobject> stateWrapper,
+    jfloat translateY) {
+  auto state = getStateFromWrapper(stateWrapper);
+  if (!state) {
+    return;
+  }
+
+  auto concreteState =
+      std::static_pointer_cast<const ConcreteState<TrueSheetFooterViewState>>(state);
+
+  concreteState->updateState(
+      [translateY](const TrueSheetFooterViewState &oldData) -> StateData::Shared {
+        auto newData = oldData;
+        newData.translateY = translateY;
+        return std::make_shared<const TrueSheetFooterViewState>(newData);
+      },
+      EventQueue::UpdateMode::Asynchronous);
 }
 
 // Publishes the precalculated bottom safe-area inset so a late-mounted
@@ -90,6 +119,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/) {
         ->registerNatives({
             makeNativeMethod("nativeUpdateState", facebook::react::updateStateImmediate),
             makeNativeMethod("nativeUpdateFooterState", facebook::react::updateFooterStateImmediate),
+            makeNativeMethod("nativeUpdateFooterTranslation", facebook::react::updateFooterTranslation),
             makeNativeMethod("nativeSetBottomSafeArea", facebook::react::setBottomSafeArea),
         });
   });

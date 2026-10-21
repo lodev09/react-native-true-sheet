@@ -32,9 +32,23 @@ class TrueSheetFooterView(reactContext: ThemedReactContext) : ReactViewGroup(rea
 
   private var lastWidth = 0
   private var lastHeight = 0
+  private var stateTranslationY = 0f
 
   var bottomInset = 0
     private set
+
+  /**
+   * positionFooter slides the footer off its Yoga position (above the
+   * keyboard, or riding the sheet). Mirror it into the shadow node so
+   * measure() — and Pressability's press region — match where it's drawn.
+   */
+  override fun setTranslationY(translationY: Float) {
+    super.setTranslationY(translationY)
+    if (translationY == stateTranslationY) return
+    val sw = stateWrapper ?: return
+    stateTranslationY = translationY
+    TrueSheetStateUpdater.updateFooterTranslation(sw, translationY.pxToDp())
+  }
 
   /**
    * Height the footer occupies above the keyboard — its layout height minus

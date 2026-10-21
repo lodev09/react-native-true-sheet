@@ -59,4 +59,16 @@ void TrueSheetFooterViewShadowNode::adjustLayoutWithState() {
   }
 }
 
+// Native moves the footer off its Yoga position without a layout pass. Folding
+// that slide into the transform keeps measure() — and Pressability's press
+// region — on the drawn footer.
+Transform TrueSheetFooterViewShadowNode::getTransform() const {
+  auto transform = ConcreteViewShadowNode::getTransform();
+  auto translateY = getStateData().translateY;
+  if (translateY == 0) {
+    return transform;
+  }
+  return transform * Transform::Translate(0, translateY, 0);
+}
+
 }  // namespace facebook::react
