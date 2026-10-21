@@ -77,6 +77,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 @implementation TrueSheetViewController {
   TrueSheetPositionState _lastEmittedPositionState;
   CGSize _lastReportedSize;
+  // Net of the footer's baked-in inset, snapshotted together: the inset updates
+  // with the footer's layout, but a size change mid-present is deferred to
+  // didPresent, so subtracting it live pairs a new inset with a stale height.
   CGFloat _autoDetentHeight;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
@@ -1576,8 +1579,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  */
 - (void)setupSheetDetentsForSizeChange {
   if (@available(iOS 16.0, *)) {
-    CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight];
-    CGFloat peekHeight = [_detentCalculator peekHeight];
+    CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
+    CGFloat peekHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
 
     if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
       return;
@@ -1617,8 +1620,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_detentCalculator clearResolvedHeights];
   _hingeCorrections = 0;
 
-  _autoDetentHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight];
-  _peekDetentHeight = [_detentCalculator peekHeight];
+  _autoDetentHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
+  _peekDetentHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
 
   for (NSInteger index = 0; index < self.detents.count; index++) {
     id detent = self.detents[index];
@@ -1681,7 +1684,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       return [self customDetentWithIdentifier:@"custom-auto"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    return self->_autoDetentHeight - [self autoDetentBottomInset];
+                                    return self->_autoDetentHeight;
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
@@ -1693,7 +1696,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       return [self customDetentWithIdentifier:@"custom-peek"
                                       atIndex:index
                                   heightBlock:^CGFloat {
-                                    return self->_peekDetentHeight - [self peekDetentBottomInset];
+                                    return self->_peekDetentHeight;
                                   }];
     } else {
       return [UISheetPresentationControllerDetent mediumDetent];
