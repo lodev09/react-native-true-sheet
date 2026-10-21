@@ -59,6 +59,7 @@
 - `scrollableRef` now resolves scrollables that expose their scroll node through an imperative handle, such as LegendList. ([#914](https://github.com/lodev09/react-native-true-sheet/pull/914) by [@cpruijsen](https://github.com/cpruijsen))
 - A sheet hosted in a bottom-tab screen is now hidden when the stack enclosing the tabs pushes a screen, and restored on return, instead of covering the pushed screen. ([#910](https://github.com/lodev09/react-native-true-sheet/pull/910) by [@IjzerenHein](https://github.com/IjzerenHein))
 - An input focused in `onWillPresent` now raises the keyboard together with the sheet, with an absolute footer above the keyboard and the scrollable's focused input and last rows visible. On Android, a stacked parent sheet no longer jumps while the keyboard rises, and returns fully to rest when its child grows past it. ([#938](https://github.com/lodev09/react-native-true-sheet/pull/938) by [@lodev09](https://github.com/lodev09))
+- Buttons in an absolute footer no longer drop `onPress` when the finger moves slightly while the keyboard is open, and `measure()` now reports the footer where it's drawn above the keyboard. ([#949](https://github.com/lodev09/react-native-true-sheet/pull/949) by [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
