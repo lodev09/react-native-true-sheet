@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState, type Ref, useImperativeHandle } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -53,6 +53,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const { onNavigateToModal, onNavigateToTest, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
   const childSheet = useRef<TrueSheet>(null);
+  const childScrollRef = useRef<ScrollView>(null);
+  const childInputRef = useRef<TextInput>(null);
   const overlaySheet = useRef<TrueSheet>(null);
   const [contentCount, setContentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -239,20 +241,29 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <TrueSheet
         ref={childSheet}
         name="basic-child"
-        detents={['auto', 1]}
+        detents={['auto']}
         dimColor="#ff0000"
         dimOpacity={0.4}
-        dimmedDetentIndex={1}
         backgroundColor={DARK}
-        style={styles.childContent}
+        scrollableRef={childScrollRef}
         footer={<Footer />}
         footerStyle={styles.footer}
+        footerOptions={{ position: 'absolute' }}
+        // Auto + scrollable + absolute footer, with the keyboard rising during present:
+        // the footer drops its safe-area inset mid-present (sheet must not overshoot)
+        onWillPresent={() => childInputRef.current?.focus()}
       >
-        <DemoContent color={DARK_BLUE} />
-        {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
-        <Button text="Dismiss All" onPress={() => dismissAll()} />
-        <Button text="Dismiss Stack" onPress={() => dismissStack('main')} />
-        <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
+        <ScrollView
+          ref={childScrollRef}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.childContent}
+        >
+          <Input ref={childInputRef} />
+          {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
+          <Button text="Dismiss All" onPress={() => dismissAll()} />
+          <Button text="Dismiss Stack" onPress={() => dismissStack('main')} />
+          <Button text="Close" onPress={() => childSheet.current?.dismiss()} />
+        </ScrollView>
       </TrueSheet>
     </TrueSheet>
   );
