@@ -115,6 +115,29 @@ describe('extendTrueSheetRouter', () => {
     expect(result?.state.routes[1]?.closing).toBe(true);
   });
 
+  it('NAVIGATE to the base screen from a sheet dismisses the sheets instead of pushing it again', () => {
+    const { baseRouter, extension } = createExtension('Home');
+    const state = makeState(['Home', 'Details', 'Settings']);
+    const home = { key: 'Home-test', name: 'Home', params: { id: '1' } };
+    baseRouter.getStateForAction.mockReturnValueOnce({
+      state: { ...state, index: 0, routes: [home] },
+      affectedRouteKey: 'Home-test',
+    } as never);
+
+    const action = { type: 'NAVIGATE', payload: { name: 'Home', params: { id: '1' } } };
+    const result = extension.getStateForAction(state, action as unknown as TrueSheetActionType, {});
+
+    expect(baseRouter.getStateForAction).toHaveBeenCalledWith(
+      state,
+      { type: 'NAVIGATE', payload: { name: 'Home', params: { id: '1' }, pop: true } },
+      {}
+    );
+    expect(result?.affectedRouteKey).toBe('Home-test');
+    expect(result?.state.routes[0]).toBe(home);
+    expect(result?.state.routes[1]?.closing).toBe(true);
+    expect(result?.state.routes[2]?.dismissing).toBe(true);
+  });
+
   it('REMOVE reports the focused route as affected', () => {
     const { extension } = createExtension('Home');
     const result = extension.getStateForAction(

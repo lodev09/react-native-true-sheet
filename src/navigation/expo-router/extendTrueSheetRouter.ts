@@ -49,6 +49,32 @@ export const extendTrueSheetRouter = (
           action: TrueSheetActionType,
           config: object
         ): ActionResult | null {
+          // React Navigation 7's `navigate` pushes a screen that is lower in the stack again, unless `pop` is set:
+          // navigating to the base screen from a sheet goes back to it and dismisses the sheets instead.
+          const { type, payload } = action as { type: string; payload?: { name?: string } };
+          if (
+            type === 'NAVIGATE' &&
+            state.routes.length > 1 &&
+            payload?.name === state.routes[0]?.name
+          ) {
+            const popped = baseRouter.getStateForAction(
+              state,
+              { ...action, payload: { ...payload, pop: true } } as unknown as TrueSheetActionType,
+              config
+            );
+            const base = popped?.state.routes.length === 1 ? popped.state.routes[0] : undefined;
+            const dismissed =
+              base &&
+              getTrueSheetStateForAction(
+                { ...state, routes: [base, ...state.routes.slice(1)] },
+                TrueSheetActions.pop(state.routes.length - 1)
+              );
+
+            if (base && dismissed) {
+              return { state: dismissed, affectedRouteKey: base.key };
+            }
+          }
+
           const result = getTrueSheetStateForAction(state, action);
 
           if (result === undefined) {
