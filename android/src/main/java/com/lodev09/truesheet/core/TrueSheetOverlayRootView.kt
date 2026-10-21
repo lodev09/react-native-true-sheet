@@ -48,7 +48,14 @@ class TrueSheetOverlayRootView(private val reactContext: ThemedReactContext) :
     translationZ = OVERLAY_Z
   }
 
-  // Children are positioned by Fabric — a FrameLayout pass would stretch them to match_parent
+  // Children are measured and positioned by Fabric — a FrameLayout pass would stretch them to match_parent
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    setMeasuredDimension(
+      MeasureSpec.getSize(widthMeasureSpec),
+      MeasureSpec.getSize(heightMeasureSpec)
+    )
+  }
+
   override fun onLayout(
     changed: Boolean,
     left: Int,
