@@ -89,11 +89,19 @@ Set `avoidKeyboard` to `false` to keep an absolute footer at the bottom edge of 
 
 The keyboard covers the pinned footer. With footer inset adjustment enabled, any footer portion above the keyboard still adds scroll padding and contributes to the expanded `auto` height. A fully covered footer adds no extra space above the keyboard. The footer keeps its safe-area padding, and `keyboardOffset` has no effect.
 
-## Autofocus Limitation
+## Autofocus
 
-Avoid using `autoFocus` on `TextInput` components inside the sheet. The input can focus before the sheet starts presenting, causing layout issues.
+Use `autoFocus` on a `TextInput` inside the sheet to raise the keyboard together with the sheet:
 
-Instead, focus the input programmatically. Focus it in `onWillPresent` to raise the keyboard together with the sheet, or in `onDidPresent` to raise it after the sheet lands:
+```tsx
+<TrueSheet detents={['auto']}>
+  <TextInput autoFocus placeholder="Type something..." />
+</TrueSheet>
+```
+
+`autoFocus` only applies when the input mounts. With [`lazy`](../reference/configuration#lazy) set to `false`, the content stays mounted after dismiss, so the input focuses on the first present only.
+
+To focus on every present, focus the input programmatically. Focus it in `onWillPresent` to raise the keyboard together with the sheet, or in `onDidPresent` to raise it after the sheet lands:
 
 ```tsx {4,7}
 const inputRef = useRef<TextInput>(null)
