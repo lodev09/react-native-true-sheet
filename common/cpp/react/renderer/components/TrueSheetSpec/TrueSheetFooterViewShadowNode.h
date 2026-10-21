@@ -20,6 +20,8 @@ class JSI_EXPORT TrueSheetFooterViewShadowNode final
 
  public:
   void adjustLayoutWithState();
+
+  Transform getTransform() const override;
 };
 
 }  // namespace facebook::react

@@ -374,6 +374,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private val isKeyboardTransitioning: Boolean
     get() = keyboardObserver?.isTransitioning ?: false
 
+  // The footer slides every frame until the sheet and keyboard come to rest
+  private val isSheetMoving: Boolean
+    get() = isPresentAnimating ||
+      isKeyboardTransitioning ||
+      behavior?.state == BottomSheetBehavior.STATE_DRAGGING ||
+      behavior?.state == BottomSheetBehavior.STATE_SETTLING
+
   // Keyboard is up or animating — detents are (or are about to be) keyboard-shifted
   val isKeyboardActive: Boolean
     get() = keyboardInset > 0 || isKeyboardTransitioning
@@ -724,6 +731,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun handleStateSettled(sheetView: View, newState: Int) {
+    // The settle's last slide frame has positioned the footer
+    containerView?.footerView?.syncTranslationState()
+
     if (interactionState is InteractionState.Reconfiguring) return
 
     // A release already at a stop settles without a slide frame
@@ -1288,6 +1298,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // absolute footer floats above it
     if (!absoluteFooter) {
       footerView.translationY = 0f
+      footerView.syncTranslationState()
       return
     }
 
@@ -1313,6 +1324,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Clamp to prevent footer going above safe area
     val maxAllowedY = (sheetHeight - topInset - footerHeight).toFloat()
     footerView.y = minOf(footerY, maxAllowedY)
+    // Mid-motion slides are synced once the sheet settles or the keyboard
+    // lands (handleStateSettled, keyboardDidShow/keyboardDidHide)
+    if (!isSheetMoving) footerView.syncTranslationState()
     if (!footerAvoidsKeyboard) {
       containerView?.contentView?.updateContentInset()
     }
@@ -1403,7 +1417,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           )
         }
 
+        override fun keyboardDidShow(height: Int) {
+          // The keyboard's last frame has positioned the footer
+          containerView?.footerView?.syncTranslationState()
+        }
+
         override fun keyboardDidHide() {
+          containerView?.footerView?.syncTranslationState()
           if (!shouldHandleKeyboard(checkFocus = false)) return
           isKeyboardDismissProgrammatic = false
           // Keep detentIndexBeforeKeyboard for the settle's detent-change check

@@ -32,9 +32,23 @@ class TrueSheetFooterView(reactContext: ThemedReactContext) : ReactViewGroup(rea
 
   private var lastWidth = 0
   private var lastHeight = 0
+  private var stateTranslationY = 0f
 
   var bottomInset = 0
     private set
+
+  /**
+   * positionFooter slides the footer off its Yoga position (above the
+   * keyboard, or riding the sheet). Mirror where it rests into the shadow
+   * node so measure() — and Pressability's press region — match where it's
+   * drawn. Called once the footer settles: every push is a commit.
+   */
+  fun syncTranslationState() {
+    if (translationY == stateTranslationY) return
+    val sw = stateWrapper ?: return
+    stateTranslationY = translationY
+    TrueSheetStateUpdater.updateFooterTranslation(sw, translationY.pxToDp())
+  }
 
   /**
    * Height the footer occupies above the keyboard — its layout height minus
@@ -55,14 +69,18 @@ class TrueSheetFooterView(reactContext: ThemedReactContext) : ReactViewGroup(rea
 
     val sw = stateWrapper ?: return
     val insetDp = bottomInset.toFloat().pxToDp()
+    // Carried along — this update replaces a still-queued translation update
+    stateTranslationY = translationY
+    val translateYDp = translationY.pxToDp()
 
     // Synchronous update — the footer must be padded before detents are
     // configured, otherwise the auto detent is set up an inset short
-    if (TrueSheetStateUpdater.updateFooterState(sw, insetDp)) return
+    if (TrueSheetStateUpdater.updateFooterState(sw, insetDp, translateYDp)) return
 
     // Fallback: async state update
     val newState = WritableNativeMap()
     newState.putDouble("bottomInset", insetDp.toDouble())
+    newState.putDouble("translateY", translateYDp.toDouble())
     sw.updateState(newState)
   }
 
