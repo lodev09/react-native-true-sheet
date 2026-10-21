@@ -448,6 +448,24 @@ On iOS 27.1+ foldables like the iPhone Duo, the new `foldOptions` prop rests the
 
 `hingeBehavior: 'avoid'` keeps the sheet below the hinge, and `'snap'` also moves it there when the device folds. Nothing changes on other devices. See the [Foldables guide](guides/foldables).
 
+### 14. Autofocus Inputs
+
+`autoFocus` on a `TextInput` inside the sheet now raises the keyboard together with the sheet. The v3 workaround of focusing in `onDidPresent` is no longer needed:
+
+```tsx
+// ❌ v3 — focus after the sheet lands
+<TrueSheet onDidPresent={() => inputRef.current?.focus()}>
+  <TextInput ref={inputRef} />
+</TrueSheet>
+
+// ✅ v4
+<TrueSheet>
+  <TextInput autoFocus />
+</TrueSheet>
+```
+
+With `lazy={false}`, content stays mounted after dismiss, so `autoFocus` focuses on the first present only. Focus in `onWillPresent` instead to raise the keyboard with the sheet on every present. See [Keyboard Handling](guides/keyboard#autofocus).
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.

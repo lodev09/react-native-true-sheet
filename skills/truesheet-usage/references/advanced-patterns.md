@@ -690,6 +690,7 @@ On iOS 26.0, color/blur still sits above glass.
 - `foldOptions` — iOS 27.1+ foldables: rest the sheet on the hinge in tabletop. See [Foldables](#foldables-ios-271)
 - `background` / `backgroundStyle` — custom nodes, exact colors, and glass/blur tints on all platforms
 - `lazy={false}` — mount content before presenting so `'auto'` measures settled content
+- `autoFocus` on a `TextInput` raises the keyboard with the sheet — drop the v3 `onDidPresent` focus workaround. With `lazy={false}`, focus in `onWillPresent` to focus on every present
 - Synchronous per-detent layout — flex layouts track the sheet edge frame-by-frame while dragging
 - Element inspector works inside a presented sheet (dev builds, no setup) — header, content, and footer are inspectable
 - Android: a quick downward flick dismisses from the lowest detent, like iOS. `dismissThreshold="short"` (Android/Web) dismisses on a short drag or any fling, like Compose Material3

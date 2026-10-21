@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Cpu,
   Droplets,
+  FoldVertical,
   Keyboard,
   Layers,
   MoveVertical,
@@ -107,6 +108,12 @@ const FEATURES = [
     title: 'Liquid Glass',
     text: 'Native background blur and Liquid Glass on iOS 26, featured on the Expo blog.',
     to: '/guides/liquid-glass',
+  },
+  {
+    icon: FoldVertical,
+    title: 'Foldables',
+    text: 'On a half-folded iPhone, the sheet rests on the hinge and fills the panel below it. iOS 27.1+.',
+    to: '/guides/foldables',
   },
   {
     icon: Accessibility,
