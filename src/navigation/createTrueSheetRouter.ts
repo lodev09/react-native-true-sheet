@@ -112,10 +112,11 @@ export const getTrueSheetStateForAction = <State extends SheetState>(
       const closingIndex = targetIndex + 1;
 
       // Mark only the bottom-most route to pop as closing
-      // The sheet's dismiss() will handle dismissing sheets above it first
+      // The sheet's dismiss() will handle dismissing sheets above it first.
+      // The index stays on the top sheet until REMOVE: Expo Router 58 treats the routes
+      // after `index` as preloaded.
       return {
         ...state,
-        index: closingIndex,
         routes: state.routes.map((route, i) => {
           if (i === closingIndex) return { ...route, closing: true };
           if (i > closingIndex) return { ...route, dismissing: true };
@@ -181,13 +182,22 @@ export const getTrueSheetStateForAction = <State extends SheetState>(
   }
 };
 
+const BASE_ROUTE_ACTIONS = new Set([
+  'NAVIGATE',
+  'NAVIGATE_DEPRECATED',
+  'PUSH',
+  'REPLACE',
+  'POP_TO',
+]);
+
 /**
- * Reduces a `NAVIGATE` or `PUSH` to the base route from a sheet. React Navigation 7 pushes a route
- * that is lower in the stack again (a `NAVIGATE` unless `pop` is set, a `PUSH` always), which
- * presents the base screen as a sheet. This goes back to it instead: `getPoppedState` reduces the
- * action as a `NAVIGATE` with `pop` (a `PUSH` ignores `pop`) to update the base route (params,
- * nested state), then the sheets above it are dismissed.
- * Returns `undefined` for other actions, or when the base router doesn't land on the base route.
+ * Reduces an action that targets the base route by name. React Navigation 7 adds another base
+ * route for a `PUSH`, a `REPLACE` or a `NAVIGATE` without `pop`, which presents the base screen
+ * as a sheet, and this router's `POP_TO` drops the params and nested state. This goes back to it
+ * instead: `getPoppedState` reduces the action as a `NAVIGATE` with `pop` (a `PUSH` ignores
+ * `pop`) to update the base route (params, nested state), then the sheets above it are dismissed.
+ * Returns `undefined` for other actions, a `REPLACE` with no sheet (it swaps the base route), or
+ * when the base router doesn't land on the base route.
  */
 export const getStateForNavigateToBase = <State extends SheetState>(
   state: State,
@@ -196,11 +206,12 @@ export const getStateForNavigateToBase = <State extends SheetState>(
 ): State | undefined => {
   const { type, payload } = action as { type: string; payload?: { name?: string } };
   const baseRoute = state.routes[0]!;
+  const hasSheets = state.routes.length > 1;
 
   if (
-    (type !== 'NAVIGATE' && type !== 'PUSH') ||
-    state.routes.length <= 1 ||
-    payload?.name !== baseRoute.name
+    !BASE_ROUTE_ACTIONS.has(type) ||
+    payload?.name !== baseRoute.name ||
+    (type === 'REPLACE' && !hasSheets)
   ) {
     return undefined;
   }
@@ -214,6 +225,10 @@ export const getStateForNavigateToBase = <State extends SheetState>(
 
   if (base?.key !== baseRoute.key) {
     return undefined;
+  }
+
+  if (!hasSheets) {
+    return popped!;
   }
 
   return getTrueSheetStateForAction(

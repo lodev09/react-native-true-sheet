@@ -53,6 +53,12 @@ export const extendTrueSheetRouter = (
           action: TrueSheetActionType,
           config: object
         ): ActionResult | null {
+          // Expo Router keeps preloaded routes in `routes`, and the navigator presents every
+          // route there as a sheet
+          if ((action as { type: string }).type === 'PRELOAD') {
+            return { state };
+          }
+
           const navigated = getStateForNavigateToBase(
             state,
             action,

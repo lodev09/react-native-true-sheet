@@ -122,11 +122,11 @@ describe('createTrueSheetRouter', () => {
       expect(nextState?.routes[2]?.closing).toBe(true);
     });
 
-    it('POP with count marks the correct route as closing', () => {
+    it('POP with count marks the correct route as closing and keeps the index on the top sheet', () => {
       const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
       const nextState = getStateForAction(state, TrueSheetActions.pop(2));
 
-      expect(nextState?.index).toBe(1);
+      expect(nextState?.index).toBe(2);
       expect(nextState?.routes[1]?.closing).toBe(true);
       expect(nextState?.routes[2]?.closing).toBeUndefined();
       expect(nextState?.routes[2]?.dismissing).toBe(true);
@@ -157,7 +157,7 @@ describe('createTrueSheetRouter', () => {
       const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
       const nextState = getStateForAction(state, TrueSheetActions.popToTop());
 
-      expect(nextState?.index).toBe(1);
+      expect(nextState?.index).toBe(2);
       expect(nextState?.routes[1]?.closing).toBe(true);
     });
 
@@ -176,10 +176,10 @@ describe('createTrueSheetRouter', () => {
       expect(getStateForAction(state, TrueSheetActions.popTo('Details'))).toBeNull();
     });
 
-    describe('NAVIGATE or PUSH to the base route', () => {
-      const navigateToHome = CommonActions.navigate('Home', { screen: 'Test' }) as Parameters<
-        typeof getStateForAction
-      >[1];
+    describe('an action to the base route', () => {
+      type Action = Parameters<typeof getStateForAction>[1];
+
+      const navigateToHome = CommonActions.navigate('Home', { screen: 'Test' }) as Action;
 
       it('goes back to it and dismisses the sheets instead of pushing it again', () => {
         const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
@@ -191,40 +191,74 @@ describe('createTrueSheetRouter', () => {
           'Settings-test',
         ]);
         expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
-        expect(nextState?.index).toBe(1);
+        expect(nextState?.index).toBe(2);
         expect(nextState?.routes[1]?.closing).toBe(true);
         expect(nextState?.routes[2]?.dismissing).toBe(true);
       });
 
       it('updates the base route while the sheets are dismissing', () => {
-        const state = makeState(
-          [
-            makeRoute('Home'),
-            makeRoute('Details', { closing: true }),
-            makeRoute('Settings', { dismissing: true }),
-          ],
-          1
-        );
+        const state = makeState([
+          makeRoute('Home'),
+          makeRoute('Details', { closing: true }),
+          makeRoute('Settings', { dismissing: true }),
+        ]);
         const nextState = getStateForAction(state, navigateToHome);
 
         expect(nextState?.routes).toHaveLength(3);
         expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
-        expect(nextState?.index).toBe(1);
+        expect(nextState?.index).toBe(2);
         expect(nextState?.routes[1]?.closing).toBe(true);
         expect(nextState?.routes[2]?.dismissing).toBe(true);
       });
 
-      it('handles a PUSH of the base route the same way', () => {
+      it.each([
+        ['PUSH', StackActions.push('Home', { screen: 'Test' })],
+        ['REPLACE', StackActions.replace('Home', { screen: 'Test' })],
+        ['POP_TO', StackActions.popTo('Home', { screen: 'Test' })],
+        ['NAVIGATE_DEPRECATED', CommonActions.navigateDeprecated('Home', { screen: 'Test' })],
+      ])('handles a %s the same way', (_, action) => {
         const state = makeState([makeRoute('Home'), makeRoute('Details')]);
-        const nextState = getStateForAction(
-          state,
-          StackActions.push('Home', { screen: 'Test' }) as Parameters<typeof getStateForAction>[1]
-        );
+        const nextState = getStateForAction(state, action as Action);
 
         expect(nextState?.routes.map((r) => r.key)).toEqual(['Home-test', 'Details-test']);
         expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
         expect(nextState?.index).toBe(1);
         expect(nextState?.routes[1]?.closing).toBe(true);
+      });
+
+      it('merges the params of a POP_TO with merge', () => {
+        const state = makeState([makeRoute('Home', { params: { id: '1' } }), makeRoute('Details')]);
+        const nextState = getStateForAction(
+          state,
+          StackActions.popTo('Home', { screen: 'Test' }, { merge: true }) as Action
+        );
+
+        expect(nextState?.routes[0]?.params).toEqual({ id: '1', screen: 'Test' });
+        expect(nextState?.routes[1]?.closing).toBe(true);
+      });
+
+      it.each([
+        ['PUSH', StackActions.push('Home', { screen: 'Test' })],
+        ['POP_TO', StackActions.popTo('Home', { screen: 'Test' })],
+      ])('updates the base route for a %s with no sheet', (_, action) => {
+        const state = makeState([makeRoute('Home')]);
+        const nextState = getStateForAction(state, action as Action);
+
+        expect(nextState?.routes.map((r) => r.key)).toEqual(['Home-test']);
+        expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
+        expect(nextState?.index).toBe(0);
+      });
+
+      it('swaps the base route for a REPLACE with no sheet', () => {
+        const state = makeState([makeRoute('Home')]);
+        const nextState = getStateForAction(
+          state,
+          StackActions.replace('Home', { screen: 'Test' }) as Action
+        );
+
+        expect(nextState?.routes).toHaveLength(1);
+        expect(nextState?.routes[0]?.key).not.toBe('Home-test');
+        expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
       });
 
       it('still pushes the base route when the base router does not land on it', () => {
@@ -246,14 +280,11 @@ describe('createTrueSheetRouter', () => {
     });
 
     it('REMOVE with source removes the route and the routes dismissed with it', () => {
-      const state = makeState(
-        [
-          makeRoute('Home'),
-          makeRoute('Details', { closing: true }),
-          makeRoute('Settings', { dismissing: true }),
-        ],
-        1
-      );
+      const state = makeState([
+        makeRoute('Home'),
+        makeRoute('Details', { closing: true }),
+        makeRoute('Settings', { dismissing: true }),
+      ]);
       const nextState = getStateForAction(state, {
         ...TrueSheetActions.remove(),
         source: 'Details-test',
@@ -264,14 +295,11 @@ describe('createTrueSheetRouter', () => {
     });
 
     it('REMOVE without source removes the first closing route', () => {
-      const state = makeState(
-        [
-          makeRoute('Home'),
-          makeRoute('Details', { closing: true }),
-          makeRoute('Settings', { dismissing: true }),
-        ],
-        1
-      );
+      const state = makeState([
+        makeRoute('Home'),
+        makeRoute('Details', { closing: true }),
+        makeRoute('Settings', { dismissing: true }),
+      ]);
       const nextState = getStateForAction(state, TrueSheetActions.remove());
 
       expect(nextState?.routes.map((r) => r.name)).toEqual(['Home']);

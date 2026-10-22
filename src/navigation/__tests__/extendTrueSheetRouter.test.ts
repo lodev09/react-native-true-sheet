@@ -103,7 +103,7 @@ describe('extendTrueSheetRouter', () => {
     expect(result?.state.routes[1]?.resizeIndex).toBe(1);
   });
 
-  it('POP reports the closing route as affected', () => {
+  it('POP keeps the top sheet focused, so the popped routes are not preloaded', () => {
     const { extension } = createExtension('Home');
     const result = extension.getStateForAction(
       makeState(['Home', 'Details', 'Settings']),
@@ -111,11 +111,26 @@ describe('extendTrueSheetRouter', () => {
       {}
     );
 
-    expect(result?.affectedRouteKey).toBe('Details-test');
+    expect(result?.affectedRouteKey).toBe('Settings-test');
+    expect(result?.state.index).toBe(2);
     expect(result?.state.routes[1]?.closing).toBe(true);
+    expect(result?.state.routes[2]?.dismissing).toBe(true);
   });
 
-  describe('NAVIGATE or PUSH to the base route', () => {
+  it('ignores PRELOAD, which would present the sheet', () => {
+    const { baseRouter, extension } = createExtension('Home');
+    const state = makeState(['Home']);
+    const result = extension.getStateForAction(
+      state,
+      { type: 'PRELOAD', payload: { name: 'Details' } } as unknown as TrueSheetActionType,
+      {}
+    );
+
+    expect(result).toEqual({ state });
+    expect(baseRouter.getStateForAction).not.toHaveBeenCalled();
+  });
+
+  describe('an action to the base route', () => {
     const action = {
       type: 'NAVIGATE',
       payload: { name: 'Home', params: { screen: 'Test' } },
@@ -139,7 +154,7 @@ describe('extendTrueSheetRouter', () => {
       expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
       expect(result?.affectedRouteKey).toBe('Home-test');
       expect(result?.state.routes[0]).toBe(home);
-      expect(result?.state.index).toBe(1);
+      expect(result?.state.index).toBe(2);
       expect(result?.state.routes[1]?.closing).toBe(true);
       expect(result?.state.routes[2]?.dismissing).toBe(true);
     });
@@ -149,12 +164,11 @@ describe('extendTrueSheetRouter', () => {
       const [base, details, settings] = makeState(['Home', 'Details', 'Settings']).routes;
       const state = {
         ...makeState([]),
-        index: 1,
+        index: 2,
         routes: [base!, { ...details!, closing: true }, { ...settings!, dismissing: true }],
       };
-      // Expo Router's StackRouter keeps the routes after `index` as preloaded routes
       baseRouter.getStateForAction.mockReturnValueOnce({
-        state: { ...state, index: 0, routes: [home, state.routes[2]] },
+        state: { ...state, index: 0, routes: [home] },
         affectedRouteKey: 'Home-test',
       } as never);
 
@@ -167,11 +181,36 @@ describe('extendTrueSheetRouter', () => {
       expect(result?.state.routes[2]?.dismissing).toBe(true);
     });
 
-    it('handles a PUSH of the base route as a NAVIGATE', () => {
+    it.each(['PUSH', 'REPLACE', 'POP_TO'])(
+      'handles a %s of the base route as a NAVIGATE',
+      (type) => {
+        const { baseRouter, extension } = createExtension('Home');
+        const state = makeState(['Home', 'Details']);
+        baseRouter.getStateForAction.mockReturnValueOnce({
+          state: { ...state, index: 0, routes: [home] },
+          affectedRouteKey: 'Home-test',
+        } as never);
+
+        const result = extension.getStateForAction(
+          state,
+          { ...action, type } as unknown as TrueSheetActionType,
+          {}
+        );
+
+        expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
+        expect(result?.affectedRouteKey).toBe('Home-test');
+        expect(result?.state.routes[0]).toBe(home);
+        expect(result?.state.index).toBe(1);
+        expect(result?.state.routes[1]?.closing).toBe(true);
+      }
+    );
+
+    it('updates the base route for a PUSH with no sheet', () => {
       const { baseRouter, extension } = createExtension('Home');
-      const state = makeState(['Home', 'Details']);
+      const state = makeState(['Home']);
+      const updated = { ...state, routes: [home] };
       baseRouter.getStateForAction.mockReturnValueOnce({
-        state: { ...state, index: 0, routes: [home] },
+        state: updated,
         affectedRouteKey: 'Home-test',
       } as never);
 
@@ -181,11 +220,8 @@ describe('extendTrueSheetRouter', () => {
         {}
       );
 
-      expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
-      expect(result?.affectedRouteKey).toBe('Home-test');
-      expect(result?.state.routes[0]).toBe(home);
-      expect(result?.state.index).toBe(1);
-      expect(result?.state.routes[1]?.closing).toBe(true);
+      expect(baseRouter.getStateForAction).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ state: updated, affectedRouteKey: 'Home-test' });
     });
 
     it.each(['NAVIGATE', 'PUSH'])(
