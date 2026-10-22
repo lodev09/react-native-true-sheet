@@ -22,8 +22,7 @@ using namespace facebook::react;
   NSInteger _presenterScreenTag;
   NSMutableSet<NSNumber *> *_screenTags;
   __weak UIViewController *_presenterScreenController;
-  __weak UIViewController *_parentScreenController;
-  __weak UIWindow *_window;
+  NSHashTable<UIViewController *> *_parentScreenControllers;
   BOOL _dismissedByNavigation;
   BOOL _pendingInteractiveDismiss;
   BOOL _pendingInteractiveAppear;
@@ -39,8 +38,7 @@ using namespace facebook::react;
     _presenterScreenTag = 0;
     _screenTags = [NSMutableSet new];
     _presenterScreenController = nil;
-    _parentScreenController = nil;
-    _window = nil;
+    _parentScreenControllers = [NSHashTable weakObjectsHashTable];
   }
   return self;
 }
@@ -143,8 +141,7 @@ using namespace facebook::react;
   _presenterScreenTag = 0;
   [_screenTags removeAllObjects];
   _presenterScreenController = nil;
-  _parentScreenController = nil;
-  _window = view.window;
+  [_parentScreenControllers removeAllObjects];
 
   Class screenViewClass = NSClassFromString(@"RNSScreenView");
   if (!screenViewClass)
@@ -165,8 +162,8 @@ using namespace facebook::react;
       if (!_presenterScreenController) {
         _presenterScreenTag = current.tag;
         _presenterScreenController = screenVC;
-      } else if (!_parentScreenController && screenVC) {
-        _parentScreenController = screenVC;
+      } else if (screenVC) {
+        [_parentScreenControllers addObject:screenVC];
       }
     }
   }
@@ -239,27 +236,16 @@ using namespace facebook::react;
 }
 
 - (BOOL)shouldDismissForScreenTag:(NSInteger)screenTag {
-  // For parent screens (not immediate presenter), check if the presenter screen is being removed
-  // This handles nested stack removal case
+  // For parent screens, dismiss if one was popped or covered in its own stack. The presenter
+  // may already be detached (e.g. its nested stack unmounting), so it can't be checked here.
+  // Skip if all are still top (e.g. modal dismiss - sheet dismisses naturally)
   if (screenTag != _presenterScreenTag) {
-    UINavigationController *parentNav = _parentScreenController.navigationController;
-
-    // Modal case: parent's nav is presented -> let sheet dismiss naturally
-    // Nested stack case: parent's nav is not presented (embedded) -> need to dismiss
-    if (parentNav.presentingViewController != nil) {
-      return NO;
+    for (UIViewController *screen in _parentScreenControllers) {
+      UINavigationController *nav = screen.navigationController;
+      if (nav && nav.topViewController != screen) {
+        return YES;
+      }
     }
-
-    if (!_parentScreenController) {
-      return NO;
-    }
-
-    // If presenter view is no longer in window, the nested stack is being removed
-    UIView *presenterView = [_window viewWithTag:_presenterScreenTag];
-    if (presenterView == nil || presenterView.window == nil) {
-      return YES;
-    }
-
     return NO;
   }
 
