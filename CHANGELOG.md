@@ -59,6 +59,7 @@
 - `scrollableRef` now resolves scrollables that expose their scroll node through an imperative handle, such as LegendList. ([#914](https://github.com/lodev09/react-native-true-sheet/pull/914) by [@cpruijsen](https://github.com/cpruijsen))
 - A sheet hosted in a bottom-tab screen is now hidden when the stack enclosing the tabs pushes a screen, and restored on return, instead of covering the pushed screen. ([#910](https://github.com/lodev09/react-native-true-sheet/pull/910) by [@IjzerenHein](https://github.com/IjzerenHein))
 - An input focused in `onWillPresent` or with `autoFocus` now raises the keyboard together with the sheet, with an absolute footer above the keyboard and the scrollable's focused input and last rows visible. On Android, a stacked parent sheet no longer jumps while the keyboard rises, and returns fully to rest when its child grows past it. ([#938](https://github.com/lodev09/react-native-true-sheet/pull/938), [#950](https://github.com/lodev09/react-native-true-sheet/pull/950), [#951](https://github.com/lodev09/react-native-true-sheet/pull/951) by [@lodev09](https://github.com/lodev09))
+- Sheet navigator: navigating from a sheet to the base screen, or a screen nested in it (e.g. an Expo Router `<Link>`), now dismisses the sheets and shows that screen, instead of presenting the base screen again as a sheet. ([#952](https://github.com/lodev09/react-native-true-sheet/pull/952) by [@simondaigre](https://github.com/simondaigre) and [@lodev09](https://github.com/lodev09))
 
 ### 💥 Breaking changes
 
