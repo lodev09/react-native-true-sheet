@@ -115,7 +115,7 @@ describe('extendTrueSheetRouter', () => {
     expect(result?.state.routes[1]?.closing).toBe(true);
   });
 
-  describe('NAVIGATE to the base route', () => {
+  describe('NAVIGATE or PUSH to the base route', () => {
     const action = {
       type: 'NAVIGATE',
       payload: { name: 'Home', params: { screen: 'Test' } },
@@ -165,6 +165,26 @@ describe('extendTrueSheetRouter', () => {
       expect(result?.state.routes[0]).toBe(home);
       expect(result?.state.routes[1]?.closing).toBe(true);
       expect(result?.state.routes[2]?.dismissing).toBe(true);
+    });
+
+    it('handles a PUSH of the base route as a NAVIGATE', () => {
+      const { baseRouter, extension } = createExtension('Home');
+      const state = makeState(['Home', 'Details']);
+      baseRouter.getStateForAction.mockReturnValueOnce({
+        state: { ...state, index: 0, routes: [home] },
+        affectedRouteKey: 'Home-test',
+      } as never);
+
+      const result = extension.getStateForAction(
+        state,
+        { ...action, type: 'PUSH' } as unknown as TrueSheetActionType,
+        {}
+      );
+
+      expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
+      expect(result?.affectedRouteKey).toBe('Home-test');
+      expect(result?.state.routes[0]).toBe(home);
+      expect(result?.state.routes[1]?.closing).toBe(true);
     });
 
     it('delegates the action as is when the base router does not land on the base route', () => {

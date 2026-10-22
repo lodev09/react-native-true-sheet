@@ -1,4 +1,9 @@
-import { CommonActions, StackRouter, type ParamListBase } from '@react-navigation/core';
+import {
+  CommonActions,
+  StackActions,
+  StackRouter,
+  type ParamListBase,
+} from '@react-navigation/core';
 
 import { TrueSheetActions } from '../actions';
 import { createTrueSheetRouter } from '../createTrueSheetRouter';
@@ -171,7 +176,7 @@ describe('createTrueSheetRouter', () => {
       expect(getStateForAction(state, TrueSheetActions.popTo('Details'))).toBeNull();
     });
 
-    describe('NAVIGATE to the base route', () => {
+    describe('NAVIGATE or PUSH to the base route', () => {
       const navigateToHome = CommonActions.navigate('Home', { screen: 'Test' }) as Parameters<
         typeof getStateForAction
       >[1];
@@ -207,6 +212,19 @@ describe('createTrueSheetRouter', () => {
         expect(nextState?.index).toBe(1);
         expect(nextState?.routes[1]?.closing).toBe(true);
         expect(nextState?.routes[2]?.dismissing).toBe(true);
+      });
+
+      it('handles a PUSH of the base route the same way', () => {
+        const state = makeState([makeRoute('Home'), makeRoute('Details')]);
+        const nextState = getStateForAction(
+          state,
+          StackActions.push('Home', { screen: 'Test' }) as Parameters<typeof getStateForAction>[1]
+        );
+
+        expect(nextState?.routes.map((r) => r.key)).toEqual(['Home-test', 'Details-test']);
+        expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
+        expect(nextState?.index).toBe(1);
+        expect(nextState?.routes[1]?.closing).toBe(true);
       });
     });
 
