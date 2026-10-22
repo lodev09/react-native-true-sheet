@@ -156,7 +156,19 @@ using namespace facebook::react;
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics {
-  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+  // UIKit resizes the sheet for the keyboard inside its animation, and the new
+  // size usually relays out the footer in the same pass. When the keyboard
+  // changes during a React commit (e.g. its input unmounts), that layout can
+  // only mount after the commit, outside the animation — the footer, pinned to
+  // the container's bottom edge, would snap by the keyboard's height while the
+  // sheet is still animating. Carry it on the rest of the keyboard's curve.
+  if (layoutMetrics.frame.origin.y != oldLayoutMetrics.frame.origin.y) {
+    [self animateAlongKeyboard:^{
+      [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+    }];
+  } else {
+    [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+  }
 
   // State lands before layout metrics within the same mount transaction, so
   // this reflects the inset the shadow node baked into this frame — seeded
@@ -196,6 +208,28 @@ using namespace facebook::react;
 }
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
+
+- (void)setKeyboardObserver:(TrueSheetKeyboardObserver *)keyboardObserver {
+  [_keyboardObserver removeDelegate:self];
+  _keyboardObserver = keyboardObserver;
+  [keyboardObserver addDelegate:self];
+}
+
+- (void)animateAlongKeyboard:(void (^)(void))changes {
+  NSTimeInterval remaining = self.keyboardObserver.remainingAnimationDuration;
+  if (remaining > 0 && [UIView inheritedAnimationDuration] == 0) {
+    [UIView animateWithDuration:remaining
+                          delay:0
+                        options:self.keyboardObserver.animationCurve | UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+                       changes();
+                       [self syncEdgeEffect];
+                     }
+                     completion:nil];
+  } else {
+    changes();
+  }
+}
 
 // Only an absolute footer floats above the keyboard — a relative footer stays
 // in the layout flow behind it, and an absolute one opts out via
@@ -291,7 +325,11 @@ using namespace facebook::react;
 
   CGFloat slide = [self keyboardSlideForHeight:height];
   [self setKeyboardOffset:slide];
-  self.transform = CGAffineTransformMakeTranslation(0, -slide);
+  // A footer mounted or relaid out mid-keyboard animation follows the keyboard
+  // instead of snapping ahead of it
+  [self animateAlongKeyboard:^{
+    self.transform = CGAffineTransformMakeTranslation(0, -slide);
+  }];
 }
 
 @end

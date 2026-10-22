@@ -22,10 +22,15 @@ static const NSTimeInterval kUnanimatedKeyboardDuration = 0.25;
   NSHashTable<id<TrueSheetKeyboardObserverDelegate>> *_delegates;
   CGFloat _currentHeight;
   CGFloat _pendingMinimizedKeyboardOverlap;
+  CFTimeInterval _animationEndTime;
 }
 
 - (CGFloat)currentHeight {
   return _currentHeight;
+}
+
+- (NSTimeInterval)remainingAnimationDuration {
+  return MAX(0, _animationEndTime - CACurrentMediaTime());
 }
 
 - (instancetype)init {
@@ -145,6 +150,8 @@ static const NSTimeInterval kUnanimatedKeyboardDuration = 0.25;
   }
 
   _currentHeight = keyboardHeight;
+  _animationEndTime = CACurrentMediaTime() + duration;
+  _animationCurve = curve;
 
   // UIKit also moves the sheet as the minimized keyboard comes and goes, by
   // whatever the detents couldn't absorb — settle again once it's done.
