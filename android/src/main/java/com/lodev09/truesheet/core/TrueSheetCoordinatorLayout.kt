@@ -140,9 +140,11 @@ class TrueSheetCoordinatorLayout(context: Context) :
         val handled = super.dispatchTouchEvent(ev)
         val step = ev.rawY - pullLastY
         pullLastY = ev.rawY
-        // Finger moved down but the sheet stayed put and the scrollable is at
-        // its top — the pull was clamped
-        if (step > 0 && sheet != null && sheet.top == topBefore && delegate?.findScrollView()?.canScrollVertically(-1) != true) {
+        // Finger moved down but the sheet stayed put and nothing under the finger
+        // could scroll up (a sheet-owned target like the header, footer, or grabber,
+        // or the scrollable at its top) — the pull was clamped
+        val scrolledUp = !streamSheetDraggable && delegate?.findScrollView()?.canScrollVertically(-1) == true
+        if (step > 0 && sheet != null && sheet.top == topBefore && !scrolledUp) {
           pullOverdrag += step
         }
         return handled
