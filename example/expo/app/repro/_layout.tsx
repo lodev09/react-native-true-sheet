@@ -26,7 +26,7 @@ export default function ReproLayout() {
       <Stack.Screen name="tabs" options={{ headerShown: false }} />
       <Stack.Screen name="nested" options={{ headerShown: false }} />
       <Stack.Screen name="pushed" options={{ title: 'Pushed' }} />
-      <Stack.Screen name="footer-press" options={{ title: 'Footer Press' }} />
+      <Stack.Screen name="footer-keyboard" options={{ title: 'Footer Keyboard' }} />
     </Stack>
   );
 }
