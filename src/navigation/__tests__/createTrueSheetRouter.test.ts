@@ -1,4 +1,4 @@
-import { StackRouter, type ParamListBase } from '@react-navigation/core';
+import { CommonActions, StackRouter, type ParamListBase } from '@react-navigation/core';
 
 import { TrueSheetActions } from '../actions';
 import { createTrueSheetRouter } from '../createTrueSheetRouter';
@@ -169,6 +169,45 @@ describe('createTrueSheetRouter', () => {
 
       expect(getStateForAction(state, TrueSheetActions.popTo('Profile'))).toBeNull();
       expect(getStateForAction(state, TrueSheetActions.popTo('Details'))).toBeNull();
+    });
+
+    describe('NAVIGATE to the base route', () => {
+      const navigateToHome = CommonActions.navigate('Home', { screen: 'Test' }) as Parameters<
+        typeof getStateForAction
+      >[1];
+
+      it('goes back to it and dismisses the sheets instead of pushing it again', () => {
+        const state = makeState([makeRoute('Home'), makeRoute('Details'), makeRoute('Settings')]);
+        const nextState = getStateForAction(state, navigateToHome);
+
+        expect(nextState?.routes.map((r) => r.key)).toEqual([
+          'Home-test',
+          'Details-test',
+          'Settings-test',
+        ]);
+        expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
+        expect(nextState?.index).toBe(1);
+        expect(nextState?.routes[1]?.closing).toBe(true);
+        expect(nextState?.routes[2]?.dismissing).toBe(true);
+      });
+
+      it('updates the base route while the sheets are dismissing', () => {
+        const state = makeState(
+          [
+            makeRoute('Home'),
+            makeRoute('Details', { closing: true }),
+            makeRoute('Settings', { dismissing: true }),
+          ],
+          1
+        );
+        const nextState = getStateForAction(state, navigateToHome);
+
+        expect(nextState?.routes).toHaveLength(3);
+        expect(nextState?.routes[0]?.params).toEqual({ screen: 'Test' });
+        expect(nextState?.index).toBe(1);
+        expect(nextState?.routes[1]?.closing).toBe(true);
+        expect(nextState?.routes[2]?.dismissing).toBe(true);
+      });
     });
 
     it('REMOVE with source removes the route and the routes dismissed with it', () => {
