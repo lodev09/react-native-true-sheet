@@ -388,6 +388,12 @@ using namespace facebook::react;
 
 #pragma mark - TrueSheetKeyboardObserverDelegate
 
+- (void)setKeyboardObserver:(TrueSheetKeyboardObserver *)keyboardObserver {
+  [_keyboardObserver removeDelegate:self];
+  _keyboardObserver = keyboardObserver;
+  [keyboardObserver addDelegate:self];
+}
+
 - (void)keyboardWillShow:(CGFloat)height duration:(NSTimeInterval)duration curve:(UIViewAnimationOptions)curve {
   if (!_detectedScrollView) {
     return;

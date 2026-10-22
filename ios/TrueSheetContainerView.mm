@@ -248,22 +248,29 @@ using namespace facebook::react;
     _contentView.footerView = _footerView;
     [_footerView setBottomInset:_footerBottomInset];
     [self footerViewDidChangeSize:_footerView.frame.size];
+
+    // The observer is set up on present — a footer mounted after that (e.g. a
+    // conditional one) joins it here and rises above a keyboard that's already open
+    _footerView.keyboardObserver = _keyboardObserver;
+    [self updateFooterKeyboardOffset];
   }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[TrueSheetContentView class]]) {
+  if (childComponentView == _contentView) {
+    _contentView.keyboardObserver = nil;
     _contentView.delegate = nil;
     _contentView = nil;
   }
 
-  if ([childComponentView isKindOfClass:[TrueSheetHeaderView class]]) {
+  if (childComponentView == _headerView) {
     _headerView.delegate = nil;
     _headerView = nil;
     [self headerViewDidChangeSize:CGSizeZero];
   }
 
-  if ([childComponentView isKindOfClass:[TrueSheetFooterView class]]) {
+  if (childComponentView == _footerView) {
+    _footerView.keyboardObserver = nil;
     _footerView.delegate = nil;
     _footerView = nil;
     _contentView.footerView = nil;
@@ -364,17 +371,8 @@ using namespace facebook::react;
 
   _keyboardObserver = [[TrueSheetKeyboardObserver alloc] init];
   _keyboardObserver.viewController = (TrueSheetViewController *)viewController;
-
-  if (_contentView) {
-    _contentView.keyboardObserver = _keyboardObserver;
-    [_keyboardObserver addDelegate:_contentView];
-  }
-
-  if (_footerView) {
-    _footerView.keyboardObserver = _keyboardObserver;
-    [_keyboardObserver addDelegate:_footerView];
-  }
-
+  _contentView.keyboardObserver = _keyboardObserver;
+  _footerView.keyboardObserver = _keyboardObserver;
   [_keyboardObserver start];
 }
 

@@ -26,6 +26,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) TrueSheetViewController *viewController;
 @property (nonatomic, readonly) CGFloat currentHeight;
 
+/**
+ * What's left of the keyboard's last show/hide animation, so a change landing
+ * outside it (e.g. after a React commit) can finish on the same curve.
+ */
+@property (nonatomic, readonly) NSTimeInterval remainingAnimationDuration;
+@property (nonatomic, readonly) UIViewAnimationOptions animationCurve;
+
 - (void)addDelegate:(id<TrueSheetKeyboardObserverDelegate>)delegate;
 - (void)removeDelegate:(id<TrueSheetKeyboardObserverDelegate>)delegate;
 
