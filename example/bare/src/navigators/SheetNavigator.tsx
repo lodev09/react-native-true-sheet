@@ -83,6 +83,10 @@ const DetailsSheet = () => {
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
         <Button text="Open Settings" onPress={() => navigation.navigate('Settings')} />
+        <Button
+          text="Go to Test (base)"
+          onPress={() => navigation.navigate('SheetHomeStack', { screen: 'Test' })}
+        />
         <Button text="Go Back" onPress={() => navigation.goBack()} />
       </View>
       <TrueSheet ref={sheetRef} cornerRadius={12} detents={['auto']} backgroundColor={DARK}>

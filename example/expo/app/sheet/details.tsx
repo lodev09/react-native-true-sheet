@@ -26,6 +26,7 @@ export default function DetailsSheet() {
       <View style={styles.buttons}>
         <Button text="Resize to 100%" onPress={() => navigation.resize(1)} />
         <Button text="Open Settings" onPress={() => router.push('/sheet/settings')} />
+        <Button text="Go to Test (base)" onPress={() => router.navigate('/sheet/test')} />
         <Button text="Go Back" onPress={() => router.back()} />
       </View>
       <TrueSheet ref={sheetRef} cornerRadius={12} detents={['auto']} backgroundColor={DARK}>

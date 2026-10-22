@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type AppStackParamList = {
   SheetStack: undefined;
   Map: undefined;
@@ -13,7 +15,7 @@ export type ModalStackParamList = {
 };
 
 export type SheetStackParamList = {
-  SheetHomeStack: undefined;
+  SheetHomeStack: NavigatorScreenParams<SheetHomeStackParamList> | undefined;
   Details: undefined;
   Settings: undefined;
   Profile: undefined;
