@@ -182,10 +182,11 @@ export const getTrueSheetStateForAction = <State extends SheetState>(
 };
 
 /**
- * Reduces a `NAVIGATE` to the base route from a sheet. React Navigation 7 pushes a route that is
- * lower in the stack again unless `pop` is set, which presents the base screen as a sheet.
- * This goes back to it instead: `getPoppedState` reduces the action with `pop` to update the base
- * route (params, nested state), then the sheets above it are dismissed.
+ * Reduces a `NAVIGATE` or `PUSH` to the base route from a sheet. React Navigation 7 pushes a route
+ * that is lower in the stack again (a `NAVIGATE` unless `pop` is set, a `PUSH` always), which
+ * presents the base screen as a sheet. This goes back to it instead: `getPoppedState` reduces the
+ * action as a `NAVIGATE` with `pop` (a `PUSH` ignores `pop`) to update the base route (params,
+ * nested state), then the sheets above it are dismissed.
  * Returns `undefined` for other actions, or when the base router doesn't land on the base route.
  */
 export const getStateForNavigateToBase = <State extends SheetState>(
@@ -196,12 +197,17 @@ export const getStateForNavigateToBase = <State extends SheetState>(
   const { type, payload } = action as { type: string; payload?: { name?: string } };
   const baseRoute = state.routes[0]!;
 
-  if (type !== 'NAVIGATE' || state.routes.length <= 1 || payload?.name !== baseRoute.name) {
+  if (
+    (type !== 'NAVIGATE' && type !== 'PUSH') ||
+    state.routes.length <= 1 ||
+    payload?.name !== baseRoute.name
+  ) {
     return undefined;
   }
 
   const popped = getPoppedState({
     ...action,
+    type: 'NAVIGATE',
     payload: { ...payload, pop: true },
   } as unknown as TrueSheetActionType);
   const base = popped?.routes[popped.index];
