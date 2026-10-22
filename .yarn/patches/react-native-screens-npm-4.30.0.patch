@@ -1,8 +1,8 @@
 diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
-index 192f5d2c77192f323844b0d11ee179081891e7a4..85b17b5824daad9ab159f6733432c621cbe11d71 100644
+index 5da11964f5932cb44e1131c44a2480803c0a62b5..7769932005e9dfc62c533807aa898a189d9c3329 100644
 --- a/ios/RNSScreenStack.mm
 +++ b/ios/RNSScreenStack.mm
-@@ -509,8 +509,10 @@ - (void)setModalViewControllers:(NSArray<UIViewController *> *)controllers
+@@ -597,8 +597,10 @@ - (void)setModalViewControllers:(NSArray<UIViewController *> *)controllers
  
    // This check is for external modals that are not owned by this stack. They can prevent the dismissal of the modal by
    // extending RNSDismissibleModalProtocol and returning NO from isDismissible method.
@@ -15,7 +15,7 @@ index 192f5d2c77192f323844b0d11ee179081891e7a4..85b17b5824daad9ab159f6733432c621
      if (firstModalToBeDismissed != nil) {
        const BOOL firstModalToBeDismissedIsOwned = [firstModalToBeDismissed isKindOfClass:RNSScreen.class];
        const BOOL firstModalToBeDismissedIsOwnedByThisStack =
-@@ -568,6 +570,33 @@ - (void)setModalViewControllers:(NSArray<UIViewController *> *)controllers
+@@ -656,6 +658,33 @@ - (void)setModalViewControllers:(NSArray<UIViewController *> *)controllers
          return;
        }
      }

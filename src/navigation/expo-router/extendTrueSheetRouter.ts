@@ -8,13 +8,18 @@ import type { StackRouterFactory, TrueSheetRouterFactory, TrueSheetRouterState }
 
 type ActionResult = { state: TrueSheetRouterState; affectedRouteKey?: string };
 
+/**
+ * `RouterActionHandling.Unhandled` from Expo Router 58+, which deprecates `null`.
+ */
+export type Unhandled = 'UNHANDLED';
+
 type RouterExtension = (context: {
   baseRouter: {
     getStateForAction(
       state: TrueSheetRouterState,
       action: TrueSheetActionType,
       options: object
-    ): ActionResult | null;
+    ): ActionResult | Unhandled;
   };
   options: { initialRouteName?: string };
 }) => object;
@@ -36,7 +41,8 @@ export type ExtendRouter = (
  */
 export const extendTrueSheetRouter = (
   extendRouter: ExtendRouter,
-  stackRouter: StackRouterFactory
+  stackRouter: StackRouterFactory,
+  unhandled: Unhandled
 ): TrueSheetRouterFactory =>
   extendRouter(
     stackRouter,
@@ -52,12 +58,19 @@ export const extendTrueSheetRouter = (
           state: TrueSheetRouterState,
           action: TrueSheetActionType,
           config: object
-        ): ActionResult | null {
-          const navigated = getStateForNavigateToBase(
-            state,
-            action,
-            (popAction) => baseRouter.getStateForAction(state, popAction, config)?.state
-          );
+        ): ActionResult | Unhandled {
+          const { type, payload } = action as { type: string; payload?: { name?: string } };
+
+          // Expo Router keeps preloaded routes in `routes`, and the navigator presents every
+          // route there as a sheet. A parent navigator's route bubbles up to it, as in a `Stack`.
+          if (type === 'PRELOAD') {
+            return payload?.name && state.routeNames.includes(payload.name) ? { state } : unhandled;
+          }
+
+          const navigated = getStateForNavigateToBase(state, action, (popAction) => {
+            const popped = baseRouter.getStateForAction(state, popAction, config);
+            return popped === unhandled ? undefined : popped.state;
+          });
 
           // Expo Router resolves the destination's nested state in the affected route
           if (navigated) {
@@ -71,7 +84,7 @@ export const extendTrueSheetRouter = (
           }
 
           if (result === null) {
-            return null;
+            return unhandled;
           }
 
           const affectedIndex =
