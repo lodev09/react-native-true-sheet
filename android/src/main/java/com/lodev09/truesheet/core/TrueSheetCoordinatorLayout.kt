@@ -80,14 +80,18 @@ class TrueSheetCoordinatorLayout(context: Context) :
   // Pull-down tracking. BottomSheetBehavior gives no callback when a downward drag
   // is clamped by `isHideable = false` — the sheet stays put (or the scrollable
   // overscrolls) and no state change fires. Accumulate the downward finger travel
-  // neither the sheet nor its scrollable followed and report it on release so the
-  // controller can surface a blocked dismiss attempt.
+  // neither the sheet nor a scroller under the finger followed and report it on
+  // release so the controller can surface a blocked dismiss attempt. Like iOS, a
+  // pull that began on a scroller that could scroll up stays a scroll, even past
+  // its top.
   private var pullTracking = false
   private var pullStartX = 0f
   private var pullStartY = 0f
   private var pullLastY = 0f
   private var pullOverdrag = 0f
   private var pullKeyboardVisible = false
+  private var pullScrollers: List<View> = emptyList()
+  private var pullBeganScrolled = false
 
   // A touch that began inside the sheet is still down
   val isTouchingSheet: Boolean
@@ -141,10 +145,13 @@ class TrueSheetCoordinatorLayout(context: Context) :
         val step = ev.rawY - pullLastY
         pullLastY = ev.rawY
         // Finger moved down but the sheet stayed put and nothing under the finger
-        // could scroll up (a sheet-owned target like the header, footer, or grabber,
-        // or the scrollable at its top) — the pull was clamped
-        val scrolledUp = !streamSheetDraggable && delegate?.findScrollView()?.canScrollVertically(-1) == true
-        if (step > 0 && sheet != null && sheet.top == topBefore && !scrolledUp) {
+        // scrolled — the pull was clamped
+        if (!pullBeganScrolled &&
+          step > 0 &&
+          sheet != null &&
+          sheet.top == topBefore &&
+          pullScrollers.none { it.canScrollVertically(-1) }
+        ) {
           pullOverdrag += step
         }
         return handled
@@ -207,17 +214,26 @@ class TrueSheetCoordinatorLayout(context: Context) :
   /**
    * Resolves the stream's touch target (respecting zIndex and pointerEvents) and
    * decides whether the sheet may drag from it — inside the sheet, outside the detected
-   * scrollable, and nothing along the target's chain scrolls vertically.
+   * scrollable, and nothing along the target's chain scrolls vertically. Also collects
+   * the chain's vertical scrollers for pull-down tracking.
    */
   private fun updateStreamTargetFlags(ev: MotionEvent) {
     streamSheetDraggable = false
     streamDraggableEditText = false
     streamScrollsIndependently = false
+    pullScrollers = emptyList()
+    pullBeganScrolled = false
 
     val sheet = delegate?.findSheetView() ?: return
     val target = TouchTargetHelper.findTargetPathAndCoordinatesForTouch(ev.x, ev.y, this, FloatArray(2))
       .firstNotNullOfOrNull { it.getView() } ?: return
     if (target !== sheet && !target.isDescendantOf(sheet)) return
+
+    pullScrollers = generateSequence(target) { it.parent as? View }
+      .takeWhile { it !== this }
+      .filter { it.canScrollVertically(1) || it.canScrollVertically(-1) }
+      .toList()
+    pullBeganScrolled = pullScrollers.any { it.canScrollVertically(-1) }
 
     // A detected scrollable that can scroll (or hosts pull-to-refresh) owns its
     // touches — nested scrolling drags the sheet. When it can't scroll (e.g.
