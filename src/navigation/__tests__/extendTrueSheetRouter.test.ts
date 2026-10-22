@@ -115,6 +115,72 @@ describe('extendTrueSheetRouter', () => {
     expect(result?.state.routes[1]?.closing).toBe(true);
   });
 
+  describe('NAVIGATE to the base route', () => {
+    const action = {
+      type: 'NAVIGATE',
+      payload: { name: 'Home', params: { screen: 'Test' } },
+    } as unknown as TrueSheetActionType;
+    const popAction = {
+      type: 'NAVIGATE',
+      payload: { name: 'Home', params: { screen: 'Test' }, pop: true },
+    };
+    const home: Route = { key: 'Home-test', name: 'Home', params: { screen: 'Test' } };
+
+    it('goes back to it and dismisses the sheets, with the base route affected', () => {
+      const { baseRouter, extension } = createExtension('Home');
+      const state = makeState(['Home', 'Details', 'Settings']);
+      baseRouter.getStateForAction.mockReturnValueOnce({
+        state: { ...state, index: 0, routes: [home] },
+        affectedRouteKey: 'Home-test',
+      } as never);
+
+      const result = extension.getStateForAction(state, action, {});
+
+      expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
+      expect(result?.affectedRouteKey).toBe('Home-test');
+      expect(result?.state.routes[0]).toBe(home);
+      expect(result?.state.index).toBe(1);
+      expect(result?.state.routes[1]?.closing).toBe(true);
+      expect(result?.state.routes[2]?.dismissing).toBe(true);
+    });
+
+    it('updates the base route while the sheets are dismissing', () => {
+      const { baseRouter, extension } = createExtension('Home');
+      const [base, details, settings] = makeState(['Home', 'Details', 'Settings']).routes;
+      const state = {
+        ...makeState([]),
+        index: 1,
+        routes: [base!, { ...details!, closing: true }, { ...settings!, dismissing: true }],
+      };
+      // Expo Router's StackRouter keeps the routes after `index` as preloaded routes
+      baseRouter.getStateForAction.mockReturnValueOnce({
+        state: { ...state, index: 0, routes: [home, state.routes[2]] },
+        affectedRouteKey: 'Home-test',
+      } as never);
+
+      const result = extension.getStateForAction(state, action, {});
+
+      expect(result?.affectedRouteKey).toBe('Home-test');
+      expect(result?.state.routes).toHaveLength(3);
+      expect(result?.state.routes[0]).toBe(home);
+      expect(result?.state.routes[1]?.closing).toBe(true);
+      expect(result?.state.routes[2]?.dismissing).toBe(true);
+    });
+
+    it('delegates the action as is when the base router does not land on the base route', () => {
+      const { baseRouter, extension } = createExtension('Home');
+      const state = makeState(['Home', 'Details']);
+      baseRouter.getStateForAction.mockReturnValueOnce({
+        state: { ...state, index: 2, routes: [...state.routes, { key: 'Home-new', name: 'Home' }] },
+        affectedRouteKey: 'Home-new',
+      } as never);
+
+      extension.getStateForAction(state, action, {});
+
+      expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(2, state, action, {});
+    });
+  });
+
   it('REMOVE reports the focused route as affected', () => {
     const { extension } = createExtension('Home');
     const result = extension.getStateForAction(

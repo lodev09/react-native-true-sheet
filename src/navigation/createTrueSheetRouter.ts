@@ -1,5 +1,10 @@
 import { TrueSheetActions, type TrueSheetActionType } from './actions';
-import type { TrueSheetRouter, TrueSheetRouterFactory, TrueSheetRouterOptions } from './types';
+import type {
+  TrueSheetRouter,
+  TrueSheetRouterFactory,
+  TrueSheetRouterOptions,
+  TrueSheetRouterState,
+} from './types';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -176,6 +181,41 @@ export const getTrueSheetStateForAction = <State extends SheetState>(
   }
 };
 
+/**
+ * Reduces a `NAVIGATE` to the base route from a sheet. React Navigation 7 pushes a route that is
+ * lower in the stack again unless `pop` is set, which presents the base screen as a sheet.
+ * This goes back to it instead: `getPoppedState` reduces the action with `pop` to update the base
+ * route (params, nested state), then the sheets above it are dismissed.
+ * Returns `undefined` for other actions, or when the base router doesn't land on the base route.
+ */
+export const getStateForNavigateToBase = <State extends SheetState>(
+  state: State,
+  action: TrueSheetActionType,
+  getPoppedState: (action: TrueSheetActionType) => State | null | undefined
+): State | undefined => {
+  const { type, payload } = action as { type: string; payload?: { name?: string } };
+  const baseRoute = state.routes[0]!;
+
+  if (type !== 'NAVIGATE' || state.routes.length <= 1 || payload?.name !== baseRoute.name) {
+    return undefined;
+  }
+
+  const popped = getPoppedState({
+    ...action,
+    payload: { ...payload, pop: true },
+  } as unknown as TrueSheetActionType);
+  const base = popped?.routes[popped.index];
+
+  if (base?.key !== baseRoute.key) {
+    return undefined;
+  }
+
+  return getTrueSheetStateForAction(
+    { ...state, routes: [base, ...state.routes.slice(1)] },
+    TrueSheetActions.pop(state.routes.length - 1)
+  )!;
+};
+
 export const createTrueSheetRouter =
   (stackRouter: TrueSheetRouterFactory) =>
   (routerOptions: TrueSheetRouterOptions): TrueSheetRouter => {
@@ -199,7 +239,14 @@ export const createTrueSheetRouter =
       },
 
       getStateForAction(state, action, options) {
-        const result = getTrueSheetStateForAction(state, action);
+        const result =
+          getStateForNavigateToBase(
+            state,
+            action,
+            // NAVIGATE never returns a partial state
+            (popAction) =>
+              baseRouter.getStateForAction(state, popAction, options) as TrueSheetRouterState | null
+          ) ?? getTrueSheetStateForAction(state, action);
 
         return result === undefined ? baseRouter.getStateForAction(state, action, options) : result;
       },

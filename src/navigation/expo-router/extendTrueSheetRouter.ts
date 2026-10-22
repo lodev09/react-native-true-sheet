@@ -1,5 +1,9 @@
 import { TrueSheetActions, type TrueSheetActionType } from '../actions';
-import { getResizeRouteIndex, getTrueSheetStateForAction } from '../createTrueSheetRouter';
+import {
+  getResizeRouteIndex,
+  getStateForNavigateToBase,
+  getTrueSheetStateForAction,
+} from '../createTrueSheetRouter';
 import type { StackRouterFactory, TrueSheetRouterFactory, TrueSheetRouterState } from './types';
 
 type ActionResult = { state: TrueSheetRouterState; affectedRouteKey?: string };
@@ -49,6 +53,17 @@ export const extendTrueSheetRouter = (
           action: TrueSheetActionType,
           config: object
         ): ActionResult | null {
+          const navigated = getStateForNavigateToBase(
+            state,
+            action,
+            (popAction) => baseRouter.getStateForAction(state, popAction, config)?.state
+          );
+
+          // Expo Router resolves the destination's nested state in the affected route
+          if (navigated) {
+            return { state: navigated, affectedRouteKey: navigated.routes[0]?.key };
+          }
+
           const result = getTrueSheetStateForAction(state, action);
 
           if (result === undefined) {
