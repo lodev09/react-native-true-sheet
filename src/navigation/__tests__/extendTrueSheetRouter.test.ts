@@ -1,5 +1,9 @@
 import { TrueSheetActions, type TrueSheetActionType } from '../actions';
-import { extendTrueSheetRouter, type ExtendRouter } from '../expo-router/extendTrueSheetRouter';
+import {
+  extendTrueSheetRouter,
+  type ExtendRouter,
+  type Unhandled,
+} from '../expo-router/extendTrueSheetRouter';
 import type { TrueSheetRouterState } from '../expo-router/types';
 
 type Route = TrueSheetRouterState['routes'][number];
@@ -25,9 +29,9 @@ const makeState = (names: string[]): TrueSheetRouterState => ({
 
 const createExtension = (initialRouteName?: string) => {
   const extendRouter = jest.fn<ReturnType<ExtendRouter>, Parameters<ExtendRouter>>();
-  const baseRouter = { getStateForAction: jest.fn(() => null) };
+  const baseRouter = { getStateForAction: jest.fn((): Unhandled => 'UNHANDLED') };
 
-  extendTrueSheetRouter(extendRouter, stackRouter);
+  extendTrueSheetRouter(extendRouter, stackRouter, 'UNHANDLED');
   const extension = extendRouter.mock.calls[0]![1]({
     baseRouter,
     options: { initialRouteName },
@@ -83,10 +87,12 @@ describe('extendTrueSheetRouter', () => {
     expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, action, config);
   });
 
-  it('returns null without delegating when a sheet action is rejected', () => {
+  it('returns UNHANDLED without delegating when a sheet action is rejected', () => {
     const { baseRouter, extension } = createExtension('Home');
 
-    expect(extension.getStateForAction(makeState(['Home']), TrueSheetActions.pop(), {})).toBeNull();
+    expect(extension.getStateForAction(makeState(['Home']), TrueSheetActions.pop(), {})).toBe(
+      'UNHANDLED'
+    );
     expect(baseRouter.getStateForAction).not.toHaveBeenCalled();
   });
 
@@ -127,6 +133,18 @@ describe('extendTrueSheetRouter', () => {
     );
 
     expect(result).toEqual({ state });
+    expect(baseRouter.getStateForAction).not.toHaveBeenCalled();
+  });
+
+  it('leaves a PRELOAD of a parent navigator route unhandled, so it bubbles up', () => {
+    const { baseRouter, extension } = createExtension('Home');
+    const result = extension.getStateForAction(
+      makeState(['Home']),
+      { type: 'PRELOAD', payload: { name: 'Profile' } } as unknown as TrueSheetActionType,
+      {}
+    );
+
+    expect(result).toBe('UNHANDLED');
     expect(baseRouter.getStateForAction).not.toHaveBeenCalled();
   });
 
@@ -244,6 +262,15 @@ describe('extendTrueSheetRouter', () => {
         expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(2, state, typedAction, {});
       }
     );
+
+    it('delegates the action as is when the base router leaves the pop unhandled', () => {
+      const { baseRouter, extension } = createExtension('Home');
+      const state = makeState(['Home', 'Details']);
+
+      expect(extension.getStateForAction(state, action, {})).toBe('UNHANDLED');
+      expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(1, state, popAction, {});
+      expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(2, state, action, {});
+    });
   });
 
   it('REMOVE reports the focused route as affected', () => {
