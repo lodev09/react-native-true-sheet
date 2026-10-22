@@ -226,6 +226,23 @@ describe('createTrueSheetRouter', () => {
         expect(nextState?.index).toBe(1);
         expect(nextState?.routes[1]?.closing).toBe(true);
       });
+
+      it('still pushes the base route when the base router does not land on it', () => {
+        const state = makeState([makeRoute('Home', { params: { id: '1' } }), makeRoute('Details')]);
+        const nextState = router.getStateForAction(
+          state,
+          StackActions.push('Home', { id: '2' }) as Parameters<typeof getStateForAction>[1],
+          {
+            ...configOptions,
+            routeGetIdList: { Home: ({ params }) => (params as { id?: string } | undefined)?.id },
+          }
+        ) as State | null;
+
+        expect(nextState?.routes.map((r) => r.name)).toEqual(['Home', 'Details', 'Home']);
+        expect(nextState?.routes[0]?.params).toEqual({ id: '1' });
+        expect(nextState?.routes[2]?.params).toEqual({ id: '2' });
+        expect(nextState?.index).toBe(2);
+      });
     });
 
     it('REMOVE with source removes the route and the routes dismissed with it', () => {

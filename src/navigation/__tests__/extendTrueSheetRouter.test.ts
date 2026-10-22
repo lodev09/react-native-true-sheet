@@ -184,21 +184,30 @@ describe('extendTrueSheetRouter', () => {
       expect(baseRouter.getStateForAction).toHaveBeenCalledWith(state, popAction, {});
       expect(result?.affectedRouteKey).toBe('Home-test');
       expect(result?.state.routes[0]).toBe(home);
+      expect(result?.state.index).toBe(1);
       expect(result?.state.routes[1]?.closing).toBe(true);
     });
 
-    it('delegates the action as is when the base router does not land on the base route', () => {
-      const { baseRouter, extension } = createExtension('Home');
-      const state = makeState(['Home', 'Details']);
-      baseRouter.getStateForAction.mockReturnValueOnce({
-        state: { ...state, index: 2, routes: [...state.routes, { key: 'Home-new', name: 'Home' }] },
-        affectedRouteKey: 'Home-new',
-      } as never);
+    it.each(['NAVIGATE', 'PUSH'])(
+      'delegates a %s as is when the base router does not land on the base route',
+      (type) => {
+        const { baseRouter, extension } = createExtension('Home');
+        const state = makeState(['Home', 'Details']);
+        const typedAction = { ...action, type } as unknown as TrueSheetActionType;
+        baseRouter.getStateForAction.mockReturnValueOnce({
+          state: {
+            ...state,
+            index: 2,
+            routes: [...state.routes, { key: 'Home-new', name: 'Home' }],
+          },
+          affectedRouteKey: 'Home-new',
+        } as never);
 
-      extension.getStateForAction(state, action, {});
+        extension.getStateForAction(state, typedAction, {});
 
-      expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(2, state, action, {});
-    });
+        expect(baseRouter.getStateForAction).toHaveBeenNthCalledWith(2, state, typedAction, {});
+      }
+    );
   });
 
   it('REMOVE reports the focused route as affected', () => {
