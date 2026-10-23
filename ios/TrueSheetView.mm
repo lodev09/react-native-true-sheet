@@ -782,26 +782,27 @@ using namespace facebook::react;
   // itself. Wait for that transition, then dismiss whatever is still on top.
   UIViewController *presented = _controller.presentedViewController;
   if (presented.isBeingDismissed) {
-    id<UIViewControllerTransitionCoordinator> coordinator = presented.transitionCoordinator;
-    if (!coordinator) {
-      if (completion) {
-        completion(YES, nil);
-      }
-      return;
-    }
-
     __weak __typeof(self) weakSelf = self;
-    [coordinator animateAlongsideTransition:nil
-                                 completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-                                   dispatch_async(dispatch_get_main_queue(), ^{
-                                     __typeof(self) strongSelf = weakSelf;
-                                     if (strongSelf) {
-                                       [strongSelf dismissStackAnimated:animated completion:completion];
-                                     } else if (completion) {
-                                       completion(YES, nil);
-                                     }
-                                   });
-                                 }];
+    void (^retry)(void) = ^{
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __typeof(self) strongSelf = weakSelf;
+        if (strongSelf) {
+          [strongSelf dismissStackAnimated:animated completion:completion];
+        } else if (completion) {
+          completion(YES, nil);
+        }
+      });
+    };
+
+    id<UIViewControllerTransitionCoordinator> coordinator = presented.transitionCoordinator;
+    if (coordinator) {
+      [coordinator animateAlongsideTransition:nil
+                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                     retry();
+                                   }];
+    } else {
+      retry();
+    }
     return;
   }
 
