@@ -3526,7 +3526,7 @@ __metadata:
     "@babel/runtime": "npm:^7.25.0"
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.1.3"
+    "@lugg/maps": "npm:1.1.6"
     "@react-native-community/cli": "npm:20.1.3"
     "@react-native-community/cli-platform-android": "npm:20.1.3"
     "@react-native-community/cli-platform-ios": "npm:20.1.3"
@@ -3556,7 +3556,7 @@ __metadata:
   dependencies:
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.1.3"
+    "@lugg/maps": "npm:1.1.6"
     "@radix-ui/react-dialog": "npm:^1.1.1"
     "@types/react": "npm:~19.2.14"
     "@vis.gl/react-google-maps": "npm:^1.7.1"
@@ -3591,7 +3591,7 @@ __metadata:
   dependencies:
     "@example/shared": "npm:*"
     "@lodev09/react-native-true-sheet": "workspace:*"
-    "@lugg/maps": "npm:1.1.3"
+    "@lugg/maps": "npm:1.1.6"
     "@radix-ui/react-dialog": "npm:^1.1.1"
     "@types/react": "npm:~19.2.14"
     "@vis.gl/react-google-maps": "npm:^1.7.1"
@@ -5786,6 +5786,23 @@ __metadata:
     expo:
       optional: true
   checksum: 10c0/c0aed60267b0ce11ca544c06e42671fe52e8c4beaa47c2afa8b2492297ce22a95547ecd9bb11370228cbe1845d6c0761c6a251a11fedc955c0ffddf773dbdeb6
+  languageName: node
+  linkType: hard
+
+"@lugg/maps@npm:1.1.6":
+  version: 1.1.6
+  resolution: "@lugg/maps@npm:1.1.6"
+  peerDependencies:
+    "@vis.gl/react-google-maps": ">=1.0.0"
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  peerDependenciesMeta:
+    "@vis.gl/react-google-maps":
+      optional: true
+    expo:
+      optional: true
+  checksum: 10c0/17b587e9f7e90dc039b32ed2d23ba90d02423538dd4af81a7576243a2882a6bd0186bc234ca0d5536569c2447f6d05e437effd7016418fb68053899c56c7a728
   languageName: node
   linkType: hard
 
