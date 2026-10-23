@@ -9,6 +9,7 @@
 #import "TrueSheetViewController.h"
 #import "TrueSheetContainerView.h"
 #import "TrueSheetContentView.h"
+#import "TrueSheetOverlayView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
 #import "core/TrueSheetDimView.h"
@@ -172,6 +173,11 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _hingeOffsets = [NSMutableDictionary dictionary];
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(overlayWindowDidChange)
+                                                 name:TrueSheetOverlayWindowDidChangeNotification
+                                               object:nil];
   }
   return self;
 }
@@ -686,6 +692,15 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 }
 
+- (void)overlayWindowDidChange {
+  if (!self.canRefreshAccessibilityContainer) {
+    return;
+  }
+
+  [self setupAccessibilityContainer];
+  UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+}
+
 - (UIViewController *)accessibilityPresentingViewController {
   UIViewController *presentingViewController = self.presentingViewController;
   while ([presentingViewController isKindOfClass:[TrueSheetViewController class]] &&
@@ -807,8 +822,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       }
       objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, [NSValue valueWithNonretainedObject:self],
         OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-      window.accessibilityElements =
+      NSArray *sheetElements =
         isAccessibilityModal ? @[ presentedView ] : @[ presentingViewController.view, presentedView ];
+      // Overlays render above every sheet. Listed first, since accessibility
+      // hit testing takes the first element containing the point.
+      window.accessibilityElements =
+        [[TrueSheetOverlayView overlayContainersInWindow:window] arrayByAddingObjectsFromArray:sheetElements];
       return;
     }
   }

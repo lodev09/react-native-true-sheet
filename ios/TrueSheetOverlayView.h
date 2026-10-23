@@ -14,6 +14,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
+ * Posted when an overlay container joins or leaves a window.
+ */
+extern NSNotificationName const TrueSheetOverlayWindowDidChangeNotification;
+
+/**
  * Hidden host that renders its children in a container attached directly to
  * the window, above every presented sheet.
  */
@@ -24,6 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
  * Called when a sheet presents, since presenting adds its transition view on top.
  */
 + (void)bringOverlaysToFrontInWindow:(nullable UIWindow *)window;
+
+/**
+ * The overlay containers attached to the window, front to back.
+ */
++ (NSArray<UIView *> *)overlayContainersInWindow:(nullable UIWindow *)window;
 
 @end
 
