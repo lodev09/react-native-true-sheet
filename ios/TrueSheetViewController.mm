@@ -278,6 +278,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 // Gap UIKit leaves between a floating sheet (iOS 26+) and the screen's bottom edge
 static const CGFloat TrueSheetFloatingSheetInset = 8;
 
+// Largest resolved detent UIKit floats on iOS 26+. A floating sheet gets no
+// bottom safe-area inset; anything taller is edge-attached and gets it added.
+static const CGFloat TrueSheetFloatingDetentMaxHeight = 100;
+
 // Only phone sheets absorb the bottom safe-area inset — non-phone idioms
 // (iPad form sheets) are inset from the screen edge by UIKit.
 static BOOL TrueSheetIsPhoneIdiom(void) {
@@ -289,7 +293,15 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return 0;
   }
 
-  return [self bottomSafeAreaForHeight:height];
+  CGFloat inset = [self bottomSafeAreaForHeight:height];
+  if (@available(iOS 26.0, *)) {
+    // Subtracting the full inset can resolve the detent small enough to float,
+    // which drops the inset and leaves the sheet shorter than its content.
+    // Keep it edge-attached instead.
+    return fmin(inset, fmax(0, height - TrueSheetFloatingDetentMaxHeight - 1));
+  }
+
+  return inset;
 }
 
 - (CGFloat)bottomSafeAreaForHeight:(CGFloat)height {
@@ -297,10 +309,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return 0;
   }
 
-  // On iOS 26+, returns 0 for small detents (height <= 150)
-  // Floating sheets don't need adjustment
+  // Floating sheets (iOS 26+) get no bottom inset
   if (@available(iOS 26.0, *)) {
-    if (height <= 150) {
+    if (height <= TrueSheetFloatingDetentMaxHeight) {
       return 0;
     }
   }
