@@ -21,6 +21,8 @@
 
 using namespace facebook::react;
 
+NSNotificationName const TrueSheetOverlayWindowDidChangeNotification = @"TrueSheetOverlayWindowDidChangeNotification";
+
 static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
 
 @interface TrueSheetOverlayView () <TrueSheetOverlayContainerViewDelegate>
@@ -51,6 +53,16 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
       [window bringSubviewToFront:overlay->_containerView];
     }
   }
+}
+
++ (NSArray<UIView *> *)overlayContainersInWindow:(nullable UIWindow *)window {
+  NSMutableArray<UIView *> *containers = [NSMutableArray array];
+  for (UIView *subview in window.subviews.reverseObjectEnumerator) {
+    if ([subview isKindOfClass:[TrueSheetOverlayContainerView class]]) {
+      [containers addObject:subview];
+    }
+  }
+  return containers;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -100,6 +112,8 @@ static NSHashTable<TrueSheetOverlayView *> *gOverlayViews;
     [_containerView removeFromSuperview];
     [_containerController removeFromParentViewController];
   }
+
+  [[NSNotificationCenter defaultCenter] postNotificationName:TrueSheetOverlayWindowDidChangeNotification object:nil];
 }
 
 #pragma mark - State

@@ -161,7 +161,7 @@ object TrueSheetStackManager {
         return
       }
 
-      // The dimmed sheet and any sheets above it stay accessible
+      // The dimmed sheet, any sheets above it, and overlays (rendered above every sheet) stay accessible
       val accessibleCoordinators = presentedSheetStack
         .subList(topDimmedIndex, presentedSheetStack.size)
         .mapNotNull { it.viewController.coordinatorLayout }
@@ -169,7 +169,7 @@ object TrueSheetStackManager {
 
       for (i in 0 until root.childCount) {
         val child = root.getChildAt(i)
-        if (child in accessibleCoordinators) {
+        if (child in accessibleCoordinators || child is TrueSheetOverlayRootView) {
           savedBackgroundImportance.remove(child)?.let { child.importantForAccessibility = it }
           continue
         }
