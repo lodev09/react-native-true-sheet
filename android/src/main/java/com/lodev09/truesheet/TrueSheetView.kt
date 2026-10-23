@@ -448,6 +448,17 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.createSheet()
     setupScrollable()
 
+    // Attach before any keyboard wait so the touches meanwhile don't reach the views below
+    rootContainerView = findRootContainerView()
+    rootContainerView?.let { container ->
+      viewController.coordinatorLayout?.let {
+        it.blocksTouches = true
+        container.addView(it)
+        // Touches skip a view without a frame — don't wait for the next layout pass
+        it.layout(0, 0, container.width, container.height)
+      }
+    }
+
     // Dismiss keyboard if focused view is within a sheet or if target detent will be dimmed
     val parentSheet = TrueSheetStackManager.getTopmostSheet()
     val isFocusedViewWithinSheet = parentSheet?.viewController?.isFocusedViewWithinSheet() == true
@@ -481,15 +492,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // Attach coordinator to the root container
-    rootContainerView = findRootContainerView()
-    viewController.coordinatorLayout?.let { rootContainerView?.addView(it) }
-
     // Register with observer to track sheet stack hierarchy
     viewController.parentSheetView = TrueSheetStackManager.registerSheet(this)
 
     viewController.presentPromise = promiseCallback
     viewController.present(detentIndex, animated)
+  }
+
+  private fun detachCoordinator() {
+    viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
+    rootContainerView = null
   }
 
   @UiThread
@@ -505,6 +517,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val callback = pendingPresentCallback ?: return false
     pendingPresentCallback = null
     pendingPresentParent = null
+    detachCoordinator()
     if (restoreFocus) {
       viewController.restoreFocusedView()
     } else {
@@ -725,10 +738,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // A slide-back cut short by this sheet's own dismissal never emits; don't carry it over
     isDidFocusPending = false
 
-    // Detach coordinator from the root container view
-    viewController.coordinatorLayout?.let { rootContainerView?.removeView(it) }
-    rootContainerView = null
-
+    detachCoordinator()
     cleanupScreenEventObserver()
 
     val surfaceId = UIManagerHelper.getSurfaceId(this)
