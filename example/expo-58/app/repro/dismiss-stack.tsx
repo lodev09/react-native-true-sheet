@@ -18,8 +18,11 @@ export default function ReproDismissStack() {
   // still animating out.
   useFocusEffect(
     useCallback(() => {
-      if (blurred.current) setTimeout(() => sheetRef.current?.dismissStack(), DISMISS_STACK_DELAY);
+      const timeout = blurred.current
+        ? setTimeout(() => sheetRef.current?.dismissStack(), DISMISS_STACK_DELAY)
+        : undefined;
       return () => {
+        clearTimeout(timeout);
         blurred.current = true;
       };
     }, [])

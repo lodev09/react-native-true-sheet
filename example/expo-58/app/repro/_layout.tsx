@@ -2,8 +2,9 @@ import { Stack } from 'expo-router';
 
 import { DARK_BLUE } from '@example/shared/utils';
 
-// Cold start deep link repros — nothing in the app links here. Open with e.g.
-// `yarn expo open repro/modal` after terminating the app.
+// Deep link repros — nothing in the app links here. Open with e.g.
+// `yarn expo open repro/modal` after terminating the app for a cold start, or
+// `repro/dismiss-stack` on a running app.
 export const unstable_settings = {
   anchor: 'index',
 };
