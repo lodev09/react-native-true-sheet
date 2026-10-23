@@ -97,6 +97,12 @@ class TrueSheetCoordinatorLayout(context: Context) :
   val isTouchingSheet: Boolean
     get() = pullTracking
 
+  // Set while the sheet presents, from present() (keyboard wait included) until the
+  // present finishes or a dismiss starts. A stream that begins meanwhile is swallowed
+  // whole so nothing below takes it, like the iOS presentation transition.
+  var blocksTouches = false
+  private var streamBlocked = false
+
   init {
     layoutParams = LayoutParams(
       LayoutParams.MATCH_PARENT,
@@ -127,6 +133,14 @@ class TrueSheetCoordinatorLayout(context: Context) :
     get() = PointerEvents.BOX_NONE
 
   override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    if (ev.actionMasked == MotionEvent.ACTION_DOWN) streamBlocked = blocksTouches
+    if (streamBlocked) {
+      if (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL) {
+        streamBlocked = false
+      }
+      return true
+    }
+
     when (ev.actionMasked) {
       MotionEvent.ACTION_DOWN -> {
         val sheet = delegate?.findSheetView()

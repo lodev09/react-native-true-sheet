@@ -1017,6 +1017,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishPresent() {
+    coordinatorLayout?.blocksTouches = false
+
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
 
@@ -1550,8 +1552,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerWillDismiss()
     parentSheetView?.viewControllerWillFocus()
 
-    // Dismissed mid-present: finishPresent() won't run. Settle the pending present well
-    // before didDismiss so JS clears isPresenting and unmounts the lazy native view
+    // Dismissed mid-present: finishPresent() won't run. Stop blocking touches, and settle the
+    // pending present well before didDismiss so JS clears isPresenting and unmounts the lazy native view
+    coordinatorLayout?.blocksTouches = false
     presentPromise?.invoke()
     presentPromise = null
   }
