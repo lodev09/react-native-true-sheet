@@ -44,6 +44,10 @@ class TrueSheetOverlayRootView(private val reactContext: ThemedReactContext) :
   init {
     layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
+    // React children draw outside their bounds (shadows, overflow)
+    clipChildren = false
+    clipToPadding = false
+
     // Draws and receives touches above the sheet coordinators regardless of add order
     translationZ = OVERLAY_Z
   }
