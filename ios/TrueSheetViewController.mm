@@ -175,7 +175,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _detentCalculator.delegate = self;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(refreshAccessibilityContainer)
+                                             selector:@selector(overlayWindowDidChange)
                                                  name:TrueSheetOverlayWindowDidChangeNotification
                                                object:nil];
   }
@@ -689,6 +689,15 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [self setAccessibilityContentElement:contentView];
+  UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+}
+
+- (void)overlayWindowDidChange {
+  if (!self.canRefreshAccessibilityContainer) {
+    return;
+  }
+
+  [self setupAccessibilityContainer];
   UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 }
 
