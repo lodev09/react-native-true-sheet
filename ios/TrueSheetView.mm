@@ -44,6 +44,21 @@ using namespace facebook::react;
   RNScreensEventObserverDelegate>
 @end
 
+// Runs the block on the main queue once the controller's transition ends, or
+// on the next main-queue turn when it has none.
+static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_block_t block) {
+  id<UIViewControllerTransitionCoordinator> coordinator = controller.transitionCoordinator;
+  if (!coordinator) {
+    dispatch_async(dispatch_get_main_queue(), block);
+    return;
+  }
+
+  [coordinator animateAlongsideTransition:nil
+                               completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                 dispatch_async(dispatch_get_main_queue(), block);
+                               }];
+}
+
 @implementation TrueSheetView {
   TrueSheetContainerView *_containerView;
   TrueSheetViewController *_controller;
@@ -142,21 +157,9 @@ using namespace facebook::react;
     _initialDetentAnimated = YES;
 
     __weak __typeof(self) weakSelf = self;
-    void (^retry)(void) = ^{
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf presentInitialIfNeeded];
-      });
-    };
-
-    id<UIViewControllerTransitionCoordinator> coordinator = dismissing.transitionCoordinator;
-    if (coordinator) {
-      [coordinator animateAlongsideTransition:nil
-                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-                                     retry();
-                                   }];
-    } else {
-      retry();
-    }
+    TrueSheetRunAfterTransition(dismissing, ^{
+      [weakSelf presentInitialIfNeeded];
+    });
     return;
   }
 
@@ -446,29 +449,17 @@ using namespace facebook::react;
     _controller.delegate = nil;
 
     __weak __typeof(self) weakSelf = self;
-    void (^reattach)(void) = ^{
-      dispatch_async(dispatch_get_main_queue(), ^{
-        __typeof(self) strongSelf = weakSelf;
-        if (!strongSelf)
-          return;
+    TrueSheetRunAfterTransition(_controller, ^{
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf)
+        return;
 
-        strongSelf->_controller.delegate = strongSelf;
-        strongSelf->_controller.activeDetentIndex = -1;
-        if (strongSelf.window) {
-          [strongSelf presentInitialIfNeeded];
-        }
-      });
-    };
-
-    id<UIViewControllerTransitionCoordinator> coordinator = _controller.transitionCoordinator;
-    if (coordinator) {
-      [coordinator animateAlongsideTransition:nil
-                                   completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-                                     reattach();
-                                   }];
-    } else {
-      reattach();
-    }
+      strongSelf->_controller.delegate = strongSelf;
+      strongSelf->_controller.activeDetentIndex = -1;
+      if (strongSelf.window) {
+        [strongSelf presentInitialIfNeeded];
+      }
+    });
   }
 
   [self cancelPendingPresent];
@@ -770,10 +761,28 @@ using namespace facebook::react;
   }
 
   // Only dismiss presented children, not this sheet itself
-  if (!_controller.presentedViewController) {
+  UIViewController *presented = _controller.presentedViewController;
+  if (!presented) {
     if (completion) {
       completion(YES, nil);
     }
+    return;
+  }
+
+  // A controller already animating out of this sheet (e.g. a navigation modal
+  // closing) makes UIKit treat the dismiss below as dismissing this sheet
+  // itself. Wait for that transition, then dismiss whatever is still on top.
+  if (presented.isBeingDismissed) {
+    __weak __typeof(self) weakSelf = self;
+    TrueSheetRunAfterTransition(presented, ^{
+      __typeof(self) strongSelf = weakSelf;
+      // Dismissed while waiting: resolve without the already-dismissed warning
+      if (strongSelf && strongSelf->_controller.isPresented && !strongSelf->_controller.isBeingDismissed) {
+        [strongSelf dismissStackAnimated:animated completion:completion];
+      } else if (completion) {
+        completion(YES, nil);
+      }
+    });
     return;
   }
 
