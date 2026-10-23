@@ -777,6 +777,34 @@ using namespace facebook::react;
     return;
   }
 
+  // A controller already animating out of this sheet (e.g. a navigation modal
+  // closing) makes UIKit treat the dismiss below as dismissing this sheet
+  // itself. Wait for that transition, then dismiss whatever is still on top.
+  UIViewController *presented = _controller.presentedViewController;
+  if (presented.isBeingDismissed) {
+    id<UIViewControllerTransitionCoordinator> coordinator = presented.transitionCoordinator;
+    if (!coordinator) {
+      if (completion) {
+        completion(YES, nil);
+      }
+      return;
+    }
+
+    __weak __typeof(self) weakSelf = self;
+    [coordinator animateAlongsideTransition:nil
+                                 completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                     __typeof(self) strongSelf = weakSelf;
+                                     if (strongSelf) {
+                                       [strongSelf dismissStackAnimated:animated completion:completion];
+                                     } else if (completion) {
+                                       completion(YES, nil);
+                                     }
+                                   });
+                                 }];
+    return;
+  }
+
   // Calling dismiss on _controller dismisses all VCs presented on top of it, but keeps _controller presented
   [_controller dismissViewControllerAnimated:animated
                                   completion:^{

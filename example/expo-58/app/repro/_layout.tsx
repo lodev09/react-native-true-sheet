@@ -23,6 +23,11 @@ export default function ReproLayout() {
       />
       <Stack.Screen name="page-sheet" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="sheet" options={{ headerShown: false }} />
+      <Stack.Screen name="dismiss-stack" options={{ title: 'dismissStack' }} />
+      <Stack.Screen
+        name="dismiss-stack-modal"
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+      />
     </Stack>
   );
 }
