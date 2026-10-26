@@ -112,7 +112,7 @@ All TrueSheet props are available as screen `options`, plus:
 | `reanimated` | `boolean` | Enable worklet-based position events for this screen |
 | `positionChangeHandler` | `function` | Callback for position change events. Must be a worklet when `reanimated: true` |
 
-The reanimated integration is lazy-loaded — screens without `reanimated: true` don't require `react-native-reanimated`.
+`reanimated: true` needs `import '@lodev09/react-native-true-sheet/navigation/reanimated'` once, before the navigator renders (top of the root layout; a later import remounts presented sheets); without it the screen warns in dev and runs `positionChangeHandler` on the JS thread. Apps that don't import it don't bundle `react-native-reanimated` for the navigator.
 
 ### `useTrueSheetNavigation()` hook
 
@@ -550,6 +550,10 @@ jest.mock('@lodev09/react-native-true-sheet/navigation/expo-router', () =>
 
 jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
   require('@lodev09/react-native-true-sheet/reanimated/mock')
+)
+
+jest.mock('@lodev09/react-native-true-sheet/navigation/reanimated', () =>
+  require('@lodev09/react-native-true-sheet/navigation/reanimated/mock')
 )
 ```
 

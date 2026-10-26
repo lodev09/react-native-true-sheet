@@ -32,6 +32,11 @@ jest.mock('@lodev09/react-native-true-sheet/navigation/expo-router', () =>
 jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
   require('@lodev09/react-native-true-sheet/reanimated/mock')
 );
+
+// Navigator's reanimated integration (if using)
+jest.mock('@lodev09/react-native-true-sheet/navigation/reanimated', () =>
+  require('@lodev09/react-native-true-sheet/navigation/reanimated/mock')
+);
 ```
 
 Configure Jest to use the setup file and transform the package:
@@ -78,6 +83,10 @@ The `transformIgnorePatterns` config is required because the mock files use ESM 
 - `ReanimatedTrueSheetProvider` - Pass-through provider
 - `useReanimatedTrueSheet` - Hook returning mocked shared values
 - `useReanimatedPositionChangeHandler` - Mocked handler hook
+
+### Navigation Reanimated Module (`/navigation/reanimated/mock`)
+
+- For tests that render the real navigator: registers a screen rendering the mocked `TrueSheet`, so screens with `reanimated: true` render without loading reanimated or the native sheet, and without the warning that the integration isn't enabled. With `/navigation` (or `/navigation/expo-router`) mocked too, the navigator renders no sheets and this mock has no effect.
 
 ## Testing Static Methods
 
