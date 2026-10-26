@@ -291,9 +291,8 @@ using namespace facebook::react;
 
   // UIKit stacks the safe area on top of contentInset while the adjustment
   // behavior is automatic — take it out so the total lands on the keyboard edge.
-  if (_appliedSafeAreaInsetAdjustment) {
-    inset = MAX(0, inset - scrollView.safeAreaInsets.bottom);
-  }
+  CGFloat stackedSafeArea = _appliedSafeAreaInsetAdjustment ? scrollView.safeAreaInsets.bottom : 0;
+  inset = MAX(0, inset - stackedSafeArea);
 
   // Track how much of keyboardOffset actually lands in the inset so the caret
   // reveal can compensate — the offset shifts the inset, not the keyboard edge.
@@ -303,9 +302,9 @@ using namespace facebook::react;
 
   // Content that already fits above the keyboard (and footer) has nothing to
   // reveal — the inset would only open blank scroll range below it (huge gap
-  // at the bottom).
+  // at the bottom). The stacked safe area shrinks the viewport too.
   if (scrollView.contentSize.height + [self footerInsetAbove:adjustedInset] <=
-      scrollView.bounds.size.height - adjustedInset) {
+      scrollView.bounds.size.height - adjustedInset - stackedSafeArea) {
     _appliedKeyboardOffset = 0;
     return 0;
   }
