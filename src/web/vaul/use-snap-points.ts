@@ -180,6 +180,21 @@ export function useSnapPoints({
     keyboardViewport,
   ]);
 
+  // `snapPointsOffset` from the viewport's units, for renders that can't read the window: on the
+  // server and while hydrating, the same on both. Only called then.
+  const getSnapPointCssOffsetAt = (index: number) => {
+    const snapPoint = snapPoints?.[index];
+    return snapPoint === undefined
+      ? '0px'
+      : getSnapPointCssOffset(snapPoint, {
+          direction,
+          detachedOffset,
+          maxContentHeight,
+          contentHeight,
+          peekHeight,
+        });
+  };
+
   const getViewportHeight = () => keyboardViewport?.height ?? window.innerHeight;
 
   const activeSnapPointOffset = React.useMemo(
@@ -504,5 +519,47 @@ export function useSnapPoints({
     onRelease,
     onDrag,
     snapPointsOffset,
+    getSnapPointCssOffsetAt,
   };
+}
+
+export function getSnapPointCssOffset(
+  snapPoint: number | string,
+  {
+    direction = 'bottom',
+    detachedOffset = 0,
+    maxContentHeight,
+    contentHeight,
+    peekHeight,
+  }: {
+    direction?: DrawerDirection;
+    detachedOffset?: number;
+    maxContentHeight?: number;
+    contentHeight?: number;
+    peekHeight?: number;
+  }
+) {
+  // `--vaul-viewport-height` is `100dvh` where supported (style.css)
+  const effectiveHeight = `(var(--vaul-viewport-height, 100vh) - ${detachedOffset || 0}px)`;
+  const vertical = isVertical(direction);
+  const containerSize = vertical ? effectiveHeight : '100vw';
+  const size =
+    snapPoint === 'auto'
+      ? contentHeight && contentHeight > 0
+        ? `${contentHeight}px`
+        : `${effectiveHeight} * 0.5`
+      : snapPoint === 'peek'
+        ? `${peekHeight && peekHeight > 0 ? peekHeight : DEFAULT_PEEK_HEIGHT}px`
+        : typeof snapPoint === 'string'
+          ? `${parseInt(snapPoint, 10)}px`
+          : `${containerSize} * ${snapPoint}`;
+  const ceiling =
+    vertical && maxContentHeight !== undefined
+      ? `min(${containerSize}, ${maxContentHeight}px)`
+      : containerSize;
+  const length = `min(${size}, ${ceiling})`;
+
+  return direction === 'bottom' || direction === 'right'
+    ? `calc(${containerSize} - ${length})`
+    : `calc(${length} - ${containerSize})`;
 }

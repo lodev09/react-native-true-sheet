@@ -4,6 +4,7 @@ import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
 import type { TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
+import { useIsHydrated } from '../web/hydration';
 
 jest.mock('../web/vaul', () => {
   const React = require('react');
@@ -12,8 +13,12 @@ jest.mock('../web/vaul', () => {
   );
   const Root = ({ children, ...props }: { children: React.ReactNode }) =>
     React.createElement('div', props, children);
-  return { Drawer: { Root, Content, Portal: Root, Overlay: Root, Title: Root, Handle: Root } };
+  const Portal = ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', null, children);
+  return { Drawer: { Root, Content, Portal, Overlay: Root, Title: Root, Handle: Root } };
 });
+
+jest.mock('../web/hydration', () => ({ useIsHydrated: jest.fn(() => true) }));
 
 jest.mock('../web/layout', () => ({
   observeSheetLayout: () => ({ disconnect: jest.fn() }),
@@ -314,5 +319,161 @@ describe('web detent backgrounds', () => {
     sheet.rerender(<TrueSheet {...sheet.props} />);
     fire(() => sheet.ref.current!.present(1));
     expect(sheet.color()).toBe('#123456');
+  });
+});
+
+describe('web server rendering', () => {
+  const isHydrated = useIsHydrated as jest.Mock;
+  const wrapperSizing = (sheet: ReturnType<typeof setup>) =>
+    sheet.UNSAFE_getByType(Drawer.Root).props.detachedWrapperStyle;
+  const sizingStyle = (sheet: ReturnType<typeof setup>) =>
+    sheet.UNSAFE_queryByProps({ href: 'true-sheet-server-rendering' });
+
+  afterEach(() => {
+    isHydrated.mockReturnValue(true);
+  });
+
+  it('renders a sheet presented from the start in place, without animating it in', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(false);
+    expect(sizingStyle(sheet)).not.toBeNull();
+    expect(wrapperSizing(sheet)).toMatchObject({
+      '--true-sheet-wide-max-width': '640px',
+      '--true-sheet-wide-margin-inline-start': 'auto',
+      '--true-sheet-wide-margin-inline-end': 'auto',
+    });
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+    expect(sizingStyle(sheet)).toBeNull();
+    // Sized from the window once hydrated (750 wide in tests)
+    expect(wrapperSizing(sheet)).toMatchObject({ maxWidth: 640, marginInlineStart: 'auto' });
+    expect(Object.keys(wrapperSizing(sheet)).filter((key) => key.startsWith('--'))).toEqual([]);
+  });
+
+  it('renders as the server did until hydrated, whatever the window', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    const props = { ...sheet.props, presentation: 'form' as const, backgroundColor: undefined };
+    sheet.rerender(<TrueSheet {...props} />);
+
+    // The server's window: not wide (750 wide in tests), light
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.detached).toBe(false);
+    // Drawer.Handle is the same mock as Drawer.Root: the one styled as the grabber
+    const grabber = sheet
+      .UNSAFE_getAllByType(Drawer.Handle)
+      .find((node) => node.props.style?.transform === 'translateX(-50%)');
+    expect(grabber?.props.style.backgroundColor).toBe('var(--true-sheet-default-grabber-color)');
+    expect(sheet.color()).toBe('var(--true-sheet-default-background)');
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...props} />);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.detached).toBe(true);
+    expect(sheet.color()).not.toContain('var(');
+  });
+
+  it('moves a sheet rendered in place to the portal once dismissed', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+
+    fire(() => sheet.ref.current!.dismiss());
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('stacks a sheet rendered in place: dismissed on its dim only, below portaled sheets, apart from other providers', () => {
+    const NodeMock = class {};
+    const ElementMock = class extends NodeMock {};
+    Object.assign(NodeMock, { DOCUMENT_POSITION_FOLLOWING: 4, DOCUMENT_POSITION_DISCONNECTED: 1 });
+    Object.assign(global, { Node: NodeMock, Element: ElementMock });
+    // `inContainer`: in another provider's portal container
+    const element = (attribute?: string, inContainer = false) => {
+      const node = new ElementMock();
+      return Object.assign(node, {
+        closest: (selector: string) =>
+          (attribute && selector.includes(`[${attribute}]`)) ||
+          (inContainer && selector === '[data-true-sheet-portal]')
+            ? node
+            : null,
+      });
+    };
+    const dim = element('data-vaul-overlay');
+    const button = element('data-testid');
+    // Preceding the wrapper, outside the provider's portal container
+    const wrapper = {
+      previousElementSibling: dim,
+      contains: () => false,
+      compareDocumentPosition: () => 2,
+    };
+    const container = { contains: () => false, parentNode: null, setAttribute: jest.fn() };
+    global.document = { createElement: () => container } as unknown as Document;
+    isHydrated.mockReturnValue(false);
+
+    const result = render(
+      <TrueSheetProvider>
+        <TrueSheet initialDetentIndex={0} detents={[0.5]} />
+      </TrueSheetProvider>,
+      {
+        createNodeMock: () =>
+          Object.assign(new MockElement(), { closest: () => wrapper, appendChild: () => {} }),
+      }
+    );
+    const pointerDownOutside = (target: object) => {
+      const event = { target, preventDefault: jest.fn() };
+      result.UNSAFE_getByType(Drawer.Content).props.onPointerDownOutside(event);
+      return event.preventDefault;
+    };
+
+    expect(pointerDownOutside(dim)).not.toHaveBeenCalled();
+    wrapper.previousElementSibling = button;
+    expect(pointerDownOutside(button)).toHaveBeenCalled();
+
+    // A sheet presented above it, in the portal: a press on the sheet in place dismisses it, as on
+    // a sheet below it in the portal
+    isHydrated.mockReturnValue(true);
+    const above = render(
+      <TrueSheetProvider>
+        <TrueSheet initialDetentIndex={0} detents={[0.5]} dimmed={false} />
+      </TrueSheetProvider>,
+      {
+        createNodeMock: () =>
+          Object.assign(new MockElement(), { closest: () => wrapper, appendChild: () => {} }),
+      }
+    );
+    const event = { target: element('data-vaul-detached-wrapper'), preventDefault: jest.fn() };
+    above.UNSAFE_getByType(Drawer.Content).props.onPointerDownOutside(event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+
+    // A sheet of another provider, in that provider's (marked) container: not part of this stack
+    expect(container.setAttribute).toHaveBeenCalledWith('data-true-sheet-portal', '');
+    const other = {
+      target: element('data-vaul-detached-wrapper', true),
+      preventDefault: jest.fn(),
+    };
+    above.UNSAFE_getByType(Drawer.Content).props.onPointerDownOutside(other);
+    expect(other.preventDefault).toHaveBeenCalled();
+    // @ts-expect-error restored for the other tests
+    delete global.document;
+  });
+
+  it('portals a sheet presented later', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(-1);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('portals and animates a sheet presented from the start in a client-rendered app', () => {
+    const sheet = setup(0);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(true);
+    expect(sizingStyle(sheet)).toBeNull();
   });
 });
