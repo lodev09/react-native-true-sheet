@@ -1,0 +1,180 @@
+---
+title: Detents
+description: Define the sheet's detents, size it to its content, and resize it programmatically.
+keywords: [bottom sheet detents, bottom sheet resizing, bottom sheet snap points, bottom sheet auto height, bottom sheet auto resizing]
+---
+
+Detents are the heights the sheet snaps to. The user drags the sheet between them, and you can resize it from code. Pass up to **3** detents to [`detents`](../reference/configuration#detents), sorted from smallest to largest.
+
+<Preview label="Resizing" src="/img/previews/resizing.mp4" />
+
+## Detents
+
+Each detent is a [`SheetDetent`](../reference/types#sheetdetent):
+
+| Value | Height | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `'auto'` | Fits the content | **_16+_** | ✅ | ✅ |
+| `'peek'` | Collapses to the header, an absolute footer, and the content above a `TrueSheetPeek` | **_16+_** | ✅ | ✅ |
+| `number` | A fraction (0-1) of the screen height | ✅ | ✅ | ✅ |
+
+```tsx {4}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto', 0.69, 1]}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+The default is `[0.5, 1]`.
+
+### Fixed Heights
+
+A fraction sets the sheet's height relative to the screen: `0.5` is half the screen and `1` is the full height. The content wraps its children like a regular view. To fill the sheet's visible height at each detent, pass `flex: 1` via [`style`](../reference/configuration#style):
+
+```tsx {4}
+const App = () => {
+  return (
+    <TrueSheet
+      style={{ flex: 1 }}
+      detents={[0.5, 1]}
+    >
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <Text>Centered</Text>
+      </View>
+    </TrueSheet>
+  )
+}
+```
+
+The content resizes in the same frame as the sheet and follows its edge while the user drags, so flex layouts, like a bottom-pinned button, stay in place.
+
+### Sizing to the Content
+
+The `'auto'` detent sizes the sheet to the content's height. A relative [`header`](header) and [`footer`](footer) count toward it too. The sheet resizes when the content changes.
+
+```tsx {4}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto']}
+    >
+      <View style={{ padding: 24 }}>
+        <Text>Sized to fit</Text>
+      </View>
+    </TrueSheet>
+  )
+}
+```
+
+Combine it with a fraction to let the user expand the sheet, e.g. `['auto', 1]`.
+
+### Auto with Scrollables
+
+<Preview label="Auto detent with scrollables" src="/img/previews/auto-detent.mp4" />
+
+`'auto'` also works with a `ScrollView` or `FlatList` passed to [`scrollableRef`](../reference/configuration#scrollableref). The sheet sizes to the scroll content and grows with it. When the content is taller than the screen, the sheet stops at its maximum height and the list scrolls. No `flex: 1` is needed:
+
+```tsx {2,5,7}
+const App = () => {
+  const scrollableRef = useRef<FlatList>(null)
+
+  return (
+    <TrueSheet detents={['auto']} scrollableRef={scrollableRef}>
+      <FlatList
+        ref={scrollableRef}
+        data={items}
+        renderItem={({ item }) => <ItemRow item={item} />}
+      />
+    </TrueSheet>
+  )
+}
+```
+
+:::warning
+Lists that wrap their scroll view in a `flex: 1` view, like `FlashList`, still need `style={{ flex: 1 }}` on the sheet. See the [Scrolling guide](scrolling).
+:::
+
+### Peek
+
+`'peek'` collapses the sheet to its header, an absolute footer, and the content above a `TrueSheetPeek` marker. Use it for map-style sheets that expand from a compact summary. See [Peeking Content](peeking).
+
+## Resizing Programmatically
+
+Call [`resize`](../reference/methods#resize) with a detent **index**, not a value.
+
+```tsx {2,6,11}
+const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  const resize = async () => {
+    // Resize to 69%
+    await sheet.current?.resize(1)
+    console.log('Yay, we are now at 69% 💦')
+  }
+
+  return (
+    <TrueSheet name="resizing-sheet" ref={sheet} detents={['auto', 0.69, 1]}>
+      <Button onPress={resize} title="Resize" />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+You can also do it globally using the related [global method](../reference/methods#global-methods).
+
+```tsx
+TrueSheet.resize('resizing-sheet', 1)
+```
+:::
+
+[`present`](../reference/methods#present) also takes an index, and [`initialDetentIndex`](../reference/configuration#initialdetentindex) presents the sheet at an index when it mounts. See [Present on Mount](onmount).
+
+:::tip
+To allow only programmatic resizing, set [`draggable={false}`](../reference/configuration#draggable).
+:::
+
+## Listening to Detent Changes
+
+[`onDetentChange`](../reference/events#ondetentchange) fires when the sheet settles at a detent, from a drag or a `resize` call. It comes with [`DetentInfoEventPayload`](../reference/types#detentinfoeventpayload): the detent `index` and its `position` (Y position on screen).
+
+```tsx {2-5,10}
+const App = () => {
+  const handleDetentChange = (e: DetentChangeEvent) => {
+    const { index, position } = e.nativeEvent
+    console.log('Detent index:', index, 'position:', position) ✅
+  }
+
+  return (
+    <TrueSheet
+      detents={['auto', 0.69, 1]}
+      onDetentChange={handleDetentChange}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+Use the `index` to look up the detent in your `detents` array. With `detents={['auto', 0.69, 1]}`, an `index` of `1` means the sheet is at `0.69`.
+
+:::tip
+To track the sheet's position while it moves, use [`onPositionChange`](../reference/events#onpositionchange) or the [Reanimated integration](reanimated).
+:::
+
+## Detent Options
+
+These props take a detent index or change with the detent:
+
+| Prop | Use |
+| - | - |
+| [`initialDetentIndex`](../reference/configuration#initialdetentindex) | Present on mount at this detent |
+| [`dimmedDetentIndex`](../reference/configuration#dimmeddetentindex) | Start dimming the background at this detent. See [Dimming](dimming) |
+| [`detentBackgrounds`](../reference/configuration#detentbackgrounds) | Change the background per detent. See [Backgrounds](backgrounds) |
+| [`foldOptions`](../reference/configuration#foldoptions) | Rest a detent on the hinge of a half-folded iPhone. See [Foldables](foldables) |
+| [`maxContentHeight`](../reference/configuration#maxcontentheight) | Cap the sheet's height, whatever the detent |

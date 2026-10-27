@@ -77,7 +77,7 @@ const FEATURES = [
     icon: MoveVertical,
     title: 'Detents that fit',
     text: 'Size by fraction, peek, or auto. Auto measures your content, including scroll views and lists.',
-    to: '/guides/resizing',
+    to: '/guides/detents',
   },
   {
     icon: Keyboard,
