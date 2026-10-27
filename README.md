@@ -2,12 +2,21 @@
 
 [![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml)
 [![NPM Downloads](https://img.shields.io/npm/d18m/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lodev09/react-native-true-sheet)
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-<img alt="React Native True Sheet - iPad" src="docs/public/img/preview-ipad.gif" width="744" /><br>
-<img alt="React Native True Sheet - IOS" src="docs/public/img/preview-ios.gif" width="248" height="500" /><img alt="React Native True Sheet - Android" src="docs/public/img/preview-android.gif" width="248" height="500" /><img alt="React Native True Sheet - Web" src="docs/public/img/preview-web.gif" width="248" height="500" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-ios-dark.gif" />
+  <img alt="React Native True Sheet - iOS" src="docs/public/img/previews/preview-ios-light.gif" height="439" />
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-android-dark.gif" />
+  <img alt="React Native True Sheet - Android" src="docs/public/img/previews/preview-android-light.gif" height="439" />
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-web-dark.gif" />
+  <img alt="React Native True Sheet - Web" src="docs/public/img/previews/preview-web-light.gif" height="439" />
+</picture>
 
 ## Features
 

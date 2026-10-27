@@ -135,17 +135,17 @@ The frame must follow the device's real screen corners: iOS draws sheet corners 
 
 Check the result before embedding:
 
-- At the defaults, 10 s of phone footage renders to ~7 MB per GIF and ~1.4 MB of MP4. Shorten the scene or lower `--fps` if a GIF grows past ~8 MB.
+- At the defaults, 10 s of phone footage renders to ~7 MB per GIF and ~1.4 MB of MP4. Keep every preview at the default 20 fps; a GIF of 8–9 MB is fine. Shorten the scene if one grows well past that.
 - Look at one frame of each GIF (`ffmpeg -ss 4 -i <gif> -frames:v 1 /tmp/f.png`): the corners and shadow should blend into the page with no box around the device.
 
 ## 5. Embed and restore
 
-README, at half the GIF's pixel width (the script prints it):
+README, at half the iOS GIF's height (878 → 439). Set only `height`, the same on every preview, so they line up; a taller GIF (Android, 456×896) comes out a little narrower:
 
 ```html
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/<name>-dark.gif" />
-  <img alt="TrueSheet on iOS" src="docs/public/img/previews/<name>-light.gif" width="228" />
+  <img alt="TrueSheet on iOS" src="docs/public/img/previews/<name>-light.gif" height="439" />
 </picture>
 ```
 
