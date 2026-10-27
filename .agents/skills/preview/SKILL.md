@@ -18,7 +18,7 @@ Read `argent-device-interact` and `argent-screen-recording` before driving a dev
 
 ## 1. Prepare the device
 
-Every preview uses the same clean state: 9:41, full battery, dark appearance, no touch markers, no watermark, no debug overlays.
+Every preview uses the same clean state: 9:41, full battery, dark appearance, no watermark, no debug overlays. Touch markers stay on so viewers see where each tap and drag lands.
 
 iOS simulator:
 
@@ -56,7 +56,7 @@ Both:
 1. `launch-app` (or `restart-app`) so the scene starts from a known state, then wait ~2 s: a swipe right after launch is often ignored.
 2. Find targets with `describe`. Coordinates differ per device, so never reuse them across devices.
 3. Dry-run the steps once without recording, then `restart-app`.
-4. `screen-recording-start` with `showTouches: false` and a `timeLimitSeconds` a little over the scene. Set the stop reminder the recording skill requires.
+4. `screen-recording-start` with `showTouches: true` (the default) and a `timeLimitSeconds` a little over the scene. Set the stop reminder the recording skill requires. Argent draws a pulse for each tap and a trail for each swipe into the video, only for the gestures it drives, so every step of the scene has to go through argent. Don't also turn on Android's own `show_touches`: it would draw a second marker.
 5. Drive the whole scene in one `run-sequence`. Give every step a `delayMs` of 1200–1500 so each state reads before the next one starts, and end on the same state the scene started on so the loop is seamless.
 6. `screen-recording-stop`. The mp4 lands in `.argent/recordings/` (gitignored). Static stretches are already trimmed to 1 s.
 
