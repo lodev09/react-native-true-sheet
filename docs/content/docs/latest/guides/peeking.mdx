@@ -6,6 +6,8 @@ keywords: [bottom sheet peek, bottom sheet collapsed, bottom sheet snap points, 
 
 Building a map-style sheet with a compact summary that expands into full content? The [`"peek"`](../reference/types#sheetdetent) detent collapses the sheet down to just the essentials — no manual height juggling needed.
 
+<Preview label="Peeking" src="/img/previews/peeking.mp4" />
+
 ## The `"peek"` Detent
 
 Add `"peek"` to your [`detents`](../reference/configuration#detents) to get a collapsed size based on the measured [`header`](header) height, plus an [absolute footer](footer#floating-footer) if provided — a relative footer is laid out below the content, so it's pushed off-screen at peek and doesn't count.

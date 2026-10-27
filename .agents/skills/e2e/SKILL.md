@@ -42,6 +42,14 @@ A branch that adds a codegen prop fails with "no member named X in TrueSheetView
 
 ### Android
 
+Boot the emulator yourself with the hardware GPU, as a background command with the max timeout:
+
+```sh
+~/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro_XL -gpu host -noaudio -no-boot-anim
+```
+
+argent `boot-device` passes `-gpu auto`, which on macOS falls back to SwiftShader (software rendering): the map and sheet animations drop frames. Check with `adb shell dumpsys SurfaceFlinger | grep GLES` — it should not say SwiftShader. If an emulator is already running on SwiftShader, `adb emu kill` it and boot again with the command above.
+
 ```sh
 cd example/bare/android && ./gradlew app:installDebug -PreactNativeArchitectures=arm64-v8a
 ```

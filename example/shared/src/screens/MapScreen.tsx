@@ -155,11 +155,13 @@ const MapScreenInner = ({
   return (
     <View style={styles.container}>
       <MapComponent style={styles.map} />
-      <View pointerEvents="none" style={styles.logContainer}>
-        {logs.map((entry) => (
-          <LogLine key={entry.id} text={entry.text} />
-        ))}
-      </View>
+      {__DEV__ && (
+        <View pointerEvents="none" style={styles.logContainer}>
+          {logs.map((entry) => (
+            <LogLine key={entry.id} text={entry.text} />
+          ))}
+        </View>
+      )}
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
@@ -183,9 +185,6 @@ const MapScreenInner = ({
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
         detentBackgrounds={[null, null, BLUE]}
-        backgroundStyle={{
-          backgroundColor: `${BLUE}33`,
-        }}
         style={styles.sheet}
         detached
         dismissible={false}
