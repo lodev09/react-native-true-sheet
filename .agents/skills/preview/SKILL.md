@@ -14,9 +14,29 @@ Previews are scripted screen recordings of the example app, rendered by `scripts
 
 GIF has no soft transparency, so each theme gets its own GIF and the README picks one with `<picture>`. Files go in `docs/public/img/previews/`.
 
-Read `argent-device-interact` and `argent-screen-recording` before driving a device. Build, install, and Metro setup are in the `e2e` skill §1.
+Read `argent-device-interact` and `argent-screen-recording` before driving a device.
 
-## 1. Prepare the device
+## 1. Prepare
+
+### Release build
+
+Record a Release build of the bare example: no Metro, no LogBox or dev overlays, and production-speed JS, so animations don't drop frames. MapScreen's on-screen event log renders only in `__DEV__`, so it's gone too. The JS bundle is baked in at build time: make any example change first, and rebuild after every JS change.
+
+iOS, from `example/bare/ios` (then install `build/Build/Products/Release-iphonesimulator/TrueSheetExample.app` with argent `reinstall-app`):
+
+```sh
+xcodebuild -workspace TrueSheetExample.xcworkspace -scheme TrueSheetExample \
+  -configuration Release -destination 'id=<UDID>' -derivedDataPath build build \
+  > /tmp/truesheet-xcodebuild-release.log 2>&1; echo "EXIT $?"
+```
+
+Android, from `example/bare/android`, with the emulator booted on the hardware GPU (`e2e` skill §1). Release is signed with the debug keystore, so this builds and installs in one step (about 3 min clean). Gradle only watches `example/bare` for the JS bundle and calls it up to date after an `example/shared` edit, so always rerun the bundle task:
+
+```sh
+./gradlew app:createBundleReleaseJsAndAssets --rerun app:installRelease -PreactNativeArchitectures=arm64-v8a
+```
+
+### Device
 
 Every preview uses the same clean state: 9:41, full battery, dark appearance, no watermark, no debug overlays. Touch markers stay on so viewers see where each tap and drag lands.
 
@@ -46,8 +66,6 @@ adb shell cmd uimode night yes
 Both:
 
 - `argent disable video-watermark` (global flag, re-enable in §5).
-- Hide MapScreen's on-screen event log with a temporary edit in `example/shared/src/screens/MapScreen.tsx`: render nothing from `logs` (e.g. `logs.slice(0, 0).map(...)`). Revert it in §5.
-- Close any LogBox banner before recording.
 - iPad: rotate to the orientation you want before recording; the video keeps the size of the first frame.
 - Web: serve the expo example and open it in iOS Simulator Safari (`e2e` skill, `references/web.md`). Safari's toolbar stays in the shot.
 
@@ -57,12 +75,27 @@ Both:
 2. Find targets with `describe`. Coordinates differ per device, so never reuse them across devices.
 3. Dry-run the steps once without recording, then `restart-app`.
 4. `screen-recording-start` with `showTouches: true` (the default) and a `timeLimitSeconds` a little over the scene. Set the stop reminder the recording skill requires. Argent draws a pulse for each tap and a trail for each swipe into the video, only for the gestures it drives, so every step of the scene has to go through argent. Don't also turn on Android's own `show_touches`: it would draw a second marker.
-5. Drive the whole scene in one `run-sequence`. Give every step a `delayMs` of 1200–1500 so each state reads before the next one starts, and end on the same state the scene started on so the loop is seamless.
+5. Drive the whole scene in one `run-sequence`. Keep it brisk: a `delayMs` of 800–900 after each step, about 450 between repeated taps on the same button. End on the same state the scene started on so the loop is seamless.
 6. `screen-recording-stop`. The mp4 lands in `.argent/recordings/` (gitignored). Static stretches are already trimmed to 1 s.
 
-Sheet drags: use a 500 ms swipe from the grabber (default momentum). A `momentum: false` swipe from peek is often ignored.
+Gestures:
 
-Example scene (MapScreen, 10 s): swipe the grabber up from peek → tap "TrueSheet View" (stacked sheet) → tap "Add Content" twice → swipe the stacked sheet down → swipe the main sheet back to peek.
+- Drag a sheet up: a 300 ms `gesture-swipe` from the grabber (default momentum; a `momentum: false` swipe from peek is often ignored). Scroll a list: a 250 ms swipe.
+- Dismiss or collapse a sheet the way a person does: a short drag, then a flick. Use `gesture-custom` from the grabber or header, `interpolate: 8`:
+
+  ```json
+  [
+    { "type": "Down", "x": 0.5, "y": 0.11 },
+    { "type": "Move", "x": 0.5, "y": 0.17, "delayMs": 240 },
+    { "type": "Move", "x": 0.5, "y": 0.33, "delayMs": 80 },
+    { "type": "Up", "x": 0.5, "y": 0.35, "delayMs": 10 }
+  ]
+  ```
+
+- Android: a flick from a middle detent doesn't skip to the lower one (Material snaps to the nearest detent by position, ignoring velocity), so end the flick past the midpoint between the two detents (e.g. drag 0.2 → 0.28, flick to 0.6). A single-detent sheet with `dismissThreshold="short"` dismisses on the short flick above.
+- Gate each tap that depends on a sheet opening with an `await-ui-element` step. If a swipe is ignored, the taps after it land on other buttons and change the app's state.
+
+Example scene (MapScreen, 9 s): swipe the grabber up from peek → tap "FlatList" → tap "Add Item" until the list scrolls → scroll it to the bottom → drag and flick it down → tap "TrueSheet View" → tap "Auto", then "Peek" → tap the dim → drag and flick the main sheet back to peek.
 
 ## 3. Pick the loop
 
@@ -129,5 +162,5 @@ Restore everything you changed:
 - iOS: `xcrun simctl status_bar <UDID> clear`, and set the appearance back (`xcrun simctl ui <UDID> appearance light`).
 - Android: `adb shell am broadcast -a com.android.systemui.demo -e command exit` and `adb shell cmd uimode night no`.
 - `argent enable video-watermark`.
-- Revert the MapScreen edit (`git diff example/` shows nothing).
-- Stop Metro and the simulator servers as in the `e2e` skill §6.
+- Reinstall the Debug build (`e2e` skill §1) so the devices are back on Metro.
+- Stop Metro, the web server, and the simulator servers as in the `e2e` skill §6.

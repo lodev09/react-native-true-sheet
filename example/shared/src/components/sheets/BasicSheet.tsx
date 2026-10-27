@@ -154,6 +154,9 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         console.log('BasicSheet is ready!');
       }}
       detentBackgrounds={[null, { blur: 'system-material' }, BLUE]}
+      backgroundStyle={{
+        backgroundColor: `${BLUE}33`,
+      }}
       header={<Header />}
       footer={<Footer />}
       footerStyle={styles.footer}
