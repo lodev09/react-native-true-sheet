@@ -202,15 +202,25 @@ using namespace facebook::react;
   _detectedScrollView.scrollView.contentInset = contentInset;
 }
 
+// The safe area UIKit stacks on top of contentInset. `automatic` only adjusts
+// a scrollable axis — content taller than the scroll view, or
+// alwaysBounceVertical — so a short list that doesn't bounce gets none.
+- (CGFloat)stackedSafeAreaInset {
+  if (!_appliedSafeAreaInsetAdjustment) {
+    return 0;
+  }
+  UIScrollView *scrollView = _detectedScrollView.scrollView;
+  return MAX(0, scrollView.adjustedContentInset.bottom - scrollView.contentInset.bottom);
+}
+
 // How much of the absolute footer covers the scroll view — measured from the
 // footer's layout position (pinned to the container's bottom edge; its
 // keyboard rise is a transform) so a short scroll view ending above the footer
-// gets no inset. UIKit stacks the safe area on top of contentInset while the
-// adjustment behavior is automatic — take out the inset baked into the
-// footer's height so the total lands on the footer's top edge. Stays constant
-// across keyboard transitions: the footer drops its inset as it rises, and
-// the baked value drops with it. A pinned footer adds only the overlap not
-// already covered by the keyboard inset.
+// gets no inset. While UIKit stacks the safe area on top of contentInset,
+// take out the inset baked into the footer's height so the total lands on the
+// footer's top edge. Stays constant across keyboard transitions: the footer
+// drops its inset as it rises, and the baked value drops with it. A pinned
+// footer adds only the overlap not already covered by the keyboard inset.
 - (CGFloat)footerInsetAbove:(CGFloat)keyboardInset {
   if (!_footerInsetAdjustment || !self.footerView || !_detectedScrollView) {
     return 0;
@@ -222,7 +232,7 @@ using namespace facebook::react;
   CGFloat footerTop = container.bounds.size.height - self.footerView.bounds.size.height;
 
   CGFloat inset = CGRectGetMaxY(scrollFrame) - footerTop;
-  if (_appliedSafeAreaInsetAdjustment) {
+  if ([self stackedSafeAreaInset] > 0) {
     inset -= self.footerView.appliedBottomInset;
   }
   if (!_keyboardObserver.viewController.footerAvoidsKeyboard) {
@@ -289,9 +299,9 @@ using namespace facebook::react;
   CGFloat keyboardTop = CGRectGetMaxY(window.bounds) - height;
   CGFloat inset = MAX(0, CGRectGetMaxY(scrollFrame) - keyboardTop);
 
-  // UIKit stacks the safe area on top of contentInset while the adjustment
-  // behavior is automatic — take it out so the total lands on the keyboard edge.
-  CGFloat stackedSafeArea = _appliedSafeAreaInsetAdjustment ? scrollView.safeAreaInsets.bottom : 0;
+  // Take out the safe area UIKit stacks on top of contentInset so the total
+  // lands on the keyboard edge.
+  CGFloat stackedSafeArea = [self stackedSafeAreaInset];
   inset = MAX(0, inset - stackedSafeArea);
 
   // Track how much of keyboardOffset actually lands in the inset so the caret
