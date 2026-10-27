@@ -80,7 +80,8 @@ Both:
 
 Gestures:
 
-- Drag a sheet up: a 300 ms `gesture-swipe` from the grabber (default momentum; a `momentum: false` swipe from peek is often ignored). Scroll a list: a 250 ms swipe.
+- Drag a sheet up: a 300 ms `gesture-swipe` from the grabber. Scroll a list: a 250 ms swipe.
+- A recording slows the simulator, so a fast swipe or short flick that works in the dry run can bounce back while recording (seen from peek to auto, and on the ScrollView sheet's dismiss flick). If that happens, use a 500 ms `momentum: false` drag that releases past the midpoint to the target detent, or a longer flick.
 - Dismiss or collapse a sheet the way a person does: a short drag, then a flick. Use `gesture-custom` from the grabber or header, `interpolate: 8`:
 
   ```json
@@ -93,7 +94,7 @@ Gestures:
   ```
 
 - Android: a flick from a middle detent doesn't skip to the lower one (Material snaps to the nearest detent by position, ignoring velocity), so end the flick past the midpoint between the two detents (e.g. drag 0.2 → 0.28, flick to 0.6). A single-detent sheet with `dismissThreshold="short"` dismisses on the short flick above.
-- Gate each tap that depends on a sheet opening with an `await-ui-element` step. If a swipe is ignored, the taps after it land on other buttons and change the app's state.
+- Gate each step that depends on a sheet opening or reaching a detent with an `await-ui-element` step. If a swipe is ignored, the taps after it land on other buttons, and swipes after it pan the map, which changes the state the loop has to end on.
 
 Example scene (MapScreen, 9 s): swipe the grabber up from peek → tap "FlatList" → tap "Add Item" until the list scrolls → scroll it to the bottom → drag and flick it down → tap "TrueSheet View" → tap "Auto", then "Peek" → tap the dim → drag and flick the main sheet back to peek.
 
