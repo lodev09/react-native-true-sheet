@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- Add an internal `preview` agent skill for recording the example app with argent and rendering README GIFs and docs videos framed to each device's real screen corners. ([#984](https://github.com/lodev09/react-native-true-sheet/pull/984) by [@lodev09](https://github.com/lodev09))
+
 ## 4.0.0
 
 ### 🎉 New features
