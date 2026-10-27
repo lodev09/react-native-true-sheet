@@ -33,7 +33,7 @@ In v3, the content was sized to the largest detent, and resizing lagged a frame 
 
 ### 📐 `auto` Detent with Scrollables
 
-<Preview label="Auto detent with scrollables" src="/img/previews/scrolling.mp4" />
+<Preview label="Auto detent with scrollables" src="/img/previews/auto-detent.mp4" />
 
 The `scrollable` prop is replaced by `scrollableRef`. Pass a ref of your `ScrollView` or `FlatList` to wire nested scrolling, keyboard insets, and `auto` sizing. With an `auto` detent, the sheet sizes to the scroll content and resizes as it grows or shrinks:
 
@@ -47,7 +47,7 @@ const scrollableRef = useRef<ScrollView>(null)
 
 The scrollable's bottom inset is now applied natively: the safe-area inset while the content can scroll, plus the height of an absolute footer floating over it. No more manual `paddingBottom`.
 
-See the [Scrolling guide](/guides/scrolling) for more details.
+See the [Detents guide](/guides/detents#auto-with-scrollables) and [Scrolling guide](/guides/scrolling) for more details.
 
 ### 🦶 Relative Footers and Floating Headers
 
