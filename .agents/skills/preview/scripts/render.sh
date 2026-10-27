@@ -4,12 +4,16 @@
 #   <name>.mp4                         plain screen for the docs, framed with CSS
 #
 # Usage: render.sh <recording.mp4> <name> [--out DIR] [--start SEC] [--end SEC]
-#                  [--device phone|tablet] [--width PX] [--radius RATIO] [--fps N]
+#                  [--device phone|tablet] [--width PX] [--mask PDF|PNG|auto] [--radius RATIO] [--fps N]
+#
+# --mask is the device's real screen shape (opaque = screen), e.g. an iOS simulator's
+# framebufferMask PDF. "auto" takes it from the recording's black rounded corners (Android).
+# Without it, the screen gets circular corners of --radius.
 
 set -euo pipefail
 
 usage() {
-  sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
   exit 1
 }
 
@@ -23,6 +27,7 @@ START=""
 END=""
 DEVICE="phone"
 WIDTH=""
+MASK=""
 RADIUS=""
 FPS=20
 
@@ -33,6 +38,7 @@ while [ $# -gt 0 ]; do
     --end) END="$2" ;;
     --device) DEVICE="$2" ;;
     --width) WIDTH="$2" ;;
+    --mask) MASK="$2" ;;
     --radius) RADIUS="$2" ;;
     --fps) FPS="$2" ;;
     *) usage ;;
@@ -41,6 +47,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ -f "$INPUT" ] || { echo "Recording not found: $INPUT" >&2; exit 1; }
+[ -z "$MASK" ] || [ "$MASK" = auto ] || [ -f "$MASK" ] || { echo "Mask not found: $MASK" >&2; exit 1; }
 
 # Screen width, corner radius, bezel and margin as ratios of the screen width
 case "$DEVICE" in
@@ -56,10 +63,8 @@ H=$(( (S * VH / VW) / 2 * 2 ))
 R=$(awk "BEGIN { printf \"%d\", $S * $RATIO + 0.5 }")
 P=$(awk "BEGIN { printf \"%d\", $S * $BEZEL + 0.5 }")
 M=$(awk "BEGIN { printf \"%d\", $S * $MARGIN + 0.5 }")
-DW=$((S + 2 * P)); DH=$((H + 2 * P)); DR=$((R + P))
-CW=$((DW + 2 * M)); CH=$((DH + 2 * M))
-X0=$M; Y0=$M; X1=$((M + DW - 1)); Y1=$((M + DH - 1))
-SX0=$((M + P)); SY0=$((M + P)); SX1=$((M + P + S - 1)); SY1=$((M + P + H - 1))
+CW=$((S + 2 * (P + M))); CH=$((H + 2 * (P + M)))
+SX0=$((M + P)); SY0=$((M + P)); SX1=$((SX0 + S - 1)); SY1=$((SY0 + H - 1))
 BLUR=$(awk "BEGIN { printf \"%d\", $S * 0.05 + 0.5 }")
 MP4_W=$(( (S * 5 / 3) / 2 * 2 ))
 
@@ -71,15 +76,56 @@ TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$OUT"
 
+# Screen shape at the recording's size: white = screen
+C=$((VW / 5))
+if [ "$MASK" = auto ]; then
+  # Android paints its rounded corners black over the screen. Flood-fill that black from each
+  # corner of the brightest frame (so dark content can't pass for it), within the corner areas.
+  ffmpeg -v error -y "${TRIM[@]}" -i "$INPUT" -vf fps=1 "$TMP/probe-%03d.png"
+  magick "$TMP"/probe-*.png -evaluate-sequence max -colorspace sRGB -type TrueColor "$TMP/max.png"
+  for p in 0,0 $((VW - 1)),0 0,$((VH - 1)) $((VW - 1)),$((VH - 1)); do
+    [ "$(magick "$TMP/max.png" -format "%[fx:p{$p}.intensity < 0.02]" info:)" = 1 ] ||
+      { echo "No black rounded corners in the recording; pass --mask <file> or --radius" >&2; exit 1; }
+  done
+  magick "$TMP/max.png" -fuzz 2% -fill red \
+    -draw "color 0,0 floodfill" -draw "color $((VW - 1)),0 floodfill" \
+    -draw "color 0,$((VH - 1)) floodfill" -draw "color $((VW - 1)),$((VH - 1)) floodfill" \
+    -fill white +opaque red -fill black -opaque red -fill white \
+    -draw "rectangle $C,0 $((VW - 1 - C)),$((VH - 1))" -draw "rectangle 0,$C $((VW - 1)),$((VH - 1 - C))" \
+    -colorspace gray "$TMP/mask-full.png"
+elif [ -n "$MASK" ]; then
+  if [[ "$MASK" == *.pdf ]]; then
+    sips -s format png --resampleWidth "$VW" "$MASK" --out "$TMP/mask.png" >/dev/null
+  else
+    cp "$MASK" "$TMP/mask.png"
+  fi
+  magick "$TMP/mask.png" -alpha extract -resize "${VW}x${VH}!" "$TMP/mask-full.png"
+fi
+
+# Screen shape on the canvas
+if [ -n "$MASK" ]; then
+  magick "$TMP/mask-full.png" -resize "${S}x${H}!" "$TMP/screen-only.png"
+  magick -size ${CW}x${CH} xc:black "$TMP/screen-only.png" -geometry +$SX0+$SY0 -compose over -composite \
+    -colorspace gray "$TMP/screen.png"
+else
+  magick -size ${CW}x${CH} xc:black -fill white \
+    -draw "roundrectangle $SX0,$SY0 $SX1,$SY1 $R,$R" -colorspace gray "$TMP/screen.png"
+fi
+
+# Bezel and edge grow out of the screen shape, so every curve stays concentric with it
+magick "$TMP/screen.png" -morphology Dilate "Disk:$(awk "BEGIN { print $P - 1.5 }")" "$TMP/body.png"
+magick "$TMP/screen.png" -morphology Dilate "Disk:$(awk "BEGIN { print $P + 1.5 }")" "$TMP/edge.png"
+magick "$TMP/edge.png" -roll +0+$((BLUR / 2)) -blur 0x$BLUR "$TMP/shadow.png"
+
 # Page background, shadow opacity, device edge color
 frame() {
   local theme=$1 bg=$2 shadow=$3 edge=$4
   magick -size ${CW}x${CH} "xc:$bg" \
-    \( -size ${CW}x${CH} xc:none -fill "rgba(0,0,0,$shadow)" \
-       -draw "roundrectangle $X0,$((Y0 + BLUR / 2)) $X1,$((Y1 + BLUR / 2)) $DR,$DR" -blur 0x$BLUR \) -composite \
-    -fill '#101113' -stroke "$edge" -strokewidth 3 -draw "roundrectangle $X0,$Y0 $X1,$Y1 $DR,$DR" \
-    \( -size ${CW}x${CH} xc:white -fill black -draw "roundrectangle $SX0,$SY0 $SX1,$SY1 $R,$R" \) \
-    -alpha off -compose CopyOpacity -composite PNG32:"$TMP/frame-$theme.png"
+    \( -size ${CW}x${CH} xc:black \( "$TMP/shadow.png" -evaluate multiply "$shadow" \) \
+       -alpha off -compose CopyOpacity -composite \) -compose over -composite \
+    \( -size ${CW}x${CH} "xc:$edge" "$TMP/edge.png" -alpha off -compose CopyOpacity -composite \) -compose over -composite \
+    \( -size ${CW}x${CH} xc:'#101113' "$TMP/body.png" -alpha off -compose CopyOpacity -composite \) -compose over -composite \
+    \( "$TMP/screen.png" -negate \) -alpha off -compose CopyOpacity -composite PNG32:"$TMP/frame-$theme.png"
 }
 
 # Composite in RGB so the page color survives exactly, force it into the palette,
@@ -104,5 +150,19 @@ gif dark '#0d1117'
 ffmpeg -v error -y "${TRIM[@]}" -i "$INPUT" -vf "fps=30,scale=${MP4_W}:-2:flags=lanczos" \
   -c:v libx264 -crf 21 -preset slow -pix_fmt yuv420p -movflags +faststart -an "$OUT/$NAME.mp4"
 
+# CSS border-radius for the docs frame, measured on the mask's top-left corner. A mask file gets
+# the circle that crosses the corner's diagonal at the same depth (a close fit for continuous iOS
+# corners). An auto mask gets the smallest circle that also covers the black corners baked into
+# the video, so none of it shows inside the CSS clip.
+CSS_RATIO=$RATIO
+if [ -n "$MASK" ]; then
+  corner() { magick "$TMP/mask-full.png" -crop "$1" +repage -depth 8 txt:- | sed -nE 's/^([0-9]+),([0-9]+): \(([0-9.]+).*/\1 \2 \3/p'; }
+  DIAG=$(corner "${C}x${C}+0+0" | awk '!f && $1 == $2 && $3 > 127 { v = $1; f = 1 } END { print v }')
+  EDGE=$(corner "${C}x1+0+0" | awk '!f && $3 > 127 { v = $1; f = 1 } END { print v }')
+  CSS_RATIO=$(awk -v d="$DIAG" -v e="$EDGE" -v w="$VW" -v auto="$([ "$MASK" = auto ] && echo 1 || echo 0)" \
+    'BEGIN { r = d / (1 - 1 / sqrt(2)); if (auto && e > r) r = e; printf "%.4f", r / w }')
+fi
+
 ls -lh "$OUT/$NAME-light.gif" "$OUT/$NAME-dark.gif" "$OUT/$NAME.mp4" | awk '{ print $5, $NF }'
-echo "GIF ${CW}x${CH} (README width $((CW / 2))), screen corner radius ratio $RATIO"
+echo "GIF ${CW}x${CH} (README width $((CW / 2)))"
+echo "Docs frame: video border-radius $CSS_RATIO × video width (202px video → $(awk "BEGIN { printf \"%d\", 202 * $CSS_RATIO + 0.5 }")px)"

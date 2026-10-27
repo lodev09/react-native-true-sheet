@@ -35,10 +35,13 @@ adb shell settings put global sysui_demo_allowed 1
 adb shell am broadcast -a com.android.systemui.demo -e command enter
 adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
 adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
-adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e level 4
+adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e fully true
+adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile hide
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
 adb shell cmd uimode night yes
 ```
+
+`fully true` drops the Wi-Fi "no internet" mark. The mobile icon is hidden because the emulator ignores the demo `datatype` and always shows "3G". Run these through `bash -c` from zsh: zsh doesn't split an `adb -s <serial> shell` stored in a variable.
 
 Both:
 
@@ -77,13 +80,25 @@ Choose `--start` just before the first movement and `--end` just after the last 
 .agents/skills/preview/scripts/render.sh <recording.mp4> <name> --start <sec> --end <sec>
 ```
 
-| Option     | Default                       | Notes                                                              |
-| ---------- | ----------------------------- | ------------------------------------------------------------------ |
-| `--device` | `phone`                       | `tablet` for iPad: thinner bezel, smaller corner radius            |
-| `--width`  | 360 (phone), 744 (tablet)     | Screen width in the GIF. The GIF renders at 2x of its README width |
-| `--radius` | 0.128 (phone), 0.025 (tablet) | Screen corner radius as a ratio of the width. Adjust per device    |
-| `--fps`    | 20                            | GIF only; the MP4 stays at 30, the recording's rate                |
-| `--out`    | `docs/public/img/previews`    |                                                                    |
+| Option     | Default                       | Notes                                                                |
+| ---------- | ----------------------------- | -------------------------------------------------------------------- |
+| `--device` | `phone`                       | `tablet` for iPad: thinner bezel, smaller corner radius              |
+| `--width`  | 360 (phone), 744 (tablet)     | Screen width in the GIF. The GIF renders at 2x of its README width   |
+| `--mask`   |                               | Real screen shape: a PDF/PNG (iOS simulators) or `auto` (Android)    |
+| `--radius` | 0.128 (phone), 0.025 (tablet) | Circular corner radius as a ratio of the width, when there's no mask |
+| `--fps`    | 20                            | GIF only; the MP4 stays at 30, the recording's rate                  |
+| `--out`    | `docs/public/img/previews`    |                                                                      |
+
+The frame must follow the device's real screen corners: iOS draws sheet corners concentric with them, so a guessed radius shows. The bezel, edge, and shadow are grown out of that shape, so they stay concentric with it.
+
+- iOS simulator: pass its `framebufferMask` PDF. Apple's corners are continuous curves, not circles, so no `--radius` matches them.
+
+  ```sh
+  TYPE="/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 18 Pro Max.simdevicetype/Contents/Resources"
+  MASK="$TYPE/$(plutil -extract framebufferMask raw "$TYPE/profile.plist").pdf"
+  ```
+
+- Android emulator: pass `--mask auto`. Android paints its rounded corners black over the screen, so they're in the recording, and the script takes the shape from them. Neither the radius `dumpsys display` reports nor the skin's `corner_radius` matches that black exactly, and the difference shows as a dark sliver in the corner.
 
 Check the result before embedding:
 
@@ -107,7 +122,7 @@ Docs and blog (MDX):
 <video src="/img/previews/<name>.mp4" autoPlay loop muted playsInline />
 ```
 
-`muted` and `playsInline` are required for autoplay on iOS Safari. Frame the phone video with CSS to match the GIFs: video 202px wide with a 26px radius, inside a 7px `#101113` bezel with a 2px `#3d4048` border, 35px outer radius, and a soft shadow.
+`muted` and `playsInline` are required for autoplay on iOS Safari. Frame the phone video with CSS to match the GIFs: video 202px wide inside a 7px `#101113` bezel with a 2px `#3d4048` border and a soft shadow. The video's `border-radius` is the one `render.sh` prints for the device (iPhone 18 Pro Max: 29px, Pixel 10 Pro XL: 26px); the outer radius is that plus 9px.
 
 Restore everything you changed:
 
