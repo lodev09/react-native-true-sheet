@@ -54,42 +54,102 @@ The sheet's background color. Uses the system default when not provided.
 | `ColorValue` | _system default_ | ✅ | ✅ | ✅ |
 
 :::info
-When not provided, iOS 26+ uses the default [Liquid Glass](../guides/liquid-glass) effect, while iOS 18 and below uses the system background color. Android uses Material Design 3's `colorSurfaceContainerLow` which automatically adapts to light/dark mode.
+Without a color or blur, iOS 26+ uses [Liquid Glass](../guides/liquid-glass), while earlier iOS versions use system-material blur. Android and Web use Material Design 3's `colorSurfaceContainerLow`, which adapts to light/dark mode.
 
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
+On supported iOS 26.1+ devices, `backgroundColor` uses a native color effect. It does not tint Liquid Glass. Other devices paint the background color.
+
+On iOS, [`backgroundBlur`](#backgroundblur) takes precedence over `backgroundColor`. Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint glass or blur, or for an exact opaque color over full-screen modals.
 :::
+
+## `detentBackgrounds`
+
+Backgrounds matched to [`detents`](#detents) by index. Each entry is a color string or an object with either `color` or `blur`.
+A string such as `"#18202b"` is shorthand for `{ color: "#18202b" }`.
+`null`, `undefined`, and missing entries inherit `backgroundColor`/`backgroundBlur`.
+An entry replaces the sheet background, so a color entry overrides the sheet blur.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`(DetentBackground \| null)[]`](types#detentbackground) | | ✅ | ✅ | ✅ |
+
+```tsx
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+| Platform | Transition | Blur entries |
+| - | - | - |
+| iOS 26.1+ with native effect support | UIKit transitions as the sheet moves | Native blur effect |
+| Other iOS devices | Cross-fade after passing the midpoint between detents | Blur view at system intensity |
+| Android and Web | Color cross-fade after passing the midpoint between detents | Inherit the sheet background |
+
+The midpoint rule applies in both directions, including `resize()`.
+Presentation starts with the entry at the presented index.
+`background` and `backgroundStyle` remain above these effects and apply across all detents.
+An opaque background wrapper hides the detent backgrounds.
+See [per-detent backgrounds](../guides/backgrounds#per-detent-backgrounds) for Liquid Glass limitations.
+
+## `background`
+
+A custom background behind the header, content, and footer. Accepts a `ReactNode`.
+The wrapper fills the sheet, sits above the sheet background effects, and ignores touches.
+It does not affect content height or detent calculations.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ReactNode` | | ✅ | ✅ | ✅ |
+
+Size the element to fill the wrapper:
+
+```tsx
+<TrueSheet background={<View style={[StyleSheet.absoluteFill, { backgroundColor: '#18202b' }]} />}>
+  <Text>Sheet content</Text>
+</TrueSheet>
+```
+
+For a custom blur, see the [Backgrounds guide](../guides/backgrounds#custom-blur).
+
+## `backgroundStyle`
+
+Style for the [`background`](#background) wrapper. Only `backgroundColor` is supported.
+The style works without a `background` element and applies across all detents.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `StyleProp<Pick<ViewStyle, 'backgroundColor'>>` | | ✅ | ✅ | ✅ |
+
+Use an opaque color for an exact background color, including over full-screen modals.
+Use a translucent color to tint the glass or blur:
+
+```tsx
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+>
+  <Text>Sheet content</Text>
+</TrueSheet>
+```
 
 ## `backgroundBlur`
 
-The blur effect style on iOS. When set, applies a blur effect over the [`backgroundColor`](#backgroundcolor). Example: `"light"`, `"dark"`, etc.
+The blur effect style on iOS, such as `"light"`, `"dark"`, or `"system-material"`. It takes precedence over [`backgroundColor`](#backgroundcolor).
+Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint the blur.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | [`BackgroundBlur`](types#backgroundblur) | | ✅ | | |
 
 :::info
-On iOS 26.1+, setting this prop will override the default [Liquid Glass](../guides/liquid-glass) effect.
+On supported iOS 26.1+ devices, this uses a native effect that replaces Liquid Glass.
+Earlier iOS versions and devices without the setters use a non-interactive blur view at system intensity.
+Design compatibility mode on iOS 26 also uses this fallback.
+On iOS 27+, `UIDesignRequiresCompatibility` is ignored.
+On iOS 26.0, this blur sits above Liquid Glass.
 :::
 
-## `blurOptions`
-
-Options for customizing the blur effect. Only applies when [`backgroundBlur`](#backgroundblur) is set.
-
-| Type | Default | 🍎 | 🤖 | 🌐 |
-| - | - | - | - | - |
-| [`BlurOptions`](types#bluroptions) | | ✅ | | |
-
-```tsx
-<TrueSheet
-  backgroundBlur="dark"
-  blurOptions={{
-    intensity: 80,
-    interaction: false,
-  }}
->
-  <View />
-</TrueSheet>
-```
+For custom intensity or blur on other platforms, use a third-party blur in [`background`](#background).
 
 ## `cornerRadius`
 
@@ -135,29 +195,53 @@ On Android and Web, the sheet defaults to a maximum width of `640dp`. Setting th
 This prop is ignored on phones in portrait orientation — the sheet always spans the full width.
 :::
 
-## `anchor`
+## `placement`
 
-Anchors the sheet to the specified horizontal edge.
+Horizontal placement of the sheet. `'leading'` and `'trailing'` follow the layout direction (left/right in LTR, right/left in RTL).
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `'left' \| 'center' \| 'right'` | `'center'` | ✅ | ✅ | ✅ |
+| `'automatic' \| 'leading' \| 'center' \| 'trailing'` | `'automatic'` | ✅ | ✅ | ✅ |
 
 :::info
-On iOS, the sheet uses `sourceView` to control horizontal positioning. System-defined margins prevent fully flush edge attachment.
+`'automatic'` lets the system decide. It only differs from `'center'` on iOS 27+, where both map to `UISheetPresentationController`'s native `preferredPlacement`. On Android, Web, and iOS 26 and below, `'automatic'` and `'center'` both center the sheet.
+:::
+
+:::info
+On iOS 26 and below, edge placement uses `sourceView`. System-defined margins prevent fully flush edge attachment.
 :::
 
 :::note
 This prop is ignored on phones in portrait orientation.
 :::
 
-## `anchorOffset`
+## `placementOffset`
 
-The offset from the screen edge. Only applies when [`anchor`](#anchor) is `'left'` or `'right'`.
+The offset from the screen edge. Only applies when [`placement`](#placement) is `'leading'` or `'trailing'`.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `number` | `16` | | ✅ | ✅ |
+
+## `foldOptions`
+
+How the sheet behaves on a foldable while it's half-open with a horizontal fold (tabletop). See [this guide](../guides/foldables) for example.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`FoldOptions`](types#foldoptions) | | ✅ | | |
+
+```tsx
+<TrueSheet detents={[0.5, 1]} foldOptions={{ hingeDetentIndex: 0, hingeBehavior: 'snap' }} />
+```
+
+:::info
+Requires iOS 27.1+ on a foldable.
+:::
+
+:::note
+In book posture (vertical fold), iOS already docks every sheet to one panel. Use [`placement`](#placement) to pick the side.
+:::
 
 ## `dismissible`
 
@@ -166,6 +250,18 @@ If set to `false`, the sheet will prevent interactive dismissal via dragging or 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ | ✅ |
+
+:::tip
+Blocked attempts fire [`onDismissAttempt`](events#ondismissattempt). Use it to confirm before dismissing programmatically, e.g. when a form has unsaved changes.
+:::
+
+## `dismissThreshold`
+
+How far the sheet must be swiped down from its lowest detent to dismiss. The default `'half'` matches iOS. Use `'short'` for Compose Material3's `ModalBottomSheet` feel.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`DismissThreshold`](types#dismissthreshold) | `'half'` | | ✅ | ✅ |
 
 ## `draggable`
 
@@ -179,6 +275,10 @@ If set to `false`, the sheet will disable dragging to resize. The sheet can only
 When `draggable` is `false`, the [`grabber`](#grabber) is automatically hidden.
 :::
 
+:::note
+On iOS 26+, `draggable={false}` doesn't turn off Liquid Glass's touch response: the sheet still stretches slightly and follows the finger while a touch moves over it (e.g. a slider inside the sheet). Set [`backgroundColor`](#backgroundcolor) to replace the glass with a native color effect on iOS 26.1+, which doesn't react to touches.
+:::
+
 ## `dimmed`
 
 Specify whether the sheet background is dimmed. Set to `false` to allow interaction with the background components.
@@ -186,6 +286,38 @@ Specify whether the sheet background is dimmed. Set to `false` to allow interact
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ | ✅ |
+
+## `dimColor`
+
+The color of the dim behind the sheet.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `ColorValue` | `"black"` | ✅ | ✅ | ✅ |
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+## `dimOpacity`
+
+The opacity of the dim behind the sheet, from `0` to `1`.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `number` | `0.5` | ✅ | ✅ | ✅ |
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+:::note
+At `0`, the dim is invisible but still blocks touches to the background. Set [`dimmed`](#dimmed) to `false` to allow interaction instead.
+:::
+
+:::note
+On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+:::
 
 ## `dimmedDetentIndex`
 
@@ -215,6 +347,18 @@ Used with `initialDetentIndex`.
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
 | `boolean` | `true` | ✅ | ✅ | ✅ |
+
+## `lazy`
+
+Specify whether the sheet content should mount lazily, on first presentation. Set to `false` to mount the content before presentation without presenting the sheet. Use this when content is not ready on the first render, then call [`present()`](methods#present) after your readiness signal so [`auto`](types#sheetdetent) detents measure the settled content.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `true` | ✅ | ✅ | |
+
+:::note
+Content that requires window attachment to measure, such as SwiftUI-hosted views, still only measures during presentation.
+:::
 
 ## `grabber`
 
@@ -296,9 +440,17 @@ Style for the header container.
 | - | - | - | - | - |
 | `StyleProp<ViewStyle>` | | ✅ | ✅ | ✅ |
 
+## `headerOptions`
+
+Options for customizing header behavior.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`HeaderOptions`](types#headeroptions) | | ✅ | ✅ | ✅ |
+
 ## `footer`
 
-A component that floats at the bottom of the sheet. Accepts a functional `Component` or `ReactElement`.
+A component that is pinned at the bottom of the sheet. The footer height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/footer) for example.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
@@ -318,29 +470,23 @@ Options for customizing footer behavior.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`FooterOptions`](types#footeroptions) | | ✅ | ✅ | |
+| [`FooterOptions`](types#footeroptions) | | ✅ | ✅ | ✅ |
 
-## `scrollable`
+## `scrollableRef`
 
-On iOS, automatically pins ScrollView or FlatList to fit within the sheet's available space. When enabled, the ScrollView's top edge will be pinned below any top sibling views, and its left, right, and bottom edges will be pinned to the container. See [this guide](../guides/scrolling) for example.
-
-On Android, it ensures the scroll view fills the available sheet space and automatically manages nested scrolling. Any `nestedScrollEnabled` prop on your `ScrollView` or `FlatList` is ignored when `scrollable` is enabled.
+A ref to the scrollable component (e.g. `ScrollView`, `FlatList`) rendered within the sheet content. Required for scrollable handling — nested scrolling, keyboard insets, and `auto` detent sizing are wired to this scrollable. Lists that expose an imperative handle (e.g. `LegendList`, `FlashList`) also work, through their `getScrollableNode()` or `getNativeScrollRef()`. See [this guide](../guides/scrolling) for more information.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| `boolean` | `false` | ✅ | ✅ | |
-
-:::warning
-The [`auto`](types#sheetdetent) detent is not supported with `scrollable`. Use fixed fractional detents (e.g., `0.5`, `0.8`, `1`) instead.
-:::
+| `RefObject<Component>` | | ✅ | ✅ | ✅ |
 
 ## `scrollableOptions`
 
-Options for customizing scrollable behavior. Only applies when `scrollable` is `true`.
+Options for customizing scrollable behavior. Applies to the scrollable provided via [`scrollableRef`](#scrollableref). See [this guide](../guides/scrolling) for more information.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |
-| [`ScrollableOptions`](types#scrollableoptions) | | ✅ | ✅ | |
+| [`ScrollableOptions`](types#scrollableoptions) | | ✅ | ✅ | ✅ |
 
 ## `presentation`
 
@@ -381,7 +527,9 @@ The offset from the bottom edge when [`detached`](#detached) is enabled.
 
 ## `style`
 
-The sheet's container style override.
+The sheet's content style override.
+
+Content lays out naturally by default — like a regular view or a screen. Pass `flex: 1` to fill the sheet's visible height per detent.
 
 | Type | Default | 🍎 | 🤖 | 🌐 |
 | - | - | - | - | - |

@@ -14,7 +14,24 @@ TrueSheet **supports Liquid Glass by default** on iOS 26+, giving your sheets a 
 
 Liquid Glass is a visual effect introduced in iOS 26 that provides a translucent, frosted glass appearance with a subtle blur. It's part of Apple's latest design language and is automatically applied to native sheet presentations.
 
-By default, TrueSheet enables Liquid Glass on iOS 26+ devices when no [`backgroundColor`](../reference/configuration#backgroundcolor) or [`backgroundBlur`](../reference/configuration#backgroundblur) is provided. The sheet will automatically display with the Liquid Glass effect.
+By default, TrueSheet enables Liquid Glass on iOS 26+ devices.
+On supported iOS 26.1+ devices, `backgroundColor` or `backgroundBlur` replaces it with a native effect. With neither prop set, the default is Liquid Glass.
+
+:::tip
+See the [Backgrounds guide](backgrounds) for colors, blur, custom backgrounds, per-detent backgrounds, and the iOS fallback behavior.
+:::
+
+## Tinting Liquid Glass
+
+[`backgroundStyle`](../reference/configuration#backgroundstyle) paints over the glass or blur. A translucent color tints the effect and keeps the content behind the sheet visible.
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}>
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+Tinted glass is not supported per detent. On iOS 26+, detents with a [`detentBackgrounds`](backgrounds#per-detent-backgrounds) entry lose the glass touch response.
 
 ## Disabling Liquid Glass
 
@@ -22,7 +39,7 @@ If you prefer the classic sheet appearance without Liquid Glass, there are two o
 
 ### Using `backgroundColor` or `backgroundBlur`
 
-Setting [`backgroundColor`](../reference/configuration#backgroundcolor) or [`backgroundBlur`](../reference/configuration#backgroundblur) (or both) on the sheet will disable the Liquid Glass effect for that specific sheet.
+Setting [`backgroundColor`](../reference/configuration#backgroundcolor) or [`backgroundBlur`](../reference/configuration#backgroundblur) replaces glass with that effect.
 
 ```tsx
 <TrueSheet backgroundColor="#ffffff">
@@ -36,10 +53,18 @@ Setting [`backgroundColor`](../reference/configuration#backgroundcolor) or [`bac
 </TrueSheet>
 ```
 
-This approach allows you to disable Liquid Glass on a per-sheet basis while keeping it enabled for other sheets in your app.
+:::tip
+Use `backgroundColor="transparent"` to remove the glass without adding a color. Leave `backgroundBlur` unset, since blur takes precedence.
+
+```tsx
+<TrueSheet backgroundColor="transparent">
+  {/* Sheet content */}
+</TrueSheet>
+```
+:::
 
 :::note
-This only works on iOS 26.1 and above.
+This requires iOS 26.1+ with native background effect support. Devices without the setters use the [fallback](backgrounds#ios-background-effects).
 :::
 
 ### Using `UIDesignRequiresCompatibility`

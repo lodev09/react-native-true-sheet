@@ -23,6 +23,11 @@ jest.mock('@lodev09/react-native-true-sheet/navigation', () =>
   require('@lodev09/react-native-true-sheet/navigation/mock')
 );
 
+// Expo Router navigation (if using)
+jest.mock('@lodev09/react-native-true-sheet/navigation/expo-router', () =>
+  require('@lodev09/react-native-true-sheet/navigation/expo-router/mock')
+);
+
 // Reanimated (if using)
 jest.mock('@lodev09/react-native-true-sheet/reanimated', () =>
   require('@lodev09/react-native-true-sheet/reanimated/mock')
@@ -57,6 +62,13 @@ The `transformIgnorePatterns` config is required because the mock files use ESM 
 ### Navigation Module (`/navigation/mock`)
 
 - `createTrueSheetNavigator` - Mocked navigator factory
+- `createTrueSheetScreen` - Mocked static API screen factory
+- `TrueSheetActions` - Mocked action creators
+- `useTrueSheetNavigation` - Hook returning mocked navigation object
+
+### Expo Router Module (`/navigation/expo-router/mock`)
+
+- `Sheet` - Pass-through layout with mocked `Screen` and `Protected`
 - `TrueSheetActions` - Mocked action creators
 - `useTrueSheetNavigation` - Hook returning mocked navigation object
 

@@ -1,5 +1,5 @@
 ---
-title: React Navigation
+title: Navigation
 description: Navigate to other screens from within the bottom sheet.
 keywords: [bottom sheet navigation, react-navigation, navigating from sheet, sheet navigator]
 ---
@@ -14,10 +14,12 @@ You can use the [Sheet Navigator](#sheet-navigator) to present screens as sheets
 
 ## Sheet Navigator
 
-TrueSheet provides a custom navigator for React Navigation. The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
+TrueSheet provides a custom navigator built on [`standard-navigation`](https://github.com/react-navigation/standard-navigation), so the same implementation works with both React Navigation and [Expo Router](#expo-router). The first screen (or `initialRouteName`) is the base content, while other screens are presented as sheets.
+
+Install `@react-navigation/native` (version `7.3.0` or higher) and `standard-navigation`. Both are declared as optional peer dependencies.
 
 ```npm
-npm install @react-navigation/native
+npm install @react-navigation/native standard-navigation
 ```
 
 ### Basic Usage
@@ -47,6 +49,27 @@ function App() {
     </NavigationContainer>
   );
 }
+```
+
+### Static API
+
+The navigator also supports React Navigation's [static API](https://reactnavigation.org/docs/static-configuration) via `createTrueSheetScreen`:
+
+```tsx
+import {
+  createTrueSheetNavigator,
+  createTrueSheetScreen,
+} from '@lodev09/react-native-true-sheet/navigation';
+
+const Sheet = createTrueSheetNavigator({
+  screens: {
+    Main: MainScreen,
+    Details: createTrueSheetScreen({
+      screen: DetailsSheet,
+      options: { detents: ['auto', 1], cornerRadius: 16 },
+    }),
+  },
+});
 ```
 
 ### Wrapping Existing Navigation
@@ -81,6 +104,70 @@ function App() {
   );
 }
 ```
+
+### Nesting Navigators in Sheets
+
+Native stacks are not supported inside a sheet screen. On Android, `react-native-screens` looks for the app's root view above its containers, and the sheet renders outside of it. Presenting a sheet screen whose component is a `createNativeStackNavigator` crashes with:
+
+```
+IllegalStateException: ScreenContainer is not attached under ReactRootView
+```
+
+Only the base screen (the first screen, or `initialRouteName`) can host a native stack, as shown in [Wrapping Existing Navigation](#wrapping-existing-navigation).
+
+For multi-step flows inside a sheet, use one of these instead:
+
+- **Stack sheets.** Make each step its own sheet screen and navigate between them. The presenting sheet stays visible underneath, and `navigation.pop()`, `popTo()`, and `popToTop()` walk back through the stack. This is the recommended approach.
+
+  ```tsx
+  function SettingsSheet() {
+    const navigation = useTrueSheetNavigation();
+
+    return (
+      <View>
+        <Button title="Profile" onPress={() => navigation.navigate('Profile')} />
+        <Button title="Back" onPress={() => navigation.pop()} />
+      </View>
+    );
+  }
+  ```
+
+  With [Expo Router](#expo-router), keep each step as a sibling route under the `Sheet` layout instead of giving the flow its own `_layout.tsx` with a `<Stack>`:
+
+  ```
+  app/
+  ├── _layout.tsx          # Sheet layout
+  ├── index.tsx            # Base content
+  ├── settings.tsx         # Sheet screen
+  └── profile.tsx          # Sheet screen, presented from settings
+  ```
+
+  ```tsx
+  // app/_layout.tsx
+  export default function SheetLayout() {
+    return (
+      <Sheet>
+        <Sheet.Screen name="index" />
+        <Sheet.Screen name="settings" options={{ detents: ['auto', 1] }} />
+        <Sheet.Screen name="profile" options={{ detents: ['auto', 1] }} />
+      </Sheet>
+    );
+  }
+
+  // app/settings.tsx
+  export default function SettingsSheet() {
+    const router = useRouter();
+
+    return (
+      <View>
+        <Button title="Profile" onPress={() => router.push('/profile')} />
+        <Button title="Back" onPress={() => router.back()} />
+      </View>
+    );
+  }
+  ```
+
+- **Local state.** Swap the sheet's content with plain React state when you don't need navigation history or deep links.
 
 ### Navigation & Resizing
 
@@ -166,6 +253,39 @@ function DetailsSheet() {
 All [TrueSheet props](../reference/configuration) like `header`, `footer`, `grabber`, `dismissible`, etc. can be dynamically updated via `setOptions`.
 :::
 
+### Scrollable Content
+
+[`scrollableRef`](../reference/configuration#scrollableref) and [`scrollableOptions`](../reference/configuration#scrollableoptions) are screen options like any other prop. Since the ref is created inside the screen component, set it with `setOptions`:
+
+```tsx
+function DetailsSheet() {
+  const navigation = useTrueSheetNavigation();
+  const scrollableRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    navigation.setOptions({ scrollableRef });
+  }, [navigation]);
+
+  return (
+    <ScrollView ref={scrollableRef}>
+      {/* ... */}
+    </ScrollView>
+  );
+}
+```
+
+Bound the scroll view's height with `flex: 1` via the screen's `style` option.
+
+```tsx
+<Sheet.Screen
+  name="Details"
+  component={DetailsSheet}
+  options={{ detents: [0.5, 1], style: { flex: 1 } }}
+/>
+```
+
+See the [Scrolling guide](scrolling) for more information.
+
 ### Screen Listeners
 
 Use `screenListeners` on the navigator or `listeners` on individual screens:
@@ -202,6 +322,7 @@ function DetailsSheet() {
 | `sheetDidPresent` | Sheet finished presenting |
 | `sheetWillDismiss` | Sheet is about to dismiss |
 | `sheetDidDismiss` | Sheet finished dismissing |
+| `sheetDismissAttempt` | User tried to dismiss a non-dismissible sheet |
 | `sheetDetentChange` | Detent changed |
 | `sheetDragBegin` | User started dragging |
 | `sheetDragChange` | User is dragging |
@@ -212,7 +333,13 @@ See [Lifecycle Events](../reference/events) for more details.
 
 ## Expo Router
 
-The [Sheet Navigator](#sheet-navigator) works with Expo Router using `withLayoutContext`. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
+TrueSheet ships a ready-to-use `Sheet` layout for Expo Router via the `/navigation/expo-router` entry point. It integrates with Expo Router's built-in navigation directly — no `@react-navigation/*` install needed. All [navigator features](#sheet-navigator) above (screen options, reanimated, dynamic header/footer, listeners) apply here too.
+
+Requires Expo SDK 57+ (`expo-router` version `57.0.0` or higher). Install `standard-navigation`, declared as an optional peer dependency:
+
+```npm
+npm install standard-navigation
+```
 
 ```
 app/
@@ -223,24 +350,7 @@ app/
 
 ```tsx
 // app/_layout.tsx
-import { withLayoutContext } from 'expo-router';
-import {
-  createTrueSheetNavigator,
-  type TrueSheetNavigationEventMap,
-  type TrueSheetNavigationOptions,
-  type TrueSheetNavigationState,
-} from '@lodev09/react-native-true-sheet/navigation';
-
-type ParamListBase = Record<string, object | undefined>;
-
-const { Navigator } = createTrueSheetNavigator();
-
-const Sheet = withLayoutContext<
-  TrueSheetNavigationOptions,
-  typeof Navigator,
-  TrueSheetNavigationState<ParamListBase>,
-  TrueSheetNavigationEventMap
->(Navigator);
+import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
 export default function SheetLayout() {
   return (
@@ -258,11 +368,27 @@ export default function SheetLayout() {
 }
 ```
 
-See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
-
 :::note
-The Sheet Navigator works with Expo Router SDK 56+ without installing `@react-navigation/native`. Under SDK 56, Expo Router no longer allows app code to import directly from `@react-navigation/*` — import navigation types/utilities from `expo-router` (or `expo-router/react-navigation`) instead. See the [Expo Router SDK 55 → 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/).
+On **Expo SDK 58+**, Expo Router picks the base screen from the layout's `unstable_settings.anchor` and ignores the `initialRouteName` prop on `Sheet`:
+
+```tsx
+export const unstable_settings = {
+  anchor: 'index',
+};
+```
 :::
+
+Inside sheet screens, import `useTrueSheetNavigation` from the same entry point:
+
+```tsx
+import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
+```
+
+:::warning
+A sheet route must not have its own `_layout.tsx` with a `<Stack>`. Keep multi-step flows as sibling sheet screens under the `Sheet` layout instead. See [Nesting Navigators in Sheets](#nesting-navigators-in-sheets).
+:::
+
+See [Expo Router docs](https://docs.expo.dev/router/introduction/) for more information.
 
 ## Navigating from Sheets
 
@@ -274,7 +400,7 @@ navigation.navigate('SomeScreen')
 ```
 
 :::note
-Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/v3/.yarn/patches/react-native-screens-npm-4.25.2.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415).
+Requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.26.2.patch). See [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415).
 
 On **Expo SDK 56+**, this patch is silently dropped on EAS builds because `react-native-screens` ships precompiled. See [Patched react-native-screens Not Applied on EAS](../troubleshooting#patched-react-native-screens-not-applied-on-eas-precompiled-modules) to force it to build from source.
 :::

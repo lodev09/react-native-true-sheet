@@ -1,0 +1,152 @@
+---
+title: Backgrounds
+description: Customize the bottom sheet background with colors, blur, custom views, and per-detent effects.
+keywords: [bottom sheet background, sheet background color, sheet blur, custom sheet background, detent background]
+---
+
+A sheet background has two layers:
+
+| Layer | Props | Renders |
+| - | - | - |
+| Sheet background | [`backgroundColor`](../reference/configuration#backgroundcolor), [`backgroundBlur`](../reference/configuration#backgroundblur), [`detentBackgrounds`](../reference/configuration#detentbackgrounds) | Native effect or painted color |
+| Background wrapper | [`background`](../reference/configuration#background), [`backgroundStyle`](../reference/configuration#backgroundstyle) | React view above the sheet background |
+
+The wrapper fills the sheet behind the header, content, and footer. It ignores touches and applies across all detents.
+It does not affect content height or detent calculations.
+
+## Background color
+
+Set [`backgroundColor`](../reference/configuration#backgroundcolor) to replace the default background.
+
+```tsx
+<TrueSheet backgroundColor="#ffffff">
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+Without a color or blur, iOS 26+ uses [Liquid Glass](liquid-glass), while earlier iOS versions use system-material blur.
+Android and Web use Material Design 3's `colorSurfaceContainerLow`, which adapts to light/dark mode.
+
+On supported iOS 26.1+ devices, `backgroundColor` uses a native color effect. It replaces Liquid Glass instead of tinting it.
+Use `backgroundColor="transparent"` to remove the glass without adding a color.
+
+## Blur
+
+Set [`backgroundBlur`](../reference/configuration#backgroundblur) for a system blur on iOS.
+
+```tsx
+<TrueSheet backgroundBlur="system-material">
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+Blur takes precedence over `backgroundColor`. The built-in blur uses system intensity and ignores touches.
+For custom intensity or blur on Android and Web, use a [custom blur](#custom-blur).
+
+## Tinting
+
+[`backgroundStyle`](../reference/configuration#backgroundstyle) paints over the glass or blur. Only `backgroundColor` is supported.
+A translucent color tints the effect and keeps the content behind the sheet visible.
+
+```tsx
+// Tinted Liquid Glass
+<TrueSheet backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }} />
+
+// Tinted blur
+<TrueSheet
+  backgroundBlur="system-material"
+  backgroundStyle={{ backgroundColor: 'rgba(0, 122, 255, 0.25)' }}
+/>
+```
+
+## Exact colors
+
+The native color effect can shift dark, low-chroma colors over full-screen modals.
+Use an opaque `backgroundStyle.backgroundColor` for an exact color:
+
+```tsx
+<TrueSheet backgroundStyle={{ backgroundColor: '#18202b' }} />
+```
+
+## Custom background
+
+Pass a `ReactNode` to [`background`](../reference/configuration#background) to render a gradient, image, or any other view.
+Size the element with `StyleSheet.absoluteFill`.
+
+```tsx
+<TrueSheet
+  background={<Image source={require('./texture.png')} style={StyleSheet.absoluteFill} />}
+>
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+### Custom blur
+
+Use a third-party blur for custom intensity. The blur library controls intensity and platform support.
+
+For example, with `expo-blur` installed:
+
+```tsx
+import { BlurView } from 'expo-blur';
+import { StyleSheet } from 'react-native';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+
+<TrueSheet
+  backgroundColor="transparent"
+  background={<BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />}
+>
+  {/* Sheet content */}
+</TrueSheet>
+```
+
+The custom background sits above the sheet background effects. On iOS 26.0 or devices without the setters, a transparent color cannot remove the system glass.
+
+## Per-detent backgrounds
+
+[`detentBackgrounds`](../reference/configuration#detentbackgrounds) selects a color or blur for each detent.
+
+```tsx
+<TrueSheet
+  detents={['peek', 'auto', 1]}
+  detentBackgrounds={[null, { blur: 'system-material' }, '#18202b']}
+/>
+```
+
+In this example, the peek detent uses the sheet background. The other detents use blur and color.
+A `null` or missing entry inherits `backgroundColor`/`backgroundBlur`. An entry overrides it.
+
+| Platform | Transition | Blur entries |
+| - | - | - |
+| iOS 26.1+ with native effect support | UIKit transitions as the sheet moves | Native blur effect |
+| Other iOS devices | Cross-fade after passing the midpoint between detents | Blur view at system intensity |
+| Android and Web | Color cross-fade after passing the midpoint between detents | Inherit the sheet background |
+
+On iOS 26+, detents with a color or blur entry lose the glass touch response.
+Tinted glass effects are not supported per detent. `backgroundStyle` can tint the background, but its tint applies across all detents.
+An opaque background wrapper hides the detent backgrounds.
+
+## iOS background effects
+
+Native effects require iOS 26.1+, the background effect setters on the sheet and its detents, and no design compatibility mode.
+Design compatibility mode applies only on iOS 26. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+
+| Input | Native effects | Fallback |
+| - | - | - |
+| `backgroundColor` | Color effect | Painted color |
+| `backgroundBlur` | Blur effect, replaces glass | Non-interactive blur view at system intensity |
+| Neither | Liquid Glass | Platform default; system-material blur before iOS 26 |
+| `backgroundStyle.backgroundColor` | Paint above the effect | Paint above the sheet background |
+| `background` | Custom node above the effect | Custom node above the sheet background |
+
+The fallback covers older iOS versions, devices without the setters, and `UIDesignRequiresCompatibility` mode.
+On iOS 26.0, the fallback color or blur sits above Liquid Glass, which TrueSheet cannot remove.
+
+## Platform support
+
+| Prop | 🍎 | 🤖 | 🌐 |
+| - | - | - | - |
+| `backgroundColor` | ✅ | ✅ | ✅ |
+| `backgroundBlur` | ✅ | | |
+| `detentBackgrounds` | ✅ | Colors only | Colors only |
+| `background` / `backgroundStyle` | ✅ | ✅ | ✅ |

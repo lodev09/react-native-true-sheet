@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 4.0.0
+
 ### 🎉 New features
 
 - **iOS**: Smoother `onPositionChange`, and `onWillDismiss` now fires only when a drag-to-dismiss is committed. ([#744](https://github.com/lodev09/react-native-true-sheet/pull/744), [#756](https://github.com/lodev09/react-native-true-sheet/pull/756) by [@lodev09](https://github.com/lodev09))

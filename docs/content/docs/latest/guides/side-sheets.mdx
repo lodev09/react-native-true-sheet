@@ -1,23 +1,23 @@
 ---
 title: Side Sheets
-description: Anchor the bottom sheet to the left or right edge of the screen.
-keywords: [bottom sheet anchor, side sheet, bottom sheet positioning, bottom sheet left, bottom sheet right]
+description: Anchor the bottom sheet to the leading or trailing edge of the screen.
+keywords: [bottom sheet placement, side sheet, bottom sheet positioning, bottom sheet leading, bottom sheet trailing]
 ---
 
-Ever wanted your sheet to slide in from the side? Now it can! The [`anchor`](../reference/configuration#anchor) prop lets you dock the sheet to the left or right edge — perfect for iPad and tablet layouts.
+Ever wanted your sheet to slide in from the side? Now it can! The [`placement`](../reference/configuration#placement) prop lets you dock the sheet to the leading or trailing edge — perfect for iPad and tablet layouts.
 
 <img alt="side-sheet" src="/img/preview-ipad.gif" width="744"/>
 
 ## How?
 
-Set [`anchor`](../reference/configuration#anchor) to `"left"` or `"right"` to position the sheet along that edge.
+Set [`placement`](../reference/configuration#placement) to `"leading"` or `"trailing"` to position the sheet along that edge. Edges follow the layout direction, so `"leading"` is the left edge in LTR and the right edge in RTL.
 
 ```tsx {5,6}
 export const App = () => {
   return (
     <TrueSheet
       detents={['auto', 1]}
-      anchor="left"
+      placement="leading"
       maxContentWidth={400}
     >
       <View />
@@ -32,14 +32,14 @@ Combine with [`maxContentWidth`](../reference/configuration#maxcontentwidth) to 
 
 ### Adjusting the Edge Offset
 
-On Android and Web, you can control the margin from the screen edge using [`anchorOffset`](../reference/configuration#anchoroffset). The default is `16`.
+On Android and Web, you can control the margin from the screen edge using [`placementOffset`](../reference/configuration#placementoffset). The default is `16`.
 
 ```tsx {5}
 export const App = () => {
   return (
     <TrueSheet
-      anchor="left"
-      anchorOffset={24}
+      placement="leading"
+      placementOffset={24}
       detents={['auto', 1]}
       maxContentWidth={400}
     >
@@ -50,9 +50,13 @@ export const App = () => {
 ```
 
 :::info
-On iOS, the system controls edge margins via `UISheetPresentationController`'s `sourceView`. The sheet will always float slightly from the edge due to system-defined margins.
+On iOS, the system controls edge margins. iOS 27+ uses `UISheetPresentationController`'s native `preferredPlacement`; earlier versions use `sourceView`. The sheet will always float slightly from the edge due to system-defined margins.
 :::
 
+### Automatic vs Center
+
+The default `"automatic"` lets the system decide where the sheet goes. `"center"` asks for a centered sheet explicitly. The two only differ on iOS 27+, where they map to `preferredPlacement`. On Android, Web, and iOS 26 and below, both center the sheet.
+
 :::note
-`anchor` and `maxContentWidth` are ignored on phones in portrait orientation — the sheet always spans the full width.
+`placement` and `maxContentWidth` are ignored on phones in portrait orientation — the sheet always spans the full width.
 :::

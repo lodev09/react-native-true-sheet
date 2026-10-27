@@ -1,3 +1,7 @@
 {
-  "pages": ["latest", "next"]
+  "pages": [
+    "latest",
+    "next",
+    "v3"
+  ]
 }

@@ -1,0 +1,107 @@
+---
+title: Peeking Content
+description: Collapse the sheet to a compact peek that expands into full content.
+keywords: [bottom sheet peek, bottom sheet collapsed, bottom sheet snap points, map bottom sheet]
+---
+
+Building a map-style sheet with a compact summary that expands into full content? The [`"peek"`](../reference/types#sheetdetent) detent collapses the sheet down to just the essentials — no manual height juggling needed.
+
+## The `"peek"` Detent
+
+Add `"peek"` to your [`detents`](../reference/configuration#detents) to get a collapsed size based on the measured [`header`](header) and [`footer`](footer) heights.
+
+```tsx {4-4}
+const App = () => {
+  return (
+    <TrueSheet
+      detents={['peek', 0.9]}
+      initialDetentIndex={0}
+      header={<BookingSummary />}
+      footer={<SheetActions />}
+      scrollable
+    >
+      <BookingDetails />
+    </TrueSheet>
+  )
+}
+```
+
+The peek height automatically follows the measured header and footer sizes. When neither `header` nor `footer` is provided, it falls back to a fixed height of `150`.
+
+## Peeking Part of the Content
+
+To include part of the content in the peek height, wrap it with the `TrueSheetPeek` component.
+
+```tsx {8-10}
+import { TrueSheet, TrueSheetPeek } from '@lodev09/react-native-true-sheet'
+
+const App = () => {
+  return (
+    <TrueSheet detents={['peek', 0.9]} initialDetentIndex={0}>
+      <TrueSheetPeek>
+        <BookingSummary />
+      </TrueSheetPeek>
+      <BookingDetails />
+    </TrueSheet>
+  )
+}
+```
+
+When collapsed, the sheet reveals everything from the top of the sheet through the **bottom edge** of `TrueSheetPeek` — content padding and anything rendered above it count toward the height, while content below it stays hidden until the sheet is expanded.
+
+```
+┌──────────────────────┐
+│ header               │ ─┐
+│ ┌──────────────────┐ │  │
+│ │  TrueSheetPeek   │ │  ├─ visible when collapsed
+│ └──────────────────┘ │  │
+│ footer               │ ─┘
+├──────────────────────┤
+│ rest of the content  │ ── hidden until expanded
+└──────────────────────┘
+```
+
+:::info
+`TrueSheetPeek` can be placed anywhere within the content — the collapsed sheet simply reveals everything above it, including itself. A sheet can only have **one** peek component.
+:::
+
+:::tip
+Since everything above it counts, an **empty** `TrueSheetPeek` works as a fold marker — drop it between your existing views to mark where the collapsed sheet ends, no wrapping needed.
+
+```tsx {3}
+<TrueSheet detents={['peek', 0.9]} initialDetentIndex={0}>
+  <BookingSummary />
+  <TrueSheetPeek />
+  <BookingDetails />
+</TrueSheet>
+```
+:::
+
+## Styling
+
+`TrueSheetPeek` is a regular `View` — style it like any other.
+
+```tsx
+<TrueSheetPeek style={styles.summary}>
+  <Text style={styles.title}>True Sheet</Text>
+  <Text style={styles.subtitle}>The true native bottom sheet experience.</Text>
+</TrueSheetPeek>
+```
+
+Note that only the content through its bottom edge counts — a `marginBottom` on the peek itself is *not* included. If you want breathing room below the peek content while collapsed, use `paddingBottom` instead.
+
+## Safe Area
+
+By default ([`insetAdjustment="automatic"`](../reference/configuration#insetadjustment)), the bottom safe area inset is added to the peek height so the peek content clears the system navigation bar. Set `insetAdjustment="never"` if you're handling insets yourself.
+
+## Resizing
+
+`"peek"` works like any other detent — resize to it programmatically or listen for changes. See [Resizing Programmatically](resizing).
+
+```tsx
+sheet.current?.resize(0) // collapse back to peek
+```
+
+## Platform Support
+
+The `"peek"` detent and `TrueSheetPeek` are supported on **iOS 16+**, **Android**, and **Web**.

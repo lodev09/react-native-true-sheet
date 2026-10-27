@@ -70,6 +70,31 @@ This is called when the sheet is about to be dismissed.
 
 This is called when the sheet has been dismissed.
 
+## `onDismissAttempt`
+
+This is called when the user tries to dismiss the sheet while [`dismissible`](configuration#dismissible) is `false` — by dragging it down, pressing the hardware back button (Android) or escape key (Web), or using an accessibility dismiss action. Tapping the dimmed background does not count, matching iOS. The sheet stays presented.
+
+Use this to confirm destructive dismissals, then call [`dismiss`](methods#dismiss) to proceed. This follows Apple's `isModalInPresentation` + `presentationControllerDidAttemptToDismiss` pattern for unsaved changes.
+
+```tsx
+<TrueSheet
+  ref={sheet}
+  dismissible={!hasUnsavedChanges}
+  onDismissAttempt={() => {
+    Alert.alert('Discard changes?', undefined, [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => sheet.current?.dismiss() },
+    ])
+  }}
+>
+  {/* form */}
+</TrueSheet>
+```
+
+:::info
+On Android, providing `onDismissAttempt` consumes the back press while `dismissible` is `false`. Return `false` from [`onBackPress`](#onbackpress) to let it propagate anyway.
+:::
+
 ## `onDetentChange`
 
 Comes with [`DetentInfoEventPayload`](types#detentinfoeventpayload).

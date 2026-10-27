@@ -59,54 +59,60 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 ```
 
 :::warning
-Use `flexGrow: 1` instead of `flex: 1` to avoid layout issues.
+Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural height by default, so a `flex: 1` child collapses to zero height. Alternatively, pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop to fill the sheet. See [Content Layout](usage#content-layout).
 :::
 
 [Learn more](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android) about gesture handler setup on Android.
 
 ## Initial Present and Deep Linking
 
-On iOS, `initialDetentIndex` may not work when deep linking to a modal screen from a cold start. When navigating back to the home screen, the sheet won't present because the view wasn't attached to the correct window during the initial render.
+On iOS, a deep link on a cold start can open another screen over the one hosting an auto-presenting sheet — a modal, or a sheet in a [sheet navigator](guides/navigation). The `initialDetentIndex` sheet then lands on top of it or doesn't present at all.
 
-**Workaround:**
+Hold `initialDetentIndex` until the screen is focused. See [Deep Linking](guides/deep-linking) for the pattern and a runnable example.
 
-Use `useFocusEffect` to present the sheet when the screen gains focus, conditioned on whether the initial present failed:
+## Large Title Doesn't Collapse on Scroll (iOS)
+
+With a native stack's `headerLargeTitleEnabled`, iOS tracks the screen's scroll view through its first child. A `TrueSheet` rendered before the scroll view takes that spot, so the large title stays expanded.
+
+Render the sheet after the scroll view:
 
 ```tsx
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-
-function HomeScreen() {
-  const sheet = useRef<TrueSheet>(null);
-  const [didPresent, setDidPresent] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!didPresent) {
-        sheet.current?.present();
-      }
-    }, [didPresent])
-  );
-
-  return (
-    <View>
-      <TrueSheet
-        ref={sheet}
-        initialDetentIndex={0}
-        onDidPresent={() => setDidPresent(true)}
-      >
-        {/* ... */}
-      </TrueSheet>
-    </View>
-  );
-}
+<>
+  <ScrollView contentInsetAdjustmentBehavior="automatic">{/* ... */}</ScrollView>
+  <TrueSheet ref={sheet}>{/* ... */}</TrueSheet>
+</>
 ```
 
 ## Weird layout render
 
-The sheet does not have control over how React Native renders components and may lead to rendering issues. To resolve this, try to minimize the use of `flex=1` in your content styles. Instead, use fixed `height` or employ `flexGrow`, `flexBasis`, etc., to manage your layout requirements.
+The sheet's content lays out naturally — like a regular view or a screen — wrapping its children's natural height. Common symptoms and fixes:
 
-Try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
+- **`flex: 1` children render with zero height** — the content isn't filled by default. Pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop so the content fills the sheet's visible height. See [Content Layout](usage#content-layout).
+- **Content taller than the sheet gets clipped** — use a `ScrollView` with `flex: 1` on the sheet's `style` (see [Scrolling Content](guides/scrolling)) or size your layout with `flexGrow`, `flexBasis`, or fixed heights.
+- **`FlashList` renders blank with `auto`** — it wraps its scroll view in a `flex: 1` view, which collapses to zero height when the content isn't filled. Pass `flex: 1` via the sheet's [`style`](reference/configuration#style) prop; the `auto` detent still sizes the sheet to the list. See [Scrolling Content](guides/scrolling).
+
+If layout still misbehaves, try moving the sheet component up to a higher level in the component tree as some container may interfere with the sheet's content rendering.
+
+## `@expo/ui` Host Opens Small, Then Grows
+
+With an `auto` detent, a sheet containing an [`@expo/ui`](https://docs.expo.dev/versions/latest/sdk/ui/) `<Host matchContents>` opens at a small height, then grows to fit the content.
+
+Jetpack Compose and SwiftUI content can only measure once it's attached to a window, and sheet content is only attached on `present()`. The `Host` reports its size a few frames into the present animation, and the sheet resizes to it. [`lazy={false}`](reference/configuration#lazy) doesn't help here — it mounts the content earlier, but doesn't attach it.
+
+To open at the right height, give the `Host` a known height instead of `matchContents`:
+
+```tsx
+const [height, setHeight] = useState(480);
+
+<TrueSheet detents={['auto']}>
+  <Host
+    style={{ height }}
+    onLayoutContent={({ nativeEvent }) => nativeEvent.height > 0 && setHeight(nativeEvent.height)}
+  >
+    <DateTimePicker displayedComponents="date" variant="picker" />
+  </Host>
+</TrueSheet>
+```
 
 ## Xcode and EAS Build Issues
 

@@ -1,8 +1,11 @@
 {
   "title": "Guides",
   "pages": [
+    "backgrounds",
+    "deep-linking",
     "dimming",
     "edge-to-edge",
+    "foldables",
     "footer",
     "global-methods",
     "header",

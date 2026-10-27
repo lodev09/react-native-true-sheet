@@ -6,16 +6,21 @@ keywords: [bottom sheet installation, bottom sheet yarn, bottom sheet npm, ios b
 
 ## Prerequisites
 
-- React Native >= 0.80
+- React Native >= 0.82
 - New Architecture enabled (default in RN 0.76+)
 - Xcode 26.1+ (liquid glass support)
 
 ### Compatibility
 
-| TrueSheet | React Native | Expo SDK |
-|-----------|--------------|----------|
-| 3.7+      | 0.81-0.86    | 54-57    |
-| 3.6       | 0.80         | 52-53    |
+| TrueSheet  | React Native | Expo SDK |
+|------------|--------------|----------|
+| 4.0+       | 0.82+        | 55+      |
+| 3.7 - 3.11 | 0.81-0.86    | 54-57    |
+| 3.6        | 0.80         | 52-53    |
+
+On React Native 0.81 (Expo SDK 54), install `@lodev09/react-native-true-sheet@^3` and follow the [v3 docs](/v3/intro).
+
+The core sheet works on Expo SDK 55+. The [Expo Router `Sheet` layout](guides/navigation#expo-router) requires Expo SDK 57+.
 
 :::info
 This package is not compatible with [Expo Go](https://docs.expo.dev/get-started/expo-go/). Use this with [Expo CNG](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
