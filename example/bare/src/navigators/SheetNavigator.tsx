@@ -7,6 +7,7 @@ import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
+import '@lodev09/react-native-true-sheet/navigation/reanimated';
 import { Button, DemoContent, Footer, Header } from '@example/shared/components';
 import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';

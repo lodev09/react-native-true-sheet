@@ -257,6 +257,10 @@ export type TrueSheetNavigationOptions = TrueSheetNavigationSheetProps & {
    * Use ReanimatedTrueSheet for this screen.
    * Enables worklet-based `onPositionChange` events.
    *
+   * Requires `import '@lodev09/react-native-true-sheet/navigation/reanimated'` once, before the
+   * navigator renders (e.g. at the top of the root layout). Without it, the screen warns in
+   * development and calls `positionChangeHandler` on the JS thread.
+   *
    * @default false
    */
   reanimated?: boolean;
