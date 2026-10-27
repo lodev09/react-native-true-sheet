@@ -262,6 +262,9 @@ Renders children in a native layer above every presented sheet. Show/hide by con
 
 Don't try to block dismissal from a callback — native can't wait on JS. Toggle `dismissible` from state; blocked drags and back/escape fire `onDismissAttempt` (dim taps don't), then `dismiss()` programmatically.
 
+- `draggable={false}` alone still dismisses on a dim tap — use `dismissible={false}` to block both
+- Sheet navigator: `navigation.setOptions({ dismissible: !isDirty })`, listen for `sheetDismissAttempt`, close with `navigation.goBack()`
+
 ### Backgrounds
 
 ```tsx

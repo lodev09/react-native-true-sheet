@@ -34,38 +34,16 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🧭 **React Navigation & Expo Router** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) and [Expo Router `Sheet` layout](https://sheet.lodev09.com/guides/navigation#expo-router)
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
-## 🎉 What's New in v4
+## 🎉 True Sheet 4.0 is here!
 
 > [!TIP]
-> ✨ **v4 rewrites the layout engine** — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
-
-* 📏 **Synchronous layout** - Content resizes in the same frame as the sheet, no more lag
-* 📐 **`auto` detent with scrollables** - The sheet now sizes itself to a `ScrollView`/`FlatList`'s content height
-* 📜 **`scrollableRef`** - Pass a `ScrollView`/`FlatList` ref to wire nested scrolling, keyboard insets, and `auto` detent sizing
-* 🦶 **Relative footers** - Footers take up space below the content by default
-* 🧭 **Expo Router** - First-class support via the `Sheet` layout from `/navigation/expo-router`
-* 🍞 **`TrueSheetOverlay`** - Render toasts, dialogs, and other [overlays above your sheets](https://sheet.lodev09.com/guides/overlays) — no more `FullWindowOverlay`/`Modal` workarounds
-* 🔍 **Element inspector** - React Native's dev menu inspector now works inside a presented sheet
-* 🎨 **Dim color and opacity** - [Customize the dim](https://sheet.lodev09.com/guides/dimming#dim-color-and-opacity) behind the sheet with `dimColor` and `dimOpacity`
-* 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone with `foldOptions` (iOS 27.1+)
-* 🖼️ **Custom backgrounds** - [`background`, `backgroundStyle`, and `detentBackgrounds`](https://sheet.lodev09.com/guides/backgrounds) for exact colors, glass or blur tints, and per-detent transitions
-* 🛑 **`onDismissAttempt`** - Confirm unsaved changes when the user tries to dismiss a non-`dismissible` sheet
-* 👇 **`dismissThreshold`** - Dismiss on a short drag or fling on Android and Web
-* 💤 **`lazy`** - Set to `false` to mount content before presentation
-* ↔️ **`placement`** - Replaces `anchor`, with `'leading'` / `'trailing'` following layout direction
-* 🆕 **Expo SDK 58** - Supports React Native 0.88
-
-See the [Migration Guide](https://sheet.lodev09.com/migration) to upgrade. **v3 is still supported** for React Native 0.81-0.86 (Expo SDK 54-57) — install `@lodev09/react-native-true-sheet@^3` and see the [v3 docs](https://sheet.lodev09.com/v3/intro).
+> v4 rewrites the layout engine — the sheet now lays out synchronously per detent and tracks its visible height in realtime while dragging. Read the [announcement](https://sheet.lodev09.com/blog/release-4-0) and see the [Migration Guide](https://sheet.lodev09.com/migration) to upgrade.
 
 ## Installation
 
-> [!IMPORTANT]
-> **Version 3.0+ requires React Native's New Architecture (Fabric)**
-> For the old architecture, use version 2.x. See the [v3 Migration Guide](https://sheet.lodev09.com/migration-v3) for upgrading.
-
 ### Prerequisites
 
-- React Native 0.82+ (0.81+ on v3)
+- React Native 0.82+
 - New Architecture enabled
 - Xcode 26.1+
 
@@ -90,8 +68,6 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
-For React Native 0.81 (Expo SDK 54), install `@lodev09/react-native-true-sheet@^3`.
-
 ## Documentation
 
 - [Example](example)
@@ -101,7 +77,6 @@ For React Native 0.81 (Expo SDK 54), install `@lodev09/react-native-true-sheet@^
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
 - [Migrating to v4](https://sheet.lodev09.com/migration)
-- [Migrating to v3](https://sheet.lodev09.com/migration-v3)
 
 ## Usage
 

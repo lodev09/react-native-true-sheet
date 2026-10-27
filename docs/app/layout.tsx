@@ -77,6 +77,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Banner id="v4-release" className="border-b bg-fd-secondary text-fd-foreground">
           <span>
             🎉 <b>True Sheet 4.0</b> is out with a rewritten layout engine.{' '}
+            <Link href="/blog/release-4-0" className="underline">
+              Read the announcement
+            </Link>{' '}
+            ·{' '}
             <Link href="/migration" className="underline">
               Migration guide
             </Link>
