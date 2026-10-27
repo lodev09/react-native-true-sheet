@@ -2,6 +2,7 @@ import { CalloutContainer, type CalloutContainerProps } from 'fumadocs-ui/compon
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import { StaticCodeBlock } from './code-block';
+import { Preview } from './preview';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -13,6 +14,7 @@ export function getMDXComponents(components?: MDXComponents) {
       />
     ),
     pre: StaticCodeBlock,
+    Preview,
     ...components,
   } satisfies MDXComponents;
 }

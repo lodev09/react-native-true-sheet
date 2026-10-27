@@ -107,6 +107,15 @@ ffmpeg -v error -y -i <recording.mp4> -vf "fps=1,scale=180:-1,tile=7x2" -frames:
 
 Choose `--start` just before the first movement and `--end` just after the last state settles. Keep previews under ~12 s; the GIFs grow with length and with how much of the screen moves (the map's polyline animation counts).
 
+MapScreen's "True Sheet" polyline draws and erases on a loop (~10.7 s), so a cut that shows the map only loops cleanly if it spans exactly one cycle. Fill the cycle with the scene, record with `trimStatic: false` and a few idle seconds on each side, then find the cycle from the polyline's blue chroma (it rises when a draw starts):
+
+```sh
+ffmpeg -v error -i <recording.mp4> -vf "fps=10,crop=iw*0.9:ih*0.07:iw*0.05:ih*0.42,signalstats,metadata=print:key=lavfi.signalstats.UAVG:file=-" -f null - \
+  | paste - - | awk '{ split($NF, u, "="); printf "%.1f %.2f\n", (NR - 1) / 10, u[2] }'
+```
+
+Match a value on the rising edge before the scene to the same value after it; that gap is the cycle. Both ends of the cut must sit where the sheet is at rest and the map is back in place.
+
 ## 4. Render
 
 ```sh
@@ -152,10 +161,10 @@ README, at half the iOS GIF's height (878 → 439). Set only `height`, the same 
 Docs and blog (MDX):
 
 ```tsx
-<video src="/img/previews/<name>.mp4" autoPlay loop muted playsInline />
+<Preview label="TrueSheet on Android" src="/img/previews/<name>.mp4" radius={26} />
 ```
 
-`muted` and `playsInline` are required for autoplay on iOS Safari. Frame the phone video with CSS to match the GIFs: video 202px wide inside a 7px `#101113` bezel with a 2px `#3d4048` border and a soft shadow. The video's `border-radius` is the one `render.sh` prints for the device (iPhone 18 Pro Max: 29px, Pixel 10 Pro XL: 26px); the outer radius is that plus 9px.
+`Preview` (`docs/components/preview.tsx`) frames the video like the GIFs: 439px tall (202px wide for iOS), inside a 7px `#101113` bezel with a 2px `#3d4048` border and a soft shadow. `radius` is the video's corner radius that `render.sh` prints for the device: 29 (default, iPhone 18 Pro Max and iOS Safari), 26 (Pixel 10 Pro XL). Side by side, wrap them in `<div className="flex flex-wrap gap-6">`.
 
 Restore everything you changed:
 
