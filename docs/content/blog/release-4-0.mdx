@@ -6,7 +6,7 @@ authors: [lodev09]
 tags: [release, layout, expo-router, navigation, breaking-changes]
 ---
 
-## True Sheet 4.0 is here!
+## 🎉 True Sheet 4.0 is here!
 
 Version 4 **rewrites the sheet's layout engine**. The sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging. On top of that, 4.0 brings first-class Expo Router support, overlays above sheets, custom backgrounds, and more than 30 bug fixes.
 
@@ -15,7 +15,7 @@ Version 4 **rewrites the sheet's layout engine**. The sheet now lays out synchro
   <img alt="React Native True Sheet - Android" src="/img/preview-android.gif" width="300" />
 </div>
 
-## A New Layout Engine
+## 📏 A New Layout Engine
 
 <img alt="Synchronous per-detent layout" src="/img/blog/release-4-0/layout-engine.gif" width="300" />
 
@@ -29,9 +29,9 @@ In v3, the content was sized to the largest detent, and resizing lagged a frame 
 - React Native >= 0.82 (Expo SDK 55+)
 - New Architecture enabled
 
-## What's New
+## ✨ What's New
 
-### `auto` Detent with Scrollables
+### 📐 `auto` Detent with Scrollables
 
 <img alt="Auto detent with scrollables" src="/img/blog/release-4-0/auto-detent.gif" width="300" />
 
@@ -49,7 +49,7 @@ The scrollable's bottom inset is now applied natively: the safe-area inset while
 
 See the [Scrolling guide](/guides/scrolling) for more details.
 
-### Relative Footers and Floating Headers
+### 🦶 Relative Footers and Floating Headers
 
 <img alt="Relative footer and floating header" src="/img/blog/release-4-0/header-footer.gif" width="300" />
 
@@ -70,7 +70,7 @@ Headers get the same option: set `headerOptions.position` to `'absolute'` to flo
 
 See the [Header guide](/guides/header) and [Footer guide](/guides/footer) for more details.
 
-### First-Class Expo Router Support
+### 🧭 First-Class Expo Router Support
 
 <img alt="Expo Router Sheet layout" src="/img/blog/release-4-0/expo-router.gif" width="300" />
 
@@ -92,7 +92,7 @@ export default function SheetLayout() {
 
 It requires Expo SDK 57+ and works on Router 58. See the [Navigation guide](/guides/navigation#expo-router) for more details.
 
-### Overlays Above Sheets
+### 🍞 Overlays Above Sheets
 
 <img alt="TrueSheetOverlay" src="/img/blog/release-4-0/overlays.gif" width="300" />
 
@@ -108,7 +108,7 @@ import { TrueSheetOverlay } from '@lodev09/react-native-true-sheet'
 
 See the [Overlays guide](/guides/overlays) for more details.
 
-### Custom Backgrounds
+### 🖼️ Custom Backgrounds
 
 <img alt="Custom and per-detent backgrounds" src="/img/blog/release-4-0/backgrounds.gif" width="300" />
 
@@ -123,7 +123,7 @@ The new `background` and `backgroundStyle` props work on iOS, Android, and Web. 
 
 See the [Backgrounds guide](/guides/backgrounds) for more details.
 
-### Dim Color and Opacity
+### 🎨 Dim Color and Opacity
 
 <img alt="Dim color and opacity" src="/img/blog/release-4-0/dimming.gif" width="300" />
 
@@ -137,7 +137,7 @@ Customize the dim behind the sheet with `dimColor` and `dimOpacity`:
 
 See the [Dimming guide](/guides/dimming#dim-color-and-opacity) for more details.
 
-### Confirm Dismissals
+### 🛑 Confirm Dismissals
 
 <img alt="Confirm dismissals with onDismissAttempt" src="/img/blog/release-4-0/dismiss-attempt.gif" width="300" />
 
@@ -153,7 +153,7 @@ The new `onDismissAttempt` event fires when the user tries to dismiss a sheet wi
 </TrueSheet>
 ```
 
-### Foldables
+### 📱 Foldables
 
 <img alt="Foldables" src="/img/blog/release-4-0/foldables.gif" width="300" />
 
@@ -170,23 +170,23 @@ On iOS 27.1+ foldables, `foldOptions` rests the sheet on the hinge when the devi
 
 See the [Foldables guide](/guides/foldables) for more details.
 
-### And More
+### ➕ And More
 
-- **`dismissThreshold`** — Set it to `'short'` to dismiss on a short drag or fling on Android and Web, like Compose Material3's sheet
-- **`lazy`** — Set it to `false` to mount the content before the sheet presents
-- **`autoFocus`** — An input with `autoFocus` now raises the keyboard together with the sheet
-- **`footerOptions.avoidKeyboard`** — Keep an absolute footer behind the keyboard
-- **`scrollableOptions.keyboardOffset`** — Adjust the scrollable's bottom inset while the keyboard is open
-- **`placement`** — Replaces `anchor`. The new `'automatic'` default uses the native placement on iOS 27+
-- **Element inspector** — The dev menu inspector now works inside a presented sheet
-- **Deep linking** — A new [Deep Linking guide](/guides/deep-linking) for cold-start deep links to sheets
-- **Expo SDK 58** — Supports React Native 0.88
+- 👇 **`dismissThreshold`** — Set it to `'short'` to dismiss on a short drag or fling on Android and Web, like Compose Material3's sheet
+- 💤 **`lazy`** — Set it to `false` to mount the content before the sheet presents
+- ⌨️ **`autoFocus`** — An input with `autoFocus` now raises the keyboard together with the sheet
+- 🙈 **`footerOptions.avoidKeyboard`** — Keep an absolute footer behind the keyboard
+- 📜 **`scrollableOptions.keyboardOffset`** — Adjust the scrollable's bottom inset while the keyboard is open
+- ↔️ **`placement`** — Replaces `anchor`. The new `'automatic'` default uses the native placement on iOS 27+
+- 🔍 **Element inspector** — The dev menu inspector now works inside a presented sheet
+- 🔗 **Deep linking** — A new [Deep Linking guide](/guides/deep-linking) for cold-start deep links to sheets
+- 🆕 **Expo SDK 58** — Supports React Native 0.88
 
-## Bug Fixes
+## 🐛 Bug Fixes
 
 4.0 includes more than 30 fixes across iOS, Android, and Web, including keyboard handling, stacked sheets, iPad windowing, accessibility, and the sheet navigator. See the [release notes](https://github.com/lodev09/react-native-true-sheet/releases/tag/v4.0.0) for the full list.
 
-## Breaking Changes
+## 💥 Breaking Changes
 
 Version 4 includes some breaking changes:
 
@@ -201,7 +201,7 @@ Version 4 includes some breaking changes:
 
 Check out the [Migration Guide](/migration) for the full list and step-by-step upgrade instructions.
 
-## Get Started
+## 🚀 Get Started
 
 ```sh
 yarn add @lodev09/react-native-true-sheet@^4.0.0
@@ -217,7 +217,7 @@ npx expo install @lodev09/react-native-true-sheet
 
 Running into issues? Check out the [Troubleshooting guide](/troubleshooting) for common fixes.
 
-## Thank You!
+## 🙏 Thank You!
 
 A huge thanks to everyone who contributed to this release: [@maxlapides](https://github.com/maxlapides), [@SamuelBrucksch](https://github.com/SamuelBrucksch), [@IjzerenHein](https://github.com/IjzerenHein), [@1kuko3](https://github.com/1kuko3), [@vilindberg](https://github.com/vilindberg), [@simondaigre](https://github.com/simondaigre), [@ronnymajani](https://github.com/ronnymajani), [@nickcernera](https://github.com/nickcernera), [@hukpo](https://github.com/hukpo), [@cpruijsen](https://github.com/cpruijsen), [@billouboq](https://github.com/billouboq), [@MAVERlCK](https://github.com/MAVERlCK) and [@AndriiSerheniuk](https://github.com/AndriiSerheniuk). And thanks to everyone who tested the betas, reported issues, and shared feedback.
 
