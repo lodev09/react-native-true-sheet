@@ -1,0 +1,134 @@
+---
+title: Dismissing
+description: Control how the bottom sheet is dismissed, block dismissal, and confirm unsaved changes.
+keywords: [bottom sheet dismiss, bottom sheet dismissible, bottom sheet unsaved changes, bottom sheet confirm dismiss, bottom sheet swipe to dismiss]
+---
+
+The user can dismiss a sheet by dragging it down, tapping the dim, pressing the back button (Android), or pressing escape (Web). This guide shows how to block these gestures, confirm before the sheet closes, and change how far the user must drag.
+
+<Preview label="Confirm before dismissing" src="/img/previews/dismissing.mp4" />
+
+## Preventing Dismissal
+
+Set [`dismissible`](../reference/configuration#dismissible) to `false` to keep the sheet presented. The user can still drag it between detents, but it springs back when they drag it down. Close it from code with [`dismiss`](../reference/methods#dismiss).
+
+```tsx {7}
+export const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+
+  return (
+    <TrueSheet
+      ref={sheet}
+      dismissible={false}
+    >
+      <Button title="Done" onPress={() => sheet.current?.dismiss()} />
+    </TrueSheet>
+  )
+}
+```
+
+:::tip
+[`draggable={false}`](../reference/configuration#draggable) stops the user from dragging the sheet, but a tap on the dim still dismisses it. Use `dismissible={false}` to block both.
+:::
+
+## Confirming Dismissal
+
+When `dismissible` is `false`, a blocked attempt fires [`onDismissAttempt`](../reference/events#ondismissattempt). Use it to confirm before discarding unsaved changes, then call `dismiss()` to proceed.
+
+```tsx {8-15}
+export const App = () => {
+  const sheet = useRef<TrueSheet>(null)
+  const [isDirty, setIsDirty] = useState(false)
+
+  return (
+    <TrueSheet
+      ref={sheet}
+      dismissible={!isDirty}
+      onDismissAttempt={() => {
+        Alert.alert('Discard changes?', undefined, [
+          { text: 'Keep editing', style: 'cancel' },
+          { text: 'Discard', style: 'destructive', onPress: () => sheet.current?.dismiss() },
+        ])
+      }}
+      onDidDismiss={() => setIsDirty(false)}
+    >
+      <TextInput onChangeText={() => setIsDirty(true)} />
+    </TrueSheet>
+  )
+}
+```
+
+These count as an attempt:
+
+- Dragging the sheet down
+- Pressing the back button (Android) or escape (Web)
+- The accessibility dismiss action, e.g. the VoiceOver escape gesture
+
+A tap on the dim does not count, matching iOS.
+
+:::info
+Native can't wait for JavaScript to decide, so you can't block a dismissal from a callback. Toggle `dismissible` from state before the user tries to dismiss.
+:::
+
+:::note
+On Android, `onDismissAttempt` consumes the back press while `dismissible` is `false`. Return `false` from [`onBackPress`](../reference/events#onbackpress) to let it propagate, e.g. to go back to the previous screen.
+:::
+
+### With Navigation
+
+In the [sheet navigator](navigation), set `dismissible` as a screen option and listen for `sheetDismissAttempt`. Call `navigation.goBack()` to close the sheet.
+
+```tsx
+function EditSheet() {
+  const navigation = useTrueSheetNavigation()
+  const [isDirty, setIsDirty] = useState(false)
+
+  useEffect(() => {
+    navigation.setOptions({ dismissible: !isDirty })
+  }, [navigation, isDirty])
+
+  useEffect(() => {
+    return navigation.addListener('sheetDismissAttempt', () => {
+      Alert.alert('Discard changes?', undefined, [
+        { text: 'Keep editing', style: 'cancel' },
+        { text: 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
+      ])
+    })
+  }, [navigation])
+
+  return <TextInput onChangeText={() => setIsDirty(true)} />
+}
+```
+
+## Dismiss Threshold
+
+On Android and Web, [`dismissThreshold`](../reference/configuration#dismissthreshold) sets how far the user must drag the sheet down from its lowest detent to dismiss it.
+
+```tsx {4}
+export const App = () => {
+  return (
+    <TrueSheet
+      dismissThreshold="short"
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+| Value | Behavior |
+| - | - |
+| `'half'` | Dismisses past half of the lowest detent, or on a quick flick. Matches iOS. This is the default. |
+| `'short'` | Dismisses on a short drag or any downward fling, like Compose Material3's `ModalBottomSheet`. |
+
+On iOS, the system controls the threshold.
+
+## Dismissing Programmatically
+
+| Method | Behavior |
+| - | - |
+| [`dismiss`](../reference/methods#dismiss) | Dismisses the sheet and all sheets presented on top of it. |
+| [`dismissStack`](../reference/methods#dismissstack) | Dismisses only the sheets on top, keeping this sheet presented. |
+| [`TrueSheet.dismissAll`](../reference/methods#dismissall) | Dismisses every presented sheet. |
+
+All of them ignore `dismissible`. Listen for [`onWillDismiss`](../reference/events#onwilldismiss) and [`onDidDismiss`](../reference/events#ondiddismiss) to react to any dismissal.
