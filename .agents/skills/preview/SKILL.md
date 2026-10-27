@@ -66,7 +66,7 @@ adb shell cmd uimode night yes
 Both:
 
 - `argent disable video-watermark` (global flag, re-enable in §5).
-- iPad: rotate to the orientation you want before recording; the video keeps the size of the first frame.
+- iPad: rotate to the orientation you want before recording. In landscape, the simulator still records the portrait framebuffer with the UI turned 90°, and `describe` frames and gestures use those raw axes (after `LandscapeLeft`, UI up is +x). Turn the recording upright before rendering (`ffmpeg -i <rec> -vf transpose=2 -crf 12 <upright.mp4>` for `LandscapeLeft`), and turn the mask the same way: `sips -s format png --resampleWidth <portrait width> <mask.pdf> --out mask.png`, then `magick mask.png -rotate -90 mask-landscape.png`.
 - Web: serve the expo example and open it in iOS Simulator Safari (`e2e` skill, `references/web.md`). Safari's toolbar stays in the shot.
 
 ## 2. Record
@@ -161,10 +161,10 @@ README, at half the iOS GIF's height (878 → 439). Set only `height`, the same 
 Docs and blog (MDX):
 
 ```tsx
-<Preview label="TrueSheet on Android" src="/img/previews/<name>.mp4" radius={26} />
+<Preview label="TrueSheet on Android" src="/img/previews/<name>.mp4" device="android" />
 ```
 
-`Preview` (`docs/components/preview.tsx`) frames the video like the GIFs: 439px tall (202px wide for iOS), inside a 7px `#101113` bezel with a 2px `#3d4048` border and a soft shadow. `radius` is the video's corner radius that `render.sh` prints for the device: 29 (default, iPhone 18 Pro Max and iOS Safari), 26 (Pixel 10 Pro XL). Side by side, wrap them in `<div className="flex flex-wrap gap-6">`.
+`Preview` (`docs/components/preview.tsx`) frames the video like the GIFs: a `#101113` bezel with a 2px `#3d4048` border and a soft shadow. `device` (`ios`, the default, also for iOS Safari; `android`; or `ipad`, landscape) sets the screen aspect, the bezel, and the corner radius ratio that `render.sh` prints (0.1423 for the iPhone 18 Pro Max, 0.1270 for the Pixel 10 Pro XL, 0.0223 for the iPad Pro 13-inch). The iPad preview renders with `--device tablet --width 900` (a 1500px MP4) and shows at `height={558}`, 744px wide. Add a device there when you record on a new one. `height` defaults to 652 (300px wide on iOS, 1:2 with the 600px MP4 on retina screens; bigger upscales). Side by side, use `height={500}` in a `<div className="flex flex-wrap gap-4">` so three fit in one row.
 
 Restore everything you changed:
 
