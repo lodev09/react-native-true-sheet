@@ -14,18 +14,21 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
 * 🚀 **Fully Native** - Implemented in the native realm, zero JS hacks
 * ♿ **Accessible** - Native accessibility and screen reader support out of the box
-* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
+* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#component-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
 * ⌨️ **Keyboard Handling** - Built-in [keyboard handling](https://sheet.lodev09.com/guides/keyboard) with automatic adjustment
 * 📐 **Side Sheets** - Native [side sheet](https://sheet.lodev09.com/guides/side-sheets) support for iPad and Android tablets
+* 🎨 **Backgrounds** - Colors, blur, glass tints, and [per-detent backgrounds](https://sheet.lodev09.com/guides/backgrounds) on all platforms
+* 🍞 **Overlays** - Render toasts and dialogs [above your sheets](https://sheet.lodev09.com/guides/overlays) with `TrueSheetOverlay`
+* 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone (iOS 27.1+)
 * 🪟 **Liquid Glass** - [iOS 26+ Liquid Glass](https://sheet.lodev09.com/guides/liquid-glass) support out of the box, featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
 * 🐎 **Reanimated** - First-class support for [react-native-reanimated](https://sheet.lodev09.com/guides/reanimated)
-* 🧭 **React Navigation** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) for seamless navigation integration
+* 🧭 **React Navigation & Expo Router** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) and [Expo Router `Sheet` layout](https://sheet.lodev09.com/guides/navigation#expo-router)
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
 ## 🎉 What's New in v4
 
 > [!TIP]
-> ✨ **v4 is in beta!** It rewrites the layout engine — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
+> ✨ **v4 rewrites the layout engine** — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
 
 * 📏 **Synchronous layout** - Content resizes in the same frame as the sheet, no more lag
 * 📐 **`auto` detent with scrollables** - The sheet now sizes itself to a `ScrollView`/`FlatList`'s content height
@@ -36,18 +39,20 @@ The true native bottom sheet experience for your React Native Apps. 💩
 * 🔍 **Element inspector** - React Native's dev menu inspector now works inside a presented sheet
 * 🎨 **Dim color and opacity** - [Customize the dim](https://sheet.lodev09.com/guides/dimming#dim-color-and-opacity) behind the sheet with `dimColor` and `dimOpacity`
 * 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone with `foldOptions` (iOS 27.1+)
+* 🖼️ **Custom backgrounds** - [`background`, `backgroundStyle`, and `detentBackgrounds`](https://sheet.lodev09.com/guides/backgrounds) for exact colors, glass or blur tints, and per-detent transitions
+* 🛑 **`onDismissAttempt`** - Confirm unsaved changes when the user tries to dismiss a non-`dismissible` sheet
+* 👇 **`dismissThreshold`** - Dismiss on a short drag or fling on Android and Web
+* 💤 **`lazy`** - Set to `false` to mount content before presentation
+* ↔️ **`placement`** - Replaces `anchor`, with `'leading'` / `'trailing'` following layout direction
+* 🆕 **Expo SDK 58** - Supports React Native 0.88
 
-```sh
-npx expo install @lodev09/react-native-true-sheet@beta
-```
-
-See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81-0.86 (Expo SDK 54-57) and remains the `latest` release on npm.
+See the [Migration Guide](https://sheet.lodev09.com/migration) to upgrade. **v3 is still supported** for React Native 0.81-0.86 (Expo SDK 54-57) — install `@lodev09/react-native-true-sheet@^3` and see the [v3 docs](https://sheet.lodev09.com/v3/intro).
 
 ## Installation
 
 > [!IMPORTANT]
 > **Version 3.0+ requires React Native's New Architecture (Fabric)**
-> For the old architecture, use version 2.x. See the [Migration Guide](https://sheet.lodev09.com/migration) for upgrading.
+> For the old architecture, use version 2.x. See the [v3 Migration Guide](https://sheet.lodev09.com/migration-v3) for upgrading.
 
 ### Prerequisites
 
@@ -76,16 +81,17 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
-These install v3. For v4, append `@beta` — see [🎉 What's New in v4](#-whats-new-in-v4).
+For React Native 0.81 (Expo SDK 54), install `@lodev09/react-native-true-sheet@^3`.
 
 ## Documentation
 
 - [Example](example)
 - [Configuration](https://sheet.lodev09.com/reference/configuration)
 - [Lifecycle Events](https://sheet.lodev09.com/reference/events)
-- [React Navigation](https://sheet.lodev09.com/guides/navigation)
+- [React Navigation & Expo Router](https://sheet.lodev09.com/guides/navigation)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
+- [Migrating to v4](https://sheet.lodev09.com/migration)
 - [Migrating to v3](https://sheet.lodev09.com/migration-v3)
 
 ## Usage

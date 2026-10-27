@@ -113,12 +113,20 @@ Our pre-commit hooks verify that your commit message matches this format when co
 
 ### Publishing to npm
 
-We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
+We use [release-it](https://github.com/release-it/release-it) to bump the version, update the changelog and docs versions, tag, and create the GitHub release. It doesn't publish to npm, so publish manually afterwards.
 
-To publish new versions, run the following:
+Stable releases publish to the `latest` tag:
 
 ```sh
 yarn release
+npm publish
+```
+
+Pre-releases skip the changelog, docs versioning, and GitHub release, and publish to the `beta` tag:
+
+```sh
+yarn release:beta
+npm publish --tag beta
 ```
 
 
@@ -144,6 +152,8 @@ The `package.json` file contains various scripts for common tasks:
 When you're sending a pull request:
 
 - Prefer small pull requests focused on one change.
+- Target `main` for v4. Target the `v3` branch for v3 fixes.
+- Document changes in `docs/content/docs/next`. `docs/content/docs/latest` is overwritten on each release.
 - Verify that linters and tests are passing.
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.

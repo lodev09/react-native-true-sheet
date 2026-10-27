@@ -102,7 +102,7 @@ setModalVisible(false)
 
 **Cause:** RN 0.83 made `canBecomeFirstResponder` return `YES` on every `RCTViewComponentView`, disrupting `UISheetPresentationController`'s keyboard avoidance animation. Fixed upstream in RN 0.86.
 
-**Fix:** Apply the [react-native patch](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-npm-0.85.3.patch) that gates it behind the `enableImperativeFocus` feature flag. Remove the patch once on 0.86+.
+**Fix:** Apply the [react-native patch](https://github.com/lodev09/react-native-true-sheet/blob/v3/.yarn/patches/react-native-npm-0.85.3.patch) that gates it behind the `enableImperativeFocus` feature flag. Remove the patch once on 0.86+.
 
 ## Gesture handler not working (Android)
 

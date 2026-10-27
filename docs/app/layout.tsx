@@ -74,13 +74,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={heading.variable} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
-        <Banner id="v4-beta" className="border-b bg-fd-secondary text-fd-foreground">
+        <Banner id="v4-release" className="border-b bg-fd-secondary text-fd-foreground">
           <span>
-            🚧 <b>True Sheet 4.0 beta</b> rewrites the layout engine.{' '}
-            <code className="rounded bg-fd-accent px-1.5 py-0.5 text-xs">
-              npx expo install @lodev09/react-native-true-sheet@beta
-            </code>{' '}
-            <Link href="/next/migration" className="underline">
+            🎉 <b>True Sheet 4.0</b> is out with a rewritten layout engine.{' '}
+            <Link href="/migration" className="underline">
               Migration guide
             </Link>
           </span>

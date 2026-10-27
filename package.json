@@ -11,10 +11,22 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
-    "./mock": "./lib/module/mocks/index.js",
-    "./navigation/mock": "./lib/module/mocks/navigation.js",
-    "./navigation/expo-router/mock": "./lib/module/mocks/navigationExpoRouter.js",
-    "./reanimated/mock": "./lib/module/mocks/reanimated.js",
+    "./mock": {
+      "types": "./lib/typescript/src/mocks/index.d.ts",
+      "default": "./lib/module/mocks/index.js"
+    },
+    "./navigation/mock": {
+      "types": "./lib/typescript/src/mocks/navigation.d.ts",
+      "default": "./lib/module/mocks/navigation.js"
+    },
+    "./navigation/expo-router/mock": {
+      "types": "./lib/typescript/src/mocks/navigationExpoRouter.d.ts",
+      "default": "./lib/module/mocks/navigationExpoRouter.js"
+    },
+    "./reanimated/mock": {
+      "types": "./lib/typescript/src/mocks/reanimated.d.ts",
+      "default": "./lib/module/mocks/reanimated.js"
+    },
     "./reanimated": {
       "source": "./src/reanimated/index.ts",
       "types": "./lib/typescript/src/reanimated/index.d.ts",
@@ -139,8 +151,8 @@
     "react": "*",
     "react-dom": "*",
     "react-native": ">=0.82.0",
-    "react-native-reanimated": ">=4",
-    "react-native-worklets": "*",
+    "react-native-reanimated": ">=4.1.0",
+    "react-native-worklets": ">=0.5.0",
     "standard-navigation": ">=0.0.9"
   },
   "peerDependenciesMeta": {

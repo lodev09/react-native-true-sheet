@@ -361,7 +361,7 @@ export type DismissThreshold =
   | 'short';
 
 /**
- * Blur style mapped to native values in IOS.
+ * Blur style mapped to native values in iOS.
  *
  * @platform ios
  */
@@ -813,12 +813,12 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the detent of the sheet has changed.
-   * Either by dragging or programatically.
+   * Either by dragging or programmatically.
    */
   onDetentChange?: (event: DetentChangeEvent) => void;
 
   /**
-   * Called when the sheet has began dragging.
+   * Called when the sheet has begun dragging.
    * Comes with the detent info.
    */
   onDragBegin?: (event: DragBeginEvent) => void;

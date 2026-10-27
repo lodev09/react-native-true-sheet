@@ -31,7 +31,7 @@ export interface ReanimatedTrueSheetProviderProps {
  *
  * @example
  * ```tsx
- * import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet'
+ * import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated'
  *
  * function App() {
  *   return (
@@ -68,7 +68,7 @@ export const ReanimatedTrueSheetProvider = ({ children }: ReanimatedTrueSheetPro
  *
  * @example
  * ```tsx
- * import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet'
+ * import { useReanimatedTrueSheet } from '@lodev09/react-native-true-sheet/reanimated'
  * import { useAnimatedStyle } from 'react-native-reanimated'
  *
  * function MyComponent() {

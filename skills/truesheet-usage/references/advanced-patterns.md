@@ -163,7 +163,7 @@ Also available as `screenListeners` on the navigator or `listeners` on a screen.
 
 ### Navigating from sheets
 
-Sheets remain visible when presenting screens on top — `navigation.navigate('SomeScreen')` works directly, no dismissing first. This requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.25.2.patch) (see [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415)). On Expo SDK 56+ EAS builds the patch is silently dropped — see [Troubleshooting](./troubleshooting.md#patched-react-native-screens-not-applied-on-eas).
+Sheets remain visible when presenting screens on top — `navigation.navigate('SomeScreen')` works directly, no dismissing first. This requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.26.2.patch) (see [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415)). On Expo SDK 56+ EAS builds the patch is silently dropped — see [Troubleshooting](./troubleshooting.md#patched-react-native-screens-not-applied-on-eas).
 
 ### Web caveat
 
@@ -679,12 +679,11 @@ On iOS 26.0, color/blur still sits above glass.
 ### New in v4
 
 - `detentBackgrounds` — color/blur entries by detent index. Native iOS 26.1+ transitions, midpoint cross-fades elsewhere. Android/Web inherit the sheet background for blur entries. See [configuration](configuration.md#per-detent-backgrounds).
-
 - `'auto'` detent works with scrollables
-- `'peek'` detent + `TrueSheetPeek` component
 - `headerOptions` (floating header)
 - `footerOptions={{ position: 'absolute', avoidKeyboard: false }}` keeps native absolute footers behind the keyboard. The default is `true`. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height.
-- `accessibilityOptions`
+- `scrollableOptions.keyboardOffset` — adjust the scrollable's keyboard bottom inset; pass a negative value to cancel your own bottom padding
+- `onDismissAttempt` — fires when the user tries to dismiss a `dismissible={false}` sheet; confirm, then call `dismiss()`
 - `dimColor` / `dimOpacity` — customize the dim. On iOS they replace the system dim with a custom layer
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `foldOptions` — iOS 27.1+ foldables: rest the sheet on the hinge in tabletop. See [Foldables](#foldables-ios-271)

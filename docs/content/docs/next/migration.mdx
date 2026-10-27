@@ -285,6 +285,14 @@ import { StyleSheet } from 'react-native';
 
 The blur library controls platform support. See [Custom blur](guides/backgrounds#custom-blur).
 
+### 12. `onWillDismiss` Fires Only on a Committed Dismissal (iOS)
+
+On iOS, [`onWillDismiss`](reference/events#onwilldismiss) used to fire as soon as a drag-to-dismiss began, even if the user then released the sheet back to a detent. It now fires only once the dismissal is committed. Move any work that should run when a drag merely starts to [`onDragBegin`](reference/events#ondragbegin).
+
+### 13. `present()` and `dismiss()` Resolve After the Animation (Web)
+
+On Web, `present()` and `dismiss()` now resolve when the animation ends instead of immediately. Calling them on an already presented or dismissed sheet is now a no-op with a warning, like native, so `present()` no longer resizes an open sheet. Use [`resize()`](reference/methods#resize) to change the detent of an open sheet.
+
 ## New Features in v4
 
 ### 1. `auto` Detent with Scrollables
@@ -466,6 +474,36 @@ On iOS 27.1+ foldables like the iPhone Duo, the new `foldOptions` prop rests the
 
 With `lazy={false}`, content stays mounted after dismiss, so `autoFocus` focuses on the first present only. Focus in `onWillPresent` instead to raise the keyboard with the sheet on every present. See [Keyboard Handling](guides/keyboard#autofocus).
 
+### 15. Confirm Dismissals with `onDismissAttempt`
+
+The new [`onDismissAttempt`](reference/events#ondismissattempt) event fires when the user tries to dismiss a sheet with `dismissible` set to `false` — by dragging it down, pressing back (Android) or escape (Web), or using an accessibility dismiss action. Confirm unsaved changes, then call `dismiss()`:
+
+```tsx
+<TrueSheet
+  ref={sheet}
+  dismissible={!hasUnsavedChanges}
+  onDismissAttempt={() => confirmDiscard(() => sheet.current?.dismiss())}
+>
+  {/* form */}
+</TrueSheet>
+```
+
+### 16. Mount Content Before Presenting with `lazy`
+
+Content mounts on first presentation by default. Set the new [`lazy`](reference/configuration#lazy) prop to `false` to mount it ahead of time, then call `present()` once it is ready so `auto` detents measure the settled content.
+
+### 17. Scrollable Keyboard Offset
+
+The new `scrollableOptions.keyboardOffset` adjusts the bottom inset the scrollable gets while the keyboard is open. Pass a negative value to cancel out your own bottom padding. See [`ScrollableOptions`](reference/types#scrollableoptions).
+
+### 18. Deep Linking
+
+The new [Deep Linking guide](guides/deep-linking) shows how to hold `initialDetentIndex` until the screen is focused, so a cold-start deep link to a modal or sheet-navigator sheet doesn't get the sheet stacked on top.
+
+### 19. Expo SDK 58 and React Native 0.88
+
+v4 supports Expo SDK 58 and React Native 0.88, including the Expo Router `Sheet` layout on Router 58. See the [Expo Router guide](guides/navigation#expo-router) for the SDK 58 `anchor` setting.
+
 ## Step-by-Step Migration
 
 1. **Update React Native** to 0.82 or newer.
@@ -495,6 +533,8 @@ With `lazy={false}`, content stays mounted after dismiss, so `autoFocus` focuses
    - Remove `blurOptions`; use a third-party blur in `background` for custom intensity
    - Rename `anchor` to `placement` and `anchorOffset` to `placementOffset`, with `"left"` / `"right"` becoming `"leading"` / `"trailing"`
    - Replace `FullWindowOverlay` / `Modal` overlay workarounds with `TrueSheetOverlay`
+   - On iOS, move work that should run when a drag starts from `onWillDismiss` to `onDragBegin`
+   - On Web, use `resize()` instead of calling `present()` on an open sheet
    - If using the Sheet Navigator, install `standard-navigation` and update `@react-navigation/native` to 7.3+
    - If using Expo Router, install `standard-navigation`, replace the `withLayoutContext` wrapper with the `Sheet` layout from `/navigation/expo-router`, and update `useTrueSheetNavigation` imports
 6. **Test your app:**

@@ -122,7 +122,7 @@ export class TrueSheet
   extends PureComponent<TrueSheetProps, TrueSheetState>
   implements TrueSheetMethods
 {
-  displayName = 'TrueSheet';
+  static displayName = 'TrueSheet';
 
   static contextType = RootTagContext;
 
@@ -232,15 +232,13 @@ export class TrueSheet
   private validateDetents(): void {
     const { detents, initialDetentIndex } = this.props;
 
-    // Warn if detents length exceeds 3
-    if (detents && detents.length > 3) {
-      console.warn(
-        `TrueSheet: detents array has ${detents.length} items but maximum is 3. Only the first 3 will be used.`
-      );
-    }
+    if (__DEV__ && detents) {
+      if (detents.length > 3) {
+        console.warn(
+          `TrueSheet: detents array has ${detents.length} items but maximum is 3. Only the first 3 will be used.`
+        );
+      }
 
-    // Warn for invalid detent fractions
-    if (detents) {
       detents.forEach((detent, index) => {
         if (typeof detent === 'number' && detent !== -1 && detent !== -2) {
           if (detent <= 0 || detent > 1) {
@@ -263,11 +261,10 @@ export class TrueSheet
     }
   }
 
-  private static getInstance(name: string) {
+  private static getInstance(name: string): TrueSheet {
     const instance = TrueSheet.instances[name];
     if (!instance) {
-      console.warn(`Could not find TrueSheet instance with name "${name}". Check your name prop.`);
-      return;
+      throw new Error(`TrueSheet: sheet with name "${name}" not found. Check your name prop.`);
     }
 
     return instance;
@@ -276,7 +273,7 @@ export class TrueSheet
   private get handle(): number {
     const nodeHandle = findNodeHandle(this.nativeRef.current);
     if (nodeHandle == null || nodeHandle === -1) {
-      throw new Error('Could not get native view tag');
+      throw new Error('TrueSheet: could not get native view tag');
     }
 
     return nodeHandle;
@@ -295,12 +292,7 @@ export class TrueSheet
     index: number = 0,
     animated: boolean = true
   ): Promise<void> {
-    const instance = TrueSheet.getInstance(name);
-    if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`);
-    }
-
-    return instance.present(index, animated);
+    return TrueSheet.getInstance(name).present(index, animated);
   }
 
   /**
@@ -311,12 +303,7 @@ export class TrueSheet
    * @throws Error if sheet not found or dismissal fails
    */
   public static async dismiss(name: string, animated: boolean = true): Promise<void> {
-    const instance = TrueSheet.getInstance(name);
-    if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`);
-    }
-
-    return instance.dismiss(animated);
+    return TrueSheet.getInstance(name).dismiss(animated);
   }
 
   /**
@@ -327,12 +314,7 @@ export class TrueSheet
    * @throws Error if sheet not found
    */
   public static async dismissStack(name: string, animated: boolean = true): Promise<void> {
-    const instance = TrueSheet.getInstance(name);
-    if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`);
-    }
-
-    return instance.dismissStack(animated);
+    return TrueSheet.getInstance(name).dismissStack(animated);
   }
 
   /**
@@ -343,12 +325,7 @@ export class TrueSheet
    * @throws Error if sheet not found
    */
   public static async resize(name: string, index: number): Promise<void> {
-    const instance = TrueSheet.getInstance(name);
-    if (!instance) {
-      throw new Error(`Sheet with name "${name}" not found`);
-    }
-
-    return instance.resize(index);
+    return TrueSheet.getInstance(name).resize(index);
   }
 
   /**
@@ -676,6 +653,11 @@ export class TrueSheet
       ...rest
     } = this.props;
     delete rest.lazy;
+    delete rest.name;
+    delete rest.scrollableRef;
+    delete rest.onBackPress;
+    delete rest.detached;
+    delete rest.detachedOffset;
 
     // Trim to max 3 detents and clamp fractions
     const resolvedDetents: number[] = detents.slice(0, 3).map((detent) => {
