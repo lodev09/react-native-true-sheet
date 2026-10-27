@@ -5,7 +5,7 @@ const withMDX = createMDX();
 
 // While v3 is the latest release it lives at the root, so legacy `/v3` URLs
 // redirect there. Once the release script archives it, those URLs are its own
-// again and the redirects must drop out.
+// again, so only bare `/v3` redirects to its intro.
 const v3Archived = fs.existsSync(new URL('./content/docs/v3', import.meta.url));
 
 /** @type {import('next').NextConfig} */
@@ -16,7 +16,7 @@ const config = {
     return [
       { source: '/next', destination: '/next/intro', permanent: false },
       ...(v3Archived
-        ? []
+        ? [{ source: '/v3', destination: '/v3/intro', permanent: false }]
         : [
             { source: '/v3', destination: '/intro', permanent: false },
             { source: '/v3/:path*', destination: '/:path*', permanent: false },

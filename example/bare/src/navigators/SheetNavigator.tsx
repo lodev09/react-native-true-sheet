@@ -218,11 +218,6 @@ export const SheetNavigator = () => {
         sheetDragEnd: (e) => {
           console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
         },
-        // sheetPositionChange: (e) => {
-        //   console.log(
-        //     `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
-        //   );
-        // },
         sheetWillFocus: () => {
           console.log('[SheetNavigator] sheetWillFocus');
         },
@@ -257,10 +252,6 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
           cornerRadius: 16,
           reanimated: true,
-          // positionChangeHandler: (payload) => {
-          //   'worklet';
-          //   console.log(payload.position);
-          // },
         }}
       />
       <SheetStack.Screen

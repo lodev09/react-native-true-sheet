@@ -230,32 +230,32 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={clsx(styles.section, styles.sectionBeta)}>
-        <div className={clsx(styles.container, styles.beta)}>
+      <section className={clsx(styles.section, styles.sectionRelease)}>
+        <div className={clsx(styles.container, styles.release)}>
           <div>
-            <h2 className={styles.title}>Version 4 is in beta.</h2>
+            <h2 className={styles.title}>Version 4 is here.</h2>
             <p>
               A rewritten layout engine sizes content synchronously per detent and tracks the sheet
               while dragging. Auto detents now measure scroll views. Expo Router gets a first class
               Sheet layout.
             </p>
             <div className={styles.actions}>
-              <Link className={clsx(styles.button, styles.buttonPrimary)} href="/next/intro">
-                Read the v4 docs
+              <Link className={clsx(styles.button, styles.buttonPrimary)} href="/intro">
+                Read the docs
               </Link>
-              <Link className={clsx(styles.button, styles.buttonGhost)} href="/next/migration">
+              <Link className={clsx(styles.button, styles.buttonGhost)} href="/migration">
                 Migration guide
               </Link>
             </div>
           </div>
-          <div className={styles.betaCode}>
+          <div className={styles.releaseCode}>
             <ServerCodeBlock
-              code={`${INSTALL}@beta`}
+              code={INSTALL}
               lang="sh"
               themes={codeThemes}
               components={{ pre: StaticCodeBlock }}
             />
-            <p className={styles.betaNote}>Teach your coding agent the library too:</p>
+            <p className={styles.releaseNote}>Teach your coding agent the library too:</p>
             <ServerCodeBlock
               code="npx skills add lodev09/react-native-true-sheet"
               lang="sh"

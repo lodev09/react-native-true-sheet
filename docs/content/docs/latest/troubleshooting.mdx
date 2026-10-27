@@ -32,7 +32,7 @@ On React Native 0.83 through 0.85, the sheet snaps back to its detent without an
 
 **Workaround:**
 
-Apply a [patch](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-npm-0.85.3.patch) to `react-native` that gates `canBecomeFirstResponder` behind the `enableImperativeFocus` feature flag. For Yarn, add to your `package.json`:
+Apply a [patch](https://github.com/lodev09/react-native-true-sheet/blob/v3/.yarn/patches/react-native-npm-0.85.3.patch) to `react-native` that gates `canBecomeFirstResponder` behind the `enableImperativeFocus` feature flag. For Yarn, add to your `package.json`:
 
 ```json
 "resolutions": {
