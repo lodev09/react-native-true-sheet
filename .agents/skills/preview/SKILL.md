@@ -96,6 +96,23 @@ Gestures:
 - Android: a flick from a middle detent doesn't skip to the lower one (Material snaps to the nearest detent by position, ignoring velocity), so end the flick past the midpoint between the two detents (e.g. drag 0.2 → 0.28, flick to 0.6). A single-detent sheet with `dismissThreshold="short"` dismisses on the short flick above.
 - Gate each step that depends on a sheet opening or reaching a detent with an `await-ui-element` step. If a swipe is ignored, the taps after it land on other buttons, and swipes after it pan the map, which changes the state the loop has to end on.
 
+### Foldables: capture the Device Hub window
+
+The foldables preview shows the phone folding, which only Device Hub (Xcode 27's simulator window) draws, so it's a macOS capture of that window instead of an argent recording. There are no touch markers; the scene is driven by `fold`, not gestures.
+
+- The app running the agent needs Screen & System Audio Recording permission (System Settings → Privacy & Security), applied after a relaunch. Without it `screencapture` fails with "could not create image".
+- The whole window must be on screen; macOS doesn't render the part past the display edge. The agent can't move it without Accessibility permission, so ask the user to.
+- Find the window ID by name with `CGWindowListCopyWindowInfo` (a few lines of Swift run with `swift`; filter on owner `Device Hub`).
+- Use the dedicated "iPhone Duo (TrueSheet)" simulator: `fold open`, `rotate LandscapeLeft` (portrait UI, horizontal fold), launch the app, tap the main grabber (drags from the bottom edge are cancelled on the Duo), then TrueSheet View. Its `foldOptions` snap moves it to the hinge.
+- Record with `screencapture -x -v -V 30 -l <window id> fold.mov` in the background, `fold half-open` after ~9 s, hold ~2.5 s, `fold open`. Pick the loop on the polyline cycle (§3), then crop to the phone (union of the flat and folded bounds; the window's background is `#1a1a1c`) and encode like `render.sh`'s MP4:
+
+  ```sh
+  ffmpeg -ss <start> -to <end> -i fold.mov -vf "fps=30,crop=<w>:<h>:<x>:<y>,scale=980:-2:flags=lanczos" \
+    -c:v libx264 -crf 21 -preset slow -pix_fmt yuv420p -movflags +faststart -an docs/public/img/previews/foldables.mp4
+  ```
+
+- Embed with `<Preview device="duo" />`: no CSS bezel, since the video already shows the phone.
+
 Example scene (MapScreen, 9 s): swipe the grabber up from peek → tap "FlatList" → tap "Add Item" until the list scrolls → scroll it to the bottom → drag and flick it down → tap "TrueSheet View" → tap "Auto", then "Peek" → tap the dim → drag and flick the main sheet back to peek.
 
 ## 3. Pick the loop
@@ -108,14 +125,16 @@ ffmpeg -v error -y -i <recording.mp4> -vf "fps=1,scale=180:-1,tile=7x2" -frames:
 
 Choose `--start` just before the first movement and `--end` just after the last state settles. Keep previews under ~12 s; the GIFs grow with length and with how much of the screen moves (the map's polyline animation counts).
 
-MapScreen's "True Sheet" polyline draws and erases on a loop (~10.7 s), so a cut that shows the map only loops cleanly if it spans exactly one cycle. Fill the cycle with the scene, record with `trimStatic: false` and a few idle seconds on each side, then find the cycle from the polyline's blue chroma (it rises when a draw starts):
+MapScreen's "True Sheet" polyline draws and erases on a loop, so a cut that shows the map only loops cleanly if it spans exactly one cycle. The cycle varies between recordings (9.8–10.7 s seen). Fill it with the scene, record with `trimStatic: false` and a few idle seconds on each side, then compare frames to find the pair of loop points that match best:
 
 ```sh
-ffmpeg -v error -i <recording.mp4> -vf "fps=10,crop=iw*0.9:ih*0.07:iw*0.05:ih*0.42,signalstats,metadata=print:key=lavfi.signalstats.UAVG:file=-" -f null - \
-  | paste - - | awk '{ split($NF, u, "="); printf "%.1f %.2f\n", (NR - 1) / 10, u[2] }'
+mkdir /tmp/lp && ffmpeg -v error -i <recording.mp4> -vf "fps=10,scale=330:-1" /tmp/lp/f%04d.png
+for a in <frames before the scene>; do for d in $(seq 96 108); do b=$((a + d))
+  echo "$(magick compare -metric RMSE /tmp/lp/f$(printf %04d $a).png /tmp/lp/f$(printf %04d $b).png null: 2>&1 | sed 's/.*(\(.*\))/\1/') $a $b"
+done; done | sort -n | head
 ```
 
-Match a value on the rising edge before the scene to the same value after it; that gap is the cycle. Both ends of the cut must sit where the sheet is at rest and the map is back in place.
+Frame `n` is at `(n - 1) / 10` s. Both ends of the cut must sit where the sheet is at rest and the map is back in place; under ~0.5% RMSE loops without a visible jump.
 
 ## 4. Render
 
@@ -165,7 +184,7 @@ Docs and blog (MDX):
 <Preview label="TrueSheet on Android" src="/img/previews/<name>.mp4" device="android" />
 ```
 
-`Preview` (`docs/components/preview.tsx`) frames the video like the GIFs: a `#101113` bezel with a 2px `#3d4048` border and a soft shadow. `device` (`ios`, the default, also for iOS Safari; `android`; or `ipad`, landscape) sets the screen aspect, the bezel, and the corner radius ratio that `render.sh` prints (0.1423 for the iPhone 18 Pro Max, 0.1270 for the Pixel 10 Pro XL, 0.0223 for the iPad Pro 13-inch). The iPad preview renders with `--device tablet --width 900` (a 1500px MP4) and shows at `height={558}`, 744px wide. Add a device there when you record on a new one. `height` defaults to 652 (300px wide on iOS, 1:2 with the 600px MP4 on retina screens; bigger upscales). Side by side, use `height={500}` in a `<div className="flex flex-wrap gap-4">` so three fit in one row.
+`Preview` (`docs/components/preview.tsx`) frames the video like the GIFs: a `#101113` bezel with a 2px `#3d4048` border and a soft shadow. `device` (`ios`, the default, also for iOS Safari; `android`; `ipad`, landscape; or `duo`, a Device Hub window capture with no bezel) sets the screen aspect, the bezel, and the corner radius ratio that `render.sh` prints (0.1423 for the iPhone 18 Pro Max, 0.1270 for the Pixel 10 Pro XL, 0.0223 for the iPad Pro 13-inch). The iPad preview renders with `--device tablet --width 900` (a 1500px MP4) and shows at `height={558}`, 744px wide. Add a device there when you record on a new one. `height` defaults to 652 (300px wide on iOS, 1:2 with the 600px MP4 on retina screens; bigger upscales). Side by side, use `height={500}` in a `<div className="flex flex-wrap gap-4">` so three fit in one row.
 
 Restore everything you changed:
 

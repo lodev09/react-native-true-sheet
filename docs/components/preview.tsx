@@ -3,6 +3,8 @@ const DEVICES = {
   ios: { aspect: 600 / 1304, radius: 0.1423, bezel: 0.035 },
   android: { aspect: 600 / 1336, radius: 0.127, bezel: 0.035 },
   ipad: { aspect: 1500 / 1126, radius: 0.0223, bezel: 0.016 },
+  // Device Hub window capture: the phone is in the video, so no bezel
+  duo: { aspect: 980 / 1304, radius: 0.03, bezel: 0 },
 };
 
 type PreviewProps = {
