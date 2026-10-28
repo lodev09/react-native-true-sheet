@@ -6,6 +6,7 @@
 
 - Add an internal `preview` agent skill for recording the example app with argent and rendering README GIFs and docs videos framed to each device's real screen corners, and use it to refresh the README, docs, and blog previews. ([#984](https://github.com/lodev09/react-native-true-sheet/pull/984), [#985](https://github.com/lodev09/react-native-true-sheet/pull/985) by [@lodev09](https://github.com/lodev09))
 - Add the 4.0 release blog post and a Dismissing guide for `dismissible`, `onDismissAttempt`, and `dismissThreshold`, with new header, footer, and dismissing previews. The Resizing guide is now a Detents guide covering every detent type, including `auto` with scrollables, and the guides are sorted by title. The `truesheet-usage` skill now covers the `draggable` dim-tap caveat and confirming dismissals in the sheet navigator. ([#986](https://github.com/lodev09/react-native-true-sheet/pull/986), [#987](https://github.com/lodev09/react-native-true-sheet/pull/987) by [@lodev09](https://github.com/lodev09))
+- `npx skills add lodev09/react-native-true-sheet` now offers only the `truesheet-usage` skill; the internal `changelog`, `e2e`, and `preview` skills are hidden. ([#989](https://github.com/lodev09/react-native-true-sheet/pull/989) by [@lodev09](https://github.com/lodev09))
 
 ## 4.0.0
 
