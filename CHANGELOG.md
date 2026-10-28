@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: `present()` on a sheet that isn't in a window, such as on a screen that just regained focus but isn't back on screen yet, now logs a warning instead of only rejecting. Present it once the screen is visible, or use `initialDetentIndex`. ([#990](https://github.com/lodev09/react-native-true-sheet/pull/990) by [@lodev09](https://github.com/lodev09))
+
 ### 💡 Others
 
 - Add an internal `preview` agent skill for recording the example app with argent and rendering README GIFs and docs videos framed to each device's real screen corners, and use it to refresh the README, docs, and blog previews. ([#984](https://github.com/lodev09/react-native-true-sheet/pull/984), [#985](https://github.com/lodev09/react-native-true-sheet/pull/985) by [@lodev09](https://github.com/lodev09))
