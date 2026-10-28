@@ -1,6 +1,8 @@
 ---
 name: e2e
 description: End-to-end test TrueSheet on the iOS simulator, the Android emulator, and mobile web (Safari / Chrome) — build and install the bare example or serve the expo example on web, drive the repro screens with argent, A/B against HEAD, and collect hard evidence (per-frame pixel and dim tracking, onPositionChange realtime/settle logs, live prop overrides including mid-gesture, temporary native logs, forced timing races, crash triage, live viewport readouts on web). Use when asked to build and e2e on iOS, Android, or web, verify or review a change in ios/, android/, or the web sheet (src/web, *.web.tsx), reproduce a visual glitch (sheet, footer, or dim jumps, flicker, wrong height), check position or detent events, check web keyboard or visual-viewport behavior, test prop-update timing around present/dismiss/cancelled swipes, reproduce a race or crash, or decide whether a bug is a regression vs HEAD.
+metadata:
+  internal: true
 ---
 
 # E2E
