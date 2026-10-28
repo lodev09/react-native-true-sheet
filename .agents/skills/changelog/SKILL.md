@@ -1,6 +1,8 @@
 ---
 name: changelog
 description: Add, extend, or skip the CHANGELOG.md entry for a TrueSheet pull request — decide whether the change shipped, pick the section and platform, write the entry in the repo's style, credit the authors, and commit it to the PR branch. Use right after creating a PR, when asked to add or update a changelog entry, or when checking whether a PR needs one.
+metadata:
+  internal: true
 ---
 
 # Changelog

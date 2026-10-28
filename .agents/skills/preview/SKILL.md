@@ -1,6 +1,8 @@
 ---
 name: preview
 description: Record and render TrueSheet preview animations for the README, docs, and blog — drive the bare example on the iOS simulator, Android emulator, iPad, or mobile Safari with argent, record a clean screen capture, and render it into a light/dark GIF pair framed in a device for GitHub and a plain MP4 for the docs. Use when asked to create, update, or re-record a preview, demo GIF, feature GIF, or blog animation, or when a preview looks outdated or bad in dark mode.
+metadata:
+  internal: true
 ---
 
 # Preview
