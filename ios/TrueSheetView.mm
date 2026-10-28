@@ -570,6 +570,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   UIViewController *presentingViewController = [self findPresentingViewController];
   if (!presentingViewController) {
+    if (!self.window) {
+      RCTLogWarn(
+        @"TrueSheet: sheet is not in a window. Present it once its screen is visible, or use initialDetentIndex.");
+    }
+
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                          code:1001
                                      userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
