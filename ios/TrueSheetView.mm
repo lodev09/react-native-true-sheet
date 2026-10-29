@@ -1051,6 +1051,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     return;
   }
 
+  // Only a sheet still on screen is hidden by navigation; a closed one has nothing to hide.
+  if (!_controller.isPresented || _controller.isBeingDismissed) {
+    [_controller finishInteractiveDismissWithDuration:duration completion:nil];
+    return;
+  }
+
   _dismissedByNavigation = YES;
   __weak __typeof(self) weakSelf = self;
   [_controller finishInteractiveDismissWithDuration:duration
