@@ -7,9 +7,12 @@
 //
 
 #import "TrueSheetDimView.h"
+#import "TrueSheetBlurView.h"
+
+using namespace facebook::react;
 
 @implementation TrueSheetDimView {
-  UIVisualEffectView *_blurView;
+  TrueSheetBlurView *_blurView;
   // Paused at `fractionComplete` so the blur radius follows the dim, like a blur intensity.
   UIViewPropertyAnimator *_blurAnimator;
   CGFloat _dimAlpha;
@@ -21,6 +24,7 @@
   if (self = [super init]) {
     self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.alpha = 0;
+    _blur = TrueSheetViewBackgroundBlur::None;
     _blurIntensity = 1;
 
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
@@ -56,12 +60,12 @@
                    }];
 }
 
-- (void)setBlurStyle:(NSNumber *)blurStyle {
-  if (_blurStyle == blurStyle || (blurStyle && [_blurStyle isEqualToNumber:blurStyle])) {
+- (void)setBlur:(TrueSheetViewBackgroundBlur)blur {
+  if (_blur == blur) {
     return;
   }
 
-  _blurStyle = blurStyle;
+  _blur = blur;
   [self rebuildBlur];
 }
 
@@ -93,23 +97,20 @@
 - (void)rebuildBlur {
   [self teardownBlur];
 
-  if (!_blurStyle) {
+  if (_blur == TrueSheetViewBackgroundBlur::None) {
     [super setAlpha:_dimAlpha];
     return;
   }
 
-  _blurView = [[UIVisualEffectView alloc] initWithEffect:nil];
-  _blurView.frame = self.bounds;
-  _blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  _blurView.userInteractionEnabled = NO;
-  [self addSubview:_blurView];
+  _blurView = [[TrueSheetBlurView alloc] init];
+  _blurView.backgroundBlur = _blur;
+  [_blurView addToView:self];
 
-  UIBlurEffect *effect = [UIBlurEffect effectWithStyle:(UIBlurEffectStyle)[_blurStyle integerValue]];
-  __weak UIVisualEffectView *blurView = _blurView;
+  __weak TrueSheetBlurView *blurView = _blurView;
   _blurAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1
                                                              curve:UIViewAnimationCurveLinear
                                                         animations:^{
-                                                          blurView.effect = effect;
+                                                          [blurView applyBlurEffect];
                                                         }];
   _blurAnimator.pausesOnCompletion = YES;
 

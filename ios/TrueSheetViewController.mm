@@ -561,13 +561,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   if (self.dimBlur != TrueSheetViewBackgroundBlur::None) {
     _dimView.backgroundColor = [UIColor clearColor];
     _dimView.blurIntensity = opacity;
-    _dimView.blurStyle = @([BlurUtil blurEffectStyleFromEnum:self.dimBlur]);
   } else {
     // Keep opacity in the color so a transparent dim still receives touches.
     UIColor *color = self.dimColor ?: [UIColor blackColor];
-    _dimView.blurStyle = nil;
     _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
   }
+  _dimView.blur = self.dimBlur;
   [_dimView addToView:container];
 }
 
