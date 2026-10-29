@@ -27,6 +27,9 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
   var dismissThreshold: TrueSheetDismissThreshold = TrueSheetDismissThreshold.HALF
   var lowestSheetTop: (() -> Int)? = null
 
+  // Each detent's sheet top, with the state that settles the sheet there.
+  var detentStops: (() -> List<Pair<Int, Int>>)? = null
+
   private var nestedDragged = false
   private var nestedReleaseVelocity = 0f
   private var touchPointerId = MotionEvent.INVALID_POINTER_ID
@@ -49,18 +52,38 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     return handled
   }
 
+  private fun releaseState(child: V, dragged: Boolean, velocityY: Float): Int? {
+    if (!isDraggable || !dragged) return null
+    return shortReleaseState(child, velocityY) ?: flungState(child, velocityY)
+  }
+
   // With the short threshold, settle at or below the lowest detent like
   // Compose Material3's sheet instead of Material's half-height rule.
-  private fun releaseState(child: V, dragged: Boolean, velocityY: Float): Int? {
-    if (dismissThreshold != TrueSheetDismissThreshold.SHORT || !isDraggable || !dragged) return null
+  private fun shortReleaseState(child: V, velocityY: Float): Int? {
+    if (dismissThreshold != TrueSheetDismissThreshold.SHORT) return null
     val lowestTop = lowestSheetTop?.invoke() ?: return null
     if (child.top < lowestTop) return null
-    val hides = if (abs(velocityY) > DISMISS_VELOCITY_DP.dpToPx()) {
+    val hides = if (abs(velocityY) > FLING_VELOCITY_DP.dpToPx()) {
       velocityY > 0
     } else {
       child.top - lowestTop > DISMISS_DISTANCE_DP.dpToPx()
     }
     return if (hides && isHideable) STATE_HIDDEN else STATE_COLLAPSED
+  }
+
+  // A fling settles at the next detent the way it goes, like Compose Material3's sheet. Material
+  // settles a downward fling at whichever of its half and collapsed stops is nearer, and with two
+  // detents its half stop is the top one, so a fling down from there would settle back unless
+  // released past halfway.
+  private fun flungState(child: V, velocityY: Float): Int? {
+    if (abs(velocityY) <= FLING_VELOCITY_DP.dpToPx()) return null
+    val stops = detentStops?.invoke() ?: return null
+    val next = if (velocityY > 0) {
+      stops.filter { it.first > child.top }.minByOrNull { it.first }
+    } else {
+      stops.filter { it.first < child.top }.maxByOrNull { it.first }
+    }
+    return next?.second
   }
 
   override fun onStartNestedScroll(
@@ -126,7 +149,6 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
   }
 
   private fun trackTouch(event: MotionEvent) {
-    if (dismissThreshold != TrueSheetDismissThreshold.SHORT) return
     if (event.eventTime == trackedEventTime && event.actionMasked == trackedAction) return
     trackedEventTime = event.eventTime
     trackedAction = event.actionMasked
@@ -165,7 +187,7 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     private const val HIDE_FRICTION = 0.3f
 
     // Compose Material3 SheetState's velocity and positional thresholds
-    private const val DISMISS_VELOCITY_DP = 125f
+    private const val FLING_VELOCITY_DP = 125f
     private const val DISMISS_DISTANCE_DP = 56f
   }
 }
