@@ -290,7 +290,6 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.dimBlur == resolved) return
     viewController.dimBlur = resolved
     if (viewController.isPresented) {
-      if (resolved == null) viewController.clearBackgroundBlur()
       viewController.updateDimAmount()
     }
   }

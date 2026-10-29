@@ -47,6 +47,15 @@
   [parentView insertSubview:self atIndex:0];
 }
 
+// Crossfades a blur out at its current strength.
+- (void)fadeOutWithDuration:(NSTimeInterval)duration {
+  _dimAlpha = 0;
+  [UIView animateWithDuration:duration
+                   animations:^{
+                     [super setAlpha:0];
+                   }];
+}
+
 - (void)setBlurStyle:(NSNumber *)blurStyle {
   if (_blurStyle == blurStyle || (blurStyle && [_blurStyle isEqualToNumber:blurStyle])) {
     return;

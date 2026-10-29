@@ -935,10 +935,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // Dismissing with a child on top only animates the child out — this sheet
   // doesn't move and isn't part of that transition, so fade its dim over it.
   if (self.isBeingDismissed && self.presentedViewController) {
-    [UIView animateWithDuration:self.transitionCoordinator.transitionDuration
-                     animations:^{
-                       self->_dimView.alpha = 0;
-                     }];
+    [_dimView fadeOutWithDuration:self.transitionCoordinator.transitionDuration];
   }
 
   // A swipe can still be cancelled, so emit once it commits on release. Any

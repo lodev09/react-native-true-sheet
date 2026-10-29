@@ -28,6 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Adds the dim view behind everything in the presentation container
 - (void)addToView:(UIView *)parentView;
 
+/// Fades the dim out. Use instead of animating `alpha`, which sets the blur without animating it.
+- (void)fadeOutWithDuration:(NSTimeInterval)duration;
+
 @end
 
 NS_ASSUME_NONNULL_END
