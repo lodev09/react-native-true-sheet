@@ -565,9 +565,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     return;
   }
 
-  // Reset navigation dismiss flag when presenting (handles view recycling edge cases)
-  _dismissedByNavigation = NO;
-
   UIViewController *presentingViewController = [self findPresentingViewController];
   if (!presentingViewController) {
     if (!self.window) {
@@ -613,6 +610,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
                       }];
     return;
   }
+
+  // Reset navigation dismiss flag when presenting (handles view recycling edge cases).
+  // Not before a deferred present: until it runs, the sheet is still hidden by navigation.
+  _dismissedByNavigation = NO;
 
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
@@ -714,6 +715,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  // Hidden by navigation (dismissed with events suppressed, or waiting to be re-presented):
+  // JS still sees the sheet as open, so turn the hide into a real dismissal.
+  if (_dismissedByNavigation && (_controller.isBeingDismissed || !_controller.isPresented)) {
+    _dismissedByNavigation = NO;
+    [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
+    // Still animating out: viewControllerDidDismiss emits didDismiss when it lands.
+    if (!_controller.isBeingDismissed) {
+      [self cancelPendingPresent];
+      [self viewControllerDidDismiss];
+    }
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
   // Dismissing before a deferred present starts cancels it — nothing was presented.
   if ([self cancelPendingPresent]) {
     if (completion) {
@@ -1012,8 +1029,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 - (void)presenterScreenWillAppear {
   if (_dismissedByNavigation && !_controller.isPresented && !_controller.isBeingPresented) {
-    _dismissedByNavigation = NO;
-
     if (self.window) {
       [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
     } else {
