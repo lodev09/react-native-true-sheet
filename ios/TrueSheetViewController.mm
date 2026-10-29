@@ -884,20 +884,17 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_overlayDismissalTimer invalidate];
 
   __weak __typeof(self) weakSelf = self;
-  _overlayDismissalTimer =
-    [NSTimer scheduledTimerWithTimeInterval:0.25
-                                    repeats:YES
-                                      block:^(NSTimer *timer) {
-                                        __typeof(self) strongSelf = weakSelf;
-                                        if (strongSelf.isPresented && strongSelf.presentedViewController) {
-                                          return;
-                                        }
+  _overlayDismissalTimer = [NSTimer scheduledTimerWithTimeInterval:0.25
+                                                           repeats:YES
+                                                             block:^(NSTimer *timer) {
+                                                               __typeof(self) strongSelf = weakSelf;
+                                                               if (strongSelf.presentedViewController) {
+                                                                 return;
+                                                               }
 
-                                        [timer invalidate];
-                                        if (strongSelf.isPresented) {
-                                          [strongSelf setupAccessibilityContainer];
-                                        }
-                                      }];
+                                                               [timer invalidate];
+                                                               [strongSelf refreshAccessibilityContainer];
+                                                             }];
 }
 
 - (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion {
@@ -909,8 +906,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
                               // Reclaim the window accessibility override once nothing
                               // else is presented over us.
-                              if (self.isPresented && self.presentedViewController == nil) {
-                                [self setupAccessibilityContainer];
+                              if (self.presentedViewController == nil) {
+                                [self->_overlayDismissalTimer invalidate];
+                                [self refreshAccessibilityContainer];
                               }
                             }];
 }
