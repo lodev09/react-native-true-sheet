@@ -156,6 +156,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _dimmed = YES;
     _dimColor = nil;
     _dimOpacity = nil;
+    _dimBlur = facebook::react::TrueSheetViewBackgroundBlur::None;
     _dimmedDetentIndex = @(0);
     _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
@@ -511,7 +512,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 // UISheetPresentationController has no API for the dim's color or opacity, so a custom
 // color/opacity turns the native dim off and fades in our own view behind the sheet.
 - (BOOL)useCustomDimming {
-  return self.dimmed && (self.dimColor != nil || self.dimOpacity != nil);
+  return self.dimmed &&
+         (self.dimColor != nil || self.dimOpacity != nil || self.dimBlur != TrueSheetViewBackgroundBlur::None);
 }
 
 - (BOOL)isDimmedAtEveryDetent {
@@ -554,10 +556,18 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     };
   }
 
-  // Keep opacity in the color so a transparent dim still receives touches.
-  UIColor *color = self.dimColor ?: [UIColor blackColor];
   CGFloat opacity = self.dimOpacity ? [self.dimOpacity doubleValue] : 0.5;
-  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
+
+  if (self.dimBlur != TrueSheetViewBackgroundBlur::None) {
+    _dimView.backgroundColor = [UIColor clearColor];
+    _dimView.blurIntensity = opacity;
+    _dimView.blurStyle = @([BlurUtil blurEffectStyleFromEnum:self.dimBlur]);
+  } else {
+    // Keep opacity in the color so a transparent dim still receives touches.
+    UIColor *color = self.dimColor ?: [UIColor blackColor];
+    _dimView.blurStyle = nil;
+    _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
+  }
   [_dimView addToView:container];
 }
 

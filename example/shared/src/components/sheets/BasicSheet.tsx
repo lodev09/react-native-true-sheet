@@ -59,6 +59,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const [contentCount, setContentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
+  const [isDimBlurred, setIsDimBlurred] = useState(false);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const { dismissAll, dismissStack } = useTrueSheet();
@@ -111,6 +112,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       presentation="form"
       dimColor="#1b0a3c"
       dimOpacity={0.3}
+      dimBlur={isDimBlurred ? 'system-ultra-thin-material-dark' : undefined}
       grabberOptions={{
         width: 60,
       }}
@@ -176,6 +178,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <Button text="Show Toast" onPress={showToast} />
         <Button text="Show Dialog" onPress={() => setDialogVisible(true)} />
       </ButtonGroup>
+      <Button
+        text={`Dim Blur: ${isDimBlurred ? 'On' : 'Off'}`}
+        onPress={() => setIsDimBlurred((prev) => !prev)}
+      />
       <TrueSheetPeek />
       <Spacer />
       <Input />

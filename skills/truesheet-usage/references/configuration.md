@@ -149,6 +149,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 | `dimmed` | `boolean` | `true` | 🍎🤖🌐 | Show background dim overlay |
 | `dimColor` | `ColorValue` | `"black"` | 🍎🤖🌐 | Color of the dim overlay |
 | `dimOpacity` | `number` | `0.5` | 🍎🤖🌐 | Opacity of the dim overlay (0–1). `0` is invisible but still blocks touches — use `dimmed={false}` for background interaction. On iOS a custom `dimColor`/`dimOpacity` replaces the system dim with its own layer; stacked sheets each add one, darkening the background |
+| `dimBlur` | `BackgroundBlur` | `"none"` | 🍎🤖 | Blur the content behind the sheet instead of tinting it. `dimOpacity` sets blur intensity; the blur follows the sheet position. Android 12+ blurs, older Android only tints. Ignored when `dimmed={false}` |
 | `dimmedDetentIndex` | `number` | `0` | 🍎🤖🌐 | Detent index at which dimming activates. Set to `1` to keep background interactive at the first detent |
 
 ## Header and Footer

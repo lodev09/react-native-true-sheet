@@ -319,6 +319,28 @@ At `0`, the dim is invisible but still blocks touches to the background. Set [`d
 On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
 :::
 
+## `dimBlur`
+
+Blurs the content behind the sheet instead of tinting it with [`dimColor`](#dimcolor). It takes the same styles as [`backgroundBlur`](#backgroundblur). [`dimOpacity`](#dimopacity) sets the blur intensity at full dim, and the blur follows the sheet position like the dim does.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BackgroundBlur`](types#backgroundblur) | | ✅ | ✅ | |
+
+```tsx
+<TrueSheet dimBlur="system-ultra-thin-material-dark" dimOpacity={0.4}>
+  <View />
+</TrueSheet>
+```
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+:::note
+On Android, the blur needs Android 12 (API 31) or later. Earlier versions only tint the background. The tint is light or dark from the style's `-light` / `-dark` suffix, otherwise from the system theme.
+:::
+
 ## `dimmedDetentIndex`
 
 The detent index that the sheet should start to dim the background.

@@ -483,6 +483,14 @@ export interface TrueSheetProps extends ViewProps {
   dimOpacity?: number;
 
   /**
+   * Blurs the content behind the sheet instead of tinting it with `dimColor`.
+   * `dimOpacity` sets the blur intensity at full dim (0 to 1).
+   * Android 12+ blurs the app behind the sheet; earlier versions only tint it.
+   * This is ignored if `dimmed` is set to `false`.
+   */
+  dimBlur?: BackgroundBlur;
+
+  /**
    * Initially present the sheet, after mounting, at a given detent index.
    *
    * @note This property is only used during the initial mount.

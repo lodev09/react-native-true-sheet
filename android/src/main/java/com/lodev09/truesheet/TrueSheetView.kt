@@ -285,6 +285,16 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     }
   }
 
+  fun setDimBlur(tint: String?) {
+    val resolved = tint?.takeIf { it.isNotEmpty() && it != "none" }
+    if (viewController.dimBlur == resolved) return
+    viewController.dimBlur = resolved
+    if (viewController.isPresented) {
+      if (resolved == null) viewController.clearBackgroundBlur()
+      viewController.updateDimAmount()
+    }
+  }
+
   fun setDimmedDetentIndex(index: Int) {
     if (viewController.dimmedDetentIndex == index) return
     viewController.dimmedDetentIndex = index
