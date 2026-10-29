@@ -191,9 +191,9 @@ object TrueSheetStackManager {
   private var crossWindowBlurEnabled: Boolean? = null
 
   /**
-   * Whether a dim blur can render: Android 12+, unless the system turns window blurs off for
-   * battery saver, a device that can't keep up, or the user's settings. Presented dim blurs
-   * follow it as it changes.
+   * Whether a blur can render: Android 12+, unless the system turns window blurs off for
+   * battery saver, a device that can't keep up, or the user's settings. Presented sheets
+   * update their blurs as it changes.
    */
   @JvmStatic
   fun isBlurEnabled(context: Context): Boolean {
@@ -204,8 +204,8 @@ object TrueSheetStackManager {
     windowManager.addCrossWindowBlurEnabledListener { enabled ->
       crossWindowBlurEnabled = enabled
       synchronized(presentedSheetStack) { presentedSheetStack.toList() }
-        .filter { it.viewController.run { isPresented && dimBlur != null } }
-        .forEach { it.viewController.updateDimAmount() }
+        .filter { it.viewController.isPresented }
+        .forEach { it.viewController.updateBlurs() }
     }
     return windowManager.isCrossWindowBlurEnabled.also { crossWindowBlurEnabled = it }
   }
@@ -218,7 +218,7 @@ object TrueSheetStackManager {
    */
   @RequiresApi(Build.VERSION_CODES.S)
   @JvmStatic
-  fun updateBackgroundBlur() {
+  fun updateDimBlur() {
     synchronized(presentedSheetStack) {
       val sheetRadii = presentedSheetStack
         .mapNotNull { sheet -> sheet.viewController.run { coordinatorLayout?.let { it to dimBlurRadius } } }

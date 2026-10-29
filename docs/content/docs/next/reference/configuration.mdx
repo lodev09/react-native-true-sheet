@@ -338,7 +338,7 @@ This is ignored if `dimmed` is set to `false`.
 :::
 
 :::note
-On Android, the blur needs Android 12 (API 31) or later and follows the system's window blurs, which battery saver, devices that can't keep up, and the user's settings turn off. Without it, the background is only tinted. The tint is light or dark from the style's `-light` / `-dark` suffix, otherwise from the system theme.
+On Android, the blur needs Android 12 (API 31) or later and follows the system's window blurs, which battery saver, devices that can't keep up, and the user's settings turn off. Over the blur, it draws the tint of the matching iOS material, so the dim looks the same on both platforms. Without the blur, the background is only tinted.
 :::
 
 :::tip
