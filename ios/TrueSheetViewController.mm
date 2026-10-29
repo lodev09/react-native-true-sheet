@@ -118,6 +118,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   UIView *_anchorView;
 
   __weak UIWindow *_accessibilityWindow;
+  NSTimer *_overlayDismissalTimer;
   BOOL _appliedAccessibilityFooterElements;
 
   TrueSheetBlurView *_blurView;
@@ -184,6 +185,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (void)dealloc {
   [self restoreWindowAccessibilityElements];
+  [_overlayDismissalTimer invalidate];
   [_transitionLink invalidate];
   _transitionLink = nil;
   [_interactivePositionLink invalidate];
@@ -857,9 +859,45 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // override when it dismisses. Nested sheets claim their own override.
   if (![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]]) {
     self.view.window.accessibilityElements = nil;
+
+    // Start watching once the overlay is up. Some overlays (e.g. PHPickerViewController)
+    // present asynchronously, so presentedViewController is still nil right after this,
+    // and a watch left over from a previous overlay would reclaim too early.
+    [_overlayDismissalTimer invalidate];
+    void (^presentCompletion)(void) = completion;
+    completion = ^{
+      [self reclaimAccessibilityWhenOverlayDismisses];
+      if (presentCompletion) {
+        presentCompletion();
+      }
+    };
   }
 
   [super presentViewController:viewControllerToPresent animated:flag completion:completion];
+}
+
+// The reclaim in -dismissViewControllerAnimated: only runs when the dismissal goes
+// through us. An overlay that dismisses itself (e.g. an image picker calling dismiss
+// on itself) or is swiped away skips it, and no other callback reaches us, so poll
+// until nothing is presented over us.
+- (void)reclaimAccessibilityWhenOverlayDismisses {
+  [_overlayDismissalTimer invalidate];
+
+  __weak __typeof(self) weakSelf = self;
+  _overlayDismissalTimer =
+    [NSTimer scheduledTimerWithTimeInterval:0.25
+                                    repeats:YES
+                                      block:^(NSTimer *timer) {
+                                        __typeof(self) strongSelf = weakSelf;
+                                        if (strongSelf.isPresented && strongSelf.presentedViewController) {
+                                          return;
+                                        }
+
+                                        [timer invalidate];
+                                        if (strongSelf.isPresented) {
+                                          [strongSelf setupAccessibilityContainer];
+                                        }
+                                      }];
 }
 
 - (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion {
