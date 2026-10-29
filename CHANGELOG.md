@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- Added `dimBlur` to blur the content behind the sheet instead of tinting it with `dimColor`. It takes the `backgroundBlur` styles, and `dimOpacity` sets the blur intensity. Android blurs on Android 12 and later unless the system turns window blurs off, and only tints otherwise. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
 - **iOS**: `present()` on a sheet that isn't in a window, such as on a screen that just regained focus but isn't back on screen yet, now logs a warning instead of only rejecting. Present it once the screen is visible, or use `initialDetentIndex`. ([#990](https://github.com/lodev09/react-native-true-sheet/pull/990) by [@lodev09](https://github.com/lodev09))
