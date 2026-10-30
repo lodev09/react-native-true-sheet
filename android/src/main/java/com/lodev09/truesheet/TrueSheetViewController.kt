@@ -235,6 +235,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override var placement: TrueSheetPlacement = TrueSheetPlacement.AUTOMATIC
   override var placementOffset: Int = DEFAULT_PLACEMENT_OFFSET.dpToPx().toInt()
   override var detents: MutableList<Double> = mutableListOf(0.5, 1.0)
+    set(value) {
+      val oldDetents = field
+      field = value
+      if (value != oldDetents) keepDetentIndices(oldDetents)
+    }
 
   // Appearance Configuration
   var dimmed = true
@@ -1601,6 +1606,32 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // =============================================================================
   // MARK: - Detent Helpers
   // =============================================================================
+
+  // Detents added or removed around the sheet's detent keep the sheet there, at
+  // its new index; removing the detent itself falls back to the same index
+  private fun keepDetentIndices(oldDetents: List<Double>) {
+    if (!isPresented) return
+
+    fun indexInDetents(index: Int): Int {
+      if (index !in oldDetents.indices) return index
+      val newIndex = detents.indexOf(oldDetents[index])
+      return if (newIndex >= 0) newIndex else minOf(index, detents.size - 1)
+    }
+
+    val knownIndex = knownDetentIndex
+    pendingDetentIndex = indexInDetents(pendingDetentIndex)
+    // The keyboard holds the sheet at the last detent
+    currentDetentIndex = if (detentIndexBeforeKeyboard >= 0) detents.size - 1 else indexInDetents(currentDetentIndex)
+    detentIndexBeforeKeyboard = indexInDetents(detentIndexBeforeKeyboard)
+
+    // A resize or fling in flight reports its detent once it settles
+    val index = knownDetentIndex
+    if (index == knownIndex || isSettling || isBeingDismissed) return
+    val sheetView = sheetView ?: return
+    val detent = detentCalculator.getDetentValueForIndex(index)
+    delegate?.viewControllerDidChangeDetent(index, getPositionDpForView(sheetView), detent)
+    sheetView.updateGrabberAccessibilityValue(index, detents.size)
+  }
 
   fun updateBehaviorMaxWidth() {
     val behavior = this.behavior ?: return

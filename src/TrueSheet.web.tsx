@@ -196,12 +196,18 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
   );
 
-  // Keep activeSnapPoint valid if detents change (e.g., prop updates).
+  // Detents added or removed around the active detent keep the sheet there;
+  // removing the detent itself falls back to the same index, like native.
+  const prevValidDetentsRef = useRef(validDetents);
   useEffect(() => {
+    const prevDetents = prevValidDetentsRef.current;
+    prevValidDetentsRef.current = validDetents;
     if (validDetents.length === 0) return;
-    setActiveSnapPoint((current) =>
-      current != null && validDetents.includes(current) ? current : validDetents[0]!
-    );
+    setActiveSnapPoint((current) => {
+      if (current != null && validDetents.includes(current)) return current;
+      const index = current != null ? prevDetents.indexOf(current) : -1;
+      return validDetents[Math.min(Math.max(index, 0), validDetents.length - 1)]!;
+    });
   }, [validDetents]);
 
   const validDetentsRef = useRef(validDetents);
@@ -887,16 +893,21 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, computeDetentInfo]);
 
-  // Fire onDetentChange only while open→open. Present/dismiss have their own
-  // events and carry detent info via onDidPresent, so we skip those edges.
-  const detentChangeStateRef = useRef({ isOpen, activeSnapPoint });
+  // Fire onDetentChange only while open→open, whenever the index changes —
+  // including detents added or removed around the active one. Present/dismiss
+  // have their own events and carry detent info via onDidPresent, so we skip
+  // those edges.
+  const activeDetentIndex = activeSnapPoint != null ? validDetents.indexOf(activeSnapPoint) : -1;
+  const detentChangeStateRef = useRef({ isOpen, activeDetentIndex });
   useEffect(() => {
+    // A removed active detent reads -1 until its fallback lands
+    if (isOpen && activeDetentIndex < 0) return;
     const prev = detentChangeStateRef.current;
-    detentChangeStateRef.current = { isOpen, activeSnapPoint };
+    detentChangeStateRef.current = { isOpen, activeDetentIndex };
     if (!prev.isOpen || !isOpen) return;
-    if (prev.activeSnapPoint === activeSnapPoint) return;
+    if (prev.activeDetentIndex === activeDetentIndex) return;
     onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
-  }, [isOpen, activeSnapPoint, computeDetentInfo]);
+  }, [isOpen, activeDetentIndex, computeDetentInfo]);
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.

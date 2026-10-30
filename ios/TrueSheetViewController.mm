@@ -84,6 +84,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _autoDetentHeight;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
+  // Resizes past their layout, waiting to report the detent change
+  NSInteger _scheduledDetentChangeCount;
   NSInteger _displayedBackgroundIndex;
   BOOL _usesBackgroundEffects;
   BOOL _refusedPanDismiss;
@@ -445,6 +447,43 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return value.boolValue;
   }
   return NO;
+}
+
+// Detents added or removed around the sheet's detent keep the sheet there, at
+// its new index; removing the detent itself falls back to the same index.
+// Also runs while hidden by navigation, which re-presents at the active index.
+- (void)setDetents:(NSArray<NSNumber *> *)detents {
+  NSArray<NSNumber *> *oldDetents = _detents;
+  _detents = detents;
+
+  if ([detents isEqualToArray:oldDetents]) {
+    return;
+  }
+
+  NSInteger index = [self indexForDetentIndex:_activeDetentIndex inDetents:oldDetents];
+  _pendingDetentIndex = [self indexForDetentIndex:_pendingDetentIndex inDetents:oldDetents];
+  _hingeRestoreIndex = [self indexForDetentIndex:_hingeRestoreIndex inDetents:oldDetents];
+
+  if (index == _activeDetentIndex) {
+    return;
+  }
+  _activeDetentIndex = index;
+
+  // A resize in flight reports its target once it lands
+  if (_isPresented && !self.isBeingDismissed && _pendingDetentIndex < 0 && _scheduledDetentChangeCount == 0) {
+    CGFloat detent = [self detentValueForIndex:index];
+    [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+    [_grabberView updateAccessibilityValueWithIndex:index detentCount:detents.count];
+  }
+}
+
+- (NSInteger)indexForDetentIndex:(NSInteger)index inDetents:(NSArray<NSNumber *> *)oldDetents {
+  if (index < 0 || index >= (NSInteger)oldDetents.count) {
+    return index;
+  }
+
+  NSUInteger newIndex = [_detents indexOfObject:oldDetents[index]];
+  return newIndex != NSNotFound ? (NSInteger)newIndex : MIN(index, (NSInteger)_detents.count - 1);
 }
 
 - (NSInteger)currentDetentIndex {
@@ -1107,15 +1146,20 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   if (_pendingDetentIndex >= 0) {
     NSInteger pendingIndex = _pendingDetentIndex;
+    NSArray<NSNumber *> *detents = _detents;
     _pendingDetentIndex = -1;
+    _scheduledDetentChangeCount++;
 
     // The presentedView frame isn't final until UIKit finishes the resize
     // animation — no completion hook exists for it, hence the delay.
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      CGFloat detent = [self detentValueForIndex:pendingIndex];
-      [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-      [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
-      [self settleAtDetentIndex:pendingIndex debug:@"pending detent change"];
+      self->_scheduledDetentChangeCount--;
+      // Detents changed meanwhile keep the target detent, not its old index
+      NSInteger index = [self indexForDetentIndex:pendingIndex inDetents:detents];
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+      [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
+      [self settleAtDetentIndex:index debug:@"pending detent change"];
     });
   }
 }
