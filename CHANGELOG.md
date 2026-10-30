@@ -8,6 +8,7 @@
 - **iOS**: Closing an image picker presented over a sheet no longer leaves the sheet's content hidden from VoiceOver and UI tests. ([#994](https://github.com/lodev09/react-native-true-sheet/pull/994) by [@erickreutz](https://github.com/erickreutz))
 - **iOS**: Closing a sheet route, `dismiss()`, or `TrueSheet.dismissAll()` while the sheet's screen is covered by a pushed screen now dismisses the sheet, instead of it coming back unclosable when the screen reappears. ([#993](https://github.com/lodev09/react-native-true-sheet/pull/993) by [@wildseansy](https://github.com/wildseansy) and [@lodev09](https://github.com/lodev09))
 - **Android**: A fling now settles the sheet at the next detent in its direction, like iOS and Compose Material3's sheet. A fling down from the middle of three detents, or from the top of two, used to settle back unless released past halfway. ([#996](https://github.com/lodev09/react-native-true-sheet/pull/996) by [@philiplindberg](https://github.com/philiplindberg))
+- Changing `detents` while the sheet is presented now keeps it at the same detent, at its new index, and fires `onDetentChange` when the index changes. Adding or removing a detent below the current one no longer moves the sheet. If the current detent is removed, the sheet moves to the detent now at the same index. ([#999](https://github.com/lodev09/react-native-true-sheet/pull/999) by [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 
