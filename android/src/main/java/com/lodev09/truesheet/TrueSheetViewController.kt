@@ -960,9 +960,6 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     behavior.scrollingExpandsSheet = scrollableOptions?.scrollingExpandsSheet ?: true
     behavior.dismissThreshold = dismissThreshold
     behavior.lowestSheetTop = { detentCalculator.getLowestSheetTop() }
-    behavior.detentStops = {
-      detents.indices.map { detentCalculator.getSheetTopForDetentIndex(it) to detentCalculator.getStateForDetentIndex(it) }
-    }
     behavior.state = BottomSheetBehavior.STATE_HIDDEN
     behavior.addBottomSheetCallback(sheetCallback)
 

@@ -27,12 +27,8 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
   var dismissThreshold: TrueSheetDismissThreshold = TrueSheetDismissThreshold.HALF
   var lowestSheetTop: (() -> Int)? = null
 
-  // Each detent's sheet top, with the state that settles the sheet there.
-  var detentStops: (() -> List<Pair<Int, Int>>)? = null
-
   private var nestedDragged = false
   private var nestedReleaseVelocity = 0f
-  private var touchPointerId = MotionEvent.INVALID_POINTER_ID
   private var trackedEventTime = -1L
   private var trackedAction = -1
   private var velocityTracker: VelocityTracker? = null
@@ -52,9 +48,9 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     return handled
   }
 
-  private fun releaseState(child: V, dragged: Boolean, velocityY: Float): Int? {
+  private fun releaseState(child: V, dragged: Boolean, velocityX: Float, velocityY: Float): Int? {
     if (!isDraggable || !dragged) return null
-    return shortReleaseState(child, velocityY) ?: flungState(child, velocityY)
+    return shortReleaseState(child, velocityY) ?: flungState(child, velocityX, velocityY)
   }
 
   // With the short threshold, settle at or below the lowest detent like
@@ -72,18 +68,17 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
   }
 
   // A fling settles at the next detent the way it goes, like Compose Material3's sheet. Material
-  // settles a downward fling at whichever of its half and collapsed stops is nearer, and with two
-  // detents its half stop is the top one, so a fling down from there would settle back unless
-  // released past halfway.
-  private fun flungState(child: V, velocityY: Float): Int? {
-    if (abs(velocityY) <= FLING_VELOCITY_DP.dpToPx()) return null
-    val stops = detentStops?.invoke() ?: return null
-    val next = if (velocityY > 0) {
-      stops.filter { it.first > child.top }.minByOrNull { it.first }
-    } else {
-      stops.filter { it.first < child.top }.maxByOrNull { it.first }
-    }
-    return next?.second
+  // already does, except that it settles a downward fling between its half and collapsed stops
+  // at the nearer one, so a fling down from the half stop (the top one with two detents) would
+  // settle back unless released past halfway. Below the collapsed stop the dismiss threshold decides.
+  private fun flungState(child: V, velocityX: Float, velocityY: Float): Int? {
+    if (isFitToContents || velocityY <= FLING_VELOCITY_DP.dpToPx() || abs(velocityX) > velocityY) return null
+    // Material's half and collapsed offsets, from the inputs it computes them with
+    val parentHeight = (child.parent as View).height
+    val halfTop = (parentHeight * (1 - halfExpandedRatio)).toInt()
+    val collapsedTop = parentHeight - peekHeight
+    val settlesBack = child.top >= halfTop && child.top - halfTop < collapsedTop - child.top
+    return if (settlesBack) STATE_COLLAPSED else null
   }
 
   override fun onStartNestedScroll(
@@ -131,7 +126,7 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     velocityY: Float
   ): Boolean {
     nestedReleaseVelocity = -velocityY
-    if (releaseState(child, nestedDragged, nestedReleaseVelocity) != null) return true
+    if (releaseState(child, nestedDragged, 0f, nestedReleaseVelocity) != null) return true
     // Don't consume flings — let the ScrollView decelerate naturally
     if (!scrollingExpandsSheet) return false
     return super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)
@@ -139,7 +134,7 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
 
   override fun onStopNestedScroll(coordinatorLayout: CoordinatorLayout, child: V, target: View, type: Int) {
     if (type == ViewCompat.TYPE_TOUCH) {
-      releaseState(child, nestedDragged, nestedReleaseVelocity)?.let {
+      releaseState(child, nestedDragged, 0f, nestedReleaseVelocity)?.let {
         nestedDragged = false
         state = it
         return
@@ -155,7 +150,6 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
       velocityTracker?.recycle()
       velocityTracker = VelocityTracker.obtain()
-      touchPointerId = event.getPointerId(0)
     }
     velocityTracker?.addMovement(event)
   }
@@ -169,12 +163,15 @@ class TrueSheetBottomSheetBehavior<V : View> : BottomSheetBehavior<V>() {
     trackTouch(event)
     val wasDragging = state == STATE_DRAGGING
     val handled = super.onTouchEvent(parent, child, event)
-    if (event.actionMasked == MotionEvent.ACTION_UP) {
-      val velocityY = velocityTracker?.run {
-        computeCurrentVelocity(1000)
-        getYVelocity(touchPointerId)
-      } ?: 0f
-      releaseState(child, wasDragging, velocityY)?.let { state = it }
+    // Material releases the sheet when its dragging pointer lifts, which isn't always the
+    // first one down, and can lift before the others
+    val lifted = event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_POINTER_UP
+    if (lifted && wasDragging && state != STATE_DRAGGING) {
+      val pointerId = event.getPointerId(event.actionIndex)
+      velocityTracker?.computeCurrentVelocity(1000)
+      val velocityX = velocityTracker?.getXVelocity(pointerId) ?: 0f
+      val velocityY = velocityTracker?.getYVelocity(pointerId) ?: 0f
+      releaseState(child, true, velocityX, velocityY)?.let { state = it }
     }
     if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
       velocityTracker?.recycle()
