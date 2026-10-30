@@ -689,6 +689,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   return _controller;
 }
 
+// Gone or still animating out. A sheet still animating in isn't hidden yet.
+- (BOOL)isHiddenByNavigation {
+  return _dismissedByNavigation &&
+         (_controller.isBeingDismissed || (!_controller.isPresented && !_controller.isBeingPresented));
+}
+
 - (void)emitDismissedPosition {
   [TrueSheetStateEvents emitPositionChange:_eventEmitter
                                      index:-1
@@ -715,18 +721,23 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
-  // Hidden by navigation (dismissed with events suppressed, or waiting to be re-presented):
-  // JS still sees the sheet as open, so turn the hide into a real dismissal. A sheet still
-  // animating in isn't hidden yet; the regular path waits for it to land.
-  if (_dismissedByNavigation &&
-      (_controller.isBeingDismissed || (!_controller.isPresented && !_controller.isBeingPresented))) {
+  // JS still sees a sheet hidden by navigation as open, so turn the hide into a real dismissal.
+  if (self.isHiddenByNavigation) {
     _dismissedByNavigation = NO;
     [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
-    // Still animating out: viewControllerDidDismiss emits didDismiss when it lands.
-    if (!_controller.isBeingDismissed) {
-      [self cancelPendingPresent];
-      [self viewControllerDidDismiss];
+
+    // Still animating out: viewControllerDidDismiss emits didDismiss when it lands, then resolve.
+    if (_controller.isBeingDismissed) {
+      TrueSheetRunAfterTransition(_controller, ^{
+        if (completion) {
+          completion(YES, nil);
+        }
+      });
+      return;
     }
+
+    [self cancelPendingPresent];
+    [self viewControllerDidDismiss];
     if (completion) {
       completion(YES, nil);
     }
