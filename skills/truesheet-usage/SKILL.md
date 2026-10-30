@@ -380,7 +380,7 @@ The most commonly used events:
 | `onDidPresent` | Sheet finished presenting | `{ index, position, detent }` |
 | `onDidDismiss` | Sheet finished dismissing | — |
 | `onDismissAttempt` | User tried to dismiss while `dismissible={false}` | — |
-| `onDetentChange` | User dragged or `resize()` changed the detent | `{ index, position, detent }` |
+| `onDetentChange` | A drag, `resize()`, or a `detents` change moved the sheet to another detent or index | `{ index, position, detent }` |
 | `onPositionChange` | Continuous position updates during drag/animation | `{ index, position, detent, realtime }` |
 
 For the full event list (drag events, focus/blur events, will/did lifecycle pairs, `onBackPress`), see the [API reference](./references/api.md#events).

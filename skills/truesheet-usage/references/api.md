@@ -78,7 +78,7 @@ These fire in pairs — "will" before the animation and "did" after.
 
 | Event | Payload | When |
 |-------|---------|------|
-| `onDetentChange` | `DetentInfoEventPayload` | Detent changed (via drag or `resize()`) |
+| `onDetentChange` | `DetentInfoEventPayload` | Detent or its index changed (drag, `resize()`, or a `detents` change) |
 | `onDragBegin` | `DetentInfoEventPayload` | User started dragging |
 | `onDragChange` | `DetentInfoEventPayload` | User is currently dragging |
 | `onDragEnd` | `DetentInfoEventPayload` | User stopped dragging |

@@ -18,6 +18,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
 - [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
 - [Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)](#sheet-screen-crashes-screencontainer-is-not-attached-under-reactrootview-android)
+- [Sheet lands on the wrong detent after changing detents](#sheet-lands-on-the-wrong-detent-after-changing-detents)
 - ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
 - [@expo/ui Host opens small, then grows](#expoui-host-opens-small-then-grows)
 - [Keyboard hides input](#keyboard-hides-input)
@@ -180,6 +181,25 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** A `react-native-screens` container (native stack, bottom tabs, drawer) is rendered inside a sheet screen or overlay. Sheets and overlays render outside the app's root view, where `react-native-screens` can't attach.
 
 **Fix:** Keep native stacks in the base screen (the first screen is a regular view, so wrapping your app there works). Don't nest them in sheet screens or overlays. For multi-step flows inside a sheet, make each step its own sheet screen (Expo Router: sibling routes under the `Sheet` layout, no nested `_layout.tsx` with `<Stack>`). See [Advanced Patterns: Nesting navigators](./advanced-patterns.md#nesting-navigators).
+
+## Sheet lands on the wrong detent after changing detents
+
+**Symptom:** After changing `detents` while the sheet is presented, a `resize()` lands on the wrong detent, or `detentBackgrounds`/`dimmedDetentIndex` apply to the wrong one.
+
+**Cause:** The sheet keeps its detent through a `detents` change (its index may shift). A `resize()` or `present()` called right after the change can reach the native sheet first and run against the old detents — on Android even from an effect. Index-based props don't follow along.
+
+**Fix:** Defer the call so the new detents land first, and change index-based props with `detents`:
+
+```tsx
+const detents: SheetDetent[] = hasPeek ? ['peek', 0.45, 1] : [0.45, 1]
+
+const showPlace = () => {
+  setHasPeek(true)
+  setTimeout(() => sheet.current?.resize(2))
+}
+
+return <TrueSheet ref={sheet} detents={detents} dimmedDetentIndex={detents.indexOf(1)} />
+```
 
 ## 'auto' detent is too short or wrong on first present
 
