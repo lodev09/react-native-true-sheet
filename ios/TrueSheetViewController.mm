@@ -498,7 +498,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (NSInteger)indexForDetentIndex:(NSInteger)index inDetents:(NSArray<NSNumber *> *)oldDetents {
-  if (index < 0 || index >= (NSInteger)oldDetents.count) {
+  if (index < 0 || index >= (NSInteger)oldDetents.count || [oldDetents isEqualToArray:_detents]) {
     return index;
   }
 

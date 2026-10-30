@@ -1671,7 +1671,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun indexInDetents(index: Int, oldDetents: List<Double>): Int {
-    if (index !in oldDetents.indices) return index
+    if (oldDetents == detents || index !in oldDetents.indices) return index
     val newIndex = detents.indexOf(oldDetents[index])
     return if (newIndex >= 0) newIndex else minOf(index, detents.size - 1)
   }

@@ -203,6 +203,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const prevDetents = prevValidDetentsRef.current;
     prevValidDetentsRef.current = validDetents;
     if (validDetents.length === 0) return;
+    // A new array with the same detents (e.g. inline) changes nothing
+    if (
+      prevDetents.length === validDetents.length &&
+      prevDetents.every((detent, index) => detent === validDetents[index])
+    ) {
+      return;
+    }
     const indexInDetents = (index: number) => {
       const newIndex = validDetents.indexOf(prevDetents[index]!);
       return newIndex >= 0 ? newIndex : Math.min(Math.max(index, 0), validDetents.length - 1);
