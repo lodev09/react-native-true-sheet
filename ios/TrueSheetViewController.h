@@ -80,6 +80,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) UIColor *dimColor;
 @property (nonatomic, strong, nullable) NSNumber *dimOpacity;
+@property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur dimBlur;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPresentation presentation;

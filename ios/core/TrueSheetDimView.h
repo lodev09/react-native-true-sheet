@@ -7,11 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <react/renderer/components/TrueSheetSpec/Props.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Dim behind the sheet for a custom color or opacity, which
+ * Dim behind the sheet for a custom color, opacity, or blur, which
  * UISheetPresentationController has no API for. Starts hidden.
  */
 @interface TrueSheetDimView : UIView
@@ -19,8 +20,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// Called when the dim is tapped
 @property (nonatomic, copy, nullable) void (^onTap)(void);
 
+/// Blur shown instead of the background color. `None` dims with the color.
+@property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur blur;
+
+/// Blur strength at full dim, from 0 to 1. `alpha` scales it while the sheet moves.
+@property (nonatomic, assign) CGFloat blurIntensity;
+
 /// Adds the dim view behind everything in the presentation container
 - (void)addToView:(UIView *)parentView;
+
+/// Fades the dim out. Use instead of animating `alpha`, which sets the blur without animating it.
+- (void)fadeOutWithDuration:(NSTimeInterval)duration;
 
 @end
 

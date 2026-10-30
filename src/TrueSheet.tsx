@@ -630,6 +630,7 @@ export class TrueSheet
       dimmed = true,
       dimColor,
       dimOpacity,
+      dimBlur,
       initialDetentIndex = -1,
       initialDetentAnimated = true,
       dimmedDetentIndex,
@@ -745,6 +746,7 @@ export class TrueSheet
         dimmed={dimmed}
         dimColor={dimColor}
         dimOpacity={dimOpacity}
+        dimBlur={dimBlur}
         dimmedDetentIndex={dimmedDetentIndex}
         initialDetentIndex={gatedInitialDetentIndex}
         initialDetentAnimated={initialDetentAnimated}

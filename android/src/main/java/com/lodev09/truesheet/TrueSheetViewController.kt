@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
@@ -28,6 +29,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
+import com.lodev09.truesheet.core.TrueSheetBlurStyle
 import com.lodev09.truesheet.core.TrueSheetBottomSheetBehavior
 import com.lodev09.truesheet.core.TrueSheetBottomSheetView
 import com.lodev09.truesheet.core.TrueSheetBottomSheetViewDelegate
@@ -45,6 +47,7 @@ import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
+import com.lodev09.truesheet.utils.isDarkMode
 import kotlin.math.roundToInt
 
 // =============================================================================
@@ -126,6 +129,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   companion object {
     const val DEFAULT_DIM_OPACITY = 0.5f
+    private const val MAX_DIM_BLUR_RADIUS = 50 // dp, at dimOpacity 1
     private const val DEFAULT_MAX_WIDTH = 640 // dp
     private const val DEFAULT_CORNER_RADIUS = 16 // dp
     private const val DEFAULT_PLACEMENT_OFFSET = 16 // dp
@@ -241,6 +245,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var dimmedDetentIndex = 0
   var dimColor: Int = Color.BLACK
   var dimOpacity: Float = DEFAULT_DIM_OPACITY
+
+  // Blur style name shared with iOS. Non-null blurs the views behind the sheet instead of tinting them.
+  var dimBlur: TrueSheetBlurStyle? = null
+  var dimBlurRadius = 0f
+    private set
+  private var dimBlurAnimator: ValueAnimator? = null
   private var dimProgress = 0f
   override var grabber: Boolean = true
   override var grabberOptions: GrabberOptions? = null
@@ -468,6 +478,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     sheetView?.animate()?.cancel()
 
     // Cleanup dim views
+    applyDimBlur(0f, animated = false)
     dimView?.detach()
     dimView = null
     parentDimView?.detach()
@@ -844,6 +855,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     TrueSheetStackManager.updateBackgroundAccessibility()
     delegate?.viewControllerDidChangeVisibility(false)
     dimViews.forEach { it.animate().alpha(0f).setDuration(SCREEN_FADE_DURATION).start() }
+    applyDimBlur(0f, animated = true)
     sheet.animate()
       .alpha(0f)
       .setDuration(SCREEN_FADE_DURATION)
@@ -1216,6 +1228,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         parentDimView?.attach(parentBottomSheet, parentController.sheetCornerRadius)
       }
     } else {
+      applyDimBlur(0f, animated = false)
       dimView?.detach()
       dimView = null
       parentDimView?.detach()
@@ -1250,22 +1263,27 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     }
   }
 
+  /** Re-renders this sheet's blurs, e.g. after the system turns window blurs on or off. */
+  fun updateBlurs() {
+    if (dimBlur != null) updateDimAmount()
+  }
+
   /**
    * Dims by this sheet's progress, blending in the dim of the sheets presented on top by theirs,
-   * so everything below the topmost sheet dims with its color and opacity.
+   * so everything below the topmost sheet dims with its tint.
    */
   private fun applyDimAmount(animated: Boolean) {
     if (!dimmed) return
 
-    var color = dimColor
-    var opacity = dimOpacity
+    var (color, opacity) = dimTint()
     (delegate as? TrueSheetView)?.let { hostView ->
       TrueSheetStackManager.getSheetsAbove(hostView).asReversed().forEach {
         val child = it.viewController
         if (!child.dimmed) return@forEach
+        val (childColor, childOpacity) = child.dimTint()
         val below = (1f - child.dimProgress) * opacity
-        val above = child.dimProgress * child.dimOpacity
-        if (below + above > 0f) color = ColorUtils.blendARGB(color, child.dimColor, above / (below + above))
+        val above = child.dimProgress * childOpacity
+        if (below + above > 0f) color = ColorUtils.blendARGB(color, childColor, above / (below + above))
         opacity = below + above
       }
     }
@@ -1276,6 +1294,44 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       it.setDimColor(color)
       if (animated) it.animate().alpha(dimProgress).setDuration(200).start() else it.alpha = dimProgress
     }
+
+    // A sheet hidden by screen navigation stops blurring the screen that covers it
+    val isBlurring = dimBlur != null && isSheetVisible && TrueSheetStackManager.isBlurEnabled(reactContext)
+    applyDimBlur(if (isBlurring) dimProgress * dimOpacity * MAX_DIM_BLUR_RADIUS.dpToPx() else 0f, animated)
+  }
+
+  /**
+   * The dim's color and opacity. A dim blur draws its style's tint instead, scaled by `dimOpacity`
+   * like the iOS material. When the blur can't render, the tint's color dims like `dimColor`.
+   */
+  private fun dimTint(): Pair<Int, Float> {
+    val tint = dimBlur?.tint(reactContext.isDarkMode) ?: return dimColor to dimOpacity
+    if (TrueSheetStackManager.isBlurEnabled(reactContext)) return tint to dimOpacity
+    return ColorUtils.setAlphaComponent(tint, 255) to dimOpacity
+  }
+
+  private fun applyDimBlur(radius: Float, animated: Boolean) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+    dimBlurAnimator?.cancel()
+    dimBlurAnimator = null
+    if (!animated || radius == dimBlurRadius) {
+      setDimBlurRadius(radius)
+      return
+    }
+
+    dimBlurAnimator = ValueAnimator.ofFloat(dimBlurRadius, radius).apply {
+      duration = 200
+      addUpdateListener { setDimBlurRadius(it.animatedValue as Float) }
+      start()
+    }
+  }
+
+  @RequiresApi(Build.VERSION_CODES.S)
+  private fun setDimBlurRadius(radius: Float) {
+    if (radius == dimBlurRadius) return
+    dimBlurRadius = radius
+    TrueSheetStackManager.updateDimBlur()
   }
 
   // =============================================================================

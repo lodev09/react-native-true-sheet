@@ -157,6 +157,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _dimmed = YES;
     _dimColor = nil;
     _dimOpacity = nil;
+    _dimBlur = facebook::react::TrueSheetViewBackgroundBlur::None;
     _dimmedDetentIndex = @(0);
     _presentation = facebook::react::TrueSheetViewPresentation::Page;
     _lastEmittedPositionState = (TrueSheetPositionState){0, 0, 0};
@@ -513,7 +514,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 // UISheetPresentationController has no API for the dim's color or opacity, so a custom
 // color/opacity turns the native dim off and fades in our own view behind the sheet.
 - (BOOL)useCustomDimming {
-  return self.dimmed && (self.dimColor != nil || self.dimOpacity != nil);
+  return self.dimmed &&
+         (self.dimColor != nil || self.dimOpacity != nil || self.dimBlur != TrueSheetViewBackgroundBlur::None);
 }
 
 - (BOOL)isDimmedAtEveryDetent {
@@ -556,10 +558,17 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     };
   }
 
-  // Keep opacity in the color so a transparent dim still receives touches.
-  UIColor *color = self.dimColor ?: [UIColor blackColor];
   CGFloat opacity = self.dimOpacity ? [self.dimOpacity doubleValue] : 0.5;
-  _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
+
+  if (self.dimBlur != TrueSheetViewBackgroundBlur::None) {
+    _dimView.backgroundColor = [UIColor clearColor];
+    _dimView.blurIntensity = opacity;
+  } else {
+    // Keep opacity in the color so a transparent dim still receives touches.
+    UIColor *color = self.dimColor ?: [UIColor blackColor];
+    _dimView.backgroundColor = [color colorWithAlphaComponent:CGColorGetAlpha(color.CGColor) * opacity];
+  }
+  _dimView.blur = self.dimBlur;
   [_dimView addToView:container];
 }
 
@@ -961,10 +970,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // Dismissing with a child on top only animates the child out — this sheet
   // doesn't move and isn't part of that transition, so fade its dim over it.
   if (self.isBeingDismissed && self.presentedViewController) {
-    [UIView animateWithDuration:self.transitionCoordinator.transitionDuration
-                     animations:^{
-                       self->_dimView.alpha = 0;
-                     }];
+    [_dimView fadeOutWithDuration:self.transitionCoordinator.transitionDuration];
   }
 
   // A swipe can still be cancelled, so emit once it commits on release. Any

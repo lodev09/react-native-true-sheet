@@ -1,7 +1,13 @@
 package com.lodev09.truesheet.core
 
+import android.content.Context
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import com.lodev09.truesheet.TrueSheetView
 
 /**
@@ -177,6 +183,67 @@ object TrueSheetStackManager {
           savedBackgroundImportance[child] = child.importantForAccessibility
         }
         child.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+      }
+    }
+  }
+
+  private val blurredViews = HashMap<View, Float>()
+  private var crossWindowBlurEnabled: Boolean? = null
+
+  /**
+   * Whether a blur can render: Android 12+, unless the system turns window blurs off for
+   * battery saver, a device that can't keep up, or the user's settings. Presented sheets
+   * update their blurs as it changes.
+   */
+  @JvmStatic
+  fun isBlurEnabled(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+    crossWindowBlurEnabled?.let { return it }
+
+    val windowManager = context.getSystemService(WindowManager::class.java)
+    windowManager.addCrossWindowBlurEnabledListener { enabled ->
+      crossWindowBlurEnabled = enabled
+      synchronized(presentedSheetStack) { presentedSheetStack.toList() }
+        .filter { it.viewController.isPresented }
+        .forEach { it.viewController.updateBlurs() }
+    }
+    return windowManager.isCrossWindowBlurEnabled.also { crossWindowBlurEnabled = it }
+  }
+
+  /**
+   * Blurs every view behind a sheet with a dim blur by the strongest blur among the sheets
+   * above it: app content and lower sheets. Overlays render above every sheet and stay sharp.
+   *
+   * Derived from the current stack state and idempotent — call whenever a sheet's blur radius changes.
+   */
+  @RequiresApi(Build.VERSION_CODES.S)
+  @JvmStatic
+  fun updateDimBlur() {
+    synchronized(presentedSheetStack) {
+      val sheetRadii = presentedSheetStack
+        .mapNotNull { sheet -> sheet.viewController.run { coordinatorLayout?.let { it to dimBlurRadius } } }
+        .toMap()
+
+      val radii = HashMap<View, Float>()
+      sheetRadii.keys.mapNotNull { it.parent as? ViewGroup }.toSet().forEach { root ->
+        var radius = 0f
+        for (i in root.childCount - 1 downTo 0) {
+          val child = root.getChildAt(i)
+          if (child is TrueSheetOverlayRootView) continue
+          if (radius >= 0.5f) radii[child] = radius
+          sheetRadii[child]?.let { radius = maxOf(radius, it) }
+        }
+      }
+
+      // Includes views of a dismissed sheet's root that are no longer behind any blur
+      blurredViews.keys.filter { it !in radii }.forEach {
+        it.setRenderEffect(null)
+        blurredViews.remove(it)
+      }
+      radii.forEach { (view, radius) ->
+        if (blurredViews[view] == radius) return@forEach
+        view.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP))
+        blurredViews[view] = radius
       }
     }
   }

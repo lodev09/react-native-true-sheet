@@ -316,7 +316,33 @@ At `0`, the dim is invisible but still blocks touches to the background. Set [`d
 :::
 
 :::note
-On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+On iOS, setting `dimColor`, `dimOpacity`, or [`dimBlur`](#dimblur) replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+:::
+
+## `dimBlur`
+
+Blurs the content behind the sheet instead of tinting it with [`dimColor`](#dimcolor). It takes the same styles as [`backgroundBlur`](#backgroundblur). [`dimOpacity`](#dimopacity) sets the blur intensity at full dim, and the blur follows the sheet position like the dim does.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`BackgroundBlur`](types#backgroundblur) | | ✅ | ✅ | |
+
+```tsx
+<TrueSheet dimBlur="system-ultra-thin-material-dark" dimOpacity={0.4}>
+  <View />
+</TrueSheet>
+```
+
+:::info
+This is ignored if `dimmed` is set to `false`.
+:::
+
+:::note
+On Android, the blur needs Android 12 (API 31) or later and follows the system's window blurs, which battery saver, devices that can't keep up, and the user's settings turn off. Over the blur, it draws the tint of the matching iOS material, so the dim looks the same on both platforms. Without the blur, the background is only tinted.
+:::
+
+:::tip
+Android re-blurs the content behind the sheet every time it redraws. A blur over content that keeps animating, such as video or a map, costs the most on lower-end devices.
 :::
 
 ## `dimmedDetentIndex`
