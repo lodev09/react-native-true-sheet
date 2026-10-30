@@ -9,20 +9,19 @@ import { StyleSheet, View, type ViewProps } from 'react-native';
  * Fills the window; touches that miss its children pass through to the views beneath.
  */
 export const TrueSheetOverlay = ({ style, ...rest }: ViewProps) => {
-  // Portal target appended to the body so it stacks above the sheets' portal
-  const [container] = useState(() =>
-    typeof document !== 'undefined' ? document.createElement('div') : null
-  );
+  // Portal target appended to the body so it stacks above the sheets' portal. Created once
+  // mounted, so that the first render matches a server-rendered page, which has no portal.
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    if (!container) return;
-
-    container.style.cssText = 'position:fixed;inset:0;pointer-events:none';
-    document.body.appendChild(container);
+    const element = document.createElement('div');
+    element.style.cssText = 'position:fixed;inset:0;pointer-events:none';
+    document.body.appendChild(element);
+    setContainer(element);
     return () => {
-      container.remove();
+      element.remove();
     };
-  }, [container]);
+  }, []);
 
   if (!container) return null;
 
