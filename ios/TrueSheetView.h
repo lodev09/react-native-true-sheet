@@ -25,6 +25,10 @@ typedef void (^TrueSheetCompletionBlock)(BOOL success, NSError *_Nullable error)
 
 @property (nonatomic, readonly) TrueSheetViewController *viewController;
 
+// Hidden by navigation (dismissed with events suppressed, or waiting to be re-presented)
+// while JS still sees the sheet as open.
+@property (nonatomic, readonly) BOOL isHiddenByNavigation;
+
 // TurboModule methods
 - (void)presentAtIndex:(NSInteger)index
               animated:(BOOL)animated
