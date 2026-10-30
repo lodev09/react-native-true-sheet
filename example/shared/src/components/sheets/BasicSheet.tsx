@@ -15,6 +15,8 @@ import {
   TrueSheetOverlay,
   TrueSheetPeek,
   useTrueSheet,
+  type DetentBackground,
+  type SheetDetent,
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
@@ -44,6 +46,9 @@ const spring = <T extends ComplexAnimationBuilder<any>>(animation: T) =>
     .mass(SPRING_CONFIG.mass!)
     .overshootClamping(SPRING_CONFIG.overshootClamping ? 1 : 0);
 
+const DETENTS: SheetDetent[] = ['peek', 'auto', 1];
+const DETENT_BACKGROUNDS: (DetentBackground | null)[] = [null, { blur: 'system-material' }, BLUE];
+
 interface BasicSheetProps extends TrueSheetProps {
   onNavigateToModal?: () => void;
   onNavigateToTest?: () => void;
@@ -59,7 +64,13 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
   const [contentCount, setContentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
+  const [hasPeek, setHasPeek] = useState(true);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Toggling peek while presented keeps the sheet at its detent, at its new index
+  const firstDetent = hasPeek ? 0 : 1;
+  const detents = DETENTS.slice(firstDetent);
+  const autoIndex = detents.indexOf('auto');
 
   const { dismissAll, dismissStack } = useTrueSheet();
 
@@ -103,8 +114,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
 
   return (
     <TrueSheet
-      detents={['peek', 'auto', 1]}
-      foldOptions={{ hingeDetentIndex: 1, hingeBehavior: 'snap' }}
+      detents={detents}
+      foldOptions={{ hingeDetentIndex: autoIndex, hingeBehavior: 'snap' }}
       name="basic"
       ref={sheetRef}
       detached
@@ -153,7 +164,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       onMount={() => {
         console.log('BasicSheet is ready!');
       }}
-      detentBackgrounds={[null, { blur: 'system-material' }, BLUE]}
+      detentBackgrounds={DETENT_BACKGROUNDS.slice(firstDetent)}
       backgroundStyle={{
         backgroundColor: `${BLUE}33`,
       }}
@@ -168,10 +179,14 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
       <Button text={`Add Content (${contentCount})`} onPress={addContent} />
       {contentCount > 0 && <Button text="Remove Content" onPress={removeContent} />}
       <ButtonGroup>
-        <Button text="Peek" onPress={() => resize(0)} />
-        <Button text="Auto" onPress={() => resize(1)} />
-        <Button text="Large" onPress={() => resize(2)} />
+        {hasPeek && <Button text="Peek" onPress={() => resize(0)} />}
+        <Button text="Auto" onPress={() => resize(autoIndex)} />
+        <Button text="Large" onPress={() => resize(detents.length - 1)} />
       </ButtonGroup>
+      <Button
+        text={hasPeek ? 'Remove Peek' : 'Add Peek'}
+        onPress={() => setHasPeek((prev) => !prev)}
+      />
       <ButtonGroup>
         <Button text="Show Toast" onPress={showToast} />
         <Button text="Show Dialog" onPress={() => setDialogVisible(true)} />

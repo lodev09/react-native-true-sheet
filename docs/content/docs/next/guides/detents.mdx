@@ -141,7 +141,7 @@ To allow only programmatic resizing, set [`draggable={false}`](../reference/conf
 
 ## Listening to Detent Changes
 
-[`onDetentChange`](../reference/events#ondetentchange) fires when the sheet settles at a detent, from a drag or a `resize` call. It comes with [`DetentInfoEventPayload`](../reference/types#detentinfoeventpayload): the detent `index` and its `position` (Y position on screen).
+[`onDetentChange`](../reference/events#ondetentchange) fires when the sheet settles at a detent, from a drag or a `resize` call, and when [changing `detents`](#changing-detents) moves the sheet to another detent or index. It comes with [`DetentInfoEventPayload`](../reference/types#detentinfoeventpayload): the detent `index` and its `position` (Y position on screen).
 
 ```tsx {2-5,10}
 const App = () => {
@@ -165,6 +165,30 @@ Use the `index` to look up the detent in your `detents` array. With `detents={['
 
 :::tip
 To track the sheet's position while it moves, use [`onPositionChange`](../reference/events#onpositionchange) or the [Reanimated integration](reanimated).
+:::
+
+## Changing Detents
+
+`detents` can change while the sheet is presented, for example to add a `'peek'` detent while a page can collapse to its header. The sheet stays at the detent it's at, and [`onDetentChange`](../reference/events#ondetentchange) reports its new index:
+
+```tsx
+// At 0.45 (index 0). Adding 'peek' keeps it at 0.45, now index 1
+<TrueSheet detents={hasPeek ? ['peek', 0.45, 1] : [0.45, 1]} />
+```
+
+If the detent the sheet is at is removed, the sheet moves to the detent now at the same index.
+
+Props that take a detent index, like [`detentBackgrounds`](../reference/configuration#detentbackgrounds) and [`dimmedDetentIndex`](../reference/configuration#dimmeddetentindex), don't follow along. Change them with `detents`.
+
+:::warning
+A [`resize`](../reference/methods#resize) or [`present`](../reference/methods#present) called right after changing `detents` can reach the native sheet before the new detents do, and run against the old ones. On Android this includes calls from an effect. Defer the call so the change lands first:
+
+```tsx
+const showPlace = () => {
+  setHasPeek(true)
+  setTimeout(() => sheet.current?.resize(2))
+}
+```
 :::
 
 ## Detent Options

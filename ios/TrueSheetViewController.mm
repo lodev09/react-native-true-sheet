@@ -84,6 +84,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   CGFloat _autoDetentHeight;
   CGFloat _peekDetentHeight;
   NSInteger _pendingDetentIndex;
+  // Detent changes waiting to be reported after their layout, oldest first
+  NSMutableArray<NSNumber *> *_scheduledDetentIndexes;
+  // The detents sheet.detents was built from
+  NSArray<NSNumber *> *_configuredDetents;
   NSInteger _displayedBackgroundIndex;
   BOOL _usesBackgroundEffects;
   BOOL _refusedPanDismiss;
@@ -168,6 +172,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _pendingDetentsChange = NO;
     _activeDetentIndex = -1;
     _pendingDetentIndex = -1;
+    _scheduledDetentIndexes = [NSMutableArray array];
 
     _insetAdjustment = TrueSheetViewInsetAdjustment::Automatic;
     _hingeRestoreIndex = -1;
@@ -447,6 +452,60 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return NO;
 }
 
+// Detents added or removed around the sheet's detent keep the sheet there, at
+// its new index; removing the detent itself falls back to the same index.
+// Also runs while hidden by navigation, which re-presents at the active index.
+- (void)setDetents:(NSArray<NSNumber *> *)detents {
+  NSArray<NSNumber *> *oldDetents = _detents;
+  _detents = detents;
+
+  if (detents.count == 0 || [detents isEqualToArray:oldDetents]) {
+    return;
+  }
+
+  NSInteger oldIndex = _activeDetentIndex;
+  _activeDetentIndex = [self indexForDetentIndex:oldIndex inDetents:oldDetents];
+  _pendingDetentIndex = [self indexForDetentIndex:_pendingDetentIndex inDetents:oldDetents];
+  _hingeRestoreIndex = [self indexForDetentIndex:_hingeRestoreIndex inDetents:oldDetents];
+  _displayedBackgroundIndex = [self indexForDetentIndex:_displayedBackgroundIndex inDetents:oldDetents];
+  for (NSUInteger i = 0; i < _scheduledDetentIndexes.count; i++) {
+    _scheduledDetentIndexes[i] = @([self indexForDetentIndex:_scheduledDetentIndexes[i].integerValue
+                                                   inDetents:oldDetents]);
+  }
+
+  if (!_isPresented || self.isBeingDismissed) {
+    return;
+  }
+
+  NSInteger index = _activeDetentIndex;
+  [_grabberView updateAccessibilityValueWithIndex:index detentCount:detents.count];
+
+  // A resize in flight reports its target once it lands
+  if (_pendingDetentIndex >= 0 || _scheduledDetentIndexes.count > 0) {
+    return;
+  }
+
+  BOOL detentRemoved =
+    oldIndex >= 0 && oldIndex < (NSInteger)oldDetents.count && ![detents containsObject:oldDetents[oldIndex]];
+  if (detentRemoved && !_isDragging) {
+    // The sheet moves to the fallback — report it once it lands, like a resize
+    _pendingDetentIndex = index;
+  } else if (index != oldIndex || detentRemoved) {
+    // Mid-drag the release reports where the sheet lands, if not here
+    CGFloat detent = [self detentValueForIndex:index];
+    [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+  }
+}
+
+- (NSInteger)indexForDetentIndex:(NSInteger)index inDetents:(NSArray<NSNumber *> *)oldDetents {
+  if (index < 0 || index >= (NSInteger)oldDetents.count || [oldDetents isEqualToArray:_detents]) {
+    return index;
+  }
+
+  NSUInteger newIndex = [_detents indexOfObject:oldDetents[index]];
+  return newIndex != NSNotFound ? (NSInteger)newIndex : MIN(index, (NSInteger)_detents.count - 1);
+}
+
 - (NSInteger)currentDetentIndex {
   UISheetPresentationController *sheet = self.sheet;
   if (!sheet)
@@ -456,22 +515,27 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   if (!selectedIdentifier)
     return -1;
 
+  NSInteger index = -1;
   NSArray<UISheetPresentationControllerDetent *> *detents = sheet.detents;
   for (NSInteger i = 0; i < detents.count; i++) {
     if (@available(iOS 16.0, *)) {
       if ([detents[i].identifier isEqualToString:selectedIdentifier]) {
-        return i;
+        index = i;
+        break;
       }
     } else {
       if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierMedium]) {
-        return 0;
+        index = 0;
+        break;
       } else if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierLarge]) {
-        return detents.count - 1;
+        index = detents.count - 1;
+        break;
       }
     }
   }
 
-  return -1;
+  // UIKit holds the detents last configured until the props update rebuilds them
+  return [self indexForDetentIndex:index inDetents:_configuredDetents];
 }
 
 #pragma mark - View Lifecycle
@@ -1106,16 +1170,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self updateHingeState];
 
   if (_pendingDetentIndex >= 0) {
-    NSInteger pendingIndex = _pendingDetentIndex;
+    [_scheduledDetentIndexes addObject:@(_pendingDetentIndex)];
     _pendingDetentIndex = -1;
 
     // The presentedView frame isn't final until UIKit finishes the resize
-    // animation — no completion hook exists for it, hence the delay.
+    // animation — no completion hook exists for it, hence the delay. Queued so
+    // detents changing meanwhile remap the index (see setDetents:).
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      CGFloat detent = [self detentValueForIndex:pendingIndex];
-      [self.delegate viewControllerDidChangeDetent:pendingIndex position:self.currentPosition detent:detent];
-      [self->_grabberView updateAccessibilityValueWithIndex:pendingIndex detentCount:self->_detents.count];
-      [self settleAtDetentIndex:pendingIndex debug:@"pending detent change"];
+      NSInteger index = self->_scheduledDetentIndexes.firstObject.integerValue;
+      [self->_scheduledDetentIndexes removeObjectAtIndex:0];
+      CGFloat detent = [self detentValueForIndex:index];
+      [self.delegate viewControllerDidChangeDetent:index position:self.currentPosition detent:detent];
+      [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
+      [self settleAtDetentIndex:index debug:@"pending detent change"];
     });
   }
 }
@@ -1711,6 +1778,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 #endif
 
   sheet.detents = detents;
+  _configuredDetents = [self.detents copy];
 
   if ([self useCustomDimming]) {
     sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;

@@ -2,7 +2,7 @@ import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
-import type { TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
+import type { SheetDetent, TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
 
 jest.mock('../web/vaul', () => {
@@ -242,6 +242,44 @@ describe('web present and dismiss', () => {
       await methods.dismissAll();
     });
     expect(result.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+});
+
+describe('web detents change', () => {
+  it('keeps the active detent, falls back to its index, and reports changes', async () => {
+    const ref = createRef<TrueSheetMethods>();
+    const onDetentChange = jest.fn();
+    const colors: Record<string, string> = { peek: '#111111', 0.45: '#454545', 1: '#ffffff' };
+    const sheet = (detents: SheetDetent[]) => (
+      <TrueSheet
+        ref={ref}
+        initialDetentIndex={0}
+        detents={detents}
+        detentBackgrounds={detents.map((detent) => colors[detent] ?? null)}
+        onDetentChange={onDetentChange}
+      />
+    );
+    const result = render(sheet([0.45, 1]), { createNodeMock: () => new MockElement() });
+    const update = (detents: SheetDetent[]) => result.rerender(sheet(detents));
+    const snap = () => result.UNSAFE_getByType(Drawer.Root).props.activeSnapPoint;
+    const color = () =>
+      result.UNSAFE_root.findByProps({ 'aria-hidden': true }).props.style.backgroundColor;
+    act(() => jest.runOnlyPendingTimers());
+
+    update(['peek', 0.45, 1]);
+    expect(snap()).toBe(0.45);
+    expect(color()).toBe('#454545');
+    update([0.45, 1]);
+    expect(snap()).toBe(0.45);
+    expect(color()).toBe('#454545');
+    await act(() => ref.current!.resize(1));
+    update(['peek', 0.45, 1]);
+    expect(snap()).toBe(1);
+    update(['peek', 0.45]);
+    expect(snap()).toBe(0.45);
+    update(['peek', 0.5]);
+    expect(snap()).toBe(0.5);
+    expect(onDetentChange.mock.calls.map(([e]) => e.nativeEvent.index)).toEqual([1, 0, 1, 2, 1, 1]);
   });
 });
 
