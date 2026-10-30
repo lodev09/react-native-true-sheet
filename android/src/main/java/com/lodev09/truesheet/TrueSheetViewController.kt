@@ -175,6 +175,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // animation doesn't snap the sheet back to the stale currentDetentIndex.
   private var pendingDetentIndex: Int = -1
 
+  // A detents change during a resize or reconfigure settle shifted the index
+  // without reporting it — the settle reports it once it lands
+  private var hasUnreportedDetentChange = false
+
   private val isSettlingInPlace: Boolean
     get() = !isBeingDismissed && pendingDetentIndex >= 0 && pendingDetentIndex == currentDetentIndex
 
@@ -188,6 +192,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   var wasHiddenByScreen = false
   private var shouldAnimatePresent = false
   private var isPresentAnimating = false
+  private var isPresentFinished = false
 
   private var lastStateWidth: Int = 0
   private var lastStateHeight: Int = 0
@@ -240,6 +245,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       field = value
       if (value != oldDetents) keepDetentIndices(oldDetents)
     }
+
+  // The behavior keeps the stops of these until the next reconfigure
+  private var configuredDetents: List<Double> = emptyList()
 
   // Appearance Configuration
   var dimmed = true
@@ -497,9 +505,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     cachedContentHeight = 0
     cachedHeaderHeight = 0
     isPresentAnimating = false
+    isPresentFinished = false
     lastEmittedPositionPx = -1
     detentIndexBeforeKeyboard = -1
     pendingDetentIndex = -1
+    hasUnreportedDetentChange = false
     isKeyboardDismissProgrammatic = false
     isKeyboardSettleDeferred = false
     focusedViewBeforeBlur = null
@@ -748,7 +758,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // whether settled at the target, interrupted by drag, or superseded.
     pendingDetentIndex = -1
 
-    val index = detentCalculator.getDetentIndexForState(newState) ?: run {
+    val index = getDetentIndexForState(newState) ?: run {
       // Unmapped settle — end any drag anyway so deferred size changes aren't
       // dropped forever (a leaked Dragging state skips every reconfigure)
       if (interactionState is InteractionState.Dragging) {
@@ -778,13 +788,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         // Skip detent change if keyboard inset is still active — the keyboard floor
         // landing below commits the detent instead.
         if (keyboardInset == 0) {
-          val changed = detentInfo.index != knownDetentIndex
+          val changed = detentInfo.index != knownDetentIndex || hasUnreportedDetentChange
           detentIndexBeforeKeyboard = -1
           if (detentInfo.index != currentDetentIndex) {
             currentDetentIndex = detentInfo.index
             setupDimmedBackground()
           }
           if (changed) {
+            hasUnreportedDetentChange = false
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
             this@TrueSheetViewController.sheetView?.updateGrabberAccessibilityValue(detentInfo.index, detents.size)
           }
@@ -794,9 +805,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       }
 
       else -> {
-        if (detentInfo.index != currentDetentIndex) {
+        val reportsHeldChange = hasUnreportedDetentChange && detentIndexBeforeKeyboard < 0
+        if (detentInfo.index != currentDetentIndex || reportsHeldChange) {
           currentDetentIndex = detentInfo.index
           if (!isKeyboardTransitioning) {
+            hasUnreportedDetentChange = false
             val detent = detentCalculator.getDetentValueForIndex(detentInfo.index)
             delegate?.viewControllerDidChangeDetent(detentInfo.index, detentInfo.position, detent)
           }
@@ -1022,6 +1035,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   private fun finishPresent() {
+    isPresentFinished = true
     coordinatorLayout?.blocksTouches = false
 
     // Restore isHideable to actual value after present animation
@@ -1101,6 +1115,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       fitToContents = fitToContents,
       animate = isPresented
     )
+    configuredDetents = detents.toList()
 
     if (isPresented && applyState) {
       // Prefer the pending target while a resize animation is in flight so a
@@ -1384,6 +1399,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
+          // The keyboard settle reports nothing — report the detents change the
+          // interrupted resize was holding back
+          if (hasUnreportedDetentChange) {
+            hasUnreportedDetentChange = false
+            emitDetentChangeAtRest(detentIndexBeforeKeyboard)
+          }
           // Commit the target index first so the container grows before the sheet expands
           currentDetentIndex = detents.size - 1
           setupSheetDetents()
@@ -1612,25 +1633,54 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun keepDetentIndices(oldDetents: List<Double>) {
     if (!isPresented) return
 
-    fun indexInDetents(index: Int): Int {
-      if (index !in oldDetents.indices) return index
-      val newIndex = detents.indexOf(oldDetents[index])
-      return if (newIndex >= 0) newIndex else minOf(index, detents.size - 1)
+    val knownIndex = knownDetentIndex
+    pendingDetentIndex = indexInDetents(pendingDetentIndex, oldDetents)
+    // The keyboard holds the sheet at the last detent
+    currentDetentIndex = if (detentIndexBeforeKeyboard >= 0) {
+      detents.size - 1
+    } else {
+      indexInDetents(currentDetentIndex, oldDetents)
+    }
+    detentIndexBeforeKeyboard = indexInDetents(detentIndexBeforeKeyboard, oldDetents)
+    displayedBackgroundIndex = indexInDetents(displayedBackgroundIndex, oldDetents)
+
+    val index = knownDetentIndex
+    sheetView?.updateGrabberAccessibilityValue(index, detents.size)
+
+    // didPresent reports the detent of a sheet still presenting
+    if (isBeingDismissed || !isPresentFinished) return
+
+    val detentRemoved = knownIndex in oldDetents.indices && oldDetents[knownIndex] !in detents
+    if (index == knownIndex && !detentRemoved) return
+
+    // A resize or reconfigure in flight reports where it lands instead, like
+    // iOS — but a keyboard settle never reports the detent it holds the sheet at
+    if (pendingDetentIndex >= 0 && isSettling && detentIndexBeforeKeyboard < 0) {
+      hasUnreportedDetentChange = true
+      return
     }
 
-    val knownIndex = knownDetentIndex
-    pendingDetentIndex = indexInDetents(pendingDetentIndex)
-    // The keyboard holds the sheet at the last detent
-    currentDetentIndex = if (detentIndexBeforeKeyboard >= 0) detents.size - 1 else indexInDetents(currentDetentIndex)
-    detentIndexBeforeKeyboard = indexInDetents(detentIndexBeforeKeyboard)
+    emitDetentChangeAtRest(index)
+  }
 
-    // A resize or fling in flight reports its detent once it settles
-    val index = knownDetentIndex
-    if (index == knownIndex || isSettling || isBeingDismissed) return
-    val sheetView = sheetView ?: return
-    val detent = detentCalculator.getDetentValueForIndex(index)
-    delegate?.viewControllerDidChangeDetent(index, getPositionDpForView(sheetView), detent)
-    sheetView.updateGrabberAccessibilityValue(index, detents.size)
+  // Reports the detent where it rests — the sheet may still be moving to it
+  private fun emitDetentChangeAtRest(index: Int) {
+    val sheetTop = detentCalculator.getSheetTopForDetentIndex(index)
+    val position = detentCalculator.getPositionDp(detentCalculator.getVisibleSheetHeight(sheetTop))
+    delegate?.viewControllerDidChangeDetent(index, position, detentCalculator.getDetentValueForIndex(index))
+  }
+
+  private fun indexInDetents(index: Int, oldDetents: List<Double>): Int {
+    if (index !in oldDetents.indices) return index
+    val newIndex = detents.indexOf(oldDetents[index])
+    return if (newIndex >= 0) newIndex else minOf(index, detents.size - 1)
+  }
+
+  // A settle before the next reconfigure lands on a stop of the detents the
+  // behavior was configured with
+  private fun getDetentIndexForState(state: Int): Int? {
+    val index = detentCalculator.getDetentIndexForState(state, configuredDetents.size) ?: return null
+    return indexInDetents(index, configuredDetents)
   }
 
   fun updateBehaviorMaxWidth() {
