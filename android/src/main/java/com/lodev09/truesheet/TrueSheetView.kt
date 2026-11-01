@@ -19,6 +19,7 @@ import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensEventObserver
 import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
+import com.lodev09.truesheet.core.TrueSheetBlurStyle
 import com.lodev09.truesheet.core.TrueSheetDismissThreshold
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
@@ -280,6 +281,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     val resolved = if (opacity < 0f) TrueSheetViewController.DEFAULT_DIM_OPACITY else opacity.coerceIn(0f, 1f)
     if (viewController.dimOpacity == resolved) return
     viewController.dimOpacity = resolved
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
+    }
+  }
+
+  fun setDimBlur(tint: String?) {
+    val resolved = TrueSheetBlurStyle.fromString(tint)
+    if (viewController.dimBlur == resolved) return
+    viewController.dimBlur = resolved
     if (viewController.isPresented) {
       viewController.updateDimAmount()
     }

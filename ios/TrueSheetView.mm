@@ -325,6 +325,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.dimOpacity = newProps.dimOpacity < 0 ? nil : @(newProps.dimOpacity);
   _controller.dimColor = RCTUIColorFromSharedColor(newProps.dimColor);
 
+  auto dimBlur = TrueSheetViewBackgroundBlur::None;
+  fromRawValue(parserContext, RawValue(toString(newProps.dimBlur)), dimBlur);
+  _controller.dimBlur = dimBlur;
+
   if (newProps.dimmedDetentIndex >= 0) {
     _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);
   }

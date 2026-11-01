@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- Added `dimBlur` to blur the content behind the sheet instead of tinting it with `dimColor`. It takes the `backgroundBlur` styles and draws the matching iOS material's tint over the blur, so the dim looks the same on every platform. `dimOpacity` sets the blur intensity. Android blurs on Android 12 and later unless the system turns window blurs off, and only tints otherwise. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))
+
+### 💡 Others
+
+- Add a Dim Blur section to the Dimming guide, and the `truesheet-usage` skill now covers `dimBlur`. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@lodev09](https://github.com/lodev09))
+
 ## 4.0.1
 
 ### 🐛 Bug fixes

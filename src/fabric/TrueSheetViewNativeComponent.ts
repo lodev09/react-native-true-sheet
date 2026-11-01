@@ -90,6 +90,31 @@ export interface NativeProps extends ViewProps {
   dimColor?: ColorValue;
   dimOpacity?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   dimmedDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, 0>;
+  dimBlur?: CodegenTypes.WithDefault<
+    | 'none'
+    | 'light'
+    | 'dark'
+    | 'default'
+    | 'extra-light'
+    | 'regular'
+    | 'prominent'
+    | 'system-ultra-thin-material'
+    | 'system-thin-material'
+    | 'system-material'
+    | 'system-thick-material'
+    | 'system-chrome-material'
+    | 'system-ultra-thin-material-light'
+    | 'system-thin-material-light'
+    | 'system-material-light'
+    | 'system-thick-material-light'
+    | 'system-chrome-material-light'
+    | 'system-ultra-thin-material-dark'
+    | 'system-thin-material-dark'
+    | 'system-material-dark'
+    | 'system-thick-material-dark'
+    | 'system-chrome-material-dark',
+    'none'
+  >;
 
   // String properties - use empty string as default to avoid nil insertion
   backgroundBlur?: CodegenTypes.WithDefault<

@@ -63,6 +63,7 @@ import {
   DEFAULT_GRABBER_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { getDimBlurStyle } from './web/blur';
 import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
@@ -105,6 +106,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     dimmed = true,
     dimColor,
     dimOpacity,
+    dimBlur,
     dimmedDetentIndex = 0,
     initialDetentIndex = -1,
     header,
@@ -1186,13 +1188,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Vaul fades the overlay through its opacity, so the dim opacity goes into the color
   const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
+    const opacity = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY));
+    if (dimBlur) {
+      return { ...overlayStyle, ...getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark') };
+    }
     if (dimColor == null && dimOpacity == null) return overlayStyle;
-    const percentage = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY)) * 100;
     return {
       ...overlayStyle,
-      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${percentage}%, transparent)`,
+      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${opacity * 100}%, transparent)`,
     };
-  }, [dimColor, dimOpacity]);
+  }, [dimColor, dimOpacity, dimBlur, colorScheme]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({

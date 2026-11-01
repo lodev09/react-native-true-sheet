@@ -253,6 +253,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "dimBlur")
+  override fun setDimBlur(view: TrueSheetView, tint: String?) {
+    view.setDimBlur(tint)
+  }
+
   @ReactProp(name = "foldOptions")
   override fun setFoldOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
