@@ -40,6 +40,7 @@ import {
   BasicSheet,
   FlatListSheet,
   GestureSheet,
+  PeekScrollViewSheet,
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
@@ -101,6 +102,7 @@ const MapScreenInner = ({
   const promptSheet = useRef<TrueSheet>(null);
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
+  const peekScrollViewSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
@@ -264,6 +266,7 @@ const MapScreenInner = ({
             />
             <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
           </ButtonGroup>
+          <Button text="Peek ScrollView" onPress={() => peekScrollViewSheet.current?.present()} />
           <Spacer />
           {showExtraContent && <DemoContent text="Extra content that changes height" />}
           <ButtonGroup>
@@ -285,6 +288,7 @@ const MapScreenInner = ({
           <PromptSheet ref={promptSheet} />
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
+          <PeekScrollViewSheet ref={peekScrollViewSheet} />
           <GestureSheet ref={gestureSheet} />
         </ScrollView>
       </ReanimatedTrueSheet>
