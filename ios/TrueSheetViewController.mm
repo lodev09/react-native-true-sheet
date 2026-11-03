@@ -1717,6 +1717,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  * perturbing a sheet behind this one).
  */
 - (void)setupSheetDetentsForSizeChange {
+  // Only auto and peek resolve from these heights. A needless animated
+  // invalidation right after presenting over another sheet animates UIKit's
+  // hide of the sheet behind, leaving it invisible if this one dismisses soon.
+  if (![self.detents containsObject:@(-1)] && ![self.detents containsObject:@(-2)]) {
+    return;
+  }
+
   if (@available(iOS 16.0, *)) {
     CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
     CGFloat peekHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
