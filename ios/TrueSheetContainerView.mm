@@ -145,7 +145,17 @@ using namespace facebook::react;
     return _peekView.frame.size.height;
   }
 
-  return CGRectGetMaxY([_peekView convertRect:_peekView.bounds toView:_contentView]);
+  // Measure at rest: converting through a scroll view subtracts its offset, which would shrink
+  // the peek detent whenever it's re-measured while the content is scrolled.
+  CGRect rect = [_peekView convertRect:_peekView.bounds toView:_contentView];
+  for (UIView *view = _peekView.superview; view && view != _contentView; view = view.superview) {
+    if ([view isKindOfClass:[UIScrollView class]]) {
+      UIScrollView *scrollView = (UIScrollView *)view;
+      rect.origin.y += scrollView.contentOffset.y + scrollView.adjustedContentInset.top;
+    }
+  }
+
+  return CGRectGetMaxY(rect);
 }
 
 - (void)updateFooterKeyboardOffset {

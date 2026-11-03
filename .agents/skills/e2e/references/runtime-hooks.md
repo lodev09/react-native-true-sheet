@@ -7,7 +7,7 @@ Observe and drive sheets from JS without editing the example app. Needs Metro + 
 Read `scripts/sheet-hooks.js` and pass its full contents as the `expression` of `debugger-evaluate`. It returns the labels it hooked, e.g.:
 
 ```
-main["peek","auto",1]   unnamed["auto"]   unnamed[0.3]   scrollview[0.8,1]   basic["peek","auto",1] ...
+main["peek","auto",1]   unnamed["auto"]   unnamed[0.3]   scrollview["peek",1]   basic["peek","auto",1] ...
 ```
 
 `unnamed["auto"]` is the FlatList sheet, `unnamed[0.3]` its "OPEN BLANK SHEET" child. Re-install after every `launch-app`/`reinstall-app` (the JS runtime restarts).

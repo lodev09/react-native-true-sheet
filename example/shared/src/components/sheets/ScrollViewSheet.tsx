@@ -10,7 +10,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { TrueSheet, TrueSheetPeek, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import {
   BORDER_RADIUS,
@@ -108,7 +108,7 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
   return (
     <TrueSheet
       ref={ref}
-      detents={[0.8, 1]}
+      detents={['peek', 1]}
       name="scrollview"
       style={styles.sheet}
       scrollableRef={scrollViewRef}
@@ -139,7 +139,10 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
             contentContainerStyle={styles.content}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           >
-            <Carousel />
+            {/* Re-measuring while scrolled must not shrink the peek detent */}
+            <TrueSheetPeek>
+              <Carousel />
+            </TrueSheetPeek>
             {times(20, (i) => (
               <HeavyItem key={i} index={i} />
             ))}
@@ -150,7 +153,9 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
               The ScrollView is not mounted yet — mounting it after the sheet has presented tests
               late scrollable detection.
             </ThemedText>
-            <Button text="Show ScrollView" onPress={() => setShowList(true)} />
+            <TrueSheetPeek>
+              <Button text="Show ScrollView" onPress={() => setShowList(true)} />
+            </TrueSheetPeek>
           </View>
         )}
       </View>
