@@ -1721,14 +1721,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
     CGFloat peekHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
 
-    if (fabs(autoHeight - _autoDetentHeight) < 0.5 && fabs(peekHeight - _peekDetentHeight) < 0.5) {
-      return;
-    }
+    // Invalidate only when a detent this sheet uses changed. A needless animated
+    // invalidation right after presenting over another sheet animates UIKit's
+    // hide of the sheet behind, leaving it invisible if this one dismisses soon.
+    // The snapshots still refresh so a later switch to auto/peek reads current heights.
+    BOOL autoChanged = fabs(autoHeight - _autoDetentHeight) >= 0.5 && [self.detents containsObject:@(-1)];
+    BOOL peekChanged = fabs(peekHeight - _peekDetentHeight) >= 0.5 && [self.detents containsObject:@(-2)];
 
     _autoDetentHeight = autoHeight;
     _peekDetentHeight = peekHeight;
 
-    [self invalidateDetentsAnimated];
+    if (autoChanged || peekChanged) {
+      [self invalidateDetentsAnimated];
+    }
   }
   // iOS 15: detents are fixed medium/large — size changes can't affect them.
 }
