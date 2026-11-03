@@ -8,7 +8,7 @@
 
 ### 🐛 Bug fixes
 
-- **iOS**: A sheet with a `TrueSheetPeek` inside a `ScrollView` now settles at the full `peek` detent when dragged down after scrolling the content, instead of a thin band at the bottom of the screen. ([#1001](https://github.com/lodev09/react-native-true-sheet/pull/1001) by [@vilindberg](https://github.com/vilindberg))
+- A sheet with a `TrueSheetPeek` inside a `ScrollView` now settles at the full `peek` detent when dragged down after scrolling the content, instead of a thin band at the bottom of the screen. ([#1001](https://github.com/lodev09/react-native-true-sheet/pull/1001) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 
