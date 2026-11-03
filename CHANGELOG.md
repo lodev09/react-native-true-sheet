@@ -8,6 +8,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Dismissing a sheet shortly after it presents over another sheet no longer hides the sheet behind it for a few frames when the top sheet's content resized right after presenting. ([#1003](https://github.com/lodev09/react-native-true-sheet/pull/1003) by [@lodev09](https://github.com/lodev09))
 - A sheet with a `TrueSheetPeek` inside a `ScrollView` now settles at the full `peek` detent when dragged down after scrolling the content, instead of a thin band at the bottom of the screen. ([#1002](https://github.com/lodev09/react-native-true-sheet/pull/1002) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
