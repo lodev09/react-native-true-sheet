@@ -14,6 +14,7 @@ import {
   useReanimatedTrueSheet,
   useReanimatedPositionChangeHandler,
 } from '../mocks/reanimated';
+import { TrueSheetActions as RealTrueSheetActions } from '../navigation/actions';
 
 describe('TrueSheet Mocks', () => {
   beforeEach(() => {
@@ -154,6 +155,14 @@ describe('TrueSheet Mocks', () => {
       expect(TrueSheetActions.resize(1)).toEqual({ type: 'RESIZE', index: 1 });
       expect(TrueSheetActions.dismiss()).toEqual({ type: 'DISMISS' });
     });
+
+    it('should match the real action creators', () => {
+      expect(TrueSheetActions.pop()).toEqual(RealTrueSheetActions.pop());
+      expect(TrueSheetActions.pop(2)).toEqual(RealTrueSheetActions.pop(2));
+      expect(TrueSheetActions.popTo('A', { id: 1 }, { merge: true })).toEqual(
+        RealTrueSheetActions.popTo('A', { id: 1 }, { merge: true })
+      );
+    });
   });
 
   describe('useTrueSheetNavigation Hook Mock', () => {
@@ -182,6 +191,19 @@ describe('TrueSheet Mocks', () => {
         </ReanimatedTrueSheet>
       );
       expect(getByText('Reanimated Content')).toBeDefined();
+    });
+
+    it('should render a custom background', () => {
+      const { getByText } = render(
+        <ReanimatedTrueSheet
+          background={<Text>Background</Text>}
+          backgroundStyle={{ backgroundColor: 'red' }}
+        >
+          <Text>Content</Text>
+        </ReanimatedTrueSheet>
+      );
+      expect(getByText('Background')).toBeDefined();
+      expect(getByText('Content')).toBeDefined();
     });
   });
 
