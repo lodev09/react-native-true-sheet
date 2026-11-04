@@ -22,10 +22,10 @@ export const createTrueSheetScreen = jest.fn((config: object) => config);
  */
 export const TrueSheetActions = {
   push: jest.fn((name: string, params?: object) => ({ type: 'PUSH', payload: { name, params } })),
-  pop: jest.fn((count?: number) => ({ type: 'POP', payload: { count } })),
-  popTo: jest.fn((name: string, params?: object) => ({
+  pop: jest.fn((count: number = 1) => ({ type: 'POP', payload: { count } })),
+  popTo: jest.fn((name: string, params?: object, options?: { merge?: boolean }) => ({
     type: 'POP_TO',
-    payload: { name, params },
+    payload: { name, params, merge: options?.merge },
   })),
   popToTop: jest.fn(() => ({ type: 'POP_TO_TOP' })),
   replace: jest.fn((name: string, params?: object) => ({
