@@ -53,14 +53,13 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
   private var activityRootView: View? = null
+  private var hasTrackedKeyboard = false
 
   fun start() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       setupAnimationCallback()
-      setupUnanimatedHideListener()
-    } else {
-      setupLegacyListener()
     }
+    setupGlobalLayoutListener()
     setupFocusChangeListener()
   }
 
@@ -88,6 +87,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     val newHeight = (from + (to - from) * fraction).toInt()
     if (currentHeight != newHeight) {
       currentHeight = newHeight
+      if (newHeight > 0) hasTrackedKeyboard = true
       delegate?.keyboardDidChangeHeight(newHeight)
     }
   }
@@ -147,45 +147,45 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     )
   }
 
-  private fun setupLegacyListener() {
+  private fun setupGlobalLayoutListener() {
     // Ensure we don't add duplicate listeners
     if (globalLayoutListener != null) return
 
     val rootView = targetView.rootView ?: return
     activityRootView = rootView
 
-    globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-      val rect = Rect()
-      rootView.getWindowVisibleDisplayFrame(rect)
+    globalLayoutListener = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      // An animated change lays out with its final inset before onStart, so check after the frame
+      ViewTreeObserver.OnGlobalLayoutListener {
+        if (hasUnanimatedChange()) targetView.post(unanimatedChangeCheck)
+      }
+    } else {
+      ViewTreeObserver.OnGlobalLayoutListener {
+        val rect = Rect()
+        rootView.getWindowVisibleDisplayFrame(rect)
 
-      val screenHeight = rootView.height
-      val keyboardHeight = screenHeight - rect.bottom
+        val screenHeight = rootView.height
+        val keyboardHeight = screenHeight - rect.bottom
 
-      applyHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
+        applyHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
+      }
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
   }
 
-  private fun isHiddenWithoutAnimation(): Boolean = !isTransitioning && currentHeight > 0 && getKeyboardHeight() == 0
+  // The keyboard can come or go without an insets animation: an input method that shows no keyboard
+  // hides it, and a cancelled back gesture ends its hide animation on a 0 inset while the keyboard stays.
+  // A keyboard already up before this observer tracked one is left alone.
+  private fun hasUnanimatedChange(): Boolean {
+    if (isTransitioning) return false
+    val keyboardHeight = getKeyboardHeight()
+    return if (currentHeight > 0) keyboardHeight == 0 else keyboardHeight > 0 && hasTrackedKeyboard
+  }
 
   // A check posted while the view is attached can still run after stop()
-  private val unanimatedHideCheck = Runnable {
-    if (globalLayoutListener != null && isHiddenWithoutAnimation()) applyHeight(0)
-  }
-
-  // Switching input methods can drop the keyboard inset to 0 without an insets animation.
-  // An animated hide lays out with the final inset before its onStart, so check again after the frame.
-  private fun setupUnanimatedHideListener() {
-    if (globalLayoutListener != null) return
-
-    val rootView = targetView.rootView ?: return
-    activityRootView = rootView
-
-    globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-      if (isHiddenWithoutAnimation()) targetView.post(unanimatedHideCheck)
-    }
-    rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
+  private val unanimatedChangeCheck = Runnable {
+    if (globalLayoutListener != null && hasUnanimatedChange()) applyHeight(getKeyboardHeight())
   }
 
   private fun applyHeight(newHeight: Int) {
