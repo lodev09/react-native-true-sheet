@@ -8,8 +8,8 @@
 
 ### 🐛 Bug fixes
 
-- **Android**: A sheet with `draggable={false}` no longer takes over a vertical gesture from its content, so a map inside it keeps its pinch and pan. ([@MarkusWendorf](https://github.com/MarkusWendorf))
 - **iOS**: Dismissing a sheet shortly after it presents over another sheet no longer hides the sheet behind it for a few frames when the top sheet's content resized right after presenting without changing any of its detent heights, such as a sheet with only fractional detents. ([#1003](https://github.com/lodev09/react-native-true-sheet/pull/1003) by [@lodev09](https://github.com/lodev09))
+- **Android**: A sheet with `draggable={false}` no longer takes over a vertical gesture from its content, so a map inside it keeps its pinch and pan. ([#1006](https://github.com/lodev09/react-native-true-sheet/pull/1006) by [@MarkusWendorf](https://github.com/MarkusWendorf))
 - A sheet with a `TrueSheetPeek` inside a `ScrollView` now settles at the full `peek` detent when dragged down after scrolling the content, instead of a thin band at the bottom of the screen. ([#1002](https://github.com/lodev09/react-native-true-sheet/pull/1002) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 - The `ReanimatedTrueSheet` Jest mock now renders `background` and `backgroundStyle` like the `TrueSheet` mock. The `TrueSheetActions` navigation mock's `pop()` now defaults to a count of 1 and `popTo` now passes `merge`, matching the real actions. ([#1005](https://github.com/lodev09/react-native-true-sheet/pull/1005) by [@lodev09](https://github.com/lodev09))
 
