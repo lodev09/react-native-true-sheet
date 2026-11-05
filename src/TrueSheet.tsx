@@ -363,7 +363,7 @@ export class TrueSheet
     this.isPresented = true;
 
     if (Platform.OS === 'android') {
-      this.backHandlerSubscription?.remove();
+      this.removeBackHandler();
       this.backHandlerSubscription = BackHandler.addEventListener(
         'hardwareBackPress',
         this.handleBackPress
@@ -373,7 +373,14 @@ export class TrueSheet
     this.props.onDidPresent?.(event);
   }
 
+  private removeBackHandler(): void {
+    this.backHandlerSubscription?.remove();
+    this.backHandlerSubscription = null;
+  }
+
   private onWillDismiss(event: WillDismissEvent): void {
+    // The sheet is already closing, so a back press goes to the sheet below or navigation
+    this.removeBackHandler();
     this.props.onWillDismiss?.(event);
   }
 
@@ -384,8 +391,7 @@ export class TrueSheet
   private onDidDismiss(event: DidDismissEvent): void {
     this.isPresented = false;
     this.isSheetVisible = true;
-    this.backHandlerSubscription?.remove();
-    this.backHandlerSubscription = null;
+    this.removeBackHandler();
 
     // Non-lazy content stays mounted; otherwise clean it up unless another presentation is active.
     if (!this.isPresenting && this.props.lazy !== false) {
@@ -607,8 +613,7 @@ export class TrueSheet
   componentWillUnmount(): void {
     TrueSheet.mountedInstances.delete(this);
     this.unregisterInstance();
-    this.backHandlerSubscription?.remove();
-    this.backHandlerSubscription = null;
+    this.removeBackHandler();
     // Don't leave a present waiting on the lazy mount hanging
     this.presentationResolver?.(false);
     this.presentationResolver = null;

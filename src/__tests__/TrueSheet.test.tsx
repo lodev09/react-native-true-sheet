@@ -1,6 +1,15 @@
 /* eslint-disable dot-notation -- bracket access reaches TrueSheet's private test hooks with full typing */
 import { createRef, type ReactNode } from 'react';
-import { FlatList, processColor, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  BackHandler,
+  FlatList,
+  Platform,
+  processColor,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { render, act } from '@testing-library/react-native';
 import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
@@ -10,6 +19,8 @@ import type {
   DidDismissEvent,
   MountEvent,
   DismissAttemptEvent,
+  DidPresentEvent,
+  WillDismissEvent,
   WillFocusEvent,
   DidFocusEvent,
   WillBlurEvent,
@@ -738,6 +749,43 @@ describe('TrueSheet', () => {
   });
 
   describe('Back Press', () => {
+    it('should stop handling back presses once the sheet starts dismissing', () => {
+      const originalOS = Platform.OS;
+      Platform.OS = 'android';
+      const remove = jest.fn();
+      const addEventListener = jest
+        .spyOn(BackHandler, 'addEventListener')
+        .mockReturnValue({ remove });
+
+      try {
+        render(
+          <TrueSheet name="back-press-will-dismiss-test" initialDetentIndex={0}>
+            <Text>Content</Text>
+          </TrueSheet>
+        );
+
+        const sheetRef = TrueSheet['instances']['back-press-will-dismiss-test']!;
+
+        act(() => {
+          sheetRef['onDidPresent']({} as DidPresentEvent);
+        });
+        expect(addEventListener).toHaveBeenCalledWith(
+          'hardwareBackPress',
+          sheetRef['handleBackPress']
+        );
+        expect(remove).not.toHaveBeenCalled();
+
+        act(() => {
+          sheetRef['onWillDismiss']({} as WillDismissEvent);
+        });
+        expect(remove).toHaveBeenCalledTimes(1);
+        expect(sheetRef['backHandlerSubscription']).toBeNull();
+      } finally {
+        addEventListener.mockRestore();
+        Platform.OS = originalOS;
+      }
+    });
+
     it('should handle the rejection when the native view is gone', () => {
       render(
         <TrueSheet name="back-press-view-gone-test" initialDetentIndex={0}>
