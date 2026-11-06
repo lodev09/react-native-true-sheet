@@ -756,6 +756,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     TrueSheetStackManager.unregisterSheet(this)
 
+    // A parent dismissed during this slide-out (e.g. back pressed again) keeps its own slide-out,
+    // which already drops this sheet's dim; resetting it would pull it back up
+    if (parent?.viewController?.isBeingDismissed == true) return
+
     // The sheets below stop blending this sheet's dim
     parent?.viewController?.takeIf { it.isPresented }?.updateDimAmount()
 

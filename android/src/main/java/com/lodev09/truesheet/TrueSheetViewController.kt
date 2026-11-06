@@ -942,6 +942,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     } else {
       setStateForDetentIndex(currentDetentIndex)
       post {
+        // Dismissed before this ran: emitWillDismissEvents already settled the present
+        if (!isPresented || isBeingDismissed) return@post
+
         emitChangePositionDelegate(detentCalculator.getSheetTopForDetentIndex(currentDetentIndex))
         updateDimAmount()
         finishPresent()
