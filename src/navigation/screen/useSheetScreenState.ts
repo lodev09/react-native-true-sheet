@@ -13,7 +13,6 @@ import type {
   PositionChangeEvent,
   PositionChangeEventPayload,
   WillBlurEvent,
-  WillDismissEvent,
   DismissAttemptEvent,
   WillFocusEvent,
   WillPresentEvent,
@@ -67,6 +66,13 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
     [emit, routeKey]
   );
 
+  // A dismiss already underway (swipe or back press) must not be dismissed again when
+  // navigation marks the route closing before it finishes
+  const onWillDismiss = useCallback(() => {
+    isDismissedRef.current = true;
+    emitEvent('sheetWillDismiss', undefined);
+  }, [emitEvent]);
+
   const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
     isDismissedRef.current = true;
@@ -77,7 +83,7 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
     () => ({
       onWillPresent: (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
       onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
-      onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
+      onWillDismiss,
       onDidDismiss,
       onDismissAttempt: (_e: DismissAttemptEvent) => emitEvent('sheetDismissAttempt', undefined),
       onDetentChange: (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
@@ -90,7 +96,7 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
       onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
       onDidBlur: (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
     }),
-    [emitEvent, onDidDismiss]
+    [emitEvent, onWillDismiss, onDidDismiss]
   );
 
   return {
