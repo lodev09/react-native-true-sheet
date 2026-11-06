@@ -451,7 +451,7 @@ On iOS 26.0 or devices without the effect setters, a transparent color cannot re
 
 ### iOS background effects
 
-Native effects need iOS 26.1+, the effect setters on the sheet and its detents, and no design compatibility mode (iOS 26 only; iOS 27+ ignores `UIDesignRequiresCompatibility`).
+Native effects need iOS 26.1+, the effect setters on the sheet and its detents, and no design compatibility mode (iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later).
 
 | Input | Native effects | Fallback |
 |-------|----------------|----------|
@@ -490,7 +490,7 @@ Tinted glass is not supported per detent. On iOS 26+, detents with a `detentBack
 ```
 
 Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. This disables Liquid Glass for the entire app on iOS 26.
-iOS 27+ ignores this key. Use `backgroundColor` or `backgroundBlur` for individual sheets.
+iOS 27+ ignores this key in apps built with the iOS 27 SDK or later. Use `backgroundColor` or `backgroundBlur` for individual sheets.
 
 ---
 
@@ -661,7 +661,7 @@ Only `backgroundColor` is supported in `backgroundStyle`. See [Custom blur](#cus
 
 Remove `blurOptions` and `BlurOptions`. For custom intensity, use a third-party blur in `background`.
 The built-in blur ignores touches, so the iOS 18 `interaction: false` workaround is no longer needed.
-Missing effect setters and design compatibility mode on iOS 26 use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+Missing effect setters and design compatibility mode use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later.
 On iOS 26.0, color/blur still sits above glass.
 
 ### 7. `anchor` → `placement`

@@ -144,8 +144,8 @@ Use [`backgroundStyle.backgroundColor`](#backgroundstyle) to tint the blur.
 :::info
 On supported iOS 26.1+ devices, this uses a native effect that replaces Liquid Glass.
 Earlier iOS versions and devices without the setters use a non-interactive blur view at system intensity.
-Design compatibility mode on iOS 26 also uses this fallback.
-On iOS 27+, `UIDesignRequiresCompatibility` is ignored.
+Design compatibility mode also uses this fallback.
+iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later.
 On iOS 26.0, this blur sits above Liquid Glass.
 :::
 
