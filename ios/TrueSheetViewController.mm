@@ -443,12 +443,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (BOOL)isDesignCompatibilityMode {
-  if (@available(iOS 27.0, *)) {
-    return NO;
-  }
   if (@available(iOS 26.0, *)) {
-    NSNumber *value = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"];
-    return value.boolValue;
+    NSBundle *bundle = [NSBundle mainBundle];
+    if (![[bundle objectForInfoDictionaryKey:@"UIDesignRequiresCompatibility"] boolValue]) {
+      return NO;
+    }
+    if (@available(iOS 27.0, *)) {
+      // iOS 27 ignores the key only in apps built with the iOS 27 SDK or later
+      return [[bundle objectForInfoDictionaryKey:@"DTPlatformVersion"] integerValue] < 27;
+    }
+    return YES;
   }
   return NO;
 }

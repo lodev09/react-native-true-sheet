@@ -90,8 +90,8 @@ type DetentBackground =
 **`BackgroundBlur` values:** `'light'`, `'dark'`, `'default'`, `'extra-light'`, `'regular'`, `'prominent'`, `'system-ultra-thin-material'`, `'system-thin-material'`, `'system-material'`, `'system-thick-material'`, `'system-chrome-material'`, plus `-light` and `-dark` variants of each system material.
 
 `blurOptions` and `BlurOptions` are removed in v4. Use a third-party blur in `background` for custom intensity or other platforms.
-The fallback covers older iOS versions, missing effect setters, and design compatibility mode on iOS 26.
-iOS 27+ ignores `UIDesignRequiresCompatibility`. Before iOS 26, the default is system-material blur.
+The fallback covers older iOS versions, missing effect setters, and design compatibility mode.
+iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later. Before iOS 26, the default is system-material blur.
 
 ## Grabber
 
