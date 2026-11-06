@@ -9,14 +9,17 @@
 ### 🐛 Bug fixes
 
 - **iOS**: Dismissing a sheet shortly after it presents over another sheet no longer hides the sheet behind it for a few frames when the top sheet's content resized right after presenting without changing any of its detent heights, such as a sheet with only fractional detents. ([#1003](https://github.com/lodev09/react-native-true-sheet/pull/1003) by [@lodev09](https://github.com/lodev09))
+- **iOS**: A sheet with `backgroundColor` no longer renders transparent on iOS 27 in apps built with Xcode 26 that set `UIDesignRequiresCompatibility`. ([#1009](https://github.com/lodev09/react-native-true-sheet/pull/1009) by [@idlework](https://github.com/idlework))
 - **Android**: A sheet with `draggable={false}` no longer takes over a vertical gesture from its content, so a map inside it keeps its pinch and pan. ([#1006](https://github.com/lodev09/react-native-true-sheet/pull/1006) by [@MarkusWendorf](https://github.com/MarkusWendorf))
 - **Android**: A back press during a sheet's dismiss animation now reaches the sheet below or navigation, instead of being swallowed by the closing sheet. A sheet dismissed right after presenting without animation no longer keeps catching back presses after it closes. ([#1008](https://github.com/lodev09/react-native-true-sheet/pull/1008) by [@wildseansy](https://github.com/wildseansy))
 - A sheet with a `TrueSheetPeek` inside a `ScrollView` now settles at the full `peek` detent when dragged down after scrolling the content, instead of a thin band at the bottom of the screen. ([#1002](https://github.com/lodev09/react-native-true-sheet/pull/1002) by [@vilindberg](https://github.com/vilindberg) and [@lodev09](https://github.com/lodev09))
 - The `ReanimatedTrueSheet` Jest mock now renders `background` and `backgroundStyle` like the `TrueSheet` mock. The `TrueSheetActions` navigation mock's `pop()` now defaults to a count of 1 and `popTo` now passes `merge`, matching the real actions. ([#1005](https://github.com/lodev09/react-native-true-sheet/pull/1005) by [@lodev09](https://github.com/lodev09))
+- **Android**: A sheet that grew for the keyboard now returns to its detent when the keyboard goes away without an animation, such as after switching to another input method. It used to stay at the keyboard height. Cancelling a back gesture that was hiding the keyboard now brings the sheet back above the keyboard. ([#1007](https://github.com/lodev09/react-native-true-sheet/pull/1007) by [@TheInkedEngineer](https://github.com/TheInkedEngineer) and [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 
 - Add a Dim Blur section to the Dimming guide, and the `truesheet-usage` skill now covers `dimBlur`. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@lodev09](https://github.com/lodev09))
+- The docs and the `truesheet-usage` skill now say that iOS 27 ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later. ([#1009](https://github.com/lodev09/react-native-true-sheet/pull/1009) by [@idlework](https://github.com/idlework))
 
 ## 4.0.1
 
