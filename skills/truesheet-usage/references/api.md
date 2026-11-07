@@ -107,6 +107,7 @@ Relevant when stacking sheets. A sheet "blurs" when another sheet presents on to
 | Event | Payload | Platforms | When |
 |-------|---------|-----------|------|
 | `onBackPress` | — | 🤖 Android | Hardware back button pressed while sheet is visible |
+| `onVerticalBarChange` | `VerticalBarChangeEventPayload` | 🍎 iOS 27.2+ (27.2 SDK) | Once per present, then when the vertical bar (iPhone Duo side rail) changes. Not mid-drag |
 
 ---
 
@@ -132,5 +133,17 @@ Extends `DetentInfoEventPayload`:
   position: number
   detent: number
   realtime: boolean // true = native animation frame, false = JS-driven
+}
+```
+
+### `VerticalBarChangeEventPayload`
+
+```tsx
+{
+  edge: 'leading' | 'trailing' | 'none' // In the app's layout direction; 'none' = sheet doesn't reach a bar
+  inset: number  // How far the bar reaches into the sheet; pad content by it
+  start: number  // Where bar items go, from the sheet's top-start corner
+  top: number    // Moves down below the rail's status items at tall detents
+  width: number
 }
 ```

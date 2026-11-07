@@ -42,6 +42,7 @@ import {
   GestureSheet,
   PromptSheet,
   ScrollViewSheet,
+  SideRailSheet,
 } from '../components/sheets';
 
 const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
@@ -102,6 +103,7 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
+  const sideRailSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -264,6 +266,7 @@ const MapScreenInner = ({
             />
             <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
           </ButtonGroup>
+          <Button text="Side Rail" onPress={() => sideRailSheet.current?.present()} />
           <Spacer />
           {showExtraContent && <DemoContent text="Extra content that changes height" />}
           <ButtonGroup>
@@ -286,6 +289,7 @@ const MapScreenInner = ({
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
           <GestureSheet ref={gestureSheet} />
+          <SideRailSheet ref={sideRailSheet} />
         </ScrollView>
       </ReanimatedTrueSheet>
     </View>

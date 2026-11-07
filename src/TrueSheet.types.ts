@@ -31,6 +31,38 @@ export interface PositionChangeEventPayload extends DetentInfoEventPayload {
   realtime: boolean;
 }
 
+/**
+ * The sheet's edge that holds the system's vertical bar, in the app's layout
+ * direction, or `'none'` while the sheet doesn't reach one.
+ */
+export type VerticalBarEdge = 'leading' | 'trailing' | 'none';
+
+export interface VerticalBarChangeEventPayload {
+  /**
+   * The sheet's edge that holds the vertical bar.
+   */
+  edge: VerticalBarEdge;
+  /**
+   * How far the bar reaches into the sheet on that edge. Pad content by it to
+   * keep it clear of the bar. `0` when `edge` is `'none'`.
+   */
+  inset: number;
+  /**
+   * Distance from the sheet's start edge to where bar items go. Use it as the
+   * `start` style of an absolutely positioned item.
+   */
+  start: number;
+  /**
+   * Distance from the sheet's top to where bar items go. It moves down when
+   * the sheet's top reaches the rail's status items.
+   */
+  top: number;
+  /**
+   * Width of the column bar items go in.
+   */
+  width: number;
+}
+
 export type MountEvent = NativeSyntheticEvent<null>;
 export type DetentChangeEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
 export type WillPresentEvent = NativeSyntheticEvent<DetentInfoEventPayload>;
@@ -46,6 +78,7 @@ export type DidFocusEvent = NativeSyntheticEvent<null>;
 export type DidBlurEvent = NativeSyntheticEvent<null>;
 export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
+export type VerticalBarChangeEvent = NativeSyntheticEvent<VerticalBarChangeEventPayload>;
 
 /**
  * Options for customizing the grabber (drag handle) appearance.
@@ -869,6 +902,19 @@ export interface TrueSheetProps extends ViewProps {
    * Called when the sheet loses focus because another sheet is presented on top of it.
    */
   onDidBlur?: (event: DidBlurEvent) => void;
+
+  /**
+   * Called with where the system's vertical bar, such as an iPhone Duo's side
+   * rail, sits in the sheet. Fires once each time the sheet presents, then when
+   * the bar changes, like on fold, rotation, or a detent change. It doesn't
+   * fire mid-drag; the value updates when the sheet settles.
+   *
+   * System sheets keep their bars horizontal but put trailing bar items in the
+   * rail. Use this to do the same with custom controls, like a close button.
+   *
+   * @platform ios 27.2+
+   */
+  onVerticalBarChange?: (event: VerticalBarChangeEvent) => void;
 
   /**
    * Called when the hardware back button is pressed on Android.

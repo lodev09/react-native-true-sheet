@@ -113,6 +113,52 @@ export const App = () => {
 }
 ```
 
+## Side Rail
+
+The iPhone Duo keeps a vertical side rail on one edge of the screen. Full-screen apps move their bar items into it. Sheets keep horizontal bars, but a sheet that reaches the rail, like a sheet on the cover screen, gets the rail's width as a safe-area inset, and system sheets put their trailing bar items, like the close button, in the rail.
+
+To do the same with your own controls, listen to [`onVerticalBarChange`](../reference/events#onverticalbarchange). It reports the sheet's `edge` that holds the rail, the `inset` it reaches into the sheet, and the `start`, `top`, and `width` of where bar items go, measured from the sheet's top-start corner. `top` sits below the rail's status items, so at a tall detent it moves down past the camera and clock, like the close button of a system sheet. A sheet that floats clear of the rail, like on the unfolded screen, gets an `edge` of `'none'`.
+
+```tsx {2-3,7,9,11-12,16-18}
+export const App = () => {
+  const [bar, setBar] = useState<VerticalBarChangeEventPayload | null>(null)
+  const inRail = bar && bar.edge !== 'none'
+
+  return (
+    <TrueSheet
+      onVerticalBarChange={(e) => setBar(e.nativeEvent)}
+      // The item can sit below the header, so keep the header above the content
+      headerStyle={{ zIndex: 1 }}
+      header={
+        <Header right={!inRail && <CloseButton />}>
+          {inRail && (
+            <View
+              style={{
+                position: 'absolute',
+                start: bar.start,
+                top: bar.top,
+                width: bar.width,
+                alignItems: 'center',
+              }}
+            >
+              <CloseButton />
+            </View>
+          )}
+        </Header>
+      }
+    >
+      <Content />
+    </TrueSheet>
+  )
+}
+```
+
+The `header` starts at the sheet's top-start corner, so the values apply as they are. Subtract any `headerStyle` margin, or the height of a relative header if you place the item in the content instead. Keep it out of a `ScrollView`, so it doesn't scroll with the content.
+
+:::info
+Requires iOS 27.2+ and an app built with the iOS 27.2 SDK or later. On Android, web, and earlier iOS versions, the event never fires.
+:::
+
 ## Navigation
 
 `foldOptions` is a screen option in the [Sheet Navigator](navigation) and the Expo Router `Sheet` layout, like any other prop.

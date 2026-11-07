@@ -4,6 +4,7 @@ import type {
   DetentInfoEventPayload,
   PositionChangeEventPayload,
   TrueSheetProps,
+  VerticalBarChangeEventPayload,
 } from '../TrueSheet.types';
 import type { TrueSheetActionType } from './actions';
 import type {
@@ -63,6 +64,10 @@ export type TrueSheetNavigationEventMap = {
    * Event fired when the sheet's position changes.
    */
   sheetPositionChange: { data: PositionChangeEventPayload };
+  /**
+   * Event fired with where the system's vertical bar sits in the sheet.
+   */
+  sheetVerticalBarChange: { data: VerticalBarChangeEventPayload };
   /**
    * Event fired when the sheet is about to regain focus.
    */

@@ -311,3 +311,37 @@ How far the sheet must be swiped down from its lowest detent to dismiss.
 | position | `number` | The Y position of the sheet relative to the screen. |
 | detent | `number` | The detent value (0-1) for the nearest detent index. |
 | realtime | `boolean` | Whether the position is a real-time value (e.g., during drag or animation tracking). When `false`, position should be animated in JS. |
+
+## `VerticalBarChangeEventPayload`
+
+`Object` that comes with the [`onVerticalBarChange`](events#onverticalbarchange) event.
+
+```tsx
+{
+  edge: 'trailing',
+  inset: 76,
+  start: 386,
+  top: 12,
+  width: 48
+}
+```
+
+| Property | Type | Description |
+| - | - | - |
+| edge | [`VerticalBarEdge`](#verticalbaredge) | The sheet's edge that holds the vertical bar. |
+| inset | `number` | How far the bar reaches into the sheet on that edge. Pad content by it to keep it clear of the bar. |
+| start | `number` | Distance from the sheet's start edge to where bar items go. Use it as the `start` style of an absolutely positioned item. |
+| top | `number` | Distance from the sheet's top to where bar items go. It moves down when the sheet's top reaches the rail's status items. |
+| width | `number` | Width of the column bar items go in. |
+
+All numbers are `0` when `edge` is `'none'`.
+
+## `VerticalBarEdge`
+
+The edge is in the app's layout direction, the same one `start` uses.
+
+| Value | Description |
+| - | - |
+| `"leading"` | The bar is on the sheet's leading edge. |
+| `"trailing"` | The bar is on the sheet's trailing edge. |
+| `"none"` | The sheet doesn't reach a vertical bar, like a sheet that floats clear of it or a device without one. |

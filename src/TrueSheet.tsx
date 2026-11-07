@@ -29,6 +29,7 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
+  VerticalBarChangeEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
@@ -194,6 +195,7 @@ export class TrueSheet
     this.onDidBlur = this.onDidBlur.bind(this);
     this.handleBackPress = this.handleBackPress.bind(this);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+    this.onVerticalBarChange = this.onVerticalBarChange.bind(this);
     this.onInitialPresentReady = this.onInitialPresentReady.bind(this);
   }
 
@@ -442,6 +444,10 @@ export class TrueSheet
 
   private onDidBlur(event: DidBlurEvent): void {
     this.props.onDidBlur?.(event);
+  }
+
+  private onVerticalBarChange(event: VerticalBarChangeEvent): void {
+    this.props.onVerticalBarChange?.(event);
   }
 
   private onVisibilityChange(event: { nativeEvent: { visible: boolean } }): void {
@@ -788,6 +794,7 @@ export class TrueSheet
         onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
         onVisibilityChange={this.onVisibilityChange}
+        onVerticalBarChange={this.onVerticalBarChange}
         // These must stay on this host view, not on the container. The container is
         // reparented into the native sheet, so this view is never a native ancestor of
         // the sheet content — this is the React-tree boundary between the sheet and

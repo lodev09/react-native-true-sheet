@@ -159,6 +159,16 @@ This is called when the sheet has lost focus. This happens:
 
 Useful for pausing updates or disabling interactions.
 
+## `onVerticalBarChange`
+
+:::info[iOS 27.2+ only]
+Requires an app built with the iOS 27.2 SDK or later.
+:::
+
+Comes with [`VerticalBarChangeEventPayload`](types#verticalbarchangeeventpayload).
+
+This is called with where the system's vertical bar, like the side rail of an iPhone Duo, sits in the sheet. It fires once each time the sheet presents, with an `edge` of `'none'` if the sheet doesn't reach a bar, then whenever the bar changes, such as on fold, rotation, or a detent change. It doesn't fire while the sheet is dragged; the value updates when the sheet settles. Don't rely on its order relative to `onWillPresent` and `onDidPresent`. See [Side Rail](../guides/foldables#side-rail).
+
 ## `onBackPress`
 
 :::info[Android only]

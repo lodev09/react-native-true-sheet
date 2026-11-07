@@ -51,6 +51,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (NSArray *)accessibilityGrabberElements;
 - (void)endInteractiveDismissState;
 - (void)updateHingeState;
+- (void)updateVerticalBar;
 - (void)correctHingeOffsetForIndex:(NSInteger)index;
 - (CGFloat)tabletopHingeEdge;
 - (CGFloat)hingeOffsetForHeight:(CGFloat)height;
@@ -1178,6 +1179,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // The hinge callback can run before the division region updates; the
   // relayout UIKit does for the posture change always sees the new region.
   [self updateHingeState];
+  [self updateVerticalBar];
 
   if (_pendingDetentIndex >= 0) {
     [_scheduledDetentIndexes addObject:@(_pendingDetentIndex)];
@@ -1381,6 +1383,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
+  [self updateVerticalBar];
 }
 
 #pragma mark - Interactive Navigation Dismiss
@@ -1486,6 +1489,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _interactiveStartPosition = 0;
   [_interactivePositionLink invalidate];
   _interactivePositionLink = nil;
+  [self updateVerticalBar];
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
@@ -1709,6 +1713,65 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       }
     });
   }
+}
+
+/**
+ * Reports the vertical bar to the delegate. iOS keeps a sheet's bars
+ * horizontal, but a sheet that reaches the rail still gets its edge as a trait,
+ * its width as a safe-area inset, and a bar layout region below the rail's
+ * status items, where system sheets put their trailing bar items. Skipped
+ * mid-drag and mid-swipe, where the region's top follows the finger every
+ * frame; the settle reports the final value.
+ */
+- (void)updateVerticalBar {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_2)
+  if (@available(iOS 27.2, *)) {
+    // Off-window passes see no safe area and would report a transient no-bar. Behind a
+    // stacked child, the push-back scaling skews the window conversion below.
+    if (_isDragging || _isInteractiveDismiss || self.isBeingDismissed || self.isStackedBehindChild ||
+        !self.viewIfLoaded.window) {
+      return;
+    }
+
+    UIView *view = self.view;
+    BOOL rtl = self.traitCollection.layoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft;
+    UIRectEdge edge = UIRectEdgeNone;
+    CGFloat inset = 0;
+    switch (self.traitCollection.verticalBarEdge) {
+      case UIVerticalBarEdgeLeading:
+        edge = rtl ? UIRectEdgeRight : UIRectEdgeLeft;
+        break;
+      case UIVerticalBarEdgeTrailing:
+        edge = rtl ? UIRectEdgeLeft : UIRectEdgeRight;
+        break;
+      default:
+        break;
+    }
+    if (edge == UIRectEdgeLeft) {
+      inset = view.safeAreaInsets.left;
+    } else if (edge == UIRectEdgeRight) {
+      inset = view.safeAreaInsets.right;
+    }
+
+    // The trait names the preferred edge even when the sheet floats clear of the bar
+    TrueSheetVerticalBar verticalBar = {UIRectEdgeNone, 0, CGRectZero};
+    if (inset > 0) {
+      UIViewLayoutRegion *region = [UIViewLayoutRegion layoutRegionForBarOnEdge:edge];
+      verticalBar.edge = edge;
+      verticalBar.inset = inset;
+      CGRect sheetRegion = UIEdgeInsetsInsetRect(view.bounds, [view edgeInsetsForLayoutRegion:region]);
+      // The rail's status items line up with the window's bar column, which the sheet's
+      // own region misses by the sheet's margin from the screen edge
+      UIWindow *window = view.window;
+      CGRect windowRegion =
+        [window convertRect:UIEdgeInsetsInsetRect(window.bounds, [window edgeInsetsForLayoutRegion:region])
+                     toView:view];
+      verticalBar.itemFrame = CGRectMake(CGRectGetMinX(windowRegion), CGRectGetMinY(sheetRegion),
+        CGRectGetWidth(windowRegion), CGRectGetHeight(sheetRegion));
+    }
+    [self.delegate viewControllerDidUpdateVerticalBar:verticalBar];
+  }
+#endif
 }
 
 #pragma mark - Sheet Configuration

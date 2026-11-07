@@ -20,6 +20,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * The system's vertical bar (an iPhone Duo's side rail) as the sheet sees it.
+ * The edge is physical, so the host can express it in React Native's layout
+ * direction, which can differ from UIKit's.
+ */
+typedef struct {
+  /// UIRectEdgeLeft or UIRectEdgeRight, or UIRectEdgeNone while the sheet doesn't reach a bar
+  UIRectEdge edge;
+  /// How far the bar reaches into the sheet
+  CGFloat inset;
+  /// Where bar items go, in the sheet's coordinates
+  CGRect itemFrame;
+} TrueSheetVerticalBar;
+
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
@@ -38,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerSafeAreaInsetsDidChange;
+- (void)viewControllerDidUpdateVerticalBar:(TrueSheetVerticalBar)verticalBar;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;

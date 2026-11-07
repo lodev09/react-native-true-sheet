@@ -184,6 +184,15 @@ export interface NativeProps extends ViewProps {
   onWillBlur?: CodegenTypes.DirectEventHandler<null>;
   onDidBlur?: CodegenTypes.DirectEventHandler<null>;
   onVisibilityChange?: CodegenTypes.DirectEventHandler<Readonly<{ visible: boolean }>>;
+  onVerticalBarChange?: CodegenTypes.DirectEventHandler<
+    Readonly<{
+      edge: 'leading' | 'trailing' | 'none';
+      inset: CodegenTypes.Double;
+      start: CodegenTypes.Double;
+      top: CodegenTypes.Double;
+      width: CodegenTypes.Double;
+    }>
+  >;
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

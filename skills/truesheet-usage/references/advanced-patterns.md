@@ -159,7 +159,7 @@ navigation.addListener('sheetDidPresent', (e) => {
 })
 ```
 
-Also available as `screenListeners` on the navigator or `listeners` on a screen. Events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDismissAttempt`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`.
+Also available as `screenListeners` on the navigator or `listeners` on a screen. Events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDismissAttempt`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`, `sheetVerticalBarChange`.
 
 ### Navigating from sheets
 
@@ -381,6 +381,7 @@ Place a sheet on the leading or trailing edge (follows layout direction). Useful
 - Detents keep their order around `hingeDetentIndex`: lower ones stay below it, higher ones above it
 - Book posture (vertical fold): iOS docks the sheet to one panel natively — pick it with `placement` (`'automatic'`/`'center'` → leading)
 - Navigator: `foldOptions` is a regular screen option
+- Side rail (iOS 27.2+): `onVerticalBarChange` reports where a bar item (custom close button) belongs. Absolutely position it in `header` with `start`/`top`/`width`, and give the header `headerStyle={{ zIndex: 1 }}` so it stays tappable below the header at tall detents
 - Test on the iPhone Duo simulator: unfold, rotate to a portrait UI, then half-fold
 
 ---
