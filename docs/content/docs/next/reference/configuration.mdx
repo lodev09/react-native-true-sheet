@@ -243,6 +243,30 @@ Requires iOS 27.1+ on a foldable.
 In book posture (vertical fold), iOS already docks every sheet to one panel. Use [`placement`](#placement) to pick the side.
 :::
 
+## `closeButton`
+
+Shows a close button that UIKit places in the sheet's vertical bar, like the side rail of an iPhone Duo, the way system sheets do. Nothing is drawn where the sheet has no vertical bar, so draw your own close button while [`onVerticalBarChange`](events#onverticalbarchange) reports it hidden. Pressing it calls [`onCloseButtonPress`](events#onclosebuttonpress). See [Side Rail](../guides/foldables#side-rail).
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `boolean` | `false` | ✅ | | |
+
+:::info
+Requires iOS 27.1+.
+:::
+
+## `closeButtonOptions`
+
+Options for the [`closeButton`](#closebutton).
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| [`CloseButtonOptions`](types#closebuttonoptions) | | ✅ | | |
+
+```tsx
+<TrueSheet closeButton closeButtonOptions={{ icon: 'chevron.down', label: 'Dismiss' }} />
+```
+
 ## `dismissible`
 
 If set to `false`, the sheet will prevent interactive dismissal via dragging or clicking outside of it.

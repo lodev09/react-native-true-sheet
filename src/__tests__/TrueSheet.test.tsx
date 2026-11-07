@@ -25,7 +25,6 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
-  VerticalBarChangeEvent,
   TrueSheetProps,
 } from '../TrueSheet.types';
 
@@ -882,29 +881,25 @@ describe('TrueSheet', () => {
   });
 
   describe('Vertical Bar', () => {
-    it('should deliver onVerticalBarChange from the native view to the prop', async () => {
-      const onVerticalBarChangeMock = jest.fn();
+    it.each([
+      [
+        'onVerticalBarChange',
+        { nativeEvent: { edge: 'trailing', inset: 76, closeButtonVisible: true } },
+      ],
+      ['onCloseButtonPress', { nativeEvent: null }],
+    ] as const)('should deliver %s from the native view to the prop', async (name, event) => {
+      const handler = jest.fn();
       const { getByTestId } = render(
-        <TrueSheet testID="vertical-bar-host" onVerticalBarChange={onVerticalBarChangeMock}>
+        <TrueSheet testID="vertical-bar-host" {...{ [name]: handler }}>
           <Text>Content</Text>
         </TrueSheet>
       );
 
-      const event = {
-        nativeEvent: {
-          edge: 'trailing',
-          inset: 76,
-          start: 378,
-          top: 12,
-          width: 48,
-        },
-      } as VerticalBarChangeEvent;
-
       await act(async () => {
-        getByTestId('vertical-bar-host').props.onVerticalBarChange(event);
+        getByTestId('vertical-bar-host').props[name](event);
       });
 
-      expect(onVerticalBarChangeMock).toHaveBeenCalledWith(event);
+      expect(handler).toHaveBeenCalledWith(event);
     });
   });
 });

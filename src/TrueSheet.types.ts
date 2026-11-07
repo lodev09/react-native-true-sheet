@@ -48,19 +48,10 @@ export interface VerticalBarChangeEventPayload {
    */
   inset: number;
   /**
-   * Distance from the sheet's start edge to where bar items go. Use it as the
-   * `start` style of an absolutely positioned item.
+   * Whether the `closeButton` is showing in the bar. Draw your own close
+   * control while it's `false`.
    */
-  start: number;
-  /**
-   * Distance from the sheet's top to where bar items go. It moves down when
-   * the sheet's top reaches the rail's status items.
-   */
-  top: number;
-  /**
-   * Width of the column bar items go in.
-   */
-  width: number;
+  closeButtonVisible: boolean;
 }
 
 export type MountEvent = NativeSyntheticEvent<null>;
@@ -79,6 +70,7 @@ export type DidBlurEvent = NativeSyntheticEvent<null>;
 export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
 export type VerticalBarChangeEvent = NativeSyntheticEvent<VerticalBarChangeEventPayload>;
+export type CloseButtonPressEvent = NativeSyntheticEvent<null>;
 
 /**
  * Options for customizing the grabber (drag handle) appearance.
@@ -293,6 +285,23 @@ export interface HeaderOptions {
    * @default 'relative'
    */
   position?: 'relative' | 'absolute';
+}
+
+/**
+ * Options for the `closeButton`.
+ */
+export interface CloseButtonOptions {
+  /**
+   * Name of an image in the app's asset catalog, or of an SF Symbol. It's drawn
+   * in the bar's tint, like a template image. Defaults to the system close icon.
+   */
+  icon?: string;
+
+  /**
+   * Accessibility label of the button. Defaults to the system's for the system
+   * icon, and to `'Close'` for a custom `icon`.
+   */
+  label?: string;
 }
 
 /**
@@ -721,6 +730,25 @@ export interface TrueSheetProps extends ViewProps {
   foldOptions?: FoldOptions;
 
   /**
+   * Shows a close button that UIKit places in the sheet's vertical bar, such as
+   * an iPhone Duo's side rail, like system sheets do. Nothing is drawn where the
+   * sheet has no vertical bar; `onVerticalBarChange` reports when it shows, so
+   * you can draw your own close control otherwise. Pressing it calls
+   * `onCloseButtonPress` and doesn't dismiss the sheet by itself.
+   *
+   * @platform ios 27.1+
+   * @default false
+   */
+  closeButton?: boolean;
+
+  /**
+   * Options for the `closeButton`.
+   *
+   * @platform ios 27.1+
+   */
+  closeButtonOptions?: CloseButtonOptions;
+
+  /**
    * Controls how the sheet adjusts its height for system insets (safe area).
    *
    * - `'automatic'`: Adds the bottom safe area inset to the sheet height,
@@ -904,17 +932,21 @@ export interface TrueSheetProps extends ViewProps {
   onDidBlur?: (event: DidBlurEvent) => void;
 
   /**
-   * Called with where the system's vertical bar, such as an iPhone Duo's side
-   * rail, sits in the sheet. Fires once each time the sheet presents, then when
-   * the bar changes, like on fold, rotation, or a detent change. It doesn't
-   * fire mid-drag; the value updates when the sheet settles.
+   * Called with the system's vertical bar, such as an iPhone Duo's side rail,
+   * as the sheet sees it, and whether the `closeButton` shows in it. Fires once
+   * each time the sheet presents, then when either changes, like on fold or
+   * rotation. It doesn't fire mid-drag; the value updates when the sheet settles.
    *
-   * System sheets keep their bars horizontal but put trailing bar items in the
-   * rail. Use this to do the same with custom controls, like a close button.
-   *
-   * @platform ios 27.2+
+   * @platform ios 27.1+
    */
   onVerticalBarChange?: (event: VerticalBarChangeEvent) => void;
+
+  /**
+   * Called when the `closeButton` is pressed. Dismiss the sheet from here.
+   *
+   * @platform ios 27.1+
+   */
+  onCloseButtonPress?: (event: CloseButtonPressEvent) => void;
 
   /**
    * Called when the hardware back button is pressed on Android.

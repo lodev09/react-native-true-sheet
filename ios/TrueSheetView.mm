@@ -378,6 +378,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _insetAdjustment = newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;
 
+  _controller.closeButton = newProps.closeButton;
+  _controller.closeButtonIcon = RCTNSStringFromStringNilIfEmpty(newProps.closeButtonOptions.icon);
+  _controller.closeButtonLabel = RCTNSStringFromStringNilIfEmpty(newProps.closeButtonOptions.label);
+  [_controller setupCloseButton];
+
   [self setupScrollable];
 }
 
@@ -426,6 +431,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   if (_pendingMountEvent && (updateMask & RNComponentViewUpdateMaskEventEmitter)) {
     _pendingMountEvent = NO;
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
+  }
+
+  // A new emitter missed what was sent before it, so it gets the bar again
+  if (updateMask & RNComponentViewUpdateMaskEventEmitter) {
+    _verticalBarReported = NO;
+    [_controller updateVerticalBar];
   }
 
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
@@ -1166,28 +1177,29 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   using Edge = TrueSheetViewEventEmitter::OnVerticalBarChangeEdge;
-  TrueSheetViewEventEmitter::OnVerticalBarChange event{Edge::None, 0, 0, 0, 0};
+  TrueSheetViewEventEmitter::OnVerticalBarChange event{
+    Edge::None, 0, static_cast<bool>(verticalBar.closeButtonVisible)};
   if (verticalBar.edge != UIRectEdgeNone) {
     // In the sheet's React Native layout direction, which can differ from UIKit's
     BOOL rtl =
       [UIView userInterfaceLayoutDirectionForSemanticContentAttribute:_containerView.semanticContentAttribute] ==
       UIUserInterfaceLayoutDirectionRightToLeft;
-    CGRect frame = verticalBar.itemFrame;
     event.edge = (verticalBar.edge == UIRectEdgeRight) != rtl ? Edge::Trailing : Edge::Leading;
     event.inset = verticalBar.inset;
-    event.start = rtl ? CGRectGetWidth(_controller.view.bounds) - CGRectGetMaxX(frame) : CGRectGetMinX(frame);
-    event.top = CGRectGetMinY(frame);
-    event.width = CGRectGetWidth(frame);
   }
 
   if (_verticalBarReported && event.edge == _verticalBar.edge && event.inset == _verticalBar.inset &&
-      event.start == _verticalBar.start && event.top == _verticalBar.top && event.width == _verticalBar.width) {
+      event.closeButtonVisible == _verticalBar.closeButtonVisible) {
     return;
   }
 
   _verticalBarReported = YES;
   _verticalBar = event;
   [TrueSheetStateEvents emitVerticalBarChange:_eventEmitter verticalBar:event];
+}
+
+- (void)viewControllerDidPressCloseButton {
+  [TrueSheetStateEvents emitCloseButtonPress:_eventEmitter];
 }
 
 - (UIViewController *)findPresentingViewController {

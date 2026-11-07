@@ -20,39 +20,34 @@ export const SideRailSheet = forwardRef((props: SideRailSheetProps, ref: Ref<Tru
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
 
-  const inRail = !!bar && bar.edge !== 'none';
-  const railPadding = inRail
-    ? bar.edge === 'trailing'
+  const dismiss = () => sheetRef.current?.dismiss();
+  const railPadding =
+    bar?.edge === 'trailing'
       ? { paddingEnd: SPACING + bar.inset }
-      : { paddingStart: SPACING + bar.inset }
-    : null;
-
-  const closeButton = (
-    <Pressable
-      accessibilityLabel="Close"
-      accessibilityRole="button"
-      style={styles.close}
-      onPress={() => sheetRef.current?.dismiss()}
-    >
-      <Text style={styles.closeText}>✕</Text>
-    </Pressable>
-  );
+      : bar?.edge === 'leading'
+        ? { paddingStart: SPACING + bar.inset }
+        : null;
 
   return (
     <TrueSheet
       ref={sheetRef}
       detents={[0.5, 1]}
       backgroundColor={DARK}
-      // The rail item can sit below the header, so keep the header above the content
-      headerStyle={styles.headerLayer}
+      closeButton
+      closeButtonOptions={{ icon: 'chevron.down' }}
+      onCloseButtonPress={dismiss}
       header={
         <View style={[styles.header, railPadding]}>
           <Text style={styles.title}>Side Rail</Text>
-          {!inRail && closeButton}
-          {inRail && (
-            <View style={[styles.rail, { start: bar.start, top: bar.top, width: bar.width }]}>
-              {closeButton}
-            </View>
+          {!bar?.closeButtonVisible && (
+            <Pressable
+              accessibilityLabel="Close"
+              accessibilityRole="button"
+              style={styles.close}
+              onPress={dismiss}
+            >
+              <Text style={styles.closeText}>✕</Text>
+            </Pressable>
           )}
         </View>
       }
@@ -74,23 +69,17 @@ export const SideRailSheet = forwardRef((props: SideRailSheetProps, ref: Ref<Tru
 });
 
 const styles = StyleSheet.create({
-  headerLayer: {
-    zIndex: 1,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: SPACING,
+    minHeight: CLOSE_SIZE + SPACING * 2,
   },
   title: {
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
-  },
-  rail: {
-    position: 'absolute',
-    alignItems: 'center',
   },
   close: {
     width: CLOSE_SIZE,

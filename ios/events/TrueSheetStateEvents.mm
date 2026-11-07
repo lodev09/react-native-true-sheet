@@ -53,6 +53,14 @@
   emitter->onVerticalBarChange(verticalBar);
 }
 
++ (void)emitCloseButtonPress:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter {
+  if (!eventEmitter)
+    return;
+
+  auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
+  emitter->onCloseButtonPress({});
+}
+
 @end
 
 #endif  // RCT_NEW_ARCH_ENABLED

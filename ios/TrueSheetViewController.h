@@ -30,8 +30,8 @@ typedef struct {
   UIRectEdge edge;
   /// How far the bar reaches into the sheet
   CGFloat inset;
-  /// Where bar items go, in the sheet's coordinates
-  CGRect itemFrame;
+  /// Whether the close button is showing in the bar
+  BOOL closeButtonVisible;
 } TrueSheetVerticalBar;
 
 @protocol TrueSheetViewControllerDelegate <NSObject>
@@ -53,6 +53,7 @@ typedef struct {
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerSafeAreaInsetsDidChange;
 - (void)viewControllerDidUpdateVerticalBar:(TrueSheetVerticalBar)verticalBar;
+- (void)viewControllerDidPressCloseButton;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;
@@ -137,6 +138,12 @@ typedef struct {
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
+/// A close button UIKit places in the sheet's vertical bar (iOS 27.1+)
+@property (nonatomic, assign) BOOL closeButton;
+/// An asset catalog image or SF Symbol name; the system close glyph when nil
+@property (nonatomic, copy, nullable) NSString *closeButtonIcon;
+@property (nonatomic, copy, nullable) NSString *closeButtonLabel;
+
 @property (nonatomic, readonly) CGFloat screenHeight;
 
 /**
@@ -156,6 +163,8 @@ typedef struct {
 - (void)setupAccessibilityContainer;
 - (void)refreshAccessibilityContainer;
 - (void)refreshAccessibilityContainerIfFooterChanged;
+- (void)setupCloseButton;
+- (void)updateVerticalBar;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;

@@ -65,9 +65,13 @@ export type TrueSheetNavigationEventMap = {
    */
   sheetPositionChange: { data: PositionChangeEventPayload };
   /**
-   * Event fired with where the system's vertical bar sits in the sheet.
+   * Event fired when the system's vertical bar, or whether the close button shows in it, changes.
    */
   sheetVerticalBarChange: { data: VerticalBarChangeEventPayload };
+  /**
+   * Event fired when the sheet's `closeButton` is pressed.
+   */
+  sheetCloseButtonPress: { data: undefined };
   /**
    * Event fired when the sheet is about to regain focus.
    */
@@ -243,6 +247,8 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'placement'
   | 'placementOffset'
   | 'foldOptions'
+  | 'closeButton'
+  | 'closeButtonOptions'
   | 'elevation'
   | 'detached'
   | 'detachedOffset'

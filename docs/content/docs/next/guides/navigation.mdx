@@ -328,7 +328,8 @@ function DetailsSheet() {
 | `sheetDragChange` | User is dragging |
 | `sheetDragEnd` | User stopped dragging |
 | `sheetPositionChange` | Position changed |
-| `sheetVerticalBarChange` | Vertical bar changed (iOS 27.2+). To move a header control into the rail, update the screen's `header` option with `navigation.setOptions` |
+| `sheetVerticalBarChange` | Vertical bar, or whether the close button shows in it, changed (iOS 27.1+) |
+| `sheetCloseButtonPress` | `closeButton` pressed (iOS 27.1+). Call `navigation.goBack()` here |
 
 See [Lifecycle Events](../reference/events) for more details.
 

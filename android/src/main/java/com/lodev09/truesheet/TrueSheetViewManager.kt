@@ -263,6 +263,16 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "closeButton", defaultBoolean = false)
+  override fun setCloseButton(view: TrueSheetView, value: Boolean) {
+    // iOS-specific prop - no-op on Android
+  }
+
+  @ReactProp(name = "closeButtonOptions")
+  override fun setCloseButtonOptions(view: TrueSheetView, options: ReadableMap?) {
+    // iOS-specific prop - no-op on Android
+  }
+
   @ReactProp(name = "insetAdjustment")
   override fun setInsetAdjustment(view: TrueSheetView, insetAdjustment: String?) {
     view.setInsetAdjustment(insetAdjustment ?: "automatic")
