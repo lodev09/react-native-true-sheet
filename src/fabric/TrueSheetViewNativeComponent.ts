@@ -50,6 +50,11 @@ type HeaderOptionsType = Readonly<{
   position?: CodegenTypes.WithDefault<'relative' | 'absolute', 'relative'>;
 }>;
 
+type CloseButtonOptionsType = Readonly<{
+  icon?: string;
+  label?: string;
+}>;
+
 type FoldOptionsType = Readonly<{
   hingeDetentIndex?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
   hingeBehavior?: CodegenTypes.WithDefault<'none' | 'avoid' | 'snap', 'none'>;
@@ -165,6 +170,8 @@ export interface NativeProps extends ViewProps {
   headerOptions?: HeaderOptionsType;
   footerOptions?: FooterOptionsType;
   foldOptions?: FoldOptionsType;
+  closeButton?: CodegenTypes.WithDefault<boolean, false>;
+  closeButtonOptions?: CloseButtonOptionsType;
   presentation?: CodegenTypes.WithDefault<'page' | 'form', 'page'>;
 
   // Event handlers
@@ -184,6 +191,14 @@ export interface NativeProps extends ViewProps {
   onWillBlur?: CodegenTypes.DirectEventHandler<null>;
   onDidBlur?: CodegenTypes.DirectEventHandler<null>;
   onVisibilityChange?: CodegenTypes.DirectEventHandler<Readonly<{ visible: boolean }>>;
+  onVerticalBarChange?: CodegenTypes.DirectEventHandler<
+    Readonly<{
+      edge: 'leading' | 'trailing' | 'none';
+      inset: CodegenTypes.Double;
+      closeButtonVisible: boolean;
+    }>
+  >;
+  onCloseButtonPress?: CodegenTypes.DirectEventHandler<null>;
 }
 
 export default codegenNativeComponent<NativeProps>('TrueSheetView', {

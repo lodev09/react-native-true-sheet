@@ -879,4 +879,27 @@ describe('TrueSheet', () => {
       expect(onDidBlurMock).toHaveBeenCalled();
     });
   });
+
+  describe('Vertical Bar', () => {
+    it.each([
+      [
+        'onVerticalBarChange',
+        { nativeEvent: { edge: 'trailing', inset: 76, closeButtonVisible: true } },
+      ],
+      ['onCloseButtonPress', { nativeEvent: null }],
+    ] as const)('should deliver %s from the native view to the prop', async (name, event) => {
+      const handler = jest.fn();
+      const { getByTestId } = render(
+        <TrueSheet testID="vertical-bar-host" {...{ [name]: handler }}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+
+      await act(async () => {
+        getByTestId('vertical-bar-host').props[name](event);
+      });
+
+      expect(handler).toHaveBeenCalledWith(event);
+    });
+  });
 });

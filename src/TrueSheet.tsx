@@ -29,6 +29,8 @@ import type {
   DidFocusEvent,
   WillBlurEvent,
   DidBlurEvent,
+  VerticalBarChangeEvent,
+  CloseButtonPressEvent,
 } from './TrueSheet.types';
 import TrueSheetViewNativeComponent from './fabric/TrueSheetViewNativeComponent';
 import TrueSheetContainerViewNativeComponent from './fabric/TrueSheetContainerViewNativeComponent';
@@ -194,6 +196,8 @@ export class TrueSheet
     this.onDidBlur = this.onDidBlur.bind(this);
     this.handleBackPress = this.handleBackPress.bind(this);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+    this.onVerticalBarChange = this.onVerticalBarChange.bind(this);
+    this.onCloseButtonPress = this.onCloseButtonPress.bind(this);
     this.onInitialPresentReady = this.onInitialPresentReady.bind(this);
   }
 
@@ -442,6 +446,14 @@ export class TrueSheet
 
   private onDidBlur(event: DidBlurEvent): void {
     this.props.onDidBlur?.(event);
+  }
+
+  private onVerticalBarChange(event: VerticalBarChangeEvent): void {
+    this.props.onVerticalBarChange?.(event);
+  }
+
+  private onCloseButtonPress(event: CloseButtonPressEvent): void {
+    this.props.onCloseButtonPress?.(event);
   }
 
   private onVisibilityChange(event: { nativeEvent: { visible: boolean } }): void {
@@ -788,6 +800,8 @@ export class TrueSheet
         onWillBlur={this.onWillBlur}
         onDidBlur={this.onDidBlur}
         onVisibilityChange={this.onVisibilityChange}
+        onVerticalBarChange={this.onVerticalBarChange}
+        onCloseButtonPress={this.onCloseButtonPress}
         // These must stay on this host view, not on the container. The container is
         // reparented into the native sheet, so this view is never a native ancestor of
         // the sheet content — this is the React-tree boundary between the sheet and

@@ -12,6 +12,9 @@ import type {
   DragEndEvent,
   PositionChangeEvent,
   PositionChangeEventPayload,
+  VerticalBarChangeEvent,
+  VerticalBarChangeEventPayload,
+  CloseButtonPressEvent,
   WillBlurEvent,
   DismissAttemptEvent,
   WillFocusEvent,
@@ -55,7 +58,11 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
   const emitEvent = useCallback(
     (
       type: keyof TrueSheetNavigationEventMap,
-      data: DetentInfoEventPayload | PositionChangeEventPayload | undefined
+      data:
+        | DetentInfoEventPayload
+        | PositionChangeEventPayload
+        | VerticalBarChangeEventPayload
+        | undefined
     ) => {
       emit({
         type,
@@ -91,6 +98,10 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
       onDragChange: (e: DragChangeEvent) => emitEvent('sheetDragChange', e.nativeEvent),
       onDragEnd: (e: DragEndEvent) => emitEvent('sheetDragEnd', e.nativeEvent),
       onPositionChange: (e: PositionChangeEvent) => emitEvent('sheetPositionChange', e.nativeEvent),
+      onVerticalBarChange: (e: VerticalBarChangeEvent) =>
+        emitEvent('sheetVerticalBarChange', e.nativeEvent),
+      onCloseButtonPress: (_e: CloseButtonPressEvent) =>
+        emitEvent('sheetCloseButtonPress', undefined),
       onWillFocus: (_e: WillFocusEvent) => emitEvent('sheetWillFocus', undefined),
       onDidFocus: (_e: DidFocusEvent) => emitEvent('sheetDidFocus', undefined),
       onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),

@@ -51,6 +51,10 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (NSArray *)accessibilityGrabberElements;
 - (void)endInteractiveDismissState;
 - (void)updateHingeState;
+- (void)installCloseButton;
+- (NSArray *)accessibilityCloseButtonElements;
+- (BOOL)updateCloseButtonVisibilityForInset:(CGFloat)inset;
+- (void)handleCloseButtonPress;
 - (void)correctHingeOffsetForIndex:(NSInteger)index;
 - (CGFloat)tabletopHingeEdge;
 - (CGFloat)hingeOffsetForHeight:(CGFloat)height;
@@ -71,6 +75,50 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (BOOL)accessibilityPerformEscape {
   return [self.controller accessibilityPerformEscape];
+}
+
+@end
+
+// Holds the close button's navigation controller above the content. Touches that only
+// reach its empty root view, or the views around it, fall through to the content.
+@interface TrueSheetCloseButtonHostView : UIView
+@property (nonatomic, weak) UIView *passThroughView;
+@end
+
+@implementation TrueSheetCloseButtonHostView
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+  UIView *hitView = [super hitTest:point withEvent:event];
+  return !hitView || [self.passThroughView isDescendantOfView:hitView] ? nil : hitView;
+}
+
+// UIKit draws the bar's items in a container as large as the sheet, and creates their views
+// after the bar shows. Look them up when asked, and frame only them, so the container doesn't
+// take touches over the content.
+- (NSArray *)accessibilityElements {
+  NSMutableArray *elements = [NSMutableArray array];
+  NSMutableArray<UIView *> *views = [self.subviews mutableCopy];
+  while (views.count > 0) {
+    UIView *view = views.lastObject;
+    [views removeLastObject];
+    if (view.hidden || view.alpha <= 0 || view == self.passThroughView) {
+      continue;
+    }
+    if (view.isAccessibilityElement) {
+      [elements addObject:view];
+    } else {
+      [views addObjectsFromArray:view.subviews];
+    }
+  }
+  return elements;
+}
+
+- (CGRect)accessibilityFrame {
+  CGRect frame = CGRectNull;
+  for (UIView *element in self.accessibilityElements) {
+    frame = CGRectUnion(frame, element.accessibilityFrame);
+  }
+  return frame;
 }
 
 @end
@@ -128,6 +176,18 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
   TrueSheetDetentCalculator *_detentCalculator;
+
+  // UIKit moves bar items into a vertical bar only from a navigation bar
+  TrueSheetCloseButtonHostView *_closeButtonHostView;
+  UINavigationController *_closeButtonNavigationController;
+  UIBarButtonItem *_closeButtonItem;
+  NSString *_closeButtonItemIcon;
+  BOOL _closeButtonItemIsSystem;
+  BOOL _closeButtonApplied;
+  BOOL _closeButtonVisible;
+  // The bar inset at which the navigation bar stayed horizontal, until the sheet settles or
+  // presents again
+  CGFloat _closeButtonHorizontalInset;
   TrueSheetDimView *_dimView;
 
   // Foldable hinge (iOS 27.1+). Tabletop resolves on demand from the window's
@@ -663,6 +723,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
     // A new presentation records the posture it starts in
     _hingeStateKnown = NO;
+    _closeButtonHorizontalInset = 0;
     _hingeRestoreIndex = -1;
     _hingeOffset = 0;
 
@@ -844,6 +905,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return elements;
 }
 
+- (NSArray *)accessibilityCloseButtonElements {
+  return _closeButtonVisible ? @[ _closeButtonHostView ] : @[];
+}
+
 - (BOOL)accessibilityPerformEscape {
   if (!_isPresented) {
     return NO;
@@ -871,7 +936,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // its accessibilityElements getter recomputes live, so a footer/content subtree
   // that remounts (e.g. swapping a footer button on a state change) stays
   // discoverable instead of leaving this snapshot pointing at destroyed views.
-  NSMutableArray *accessibilityElements = [[self accessibilityGrabberElements] mutableCopy];
+  NSMutableArray *accessibilityElements = [[self accessibilityCloseButtonElements] mutableCopy];
+  [accessibilityElements addObjectsFromArray:[self accessibilityGrabberElements]];
   if (isAccessibilityModal) {
     NSArray *contentElements = contentView.accessibilityElements;
     [accessibilityElements addObjectsFromArray:contentElements.count > 0 ? contentElements : @[ contentView ]];
@@ -1178,6 +1244,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // The hinge callback can run before the division region updates; the
   // relayout UIKit does for the posture change always sees the new region.
   [self updateHingeState];
+  if (_closeButtonHostView && self.view.subviews.lastObject != _closeButtonHostView) {
+    [self.view bringSubviewToFront:_closeButtonHostView];
+  }
+  [self updateVerticalBar];
 
   if (_pendingDetentIndex >= 0) {
     [_scheduledDetentIndexes addObject:@(_pendingDetentIndex)];
@@ -1381,6 +1451,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
+  _closeButtonHorizontalInset = 0;
+  [self updateVerticalBar];
 }
 
 #pragma mark - Interactive Navigation Dismiss
@@ -1486,6 +1558,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _interactiveStartPosition = 0;
   [_interactivePositionLink invalidate];
   _interactivePositionLink = nil;
+  [self updateVerticalBar];
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
@@ -1709,6 +1782,151 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       }
     });
   }
+}
+
+/**
+ * Reports the vertical bar to the delegate, and shows the close button in it.
+ * Skipped mid-drag and mid-swipe; the settle reports the final value.
+ */
+- (void)updateVerticalBar {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
+  if (@available(iOS 27.1, *)) {
+    // Off-window passes see no safe area and would report a transient no-bar. Behind a
+    // stacked child, the push-back scaling changes the safe area.
+    if (_isDragging || _isInteractiveDismiss || self.isBeingDismissed || self.isStackedBehindChild ||
+        !self.viewIfLoaded.window) {
+      return;
+    }
+
+    UIView *view = self.view;
+    BOOL rtl = self.traitCollection.layoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft;
+    TrueSheetVerticalBar verticalBar = {UIRectEdgeNone, 0, NO};
+    switch (self.traitCollection.verticalBarEdge) {
+      case UIVerticalBarEdgeLeading:
+        verticalBar.edge = rtl ? UIRectEdgeRight : UIRectEdgeLeft;
+        break;
+      case UIVerticalBarEdgeTrailing:
+        verticalBar.edge = rtl ? UIRectEdgeLeft : UIRectEdgeRight;
+        break;
+      default:
+        break;
+    }
+    verticalBar.inset = verticalBar.edge == UIRectEdgeLeft    ? view.safeAreaInsets.left
+                        : verticalBar.edge == UIRectEdgeRight ? view.safeAreaInsets.right
+                                                              : 0;
+    // The trait names the preferred edge even when the sheet floats clear of the bar
+    if (verticalBar.inset <= 0) {
+      verticalBar.edge = UIRectEdgeNone;
+      verticalBar.inset = 0;
+    }
+    verticalBar.closeButtonVisible = [self updateCloseButtonVisibilityForInset:verticalBar.inset];
+    [self.delegate viewControllerDidUpdateVerticalBar:verticalBar];
+  }
+#endif
+}
+
+#pragma mark - Close Button
+
+- (void)setupCloseButton {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
+  if (@available(iOS 27.1, *)) {
+    if (!_closeButton && !_closeButtonNavigationController) {
+      return;
+    }
+    [self installCloseButton];
+
+    BOOL needsLayout = _closeButton != _closeButtonApplied;
+    _closeButtonApplied = _closeButton;
+
+    NSString *icon = _closeButtonIcon.length > 0 ? _closeButtonIcon : nil;
+    if (!_closeButtonItem || !(icon == _closeButtonItemIcon || [icon isEqualToString:_closeButtonItemIcon])) {
+      UIImage *image = icon ? ([UIImage imageNamed:icon] ?: [UIImage systemImageNamed:icon]) : nil;
+      image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+      _closeButtonItemIcon = icon;
+      // A system item can't take an image, so switching between the two replaces the item
+      if (_closeButtonItem && _closeButtonItemIsSystem == !image) {
+        _closeButtonItem.image = image;
+      } else {
+        _closeButtonItem = image
+                             ? [[UIBarButtonItem alloc] initWithImage:image
+                                                                style:UIBarButtonItemStylePlain
+                                                               target:self
+                                                               action:@selector(handleCloseButtonPress)]
+                             : [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose
+                                                                             target:self
+                                                                             action:@selector(handleCloseButtonPress)];
+        _closeButtonItemIsSystem = !image;
+        _closeButtonNavigationController.topViewController.navigationItem.leftBarButtonItem = _closeButtonItem;
+        needsLayout = YES;
+      }
+    }
+    // The system item has its own localized label
+    _closeButtonItem.accessibilityLabel = _closeButtonLabel ?: (_closeButtonItemIsSystem ? nil : @"Close");
+
+    if (needsLayout) {
+      [self.viewIfLoaded setNeedsLayout];
+    }
+  }
+#endif
+}
+
+- (void)installCloseButton {
+  if (_closeButtonNavigationController) {
+    return;
+  }
+
+  UIViewController *rootController = [[UIViewController alloc] init];
+  rootController.view.backgroundColor = UIColor.clearColor;
+  _closeButtonNavigationController = [[UINavigationController alloc] initWithRootViewController:rootController];
+  _closeButtonNavigationController.view.backgroundColor = UIColor.clearColor;
+  [_closeButtonNavigationController setNavigationBarHidden:YES animated:NO];
+
+  _closeButtonHostView = [[TrueSheetCloseButtonHostView alloc] initWithFrame:self.view.bounds];
+  _closeButtonHostView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  _closeButtonHostView.passThroughView = rootController.view;
+
+  [self addChildViewController:_closeButtonNavigationController];
+  UIView *navigationView = _closeButtonNavigationController.view;
+  navigationView.frame = _closeButtonHostView.bounds;
+  navigationView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [_closeButtonHostView addSubview:navigationView];
+  [self.view addSubview:_closeButtonHostView];
+  [_closeButtonNavigationController didMoveToParentViewController:self];
+}
+
+- (BOOL)updateCloseButtonVisibilityForInset:(CGFloat)inset {
+  if (!_closeButtonNavigationController) {
+    return NO;
+  }
+
+  UINavigationController *navigationController = _closeButtonNavigationController;
+  if (!_closeButton || inset <= 0) {
+    _closeButtonHorizontalInset = 0;
+  }
+  BOOL visible = _closeButton && inset > 0 && inset != _closeButtonHorizontalInset;
+  if (navigationController.navigationBarHidden == visible) {
+    [navigationController setNavigationBarHidden:!visible animated:NO];
+  }
+  if (visible) {
+    [navigationController.view layoutIfNeeded];
+    // Moved into a vertical bar, the navigation bar itself has no height. A sheet that keeps
+    // its bars horizontal would draw this one over the content's header instead.
+    if (navigationController.navigationBar.frame.size.height > 0) {
+      [navigationController setNavigationBarHidden:YES animated:NO];
+      _closeButtonHorizontalInset = inset;
+      visible = NO;
+    }
+  }
+
+  if (_closeButtonVisible != visible) {
+    _closeButtonVisible = visible;
+    [self refreshAccessibilityContainer];
+  }
+  return visible;
+}
+
+- (void)handleCloseButtonPress {
+  [self.delegate viewControllerDidPressCloseButton];
 }
 
 #pragma mark - Sheet Configuration

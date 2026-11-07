@@ -159,7 +159,7 @@ navigation.addListener('sheetDidPresent', (e) => {
 })
 ```
 
-Also available as `screenListeners` on the navigator or `listeners` on a screen. Events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDismissAttempt`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`.
+Also available as `screenListeners` on the navigator or `listeners` on a screen. Events: `sheetWillPresent`, `sheetDidPresent`, `sheetWillDismiss`, `sheetDidDismiss`, `sheetDismissAttempt`, `sheetDetentChange`, `sheetDragBegin`, `sheetDragChange`, `sheetDragEnd`, `sheetPositionChange`, `sheetVerticalBarChange`, `sheetCloseButtonPress`.
 
 ### Navigating from sheets
 
@@ -381,6 +381,7 @@ Place a sheet on the leading or trailing edge (follows layout direction). Useful
 - Detents keep their order around `hingeDetentIndex`: lower ones stay below it, higher ones above it
 - Book posture (vertical fold): iOS docks the sheet to one panel natively — pick it with `placement` (`'automatic'`/`'center'` → leading)
 - Navigator: `foldOptions` is a regular screen option
+- Side rail (iOS 27.1+): `closeButton` puts a UIKit close button in the rail (custom icon via `closeButtonOptions.icon`: asset catalog name or SF Symbol). It doesn't dismiss by itself: handle `onCloseButtonPress` (navigator: `sheetCloseButtonPress` → `goBack()`). Draw your own close button while `onVerticalBarChange` reports `closeButtonVisible: false`, and pad content by its `inset`
 - Test on the iPhone Duo simulator: unfold, rotate to a portrait UI, then half-fold
 
 ---

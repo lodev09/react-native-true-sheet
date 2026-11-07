@@ -84,6 +84,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   TrueSheetCompletionBlock _pendingPresentCompletion;
   NSArray *_pendingDetents;
   RNScreensEventObserver *_screensEventObserver;
+  BOOL _verticalBarReported;
+  TrueSheetViewEventEmitter::OnVerticalBarChange _verticalBar;
 }
 
 #pragma mark - Initialization
@@ -109,6 +111,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
     _screensEventObserver = [[RNScreensEventObserver alloc] init];
     _screensEventObserver.delegate = self;
+
+    _verticalBarReported = NO;
   }
   return self;
 }
@@ -374,6 +378,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _insetAdjustment = newProps.insetAdjustment;
   _controller.insetAdjustment = _insetAdjustment;
 
+  _controller.closeButton = newProps.closeButton;
+  _controller.closeButtonIcon = RCTNSStringFromStringNilIfEmpty(newProps.closeButtonOptions.icon);
+  _controller.closeButtonLabel = RCTNSStringFromStringNilIfEmpty(newProps.closeButtonOptions.label);
+  [_controller setupCloseButton];
+
   [self setupScrollable];
 }
 
@@ -424,6 +433,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     [TrueSheetLifecycleEvents emitMount:_eventEmitter];
   }
 
+  // A new emitter missed what was sent before it, so it gets the bar again
+  if (updateMask & RNComponentViewUpdateMaskEventEmitter) {
+    _verticalBarReported = NO;
+    [_controller updateVerticalBar];
+  }
+
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
@@ -472,6 +487,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _didInitiallyPresent = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
+  _verticalBarReported = NO;
 }
 
 #pragma mark - Child Component Mounting
@@ -987,6 +1003,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 - (void)viewControllerDidDismiss {
   [_containerView cleanupKeyboardObserver];
+  // Each presentation reports its bar, even one that matches the last
+  _verticalBarReported = NO;
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
     _pendingNavigationRepresent = NO;
@@ -1151,6 +1169,37 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     [self->_controller applyActiveDetent];
   }];
   [_controller setupDraggable];
+}
+
+- (void)viewControllerDidUpdateVerticalBar:(TrueSheetVerticalBar)verticalBar {
+  if (!_eventEmitter || !_containerView) {
+    return;
+  }
+
+  using Edge = TrueSheetViewEventEmitter::OnVerticalBarChangeEdge;
+  TrueSheetViewEventEmitter::OnVerticalBarChange event{
+    Edge::None, 0, static_cast<bool>(verticalBar.closeButtonVisible)};
+  if (verticalBar.edge != UIRectEdgeNone) {
+    // In the sheet's React Native layout direction, which can differ from UIKit's
+    BOOL rtl =
+      [UIView userInterfaceLayoutDirectionForSemanticContentAttribute:_containerView.semanticContentAttribute] ==
+      UIUserInterfaceLayoutDirectionRightToLeft;
+    event.edge = (verticalBar.edge == UIRectEdgeRight) != rtl ? Edge::Trailing : Edge::Leading;
+    event.inset = verticalBar.inset;
+  }
+
+  if (_verticalBarReported && event.edge == _verticalBar.edge && event.inset == _verticalBar.inset &&
+      event.closeButtonVisible == _verticalBar.closeButtonVisible) {
+    return;
+  }
+
+  _verticalBarReported = YES;
+  _verticalBar = event;
+  [TrueSheetStateEvents emitVerticalBarChange:_eventEmitter verticalBar:event];
+}
+
+- (void)viewControllerDidPressCloseButton {
+  [TrueSheetStateEvents emitCloseButtonPress:_eventEmitter];
 }
 
 - (UIViewController *)findPresentingViewController {

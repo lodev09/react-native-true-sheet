@@ -113,6 +113,50 @@ export const App = () => {
 }
 ```
 
+## Side Rail
+
+The iPhone Duo keeps a vertical side rail on one edge of the screen. A sheet that reaches it, like a sheet on the cover screen, runs under the rail and gets the rail's width as a safe-area inset. System sheets move their close button into the rail.
+
+Set [`closeButton`](../reference/configuration#closebutton) to do the same. UIKit places the button in the rail, below the camera and clock at tall detents, and moves it when the rail changes. Pressing it calls [`onCloseButtonPress`](../reference/events#onclosebuttonpress); dismiss the sheet there. Pick its icon with [`closeButtonOptions`](../reference/configuration#closebuttonoptions).
+
+The button only exists in the rail. [`onVerticalBarChange`](../reference/events#onverticalbarchange) reports whether it's showing, along with the sheet's `edge` that holds the rail and the `inset` it reaches into the sheet. Draw your own close button while it's hidden, like on the unfolded screen, and pad content by the inset.
+
+```tsx {2,4-9,14-20}
+export const App = () => {
+  const [bar, setBar] = useState<VerticalBarChangeEventPayload | null>(null)
+  const sheet = useRef<TrueSheet>(null)
+  const railPadding =
+    bar?.edge === 'leading'
+      ? { paddingStart: bar.inset }
+      : bar?.edge === 'trailing'
+        ? { paddingEnd: bar.inset }
+        : null
+
+  return (
+    <TrueSheet
+      ref={sheet}
+      closeButton
+      closeButtonOptions={{ icon: 'brand-close' }}
+      onCloseButtonPress={() => sheet.current?.dismiss()}
+      onVerticalBarChange={(e) => setBar(e.nativeEvent)}
+      header={<Header right={!bar?.closeButtonVisible && <CloseButton />} />}
+      headerStyle={railPadding}
+      style={railPadding}
+    >
+      <Content />
+    </TrueSheet>
+  )
+}
+```
+
+The icon is the name of an image in your app's asset catalog or of an SF Symbol, drawn in the button's tint at its own size. UIKit draws the button around it. With a custom icon, set a localized `label` too.
+
+The first `onVerticalBarChange` arrives while the sheet presents, so a sheet that mounts as it presents can show its own close button for a moment before it learns the rail's button is showing.
+
+:::info
+Requires iOS 27.1+ and an app built with the iOS 27.1 SDK or later. On Android, web, and earlier iOS versions, no button shows and `onVerticalBarChange` never fires.
+:::
+
 ## Navigation
 
 `foldOptions` is a screen option in the [Sheet Navigator](navigation) and the Expo Router `Sheet` layout, like any other prop.
@@ -128,6 +172,8 @@ export const App = () => {
 />
 ```
 
+`closeButton` and `closeButtonOptions` are screen options too. The button doesn't go back by itself, so listen to `sheetCloseButtonPress` and call `navigation.goBack()`.
+
 ## Testing on the Simulator
 
 Use the **iPhone Duo** simulator on iOS 27.1+.
@@ -137,5 +183,5 @@ Use the **iPhone Duo** simulator on iOS 27.1+.
 3. Half-fold the device to enter tabletop. Unfold it to leave.
 
 :::tip
-The example app's **TrueSheet View** sheet uses `foldOptions` with `hingeBehavior: 'snap'`.
+The example app's **TrueSheet View** sheet uses `foldOptions` with `hingeBehavior: 'snap'`, and its **Side Rail** sheet uses `closeButton` with a custom icon. Show the side rail by folding the device closed.
 :::

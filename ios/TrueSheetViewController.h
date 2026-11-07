@@ -20,6 +20,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * The system's vertical bar (an iPhone Duo's side rail) as the sheet sees it.
+ * The edge is physical, so the host can express it in React Native's layout
+ * direction, which can differ from UIKit's.
+ */
+typedef struct {
+  /// UIRectEdgeLeft or UIRectEdgeRight, or UIRectEdgeNone while the sheet doesn't reach a bar
+  UIRectEdge edge;
+  /// How far the bar reaches into the sheet
+  CGFloat inset;
+  /// Whether the close button is showing in the bar
+  BOOL closeButtonVisible;
+} TrueSheetVerticalBar;
+
 @protocol TrueSheetViewControllerDelegate <NSObject>
 
 - (void)viewControllerWillPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent;
@@ -38,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerSafeAreaInsetsDidChange;
+- (void)viewControllerDidUpdateVerticalBar:(TrueSheetVerticalBar)verticalBar;
+- (void)viewControllerDidPressCloseButton;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;
@@ -122,6 +138,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
+/// A close button UIKit places in the sheet's vertical bar (iOS 27.1+)
+@property (nonatomic, assign) BOOL closeButton;
+/// An asset catalog image or SF Symbol name; the system close glyph when nil
+@property (nonatomic, copy, nullable) NSString *closeButtonIcon;
+@property (nonatomic, copy, nullable) NSString *closeButtonLabel;
+
 @property (nonatomic, readonly) CGFloat screenHeight;
 
 /**
@@ -141,6 +163,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupAccessibilityContainer;
 - (void)refreshAccessibilityContainer;
 - (void)refreshAccessibilityContainerIfFooterChanged;
+- (void)setupCloseButton;
+- (void)updateVerticalBar;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;

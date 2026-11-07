@@ -221,6 +221,8 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 | `placement` | `'automatic' \| 'leading' \| 'center' \| 'trailing'` | `'automatic'` | 🍎🤖🌐 | Horizontal placement, follows layout direction. `'automatic'` vs `'center'` only differ on iOS 27+. Ignored on phones in portrait |
 | `placementOffset` | `number` | `16` | 🤖🌐 | Edge margin when placement is leading/trailing |
 | `foldOptions` | `FoldOptions` | — | 🍎 | Foldable tabletop behavior (iOS 27.1+). Book posture is system-handled via `placement` |
+| `closeButton` | `boolean` | `false` | 🍎 | UIKit close button in the vertical bar (iPhone Duo side rail, iOS 27.1+). Only drawn there; calls `onCloseButtonPress` |
+| `closeButtonOptions` | `{ icon?: string; label?: string }` | — | 🍎 | `icon`: asset catalog image or SF Symbol name (template-tinted). `label`: accessibility label |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
 
