@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- **iOS**: Added Swift Package Manager support for React Native's SwiftPM mode (react-native 0.88 and later, `npx react-native spm`). The package now ships a `Package.swift`, so apps built without CocoaPods autolink TrueSheet without scaffolding a manifest. CocoaPods is unchanged. ([#1013](https://github.com/lodev09/react-native-true-sheet/pull/1013) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10))
+
 ## 4.1.0
 
 ### 🎉 New features
