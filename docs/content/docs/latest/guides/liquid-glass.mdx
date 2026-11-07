@@ -72,7 +72,7 @@ This requires iOS 26.1+ with native background effect support. Devices without t
 On iOS 26, set `UIDesignRequiresCompatibility` to `true` in your `Info.plist` to disable Liquid Glass.
 
 :::note
-iOS 27 and later ignore this key. Use `backgroundColor` or `backgroundBlur` to replace Liquid Glass on individual sheets.
+iOS 27 and later ignore this key in apps built with the iOS 27 SDK (Xcode 27) or later. Use `backgroundColor` or `backgroundBlur` to replace Liquid Glass on individual sheets.
 :::
 
 #### Using Info.plist
@@ -115,7 +115,7 @@ npx expo run:ios
 ```
 
 :::note
-On iOS 26, this setting disables Liquid Glass across the entire app. It has no effect on iOS 27+.
+On iOS 26, this setting disables Liquid Glass across the entire app. On iOS 27+, it only applies to apps built with an older SDK.
 See [Apple's documentation](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UIDesignRequiresCompatibility) for more details.
 :::
 
