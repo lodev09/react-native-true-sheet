@@ -119,18 +119,14 @@ The iPhone Duo keeps a vertical side rail on one edge of the screen. A sheet tha
 
 Set [`closeButton`](../reference/configuration#closebutton) to do the same. UIKit places the button in the rail, below the camera and clock at tall detents, and moves it when the rail changes. Pressing it calls [`onCloseButtonPress`](../reference/events#onclosebuttonpress); dismiss the sheet there. Pick its icon with [`closeButtonOptions`](../reference/configuration#closebuttonoptions).
 
-The button only exists in the rail. [`onVerticalBarChange`](../reference/events#onverticalbarchange) reports whether it's showing, along with the sheet's `edge` that holds the rail and the `inset` it reaches into the sheet. Draw your own close button while it's hidden, like on the unfolded screen, and pad content by the inset.
+The button only exists in the rail. [`onCloseButtonVisibilityChange`](../reference/events#onclosebuttonvisibilitychange) reports when it shows and hides, so draw your own close button while it's hidden, like on the unfolded screen. The rail is a left or right safe-area inset of the sheet, so keep content clear of it with `SafeAreaView` from [`react-native-safe-area-context`](https://github.com/AppAndFlow/react-native-safe-area-context). Inside a sheet it reads the sheet's own safe area.
 
-```tsx {2,4-9,14-20}
+```tsx {1,4,10-13,15-17,20-22}
+import { SafeAreaView } from 'react-native-safe-area-context'
+
 export const App = () => {
-  const [bar, setBar] = useState<VerticalBarChangeEventPayload | null>(null)
+  const [closeButtonVisible, setCloseButtonVisible] = useState(false)
   const sheet = useRef<TrueSheet>(null)
-  const railPadding =
-    bar?.edge === 'leading'
-      ? { paddingStart: bar.inset }
-      : bar?.edge === 'trailing'
-        ? { paddingEnd: bar.inset }
-        : null
 
   return (
     <TrueSheet
@@ -138,23 +134,37 @@ export const App = () => {
       closeButton
       closeButtonOptions={{ icon: 'brand-close' }}
       onCloseButtonPress={() => sheet.current?.dismiss()}
-      onVerticalBarChange={(e) => setBar(e.nativeEvent)}
-      header={<Header right={!bar?.closeButtonVisible && <CloseButton />} />}
-      headerStyle={railPadding}
-      style={railPadding}
+      onCloseButtonVisibilityChange={(e) => setCloseButtonVisible(e.nativeEvent.visible)}
+      header={
+        <SafeAreaView edges={['left', 'right']}>
+          <Header right={!closeButtonVisible && <CloseButton />} />
+        </SafeAreaView>
+      }
     >
-      <Content />
+      <SafeAreaView edges={['left', 'right']}>
+        <Content />
+      </SafeAreaView>
     </TrueSheet>
   )
 }
 ```
 
+In an app that React Native lays out right to left, React Native treats left and right padding as start and end, so `SafeAreaView` pads the side away from the rail. There, read the insets with `useSafeAreaInsets` under a `SafeAreaProvider` inside the sheet, and pad start and end yourself:
+
+```tsx
+const insets = useSafeAreaInsets()
+const railPadding = {
+  paddingStart: I18nManager.isRTL ? insets.right : insets.left,
+  paddingEnd: I18nManager.isRTL ? insets.left : insets.right,
+}
+```
+
 The icon is the name of an image in your app's asset catalog or of an SF Symbol, drawn in the button's tint at its own size. UIKit draws the button around it. With a custom icon, set a localized `label` too.
 
-The first `onVerticalBarChange` arrives while the sheet presents, so a sheet that mounts as it presents can show its own close button for a moment before it learns the rail's button is showing.
+The button starts hidden and shows while the sheet presents, so a sheet that mounts as it presents can show its own close button for a moment before `onCloseButtonVisibilityChange` reports the rail's button.
 
 :::info
-Requires iOS 27.1+ and an app built with the iOS 27.1 SDK or later. On Android, web, and earlier iOS versions, no button shows and `onVerticalBarChange` never fires.
+Requires iOS 27.1+ and an app built with the iOS 27.1 SDK or later. On Android, web, and earlier iOS versions, no button shows and `onCloseButtonVisibilityChange` never fires.
 :::
 
 ## Navigation

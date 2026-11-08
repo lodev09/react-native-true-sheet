@@ -53,7 +53,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 - (void)updateHingeState;
 - (void)installCloseButton;
 - (NSArray *)accessibilityCloseButtonElements;
-- (BOOL)updateCloseButtonVisibilityForInset:(CGFloat)inset;
+- (void)updateCloseButtonVisibility;
 - (void)handleCloseButtonPress;
 - (void)correctHingeOffsetForIndex:(NSInteger)index;
 - (CGFloat)tabletopHingeEdge;
@@ -1247,7 +1247,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   if (_closeButtonHostView && self.view.subviews.lastObject != _closeButtonHostView) {
     [self.view bringSubviewToFront:_closeButtonHostView];
   }
-  [self updateVerticalBar];
+  [self updateCloseButtonVisibility];
 
   if (_pendingDetentIndex >= 0) {
     [_scheduledDetentIndexes addObject:@(_pendingDetentIndex)];
@@ -1452,7 +1452,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
   [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
   _closeButtonHorizontalInset = 0;
-  [self updateVerticalBar];
+  [self updateCloseButtonVisibility];
 }
 
 #pragma mark - Interactive Navigation Dismiss
@@ -1558,7 +1558,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _interactiveStartPosition = 0;
   [_interactivePositionLink invalidate];
   _interactivePositionLink = nil;
-  [self updateVerticalBar];
+  [self updateCloseButtonVisibility];
 }
 
 - (void)emitChangePositionDelegateWithPosition:(CGFloat)position realtime:(BOOL)realtime debug:(NSString *)debug {
@@ -1784,47 +1784,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 }
 
-/**
- * Reports the vertical bar to the delegate, and shows the close button in it.
- * Skipped mid-drag and mid-swipe; the settle reports the final value.
- */
-- (void)updateVerticalBar {
-#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
-  if (@available(iOS 27.1, *)) {
-    // Off-window passes see no safe area and would report a transient no-bar. Behind a
-    // stacked child, the push-back scaling changes the safe area.
-    if (_isDragging || _isInteractiveDismiss || self.isBeingDismissed || self.isStackedBehindChild ||
-        !self.viewIfLoaded.window) {
-      return;
-    }
-
-    UIView *view = self.view;
-    BOOL rtl = self.traitCollection.layoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft;
-    TrueSheetVerticalBar verticalBar = {UIRectEdgeNone, 0, NO};
-    switch (self.traitCollection.verticalBarEdge) {
-      case UIVerticalBarEdgeLeading:
-        verticalBar.edge = rtl ? UIRectEdgeRight : UIRectEdgeLeft;
-        break;
-      case UIVerticalBarEdgeTrailing:
-        verticalBar.edge = rtl ? UIRectEdgeLeft : UIRectEdgeRight;
-        break;
-      default:
-        break;
-    }
-    verticalBar.inset = verticalBar.edge == UIRectEdgeLeft    ? view.safeAreaInsets.left
-                        : verticalBar.edge == UIRectEdgeRight ? view.safeAreaInsets.right
-                                                              : 0;
-    // The trait names the preferred edge even when the sheet floats clear of the bar
-    if (verticalBar.inset <= 0) {
-      verticalBar.edge = UIRectEdgeNone;
-      verticalBar.inset = 0;
-    }
-    verticalBar.closeButtonVisible = [self updateCloseButtonVisibilityForInset:verticalBar.inset];
-    [self.delegate viewControllerDidUpdateVerticalBar:verticalBar];
-  }
-#endif
-}
-
 #pragma mark - Close Button
 
 - (void)setupCloseButton {
@@ -1894,35 +1853,66 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [_closeButtonNavigationController didMoveToParentViewController:self];
 }
 
-- (BOOL)updateCloseButtonVisibilityForInset:(CGFloat)inset {
-  if (!_closeButtonNavigationController) {
-    return NO;
-  }
+/**
+ * Shows the close button while the sheet reaches a vertical bar.
+ * Skipped mid-drag and mid-swipe; the settle updates it.
+ */
+- (void)updateCloseButtonVisibility {
+#if RNTS_IPHONE_OS_VERSION_AVAILABLE(27_1)
+  if (@available(iOS 27.1, *)) {
+    // Off-window passes see no safe area and would hide the button for a moment. Behind a
+    // stacked child, the push-back scaling changes the safe area.
+    if (!_closeButtonNavigationController || _isDragging || _isInteractiveDismiss || self.isBeingDismissed ||
+        self.isStackedBehindChild || !self.viewIfLoaded.window) {
+      return;
+    }
 
-  UINavigationController *navigationController = _closeButtonNavigationController;
-  if (!_closeButton || inset <= 0) {
-    _closeButtonHorizontalInset = 0;
-  }
-  BOOL visible = _closeButton && inset > 0 && inset != _closeButtonHorizontalInset;
-  if (navigationController.navigationBarHidden == visible) {
-    [navigationController setNavigationBarHidden:!visible animated:NO];
-  }
-  if (visible) {
-    [navigationController.view layoutIfNeeded];
-    // Moved into a vertical bar, the navigation bar itself has no height. A sheet that keeps
-    // its bars horizontal would draw this one over the content's header instead.
-    if (navigationController.navigationBar.frame.size.height > 0) {
-      [navigationController setNavigationBarHidden:YES animated:NO];
-      _closeButtonHorizontalInset = inset;
-      visible = NO;
+    // The trait names the preferred edge even when the sheet floats clear of the bar,
+    // so the bar's safe-area inset tells whether the sheet reaches it
+    UIEdgeInsets safeAreaInsets = self.view.safeAreaInsets;
+    BOOL rtl = self.traitCollection.layoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft;
+    CGFloat inset = 0;
+    switch (self.traitCollection.verticalBarEdge) {
+      case UIVerticalBarEdgeLeading:
+        inset = rtl ? safeAreaInsets.right : safeAreaInsets.left;
+        break;
+      case UIVerticalBarEdgeTrailing:
+        inset = rtl ? safeAreaInsets.left : safeAreaInsets.right;
+        break;
+      default:
+        break;
+    }
+
+    UINavigationController *navigationController = _closeButtonNavigationController;
+    if (!_closeButton || inset <= 0) {
+      _closeButtonHorizontalInset = 0;
+    }
+    BOOL visible = _closeButton && inset > 0 && inset != _closeButtonHorizontalInset;
+    if (navigationController.navigationBarHidden == visible) {
+      [navigationController setNavigationBarHidden:!visible animated:NO];
+    }
+    if (visible) {
+      [navigationController.view layoutIfNeeded];
+      // Moved into a vertical bar, the navigation bar itself has no height. A sheet that keeps
+      // its bars horizontal would draw this one over the content's header instead.
+      if (navigationController.navigationBar.frame.size.height > 0) {
+        [navigationController setNavigationBarHidden:YES animated:NO];
+        _closeButtonHorizontalInset = inset;
+        visible = NO;
+      }
+    }
+
+    if (_closeButtonVisible != visible) {
+      _closeButtonVisible = visible;
+      [self refreshAccessibilityContainer];
+      [self.delegate viewControllerDidChangeCloseButtonVisibility:visible];
     }
   }
+#endif
+}
 
-  if (_closeButtonVisible != visible) {
-    _closeButtonVisible = visible;
-    [self refreshAccessibilityContainer];
-  }
-  return visible;
+- (void)resetCloseButtonVisibility {
+  _closeButtonVisible = NO;
 }
 
 - (void)handleCloseButtonPress {

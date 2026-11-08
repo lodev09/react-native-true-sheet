@@ -4,7 +4,7 @@ import type {
   DetentInfoEventPayload,
   PositionChangeEventPayload,
   TrueSheetProps,
-  VerticalBarChangeEventPayload,
+  CloseButtonVisibilityChangeEventPayload,
 } from '../TrueSheet.types';
 import type { TrueSheetActionType } from './actions';
 import type {
@@ -65,9 +65,9 @@ export type TrueSheetNavigationEventMap = {
    */
   sheetPositionChange: { data: PositionChangeEventPayload };
   /**
-   * Event fired when the system's vertical bar, or whether the close button shows in it, changes.
+   * Event fired when the sheet's `closeButton` starts or stops showing.
    */
-  sheetVerticalBarChange: { data: VerticalBarChangeEventPayload };
+  sheetCloseButtonVisibilityChange: { data: CloseButtonVisibilityChangeEventPayload };
   /**
    * Event fired when the sheet's `closeButton` is pressed.
    */

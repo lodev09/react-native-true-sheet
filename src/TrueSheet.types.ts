@@ -31,27 +31,12 @@ export interface PositionChangeEventPayload extends DetentInfoEventPayload {
   realtime: boolean;
 }
 
-/**
- * The sheet's edge that holds the system's vertical bar, in the app's layout
- * direction, or `'none'` while the sheet doesn't reach one.
- */
-export type VerticalBarEdge = 'leading' | 'trailing' | 'none';
-
-export interface VerticalBarChangeEventPayload {
+export interface CloseButtonVisibilityChangeEventPayload {
   /**
-   * The sheet's edge that holds the vertical bar.
+   * Whether the `closeButton` is showing. It keeps its last value between
+   * presentations. Draw your own close button while it's `false`.
    */
-  edge: VerticalBarEdge;
-  /**
-   * How far the bar reaches into the sheet on that edge. Pad content by it to
-   * keep it clear of the bar. `0` when `edge` is `'none'`.
-   */
-  inset: number;
-  /**
-   * Whether the `closeButton` is showing in the bar. Draw your own close
-   * control while it's `false`.
-   */
-  closeButtonVisible: boolean;
+  visible: boolean;
 }
 
 export type MountEvent = NativeSyntheticEvent<null>;
@@ -69,7 +54,8 @@ export type DidFocusEvent = NativeSyntheticEvent<null>;
 export type DidBlurEvent = NativeSyntheticEvent<null>;
 export type WillFocusEvent = NativeSyntheticEvent<null>;
 export type WillBlurEvent = NativeSyntheticEvent<null>;
-export type VerticalBarChangeEvent = NativeSyntheticEvent<VerticalBarChangeEventPayload>;
+export type CloseButtonVisibilityChangeEvent =
+  NativeSyntheticEvent<CloseButtonVisibilityChangeEventPayload>;
 export type CloseButtonPressEvent = NativeSyntheticEvent<null>;
 
 /**
@@ -732,8 +718,8 @@ export interface TrueSheetProps extends ViewProps {
   /**
    * Shows a close button that UIKit places in the sheet's vertical bar, such as
    * an iPhone Duo's side rail, like system sheets do. Nothing is drawn where the
-   * sheet has no vertical bar; `onVerticalBarChange` reports when it shows, so
-   * you can draw your own close control otherwise. Pressing it calls
+   * sheet has no vertical bar; `onCloseButtonVisibilityChange` reports when it
+   * shows, so you can draw your own close button otherwise. Pressing it calls
    * `onCloseButtonPress` and doesn't dismiss the sheet by itself.
    *
    * @platform ios 27.1+
@@ -932,14 +918,13 @@ export interface TrueSheetProps extends ViewProps {
   onDidBlur?: (event: DidBlurEvent) => void;
 
   /**
-   * Called with the system's vertical bar, such as an iPhone Duo's side rail,
-   * as the sheet sees it, and whether the `closeButton` shows in it. Fires once
-   * each time the sheet presents, then when either changes, like on fold or
-   * rotation. It doesn't fire mid-drag; the value updates when the sheet settles.
+   * Called when the `closeButton` starts or stops showing in the sheet's
+   * vertical bar, like on fold or rotation. It starts hidden. It doesn't change
+   * mid-drag; it updates when the sheet settles.
    *
    * @platform ios 27.1+
    */
-  onVerticalBarChange?: (event: VerticalBarChangeEvent) => void;
+  onCloseButtonVisibilityChange?: (event: CloseButtonVisibilityChangeEvent) => void;
 
   /**
    * Called when the `closeButton` is pressed. Dismiss the sheet from here.

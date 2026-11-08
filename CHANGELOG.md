@@ -4,7 +4,7 @@
 
 ### 🎉 New features
 
-- **iOS**: Added `closeButton` for the side rail of an iPhone Duo on iOS 27.1+. UIKit places the button in the rail, like the close button of a system sheet, and `closeButtonOptions` sets its icon from the app's asset catalog or SF Symbols. `onCloseButtonPress` reports presses, and `onVerticalBarChange` reports the rail's edge and inset and whether the button shows. Navigator sheets get them as `sheetCloseButtonPress` and `sheetVerticalBarChange`. ([#1010](https://github.com/lodev09/react-native-true-sheet/pull/1010) by [@maxlapides](https://github.com/maxlapides))
+- **iOS**: Added `closeButton` for the side rail of an iPhone Duo on iOS 27.1+. UIKit places the button in the rail, like the close button of a system sheet, and `closeButtonOptions` sets its icon from the app's asset catalog or SF Symbols. `onCloseButtonPress` reports presses, and `onCloseButtonVisibilityChange` reports when the button shows and hides. Navigator sheets get them as `sheetCloseButtonPress` and `sheetCloseButtonVisibilityChange`. ([#1010](https://github.com/lodev09/react-native-true-sheet/pull/1010) by [@maxlapides](https://github.com/maxlapides))
 - Added `dimBlur` to blur the content behind the sheet instead of tinting it with `dimColor`. It takes the `backgroundBlur` styles and draws the matching iOS material's tint over the blur, so the dim looks the same on every platform. `dimOpacity` sets the blur intensity. Android blurs on Android 12 and later unless the system turns window blurs off, and only tints otherwise. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))
 
 ### 🐛 Bug fixes
@@ -21,7 +21,7 @@
 
 - Add a Dim Blur section to the Dimming guide, and the `truesheet-usage` skill now covers `dimBlur`. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@lodev09](https://github.com/lodev09))
 - The docs and the `truesheet-usage` skill now say that iOS 27 ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later. ([#1009](https://github.com/lodev09/react-native-true-sheet/pull/1009) by [@idlework](https://github.com/idlework))
-- Add a Side Rail section to the Foldables guide and a Side Rail example sheet, and the `truesheet-usage` skill now covers `closeButton` and `onVerticalBarChange`. ([#1010](https://github.com/lodev09/react-native-true-sheet/pull/1010) by [@maxlapides](https://github.com/maxlapides))
+- Add a Side Rail section to the Foldables guide and a Side Rail example sheet, and the `truesheet-usage` skill now covers `closeButton` and `onCloseButtonVisibilityChange`. ([#1010](https://github.com/lodev09/react-native-true-sheet/pull/1010) by [@maxlapides](https://github.com/maxlapides))
 
 ## 4.0.1
 

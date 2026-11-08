@@ -28,8 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
                     detent:(CGFloat)detent
                   realtime:(BOOL)realtime;
 
-+ (void)emitVerticalBarChange:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
-                  verticalBar:(TrueSheetViewEventEmitter::OnVerticalBarChange)verticalBar;
++ (void)emitCloseButtonVisibilityChange:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
+                                visible:(BOOL)visible;
 
 + (void)emitCloseButtonPress:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter;
 

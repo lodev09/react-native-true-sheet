@@ -880,23 +880,20 @@ describe('TrueSheet', () => {
     });
   });
 
-  describe('Vertical Bar', () => {
+  describe('Close Button', () => {
     it.each([
-      [
-        'onVerticalBarChange',
-        { nativeEvent: { edge: 'trailing', inset: 76, closeButtonVisible: true } },
-      ],
+      ['onCloseButtonVisibilityChange', { nativeEvent: { visible: true } }],
       ['onCloseButtonPress', { nativeEvent: null }],
     ] as const)('should deliver %s from the native view to the prop', async (name, event) => {
       const handler = jest.fn();
       const { getByTestId } = render(
-        <TrueSheet testID="vertical-bar-host" {...{ [name]: handler }}>
+        <TrueSheet testID="close-button-host" {...{ [name]: handler }}>
           <Text>Content</Text>
         </TrueSheet>
       );
 
       await act(async () => {
-        getByTestId('vertical-bar-host').props[name](event);
+        getByTestId('close-button-host').props[name](event);
       });
 
       expect(handler).toHaveBeenCalledWith(event);

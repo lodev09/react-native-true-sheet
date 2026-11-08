@@ -107,7 +107,7 @@ Relevant when stacking sheets. A sheet "blurs" when another sheet presents on to
 | Event | Payload | Platforms | When |
 |-------|---------|-----------|------|
 | `onBackPress` | — | 🤖 Android | Hardware back button pressed while sheet is visible |
-| `onVerticalBarChange` | `VerticalBarChangeEventPayload` | 🍎 iOS 27.1+ | Once per present, then when the vertical bar (iPhone Duo side rail) or `closeButton` visibility changes. Not mid-drag |
+| `onCloseButtonVisibilityChange` | `{ visible: boolean }` | 🍎 iOS 27.1+ | `closeButton` started or stopped showing in the vertical bar (iPhone Duo side rail). Starts hidden; not mid-drag |
 | `onCloseButtonPress` | — | 🍎 iOS 27.1+ | `closeButton` pressed. Sheet stays presented; dismiss here |
 
 ---
@@ -134,15 +134,5 @@ Extends `DetentInfoEventPayload`:
   position: number
   detent: number
   realtime: boolean // true = native animation frame, false = JS-driven
-}
-```
-
-### `VerticalBarChangeEventPayload`
-
-```tsx
-{
-  edge: 'leading' | 'trailing' | 'none' // In the app's layout direction; 'none' = sheet doesn't reach a bar
-  inset: number  // How far the bar reaches into the sheet; pad content by it
-  closeButtonVisible: boolean // closeButton is in the bar; draw your own while false
 }
 ```

@@ -159,15 +159,15 @@ This is called when the sheet has lost focus. This happens:
 
 Useful for pausing updates or disabling interactions.
 
-## `onVerticalBarChange`
+## `onCloseButtonVisibilityChange`
 
 :::info[iOS 27.1+ only]
 Requires an app built with the iOS 27.1 SDK or later.
 :::
 
-Comes with [`VerticalBarChangeEventPayload`](types#verticalbarchangeeventpayload).
+Comes with [`CloseButtonVisibilityChangeEventPayload`](types#closebuttonvisibilitychangeeventpayload).
 
-This is called with the system's vertical bar, like the side rail of an iPhone Duo, as the sheet sees it, and whether the [`closeButton`](configuration#closebutton) shows in it. It fires once each time the sheet presents, with an `edge` of `'none'` if the sheet doesn't reach a bar, then whenever either changes, such as on fold or rotation. It doesn't fire while the sheet is dragged; the value updates when the sheet settles. Don't rely on its order relative to `onWillPresent` and `onDidPresent`. See [Side Rail](../guides/foldables#side-rail).
+This is called when the [`closeButton`](configuration#closebutton) starts or stops showing in the sheet's vertical bar, like the side rail of an iPhone Duo. That happens as the sheet presents, and on fold or rotation. The button starts hidden, so this first fires when it shows. It doesn't fire while the sheet is dragged; the value updates when the sheet settles. Don't rely on its order relative to `onWillPresent` and `onDidPresent`. See [Side Rail](../guides/foldables#side-rail).
 
 ## `onCloseButtonPress`
 

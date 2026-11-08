@@ -44,13 +44,15 @@
   emitter->onPositionChange(event);
 }
 
-+ (void)emitVerticalBarChange:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
-                  verticalBar:(TrueSheetViewEventEmitter::OnVerticalBarChange)verticalBar {
++ (void)emitCloseButtonVisibilityChange:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter
+                                visible:(BOOL)visible {
   if (!eventEmitter)
     return;
 
   auto emitter = std::static_pointer_cast<TrueSheetViewEventEmitter const>(eventEmitter);
-  emitter->onVerticalBarChange(verticalBar);
+  TrueSheetViewEventEmitter::OnCloseButtonVisibilityChange event;
+  event.visible = static_cast<bool>(visible);
+  emitter->onCloseButtonVisibilityChange(event);
 }
 
 + (void)emitCloseButtonPress:(std::shared_ptr<const facebook::react::EventEmitter>)eventEmitter {

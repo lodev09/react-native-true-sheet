@@ -321,30 +321,16 @@ How far the sheet must be swiped down from its lowest detent to dismiss.
 | detent | `number` | The detent value (0-1) for the nearest detent index. |
 | realtime | `boolean` | Whether the position is a real-time value (e.g., during drag or animation tracking). When `false`, position should be animated in JS. |
 
-## `VerticalBarChangeEventPayload`
+## `CloseButtonVisibilityChangeEventPayload`
 
-`Object` that comes with the [`onVerticalBarChange`](events#onverticalbarchange) event.
+`Object` that comes with the [`onCloseButtonVisibilityChange`](events#onclosebuttonvisibilitychange) event.
 
 ```tsx
 {
-  edge: 'trailing',
-  inset: 76,
-  closeButtonVisible: true
+  visible: true
 }
 ```
 
 | Property | Type | Description |
 | - | - | - |
-| edge | [`VerticalBarEdge`](#verticalbaredge) | The sheet's edge that holds the vertical bar. |
-| inset | `number` | How far the bar reaches into the sheet on that edge. Pad content by it to keep it clear of the bar. `0` when `edge` is `'none'`. |
-| closeButtonVisible | `boolean` | Whether the [`closeButton`](configuration#closebutton) is showing in the bar. Draw your own close button while it's `false`. |
-
-## `VerticalBarEdge`
-
-The edge is in the app's layout direction, the same one `start` and `end` styles use.
-
-| Value | Description |
-| - | - |
-| `"leading"` | The bar is on the sheet's leading edge. |
-| `"trailing"` | The bar is on the sheet's trailing edge. |
-| `"none"` | The sheet doesn't reach a vertical bar, like a sheet that floats clear of it or a device without one. |
+| visible | `boolean` | Whether the [`closeButton`](configuration#closebutton) is showing. It keeps its last value between presentations. Draw your own close button while it's `false`. |

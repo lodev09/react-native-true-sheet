@@ -1,10 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, type Ref } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  TrueSheet,
-  type TrueSheetProps,
-  type VerticalBarChangeEventPayload,
-} from '@lodev09/react-native-true-sheet';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
 import { DARK, DARK_GRAY, GAP, SPACING } from '../../utils';
 import { DemoContent } from '../DemoContent';
@@ -14,19 +11,13 @@ interface SideRailSheetProps extends TrueSheetProps {}
 const CLOSE_SIZE = 44;
 
 export const SideRailSheet = forwardRef((props: SideRailSheetProps, ref: Ref<TrueSheet>) => {
-  const { onVerticalBarChange, ...rest } = props;
+  const { onCloseButtonVisibilityChange, ...rest } = props;
   const sheetRef = useRef<TrueSheet>(null);
-  const [bar, setBar] = useState<VerticalBarChangeEventPayload | null>(null);
+  const [closeButtonVisible, setCloseButtonVisible] = useState(false);
 
   useImperativeHandle<TrueSheet | null, TrueSheet | null>(ref, () => sheetRef.current);
 
   const dismiss = () => sheetRef.current?.dismiss();
-  const railPadding =
-    bar?.edge === 'trailing'
-      ? { paddingEnd: SPACING + bar.inset }
-      : bar?.edge === 'leading'
-        ? { paddingStart: SPACING + bar.inset }
-        : null;
 
   return (
     <TrueSheet
@@ -37,9 +28,10 @@ export const SideRailSheet = forwardRef((props: SideRailSheetProps, ref: Ref<Tru
       closeButtonOptions={{ icon: 'chevron.down' }}
       onCloseButtonPress={dismiss}
       header={
-        <View style={[styles.header, railPadding]}>
+        // The side rail is a left or right safe-area inset of the sheet
+        <SafeAreaView edges={['left', 'right']} style={styles.header}>
           <Text style={styles.title}>Side Rail</Text>
-          {!bar?.closeButtonVisible && (
+          {!closeButtonVisible && (
             <Pressable
               accessibilityLabel="Close"
               accessibilityRole="button"
@@ -49,21 +41,22 @@ export const SideRailSheet = forwardRef((props: SideRailSheetProps, ref: Ref<Tru
               <Text style={styles.closeText}>✕</Text>
             </Pressable>
           )}
-        </View>
+        </SafeAreaView>
       }
-      style={[styles.content, railPadding]}
-      onVerticalBarChange={(e) => {
-        console.log('[SideRailSheet] vertical bar', JSON.stringify(e.nativeEvent));
-        setBar(e.nativeEvent);
-        onVerticalBarChange?.(e);
+      onCloseButtonVisibilityChange={(e) => {
+        console.log('[SideRailSheet] close button', JSON.stringify(e.nativeEvent));
+        setCloseButtonVisible(e.nativeEvent.visible);
+        onCloseButtonVisibilityChange?.(e);
       }}
       {...rest}
     >
-      <Text style={styles.caption}>
-        Vertical bar: {bar?.edge ?? 'none'}, inset {bar?.inset ?? 0}
-      </Text>
-      <DemoContent color={DARK_GRAY} />
-      <DemoContent color={DARK_GRAY} />
+      <SafeAreaView edges={['left', 'right']} style={styles.content}>
+        <Text style={styles.caption}>
+          Close button: {closeButtonVisible ? 'in the side rail' : 'drawn by the app'}
+        </Text>
+        <DemoContent color={DARK_GRAY} />
+        <DemoContent color={DARK_GRAY} />
+      </SafeAreaView>
     </TrueSheet>
   );
 });
