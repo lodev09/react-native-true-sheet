@@ -7,8 +7,8 @@ This directory contains example apps demonstrating `@lodev09/react-native-true-s
 ```
 example/
 ├── bare/    # Bare React Native app (react-native-community/cli)
-├── expo/    # Expo Router app (SDK 57)
-├── expo-58/ # Expo Router app (SDK 58)
+├── expo/    # Expo Router app (SDK 58)
+├── expo-57/ # Expo Router app (SDK 57)
 └── shared/  # Shared components and utilities
 ```
 
@@ -46,10 +46,10 @@ yarn ios
 yarn android
 ```
 
-### Expo SDK 58
+### Expo SDK 57
 
 ```bash
-cd example/expo-58
+cd example/expo-57
 
 # iOS
 yarn ios

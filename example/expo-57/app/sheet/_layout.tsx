@@ -6,7 +6,7 @@ import { DARK, DARK_GRAY } from '@example/shared/utils';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 export const unstable_settings = {
-  anchor: '(home)',
+  initialRouteName: 'index',
 };
 
 export default function SheetStackLayout() {
@@ -51,6 +51,7 @@ export default function SheetStackLayout() {
             console.log('[SheetNavigator] sheetDidBlur');
           },
         }}
+        initialRouteName="(home)"
       >
         <Sheet.Screen name="(home)" />
         <Sheet.Screen
