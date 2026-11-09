@@ -1,7 +1,7 @@
 import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'index',
+  anchor: 'index',
 };
 
 export default function ReproSheetLayout() {

@@ -2,11 +2,10 @@ import { Stack } from 'expo-router';
 
 import { DARK_BLUE } from '@example/shared/utils';
 
-// Deep link repros — nothing in the app links here. Open with e.g.
-// `yarn expo open repro/modal` after terminating the app for a cold start, or
-// `repro/dismiss-stack` on a running app.
+// Cold start deep link repros — nothing in the app links here. Open with e.g.
+// `yarn expo-57 open repro/modal` after terminating the app.
 export const unstable_settings = {
-  anchor: 'index',
+  initialRouteName: 'index',
 };
 
 export default function ReproLayout() {
@@ -24,11 +23,10 @@ export default function ReproLayout() {
       />
       <Stack.Screen name="page-sheet" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="sheet" options={{ headerShown: false }} />
-      <Stack.Screen name="dismiss-stack" options={{ title: 'dismissStack' }} />
-      <Stack.Screen
-        name="dismiss-stack-modal"
-        options={{ presentation: 'fullScreenModal', headerShown: false }}
-      />
+      <Stack.Screen name="tabs" options={{ headerShown: false }} />
+      <Stack.Screen name="nested" options={{ headerShown: false }} />
+      <Stack.Screen name="pushed" options={{ title: 'Pushed' }} />
+      <Stack.Screen name="footer-keyboard" options={{ title: 'Footer Keyboard' }} />
     </Stack>
   );
 }

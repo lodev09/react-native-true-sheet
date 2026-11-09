@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
+
 ## 4.1.0
 
 ### 🎉 New features

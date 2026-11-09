@@ -4,24 +4,24 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'TrueSheetExpo58Example',
-  slug: 'TrueSheetExpo58Example',
+  name: 'TrueSheetExpo57Example',
+  slug: 'TrueSheetExpo57Example',
   version: '1.0.0',
   orientation: 'default',
   icon: './assets/images/icon.png',
-  scheme: 'expoexample58',
+  scheme: 'expoexample57',
   userInterfaceStyle: 'automatic',
   ios: {
     supportsTablet: true,
     requireFullScreen: false,
-    bundleIdentifier: 'com.lodev09.truesheet.expo58',
+    bundleIdentifier: 'com.lodev09.truesheet.expo57',
   },
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#ffffff',
     },
-    package: 'com.lodev09.truesheet.expo58',
+    package: 'com.lodev09.truesheet.expo57',
   },
   web: {
     bundler: 'metro',
@@ -32,6 +32,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-font',
     'expo-web-browser',
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          enableSceneSupport: true,
+        },
+      },
+    ],
     [
       'expo-splash-screen',
       {
