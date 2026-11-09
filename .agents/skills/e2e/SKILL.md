@@ -79,6 +79,7 @@ Launch (or `/` on web) lands on MapScreen with the `main` ReanimatedTrueSheet (`
 | FlatList → "Switch to View/List"                      | Prop + size change in one commit (`scrollableHandle` flips with the content) — the coalesced deferred-update path         | Main sheet → FlatList        |
 | FlatList → Add/Remove Item                            | Size-only change                                                                                                          | Same sheet                   |
 | FlatList → "OPEN BLANK SHEET"                         | Stacked child sheet (0.3 detent)                                                                                          | Footer button                |
+| Blank sheet → prop change + next-tick dismiss         | Parent translation racing a dismiss (#1014): at animator scale 0 the parent must return to rest and stay draggable        | `__ts.set` + `dismiss()`     |
 | Main → Add/Remove Content                             | Size-only change; the floating button follows `animatedPosition`                                                          | Main sheet buttons           |
 | ScrollView → Show ScrollView / Toggle ListView        | Late scrollable mount and remount, scroll edge effects                                                                    | Main sheet → ScrollView      |
 | Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                          | Main sheet → Sheet Navigator |

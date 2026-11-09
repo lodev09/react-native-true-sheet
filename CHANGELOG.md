@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: When a sheet presented over another sheet changes its content size right before it dismisses, the sheet behind it now slides back instead of staying pushed down and not draggable. ([#1015](https://github.com/lodev09/react-native-true-sheet/pull/1015) by [@idlework](https://github.com/idlework))
+
 ## 4.1.0
 
 ### 🎉 New features

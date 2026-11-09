@@ -603,7 +603,8 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     isSheetUpdatePending = true
     viewController.post {
       isSheetUpdatePending = false
-      if (viewController.containerView == null) return@post
+      // A settle on a sheet sliding out would fight the dismiss animation
+      if (viewController.containerView == null || !viewController.isPresented || viewController.isBeingDismissed) return@post
 
       viewController.setupSheetDetentsForSizeChange()
       // While settling, onSlide drives the parent translation in realtime —
