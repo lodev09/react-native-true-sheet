@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid/non-secure';
 import {
   type CommonActions,
   type ParamListBase,
@@ -10,6 +9,8 @@ import {
 } from '@react-navigation/core';
 
 import type { TrueSheetNavigationState } from './types';
+
+const uid = () => Math.random().toString(36).slice(2, 10);
 
 export type TrueSheetRouterOptions = StackRouterOptions;
 
@@ -53,7 +54,7 @@ const ensureBaseRoute = <T extends { routes: { name: string }[] }>(
 
   if (!hasBaseRoute) {
     const baseRoute = {
-      key: `${baseRouteName}-${nanoid()}`,
+      key: `${baseRouteName}-${uid()}`,
       name: baseRouteName,
       params: routeParamList?.[baseRouteName],
     };
@@ -89,7 +90,7 @@ export const TrueSheetRouter = (
         ...stateWithBaseRoute,
         stale: false,
         type: 'true-sheet',
-        key: `true-sheet-${nanoid()}`,
+        key: `true-sheet-${uid()}`,
       };
     },
 
@@ -225,7 +226,7 @@ export const TrueSheetRouter = (
       return {
         ...stateWithBaseRoute,
         type: 'true-sheet',
-        key: `true-sheet-${nanoid()}`,
+        key: `true-sheet-${uid()}`,
       };
     },
 
