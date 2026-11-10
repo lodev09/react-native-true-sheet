@@ -2345,6 +2345,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (UIViewController *)newPresentingViewController {
+  // A dismissing sheet can't present, and react-native-screens stops updating its modals when handed one.
+  // Returning nil makes it present from its own controller, which UIKit queues until this dismissal ends.
+  if (self.isBeingDismissed) {
+    return nil;
+  }
+
   UIViewController *topmost = self;
   while (topmost.presentedViewController != nil && !topmost.presentedViewController.isBeingDismissed &&
          [topmost.presentedViewController isKindOfClass:[TrueSheetViewController class]]) {
