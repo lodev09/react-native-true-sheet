@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: `maxContentHeight` now caps the sheet's content without the keyboard, as on iOS. The keyboard used to count against it, so a sheet whose content plus keyboard was taller than `maxContentHeight` stopped at the cap and the keyboard covered the bottom of its content, such as a button below a text input. ([#1017](https://github.com/lodev09/react-native-true-sheet/pull/1017) by [@wildseansy](https://github.com/wildseansy))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))

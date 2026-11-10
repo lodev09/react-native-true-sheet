@@ -132,9 +132,11 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     } else {
       0
     }
-    val height = baseHeight + keyboardHeight - footerKeyboardOverlap
-    val maxAllowedHeight = screenHeight + contentBottomInset
-    return maxContentHeight?.let { minOf(height, it, maxAllowedHeight) } ?: minOf(height, maxAllowedHeight)
+    // maxContentHeight caps the content; the keyboard lifts the sheet on top of it, as on iOS.
+    val contentHeight = (baseHeight - footerKeyboardOverlap).let { height ->
+      maxContentHeight?.let { minOf(height, it) } ?: height
+    }
+    return minOf(contentHeight + keyboardHeight, screenHeight + contentBottomInset)
   }
 
   fun getBackgroundIndex(sheetTop: Int, displayedIndex: Int): Int {
