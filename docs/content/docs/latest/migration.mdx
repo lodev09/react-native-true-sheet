@@ -241,7 +241,7 @@ For an exact opaque color, including over full-screen modals, use `backgroundSty
 The native color effect can shift dark, low-chroma colors over full-screen modals.
 
 Earlier iOS versions and devices without the background effect setters use a painted color or a blur view.
-Design compatibility mode also uses this fallback on iOS 26. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+Design compatibility mode also uses this fallback. iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later.
 On iOS 26.0, the fallback sits above Liquid Glass. See [Background effects](guides/backgrounds#ios-background-effects) for details.
 
 ### 10. `anchor` Renamed to `placement`

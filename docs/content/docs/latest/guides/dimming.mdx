@@ -69,7 +69,31 @@ export const App = () => {
 `dimOpacity={0}` hides the dim, but it still blocks touches to the background and a tap still dismisses the sheet. Set `dimmed={false}` to let touches through.
 
 :::note
-On iOS, setting `dimColor` or `dimOpacity` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+On iOS, setting `dimColor`, `dimOpacity`, or `dimBlur` replaces the system dim with a custom dim layer. Stacked sheets each add their own layer, so the background gets darker with every sheet.
+:::
+
+## Dim Blur
+
+Use [`dimBlur`](../reference/configuration#dimblur) to blur the content behind the sheet instead of tinting it. It takes the same styles as [`backgroundBlur`](../reference/configuration#backgroundblur), and `dimOpacity` sets how strong the blur is.
+
+```tsx {5-6}
+export const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto', 1]}
+      dimBlur="system-ultra-thin-material-dark"
+      dimOpacity={0.4}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+Over the blur, each style draws the tint of its iOS material, so the dim looks the same on iOS, Android, and Web. `dimColor` is ignored.
+
+:::note
+On Android, the blur needs Android 12 or later and the system's window blurs, which battery saver and the user's settings can turn off. Without them, the background is only tinted.
 :::
 
 ## Customizing Dimming Alpha

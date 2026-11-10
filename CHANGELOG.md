@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
+
+## 4.1.0
+
 ### 🎉 New features
 
 - **iOS**: Added `closeButton` for the side rail of an iPhone Duo on iOS 27.1+. UIKit places the button in the rail, like the close button of a system sheet, and `closeButtonOptions` sets its icon from the app's asset catalog or SF Symbols. `onCloseButtonPress` reports presses, and `onCloseButtonVisibilityChange` reports when the button shows and hides. Navigator sheets get them as `sheetCloseButtonPress` and `sheetCloseButtonVisibilityChange`. ([#1010](https://github.com/lodev09/react-native-true-sheet/pull/1010) by [@maxlapides](https://github.com/maxlapides))

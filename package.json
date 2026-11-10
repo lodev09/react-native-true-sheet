@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "The true native bottom sheet experience for your React Native Apps.",
   "source": "./src/index.ts",
   "main": "./lib/module/index.js",
@@ -65,7 +65,7 @@
   "scripts": {
     "bare": "yarn workspace @example/bare",
     "expo": "yarn workspace @example/expo",
-    "expo-58": "yarn workspace @example/expo-58",
+    "expo-57": "yarn workspace @example/expo-57",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -184,7 +184,7 @@
   "workspaces": [
     "example/bare",
     "example/expo",
-    "example/expo-58",
+    "example/expo-57",
     "example/shared",
     "docs"
   ],
@@ -200,7 +200,7 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/bare/node_modules",
       "<rootDir>/example/expo/node_modules",
-      "<rootDir>/example/expo-58/node_modules",
+      "<rootDir>/example/expo-57/node_modules",
       "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",

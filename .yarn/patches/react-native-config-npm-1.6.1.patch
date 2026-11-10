@@ -1,0 +1,14 @@
+diff --git a/package.json b/package.json
+index aa6773550b70bd53a3db90e04d66ec2a627ea36b..ba200049f94b2d39f6b1042124e092d01a5af49a 100644
+--- a/package.json
++++ b/package.json
+@@ -63,8 +63,7 @@
+     "ios": {
+       "modules": {
+         "RNCConfig": {
+-          "className": "RNCConfigModule",
+-          "unstableRequiresMainQueueSetup": true
++          "className": "RNCConfigModule"
+         }
+       }
+     },
