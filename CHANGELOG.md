@@ -4,7 +4,7 @@
 
 ### 🐛 Bug fixes
 
-- The `/navigation` entry point no longer imports `nanoid`, which was never a declared dependency and failed to resolve when dependencies aren't hoisted (e.g. pnpm with `hoist: false`). ([#TODO](https://github.com/lodev09/react-native-true-sheet/pull/TODO) by [@maschwenk](https://github.com/maschwenk))
+- The `/navigation` entry point no longer imports `nanoid`, which was never a declared dependency and failed to resolve when dependencies aren't hoisted (e.g. pnpm with `hoist: false`). ([#1020](https://github.com/lodev09/react-native-true-sheet/pull/1020) by [@maschwenk](https://github.com/maschwenk))
 
 ## 3.11.18
 
