@@ -760,7 +760,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // The settle's last slide frame has positioned the footer
     containerView?.footerView?.syncTranslationState()
 
-    if (interactionState is InteractionState.Reconfiguring) return
+    if (interactionState is InteractionState.Reconfiguring) {
+      // A keyboard reconfigure onto the stop the present slide just reached settles here, and no
+      // settle follows it — finish the present once the reconfigure is done
+      if (isPresentAnimating) post { finishPresentSettledByReconfigure() }
+      return
+    }
 
     // A release already at a stop settles without a slide frame
     keyboardSettleStartTop = -1
@@ -1047,6 +1052,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       .setUpdateListener { updateSheetVisuals(sheet.y.toInt()) }
       .withEndAction { finishDismiss() }
       .start()
+  }
+
+  // Another settle under way finishes the present instead
+  private fun finishPresentSettledByReconfigure() {
+    if (!isPresentAnimating || !isPresented || isBeingDismissed || isSettling) return
+    if (interactionState !is InteractionState.Idle) return
+    isPresentAnimating = false
+    finishPresent()
+    flushPendingSizeChange()
   }
 
   private fun finishPresent() {
