@@ -953,6 +953,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isPresented = true
     isSheetVisible = true
+
+    // setupSheetDetents above resizes the container, and Fabric mounts the pending props right
+    // there: a detents change applied then saw isPresented false and skipped the reconfigure,
+    // leaving the behavior on the old stops while the container followed the new ones
+    if (configuredDetents != detents) setupSheetDetents(applyState = false)
   }
 
   fun resize(detentIndex: Int) {
