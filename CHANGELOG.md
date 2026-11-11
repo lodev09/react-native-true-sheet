@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: A sheet navigator sheet opened while the base screen shows a `fullScreenModal` now presents over the modal. It used to never appear, its `dismiss()` rejected with "No sheet found", and the half-open route kept the modal from closing through the navigator. A sheet rendered beside the navigation tree, such as a root-level named sheet, now presents over a `fullScreenModal` too. ([#1021](https://github.com/lodev09/react-native-true-sheet/pull/1021) by [@maxlapides](https://github.com/maxlapides))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))

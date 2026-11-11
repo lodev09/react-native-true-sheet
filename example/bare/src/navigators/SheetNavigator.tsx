@@ -40,7 +40,31 @@ const HomeScreen = () => {
       <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
       <Button text="Open Peek Sheet" onPress={() => navigation.navigate('Peek')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
+      <Button
+        text="Open Full Screen Modal"
+        onPress={() => navigation.navigate('SheetHomeStack', { screen: 'FullScreenModal' })}
+      />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
+    </View>
+  );
+};
+
+// Repro: a sheet route opened while a fullScreenModal covers the navigator's base.
+const FullScreenModalScreen = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return (
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>Full Screen Modal</Text>
+        <Text style={styles.subtitle}>
+          A fullScreenModal inside the sheet navigator's base screen. Sheets opened from here
+          present over it.
+        </Text>
+      </View>
+      <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
+      <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+      <Button text="Close Modal" onPress={() => navigation.goBack()} />
     </View>
   );
 };
@@ -61,6 +85,11 @@ const SheetHomeNavigator = () => {
     >
       <SheetHomeStack.Screen name="Home" component={HomeScreen} />
       <SheetHomeStack.Screen name="Test" component={TestScreenWrapper} />
+      <SheetHomeStack.Screen
+        name="FullScreenModal"
+        component={FullScreenModalScreen}
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+      />
     </SheetHomeStack.Navigator>
   );
 };
