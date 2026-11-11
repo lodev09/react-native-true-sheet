@@ -10,7 +10,11 @@ export function useScaleBackground() {
   const { direction, isOpen, shouldScaleBackground, setBackgroundColorOnScale, noBodyStyles } =
     useDrawerContext();
   const timeoutIdRef = React.useRef<number | null>(null);
-  const initialBackgroundColor = useMemo(() => document.body.style.backgroundColor, []);
+  // Also rendered on the server: a sheet presented from the start renders in place (see TrueSheet.web)
+  const initialBackgroundColor = useMemo(
+    () => (typeof document !== 'undefined' ? document.body.style.backgroundColor : ''),
+    []
+  );
 
   function getScale() {
     return (window.innerWidth - WINDOW_TOP_OFFSET) / window.innerWidth;

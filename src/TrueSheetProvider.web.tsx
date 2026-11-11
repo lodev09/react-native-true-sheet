@@ -13,6 +13,9 @@ import {
 
 import type { TrueSheetMethods, TrueSheetStaticMethods } from './TrueSheet.types';
 
+// Marks the providers' portal containers, to tell their sheets from the ones rendered in place
+export const PORTAL_CONTAINER_ATTRIBUTE = 'data-true-sheet-portal';
+
 export interface SheetHandle {
   methods: TrueSheetMethods;
   // dismiss() without the already-dismissed warning, for stack-wide dismissals
@@ -59,10 +62,12 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   // Stable portal container created once. Attached to an anchor div rendered
   // in this provider's tree so the sheets unmount cleanly with the provider
   // (e.g., when a screen-scoped provider unmounts on navigation).
-  const portalContainer = useMemo<HTMLDivElement | null>(
-    () => (typeof document !== 'undefined' ? document.createElement('div') : null),
-    []
-  );
+  const portalContainer = useMemo<HTMLDivElement | null>(() => {
+    if (typeof document === 'undefined') return null;
+    const container = document.createElement('div');
+    container.setAttribute(PORTAL_CONTAINER_ATTRIBUTE, '');
+    return container;
+  }, []);
   const anchorRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
