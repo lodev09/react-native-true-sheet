@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: A sheet whose `detents` change while it is being presented now settles at the new detents. The change was lost when it landed inside `present()`, so the sheet kept the old stops while its content followed the new ones and left empty space below it. ([#1022](https://github.com/lodev09/react-native-true-sheet/pull/1022) by [@Kijomimi](https://github.com/Kijomimi))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
