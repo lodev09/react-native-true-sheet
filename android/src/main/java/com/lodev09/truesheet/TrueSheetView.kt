@@ -479,7 +479,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       pendingPresentParent = parentSheet
       // A cancelled request's callback can still land (a timer below API 30) — only the latest may present
       val generation = ++pendingPresentGeneration
-      KeyboardUtils.dismiss(this) {
+      // Wait on the coordinator, which sits on the activity root: this host view can be inside a screen that
+      // stops insets animation dispatch (a react-native-screens form sheet), so its callback would never end
+      val keyboardHideTarget = rootContainerView?.let { viewController.coordinatorLayout } ?: this
+      KeyboardUtils.dismiss(keyboardHideTarget) {
         post {
           if (generation != pendingPresentGeneration) return@post
           val callback = pendingPresentCallback ?: return@post

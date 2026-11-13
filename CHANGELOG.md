@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: Presenting a sheet with the keyboard up from inside a react-native-screens form sheet no longer hangs. The present used to wait for the keyboard to finish hiding on a view the form sheet stops insets animations from reaching, so it never ran and the screen ignored every tap until a back press. ([#TBD](https://github.com/lodev09/react-native-true-sheet/pull/TBD) by [@jesseinkfnd](https://github.com/jesseinkfnd))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
