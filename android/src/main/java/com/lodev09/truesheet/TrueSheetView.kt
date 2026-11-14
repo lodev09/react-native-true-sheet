@@ -365,6 +365,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.scrollableHandle == handle) return
     viewController.scrollableHandle = handle
     setupScrollable()
+    // BottomSheetBehavior only looks for its nested scrolling child in onLayoutChild, and
+    // nothing else is sure to lay the sheet out after a handle that arrives once it is presented.
+    viewController.sheetView?.requestLayout()
   }
 
   fun setAbsoluteHeader(absolute: Boolean) {
