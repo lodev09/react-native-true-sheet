@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: A sheet with `grabber={false}` whose `scrollableRef` scroll view mounts after the sheet presents, such as content that shows a loader first, now closes on a short pull with `dismissThreshold="short"`. The pull used to spring back. ([#1024](https://github.com/lodev09/react-native-true-sheet/pull/1024) by [@isaacrowntree](https://github.com/isaacrowntree))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
