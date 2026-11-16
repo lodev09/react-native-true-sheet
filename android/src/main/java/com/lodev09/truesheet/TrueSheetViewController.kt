@@ -788,9 +788,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Handle present animation completion
     if (isPresentAnimating) {
-      isPresentAnimating = false
-      finishPresent()
-      flushPendingSizeChange()
+      finishPresentAnimation()
       return
     }
 
@@ -1057,7 +1055,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // Another settle under way finishes the present instead
   private fun finishPresentSettledByReconfigure() {
     if (!isPresentAnimating || !isPresented || isBeingDismissed || isSettling) return
-    if (interactionState !is InteractionState.Idle) return
+    finishPresentAnimation()
+  }
+
+  private fun finishPresentAnimation() {
     isPresentAnimating = false
     finishPresent()
     flushPendingSizeChange()
