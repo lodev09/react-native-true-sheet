@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: A sheet whose keyboard starts rising as the present slide ends, such as one that focuses an input around `onWillPresent`, now finishes presenting. It used to never fire `onDidPresent` or resolve `present()`, and kept swallowing taps. ([#1012](https://github.com/lodev09/react-native-true-sheet/pull/1012) by [@JacquesLeupin](https://github.com/JacquesLeupin))
+
 ### 💡 Others
 
 - The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
