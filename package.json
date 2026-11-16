@@ -51,6 +51,7 @@
     "ios",
     "common",
     "*.podspec",
+    "Package.swift",
     "react-native.config.js",
     "!ios/build",
     "!android/build",
@@ -65,7 +66,7 @@
   "scripts": {
     "bare": "yarn workspace @example/bare",
     "expo": "yarn workspace @example/expo",
-    "expo-58": "yarn workspace @example/expo-58",
+    "expo-57": "yarn workspace @example/expo-57",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -184,7 +185,7 @@
   "workspaces": [
     "example/bare",
     "example/expo",
-    "example/expo-58",
+    "example/expo-57",
     "example/shared",
     "docs"
   ],
@@ -200,7 +201,7 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/bare/node_modules",
       "<rootDir>/example/expo/node_modules",
-      "<rootDir>/example/expo-58/node_modules",
+      "<rootDir>/example/expo-57/node_modules",
       "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
@@ -308,5 +309,8 @@
         }
       }
     }
+  },
+  "swiftpmConfig": {
+    "name": "RNTrueSheet"
   }
 }

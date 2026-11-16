@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { ScrollView } from 'react-native';
 import { useTrueSheetNavigation } from '@lodev09/react-native-true-sheet/navigation/expo-router';
-import type { TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { useRouter } from 'expo-router';
 
 import { ScrollableSheetContent } from '@example/shared/screens';
@@ -10,9 +10,7 @@ import { ScrollableSheetContent } from '@example/shared/screens';
 export default function ScrollableSheet() {
   const navigation = useTrueSheetNavigation();
   const router = useRouter();
-  // Typed as the sheet prop: in this monorepo the library resolves the root's
-  // react-native, whose `HostInstance` differs from this app's.
-  const scrollableRef = useRef(null) as NonNullable<TrueSheetProps['scrollableRef']>;
+  const scrollableRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     navigation.setOptions({ scrollableRef });
