@@ -68,6 +68,8 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
+On apps using React Native's Swift Package Manager setup (React Native 0.88+), run `npx react-native spm` instead of `pod install`.
+
 ## Documentation
 
 - [Example](example)
