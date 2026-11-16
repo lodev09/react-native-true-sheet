@@ -12,8 +12,12 @@
 
 import PackageDescription
 
+// CocoaPods flattens a pod's headers into one directory and SwiftPM does not,
+// so every folder that holds headers must be listed here.
+let headerSearchPaths = ["ios", "ios/core", "ios/events", "ios/utils", "common/cpp"]
+
 let package = Package(
-  name: "react-native-true-sheet",
+  name: "RNTrueSheet",
   platforms: [.iOS("15.1")],
   products: [
     .library(name: "RNTrueSheet", targets: ["RNTrueSheet"]),
@@ -36,28 +40,18 @@ let package = Package(
       exclude: ["ios/tvos"],
       sources: ["ios", "common/cpp"],
       publicHeadersPath: "ios",
-      cSettings: [
-        .define("RCT_NEW_ARCH_ENABLED", to: "1"),
-        .headerSearchPath("ios"),
-        .headerSearchPath("ios/core"),
-        .headerSearchPath("ios/events"),
-        .headerSearchPath("ios/utils"),
-        .headerSearchPath("common/cpp"),
-      ],
+      cSettings: [.define("RCT_NEW_ARCH_ENABLED", to: "1")]
+        + headerSearchPaths.map { CSetting.headerSearchPath($0) },
       cxxSettings: [
         .define("RCT_NEW_ARCH_ENABLED", to: "1"),
         // Must match the prebuilt React.framework's config-gated C++ ABI.
         .define("DEBUG", .when(configuration: .debug)),
         .define("NDEBUG", .when(configuration: .release)),
-        .headerSearchPath("ios"),
-        .headerSearchPath("ios/core"),
-        .headerSearchPath("ios/events"),
-        .headerSearchPath("ios/utils"),
-        .headerSearchPath("common/cpp"),
-      ],
+      ] + headerSearchPaths.map { CXXSetting.headerSearchPath($0) },
       linkerSettings: [
         .linkedFramework("UIKit"),
         .linkedFramework("Foundation"),
+        .linkedFramework("CoreGraphics"),
       ]
     ),
   ],
