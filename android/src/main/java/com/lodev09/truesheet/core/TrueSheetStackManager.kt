@@ -78,11 +78,12 @@ object TrueSheetStackManager {
    */
   @JvmStatic
   fun updateParentTranslation(sheetView: TrueSheetView) {
+    if (sheetView.viewController.parentSheetView == null) return
+
     // Post to ensure layout is complete before reading position
     sheetView.viewController.post {
-      // Skip if the child dismissed after this was posted: isBeingDismissed covers a dismiss in progress,
-      // isPresented one that finished (cleanup clears isBeingDismissed)
-      if (!sheetView.viewController.isPresented || sheetView.viewController.isBeingDismissed) return@post
+      // The child may have started dismissing since this was posted. A finished dismiss clears parentSheetView.
+      if (sheetView.viewController.isBeingDismissed) return@post
       val parentSheet = sheetView.viewController.parentSheetView ?: return@post
 
       val childMinSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(0)

@@ -28,6 +28,14 @@ Races that need the JS and UI threads to interleave a certain way are flaky by h
 
   The queued work runs against a surface that is already stopped while JS still holds the tree. This reproduced the Android back-press `VIEW_NOT_FOUND` rejection (#921) and the overlay detach NPE on activity destroy (#922, with the Basic sheet's overlays mounted).
 
+- **Animator scale 0 (Android).** View animations (the dismiss slide, parent translation) finish in one frame, so a runnable posted before a dismiss runs after it finished. `BottomSheetBehavior` settles still animate. Note the current values (`adb shell settings get global <key>`), then:
+
+  ```sh
+  for k in window_animation_scale transition_animation_scale animator_duration_scale; do adb shell settings put global $k 0; done
+  ```
+
+  #1014 recipe: present the FlatList sheet and its blank child, then from one `debugger-evaluate` call `__ts.set('unnamed[0.3]', 'backgroundColor', …)` and `setTimeout(() => child.dismiss(), 0)`. The parent's last `onPositionChange` must be its rest top (the unfixed build failed 11 of 12 runs). Restore the scales when done with `settings put global <key> 1` for all three. Don't `settings delete` a key that was `null`: the system keeps the 0 in memory, and the emulator's quickboot snapshot carries it across reboots. A scale left at 0 makes the parent snap instead of slide, and skews later recordings, frame traces, and perf runs.
+
 - **Heavy render after node creation.** Mount the sheet followed by a sibling that busy-waits ~500 ms in render. Android Fabric then preallocates the sheet's view with its initial state on a UI frame before the JS commit lands, so a state update on that wrapper is dropped (#905). Measure the host with `nativeRef.current.measure` — the parent's size instead of the screen's is the bug.
 
 ## Crash triage

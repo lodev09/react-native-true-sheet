@@ -79,7 +79,7 @@ Launch (or `/` on web) lands on MapScreen with the `main` ReanimatedTrueSheet (`
 | FlatList → "Switch to View/List"                      | Prop + size change in one commit (`scrollableHandle` flips with the content) — the coalesced deferred-update path         | Main sheet → FlatList        |
 | FlatList → Add/Remove Item                            | Size-only change                                                                                                          | Same sheet                   |
 | FlatList → "OPEN BLANK SHEET"                         | Stacked child sheet (0.3 detent)                                                                                          | Footer button                |
-| Blank sheet → prop change + next-tick dismiss         | Parent translation racing a dismiss (#1014): at animator scale 0 the parent must return to rest and stay draggable        | `__ts.set` + `dismiss()`     |
+| Blank sheet → prop change + next-tick dismiss         | Parent translation racing a dismiss (#1014, recipe in §3 races): the parent must return to rest and stay draggable        | Footer button, then hooks    |
 | Main → Add/Remove Content                             | Size-only change; the floating button follows `animatedPosition`                                                          | Main sheet buttons           |
 | ScrollView → Show ScrollView / Toggle ListView        | Late scrollable mount and remount, scroll edge effects                                                                    | Main sheet → ScrollView      |
 | Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                          | Main sheet → Sheet Navigator |
@@ -93,7 +93,7 @@ RN deep-diffs props: a parent re-render sends a native props update only when a 
 
 - **Runtime hooks** — [references/runtime-hooks.md](references/runtime-hooks.md). Install `scripts/sheet-hooks.js` through `debugger-evaluate` to log every sheet's `onPositionChange` (position, `realtime`, index), override any prop live, change a prop on each drag event, and call `present`/`dismiss`/`resize` with precise timing. iOS and Android only.
 - **Frame analysis** — [references/frame-analysis.md](references/frame-analysis.md). Record with `screen-recording-start` (`trimStatic: false`, `showTouches: false`), then `scripts/track_column.py` prints a pixel column's tracked edge per frame, and an ffmpeg one-liner prints a region's mean luma per frame (dim). A pinned element that prints one value for the whole run did not move; a 1-frame jump shows up as its own line.
-- **Native debugging** — [references/native-debugging.md](references/native-debugging.md). Temporary `[TSDBG]` logs (`RCTLogWarn` on iOS, `Log.d` on Android), forcing timing races (blocked JS + `adb` input, heavy renders), and crash triage per platform.
+- **Native debugging** — [references/native-debugging.md](references/native-debugging.md). Temporary `[TSDBG]` logs (`RCTLogWarn` on iOS, `Log.d` on Android), forcing timing races (blocked JS + `adb` input, heavy renders, Android animator scale 0), and crash triage per platform.
 - **Web** — [references/web.md](references/web.md). A temporary live readout of the viewport and drawer geometry read through `describe`, plus measured Safari/Chrome keyboard and viewport facts.
 
 ## 4. A/B against HEAD
