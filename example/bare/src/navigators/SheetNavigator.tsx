@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -136,7 +136,7 @@ const PeekSheet = () => {
 // plugged into the sheet via `setOptions` instead of the static screen options.
 const ScrollableSheet = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
-  const scrollableRef = useRef<ScrollView>(null);
+  const scrollableRef = useRef<ScrollViewInstance>(null);
 
   useEffect(() => {
     navigation.setOptions({ scrollableRef });

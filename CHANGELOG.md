@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 💡 Others
+
+- The Expo example in `example/expo` now runs SDK 58, and the SDK 57 example moves to `example/expo-57` (`yarn expo-57`). The bare example is upgraded to React Native 0.88. ([#1016](https://github.com/lodev09/react-native-true-sheet/pull/1016) by [@lodev09](https://github.com/lodev09))
+
+## 4.1.0
+
 ### 🎉 New features
 
 - Added `dimBlur` to blur the content behind the sheet instead of tinting it with `dimColor`. It takes the `backgroundBlur` styles and draws the matching iOS material's tint over the blur, so the dim looks the same on every platform. `dimOpacity` sets the blur intensity. Android blurs on Android 12 and later unless the system turns window blurs off, and only tints otherwise. ([#991](https://github.com/lodev09/react-native-true-sheet/pull/991) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))

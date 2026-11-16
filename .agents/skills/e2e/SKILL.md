@@ -58,7 +58,7 @@ cd example/bare/android && ./gradlew app:installDebug -PreactNativeArchitectures
 
 Builds and installs in one step (a library-only incremental rebuild is about 10 s). The APK is `example/bare/android/app/build/outputs/apk/debug/app-debug.apk` — copy it per variant for A/B (§4).
 
-- Run one Gradle build at a time: every example compiles the library into the shared root `android/build`, so parallel builds (or switching between bare and expo-58) leave stale codegen (`NoClassDefFoundError ...TrueSheetViewManagerInterface`). Recover with `rm -rf android/build` and a single rebuild.
+- Run one Gradle build at a time: every example compiles the library into the shared root `android/build`, so parallel builds (or switching between bare and expo) leave stale codegen (`NoClassDefFoundError ...TrueSheetViewManagerInterface`). Recover with `rm -rf android/build` and a single rebuild.
 - Metro on another port (8081 taken): `adb reverse` is not enough, the emulator dials `10.0.2.2:8081` and loads the other project's bundle (redbox "Cannot read property 'EventEmitter' of undefined"). Point the app at the new port, relaunch, and pass `port: 8082` to the argent debugger tools. When done, delete it (`adb shell run-as truesheet.example rm shared_prefs/truesheet.example_preferences.xml`).
 
   ```sh
