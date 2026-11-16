@@ -14,6 +14,10 @@
 #if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
 #import <RNScreens/RNSDismissibleModalProtocol.h>
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 1
+// SwiftPM does not flatten headers: react-native-screens is exposed under its package paths
+#elif __has_include(<RNScreens/ios/integrations/RNSDismissibleModalProtocol.h>)
+#import <RNScreens/ios/integrations/RNSDismissibleModalProtocol.h>
+#define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 1
 #else
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 0
 #endif
