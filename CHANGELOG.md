@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- **iOS**: Added Swift Package Manager support for apps using React Native's SwiftPM setup (`npx react-native spm`, React Native 0.88 and later). CocoaPods is unchanged. ([#1013](https://github.com/lodev09/react-native-true-sheet/pull/1013) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))
+
 ### 🐛 Bug fixes
 
+- **Android**: A sheet whose keyboard starts rising as the present slide ends, such as one that focuses an input around `onWillPresent`, now finishes presenting. It used to never fire `onDidPresent` or resolve `present()`, and kept swallowing taps. ([#1012](https://github.com/lodev09/react-native-true-sheet/pull/1012) by [@JacquesLeupin](https://github.com/JacquesLeupin))
+- **Android**: When a sheet presented over another sheet changes its content size right before it dismisses, the sheet behind it now slides back instead of staying pushed down and not draggable. ([#1015](https://github.com/lodev09/react-native-true-sheet/pull/1015) by [@idlework](https://github.com/idlework))
 - **Android**: `maxContentHeight` now caps the sheet's content without the keyboard, as on iOS. The keyboard used to count against it, so a sheet whose content plus keyboard was taller than `maxContentHeight` stopped at the cap and the keyboard covered the bottom of its content, such as a button below a text input. ([#1017](https://github.com/lodev09/react-native-true-sheet/pull/1017) by [@wildseansy](https://github.com/wildseansy))
 
 ### 💡 Others

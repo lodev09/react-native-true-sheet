@@ -15,7 +15,7 @@ description: >-
 
 Use this skill to produce correct, idiomatic code for apps that consume `@lodev09/react-native-true-sheet` (v4). It covers choosing the right integration pattern, applying the public API correctly, and avoiding platform-specific pitfalls.
 
-Requires React Native >= 0.82 (Expo SDK 55+) with the New Architecture.
+Requires React Native >= 0.82 (Expo SDK 55+) with the New Architecture. On iOS it links through CocoaPods (`pod install`) or React Native's Swift Package Manager setup (`npx react-native spm`, RN 0.88+).
 
 ## Quick Start
 
