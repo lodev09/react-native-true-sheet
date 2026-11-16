@@ -1189,6 +1189,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
+    // A settle on a sheet sliding out would fight the dismiss animation
+    if (!isPresented || isBeingDismissed) return
+
     // Reconfiguring while the container tracks the sheet can interrupt its
     // motion. Apply content size changes once the drag or resize settles, or
     // the touch holding a deferred keyboard settle lifts.

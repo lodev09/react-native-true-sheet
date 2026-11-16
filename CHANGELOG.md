@@ -9,6 +9,7 @@
 ### 🐛 Bug fixes
 
 - **Android**: A sheet whose keyboard starts rising as the present slide ends, such as one that focuses an input around `onWillPresent`, now finishes presenting. It used to never fire `onDidPresent` or resolve `present()`, and kept swallowing taps. ([#1012](https://github.com/lodev09/react-native-true-sheet/pull/1012) by [@JacquesLeupin](https://github.com/JacquesLeupin))
+- **Android**: When a sheet presented over another sheet changes its content size right before it dismisses, the sheet behind it now slides back instead of staying pushed down and not draggable. ([#1015](https://github.com/lodev09/react-native-true-sheet/pull/1015) by [@idlework](https://github.com/idlework))
 
 ### 💡 Others
 
