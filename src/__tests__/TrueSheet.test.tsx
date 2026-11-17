@@ -806,6 +806,43 @@ describe('TrueSheet', () => {
     });
   });
 
+  describe('Missing native view', () => {
+    const missingView = (code: string) =>
+      Object.assign(new Error('TrueSheetView with tag 1 not found'), { code });
+
+    const renderSheet = (name: string) => {
+      render(
+        <TrueSheet name={name}>
+          <Text>Content</Text>
+        </TrueSheet>
+      );
+      return TrueSheet['instances'][name]!;
+    };
+
+    it.each(['VIEW_NOT_FOUND', 'SHEET_NOT_FOUND'])(
+      'should resolve resize, dismiss and dismissStack on %s',
+      async (code) => {
+        const sheetRef = renderSheet(`missing-view-${code}`);
+
+        jest.mocked(TrueSheetModule!.resizeByRef).mockRejectedValueOnce(missingView(code));
+        jest.mocked(TrueSheetModule!.dismissByRef).mockRejectedValueOnce(missingView(code));
+        jest.mocked(TrueSheetModule!.dismissStackByRef).mockRejectedValueOnce(missingView(code));
+
+        await expect(sheetRef.resize(0)).resolves.toBeUndefined();
+        await expect(sheetRef.dismiss()).resolves.toBeUndefined();
+        await expect(sheetRef.dismissStack()).resolves.toBeUndefined();
+      }
+    );
+
+    it('should still reject other native errors', async () => {
+      const sheetRef = renderSheet('missing-view-other-error');
+      const error = Object.assign(new Error('Failed to resize'), { code: 'RESIZE_FAILED' });
+      jest.mocked(TrueSheetModule!.resizeByRef).mockRejectedValueOnce(error);
+
+      await expect(sheetRef.resize(0)).rejects.toBe(error);
+    });
+  });
+
   describe('Focus/Blur Events', () => {
     it('should call onWillFocus when triggered', async () => {
       const onWillFocusMock = jest.fn();

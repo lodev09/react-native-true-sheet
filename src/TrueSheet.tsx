@@ -99,6 +99,16 @@ const stopResponderNegotiation = (event: GestureResponderEvent) => {
   return false;
 };
 
+// The native view can be dropped while JS still holds the sheet (e.g. the Android
+// activity is destroyed but the JS runtime keeps running). Native then rejects with
+// VIEW_NOT_FOUND (Android) or SHEET_NOT_FOUND (iOS). A sheet that no longer exists
+// has nothing left to resize or dismiss, so those calls resolve instead.
+const ignoreMissingView = (error: unknown): void => {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (code === 'VIEW_NOT_FOUND' || code === 'SHEET_NOT_FOUND') return;
+  throw error;
+};
+
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
   initialPresentReady: boolean;
@@ -550,7 +560,7 @@ export class TrueSheet
    * @param index - The detent index to resize to
    */
   public async resize(index: number): Promise<void> {
-    await TrueSheetModule?.resizeByRef(this.handle, index);
+    await TrueSheetModule?.resizeByRef(this.handle, index).catch(ignoreMissingView);
   }
 
   /**
@@ -561,7 +571,7 @@ export class TrueSheet
     // Dismissing before the lazy mount finishes cancels the present — nothing was presented
     if (this.cancelPendingPresent()) return;
 
-    return TrueSheetModule?.dismissByRef(this.handle, animated);
+    return TrueSheetModule?.dismissByRef(this.handle, animated).catch(ignoreMissingView);
   }
 
   /**
@@ -570,7 +580,7 @@ export class TrueSheet
    * @param animated - Whether to animate the dismissal (default: true)
    */
   public async dismissStack(animated: boolean = true): Promise<void> {
-    return TrueSheetModule?.dismissStackByRef(this.handle, animated);
+    return TrueSheetModule?.dismissStackByRef(this.handle, animated).catch(ignoreMissingView);
   }
 
   componentDidMount(): void {
