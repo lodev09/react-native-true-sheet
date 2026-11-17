@@ -129,11 +129,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [self presentInitialIfNeeded];
 }
 
+// A host mounted under a full-screen modal never gets didMoveToWindow, and its
+// props can land before it's inserted (no superview yet), so retry on insert.
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+
+  if (!self.window && [self presentationWindow]) {
+    [self presentInitialIfNeeded];
+  }
+}
+
 // JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
 // navigation footer set via setOptions) commits together with it — by the time
 // the prop lands the tree is final and the sheet presents at its final height.
-// Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
-// arriving after attach, which didMoveToWindow won't re-fire for).
+// Called from didMoveToWindow (re-attach), didMoveToSuperview (insert under a
+// full-screen modal) and finalizeUpdates (the prop arriving after attach, which
+// didMoveToWindow won't re-fire for).
 - (void)presentInitialIfNeeded {
   if (_initialDetentIndex < 0 || _didInitiallyPresent)
     return;
