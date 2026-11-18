@@ -296,8 +296,8 @@ using namespace facebook::react;
   UIScrollView *scrollView = _detectedScrollView.scrollView;
   UIWindow *window = scrollView.window;
   CGRect scrollFrame = [scrollView convertRect:scrollView.bounds toView:window];
-  CGFloat keyboardTop = CGRectGetMaxY(window.bounds) - height;
-  CGFloat inset = MAX(0, CGRectGetMaxY(scrollFrame) - keyboardTop);
+  CGFloat coveredTop = CGRectGetMaxY(window.bounds) - height - [self risenFooterHeight];
+  CGFloat inset = MAX(0, CGRectGetMaxY(scrollFrame) - coveredTop);
 
   // Take out the safe area UIKit stacks on top of contentInset so the total
   // lands on the keyboard edge.
@@ -322,15 +322,16 @@ using namespace facebook::react;
   return adjustedInset;
 }
 
-// An absolute footer floats over the viewport's bottom edge — extend the
-// caret target so it clears the footer, not just the keyboard. Not needed
-// while the footer inset is applied (the visible rect already ends above it)
-// or when the footer stays behind the keyboard.
-- (CGFloat)footerOcclusion {
+// An absolute footer rising with the keyboard covers the scroll view above
+// the keyboard too, so the keyboard inset includes it and the scroll range
+// reaches a field under it. Not needed while the footer inset is applied (it
+// already covers the footer) or when the footer stays behind the keyboard.
+- (CGFloat)risenFooterHeight {
   TrueSheetViewController *controller = _keyboardObserver.viewController;
   if (self.footerView && controller.absoluteFooter && controller.footerAvoidsKeyboard &&
       [self footerInsetAbove:0] <= 0) {
-    return [self.footerView keyboardOcclusionHeight];
+    CGFloat occlusion = [self.footerView keyboardOcclusionHeight];
+    return occlusion > 0 ? MAX(0, occlusion + controller.footerKeyboardOffset) : 0;
   }
   return 0;
 }
@@ -482,7 +483,7 @@ using namespace facebook::react;
     }
   }
 
-  targetRect.size.height += self.keyboardScrollOffset + [self footerOcclusion] - _appliedKeyboardOffset;
+  targetRect.size.height += self.keyboardScrollOffset - _appliedKeyboardOffset;
   [scrollView scrollRectToVisible:targetRect animated:animated];
 }
 
