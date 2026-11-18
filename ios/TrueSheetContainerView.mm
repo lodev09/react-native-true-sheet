@@ -111,8 +111,8 @@ using namespace facebook::react;
   return elements;
 }
 
-- (BOOL)hasAccessibilityFooterElements {
-  return _footerView && _footerView.accessibilityElements.count > 0;
+- (NSArray *)accessibilityFooterElements {
+  return _footerView ? _footerView.accessibilityElements : @[];
 }
 
 #pragma mark - Layout

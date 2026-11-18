@@ -123,7 +123,7 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   __weak UIWindow *_accessibilityWindow;
   NSTimer *_overlayDismissalTimer;
-  BOOL _appliedAccessibilityFooterElements;
+  NSArray *_appliedAccessibilityFooterElements;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -767,14 +767,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)refreshAccessibilityContainerIfFooterChanged {
-  // Only a dimmed sheet's boundary depends on the footer
+  // Only a dimmed sheet flattens the footer's elements into its own
   if (!_dimmed || !self.canRefreshAccessibilityContainer) {
     return;
   }
 
+  // Compares by identity, so a footer control that remounts is picked up too
   UIView *contentView = self.accessibilityContentView;
   if (![contentView isKindOfClass:[TrueSheetContainerView class]] ||
-      [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements] == _appliedAccessibilityFooterElements) {
+      [[(TrueSheetContainerView *)contentView accessibilityFooterElements]
+        isEqualToArray:_appliedAccessibilityFooterElements]) {
     return;
   }
 
@@ -859,12 +861,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)setAccessibilityContentElement:(UIView *)contentView {
-  BOOL hasAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]] &&
-                                        [(TrueSheetContainerView *)contentView hasAccessibilityFooterElements];
-  // Footer controls exposed as separate accessibility elements can be skipped
-  // by XCTest when the presented sheet is a hard modal accessibility boundary.
-  BOOL isAccessibilityModal = _dimmed && !hasAccessibilityFooterElements;
-  _appliedAccessibilityFooterElements = hasAccessibilityFooterElements;
+  // A dimmed sheet blocks touches to the screen behind it, so it's modal for
+  // assistive technologies too, footer or not.
+  BOOL isAccessibilityModal = _dimmed;
+  _appliedAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]]
+                                          ? [(TrueSheetContainerView *)contentView accessibilityFooterElements]
+                                          : @[];
 
   // At a hard modal boundary XCTest skips nested elements, so flatten the
   // container's children into the array. Otherwise expose the container itself:
