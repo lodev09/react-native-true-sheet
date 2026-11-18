@@ -118,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)updateFooterKeyboardOffset;
 
-- (BOOL)hasAccessibilityFooterElements;
+- (NSArray *)accessibilityFooterElements;
 
 /**
  * Setup scrollable content
