@@ -760,7 +760,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // The settle's last slide frame has positioned the footer
     containerView?.footerView?.syncTranslationState()
 
-    if (interactionState is InteractionState.Reconfiguring) return
+    if (interactionState is InteractionState.Reconfiguring) {
+      // A keyboard reconfigure onto the stop the present slide just reached settles here, and no
+      // settle follows it — finish the present once the reconfigure is done
+      if (isPresentAnimating) post { finishPresentSettledByReconfigure() }
+      return
+    }
 
     // A release already at a stop settles without a slide frame
     keyboardSettleStartTop = -1
@@ -783,9 +788,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     // Handle present animation completion
     if (isPresentAnimating) {
-      isPresentAnimating = false
-      finishPresent()
-      flushPendingSizeChange()
+      finishPresentAnimation()
       return
     }
 
@@ -1054,6 +1057,18 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       .start()
   }
 
+  // Another settle under way finishes the present instead
+  private fun finishPresentSettledByReconfigure() {
+    if (!isPresentAnimating || !isPresented || isBeingDismissed || isSettling) return
+    finishPresentAnimation()
+  }
+
+  private fun finishPresentAnimation() {
+    isPresentAnimating = false
+    finishPresent()
+    flushPendingSizeChange()
+  }
+
   private fun finishPresent() {
     isPresentFinished = true
     coordinatorLayout?.blocksTouches = false
@@ -1179,6 +1194,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   }
 
   fun setupSheetDetentsForSizeChange() {
+    // A settle on a sheet sliding out would fight the dismiss animation
+    if (!isPresented || isBeingDismissed) return
+
     // Reconfiguring while the container tracks the sheet can interrupt its
     // motion. Apply content size changes once the drag or resize settles, or
     // the touch holding a deferred keyboard settle lifts.

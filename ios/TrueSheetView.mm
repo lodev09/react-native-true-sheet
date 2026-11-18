@@ -35,6 +35,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <React/UIView+React.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -119,10 +120,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   if (!self.window)
     return;
 
-  if (self.tag > 0) {
-    [TrueSheetModule registerView:self withTag:@(self.tag)];
-  }
-
   if (_pendingNavigationRepresent && !_controller.isPresented) {
     _pendingNavigationRepresent = NO;
     [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
@@ -132,11 +129,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [self presentInitialIfNeeded];
 }
 
+// A host mounted under a full-screen modal never gets didMoveToWindow, and its
+// props can land before it's inserted (no superview yet), so retry on insert.
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+
+  if (!self.window && [self presentationWindow]) {
+    [self presentInitialIfNeeded];
+  }
+}
+
 // JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
 // navigation footer set via setOptions) commits together with it — by the time
 // the prop lands the tree is final and the sheet presents at its final height.
-// Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
-// arriving after attach, which didMoveToWindow won't re-fire for).
+// Called from didMoveToWindow (re-attach), didMoveToSuperview (insert under a
+// full-screen modal) and finalizeUpdates (the prop arriving after attach, which
+// didMoveToWindow won't re-fire for).
 - (void)presentInitialIfNeeded {
   if (_initialDetentIndex < 0 || _didInitiallyPresent)
     return;
@@ -144,7 +152,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   UIViewController *vc = [self findPresentingViewController];
 
   // Only present if the view controller is in the same window
-  if (!vc || vc.view.window != self.window) {
+  if (!vc || vc.view.window != [self presentationWindow]) {
     // Animate next time when sheet finally moves to the correct window
     _initialDetentAnimated = YES;
     return;
@@ -427,6 +435,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
+  // Registered on mount, not on window attach: a host mounted under a
+  // full-screen modal has no window yet but must still answer dismiss().
+  if (self.tag > 0) {
+    [TrueSheetModule registerView:self withTag:@(self.tag)];
+  }
+
   [self setupScrollable];
 
   if (_controller.isPresented) {
@@ -436,7 +450,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
-    if (self.window) {
+    if ([self presentationWindow]) {
       [self presentInitialIfNeeded];
     }
   }
@@ -460,7 +474,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
       strongSelf->_controller.delegate = strongSelf;
       strongSelf->_controller.activeDetentIndex = -1;
-      if (strongSelf.window) {
+      if ([strongSelf presentationWindow]) {
         [strongSelf presentInitialIfNeeded];
       }
     });
@@ -1046,7 +1060,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 - (void)presenterScreenWillAppear {
   if (_dismissedByNavigation && !_controller.isPresented && !_controller.isBeingPresented) {
-    if (self.window) {
+    if ([self presentationWindow]) {
       [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
     } else {
       _pendingNavigationRepresent = YES;
@@ -1153,11 +1167,39 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [_controller setupDraggable];
 }
 
-- (UIViewController *)findPresentingViewController {
-  if (!self.window)
+/**
+ * The window this sheet presents in. A full-screen modal takes the views under
+ * it out of the window. A sheet hosted beside the stack that presented it (e.g. a
+ * sheet navigator's sheet, next to its base screen) still sits above that stack,
+ * so it presents in the modal's window. A sheet inside that stack waits for its
+ * screen to come back.
+ */
+- (nullable UIWindow *)presentationWindow {
+  if (self.window)
+    return self.window;
+
+  UIView *rootView = self;
+  while (rootView.superview) {
+    rootView = rootView.superview;
+  }
+
+  // A detached view controller's root view still responds through its controller
+  UIResponder *responder = rootView.nextResponder;
+  if (![responder isKindOfClass:[UIViewController class]])
     return nil;
 
-  UIViewController *rootViewController = self.window.rootViewController;
+  // react-native-screens keeps a presented screen's reactSuperview on its stack
+  UIViewController *modal = ((UIViewController *)responder).presentedViewController;
+  UIView *presentingStack = modal.viewIfLoaded.reactSuperview;
+  if (modal.isBeingDismissed || ![presentingStack isDescendantOfView:rootView] ||
+      [self isDescendantOfView:presentingStack])
+    return nil;
+
+  return modal.view.window;
+}
+
+- (UIViewController *)findPresentingViewController {
+  UIViewController *rootViewController = [self presentationWindow].rootViewController;
   if (!rootViewController)
     return nil;
 

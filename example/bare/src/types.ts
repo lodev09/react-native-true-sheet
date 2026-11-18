@@ -28,4 +28,5 @@ export type SheetStackParamList = {
 export type SheetHomeStackParamList = {
   Home: undefined;
   Test: undefined;
+  FullScreenModal: undefined;
 };
