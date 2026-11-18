@@ -956,6 +956,12 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     isPresented = true
     isSheetVisible = true
+
+    // The container resize in setupSheetDetents mounts pending props synchronously, and
+    // finalizeUpdates skipped them while isPresented was false
+    sheet.updateGravity()
+    updateBehaviorMaxWidth()
+    setupSheetDetents(applyState = false)
   }
 
   fun resize(detentIndex: Int) {

@@ -13,6 +13,7 @@
 - **Android**: A sheet whose keyboard starts rising as the present slide ends, such as one that focuses an input around `onWillPresent`, now finishes presenting. It used to never fire `onDidPresent` or resolve `present()`, and kept swallowing taps. ([#1012](https://github.com/lodev09/react-native-true-sheet/pull/1012) by [@JacquesLeupin](https://github.com/JacquesLeupin))
 - **Android**: When a sheet presented over another sheet changes its content size right before it dismisses, the sheet behind it now slides back instead of staying pushed down and not draggable. ([#1015](https://github.com/lodev09/react-native-true-sheet/pull/1015) by [@idlework](https://github.com/idlework))
 - **Android**: The keyboard no longer counts against `maxContentHeight`, as on iOS. A sheet now rises above the keyboard instead of stopping at `maxContentHeight` with the keyboard covering the bottom of its content, such as a button below a text input. A sheet already at `maxContentHeight` now rises with the keyboard too, instead of staying put. ([#1017](https://github.com/lodev09/react-native-true-sheet/pull/1017) by [@wildseansy](https://github.com/wildseansy))
+- **Android**: A sheet whose `detents`, `maxContentHeight`, `placement`, or `maxContentWidth` change while it presents now uses the new values. It used to keep the old ones, such as settling at the old detents with empty space below its content. ([#1022](https://github.com/lodev09/react-native-true-sheet/pull/1022) by [@Kijomimi](https://github.com/Kijomimi) and [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 
