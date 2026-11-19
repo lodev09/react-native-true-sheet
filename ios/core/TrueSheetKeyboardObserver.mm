@@ -174,7 +174,10 @@ static const NSTimeInterval kUnanimatedKeyboardDuration = 0.25;
 
   _viewController.keyboardHeight = keyboardHeight;
 
-  for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates) {
+  // A delegate callback can commit synchronously and mount a pending footer,
+  // which joins `_delegates` mid-loop — iterate a snapshot. A late joiner
+  // follows the keyboard on its own (see TrueSheetFooterView applyKeyboardOffset).
+  for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates.allObjects) {
     if (keyboardHeight > 0) {
       [delegate keyboardWillShow:keyboardHeight duration:duration curve:curve];
     } else {
