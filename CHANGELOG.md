@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 4.1.1
+
 ### 🎉 New features
 
 - **iOS**: Added Swift Package Manager support for apps using React Native's SwiftPM setup (`npx react-native spm`, React Native 0.88 and later). CocoaPods is unchanged. ([#1013](https://github.com/lodev09/react-native-true-sheet/pull/1013) by [@VladyslavMartynov10](https://github.com/VladyslavMartynov10) and [@lodev09](https://github.com/lodev09))
