@@ -90,8 +90,9 @@ object TrueSheetStackManager {
       val childCurrentSheetTop = sheetView.viewController.detentCalculator.getSheetTopForDetentIndex(
         sheetView.viewController.currentDetentIndex
       )
-      // Cap to minimum detent position
-      val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop)
+      // Cap to minimum detent position. A child pushed down by its own child sits below its detent, and the parent
+      // must follow it there, or re-placing the stack (as on resume) brings the parent up above the top sheet.
+      val childSheetTop = maxOf(childMinSheetTop, childCurrentSheetTop + sheetView.viewController.currentTranslationY)
       parentSheet.updateTranslationForChild(childSheetTop)
     }
   }
