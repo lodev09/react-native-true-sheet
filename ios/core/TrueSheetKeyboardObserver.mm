@@ -178,6 +178,10 @@ static const NSTimeInterval kUnanimatedKeyboardDuration = 0.25;
   // which joins `_delegates` mid-loop — iterate a snapshot. A late joiner
   // follows the keyboard on its own (see TrueSheetFooterView applyKeyboardOffset).
   for (id<TrueSheetKeyboardObserverDelegate> delegate in _delegates.allObjects) {
+    if (![_delegates containsObject:delegate]) {
+      continue;
+    }
+
     if (keyboardHeight > 0) {
       [delegate keyboardWillShow:keyboardHeight duration:duration curve:curve];
     } else {
