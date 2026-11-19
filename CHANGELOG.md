@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+- **iOS**: iOS 27 now applies soft scroll edge effect correctly ([#1031](https://github.com/lodev09/react-native-true-sheet/pull/1031)) by [@bigcupcoffee](https://github.com/bigcupcoffee)
+
 ## 4.1.1
 
 ### 🎉 New features
