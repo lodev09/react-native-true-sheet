@@ -204,6 +204,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
+  private var isHandlingKeyboard = false
   private var isKeyboardDismissProgrammatic = false
 
   // The keyboard hid under a touch (e.g. keyboardDismissMode="on-drag") — the
@@ -386,16 +387,16 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
   // Insets
-  // Target keyboard height used for detent calculations
+  // Insets are window-wide. Keep applying them through blur and scroll commits until the keyboard hides.
   override val keyboardInset: Int
-    get() = keyboardObserver?.targetHeight ?: 0
+    get() = if (isHandlingKeyboard) keyboardObserver?.targetHeight ?: 0 else 0
 
   // Current animated keyboard height for positioning
   private val currentKeyboardInset: Int
-    get() = keyboardObserver?.currentHeight ?: 0
+    get() = if (isHandlingKeyboard) keyboardObserver?.currentHeight ?: 0 else 0
 
   private val isKeyboardTransitioning: Boolean
-    get() = keyboardObserver?.isTransitioning ?: false
+    get() = isHandlingKeyboard && keyboardObserver?.isTransitioning == true
 
   // The footer slides every frame until the sheet and keyboard come to rest
   private val isSheetMoving: Boolean
@@ -1441,12 +1442,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Keyboard Handling
   // =============================================================================
 
-  private fun shouldHandleKeyboard(checkFocus: Boolean = true): Boolean {
-    if (wasHiddenByScreen) return false
-    if (!isTopmostSheet) return false
-    if (checkFocus && !isFocusedViewWithinSheet()) return false
-    return true
-  }
+  private fun shouldHandleKeyboard(): Boolean = !wasHiddenByScreen && isTopmostSheet && isFocusedViewWithinSheet()
 
   fun saveFocusedView() {
     focusedViewBeforeBlur = delegate?.findRootContainerView()?.findFocus()
@@ -1479,6 +1475,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
+          isHandlingKeyboard = true
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
@@ -1496,7 +1493,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardWillHide() {
-          if (!shouldHandleKeyboard(checkFocus = false)) return
+          if (!isHandlingKeyboard) return
           // Mid-drag (the drag itself dismissed the keyboard) the release decides
           // the detent and a reconfigure would kill the gesture — the floor stops
           // stay put until the settle flushes the pending reconfigure
@@ -1530,12 +1527,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardDidShow(height: Int) {
           // The keyboard's last frame has positioned the footer
-          containerView?.footerView?.syncTranslationState()
+          if (isHandlingKeyboard) containerView?.footerView?.syncTranslationState()
         }
 
         override fun keyboardDidHide() {
+          if (!isHandlingKeyboard) return
+          isHandlingKeyboard = false
           containerView?.footerView?.syncTranslationState()
-          if (!shouldHandleKeyboard(checkFocus = false)) return
           isKeyboardDismissProgrammatic = false
           // Keep detentIndexBeforeKeyboard for the settle's detent-change check
           if (interactionState is InteractionState.Dragging) {
@@ -1554,16 +1552,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
-          // Skip focus check during active keyboard transitions (focus may be lost during hide)
-          val skipFocusCheck = detentIndexBeforeKeyboard >= 0 || isKeyboardTransitioning
-          if (!shouldHandleKeyboard(checkFocus = !skipFocusCheck)) return
-          positionFooter()
+          if (isHandlingKeyboard) positionFooter()
         }
 
         override fun focusDidChange(newFocus: View) {
           // Handle case where keyboard is already visible and focus moves into the sheet
           if (!shouldHandleKeyboard()) return
           if (detentIndexBeforeKeyboard < 0 && (keyboardObserver?.currentHeight ?: 0) > 0) {
+            isHandlingKeyboard = true
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()
@@ -1578,6 +1574,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun cleanupKeyboardObserver() {
     keyboardObserver?.stop()
     keyboardObserver = null
+    isHandlingKeyboard = false
   }
 
   // =============================================================================

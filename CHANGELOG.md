@@ -3,7 +3,9 @@
 ## Unreleased
 
 ### 🐛 Bug fixes
-- **iOS**: iOS 27 now applies soft scroll edge effect correctly ([#1031](https://github.com/lodev09/react-native-true-sheet/pull/1031)) by [@bigcupcoffee](https://github.com/bigcupcoffee)
+
+- **iOS**: On iOS 27, `topScrollEdgeEffect` and `bottomScrollEdgeEffect` now show under the sheet's `header` and `footer`, as on iOS 26. Content used to scroll under them with no edge effect. ([#1031](https://github.com/lodev09/react-native-true-sheet/pull/1031) by [@bigcupcoffee](https://github.com/bigcupcoffee))
+- **Android**: With three or more sheets stacked, dismissing the top sheet while its keyboard is up no longer shows a sheet two levels down above the sheet under it for a moment. Only the sheet that has the keyboard now rises for it. ([#1032](https://github.com/lodev09/react-native-true-sheet/pull/1032) by [@lodev09](https://github.com/lodev09))
 
 ## 4.1.1
 
