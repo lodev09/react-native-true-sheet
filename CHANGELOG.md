@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **Android**: With three or more sheets stacked, dismissing the top sheet while its keyboard is up no longer shows a sheet two levels down above the sheet under it for a moment. Only the sheet that has the keyboard now rises for it. ([#1032](https://github.com/lodev09/react-native-true-sheet/pull/1032) by [@lodev09](https://github.com/lodev09))
+
 ## 4.1.1
 
 ### 🎉 New features
