@@ -68,8 +68,7 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   // non-visible UILabel as an element hint. iOS 27+ ignores full-size empty
   // label when applying soft effect, so we put 1x1 in the corner instead
   BOOL isTopEdge = edge == UIRectEdgeTop;
-  UILabel *hint = [[UILabel alloc]
-    initWithFrame:CGRectMake(0, isTopEdge ? CGRectGetHeight(self.bounds) - 1 : 0, 1, 1)];
+  UILabel *hint = [[UILabel alloc] initWithFrame:CGRectMake(0, isTopEdge ? CGRectGetHeight(self.bounds) - 1 : 0, 1, 1)];
   hint.autoresizingMask = isTopEdge ? UIViewAutoresizingFlexibleTopMargin : UIViewAutoresizingNone;
   hint.userInteractionEnabled = NO;
   [self addSubview:hint];

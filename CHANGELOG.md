@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 4.1.2
+
 ### 🐛 Bug fixes
 
 - **iOS**: On iOS 27, `topScrollEdgeEffect` and `bottomScrollEdgeEffect` now show under the sheet's `header` and `footer`, as on iOS 26. Content used to scroll under them with no edge effect. ([#1031](https://github.com/lodev09/react-native-true-sheet/pull/1031) by [@bigcupcoffee](https://github.com/bigcupcoffee))
