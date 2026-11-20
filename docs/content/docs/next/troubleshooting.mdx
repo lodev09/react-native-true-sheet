@@ -83,6 +83,16 @@ Render the sheet after the scroll view:
 </>
 ```
 
+## Sheet Floats With Side and Bottom Margins (iOS 26+)
+
+On iPhone with iOS 26+, a sheet below its full detent floats as an inset card, with margins on the sides and bottom. At the full detent (`1`), it attaches to the screen edges. This is the system's Liquid Glass sheet layout. `UISheetPresentationController` has no public API to change it, so props like `presentation`, `placement`, and `maxContentWidth` don't affect it.
+
+To keep the sheet edge-attached at every detent, as on earlier iOS versions, opt out of Liquid Glass app-wide with [`UIDesignRequiresCompatibility`](guides/liquid-glass#using-uidesignrequirescompatibility). `backgroundColor` and `backgroundBlur` only replace the glass effect. The sheet still floats.
+
+:::note
+iOS 27 and later ignore `UIDesignRequiresCompatibility` in apps built with the iOS 27 SDK (Xcode 27) or later. The sheet floats in those apps.
+:::
+
 ## Weird layout render
 
 The sheet's content lays out naturally — like a regular view or a screen — wrapping its children's natural height. Common symptoms and fixes:
