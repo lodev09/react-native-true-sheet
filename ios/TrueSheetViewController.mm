@@ -91,6 +91,8 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   NSInteger _displayedBackgroundIndex;
   BOOL _usesBackgroundEffects;
   BOOL _refusedPanDismiss;
+  __weak UIPanGestureRecognizer *_scrollPan;
+  CFTimeInterval _scrollPanEndTime;
 
   // Present/dismiss tracking: a display link scoped to the transition
   // coordinator — started alongside the transition, stopped in its completion.
@@ -1246,6 +1248,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
+  if ([gesture.view isKindOfClass:[UIScrollView class]]) {
+    _scrollPan = gesture;
+    if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
+      _scrollPanEndTime = CACurrentMediaTime();
+    }
+  }
+
   NSInteger index = self.currentDetentIndex;
   CGFloat detent = [self detentValueForIndex:index];
 
@@ -2290,9 +2299,40 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // pulling down its scroll view: refuse a dismissal while any pan is under
   // way, and keep the one from a tap outside the sheet. Reset on every call:
   // UIKit skips didAttemptToDismiss for a short pull.
-  _refusedPanDismiss =
-    self.dismissible && !self.draggable && [self hasActivePanInView:presentationController.containerView];
+  BOOL refusesPan = !self.draggable && [self hasActivePanInView:presentationController.containerView];
+  _refusedPanDismiss = self.dismissible && (refusesPan || [self isQuickScrollAboveLowestDetent]);
   return self.dismissible && !_refusedPanDismiss;
+}
+
+/**
+ * UIKit won't hand a swipe on the scroll view to a sheet that can be swiped
+ * away when the swipe starts within 0.4 s of the previous one, so that a fast
+ * scroll can't dismiss the sheet. The scroll view takes it instead, often
+ * while still bouncing at its top, and the sheet ignores the drag. UIKit
+ * decides by asking this delegate whether the sheet can be dismissed. Above
+ * its lowest detent a swipe down can only resize the sheet, so answer that it
+ * can't; UIKit asks again when the drag reaches the lowest detent.
+ */
+- (BOOL)isQuickScrollAboveLowestDetent {
+  UIGestureRecognizerState state = _scrollPan.state;
+  if (state != UIGestureRecognizerStateBegan && state != UIGestureRecognizerStateChanged) {
+    return NO;
+  }
+  if (CACurrentMediaTime() - _scrollPanEndTime >= 0.4) {
+    return NO;
+  }
+
+  NSInteger index = self.currentDetentIndex;
+  if (index < 0) {
+    return NO;
+  }
+  CGFloat height = [_detentCalculator resolvedHeightForIndex:index];
+  for (NSInteger i = 0; i < (NSInteger)_detents.count; i++) {
+    if ([_detentCalculator resolvedHeightForIndex:i] < height - 1) {
+      return YES;
+    }
+  }
+  return NO;
 }
 
 - (BOOL)hasActivePanInView:(UIView *)view {

@@ -27,6 +27,7 @@ export default function ReproLayout() {
       <Stack.Screen name="dismiss-stack" options={{ title: 'dismissStack' }} />
       <Stack.Screen name="stack-resume" options={{ title: 'Stack resume' }} />
       <Stack.Screen name="stack-keyboard" options={{ title: 'Stack keyboard' }} />
+      <Stack.Screen name="scroll-handoff" options={{ title: 'Scroll handoff' }} />
       <Stack.Screen
         name="dismiss-stack-modal"
         options={{ presentation: 'fullScreenModal', headerShown: false }}
