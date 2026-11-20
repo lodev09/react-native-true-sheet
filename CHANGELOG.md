@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- **iOS**: A swipe down on a scrollable sheet right after scrolling its list back to the top now moves the sheet to a lower detent, instead of stretching the list until you pause. ([#1034](https://github.com/lodev09/react-native-true-sheet/pull/1034) by [@IjzerenHein](https://github.com/IjzerenHein))
+
 ## 4.1.2
 
 ### 🐛 Bug fixes
