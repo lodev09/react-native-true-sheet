@@ -28,6 +28,7 @@ interface DrawerContextValue {
   isDragging: boolean;
   keyboardIsOpen: React.MutableRefObject<boolean>;
   snapPointsOffset: number[] | null;
+  getSnapPointCssOffsetAt: (index: number) => string;
   snapPoints?: (number | string)[] | null;
   activeSnapPointIndex?: number | null;
   fadeFromIndex?: number;
@@ -74,6 +75,7 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   isDragging: false,
   keyboardIsOpen: { current: false },
   snapPointsOffset: null,
+  getSnapPointCssOffsetAt: () => '0px',
   snapPoints: null,
   handleOnly: false,
   modal: false,
