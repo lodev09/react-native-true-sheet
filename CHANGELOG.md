@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🐛 Bug fixes
+
+- `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer log "findHostInstance_DEPRECATED is deprecated in StrictMode" under React StrictMode. ([#1037](https://github.com/lodev09/react-native-true-sheet/pull/1037) by [@setoy](https://github.com/setoy))
+
 ### 💡 Others
 
 - Documented the iOS 26+ floating sheet layout: iPhone sheets float with side and bottom margins below the full detent, and `UIDesignRequiresCompatibility` is the only opt-out. Added to the troubleshooting page, the Liquid Glass guide, and the `truesheet-usage` skill. ([#1035](https://github.com/lodev09/react-native-true-sheet/pull/1035) by [@lodev09](https://github.com/lodev09))
