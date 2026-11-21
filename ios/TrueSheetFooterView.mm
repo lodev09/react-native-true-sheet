@@ -15,6 +15,7 @@
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewComponentDescriptor.h>
 #import <react/renderer/components/TrueSheetSpec/TrueSheetFooterViewShadowNode.h>
 #import "TrueSheetViewController.h"
+#import "utils/StateUtil.h"
 #import "utils/UIView+ScrollEdgeInteraction.h"
 
 using namespace facebook::react;
@@ -98,16 +99,21 @@ using namespace facebook::react;
     return;
   }
 
-  TrueSheetFooterViewState newState;
-  newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
-  newState.translateY = -_currentKeyboardOffset;
-  newState.initialized = true;
   // Inset changes go Immediate so they land before anything reads the
   // footer's height — the async path races the keyboard caret scroll and
   // detent setup, leaving them an inset stale (same reason Android bridges
   // through TrueSheetStateUpdater).
-  _state->updateState(std::move(newState), mode);
+  if (mode == EventQueue::UpdateMode::unstable_Immediate && !TrueSheetPrepareImmediateStateUpdate(self, _state)) {
+    return;
+  }
+
+  TrueSheetFooterViewState newState;
+  newState.bottomInset = _keyboardVisible ? 0 : _bottomInset;
+  newState.translateY = -_currentKeyboardOffset;
+  newState.initialized = true;
+  // Before the update: its mount can recycle this view, which resets the flag
   _didPushBottomInset = YES;
+  _state->updateState(std::move(newState), mode);
 }
 
 // The inset baked into the current layout by the shadow node (pushed or

@@ -20,6 +20,7 @@
 #import "events/TrueSheetFocusEvents.h"
 #import "events/TrueSheetLifecycleEvents.h"
 #import "events/TrueSheetStateEvents.h"
+#import "utils/StateUtil.h"
 #import "utils/WindowUtil.h"
 
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
@@ -412,6 +413,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     return;
 
   _lastStateSize = size;
+
+  // Mounting pending commits can report a newer size, which supersedes this one
+  if (!TrueSheetPrepareImmediateStateUpdate(self, _state) || !CGSizeEqualToSize(_lastStateSize, size))
+    return;
 
   auto stateData = _state->getData();
   stateData.containerWidth = static_cast<float>(size.width);
