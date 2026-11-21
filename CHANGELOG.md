@@ -4,6 +4,7 @@
 
 ### 🐛 Bug fixes
 
+- **iOS**: Views that mount while a sheet resizes to a new detent, such as content rendered right after a `detents` change, now appear in place instead of growing in from the top-left corner. ([#1038](https://github.com/lodev09/react-native-true-sheet/pull/1038) by [@maxlapides](https://github.com/maxlapides))
 - `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer log "findHostInstance_DEPRECATED is deprecated in StrictMode" under React StrictMode. ([#1037](https://github.com/lodev09/react-native-true-sheet/pull/1037) by [@setoy](https://github.com/setoy))
 
 ### 💡 Others
