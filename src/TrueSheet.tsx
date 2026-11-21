@@ -573,6 +573,13 @@ export class TrueSheet
     return TrueSheetModule?.dismissStackByRef(this.handle, animated);
   }
 
+  /**
+   * Lets Reanimated's `createAnimatedComponent` reach the native view without `findHostInstance`.
+   */
+  public getAnimatableRef(): NativeRef | null {
+    return this.nativeRef.current;
+  }
+
   componentDidMount(): void {
     TrueSheet.mountedInstances.add(this);
     this.registerInstance();

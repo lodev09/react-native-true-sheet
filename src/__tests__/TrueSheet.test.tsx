@@ -103,6 +103,16 @@ describe('TrueSheet', () => {
     expect(typeof TrueSheet.dismissAll).toBe('function');
   });
 
+  it('exposes its native view as the animatable ref for Reanimated', () => {
+    const ref = createRef<TrueSheet>();
+    render(<TrueSheet ref={ref} />);
+
+    const animatableRef = ref.current?.getAnimatableRef();
+
+    expect(animatableRef).toBeTruthy();
+    expect(animatableRef).toBe(ref.current?.['nativeRef'].current);
+  });
+
   it('should render TrueSheet component without crashing', () => {
     const { getByText } = render(
       <TrueSheet name="test" initialDetentIndex={0}>
