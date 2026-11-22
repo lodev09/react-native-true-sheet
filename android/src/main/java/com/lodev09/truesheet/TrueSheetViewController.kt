@@ -576,10 +576,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     if (hasPendingConfigurationChange) {
       hasPendingConfigurationChange = false
-      if (!isPresented) return
-
-      updateStateDimensions()
-      sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+      // After the settle the size change posted, which reports its own frames
+      post {
+        if (!isPresented || isSettling || interactionState is InteractionState.Dragging) return@post
+        sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+      }
     }
   }
 
@@ -1064,11 +1065,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Bring the parent back alongside the slide-out (like iOS) instead of after it
     parentSheetView?.resetTranslation()
 
+    // Slide to the window bottom, past the coordinator's however it resizes
+    // meanwhile (an adjustResize keyboard hiding grows it back). Past the
+    // coordinator's bottom the sheet is out of sight, so report it there.
     sheet.animate()
-      .y(coordinatorHeight.toFloat())
+      .y(screenMetrics.realHeight.toFloat())
       .setDuration(DISMISS_DURATION)
       .setInterpolator(android.view.animation.AccelerateInterpolator())
-      .setUpdateListener { updateSheetVisuals(sheet.y.toInt()) }
+      .setUpdateListener { updateSheetVisuals(minOf(sheet.y.toInt(), coordinatorHeight)) }
       .withEndAction { finishDismiss() }
       .start()
   }
@@ -1180,16 +1184,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       sheetView?.let { updateStateDimensionsForPosition(it.top) }
       setStateForDetentIndex(targetIndex)
 
-      // Already at the target — no slide frames will follow
-      if (!isSettling) {
-        pendingDetentIndex = -1
-        updateStateDimensions()
+      // Mid-layout (a rotation, an adjustResize keyboard) the behavior posts
+      // the settle, so it isn't settling yet — check once it has started
+      if (coordinatorLayout?.isLayoutRequested == true) {
+        post { finishSettleIfAtRest(targetIndex) }
+      } else {
+        finishSettleIfAtRest(targetIndex)
       }
     } else {
       updateStateDimensions()
     }
 
     interactionState = InteractionState.Idle
+  }
+
+  // Already at the target — no slide frames will follow
+  private fun finishSettleIfAtRest(targetIndex: Int) {
+    if (!isPresented || isBeingDismissed || isSettling || pendingDetentIndex != targetIndex) return
+    pendingDetentIndex = -1
+    updateStateDimensions()
   }
 
   private fun configureDetents(
