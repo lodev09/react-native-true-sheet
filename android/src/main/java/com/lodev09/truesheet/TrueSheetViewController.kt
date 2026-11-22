@@ -357,9 +357,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   val screenWidth: Int
     get() = screenMetrics.width
 
-  // Includes system bars for accurate positioning
-  override val realScreenHeight: Int
-    get() = screenMetrics.realHeight
+  // The space the sheet lives in: the root container the coordinator fills —
+  // the whole window with edge-to-edge, the area between the system bars
+  // without it. Window height until the coordinator is laid out.
+  override val coordinatorHeight: Int
+    get() = coordinatorLayout?.height?.takeIf { it > 0 } ?: screenMetrics.realHeight
 
   private val insets: Insets
     get() = cachedInsets ?: ScreenUtils.getInsets(reactContext).also { cachedInsets = it }
@@ -608,7 +610,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (hasKeyboardFloor && !isKeyboardDismissProgrammatic) commitDetentAndDismissKeyboard(0, sheet)
 
       // Past the floor by the distance that would hide a dismissible sheet, like iOS
-      val floorHeight = realScreenHeight - lowestTop
+      val floorHeight = coordinatorHeight - lowestTop
       if (overdragPx < floorHeight * HIDE_THRESHOLD) return
     }
 
@@ -1032,7 +1034,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (animated) {
       animateDismiss()
     } else {
-      emitChangePositionDelegate(realScreenHeight)
+      emitChangePositionDelegate(coordinatorHeight)
       finishDismiss()
     }
   }
@@ -1063,7 +1065,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     parentSheetView?.resetTranslation()
 
     sheet.animate()
-      .y(realScreenHeight.toFloat())
+      .y(coordinatorHeight.toFloat())
       .setDuration(DISMISS_DURATION)
       .setInterpolator(android.view.animation.AccelerateInterpolator())
       .setUpdateListener { updateSheetVisuals(sheet.y.toInt()) }
@@ -1132,7 +1134,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     behavior.isFitToContents = false
 
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
 
     // With a keyboard floor only the last detent stays keyboard-shifted; the
     // collapsed and half stops are the keyboard-free first and second detents,
@@ -1148,9 +1150,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val maxDetentHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
 
     val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
-    val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
+    val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / coordinatorHeight.toFloat())
 
-    val expandedOffset = realScreenHeight - maxDetentHeight
+    val expandedOffset = coordinatorHeight - maxDetentHeight
 
     // fitToContents works better with <= 2 detents when no expanded offset, but
     // it drops the half stop the keyboard floor relies on
@@ -1309,7 +1311,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       dimProgress = dimView?.calculateProgress(
         top,
-        realScreenHeight,
+        coordinatorHeight,
         dimmedDetentIndex,
         detentCalculator::getSheetTopForDetentIndex
       ) ?: 0f
@@ -1701,7 +1703,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (currentTop == lastEmittedPositionPx) return
 
     lastEmittedPositionPx = currentTop
-    val visibleHeight = realScreenHeight - currentTop
+    val visibleHeight = coordinatorHeight - currentTop
     val position = detentCalculator.getPositionDp(visibleHeight)
     val (interpolatedIndex, detent) = detentCalculator.getInterpolatedPositionInfo(currentTop)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
@@ -1794,7 +1796,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
       .coerceIn(0, detents.size - 1)
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
     val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
     val newWidth = getStateWidth()
 
@@ -1808,7 +1810,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun updateStateDimensionsForPosition(sheetTop: Int) {
     if (detents.isEmpty()) return
 
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
     val minHeight = minOf(
       detentCalculator.getDetentHeight(detents.first(), includeKeyboard = !hasKeyboardFloor),
       maxAvailableHeight
@@ -1877,7 +1879,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     sheetView?.let {
       val visibleSheetHeight = detentCalculator.getVisibleSheetHeight(it.top)
-      if (visibleSheetHeight in 1..<realScreenHeight) {
+      if (visibleSheetHeight in 1..<coordinatorHeight) {
         return detentCalculator.getPositionDp(visibleSheetHeight)
       }
     }

@@ -11,7 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  */
 interface TrueSheetDetentCalculatorDelegate {
   val screenHeight: Int
-  val realScreenHeight: Int
+  val coordinatorHeight: Int
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
@@ -49,7 +49,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   var delegate: TrueSheetDetentCalculatorDelegate? = null
 
   private val screenHeight: Int get() = delegate?.screenHeight ?: 0
-  private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
+  private val coordinatorHeight: Int get() = delegate?.coordinatorHeight ?: 0
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
 
@@ -159,7 +159,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   fun getSheetTopForDetentIndex(index: Int): Int {
     if (index < 0 || index >= detents.size) {
       RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
-      return realScreenHeight
+      return coordinatorHeight
     }
     // With a keyboard floor only the last detent stays keyboard-shifted — it's
     // the keyboard-expanded resting position; the stops below it are keyboard-free
@@ -184,14 +184,14 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   // placing the expected top above the screen while the real sheet stops
   // at the top inset.
   private fun getSheetTop(detent: Double, includeKeyboard: Boolean = true): Int {
-    val maxAvailableHeight = realScreenHeight - topInset
-    return realScreenHeight - minOf(getDetentHeight(detent, includeKeyboard), maxAvailableHeight)
+    val maxAvailableHeight = coordinatorHeight - topInset
+    return coordinatorHeight - minOf(getDetentHeight(detent, includeKeyboard), maxAvailableHeight)
   }
 
   /**
    * Calculate visible sheet height from sheet top position.
    */
-  fun getVisibleSheetHeight(sheetTop: Int): Int = realScreenHeight - sheetTop
+  fun getVisibleSheetHeight(sheetTop: Int): Int = coordinatorHeight - sheetTop
 
   /**
    * Convert visible sheet height to position in dp.
@@ -285,7 +285,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
 
     // Position is below the lowest stop (sheet is being dragged down to dismiss)
     if (positionPx > floorPos) {
-      val range = realScreenHeight - floorPos
+      val range = coordinatorHeight - floorPos
       val progress = if (range > 0) (positionPx - floorPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }

@@ -114,9 +114,9 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   /**
    * How far the sheet is into its dimmed range, from 0 (undimmed) to 1 (fully dimmed).
    */
-  fun calculateProgress(sheetTop: Int, realHeight: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
+  fun calculateProgress(sheetTop: Int, coordinatorHeight: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
     val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
-    val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
+    val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else coordinatorHeight
 
     return when {
       sheetTop <= dimmedDetentTop -> 1f
