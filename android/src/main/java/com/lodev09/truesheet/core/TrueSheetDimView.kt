@@ -10,7 +10,6 @@ import android.view.ViewOutlineProvider
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.ThemedReactContext
-import com.lodev09.truesheet.utils.ScreenUtils
 
 /**
  * Delegate for handling dim view interactions.
@@ -115,10 +114,9 @@ class TrueSheetDimView(private val reactContext: ThemedReactContext) :
   /**
    * How far the sheet is into its dimmed range, from 0 (undimmed) to 1 (fully dimmed).
    */
-  fun calculateProgress(sheetTop: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
-    val realHeight = ScreenUtils.getRealScreenHeight(reactContext)
+  fun calculateProgress(sheetTop: Int, coordinatorHeight: Int, dimmedDetentIndex: Int, getSheetTopForDetentIndex: (Int) -> Int): Float {
     val dimmedDetentTop = getSheetTopForDetentIndex(dimmedDetentIndex)
-    val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else realHeight
+    val belowDimmedTop = if (dimmedDetentIndex > 0) getSheetTopForDetentIndex(dimmedDetentIndex - 1) else coordinatorHeight
 
     return when {
       sheetTop <= dimmedDetentTop -> 1f
