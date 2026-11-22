@@ -2,11 +2,16 @@ package com.lodev09.truesheet.utils
 
 import android.content.res.Configuration
 import android.graphics.Point
+import android.graphics.Rect
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.modules.systeminfo.ReactNativeVersion
+import com.facebook.react.views.view.isEdgeToEdgeFeatureFlagOn
 import kotlin.math.min
 
 /**
@@ -93,16 +98,42 @@ object ScreenUtils {
    * @param reactContext The ReactContext to get resources from
    * @return Screen width in pixels
    */
-  fun getScreenWidth(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.widthPixels
+  fun getScreenWidth(reactContext: ReactContext): Int = getWindowSize(reactContext).x
 
   /**
    * Calculate the screen height using the same method as React Native's useWindowDimensions.
-   * This returns the window height which automatically accounts for edge-to-edge mode.
    *
    * @param reactContext The ReactContext to get resources from
    * @return Screen height in pixels
    */
-  fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
+  fun getScreenHeight(reactContext: ReactContext): Int = getWindowSize(reactContext).y
+
+  /**
+   * The window size React Native reports to useWindowDimensions. Since 0.86 it is the activity's
+   * window bounds, minus the system bars when edge-to-edge is off (see DeviceInfoModule).
+   * Before 0.86 it is resources.displayMetrics, which excludes the system bars below Android 15.
+   */
+  @Suppress("DEPRECATION")
+  private fun getWindowSize(reactContext: ReactContext): Point {
+    val displayMetrics = reactContext.resources.displayMetrics
+    val activity = reactContext.currentActivity
+    val reactNativeMinor = ReactNativeVersion.VERSION["minor"] as Int
+    if (activity == null || reactNativeMinor < 86) {
+      return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
+    }
+
+    val bounds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      activity.windowManager.currentWindowMetrics.bounds
+    } else {
+      Point().also { activity.windowManager.defaultDisplay.getRealSize(it) }.let { Rect(0, 0, it.x, it.y) }
+    }
+    if (isEdgeToEdgeFeatureFlagOn) return Point(bounds.width(), bounds.height())
+
+    val insets = ViewCompat.getRootWindowInsets(activity.window.decorView)
+      ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+      ?: return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
+    return Point(bounds.width() - insets.left - insets.right, bounds.height() - insets.top - insets.bottom)
+  }
 
   /**
    * Returns true if the device is a phone in portrait orientation.
