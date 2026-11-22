@@ -4,6 +4,7 @@ import {
   forwardRef,
   isValidElement,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -37,6 +38,7 @@ import type {
   WillFocusEvent,
   WillPresentEvent,
 } from './TrueSheet.types';
+import { AccessibilityOptionsContext, mergeAccessibilityOptions } from './accessibilityOptions';
 import {
   measurePeekContentHeight,
   TrueSheetPeekContext,
@@ -265,6 +267,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   const portalContainer = usePortalContainer();
+
+  const defaultAccessibilityOptions = useContext(AccessibilityOptionsContext);
+  const paneTitle =
+    mergeAccessibilityOptions(defaultAccessibilityOptions, accessibilityOptions)?.paneTitle ??
+    'Sheet';
 
   const handlePointerDownOutside = (e: Event) => {
     const target = e.target;
@@ -1389,9 +1396,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
             }
           >
             <div aria-hidden style={backgroundLayerStyle} />
-            <Drawer.Title style={visuallyHiddenStyle}>
-              {accessibilityOptions?.paneTitle ?? 'Sheet'}
-            </Drawer.Title>
+            <Drawer.Title style={visuallyHiddenStyle}>{paneTitle}</Drawer.Title>
             {grabber && <Drawer.Handle style={handleStyle} />}
             <div
               ref={sizedLayoutRef}

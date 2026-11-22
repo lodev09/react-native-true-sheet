@@ -304,7 +304,7 @@ Web needs the underlying dialog primitives, declared as optional peer dependenci
 yarn add @radix-ui/react-dialog @radix-ui/react-presence
 ```
 
-### Provider (required on web, pass-through on native)
+### Provider (required on web, optional on native)
 
 ```tsx
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet'

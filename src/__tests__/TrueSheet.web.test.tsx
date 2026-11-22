@@ -2,7 +2,12 @@ import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
-import type { SheetDetent, TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
+import type {
+  SheetDetent,
+  TrueSheetMethods,
+  TrueSheetProps,
+  TrueSheetStaticMethods,
+} from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
 
 jest.mock('../web/vaul', () => {
@@ -242,6 +247,35 @@ describe('web present and dismiss', () => {
       await methods.dismissAll();
     });
     expect(result.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+});
+
+describe('web accessibilityOptions', () => {
+  const accessibilityOptions = {
+    grabberLabel: 'Poignée de déplacement',
+    expandedValue: 'Développé',
+    collapsedValue: 'Réduit',
+    detentValue: 'Position {index} sur {count}',
+    paneTitle: 'Bottom sheet',
+  };
+
+  const renderSheet = (sheetOptions?: TrueSheetProps['accessibilityOptions']) =>
+    render(
+      <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+        <TrueSheet initialDetentIndex={0} accessibilityOptions={sheetOptions} />
+      </TrueSheetProvider>,
+      { createNodeMock: () => new MockElement() }
+    );
+
+  it('uses the provider paneTitle', () => {
+    const result = renderSheet({ expandedValue: 'Expanded' });
+    expect(result.UNSAFE_queryByProps({ children: 'Bottom sheet' })).not.toBeNull();
+  });
+
+  it('prefers the sheet paneTitle', () => {
+    const result = renderSheet({ paneTitle: 'Sheet' });
+    expect(result.UNSAFE_queryByProps({ children: 'Sheet' })).not.toBeNull();
+    expect(result.UNSAFE_queryByProps({ children: 'Bottom sheet' })).toBeNull();
   });
 });
 

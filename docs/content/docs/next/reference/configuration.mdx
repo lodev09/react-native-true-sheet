@@ -454,6 +454,21 @@ Options for customizing (e.g. localizing) the accessibility strings announced by
 On iOS, the grabber strings only apply when [`grabberOptions`](#grabberoptions) is provided. Without it, iOS uses the system grabber which is already localized by the system.
 :::
 
+To set defaults for every sheet, pass `accessibilityOptions` to `TrueSheetProvider`. A sheet's own `accessibilityOptions` override them key by key, and a nested provider overrides the outer one the same way.
+
+```tsx
+<TrueSheetProvider
+  accessibilityOptions={{
+    grabberLabel: 'Poignée de déplacement',
+    expandedValue: 'Développé',
+    collapsedValue: 'Réduit',
+    detentValue: 'Position {index} sur {count}',
+  }}
+>
+  <App />
+</TrueSheetProvider>
+```
+
 ## `header`
 
 A component that is fixed at the top of the sheet content. Useful for search bars, titles, or other header content. The header height is automatically accounted for in layout calculations. Accepts a functional `Component` or `ReactElement`. See [this guide](../guides/header) for example.

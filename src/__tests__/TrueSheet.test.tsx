@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { render, act } from '@testing-library/react-native';
-import { TrueSheet, TrueSheetOverlay, TrueSheetPeek } from '../index';
+import { TrueSheet, TrueSheetOverlay, TrueSheetPeek, TrueSheetProvider } from '../index';
 import TrueSheetModule from '../specs/NativeTrueSheetModule';
 import { TrueSheetBackground } from '../TrueSheetBackground';
 import TrueSheetContainerViewNativeComponent from '../fabric/TrueSheetContainerViewNativeComponent';
@@ -27,6 +27,13 @@ import type {
   DidBlurEvent,
   TrueSheetProps,
 } from '../TrueSheet.types';
+
+const accessibilityOptions = {
+  grabberLabel: 'Poignée de déplacement',
+  expandedValue: 'Développé',
+  collapsedValue: 'Réduit',
+  detentValue: 'Position {index} sur {count}',
+};
 
 describe('TrueSheet', () => {
   it('normalizes detent backgrounds and updates or removes them', () => {
@@ -143,6 +150,59 @@ describe('TrueSheet', () => {
     );
     expect(getByText('Peek Content')).toBeDefined();
     expect(getByText('Content')).toBeDefined();
+  });
+
+  describe('accessibilityOptions', () => {
+    it('uses the provider defaults', () => {
+      const { getByTestId } = render(
+        <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+          <TrueSheet testID="sheet" />
+        </TrueSheetProvider>
+      );
+      expect(getByTestId('sheet').props.accessibilityOptions).toEqual(accessibilityOptions);
+    });
+
+    it('lets the sheet override provider defaults key by key', () => {
+      const { getByTestId } = render(
+        <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+          <TrueSheet testID="sheet" accessibilityOptions={{ expandedValue: 'Expanded' }} />
+        </TrueSheetProvider>
+      );
+      expect(getByTestId('sheet').props.accessibilityOptions).toEqual({
+        ...accessibilityOptions,
+        expandedValue: 'Expanded',
+      });
+    });
+
+    it('merges nested providers', () => {
+      const { getByTestId } = render(
+        <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+          <TrueSheetProvider accessibilityOptions={{ collapsedValue: 'Collapsed' }}>
+            <TrueSheet testID="sheet" />
+          </TrueSheetProvider>
+        </TrueSheetProvider>
+      );
+      expect(getByTestId('sheet').props.accessibilityOptions).toEqual({
+        ...accessibilityOptions,
+        collapsedValue: 'Collapsed',
+      });
+    });
+
+    it('keeps the merged options stable across rerenders', () => {
+      const options = { expandedValue: 'Expanded' };
+      const { getByTestId, rerender } = render(
+        <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+          <TrueSheet testID="sheet" accessibilityOptions={options} dimmed />
+        </TrueSheetProvider>
+      );
+      const first = getByTestId('sheet').props.accessibilityOptions;
+      rerender(
+        <TrueSheetProvider accessibilityOptions={accessibilityOptions}>
+          <TrueSheet testID="sheet" accessibilityOptions={options} dimmed={false} />
+        </TrueSheetProvider>
+      );
+      expect(getByTestId('sheet').props.accessibilityOptions).toBe(first);
+    });
   });
 
   describe('Background', () => {

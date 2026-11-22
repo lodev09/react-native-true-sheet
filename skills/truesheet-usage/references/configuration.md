@@ -134,6 +134,21 @@ iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 
 
 On iOS, grabber strings only apply when `grabberOptions` is provided (the system grabber is already localized).
 
+App-wide defaults go on the provider; a sheet's own options override them key by key:
+
+```tsx
+<TrueSheetProvider
+  accessibilityOptions={{
+    grabberLabel: 'Poignée de déplacement',
+    expandedValue: 'Développé',
+    collapsedValue: 'Réduit',
+    detentValue: 'Position {index} sur {count}',
+  }}
+>
+  <App />
+</TrueSheetProvider>
+```
+
 ## Interaction
 
 | Prop | Type | Default | Platforms | Description |

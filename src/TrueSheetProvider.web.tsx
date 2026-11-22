@@ -11,7 +11,15 @@ import {
   type RefObject,
 } from 'react';
 
-import type { TrueSheetMethods, TrueSheetStaticMethods } from './TrueSheet.types';
+import type {
+  AccessibilityOptions,
+  TrueSheetMethods,
+  TrueSheetStaticMethods,
+} from './TrueSheet.types';
+import {
+  AccessibilityOptionsContext,
+  useProvidedAccessibilityOptions,
+} from './accessibilityOptions';
 
 export interface SheetHandle {
   methods: TrueSheetMethods;
@@ -48,9 +56,14 @@ const EMPTY_STACK: readonly StackEntry[] = Object.freeze([]);
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
+  /**
+   * Default `accessibilityOptions` for every sheet under this provider.
+   */
+  accessibilityOptions?: AccessibilityOptions;
 }
 
-export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
+export function TrueSheetProvider({ children, accessibilityOptions }: TrueSheetProviderProps) {
+  const resolvedAccessibilityOptions = useProvidedAccessibilityOptions(accessibilityOptions);
   const sheetsRef = useRef<Set<SheetRef>>(new Set());
   const namedSheetsRef = useRef<Map<string, SheetRef>>(new Map());
   const stackRef = useRef<readonly StackEntry[]>(EMPTY_STACK);
@@ -123,7 +136,9 @@ export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
 
   return (
     <SheetContext.Provider value={value}>
-      {children}
+      <AccessibilityOptionsContext.Provider value={resolvedAccessibilityOptions}>
+        {children}
+      </AccessibilityOptionsContext.Provider>
       <div ref={anchorRef} />
     </SheetContext.Provider>
   );

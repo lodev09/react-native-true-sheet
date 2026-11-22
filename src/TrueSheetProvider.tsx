@@ -1,21 +1,34 @@
 import type { ReactNode } from 'react';
 
 import { TrueSheet } from './TrueSheet';
-import type { TrueSheetStaticMethods } from './TrueSheet.types';
+import type { AccessibilityOptions, TrueSheetStaticMethods } from './TrueSheet.types';
+import {
+  AccessibilityOptionsContext,
+  useProvidedAccessibilityOptions,
+} from './accessibilityOptions';
 
 export type { TrueSheetStaticMethods };
 
 export interface TrueSheetProviderProps {
   children: ReactNode;
+  /**
+   * Default `accessibilityOptions` for every sheet under this provider.
+   */
+  accessibilityOptions?: AccessibilityOptions;
 }
 
 /**
  * Provider for TrueSheet on native platforms.
- * This is a pass-through component - no context is needed on native
- * since TrueSheet uses static instance methods internally.
+ * Optional on native since TrueSheet uses static instance methods internally.
  */
-export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
-  return children;
+export function TrueSheetProvider({ children, accessibilityOptions }: TrueSheetProviderProps) {
+  const resolvedAccessibilityOptions = useProvidedAccessibilityOptions(accessibilityOptions);
+
+  return (
+    <AccessibilityOptionsContext.Provider value={resolvedAccessibilityOptions}>
+      {children}
+    </AccessibilityOptionsContext.Provider>
+  );
 }
 
 /**

@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import type {
+  AccessibilityOptions,
   TrueSheetProps,
   TrueSheetMethods,
   TrueSheetStaticMethods,
@@ -40,6 +41,7 @@ import TrueSheetModule from './specs/NativeTrueSheetModule';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { normalizeDetentBackground } from './detentBackgrounds';
 import { resolveScrollable } from './scrollable';
+import { AccessibilityOptionsContext, mergeAccessibilityOptions } from './accessibilityOptions';
 
 import {
   Platform,
@@ -124,12 +126,15 @@ export class TrueSheet
 {
   static displayName = 'TrueSheet';
 
-  static contextType = RootTagContext;
+  static contextType = AccessibilityOptionsContext;
 
   private readonly nativeRef: RefObject<NativeRef | null>;
 
   private cachedGrabberOptions: TrueSheetProps['grabberOptions'] | undefined;
   private resolvedGrabberOptions: Record<string, unknown> | undefined;
+  private cachedDefaultAccessibilityOptions: AccessibilityOptions | undefined;
+  private cachedAccessibilityOptions: AccessibilityOptions | undefined;
+  private resolvedAccessibilityOptions: AccessibilityOptions | undefined;
   private backHandlerSubscription: NativeEventSubscription | null = null;
   private isPresented: boolean = false;
   private isSheetVisible: boolean = true;
@@ -699,6 +704,19 @@ export class TrueSheet
       };
     }
 
+    const defaultAccessibilityOptions = this.context as AccessibilityOptions | undefined;
+    if (
+      defaultAccessibilityOptions !== this.cachedDefaultAccessibilityOptions ||
+      accessibilityOptions !== this.cachedAccessibilityOptions
+    ) {
+      this.cachedDefaultAccessibilityOptions = defaultAccessibilityOptions;
+      this.cachedAccessibilityOptions = accessibilityOptions;
+      this.resolvedAccessibilityOptions = mergeAccessibilityOptions(
+        defaultAccessibilityOptions,
+        accessibilityOptions
+      );
+    }
+
     const sheetContent = (
       <>
         <TrueSheetBackground background={background} backgroundStyle={backgroundStyle} />
@@ -754,7 +772,7 @@ export class TrueSheet
         cornerRadius={cornerRadius}
         grabber={grabber}
         grabberOptions={this.resolvedGrabberOptions}
-        accessibilityOptions={accessibilityOptions}
+        accessibilityOptions={this.resolvedAccessibilityOptions}
         dimmed={dimmed}
         dimColor={dimColor}
         dimOpacity={dimOpacity}
@@ -816,13 +834,17 @@ export class TrueSheet
               // Yoga layout and the native tree, so header/content/footer remain the
               // container's direct native children, while the inspector overlay
               // anchors to the container and lines up with measured frames.
-              <AppContainer
-                rootTag={this.context as RootTag}
-                rootViewStyle={styles.inspectorHost}
-                internal_excludeLogBox
-              >
-                {sheetContent}
-              </AppContainer>
+              <RootTagContext.Consumer>
+                {(rootTag) => (
+                  <AppContainer
+                    rootTag={rootTag}
+                    rootViewStyle={styles.inspectorHost}
+                    internal_excludeLogBox
+                  >
+                    {sheetContent}
+                  </AppContainer>
+                )}
+              </RootTagContext.Consumer>
             ) : (
               sheetContent
             )}

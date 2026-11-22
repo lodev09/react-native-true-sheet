@@ -2,6 +2,7 @@ import React, { createElement, isValidElement, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 
 import type { TrueSheetProps, TrueSheetStaticMethods } from '../TrueSheet.types';
+import type { TrueSheetProviderProps } from '../TrueSheetProvider';
 import { TrueSheetBackground } from '../TrueSheetBackground';
 
 interface TrueSheetState {
@@ -84,7 +85,7 @@ export function TrueSheetOverlay({ children, ...rest }: ViewProps) {
 /**
  * Mock TrueSheetProvider for testing.
  */
-export function TrueSheetProvider({ children }: { children: React.ReactNode }) {
+export function TrueSheetProvider({ children }: TrueSheetProviderProps) {
   return children;
 }
 
