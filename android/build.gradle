@@ -96,5 +96,7 @@ def material_version = getExtOrDefault("materialVersion") ?: "1.12.0"
 dependencies {
   implementation "com.facebook.react:react-android"
   implementation "com.google.android.material:material:$material_version"
+  // Same version React Native 0.86+ uses for WindowMetricsCalculator
+  implementation "androidx.window:window:1.5.1"
 }
 

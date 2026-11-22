@@ -45,6 +45,7 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
+import com.lodev09.truesheet.utils.ScreenMetrics
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
 import com.lodev09.truesheet.utils.isDarkMode
@@ -191,6 +192,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // A content/header/footer size change arrived mid-drag — reconfiguring then
   // would reset behavior state and kill the gesture, so it's applied on settle.
   private var hasPendingSizeChange = false
+
+  // Root insets keep the old configuration's values until the next layout
+  // pass, so a rotation's size and position updates wait for it.
+  private var hasPendingConfigurationChange = false
   internal var isBeingDismissed = false
     private set
   var wasHiddenByScreen = false
@@ -330,32 +335,31 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = if (this.isNotEmpty()) getChildAt(0) as? TrueSheetContainerView else null
 
   // Screen Measurements
-  override val screenHeight: Int
-    get() = ScreenUtils.getScreenHeight(reactContext)
-
-  val screenWidth: Int
-    get() = ScreenUtils.getScreenWidth(reactContext)
-
   // Cached per layout/configuration pass — the WindowManager and
-  // rootWindowInsets queries behind these allocate, and they're read many
-  // times per animation frame (position emission, detent interpolation,
-  // stacked sheet sync)
-  private var cachedRealScreenHeight: Int = 0
+  // rootWindowInsets queries behind these allocate (and can make a binder
+  // call), and they're read many times per animation frame (position
+  // emission, detent interpolation, stacked sheet sync)
+  private var cachedScreenMetrics: ScreenMetrics? = null
   private var cachedInsets: Insets? = null
 
   private fun invalidateScreenMetrics() {
-    cachedRealScreenHeight = 0
+    cachedScreenMetrics = null
     cachedInsets = null
   }
 
+  private val screenMetrics: ScreenMetrics
+    get() = cachedScreenMetrics ?: ScreenUtils.getScreenMetrics(reactContext).also { cachedScreenMetrics = it }
+
+  // Matches useWindowDimensions
+  override val screenHeight: Int
+    get() = screenMetrics.height
+
+  val screenWidth: Int
+    get() = screenMetrics.width
+
   // Includes system bars for accurate positioning
   override val realScreenHeight: Int
-    get() {
-      if (cachedRealScreenHeight == 0) {
-        cachedRealScreenHeight = ScreenUtils.getRealScreenHeight(reactContext)
-      }
-      return cachedRealScreenHeight
-    }
+    get() = screenMetrics.realHeight
 
   private val insets: Insets
     get() = cachedInsets ?: ScreenUtils.getInsets(reactContext).also { cachedInsets = it }
@@ -510,6 +514,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     interactionState = InteractionState.Idle
     hasPendingSizeChange = false
+    hasPendingConfigurationChange = false
     isBeingDismissed = false
     isPresented = false
     isSheetVisible = false
@@ -566,6 +571,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresented && changed) {
       setupSheetDetentsForSizeChange()
     }
+
+    if (hasPendingConfigurationChange) {
+      hasPendingConfigurationChange = false
+      if (!isPresented) return
+
+      updateStateDimensions()
+      sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+    }
   }
 
   override fun coordinatorLayoutDidChangeConfiguration() {
@@ -574,8 +587,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     sheetView?.updateGravity()
     updateBehaviorMaxWidth()
-    updateStateDimensions()
-    sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+    hasPendingConfigurationChange = true
   }
 
   override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
@@ -1297,6 +1309,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       dimProgress = dimView?.calculateProgress(
         top,
+        realScreenHeight,
         dimmedDetentIndex,
         detentCalculator::getSheetTopForDetentIndex
       ) ?: 0f
