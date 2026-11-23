@@ -1,6 +1,8 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
+import android.graphics.Matrix
+import android.graphics.RectF
 import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,6 +19,7 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.isDescendantOf
 import com.lodev09.truesheet.utils.smoothScrollTo
+import kotlin.math.roundToInt
 
 /**
  * What the sheet insets the bottom of the scroll content for — the safe area
@@ -165,6 +168,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
    */
   private var footerBottomInset = 0
 
+  private val scrollTransform = Matrix()
+  private val scrollBounds = RectF()
+  private var scrollBottomGap: Int? = null
+
+  // A transform or ancestor scroll can move the viewport without a layout pass.
+  private val scrollPositionListener = ViewTreeObserver.OnPreDrawListener {
+    val gap = measureScrollBottomGap()
+    if (gap != scrollBottomGap) updateContentInset(gap)
+    true
+  }
+
   private val scrollableLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
     updateContentInset()
   }
@@ -176,10 +190,12 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     viewTreeObserver.addOnGlobalLayoutListener(scrollableLayoutListener)
+    viewTreeObserver.addOnPreDrawListener(scrollPositionListener)
   }
 
   override fun onDetachedFromWindow() {
     viewTreeObserver.removeOnGlobalLayoutListener(scrollableLayoutListener)
+    viewTreeObserver.removeOnPreDrawListener(scrollPositionListener)
     super.onDetachedFromWindow()
   }
 
@@ -248,7 +264,10 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
    * content can scroll, no relative footer absorbs it, and
    * `contentInsetAdjustment` includes the safe area.
    */
-  fun updateContentInset() {
+  fun updateContentInset() = updateContentInset(measureScrollBottomGap())
+
+  private fun updateContentInset(gap: Int?) {
+    scrollBottomGap = gap
     val scrollView = detectedScrollView ?: return
 
     val enabled = scrollableOptions?.contentInsetAdjustment?.safeArea ?: true
@@ -264,9 +283,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private fun scrollableSafeAreaInset(scrollView: ViewGroup): Int {
     if (bottomInset == 0) return 0
     val child = scrollView.getChildAt(0) ?: return 0
-    val container = parent as? View ?: return 0
-    val scrollBottom = scrollBottomInContainer(scrollView, container) ?: return 0
-    val overlap = (scrollBottom - (container.height - bottomInset)).coerceIn(0, bottomInset)
+    val gap = scrollBottomGap ?: return 0
+    val overlap = (bottomInset - gap).coerceIn(0, bottomInset)
     val viewportHeight = scrollView.height - scrollView.paddingTop - scrollView.paddingBottom
     return if (child.measuredHeight > viewportHeight - overlap) overlap else 0
   }
@@ -287,18 +305,17 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   // overlap not already covered by the safe-area or keyboard inset.
   private fun footerInsetAbove(safeAreaInset: Int): Int {
     if (scrollableOptions?.contentInsetAdjustment?.footer == false) return 0
-    val scrollView = detectedScrollView ?: return 0
-    val container = parent as? View ?: return 0
     val footerHeight = delegate?.absoluteFooterHeight ?: 0
     if (footerHeight <= 0) return 0
 
-    val scrollBottom = scrollBottomInContainer(scrollView, container) ?: return 0
-    val footerTop = if (delegate?.footerAvoidsKeyboard == false) {
-      delegate?.absoluteFooterTop ?: return 0
+    val gap = scrollBottomGap ?: return 0
+    val footerExtent = if (delegate?.footerAvoidsKeyboard == false) {
+      val container = parent as? View ?: return 0
+      container.height - (delegate?.absoluteFooterTop ?: return 0)
     } else {
-      container.height - footerHeight
+      footerHeight
     }
-    var inset = scrollBottom - footerTop
+    var inset = footerExtent - gap
     if (delegate?.footerAvoidsKeyboard == false) {
       inset -= safeAreaInset
     } else if (safeAreaInset > 0) {
@@ -308,14 +325,27 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     return maxOf(0, inset)
   }
 
-  private fun scrollBottomInContainer(scrollView: ViewGroup, container: View): Int? {
-    var scrollBottom = scrollView.bottom
-    var view: View = scrollView.parent as? View ?: return null
-    while (view !== container) {
-      scrollBottom += view.top
-      view = view.parent as? View ?: return null
+  private fun measureScrollBottomGap(): Int? {
+    val scrollView = detectedScrollView ?: return null
+    if (delegate?.hasRelativeFooter == true || scrollableOptions?.contentInsetAdjustment == TrueSheetContentInsetAdjustment.NEVER) {
+      return null
     }
-    return scrollBottom
+    val container = parent as? View ?: return null
+    scrollTransform.reset()
+    var view: View = scrollView
+    while (view !== container) {
+      val parentView = view.parent as? View ?: return null
+      val matrix = view.matrix
+      if (!matrix.isIdentity) scrollTransform.postConcat(matrix)
+      scrollTransform.postTranslate(
+        (view.left - parentView.scrollX).toFloat(),
+        (view.top - parentView.scrollY).toFloat()
+      )
+      view = parentView
+    }
+    scrollBounds.set(0f, 0f, scrollView.width.toFloat(), scrollView.height.toFloat())
+    scrollTransform.mapRect(scrollBounds)
+    return container.height - scrollBounds.bottom.roundToInt()
   }
 
   private fun setScrollContentInset(inset: Int) {
