@@ -114,3 +114,40 @@ const handleWillPresent = () => {
   <TextInput ref={inputRef} placeholder="Type something..." />
 </TrueSheet>
 ```
+
+## Android Soft Input Mode
+
+On Android, TrueSheet lifts the sheet above the keyboard itself. Keep the activity on `adjustResize`, the default in React Native and Expo.
+
+With `adjustPan`, Android also pans the whole window to reveal the focused input. Focusing an input low in the sheet, such as one in the footer, can push the top of the sheet off-screen and leave a gap above the keyboard.
+
+Set `adjustResize` on the activity in `AndroidManifest.xml`:
+
+```xml
+<activity android:name=".MainActivity" android:windowSoftInputMode="adjustResize" />
+```
+
+With Expo, remove `softwareKeyboardLayoutMode` from your app config or set it to `resize`:
+
+```json
+{
+  "expo": {
+    "android": {
+      "softwareKeyboardLayoutMode": "resize"
+    }
+  }
+}
+```
+
+If the rest of your app needs `adjustPan`, switch to `adjustResize` while the sheet is presented. For example, with [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/api/keyboard-controller#setinputmode-):
+
+```tsx
+import { AndroidSoftInputModes, KeyboardController } from 'react-native-keyboard-controller'
+
+<TrueSheet
+  onWillPresent={() => KeyboardController.setInputMode(AndroidSoftInputModes.SOFT_INPUT_ADJUST_RESIZE)}
+  onDidDismiss={() => KeyboardController.setDefaultMode()}
+>
+  {/* ... */}
+</TrueSheet>
+```
