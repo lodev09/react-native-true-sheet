@@ -94,10 +94,12 @@ export default function ReproFooterKeyboardGap() {
             Gap, keyboard open: {openGap === null ? '–' : openGap.toFixed(1)}
           </Text>
           <Button
+            testID="toggle-tall"
             text={tall ? 'Short content' : 'Tall content'}
             onPress={() => setTall((value) => !value)}
           />
           <Button
+            testID="cycle-keyboard-offset"
             text={`keyboardOffset: ${keyboardOffset}`}
             onPress={() => setOffsetIndex((index) => (index + 1) % keyboardOffsets.length)}
           />

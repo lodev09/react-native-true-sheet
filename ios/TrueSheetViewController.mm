@@ -415,11 +415,13 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 }
 
-// With the keyboard open UIKit still adds the bottom safe area
-// below the detent, while a footer floating above the keyboard has dropped
-// the inset from its height. The part of it that ends up above the keyboard
-// would open a gap between the content and the footer. footerKeyboardOffset
-// moves the footer by itself, so that much of the gap is already taken.
+/**
+ * With the keyboard open UIKit still adds the bottom safe area below the
+ * detent, while a footer floating above the keyboard has dropped the inset
+ * from its height. The part that ends up above the keyboard would open a gap
+ * between the content and the footer. footerKeyboardOffset moves the footer
+ * by itself, so that much of the gap is already taken.
+ */
 - (CGFloat)keyboardSafeAreaSurplus {
   UIView *view = self.viewIfLoaded;
   UIWindow *window = view.window;
