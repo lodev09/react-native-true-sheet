@@ -171,11 +171,15 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private val scrollTransform = Matrix()
   private val scrollBounds = RectF()
   private var scrollBottomGap: Int? = null
+  private var scrollViewportHeight = -1
 
-  // A transform or ancestor scroll can move the viewport without a layout pass.
+  // A transform, ancestor scroll, or Fabric frame update (e.g. a detent
+  // resize) can move or resize the viewport without a layout pass.
   private val scrollPositionListener = ViewTreeObserver.OnPreDrawListener {
     val gap = measureScrollBottomGap()
-    if (gap != scrollBottomGap) updateContentInset(gap)
+    if (gap != scrollBottomGap || (detectedScrollView?.height ?: -1) != scrollViewportHeight) {
+      updateContentInset(gap)
+    }
     true
   }
 
@@ -268,6 +272,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private fun updateContentInset(gap: Int?) {
     scrollBottomGap = gap
+    scrollViewportHeight = detectedScrollView?.height ?: -1
     val scrollView = detectedScrollView ?: return
 
     val enabled = scrollableOptions?.contentInsetAdjustment?.safeArea ?: true
