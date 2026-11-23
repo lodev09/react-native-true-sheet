@@ -14,6 +14,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [initialDetentIndex sheet covers or misses a deep-linked screen (iOS)](#initialdetentindex-sheet-covers-or-misses-a-deep-linked-screen-ios)
 - [Large title doesn't collapse on scroll (iOS)](#large-title-doesnt-collapse-on-scroll-ios)
 - [Sheet floats with side and bottom margins (iOS 26+)](#sheet-floats-with-side-and-bottom-margins-ios-26)
+- [Sheet pushed off-screen when the keyboard opens (Android)](#sheet-pushed-off-screen-when-the-keyboard-opens-android)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
@@ -147,6 +148,21 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** The Liquid Glass sheet layout from `UISheetPresentationController`. No public API changes it. `presentation`, `placement`, `maxContentWidth`, and `insetAdjustment` have no effect.
 
 **Fix:** Opt out of Liquid Glass app-wide with `UIDesignRequiresCompatibility` (see [Liquid Glass](./advanced-patterns.md#liquid-glass-ios-26)). `backgroundColor`/`backgroundBlur` only replace the effect, the sheet still floats. iOS 27+ ignores the key in apps built with the iOS 27 SDK or later.
+
+## Sheet pushed off-screen when the keyboard opens (Android)
+
+**Symptom:** Focusing an input low in the sheet (e.g. in the footer) pushes the sheet's top and header off-screen and leaves a gap above the keyboard.
+
+**Cause:** The activity uses `android:windowSoftInputMode="adjustPan"` (Expo: `softwareKeyboardLayoutMode: 'pan'`). Android pans the whole window on top of the sheet's own keyboard handling.
+
+**Fix:** Use `adjustResize` (the React Native and Expo default). If the rest of the app needs `adjustPan`, switch while the sheet is presented, e.g. with `react-native-keyboard-controller`:
+
+```tsx
+<TrueSheet
+  onWillPresent={() => KeyboardController.setInputMode(AndroidSoftInputModes.SOFT_INPUT_ADJUST_RESIZE)}
+  onDidDismiss={() => KeyboardController.setDefaultMode()}
+>
+```
 
 ## Gap above the keyboard
 

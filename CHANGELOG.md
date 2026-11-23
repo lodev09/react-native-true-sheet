@@ -10,6 +10,7 @@
 ### 💡 Others
 
 - Documented the iOS 26+ floating sheet layout: iPhone sheets float with side and bottom margins below the full detent, and `UIDesignRequiresCompatibility` is the only opt-out. Added to the troubleshooting page, the Liquid Glass guide, and the `truesheet-usage` skill. ([#1035](https://github.com/lodev09/react-native-true-sheet/pull/1035) by [@lodev09](https://github.com/lodev09))
+- Documented that keyboard handling on Android needs `adjustResize`: with `adjustPan`, focusing an input low in the sheet can push its top off-screen and leave a gap above the keyboard. Added to the Keyboard guide with a workaround for apps that need `adjustPan`, the troubleshooting page, and the `truesheet-usage` skill. ([#1046](https://github.com/lodev09/react-native-true-sheet/pull/1046) by [@lodev09](https://github.com/lodev09))
 
 ## 4.1.2
 
