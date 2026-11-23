@@ -27,6 +27,7 @@ interface TrueSheetDetentCalculatorDelegate {
    */
   val footerInsetAdjustment: Boolean
   val footerAvoidsKeyboard: Boolean
+  val footerKeyboardOffset: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -132,8 +133,22 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     } else {
       0
     }
+    // A footer that rises with the keyboard tucks its absorbed inset behind the
+    // keyboard's top edge, so the auto detent no longer needs room for it —
+    // counting it would open a gap between the content and the footer.
+    // footerKeyboardOffset moves the footer by itself and changes how much is tucked.
+    val footerInsetBehindKeyboard = if (detent == -1.0 &&
+      footerHeight > 0 &&
+      delegate?.absoluteFooter == true &&
+      footerInAuto &&
+      delegate?.footerAvoidsKeyboard == true
+    ) {
+      minOf(keyboardHeight, contentBottomInset - (delegate?.footerKeyboardOffset ?: 0)).coerceAtLeast(0)
+    } else {
+      0
+    }
     // maxContentHeight caps the content; the keyboard lifts the sheet on top of it, as on iOS.
-    val cappedHeight = minOf(baseHeight - footerKeyboardOverlap, maxContentHeight ?: Int.MAX_VALUE)
+    val cappedHeight = minOf(baseHeight - footerKeyboardOverlap - footerInsetBehindKeyboard, maxContentHeight ?: Int.MAX_VALUE)
     return minOf(cappedHeight + keyboardHeight, screenHeight + contentBottomInset)
   }
 

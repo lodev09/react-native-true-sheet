@@ -415,6 +415,24 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 }
 
+// With the keyboard open UIKit still adds the bottom safe area
+// below the detent, while a footer floating above the keyboard has dropped
+// the inset from its height. The part of it that ends up above the keyboard
+// would open a gap between the content and the footer. footerKeyboardOffset
+// moves the footer by itself, so that much of the gap is already taken.
+- (CGFloat)keyboardSafeAreaSurplus {
+  UIView *view = self.viewIfLoaded;
+  UIWindow *window = view.window;
+  if (!window || _keyboardHeight <= 0 || !_absoluteFooter || !_footerAvoidsKeyboard) {
+    return 0;
+  }
+
+  CGPoint keyboardTopInWindow =
+    CGPointMake(CGRectGetMidX(window.bounds), CGRectGetMaxY(window.bounds) - _keyboardHeight);
+  CGFloat occluded = CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTopInWindow fromView:window].y;
+  return MAX(0, view.safeAreaInsets.bottom + _keyboardHeight - occluded - _footerKeyboardOffset);
+}
+
 /**
  * Bottom inset excluded from the auto detent. A relative footer (or an
  * absolute one padding the scrollable) owns the sheet's bottom edge and
@@ -426,7 +444,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return 0;
   }
 
-  return _appliedFooterBottomInset;
+  return _appliedFooterBottomInset + [self keyboardSafeAreaSurplus];
 }
 
 /**
