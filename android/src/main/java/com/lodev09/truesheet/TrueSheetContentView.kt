@@ -1,8 +1,6 @@
 package com.lodev09.truesheet
 
 import android.annotation.SuppressLint
-import android.graphics.Matrix
-import android.graphics.RectF
 import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
@@ -111,7 +109,8 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   private var lastNaturalHeight = 0
 
   fun updateNaturalHeight(heightDp: Double) {
-    val heightPx = heightDp.toFloat().dpToPx().toInt()
+    // Round like Yoga's pixel grid — truncating leaves the container 1px short of its content
+    val heightPx = heightDp.toFloat().dpToPx().roundToInt()
     if (heightPx == lastNaturalHeight) return
     lastNaturalHeight = heightPx
     delegate?.contentViewDidChangeSize(width, heightPx)
@@ -168,13 +167,11 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
    */
   private var footerBottomInset = 0
 
-  private val scrollTransform = Matrix()
-  private val scrollBounds = RectF()
   private var scrollBottomGap: Int? = null
   private var scrollViewportHeight = -1
 
-  // A transform, ancestor scroll, or Fabric frame update (e.g. a detent
-  // resize) can move or resize the viewport without a layout pass.
+  // An ancestor scroll or Fabric frame update (e.g. a detent resize) can move
+  // or resize the viewport without a layout pass.
   private val scrollPositionListener = ViewTreeObserver.OnPreDrawListener {
     val gap = measureScrollBottomGap()
     if (gap != scrollBottomGap || (detectedScrollView?.height ?: -1) != scrollViewportHeight) {
@@ -264,9 +261,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   /**
-   * Re-applies the base content inset — the bottom safe-area inset while the
-   * content can scroll, no relative footer absorbs it, and
-   * `contentInsetAdjustment` includes the safe area.
+   * Re-applies the base content inset — the part of the bottom safe-area inset
+   * the scrollable overlaps, while its content reaches into it, no relative
+   * footer absorbs it, and `contentInsetAdjustment` includes the safe area.
    */
   fun updateContentInset() = updateContentInset(measureScrollBottomGap())
 
@@ -336,21 +333,16 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       return null
     }
     val container = parent as? View ?: return null
-    scrollTransform.reset()
+    // Layout positions only — like UIKit's safe area, transforms don't move the inset
+    var scrollBottom = scrollView.height
     var view: View = scrollView
     while (view !== container) {
-      val parentView = view.parent as? View ?: return null
-      val matrix = view.matrix
-      if (!matrix.isIdentity) scrollTransform.postConcat(matrix)
-      scrollTransform.postTranslate(
-        (view.left - parentView.scrollX).toFloat(),
-        (view.top - parentView.scrollY).toFloat()
-      )
+      // Clipped out of the hierarchy (e.g. removeClippedSubviews) — keep the last gap
+      val parentView = view.parent as? View ?: return scrollBottomGap
+      scrollBottom += view.top - parentView.scrollY
       view = parentView
     }
-    scrollBounds.set(0f, 0f, scrollView.width.toFloat(), scrollView.height.toFloat())
-    scrollTransform.mapRect(scrollBounds)
-    return container.height - scrollBounds.bottom.roundToInt()
+    return container.height - scrollBottom
   }
 
   private fun setScrollContentInset(inset: Int) {
