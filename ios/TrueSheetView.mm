@@ -390,6 +390,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
   _controller.footerInsetAdjustment =
     options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
+  _controller.footerKeyboardAdjustment =
+    _controller.absoluteFooter ? _controller.footerInsetAdjustment : _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   BOOL footerAvoidsKeyboard = newProps.footerOptions.avoidKeyboard;
