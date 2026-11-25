@@ -7,6 +7,7 @@
 - **Android**: `position`, detents and the sheet's max width now match `useWindowDimensions` on React Native 0.86+ below Android 15, and `position` is also correct in split-screen on Android 10 and older. With edge-to-edge off, `position` is no longer off by the system bars' size and the bottom of the sheet, including the footer, is no longer cut off. ([#1042](https://github.com/lodev09/react-native-true-sheet/pull/1042) by [@gadcam](https://github.com/gadcam) and [@lodev09](https://github.com/lodev09))
 - **Android**: Scrollable content that overflows the sheet by less than the bottom inset now scrolls, and its end clears the navigation bar instead of sitting under it. ([#1048](https://github.com/lodev09/react-native-true-sheet/pull/1048) by [@lodev09](https://github.com/lodev09))
 - `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer log "findHostInstance_DEPRECATED is deprecated in StrictMode" under React StrictMode. ([#1037](https://github.com/lodev09/react-native-true-sheet/pull/1037) by [@setoy](https://github.com/setoy))
+- `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer trigger Reanimated's "Dependencies should only be used on the web and are always ignored on native" warning on react-native-reanimated 4.6 and later. ([#1053](https://github.com/lodev09/react-native-true-sheet/pull/1053) by [@setoy](https://github.com/setoy))
 
 ### 💡 Others
 
