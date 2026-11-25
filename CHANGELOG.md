@@ -10,6 +10,7 @@
 - `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer log "findHostInstance_DEPRECATED is deprecated in StrictMode" under React StrictMode. ([#1037](https://github.com/lodev09/react-native-true-sheet/pull/1037) by [@setoy](https://github.com/setoy))
 - `ReanimatedTrueSheet` and `ReanimatedTrueSheetScreen` no longer trigger Reanimated's "Dependencies should only be used on the web and are always ignored on native" warning on react-native-reanimated 4.6 and later. ([#1053](https://github.com/lodev09/react-native-true-sheet/pull/1053) by [@setoy](https://github.com/setoy))
 - A sheet navigator route that closes before its sheet presents, such as one that redirects or calls `goBack()` on its first render, is now removed without showing the sheet. It used to leave a grabber-height sheet over a dim and stay in the navigation state, swallowing the next back action. ([#1050](https://github.com/lodev09/react-native-true-sheet/pull/1050) by [@maxlapides](https://github.com/maxlapides) and [@lodev09](https://github.com/lodev09))
+- With the keyboard open, an `auto` sheet with a scrollable and an absolute `footer` no longer leaves a gap as tall as the bottom inset between the content and the footer. The content also keeps its distance from the footer when `footerOptions.keyboardOffset` is set. ([#1045](https://github.com/lodev09/react-native-true-sheet/pull/1045) by [@cgrossbyte](https://github.com/cgrossbyte) and [@lodev09](https://github.com/lodev09))
 
 ### 💡 Others
 

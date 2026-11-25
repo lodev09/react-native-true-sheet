@@ -35,8 +35,12 @@
   CGFloat headerHeight = self.delegate.absoluteHeader ? 0 : [self.delegate.headerHeight floatValue];
   BOOL floatingFooter = self.delegate.absoluteFooter && !self.delegate.footerInsetAdjustment;
   CGFloat footerHeight = floatingFooter ? 0 : [self.delegate.footerHeight floatValue];
-  if (self.delegate.absoluteFooter && !floatingFooter && !self.delegate.footerAvoidsKeyboard) {
-    footerHeight -= MIN(keyboardHeight, MAX(0, footerHeight - self.delegate.appliedFooterBottomInset));
+  if (keyboardHeight > 0 && footerHeight > 0 && self.delegate.absoluteFooter) {
+    if (self.delegate.footerAvoidsKeyboard) {
+      footerHeight -= self.delegate.footerKeyboardSurplus;
+    } else {
+      footerHeight -= MIN(keyboardHeight, MAX(0, footerHeight - self.delegate.appliedFooterBottomInset));
+    }
   }
   return [self.delegate.contentHeight floatValue] + headerHeight + footerHeight;
 }

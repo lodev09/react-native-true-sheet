@@ -398,6 +398,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _controller.footerKeyboardOffset = footerKeyboardOffset;
     _controller.footerAvoidsKeyboard = footerAvoidsKeyboard;
     [_containerView updateFooterKeyboardOffset];
+    // The auto detent follows where the footer sits above the keyboard
+    if (_controller.keyboardHeight > 0) {
+      [self setupSheetDetentsForSizeChange];
+    }
   }
 
   _insetAdjustment = newProps.insetAdjustment;

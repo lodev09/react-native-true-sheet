@@ -383,14 +383,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.absoluteFooter = absolute
   }
 
-  fun setFooterKeyboardOffset(offset: Float) {
-    viewController.footerKeyboardOffset = offset.dpToPx().toInt()
-    viewController.positionFooter()
-  }
-
-  fun setFooterAvoidsKeyboard(avoids: Boolean) {
-    viewController.footerAvoidsKeyboard = avoids
-    viewController.containerView?.footerAvoidsKeyboard = avoids
+  // The auto detent follows on the post-transaction refresh (see finalizeUpdates)
+  fun setFooterKeyboardOptions(keyboardOffset: Float, avoidsKeyboard: Boolean) {
+    viewController.footerKeyboardOffset = keyboardOffset.dpToPx().toInt()
+    viewController.footerAvoidsKeyboard = avoidsKeyboard
+    viewController.containerView?.footerAvoidsKeyboard = avoidsKeyboard
     viewController.positionFooter()
   }
 

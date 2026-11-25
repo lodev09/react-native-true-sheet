@@ -314,11 +314,9 @@ class TrueSheetViewManager :
 
     val keyboardOffset =
       if (options != null && options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f
-    view.setFooterKeyboardOffset(keyboardOffset)
-
     val avoidKeyboard =
       if (options != null && options.hasKey("avoidKeyboard")) options.getBoolean("avoidKeyboard") else true
-    view.setFooterAvoidsKeyboard(avoidKeyboard)
+    view.setFooterKeyboardOptions(keyboardOffset, avoidKeyboard)
   }
 
   companion object {
