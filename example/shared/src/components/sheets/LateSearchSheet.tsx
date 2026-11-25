@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
@@ -18,6 +18,7 @@ export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
   const [loaded, setLoaded] = useState(false);
 
   const load = () => {
+    clearTimeout(loadTimeout.current);
     loadTimeout.current = setTimeout(() => setLoaded(true), LOAD_DELAY_MS);
   };
 
@@ -25,6 +26,8 @@ export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
     clearTimeout(loadTimeout.current);
     setLoaded(false);
   };
+
+  useEffect(() => () => clearTimeout(loadTimeout.current), []);
 
   return (
     <TrueSheet

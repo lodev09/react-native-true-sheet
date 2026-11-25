@@ -907,6 +907,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
     [self refreshFooterBottomInset];
 
+    [self layoutPendingContent];
+
     // Size first: the props rebuild refreshes the heights itself, hiding the
     // change from the controller and skipping its post-resize settle.
     [self->_controller setupSheetDetentsForSizeChange];
@@ -1098,6 +1100,15 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 #pragma mark - Private Helpers
 
+// UIKit lays the sheet out inside animateChanges:. A view mounted since the last
+// layout pass would get its first layout there, and its subviews (a text field's
+// placeholder, say) would grow in from a zero frame.
+- (void)layoutPendingContent {
+  [UIView performWithoutAnimation:^{
+    [self->_containerView layoutIfNeeded];
+  }];
+}
+
 - (void)setupScrollable {
   if (!_containerView)
     return;
@@ -1141,14 +1152,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)applySheetPropsUpdate {
-  // Views mounted since the last layout pass, e.g. right before the did-present
-  // update, haven't had their first layout yet. Run it outside the animation
-  // below, or their subviews (a text field's placeholder, say) grow in from a
-  // zero frame.
-  [UIView performWithoutAnimation:^{
-    [self->_controller.view layoutIfNeeded];
-  }];
-
   BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
   _pendingLayoutUpdate = NO;
 
@@ -1163,6 +1166,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   [_controller setupSheetSizing];
 
+  [self layoutPendingContent];
   [_controller.sheetPresentationController animateChanges:^{
     [self->_controller setupSheetProps];
     if (pendingLayoutUpdate) {
