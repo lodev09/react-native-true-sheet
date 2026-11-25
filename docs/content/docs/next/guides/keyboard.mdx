@@ -65,7 +65,7 @@ const insets = useSafeAreaInsets()
 
 ## Footer Behavior
 
-A relative [`footer`](../reference/configuration#footer) (the default) stays in the layout flow — it doesn't float above the keyboard. The keyboard simply covers it, and it's revealed again when the keyboard hides.
+A relative [`footer`](../reference/configuration#footer) (the default) stays in the layout flow — it doesn't float above the keyboard. The keyboard simply covers it, and it's revealed again when the keyboard hides. With a [`scrollableRef`](../reference/configuration#scrollableref), the covered part of the footer adds no extra space above the keyboard to the `auto` height.
 
 An absolute footer automatically repositions above the keyboard, staying visible while the user types. The automatic scroll accounts for the footer's height — focused inputs clear both the keyboard and the footer. Its built-in [safe-area inset](./footer#safe-area-handling) is skipped while the keyboard is open — the footer hugs the keyboard with no gap, and the inset is restored when the keyboard hides.
 

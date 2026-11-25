@@ -26,6 +26,14 @@ interface TrueSheetDetentCalculatorDelegate {
    * above it.
    */
   val footerInsetAdjustment: Boolean
+
+  /**
+   * True while the auto detent follows the footer's overlap with the
+   * keyboard: an absolute footer padding the plugged scrollable, or a
+   * relative footer with a plugged scrollable. Plain content keeps the
+   * default keyboard sizing.
+   */
+  val footerKeyboardAdjustment: Boolean
   val footerAvoidsKeyboard: Boolean
   val footerKeyboardOffset: Int
   val peekContentHeight: Int
@@ -125,20 +133,20 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     }
 
     val keyboardHeight = if (includeKeyboard) keyboardInset else 0
-    // The keyboard covers part of an absolute footer counted in the auto
-    // height: a pinned footer down to its absorbed inset, a rising footer only
-    // that inset, which rides below the keyboard's top edge — less what
-    // keyboardOffset raises it by (see positionFooter).
+    // The keyboard covers part of a footer counted in the auto height: a
+    // footer behind it (pinned or relative) down to its part above the
+    // keyboard, a rising footer only its inset, which rides below the
+    // keyboard's top edge — less what keyboardOffset raises it by (see
+    // positionFooter).
     val footerKeyboardOverlap = if (keyboardHeight > 0 &&
       footerHeight > 0 &&
       detent == -1.0 &&
-      delegate?.absoluteFooter == true &&
-      footerInAuto
+      delegate?.footerKeyboardAdjustment == true
     ) {
-      if (delegate?.footerAvoidsKeyboard == false) {
-        minOf(keyboardHeight, maxOf(0, footerHeight - contentBottomInset))
-      } else {
+      if (delegate?.absoluteFooter == true && delegate?.footerAvoidsKeyboard == true) {
         minOf(keyboardHeight, contentBottomInset - footerKeyboardOffset)
+      } else {
+        minOf(keyboardHeight, footerHeight)
       }
     } else {
       0

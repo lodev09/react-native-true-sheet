@@ -404,42 +404,90 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 /**
  * Room the auto detent reserves for a footer rising with the keyboard beyond
- * what it occupies there. UIKit grows an edge-attached sheet by the keyboard's
- * height on top of the bottom inset, which then sits above the keyboard — less
- * what a floating sheet's (iOS 26+) scale adds to the keyboard's cover — while
- * the footer has dropped it. keyboardOffset moves the footer by itself, down to
- * its layout position (see TrueSheetFooterView keyboardSlideForHeight:), so
- * this follows the footer's actual slide. Not phone idiom: UIKit moves the
- * sheet instead of growing it.
+ * what it occupies there. UIKit grows the sheet for the keyboard on top of the
+ * bottom inset, which then sits above the keyboard, while the footer has
+ * dropped it. keyboardOffset moves the footer by itself, down to its layout
+ * position (see TrueSheetFooterView keyboardSlideForHeight:), so this follows
+ * the footer's actual slide.
  */
 - (CGFloat)footerKeyboardSurplus {
-  UIView *view = self.viewIfLoaded;
-  UIWindow *window = view.window;
-  if (!window || !TrueSheetIsPhoneIdiom()) {
+  if (!self.viewIfLoaded.window || [self keyboardMovesSheet]) {
     return 0;
   }
 
+  CGFloat covered = [self keyboardCoveredHeight];
+  return self.footerBottomInset + [self keyboardGrowthForCoveredHeight:covered] -
+         MAX(0, covered + _footerKeyboardOffset);
+}
+
+/**
+ * Footer height to take out of the auto detent for a footer that stays behind
+ * the keyboard (pinned or relative). Only its part above the keyboard takes
+ * room there, and UIKit's growth beyond the covered part (the bottom inset on
+ * iPhone) isn't needed once the keyboard covers the footer's.
+ */
+- (CGFloat)footerKeyboardCover {
+  CGFloat footerHeight = [self.footerHeight floatValue];
+  if (!self.viewIfLoaded.window) {
+    return _absoluteFooter ? MIN(_keyboardHeight, MAX(0, footerHeight - _appliedFooterBottomInset)) : 0;
+  }
+  if ([self keyboardMovesSheet]) {
+    return 0;
+  }
+
+  CGFloat covered = [self keyboardCoveredHeight];
+  return MIN(footerHeight, MAX(0, covered)) + [self keyboardGrowthForCoveredHeight:covered] - covered;
+}
+
+// UIKit lifts a form-sized sheet in regular width clear of the keyboard
+// instead of growing it, so its footer stays visible — unless its preferred
+// height fills the screen, which pins it to the bottom edge like a page sheet.
+// Reads the sizing setupSheetSizing applied (form, or page with
+// maxContentWidth); before iOS 17 every sheet is page-sized.
+- (BOOL)keyboardMovesSheet {
+  if (TrueSheetIsPhoneIdiom()) {
+    return NO;
+  }
+
+  if (@available(iOS 17.0, *)) {
+    UISheetPresentationController *sheet = self.sheet;
+    return sheet && !sheet.prefersPageSizing && self.preferredContentSize.height < self.screenHeight &&
+           self.viewIfLoaded.window.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+  }
+  return NO;
+}
+
+// How much UIKit grows the sheet for the keyboard: the keyboard's height on
+// iPhone, only the part covering the sheet on iPad (it floats above the edge).
+- (CGFloat)keyboardGrowthForCoveredHeight:(CGFloat)covered {
+  return TrueSheetIsPhoneIdiom() ? _keyboardHeight : covered;
+}
+
+// How much of the sheet's bottom the keyboard covers — a floating sheet's
+// (iOS 26+) scale makes it differ from the keyboard's height.
+- (CGFloat)keyboardCoveredHeight {
+  UIView *view = self.viewIfLoaded;
+  UIWindow *window = view.window;
   CGPoint keyboardTop = CGPointMake(0, CGRectGetMaxY(window.bounds) - _keyboardHeight);
-  CGFloat covered = CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTop fromView:window].y;
-  return self.footerBottomInset + _keyboardHeight - MAX(0, covered + _footerKeyboardOffset);
+  return CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTop fromView:window].y;
 }
 
 // The footer's overlap with the keyboard changes the auto detent, including
-// keyboard height changes while already visible. A pinned footer re-resolves
-// alongside the keyboard animation. A rising one only refreshes the snapshot
-// UIKit's own keyboard resize resolves from — an invalidation there runs a
-// second animation that drags the footer off the keyboard.
+// keyboard height changes while already visible. A footer behind the keyboard
+// re-resolves alongside the keyboard animation. A rising one only refreshes
+// the snapshot UIKit's own keyboard resize resolves from — an invalidation
+// there runs a second animation that drags the footer off the keyboard.
 - (void)setKeyboardHeight:(CGFloat)keyboardHeight {
   if (_keyboardHeight == keyboardHeight) {
     return;
   }
   _keyboardHeight = keyboardHeight;
 
-  if (!_footerInsetAdjustment || !self.isPresented) {
+  if (!_footerKeyboardAdjustment || !self.isPresented) {
     return;
   }
 
-  if (_footerAvoidsKeyboard) {
+  if (_absoluteFooter && _footerAvoidsKeyboard) {
     [self refreshDetentHeights];
   } else {
     [self setupSheetDetentsForSizeChange];
