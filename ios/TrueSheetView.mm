@@ -1141,6 +1141,14 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)applySheetPropsUpdate {
+  // Views mounted since the last layout pass, e.g. right before the did-present
+  // update, haven't had their first layout yet. Run it outside the animation
+  // below, or their subviews (a text field's placeholder, say) grow in from a
+  // zero frame.
+  [UIView performWithoutAnimation:^{
+    [self->_controller.view layoutIfNeeded];
+  }];
+
   BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
   _pendingLayoutUpdate = NO;
 

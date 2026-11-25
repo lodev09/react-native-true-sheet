@@ -40,6 +40,7 @@ import {
   BasicSheet,
   FlatListSheet,
   GestureSheet,
+  LateSearchSheet,
   PromptSheet,
   ScrollViewSheet,
 } from '../components/sheets';
@@ -102,6 +103,7 @@ const MapScreenInner = ({
   const scrollViewSheet = useRef<TrueSheet>(null);
   const flatListSheet = useRef<TrueSheet>(null);
   const gestureSheet = useRef<TrueSheet>(null);
+  const lateSearchSheet = useRef<TrueSheet>(null);
 
   const [anchorLeft, setAnchorLeft] = useState(false);
   const [scrollViewLoading, setScrollViewLoading] = useState(false);
@@ -264,6 +266,9 @@ const MapScreenInner = ({
             />
             <Button text="FlatList" onPress={() => flatListSheet.current?.present()} />
           </ButtonGroup>
+          {Platform.OS === 'ios' && (
+            <Button text="Late Search" onPress={() => lateSearchSheet.current?.present()} />
+          )}
           <Spacer />
           {showExtraContent && <DemoContent text="Extra content that changes height" />}
           <ButtonGroup>
@@ -286,6 +291,7 @@ const MapScreenInner = ({
           <ScrollViewSheet ref={scrollViewSheet} />
           <FlatListSheet ref={flatListSheet} />
           <GestureSheet ref={gestureSheet} />
+          {Platform.OS === 'ios' && <LateSearchSheet ref={lateSearchSheet} />}
         </ScrollView>
       </ReanimatedTrueSheet>
     </View>
