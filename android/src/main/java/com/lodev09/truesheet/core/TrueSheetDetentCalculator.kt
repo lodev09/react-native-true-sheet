@@ -27,7 +27,6 @@ interface TrueSheetDetentCalculatorDelegate {
    */
   val footerInsetAdjustment: Boolean
   val footerAvoidsKeyboard: Boolean
-  val footerKeyboardOffset: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -124,31 +123,18 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     }
 
     val keyboardHeight = if (includeKeyboard) keyboardInset else 0
-    val footerKeyboardOverlap = if (detent == -1.0 &&
-      delegate?.absoluteFooter == true &&
-      footerInAuto &&
-      delegate?.footerAvoidsKeyboard == false
-    ) {
-      minOf(keyboardHeight, maxOf(0, footerHeight - contentBottomInset))
-    } else {
-      0
-    }
-    // A footer that rises with the keyboard tucks its absorbed inset behind the
-    // keyboard's top edge, so the auto detent no longer needs room for it —
-    // counting it would open a gap between the content and the footer.
-    // footerKeyboardOffset moves the footer by itself and changes how much is tucked.
-    val footerInsetBehindKeyboard = if (detent == -1.0 &&
-      footerHeight > 0 &&
-      delegate?.absoluteFooter == true &&
-      footerInAuto &&
-      delegate?.footerAvoidsKeyboard == true
-    ) {
-      minOf(keyboardHeight, contentBottomInset - (delegate?.footerKeyboardOffset ?: 0)).coerceAtLeast(0)
+    // The keyboard covers part of an absolute footer counted in the auto
+    // height: a pinned footer down to its absorbed inset, a rising footer only
+    // that inset (it rides below the keyboard's top edge, see positionFooter).
+    val footerKeyboardOverlap = if (detent == -1.0 && delegate?.absoluteFooter == true && footerInAuto) {
+      val footerInset = minOf(footerHeight, contentBottomInset)
+      val covered = if (delegate?.footerAvoidsKeyboard == false) footerHeight - footerInset else footerInset
+      minOf(keyboardHeight, covered)
     } else {
       0
     }
     // maxContentHeight caps the content; the keyboard lifts the sheet on top of it, as on iOS.
-    val cappedHeight = minOf(baseHeight - footerKeyboardOverlap - footerInsetBehindKeyboard, maxContentHeight ?: Int.MAX_VALUE)
+    val cappedHeight = minOf(baseHeight - footerKeyboardOverlap, maxContentHeight ?: Int.MAX_VALUE)
     return minOf(cappedHeight + keyboardHeight, screenHeight + contentBottomInset)
   }
 

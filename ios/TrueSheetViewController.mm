@@ -402,37 +402,42 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
 }
 
-// Re-resolve alongside the keyboard animation as its overlap with the pinned
-// footer changes, including keyboard height changes while already visible.
+// UIKit grows the sheet by the keyboard's height on top of the bottom inset,
+// which then sits above the keyboard — less what a floating sheet's (iOS 26+)
+// scale adds to the keyboard's cover.
+- (CGFloat)bottomInsetAboveKeyboard {
+  CGFloat inset = self.footerBottomInset;
+  UIView *view = self.viewIfLoaded;
+  UIWindow *window = view.window;
+  if (inset <= 0 || !window) {
+    return inset;
+  }
+
+  CGPoint keyboardTop = CGPointMake(0, CGRectGetMaxY(window.bounds) - _keyboardHeight);
+  CGFloat covered = CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTop fromView:window].y;
+  return MAX(0, inset + _keyboardHeight - covered);
+}
+
+// The footer's overlap with the keyboard changes the auto detent, including
+// keyboard height changes while already visible. A pinned footer re-resolves
+// alongside the keyboard animation. A rising one only refreshes the snapshot
+// UIKit's own keyboard resize resolves from — an invalidation there runs a
+// second animation that drags the footer off the keyboard.
 - (void)setKeyboardHeight:(CGFloat)keyboardHeight {
   if (_keyboardHeight == keyboardHeight) {
     return;
   }
   _keyboardHeight = keyboardHeight;
 
-  if (_footerInsetAdjustment && !_footerAvoidsKeyboard && self.isPresented) {
+  if (!_footerInsetAdjustment || !self.isPresented) {
+    return;
+  }
+
+  if (_footerAvoidsKeyboard) {
+    [self refreshDetentHeights];
+  } else {
     [self setupSheetDetentsForSizeChange];
   }
-}
-
-/**
- * With the keyboard open UIKit still adds the bottom safe area below the
- * detent, while a footer floating above the keyboard has dropped the inset
- * from its height. The part that ends up above the keyboard would open a gap
- * between the content and the footer. footerKeyboardOffset moves the footer
- * by itself, so that much of the gap is already taken.
- */
-- (CGFloat)keyboardSafeAreaSurplus {
-  UIView *view = self.viewIfLoaded;
-  UIWindow *window = view.window;
-  if (!window || _keyboardHeight <= 0 || !_absoluteFooter || !_footerAvoidsKeyboard) {
-    return 0;
-  }
-
-  CGPoint keyboardTopInWindow =
-    CGPointMake(CGRectGetMidX(window.bounds), CGRectGetMaxY(window.bounds) - _keyboardHeight);
-  CGFloat occluded = CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTopInWindow fromView:window].y;
-  return MAX(0, view.safeAreaInsets.bottom + _keyboardHeight - occluded - _footerKeyboardOffset);
 }
 
 /**
@@ -446,7 +451,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return 0;
   }
 
-  return _appliedFooterBottomInset + [self keyboardSafeAreaSurplus];
+  return _appliedFooterBottomInset;
 }
 
 /**
@@ -1742,24 +1747,30 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
  */
 - (void)setupSheetDetentsForSizeChange {
   if (@available(iOS 16.0, *)) {
-    CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
-    CGFloat peekHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
-
     // Invalidate only when a detent this sheet uses changed. A needless animated
     // invalidation right after presenting over another sheet animates UIKit's
     // hide of the sheet behind, leaving it invisible if this one dismisses soon.
-    // The snapshots still refresh so a later switch to auto/peek reads current heights.
-    BOOL autoChanged = fabs(autoHeight - _autoDetentHeight) >= 0.5 && [self.detents containsObject:@(-1)];
-    BOOL peekChanged = fabs(peekHeight - _peekDetentHeight) >= 0.5 && [self.detents containsObject:@(-2)];
-
-    _autoDetentHeight = autoHeight;
-    _peekDetentHeight = peekHeight;
-
-    if (autoChanged || peekChanged) {
+    if ([self refreshDetentHeights]) {
       [self invalidateDetentsAnimated];
     }
   }
   // iOS 15: detents are fixed medium/large — size changes can't affect them.
+}
+
+// Refreshes the auto/peek snapshots and returns whether a detent this sheet
+// uses changed. They refresh either way so a later switch to auto/peek reads
+// current heights.
+- (BOOL)refreshDetentHeights {
+  CGFloat autoHeight = [_detentCalculator autoHeightForKeyboardHeight:_keyboardHeight] - [self autoDetentBottomInset];
+  CGFloat peekHeight = [_detentCalculator peekHeight] - [self peekDetentBottomInset];
+
+  BOOL autoChanged = fabs(autoHeight - _autoDetentHeight) >= 0.5 && [self.detents containsObject:@(-1)];
+  BOOL peekChanged = fabs(peekHeight - _peekDetentHeight) >= 0.5 && [self.detents containsObject:@(-2)];
+
+  _autoDetentHeight = autoHeight;
+  _peekDetentHeight = peekHeight;
+
+  return autoChanged || peekChanged;
 }
 
 // Re-resolves the detents in place, e.g. when an input to the resolver
