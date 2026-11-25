@@ -385,13 +385,21 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   fun setFooterKeyboardOffset(offset: Float) {
     viewController.footerKeyboardOffset = offset.dpToPx().toInt()
-    viewController.positionFooter()
+    updateFooterKeyboardPosition()
   }
 
   fun setFooterAvoidsKeyboard(avoids: Boolean) {
     viewController.footerAvoidsKeyboard = avoids
     viewController.containerView?.footerAvoidsKeyboard = avoids
+    updateFooterKeyboardPosition()
+  }
+
+  // The auto detent follows where the footer sits above the keyboard
+  private fun updateFooterKeyboardPosition() {
     viewController.positionFooter()
+    if (viewController.isKeyboardActive) {
+      viewController.setupSheetDetentsForSizeChange()
+    }
   }
 
   private fun setupScrollable() {

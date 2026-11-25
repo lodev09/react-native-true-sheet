@@ -27,6 +27,7 @@ interface TrueSheetDetentCalculatorDelegate {
    */
   val footerInsetAdjustment: Boolean
   val footerAvoidsKeyboard: Boolean
+  val footerKeyboardOffset: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -59,6 +60,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
+  private val footerKeyboardOffset: Int get() = delegate?.footerKeyboardOffset ?: 0
   private val topInset: Int get() = delegate?.topInset ?: 0
   private val hasKeyboardFloor: Boolean get() = delegate?.hasKeyboardFloor == true
 
@@ -125,11 +127,19 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     val keyboardHeight = if (includeKeyboard) keyboardInset else 0
     // The keyboard covers part of an absolute footer counted in the auto
     // height: a pinned footer down to its absorbed inset, a rising footer only
-    // that inset (it rides below the keyboard's top edge, see positionFooter).
-    val footerKeyboardOverlap = if (detent == -1.0 && delegate?.absoluteFooter == true && footerInAuto) {
-      val footerInset = minOf(footerHeight, contentBottomInset)
-      val covered = if (delegate?.footerAvoidsKeyboard == false) footerHeight - footerInset else footerInset
-      minOf(keyboardHeight, covered)
+    // that inset, which rides below the keyboard's top edge — less what
+    // keyboardOffset raises it by (see positionFooter).
+    val footerKeyboardOverlap = if (keyboardHeight > 0 &&
+      footerHeight > 0 &&
+      detent == -1.0 &&
+      delegate?.absoluteFooter == true &&
+      footerInAuto
+    ) {
+      if (delegate?.footerAvoidsKeyboard == false) {
+        minOf(keyboardHeight, maxOf(0, footerHeight - contentBottomInset))
+      } else {
+        minOf(keyboardHeight, contentBottomInset - footerKeyboardOffset)
+      }
     } else {
       0
     }

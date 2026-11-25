@@ -402,20 +402,24 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return [self bottomSafeAreaForHeight:[self maxNaturalDetentHeight]];
 }
 
-// UIKit grows the sheet by the keyboard's height on top of the bottom inset,
-// which then sits above the keyboard — less what a floating sheet's (iOS 26+)
-// scale adds to the keyboard's cover.
-- (CGFloat)bottomInsetAboveKeyboard {
-  CGFloat inset = self.footerBottomInset;
+/**
+ * Room the auto detent reserves for a footer rising with the keyboard beyond
+ * what it occupies there. UIKit grows an edge-attached sheet by the keyboard's
+ * height on top of the bottom inset, which then sits above the keyboard — less
+ * what a floating sheet's (iOS 26+) scale adds to the keyboard's cover — while
+ * the footer has dropped it. keyboardOffset raises the footer by itself, taking
+ * that much back. Not phone idiom: UIKit moves the sheet instead of growing it.
+ */
+- (CGFloat)footerKeyboardSurplus {
   UIView *view = self.viewIfLoaded;
   UIWindow *window = view.window;
-  if (inset <= 0 || !window) {
-    return inset;
+  if (!window || !TrueSheetIsPhoneIdiom()) {
+    return 0;
   }
 
   CGPoint keyboardTop = CGPointMake(0, CGRectGetMaxY(window.bounds) - _keyboardHeight);
   CGFloat covered = CGRectGetMaxY(view.bounds) - [view convertPoint:keyboardTop fromView:window].y;
-  return MAX(0, inset + _keyboardHeight - covered);
+  return self.footerBottomInset + _keyboardHeight - covered - _footerKeyboardOffset;
 }
 
 // The footer's overlap with the keyboard changes the auto detent, including

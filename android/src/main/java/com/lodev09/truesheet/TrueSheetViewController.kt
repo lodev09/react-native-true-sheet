@@ -1414,7 +1414,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Footer Positioning
   // =============================================================================
 
-  var footerKeyboardOffset: Int = 0
+  override var footerKeyboardOffset: Int = 0
 
   /**
    * false keeps an absolute footer pinned to the sheet's bottom edge behind

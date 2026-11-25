@@ -37,8 +37,7 @@
   CGFloat footerHeight = floatingFooter ? 0 : [self.delegate.footerHeight floatValue];
   if (keyboardHeight > 0 && footerHeight > 0 && self.delegate.absoluteFooter) {
     if (self.delegate.footerAvoidsKeyboard) {
-      // A rising footer drops its inset above the keyboard, while UIKit keeps the sheet's there
-      footerHeight -= self.delegate.bottomInsetAboveKeyboard;
+      footerHeight -= self.delegate.footerKeyboardSurplus;
     } else {
       footerHeight -= MIN(keyboardHeight, MAX(0, footerHeight - self.delegate.appliedFooterBottomInset));
     }
