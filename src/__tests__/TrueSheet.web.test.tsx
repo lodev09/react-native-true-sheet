@@ -164,7 +164,7 @@ describe('web present and dismiss', () => {
     expect(sheet.events).toEqual(['presented', 'dismissed']);
   });
 
-  it('dismisses an auto-presented sheet once it lands when dismissed before willPresent', async () => {
+  it('cancels an auto-present when dismissed before willPresent', async () => {
     const sheet = setup(0);
     const events: string[] = [];
     const log = (event: string) => () => {
@@ -186,8 +186,82 @@ describe('web present and dismiss', () => {
     await act(async () => {
       jest.runOnlyPendingTimers();
     });
-    expect(events).toEqual(['willPresent', 'didPresent', 'willDismiss', 'didDismiss', 'dismissed']);
+    expect(events).toEqual(['dismissed']);
     expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+
+  it('presents again after a canceled auto-present when the close and reopen batch', async () => {
+    const sheet = setup(0);
+    const events: string[] = [];
+    const log = (event: string) => () => {
+      events.push(event);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onWillDismiss={log('willDismiss')}
+        onDidDismiss={log('didDismiss')}
+      />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss().then(log('dismissed'));
+      // The pending frame runs before React commits the close
+      jest.runOnlyPendingTimers();
+      sheet.ref.current!.present(1).then(log('presented'));
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(events).toEqual(['dismissed', 'willPresent', 'didPresent', 'presented']);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(true);
+  });
+
+  it('emits willPresent with the reopened detent when the close and reopen batch', async () => {
+    const sheet = setup(0);
+    const onWillPresent = jest.fn();
+    const onDidPresent = jest.fn();
+    sheet.rerender(
+      <TrueSheet {...sheet.props} onWillPresent={onWillPresent} onDidPresent={onDidPresent} />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss();
+      sheet.ref.current!.present(1);
+      // The pending frame runs before React commits the reopen
+      jest.runOnlyPendingTimers();
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(onWillPresent).toHaveBeenCalledTimes(1);
+    expect(onWillPresent.mock.calls[0]![0].nativeEvent.index).toBe(1);
+    expect(onDidPresent.mock.calls[0]![0].nativeEvent.index).toBe(1);
+  });
+
+  it('treats a batched reopen at another detent as a present, not a resize', async () => {
+    const sheet = setup(0);
+    const events: string[] = [];
+    const log = (event: string) => (e: { nativeEvent: { index: number } }) => {
+      events.push(`${event}:${e.nativeEvent.index}`);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onDetentChange={log('detentChange')}
+      />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss();
+      sheet.ref.current!.present(1);
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    await act(() => sheet.ref.current!.resize(2));
+    expect(events).toEqual(['willPresent:1', 'didPresent:1', 'detentChange:2']);
   });
 
   it('ignores present while presented or dismissing, and dismiss while dismissed', async () => {
