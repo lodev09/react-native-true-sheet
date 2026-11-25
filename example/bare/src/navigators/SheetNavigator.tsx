@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Platform, type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -23,34 +23,8 @@ import { useAppNavigation } from '../hooks';
 const SheetStack = createTrueSheetNavigator<AppStackParamList & SheetStackParamList>();
 const SheetHomeStack = createNativeStackNavigator<AppStackParamList & SheetHomeStackParamList>();
 
-type SheetRouteSummary = { name: string; closing?: boolean };
-
-const summarizeRoutes = (state: { routes: SheetRouteSummary[] } | undefined) =>
-  (state?.routes ?? [])
-    .slice(1)
-    .map((r) => (r.closing ? `${r.name} (closing)` : r.name))
-    .join(', ') || 'none';
-
-// Sheet routes above the base screen, to see a route that never got removed
-const useSheetRoutes = () => {
-  const navigation = useTrueSheetNavigation();
-  const sheetNavigation = navigation.getParent();
-  const [routes, setRoutes] = useState(() => summarizeRoutes(sheetNavigation?.getState()));
-
-  useEffect(
-    () =>
-      sheetNavigation?.addListener('state', (e) => {
-        setRoutes(summarizeRoutes(e.data.state as { routes: SheetRouteSummary[] }));
-      }),
-    [sheetNavigation]
-  );
-
-  return routes;
-};
-
 const HomeScreen = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
-  const sheetRoutes = useSheetRoutes();
 
   return (
     <View style={styles.content}>
@@ -59,16 +33,12 @@ const HomeScreen = () => {
         <Text style={styles.subtitle}>
           Using createTrueSheetNavigator for react-navigation integration.
         </Text>
-        <Text style={styles.subtitle} testID="sheet-routes">
-          Sheet routes: {sheetRoutes}
-        </Text>
       </View>
       <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
       <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
       <Button text="Open Scrollable Sheet" onPress={() => navigation.navigate('Scrollable')} />
       <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
       <Button text="Open Peek Sheet" onPress={() => navigation.navigate('Peek')} />
-      <Button text="Open Redirect Sheet" onPress={() => navigation.navigate('Redirect')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
       <Button
         text="Open Full Screen Modal"
@@ -183,19 +153,6 @@ const SmallFooterSheet = () => {
       <Text style={styles.sheetSubtitle}>Small auto detent with a late-mounted footer.</Text>
     </View>
   );
-};
-
-// Repro: a sheet route that leaves on its first render (e.g. a redirect when there's
-// nothing to show) closes before its sheet presents. It must still be removed, or the
-// next back press is swallowed by the closing route.
-const RedirectSheet = () => {
-  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
-
-  useEffect(() => {
-    navigation.goBack();
-  }, [navigation]);
-
-  return null;
 };
 
 const PeekSheet = () => {
@@ -372,7 +329,6 @@ export const SheetNavigator = () => {
           cornerRadius: 16,
         }}
       />
-      <SheetStack.Screen name="Redirect" component={RedirectSheet} />
       <SheetStack.Screen
         name="Peek"
         component={PeekSheet}
