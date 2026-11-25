@@ -181,10 +181,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Whether willPresent fired for the current open cycle — a present undone
   // before it fires has nothing to pair a dismiss with.
   const didEmitWillPresentRef = useRef(false);
-  // Whether the current open cycle came from initialDetentIndex. Native mounts those
-  // eagerly, so a dismiss before willPresent lands after the present instead of cancelling it.
-  const isAutoPresentRef = useRef(shouldAutoPresent);
-  const shouldDismissOnPresentRef = useRef(false);
+  // Bumped per present() so its lifecycle waits for that present's detent to commit
+  const [presentRequest, setPresentRequest] = useState(0);
+  const presentRequestRef = useRef(0);
+  const committedPresentRequestRef = useRef(0);
   const [displayedBackgroundIndex, setDisplayedBackgroundIndex] = useState(
     shouldAutoPresent ? initialDetentIndex : 0
   );
@@ -241,13 +241,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissSheet = useCallback((): Promise<void> | null => {
     if (phaseRef.current === 'dismissed' || phaseRef.current === 'dismissing') return null;
     settle(resolvePresentRef);
-    if (didEmitWillPresentRef.current) {
-      setIsOpen(false);
-    } else if (isAutoPresentRef.current) {
-      shouldDismissOnPresentRef.current = true;
-    } else {
-      // Mirror native's lazy-mount cancel: nothing shown yet, nothing to animate out
-      setIsOpen(false);
+    setIsOpen(false);
+    // Mirror native: a dismiss before willPresent cancels the present, initialDetentIndex
+    // included — nothing shown yet, nothing to animate out
+    if (!didEmitWillPresentRef.current) {
       phaseRef.current = 'dismissed';
       return Promise.resolve();
     }
@@ -304,7 +301,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
   const dismissDescendantsRef = useRef<() => void>(() => {});
 
-  const presentSheet = useCallback(async (index: number, auto: boolean) => {
+  const presentSheet = useCallback(async (index: number) => {
     const detent = validDetentsRef.current[index];
     if (detent === undefined) {
       throw new Error(
@@ -316,8 +313,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
     phaseRef.current = 'presenting';
-    isAutoPresentRef.current = auto;
     isPresentingRef.current = true;
+    presentRequestRef.current += 1;
+    setPresentRequest(presentRequestRef.current);
     setDisplayedBackgroundIndex(index);
     setActiveSnapPoint(detent);
     setIsOpen(true);
@@ -328,7 +326,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const methods = useMemo<TrueSheetMethods>(
     () => ({
-      present: (index = 0) => presentSheet(index, false),
+      present: (index = 0) => presentSheet(index),
       dismiss: async () => {
         const dismissal = dismissSheet();
         if (!dismissal) {
@@ -363,7 +361,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
     didInitiallyPresentRef.current = true;
     if (phaseRef.current === 'dismissed') {
-      presentSheet(initialDetentIndex, true);
+      presentSheet(initialDetentIndex);
     }
   }, [initialDetentIndex, shouldAutoPresent, presentSheet]);
 
@@ -608,6 +606,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragEndRef.current = onDragEnd;
     onPositionChangeRef.current = onPositionChange;
     activeSnapPointRef.current = activeSnapPoint;
+    committedPresentRequestRef.current = presentRequest;
   });
 
   // Detent geometry — target top-Y (`positions`) and height ratio (`values`)
@@ -833,10 +832,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
         onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
         settle(resolvePresentRef);
-        if (shouldDismissOnPresentRef.current) {
-          shouldDismissOnPresentRef.current = false;
-          setIsOpen(false);
-        }
       } else {
         phaseRef.current = 'dismissed';
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
@@ -851,11 +846,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const start = () => {
       if (canceled) return;
       const drawer = drawerContentRef.current;
-      if (!drawer || !drawer.isConnected) {
-        // Drawer hasn't mounted yet (Radix Presence defers the portal mount
-        // past the first effect pass), or its subtree isn't attached to the
-        // document yet (autopresent commits the portal before the app tree
-        // attaches, so nothing is measurable). Poll until it's live.
+      // Drawer hasn't mounted yet (Radix Presence defers the portal mount
+      // past the first effect pass), or its subtree isn't attached to the
+      // document yet (autopresent commits the portal before the app tree
+      // attaches, so nothing is measurable). Poll until it's live.
+      // Also poll while a dismiss before willPresent has canceled the present
+      // but its close hasn't committed: the commit cleans this up, or a
+      // present() batched with the close reuses this cycle once its detent commits.
+      if (
+        !drawer ||
+        !drawer.isConnected ||
+        (present &&
+          (phaseRef.current !== 'presenting' ||
+            committedPresentRequestRef.current !== presentRequestRef.current))
+      ) {
         rafId = window.requestAnimationFrame(start);
         return;
       }
@@ -912,18 +916,25 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Present/dismiss have their own events and carry detent info via
   // onDidPresent, so we skip those edges.
   const activeDetentIndex = activeSnapPoint != null ? validDetents.indexOf(activeSnapPoint) : -1;
-  const detentChangeStateRef = useRef({ isOpen, activeSnapPoint, activeDetentIndex });
+  const detentChangeStateRef = useRef({
+    isOpen,
+    activeSnapPoint,
+    activeDetentIndex,
+    presentRequest,
+  });
   useEffect(() => {
     // A removed active detent reads -1 until its fallback lands
     if (isOpen && activeDetentIndex < 0) return;
     const prev = detentChangeStateRef.current;
-    detentChangeStateRef.current = { isOpen, activeSnapPoint, activeDetentIndex };
-    if (!prev.isOpen || !isOpen) return;
+    detentChangeStateRef.current = { isOpen, activeSnapPoint, activeDetentIndex, presentRequest };
+    // A present() batched with a canceled present's close keeps the sheet open,
+    // but its detent belongs to the new presentation, not a resize
+    if (!prev.isOpen || !isOpen || prev.presentRequest !== presentRequest) return;
     if (prev.activeSnapPoint === activeSnapPoint && prev.activeDetentIndex === activeDetentIndex) {
       return;
     }
     onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
-  }, [isOpen, activeSnapPoint, activeDetentIndex, computeDetentInfo]);
+  }, [isOpen, activeSnapPoint, activeDetentIndex, presentRequest, computeDetentInfo]);
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.
