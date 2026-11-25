@@ -550,14 +550,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Dismissing before a deferred present starts cancels it — nothing was presented
-    if (cancelPendingPresent()) {
-      promiseCallback()
-      return
-    }
+    // Cancels a scheduled initialDetentIndex present, along with a present() waiting on the keyboard
+    val hadInitialPresentScheduled = isInitialPresentScheduled
+    isInitialPresentScheduled = false
 
-    if (isInitialPresentScheduled) {
-      isInitialPresentScheduled = false
+    // Dismissing before a deferred present starts cancels it — nothing was presented.
+    // A sheet already open with a scheduled initialDetentIndex present still dismisses below.
+    if (cancelPendingPresent() || (hadInitialPresentScheduled && !viewController.isPresented)) {
       promiseCallback()
       return
     }

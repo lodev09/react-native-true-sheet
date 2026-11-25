@@ -161,13 +161,21 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   // A sheet still animating out of the presenter (e.g. our own controller,
   // recycled mid-dismissal) blocks presentation — retry once its transition ends.
+  // Scheduled like the deferred present below, so a dismiss() meanwhile cancels it.
   UIViewController *dismissing = vc.presentedViewController;
   if (dismissing && dismissing.isBeingDismissed) {
     _initialDetentAnimated = YES;
+    _didInitiallyPresent = YES;
+    _isInitialPresentScheduled = YES;
 
     __weak __typeof(self) weakSelf = self;
     TrueSheetRunAfterTransition(dismissing, ^{
-      [weakSelf presentInitialIfNeeded];
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+        return;
+      strongSelf->_isInitialPresentScheduled = NO;
+      strongSelf->_didInitiallyPresent = NO;
+      [strongSelf presentInitialIfNeeded];
     });
     return;
   }
@@ -753,6 +761,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  // Cancels a scheduled initialDetentIndex present on every path below
+  BOOL hadInitialPresentScheduled = _isInitialPresentScheduled;
+  _isInitialPresentScheduled = NO;
+
   // JS still sees a sheet hidden by navigation as open, so turn the hide into a real dismissal.
   if (self.isHiddenByNavigation) {
     _dismissedByNavigation = NO;
@@ -777,15 +789,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // Dismissing before a deferred present starts cancels it — nothing was presented.
-  if ([self cancelPendingPresent]) {
-    if (completion) {
-      completion(YES, nil);
-    }
-    return;
-  }
-
-  if (_isInitialPresentScheduled) {
-    _isInitialPresentScheduled = NO;
+  // A sheet already open with a scheduled initialDetentIndex present still dismisses below.
+  if ([self cancelPendingPresent] ||
+      (hadInitialPresentScheduled && !_controller.isPresented && !_controller.isBeingPresented)) {
     if (completion) {
       completion(YES, nil);
     }
