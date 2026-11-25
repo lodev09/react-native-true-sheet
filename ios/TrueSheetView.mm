@@ -75,6 +75,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  BOOL _isInitialPresentScheduled;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
@@ -172,13 +173,25 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   _didInitiallyPresent = YES;
+  _isInitialPresentScheduled = YES;
 
   // Deferred a runloop turn so sibling mounts from the current transaction
   // (e.g. a footer committed alongside the prop) land before measuring.
+  // A dismiss() meanwhile cancels it.
   __weak __typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
     __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+    if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+      return;
+    strongSelf->_isInitialPresentScheduled = NO;
+
+    // initialDetentIndex withdrawn meanwhile — present again if it comes back
+    if (strongSelf->_initialDetentIndex < 0) {
+      strongSelf->_didInitiallyPresent = NO;
+      return;
+    }
+
+    if (strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
       return;
 
     [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
@@ -484,6 +497,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
+  _isInitialPresentScheduled = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
 }
@@ -764,6 +778,14 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   // Dismissing before a deferred present starts cancels it — nothing was presented.
   if ([self cancelPendingPresent]) {
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
+  if (_isInitialPresentScheduled) {
+    _isInitialPresentScheduled = NO;
     if (completion) {
       completion(YES, nil);
     }

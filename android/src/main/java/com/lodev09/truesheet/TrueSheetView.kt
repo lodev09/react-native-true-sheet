@@ -48,6 +48,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
   private var didInitiallyPresent: Boolean = false
+  private var isInitialPresentScheduled: Boolean = false
 
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
@@ -135,12 +136,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (initialDetentIndex < 0 || didInitiallyPresent || !isAttachedToWindow) return
 
     didInitiallyPresent = true
+    isInitialPresentScheduled = true
     post {
       // The view may have been dropped (flag reset) or detached before this
       // ran — roll back so a later attach retries instead of presenting a
-      // sheet with no live host.
-      if (!didInitiallyPresent) return@post
-      if (!isAttachedToWindow) {
+      // sheet with no live host. Same when initialDetentIndex was withdrawn.
+      // A dismiss() meanwhile cancels it.
+      if (!didInitiallyPresent || !isInitialPresentScheduled) return@post
+      isInitialPresentScheduled = false
+      if (!isAttachedToWindow || initialDetentIndex < 0) {
         didInitiallyPresent = false
         return@post
       }
@@ -209,6 +213,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     cleanupScreenEventObserver()
     didInitiallyPresent = false
+    isInitialPresentScheduled = false
     cancelPendingPresent()
 
     viewController.dismissPromise = { viewController.delegate = null }
@@ -547,6 +552,12 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
     // Dismissing before a deferred present starts cancels it — nothing was presented
     if (cancelPendingPresent()) {
+      promiseCallback()
+      return
+    }
+
+    if (isInitialPresentScheduled) {
+      isInitialPresentScheduled = false
       promiseCallback()
       return
     }
