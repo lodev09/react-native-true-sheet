@@ -12,6 +12,7 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
 - [Gesture handler not working (Android)](#gesture-handler-not-working-android)
 - [initialDetentIndex sheet covers or misses a deep-linked screen (iOS)](#initialdetentindex-sheet-covers-or-misses-a-deep-linked-screen-ios)
+- [Sheet route shows briefly before a redirect (Web)](#sheet-route-shows-briefly-before-a-redirect-web)
 - [Large title doesn't collapse on scroll (iOS)](#large-title-doesnt-collapse-on-scroll-ios)
 - [Sheet floats with side and bottom margins (iOS 26+)](#sheet-floats-with-side-and-bottom-margins-ios-26)
 - [Sheet pushed off-screen when the keyboard opens (Android)](#sheet-pushed-off-screen-when-the-keyboard-opens-android)
@@ -132,6 +133,14 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** The sheet presents while the deep-linked screen is still opening.
 
 **Fix:** Hold `initialDetentIndex` at `-1` until the screen is focused, then flip it to `0` — don't call `present()` on focus. See [Deep linking](./advanced-patterns.md#deep-linking).
+
+## Sheet route shows briefly before a redirect (Web)
+
+**Symptom:** On web, a sheet-navigator route that redirects or calls `router.back()` on its first render shows its sheet for a moment before it closes.
+
+**Cause:** Expo Router loads web routes lazily by default (`asyncRoutes`), so the route's screen renders only after its sheet has opened.
+
+**Fix:** Redirect before navigating to the sheet route, or turn off async routes for web: `['expo-router', { asyncRoutes: { web: false } }]` in the app config plugins. Every route then ships in the initial web bundle.
 
 ## Large title doesn't collapse on scroll (iOS)
 
