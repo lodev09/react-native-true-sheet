@@ -108,10 +108,51 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.bottomInset = value
     }
 
+  // Set on attach until the next layout lays out the content attached with the container
+  private var isContentLayoutPending = false
+
   init {
     // Allow footer to position outside container bounds
     clipChildren = false
     clipToPadding = false
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    isContentLayoutPending = true
+  }
+
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int
+  ) {
+    super.onLayout(changed, left, top, right, bottom)
+
+    if (isContentLayoutPending) {
+      isContentLayoutPending = false
+      layoutDescendantsNotLaidOut(this)
+    }
+  }
+
+  /**
+   * Attaching a view to a window clears its laid-out state (View.isLaidOut), and React Native lays a view
+   * out again only when its frame changes, so the content laid out before the sheet was presented stays
+   * not laid out. Android's autofill skips such views: a focused text field starts no autofill session.
+   */
+  private fun layoutDescendantsNotLaidOut(group: ViewGroup) {
+    for (index in 0 until group.childCount) {
+      val child = group.getChildAt(index)
+      if (!child.isLaidOut) {
+        child.layout(child.left, child.top, child.right, child.bottom)
+      }
+
+      if (child is ViewGroup) {
+        layoutDescendantsNotLaidOut(child)
+      }
+    }
   }
 
   fun setupScrollable() {
