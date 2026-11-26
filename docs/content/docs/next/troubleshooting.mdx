@@ -64,11 +64,27 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 
 [Learn more](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android) about gesture handler setup on Android.
 
+## Sheet Pushed Off-Screen When the Keyboard Opens (Android)
+
+With `android:windowSoftInputMode="adjustPan"` (`softwareKeyboardLayoutMode: 'pan'` in Expo), focusing an input low in the sheet, such as one in the footer, can push the top of the sheet off-screen and leave a gap above the keyboard. Android pans the whole window on top of the sheet's own keyboard handling.
+
+Use `adjustResize`, or switch to it while the sheet is presented. See [Android Soft Input Mode](guides/keyboard#android-soft-input-mode).
+
 ## Initial Present and Deep Linking
 
 On iOS, a deep link on a cold start can open another screen over the one hosting an auto-presenting sheet — a modal, or a sheet in a [sheet navigator](guides/navigation). The `initialDetentIndex` sheet then lands on top of it or doesn't present at all.
 
 Hold `initialDetentIndex` until the screen is focused. See [Deep Linking](guides/deep-linking) for the pattern and a runnable example.
+
+## Sheet Route Shows Briefly Before a Redirect (Web)
+
+On web, a [sheet navigator](guides/navigation) route that redirects or goes back on its first render can show its sheet for a moment before it closes. Expo Router loads web routes lazily by default (`asyncRoutes`), so the route's screen renders only after its sheet has opened.
+
+Redirect before navigating to the sheet route, or turn off async routes for web. Every route then ships in the initial web bundle.
+
+```ts title="app.config.ts"
+plugins: [['expo-router', { asyncRoutes: { web: false } }]],
+```
 
 ## Large Title Doesn't Collapse on Scroll (iOS)
 
@@ -82,6 +98,16 @@ Render the sheet after the scroll view:
   <TrueSheet ref={sheet}>{/* ... */}</TrueSheet>
 </>
 ```
+
+## Sheet Floats With Side and Bottom Margins (iOS 26+)
+
+On iPhone with iOS 26+, a sheet below its full detent floats as an inset card, with margins on the sides and bottom. At the full detent (`1`), it attaches to the screen edges. This is the system's Liquid Glass sheet layout. `UISheetPresentationController` has no public API to change it, so props like `presentation`, `placement`, and `maxContentWidth` don't affect it.
+
+To keep the sheet edge-attached at every detent, as on earlier iOS versions, opt out of Liquid Glass app-wide with [`UIDesignRequiresCompatibility`](guides/liquid-glass#using-uidesignrequirescompatibility). `backgroundColor` and `backgroundBlur` only replace the glass effect. The sheet still floats.
+
+:::note
+iOS 27 and later ignore `UIDesignRequiresCompatibility` in apps built with the iOS 27 SDK (Xcode 27) or later. The sheet floats in those apps.
+:::
 
 ## Weird layout render
 

@@ -117,12 +117,6 @@ using namespace facebook::react;
   return _appliedBottomInset;
 }
 
-// Height the footer occupies above the keyboard — its layout height minus the
-// safe-area inset it drops while the keyboard is open.
-- (CGFloat)keyboardOcclusionHeight {
-  return MAX(0, _lastHeight - (_keyboardVisible ? 0 : _bottomInset));
-}
-
 #pragma mark - Accessibility
 
 - (NSArray *)accessibilityElements {

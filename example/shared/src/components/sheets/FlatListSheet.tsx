@@ -79,6 +79,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           contentContainerStyle={styles.content}
           indicatorStyle="white"
           alwaysBounceVertical={false}
+          keyboardShouldPersistTaps="handled"
           ItemSeparatorComponent={Spacer}
           renderItem={({ item }) => (
             <View style={styles.listItem}>
@@ -99,6 +100,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
                 />
               </ButtonGroup>
               {toggleButton}
+              <Input placeholder="Last input" accessibilityLabel="Last input" />
             </View>
           }
         />

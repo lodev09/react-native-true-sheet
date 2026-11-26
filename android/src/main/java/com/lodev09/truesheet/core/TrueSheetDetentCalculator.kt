@@ -11,7 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  */
 interface TrueSheetDetentCalculatorDelegate {
   val screenHeight: Int
-  val realScreenHeight: Int
+  val coordinatorHeight: Int
   val detents: MutableList<Double>
   val contentHeight: Int
   val headerHeight: Int
@@ -26,7 +26,16 @@ interface TrueSheetDetentCalculatorDelegate {
    * above it.
    */
   val footerInsetAdjustment: Boolean
+
+  /**
+   * True while the auto detent follows the footer's overlap with the
+   * keyboard: an absolute footer padding the plugged scrollable, or a
+   * relative footer with a plugged scrollable. Plain content keeps the
+   * default keyboard sizing.
+   */
+  val footerKeyboardAdjustment: Boolean
   val footerAvoidsKeyboard: Boolean
+  val footerKeyboardOffset: Int
   val peekContentHeight: Int
   val contentBottomInset: Int
   val maxContentHeight: Int?
@@ -49,7 +58,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   var delegate: TrueSheetDetentCalculatorDelegate? = null
 
   private val screenHeight: Int get() = delegate?.screenHeight ?: 0
-  private val realScreenHeight: Int get() = delegate?.realScreenHeight ?: 0
+  private val coordinatorHeight: Int get() = delegate?.coordinatorHeight ?: 0
   private val detents: List<Double> get() = delegate?.detents ?: emptyList()
   private val contentHeight: Int get() = delegate?.contentHeight ?: 0
 
@@ -59,6 +68,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   private val contentBottomInset: Int get() = delegate?.contentBottomInset ?: 0
   private val maxContentHeight: Int? get() = delegate?.maxContentHeight
   private val keyboardInset: Int get() = delegate?.keyboardInset ?: 0
+  private val footerKeyboardOffset: Int get() = delegate?.footerKeyboardOffset ?: 0
   private val topInset: Int get() = delegate?.topInset ?: 0
   private val hasKeyboardFloor: Boolean get() = delegate?.hasKeyboardFloor == true
 
@@ -123,12 +133,21 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
     }
 
     val keyboardHeight = if (includeKeyboard) keyboardInset else 0
-    val footerKeyboardOverlap = if (detent == -1.0 &&
-      delegate?.absoluteFooter == true &&
-      footerInAuto &&
-      delegate?.footerAvoidsKeyboard == false
+    // The keyboard covers part of a footer counted in the auto height: a
+    // footer behind it (pinned or relative) down to its part above the
+    // keyboard, a rising footer only its inset, which rides below the
+    // keyboard's top edge — less what keyboardOffset raises it by (see
+    // positionFooter).
+    val footerKeyboardOverlap = if (keyboardHeight > 0 &&
+      footerHeight > 0 &&
+      detent == -1.0 &&
+      delegate?.footerKeyboardAdjustment == true
     ) {
-      minOf(keyboardHeight, maxOf(0, footerHeight - contentBottomInset))
+      if (delegate?.absoluteFooter == true && delegate?.footerAvoidsKeyboard == true) {
+        minOf(keyboardHeight, contentBottomInset - footerKeyboardOffset)
+      } else {
+        minOf(keyboardHeight, footerHeight)
+      }
     } else {
       0
     }
@@ -159,7 +178,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   fun getSheetTopForDetentIndex(index: Int): Int {
     if (index < 0 || index >= detents.size) {
       RNLog.w(reactContext, "TrueSheet: Detent index ($index) is out of bounds (0..${detents.size - 1})")
-      return realScreenHeight
+      return coordinatorHeight
     }
     // With a keyboard floor only the last detent stays keyboard-shifted — it's
     // the keyboard-expanded resting position; the stops below it are keyboard-free
@@ -184,14 +203,14 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
   // placing the expected top above the screen while the real sheet stops
   // at the top inset.
   private fun getSheetTop(detent: Double, includeKeyboard: Boolean = true): Int {
-    val maxAvailableHeight = realScreenHeight - topInset
-    return realScreenHeight - minOf(getDetentHeight(detent, includeKeyboard), maxAvailableHeight)
+    val maxAvailableHeight = coordinatorHeight - topInset
+    return coordinatorHeight - minOf(getDetentHeight(detent, includeKeyboard), maxAvailableHeight)
   }
 
   /**
    * Calculate visible sheet height from sheet top position.
    */
-  fun getVisibleSheetHeight(sheetTop: Int): Int = realScreenHeight - sheetTop
+  fun getVisibleSheetHeight(sheetTop: Int): Int = coordinatorHeight - sheetTop
 
   /**
    * Convert visible sheet height to position in dp.
@@ -285,7 +304,7 @@ class TrueSheetDetentCalculator(private val reactContext: ThemedReactContext) {
 
     // Position is below the lowest stop (sheet is being dragged down to dismiss)
     if (positionPx > floorPos) {
-      val range = realScreenHeight - floorPos
+      val range = coordinatorHeight - floorPos
       val progress = if (range > 0) (positionPx - floorPos).toFloat() / range else 0f
       return Triple(-1, 0, progress)
     }

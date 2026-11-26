@@ -1,18 +1,28 @@
 package com.lodev09.truesheet.utils
 
+import android.app.Activity
 import android.content.res.Configuration
-import android.graphics.Point
+import android.graphics.Rect
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.window.layout.WindowMetricsCalculator
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.modules.systeminfo.ReactNativeVersion
+import com.facebook.react.views.view.isEdgeToEdgeFeatureFlagOn
 import kotlin.math.min
 
 /**
  * Data class for top/bottom insets
  */
 data class Insets(val top: Int, val bottom: Int)
+
+/**
+ * Window size as React Native reports it (width, height) and the window height including system bars
+ */
+data class ScreenMetrics(val width: Int, val height: Int, val realHeight: Int)
 
 /**
  * Utility object for screen dimension calculations.
@@ -68,41 +78,54 @@ object ScreenUtils {
     } ?: Insets(0, 0)
   }
 
+  // React Native 0.86 (facebook/react-native#53254) reports the window bounds to useWindowDimensions
+  private val reportsWindowBounds: Boolean by lazy {
+    val version = ReactNativeVersion.VERSION
+    (version["major"] as Int) > 0 || (version["minor"] as Int) >= 86
+  }
+
+  // Same call as React Native's DeviceInfoModule: the activity's window on every API level,
+  // including multi-window
+  private fun getWindowBounds(activity: Activity): Rect = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity).bounds
+
   /**
-   * Get the real physical device screen height, including system bars.
-   * This is consistent across all API levels.
+   * Get the window height, including system bars.
    *
-   * @param reactContext The ReactContext to get context from
-   * @return Real screen height in pixels
+   * @param reactContext The ReactContext to get the activity from
+   * @return Window height in pixels
    */
-  @Suppress("DEPRECATION")
   fun getRealScreenHeight(reactContext: ReactContext): Int {
-    val windowManager = reactContext.getSystemService(WindowManager::class.java)
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      windowManager.currentWindowMetrics.bounds.height()
-    } else {
-      val size = Point()
-      windowManager.defaultDisplay.getRealSize(size)
-      size.y
-    }
+    val activity = reactContext.currentActivity ?: return reactContext.resources.displayMetrics.heightPixels
+    return getWindowBounds(activity).height()
   }
 
   /**
-   * Get the screen width using the same method as React Native's useWindowDimensions.
+   * The window size React Native reports to useWindowDimensions (`width`, `height`) and the
+   * window height including system bars (`realHeight`). Since 0.86 React Native reports the window
+   * bounds, minus the system bars when edge-to-edge is off. Before 0.86 it reports
+   * resources.displayMetrics, which excludes the system bars below Android 15.
    *
-   * @param reactContext The ReactContext to get resources from
-   * @return Screen width in pixels
+   * @param reactContext The ReactContext to get the activity and resources from
+   * @return Screen metrics in pixels
    */
-  fun getScreenWidth(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.widthPixels
+  fun getScreenMetrics(reactContext: ReactContext): ScreenMetrics {
+    val displayMetrics = reactContext.resources.displayMetrics
+    val fallback = ScreenMetrics(displayMetrics.widthPixels, displayMetrics.heightPixels, displayMetrics.heightPixels)
+    val activity = reactContext.currentActivity ?: return fallback
 
-  /**
-   * Calculate the screen height using the same method as React Native's useWindowDimensions.
-   * This returns the window height which automatically accounts for edge-to-edge mode.
-   *
-   * @param reactContext The ReactContext to get resources from
-   * @return Screen height in pixels
-   */
-  fun getScreenHeight(reactContext: ReactContext): Int = reactContext.resources.displayMetrics.heightPixels
+    val bounds = getWindowBounds(activity)
+    if (!reportsWindowBounds) return fallback.copy(realHeight = bounds.height())
+    if (isEdgeToEdgeFeatureFlagOn) return ScreenMetrics(bounds.width(), bounds.height(), bounds.height())
+
+    val insets = ViewCompat.getRootWindowInsets(activity.window.decorView)
+      ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+      ?: return fallback.copy(realHeight = bounds.height())
+    return ScreenMetrics(
+      width = bounds.width() - insets.left - insets.right,
+      height = bounds.height() - insets.top - insets.bottom,
+      realHeight = bounds.height()
+    )
+  }
 
   /**
    * Returns true if the device is a phone in portrait orientation.

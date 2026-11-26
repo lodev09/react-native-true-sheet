@@ -75,6 +75,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  BOOL _isInitialPresentScheduled;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
@@ -160,25 +161,45 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   // A sheet still animating out of the presenter (e.g. our own controller,
   // recycled mid-dismissal) blocks presentation — retry once its transition ends.
+  // Scheduled like the deferred present below, so a dismiss() meanwhile cancels it.
   UIViewController *dismissing = vc.presentedViewController;
   if (dismissing && dismissing.isBeingDismissed) {
     _initialDetentAnimated = YES;
+    _didInitiallyPresent = YES;
+    _isInitialPresentScheduled = YES;
 
     __weak __typeof(self) weakSelf = self;
     TrueSheetRunAfterTransition(dismissing, ^{
-      [weakSelf presentInitialIfNeeded];
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+        return;
+      strongSelf->_isInitialPresentScheduled = NO;
+      strongSelf->_didInitiallyPresent = NO;
+      [strongSelf presentInitialIfNeeded];
     });
     return;
   }
 
   _didInitiallyPresent = YES;
+  _isInitialPresentScheduled = YES;
 
   // Deferred a runloop turn so sibling mounts from the current transaction
   // (e.g. a footer committed alongside the prop) land before measuring.
+  // A dismiss() meanwhile cancels it.
   __weak __typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
     __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+    if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+      return;
+    strongSelf->_isInitialPresentScheduled = NO;
+
+    // initialDetentIndex withdrawn meanwhile — present again if it comes back
+    if (strongSelf->_initialDetentIndex < 0) {
+      strongSelf->_didInitiallyPresent = NO;
+      return;
+    }
+
+    if (strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
       return;
 
     [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
@@ -369,6 +390,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
   _controller.footerInsetAdjustment =
     options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
+  _controller.footerKeyboardAdjustment =
+    _controller.absoluteFooter ? _controller.footerInsetAdjustment : _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   BOOL footerAvoidsKeyboard = newProps.footerOptions.avoidKeyboard;
@@ -377,6 +400,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _controller.footerKeyboardOffset = footerKeyboardOffset;
     _controller.footerAvoidsKeyboard = footerAvoidsKeyboard;
     [_containerView updateFooterKeyboardOffset];
+    // The auto detent follows where the footer sits above the keyboard
+    if (_controller.keyboardHeight > 0) {
+      [self setupSheetDetentsForSizeChange];
+    }
   }
 
   _insetAdjustment = newProps.insetAdjustment;
@@ -484,6 +511,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
+  _isInitialPresentScheduled = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
 }
@@ -739,6 +767,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  // Cancels a scheduled initialDetentIndex present on every path below
+  BOOL hadInitialPresentScheduled = _isInitialPresentScheduled;
+  _isInitialPresentScheduled = NO;
+
   // JS still sees a sheet hidden by navigation as open, so turn the hide into a real dismissal.
   if (self.isHiddenByNavigation) {
     _dismissedByNavigation = NO;
@@ -763,7 +795,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // Dismissing before a deferred present starts cancels it — nothing was presented.
-  if ([self cancelPendingPresent]) {
+  // A sheet already open with a scheduled initialDetentIndex present still dismisses below.
+  if ([self cancelPendingPresent] ||
+      (hadInitialPresentScheduled && !_controller.isPresented && !_controller.isBeingPresented)) {
     if (completion) {
       completion(YES, nil);
     }

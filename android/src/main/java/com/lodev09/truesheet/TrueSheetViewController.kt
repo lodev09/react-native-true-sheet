@@ -45,6 +45,7 @@ import com.lodev09.truesheet.core.TrueSheetKeyboardObserverDelegate
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.utils.Insets
 import com.lodev09.truesheet.utils.KeyboardUtils
+import com.lodev09.truesheet.utils.ScreenMetrics
 import com.lodev09.truesheet.utils.ScreenUtils
 import com.lodev09.truesheet.utils.TouchEventDeduper
 import com.lodev09.truesheet.utils.isDarkMode
@@ -191,6 +192,10 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // A content/header/footer size change arrived mid-drag — reconfiguring then
   // would reset behavior state and kill the gesture, so it's applied on settle.
   private var hasPendingSizeChange = false
+
+  // Root insets keep the old configuration's values until the next layout
+  // pass, so a rotation's size and position updates wait for it.
+  private var hasPendingConfigurationChange = false
   internal var isBeingDismissed = false
     private set
   var wasHiddenByScreen = false
@@ -204,6 +209,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
   // Keyboard State
   private var detentIndexBeforeKeyboard: Int = -1
+  private var isHandlingKeyboard = false
   private var isKeyboardDismissProgrammatic = false
 
   // The keyboard hid under a touch (e.g. keyboardDismissMode="on-drag") — the
@@ -329,32 +335,33 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = if (this.isNotEmpty()) getChildAt(0) as? TrueSheetContainerView else null
 
   // Screen Measurements
-  override val screenHeight: Int
-    get() = ScreenUtils.getScreenHeight(reactContext)
-
-  val screenWidth: Int
-    get() = ScreenUtils.getScreenWidth(reactContext)
-
   // Cached per layout/configuration pass — the WindowManager and
-  // rootWindowInsets queries behind these allocate, and they're read many
-  // times per animation frame (position emission, detent interpolation,
-  // stacked sheet sync)
-  private var cachedRealScreenHeight: Int = 0
+  // rootWindowInsets queries behind these allocate (and can make a binder
+  // call), and they're read many times per animation frame (position
+  // emission, detent interpolation, stacked sheet sync)
+  private var cachedScreenMetrics: ScreenMetrics? = null
   private var cachedInsets: Insets? = null
 
   private fun invalidateScreenMetrics() {
-    cachedRealScreenHeight = 0
+    cachedScreenMetrics = null
     cachedInsets = null
   }
 
-  // Includes system bars for accurate positioning
-  override val realScreenHeight: Int
-    get() {
-      if (cachedRealScreenHeight == 0) {
-        cachedRealScreenHeight = ScreenUtils.getRealScreenHeight(reactContext)
-      }
-      return cachedRealScreenHeight
-    }
+  private val screenMetrics: ScreenMetrics
+    get() = cachedScreenMetrics ?: ScreenUtils.getScreenMetrics(reactContext).also { cachedScreenMetrics = it }
+
+  // Matches useWindowDimensions
+  override val screenHeight: Int
+    get() = screenMetrics.height
+
+  val screenWidth: Int
+    get() = screenMetrics.width
+
+  // The space the sheet lives in: the root container the coordinator fills —
+  // the whole window with edge-to-edge, the area between the system bars
+  // without it. Window height until the coordinator is laid out.
+  override val coordinatorHeight: Int
+    get() = coordinatorLayout?.height?.takeIf { it > 0 } ?: screenMetrics.realHeight
 
   private val insets: Insets
     get() = cachedInsets ?: ScreenUtils.getInsets(reactContext).also { cachedInsets = it }
@@ -382,20 +389,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val footerInsetAdjustment: Boolean
     get() = absoluteFooter && scrollableHandle > 0 && scrollableOptions?.contentInsetAdjustment?.footer != false
 
+  override val footerKeyboardAdjustment: Boolean
+    get() = if (absoluteFooter) footerInsetAdjustment else scrollableHandle > 0
+
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
   // Insets
-  // Target keyboard height used for detent calculations
+  // Insets are window-wide. Keep applying them through blur and scroll commits until the keyboard hides.
   override val keyboardInset: Int
-    get() = keyboardObserver?.targetHeight ?: 0
+    get() = if (isHandlingKeyboard) keyboardObserver?.targetHeight ?: 0 else 0
 
   // Current animated keyboard height for positioning
   private val currentKeyboardInset: Int
-    get() = keyboardObserver?.currentHeight ?: 0
+    get() = if (isHandlingKeyboard) keyboardObserver?.currentHeight ?: 0 else 0
 
   private val isKeyboardTransitioning: Boolean
-    get() = keyboardObserver?.isTransitioning ?: false
+    get() = isHandlingKeyboard && keyboardObserver?.isTransitioning == true
 
   // The footer slides every frame until the sheet and keyboard come to rest
   private val isSheetMoving: Boolean
@@ -509,6 +519,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     interactionState = InteractionState.Idle
     hasPendingSizeChange = false
+    hasPendingConfigurationChange = false
     isBeingDismissed = false
     isPresented = false
     isSheetVisible = false
@@ -565,6 +576,15 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (isPresented && changed) {
       setupSheetDetentsForSizeChange()
     }
+
+    if (hasPendingConfigurationChange) {
+      hasPendingConfigurationChange = false
+      // After the settle the size change posted, which reports its own frames
+      post {
+        if (!isPresented || isSettling || interactionState is InteractionState.Dragging) return@post
+        sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+      }
+    }
   }
 
   override fun coordinatorLayoutDidChangeConfiguration() {
@@ -573,8 +593,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     sheetView?.updateGravity()
     updateBehaviorMaxWidth()
-    updateStateDimensions()
-    sheetView?.let { emitChangePositionDelegate(it.top, realtime = false) }
+    hasPendingConfigurationChange = true
   }
 
   override fun findScrollView(): ViewGroup? = containerView?.contentView?.findScrollView()
@@ -595,7 +614,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       if (hasKeyboardFloor && !isKeyboardDismissProgrammatic) commitDetentAndDismissKeyboard(0, sheet)
 
       // Past the floor by the distance that would hide a dismissible sheet, like iOS
-      val floorHeight = realScreenHeight - lowestTop
+      val floorHeight = coordinatorHeight - lowestTop
       if (overdragPx < floorHeight * HIDE_THRESHOLD) return
     }
 
@@ -1019,7 +1038,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (animated) {
       animateDismiss()
     } else {
-      emitChangePositionDelegate(realScreenHeight)
+      emitChangePositionDelegate(coordinatorHeight)
       finishDismiss()
     }
   }
@@ -1049,11 +1068,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Bring the parent back alongside the slide-out (like iOS) instead of after it
     parentSheetView?.resetTranslation()
 
+    // Slide to the window bottom, past the coordinator's however it resizes
+    // meanwhile (an adjustResize keyboard hiding grows it back). Past the
+    // coordinator's bottom the sheet is out of sight, so report it there.
     sheet.animate()
-      .y(realScreenHeight.toFloat())
+      .y(screenMetrics.realHeight.toFloat())
       .setDuration(DISMISS_DURATION)
       .setInterpolator(android.view.animation.AccelerateInterpolator())
-      .setUpdateListener { updateSheetVisuals(sheet.y.toInt()) }
+      .setUpdateListener { updateSheetVisuals(minOf(sheet.y.toInt(), coordinatorHeight)) }
       .withEndAction { finishDismiss() }
       .start()
   }
@@ -1119,7 +1141,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     behavior.isFitToContents = false
 
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
 
     // With a keyboard floor only the last detent stays keyboard-shifted; the
     // collapsed and half stops are the keyboard-free first and second detents,
@@ -1135,9 +1157,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     val maxDetentHeight = minOf(detentCalculator.getDetentHeight(detents.last()), maxAvailableHeight)
 
     val adjustedHalfExpandedHeight = minOf(halfExpandedDetentHeight, maxAvailableHeight)
-    val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / realScreenHeight.toFloat())
+    val halfExpandedRatio = (adjustedHalfExpandedHeight.toFloat() / coordinatorHeight.toFloat())
 
-    val expandedOffset = realScreenHeight - maxDetentHeight
+    val expandedOffset = coordinatorHeight - maxDetentHeight
 
     // fitToContents works better with <= 2 detents when no expanded offset, but
     // it drops the half stop the keyboard floor relies on
@@ -1165,16 +1187,25 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       sheetView?.let { updateStateDimensionsForPosition(it.top) }
       setStateForDetentIndex(targetIndex)
 
-      // Already at the target — no slide frames will follow
-      if (!isSettling) {
-        pendingDetentIndex = -1
-        updateStateDimensions()
+      // Mid-layout (a rotation, an adjustResize keyboard) the behavior posts
+      // the settle, so it isn't settling yet — check once it has started
+      if (coordinatorLayout?.isLayoutRequested == true) {
+        post { finishSettleIfAtRest(targetIndex) }
+      } else {
+        finishSettleIfAtRest(targetIndex)
       }
     } else {
       updateStateDimensions()
     }
 
     interactionState = InteractionState.Idle
+  }
+
+  // Already at the target — no slide frames will follow
+  private fun finishSettleIfAtRest(targetIndex: Int) {
+    if (!isPresented || isBeingDismissed || isSettling || pendingDetentIndex != targetIndex) return
+    pendingDetentIndex = -1
+    updateStateDimensions()
   }
 
   private fun configureDetents(
@@ -1296,6 +1327,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
       dimProgress = dimView?.calculateProgress(
         top,
+        coordinatorHeight,
         dimmedDetentIndex,
         detentCalculator::getSheetTopForDetentIndex
       ) ?: 0f
@@ -1385,13 +1417,28 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Footer Positioning
   // =============================================================================
 
-  var footerKeyboardOffset: Int = 0
+  override var footerKeyboardOffset: Int = 0
 
   /**
    * false keeps an absolute footer pinned to the sheet's bottom edge behind
    * the keyboard instead of rising above it.
    */
   override var footerAvoidsKeyboard: Boolean = true
+
+  /**
+   * How far an absolute footer rises from its layout position to sit above
+   * the keyboard — 0 while this sheet doesn't handle the keyboard (e.g. an
+   * input behind a non-dimmed sheet has focus). The footer's absorbed
+   * safe-area inset rides below the keyboard's top edge — its content stays
+   * flush with the keyboard without dropping the inset padding from the
+   * layout, which would jump at the transition edges.
+   */
+  val footerKeyboardShift: Int
+    get() {
+      val footerView = containerView?.footerView ?: return 0
+      if (!absoluteFooter || !footerAvoidsKeyboard || currentKeyboardInset <= 0) return 0
+      return maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
+    }
 
   fun positionFooter() {
     if (!isPresented) return
@@ -1407,14 +1454,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // The footer's absorbed safe-area inset rides below the keyboard's top
-    // edge — its content stays flush with the keyboard without dropping the
-    // inset padding from the layout, which would jump at the transition edges
-    val keyboardShift = if (currentKeyboardInset > 0 && footerAvoidsKeyboard) {
-      maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
-    } else {
-      0
-    }
+    val keyboardShift = footerKeyboardShift
 
     val footerHeight = footerView.height
     val sheetHeight = sheet.height
@@ -1441,12 +1481,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Keyboard Handling
   // =============================================================================
 
-  private fun shouldHandleKeyboard(checkFocus: Boolean = true): Boolean {
-    if (wasHiddenByScreen) return false
-    if (!isTopmostSheet) return false
-    if (checkFocus && !isFocusedViewWithinSheet()) return false
-    return true
-  }
+  private fun shouldHandleKeyboard(): Boolean = !wasHiddenByScreen && isTopmostSheet && isFocusedViewWithinSheet()
 
   fun saveFocusedView() {
     focusedViewBeforeBlur = delegate?.findRootContainerView()?.findFocus()
@@ -1479,6 +1514,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       delegate = object : TrueSheetKeyboardObserverDelegate {
         override fun keyboardWillShow(height: Int) {
           if (!shouldHandleKeyboard()) return
+          isHandlingKeyboard = true
           // If a resize is in flight, restore to its target — not the stale current
           detentIndexBeforeKeyboard = if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex
           pendingDetentIndex = -1
@@ -1496,7 +1532,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardWillHide() {
-          if (!shouldHandleKeyboard(checkFocus = false)) return
+          if (!isHandlingKeyboard) return
           // Mid-drag (the drag itself dismissed the keyboard) the release decides
           // the detent and a reconfigure would kill the gesture — the floor stops
           // stay put until the settle flushes the pending reconfigure
@@ -1530,12 +1566,13 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
         override fun keyboardDidShow(height: Int) {
           // The keyboard's last frame has positioned the footer
-          containerView?.footerView?.syncTranslationState()
+          if (isHandlingKeyboard) containerView?.footerView?.syncTranslationState()
         }
 
         override fun keyboardDidHide() {
+          if (!isHandlingKeyboard) return
+          isHandlingKeyboard = false
           containerView?.footerView?.syncTranslationState()
-          if (!shouldHandleKeyboard(checkFocus = false)) return
           isKeyboardDismissProgrammatic = false
           // Keep detentIndexBeforeKeyboard for the settle's detent-change check
           if (interactionState is InteractionState.Dragging) {
@@ -1554,16 +1591,14 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         }
 
         override fun keyboardDidChangeHeight(height: Int) {
-          // Skip focus check during active keyboard transitions (focus may be lost during hide)
-          val skipFocusCheck = detentIndexBeforeKeyboard >= 0 || isKeyboardTransitioning
-          if (!shouldHandleKeyboard(checkFocus = !skipFocusCheck)) return
-          positionFooter()
+          if (isHandlingKeyboard) positionFooter()
         }
 
         override fun focusDidChange(newFocus: View) {
           // Handle case where keyboard is already visible and focus moves into the sheet
           if (!shouldHandleKeyboard()) return
           if (detentIndexBeforeKeyboard < 0 && (keyboardObserver?.currentHeight ?: 0) > 0) {
+            isHandlingKeyboard = true
             detentIndexBeforeKeyboard = currentDetentIndex
             currentDetentIndex = detents.size - 1
             setupSheetDetents()
@@ -1578,6 +1613,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   fun cleanupKeyboardObserver() {
     keyboardObserver?.stop()
     keyboardObserver = null
+    isHandlingKeyboard = false
   }
 
   // =============================================================================
@@ -1691,7 +1727,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     if (currentTop == lastEmittedPositionPx) return
 
     lastEmittedPositionPx = currentTop
-    val visibleHeight = realScreenHeight - currentTop
+    val visibleHeight = coordinatorHeight - currentTop
     val position = detentCalculator.getPositionDp(visibleHeight)
     val (interpolatedIndex, detent) = detentCalculator.getInterpolatedPositionInfo(currentTop)
     delegate?.viewControllerDidChangePosition(interpolatedIndex, position, detent, realtime)
@@ -1784,7 +1820,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     val targetIndex = (if (pendingDetentIndex >= 0) pendingDetentIndex else currentDetentIndex)
       .coerceIn(0, detents.size - 1)
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
     val newHeight = minOf(detentCalculator.getDetentHeight(detents[targetIndex]), maxAvailableHeight)
     val newWidth = getStateWidth()
 
@@ -1798,7 +1834,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   private fun updateStateDimensionsForPosition(sheetTop: Int) {
     if (detents.isEmpty()) return
 
-    val maxAvailableHeight = realScreenHeight - topInset
+    val maxAvailableHeight = coordinatorHeight - topInset
     val minHeight = minOf(
       detentCalculator.getDetentHeight(detents.first(), includeKeyboard = !hasKeyboardFloor),
       maxAvailableHeight
@@ -1867,7 +1903,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
 
     sheetView?.let {
       val visibleSheetHeight = detentCalculator.getVisibleSheetHeight(it.top)
-      if (visibleSheetHeight in 1..<realScreenHeight) {
+      if (visibleSheetHeight in 1..<coordinatorHeight) {
         return detentCalculator.getPositionDp(visibleSheetHeight)
       }
     }
