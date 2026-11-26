@@ -51,24 +51,6 @@ class TrueSheetFooterView(reactContext: ThemedReactContext) : ReactViewGroup(rea
   }
 
   /**
-   * Height the footer occupies above the keyboard — its layout height minus
-   * the safe-area inset, which rides below the keyboard's top edge while the
-   * keyboard is open (see positionFooter).
-   */
-  val keyboardOcclusionHeight: Int
-    get() = maxOf(0, height - bottomInset)
-
-  /**
-   * How far the footer rises from its layout position to sit above a keyboard
-   * of the given height. Its absorbed safe-area inset rides below the
-   * keyboard's top edge — its content stays flush with the keyboard without
-   * dropping the inset padding from the layout, which would jump at the
-   * transition edges.
-   */
-  fun keyboardShift(keyboardHeight: Int, keyboardOffset: Int): Int =
-    if (keyboardHeight > 0) maxOf(0, keyboardHeight + keyboardOffset - bottomInset) else 0
-
-  /**
    * Tells the shadow node to pad the footer's bottom edge with the sheet's
    * bottom safe-area inset — the footer owns the sheet's bottom edge, so it
    * absorbs the inset and its background fills it.
