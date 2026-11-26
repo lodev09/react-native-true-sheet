@@ -389,6 +389,9 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   override val footerInsetAdjustment: Boolean
     get() = absoluteFooter && scrollableHandle > 0 && scrollableOptions?.contentInsetAdjustment?.footer != false
 
+  override val footerKeyboardAdjustment: Boolean
+    get() = if (absoluteFooter) footerInsetAdjustment else scrollableHandle > 0
+
   override val peekContentHeight: Int
     get() = containerView?.peekContentHeight ?: cachedPeekContentHeight
 
@@ -1414,7 +1417,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - Footer Positioning
   // =============================================================================
 
-  var footerKeyboardOffset: Int = 0
+  override var footerKeyboardOffset: Int = 0
 
   /**
    * false keeps an absolute footer pinned to the sheet's bottom edge behind

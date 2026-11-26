@@ -76,6 +76,16 @@ On iOS, a deep link on a cold start can open another screen over the one hosting
 
 Hold `initialDetentIndex` until the screen is focused. See [Deep Linking](guides/deep-linking) for the pattern and a runnable example.
 
+## Sheet Route Shows Briefly Before a Redirect (Web)
+
+On web, a [sheet navigator](guides/navigation) route that redirects or goes back on its first render can show its sheet for a moment before it closes. Expo Router loads web routes lazily by default (`asyncRoutes`), so the route's screen renders only after its sheet has opened.
+
+Redirect before navigating to the sheet route, or turn off async routes for web. Every route then ships in the initial web bundle.
+
+```ts title="app.config.ts"
+plugins: [['expo-router', { asyncRoutes: { web: false } }]],
+```
+
 ## Large Title Doesn't Collapse on Scroll (iOS)
 
 With a native stack's `headerLargeTitleEnabled`, iOS tracks the screen's scroll view through its first child. A `TrueSheet` rendered before the scroll view takes that spot, so the large title stays expanded.

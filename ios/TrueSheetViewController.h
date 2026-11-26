@@ -74,6 +74,13 @@ NS_ASSUME_NONNULL_BEGIN
  * toward the auto detent like a relative one, so the content ends above it.
  */
 @property (nonatomic, assign) BOOL footerInsetAdjustment;
+
+/**
+ * YES while the auto detent follows the footer's overlap with the keyboard:
+ * an absolute footer padding the plugged scrollable, or a relative footer
+ * with a plugged scrollable. Plain content keeps UIKit's keyboard sizing.
+ */
+@property (nonatomic, assign) BOOL footerKeyboardAdjustment;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
