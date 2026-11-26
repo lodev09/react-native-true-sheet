@@ -152,6 +152,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupAccessibilityContainer;
 - (void)refreshAccessibilityContainer;
 - (void)refreshAccessibilityContainerIfChanged;
+- (void)noteAccessibilityQuery;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
