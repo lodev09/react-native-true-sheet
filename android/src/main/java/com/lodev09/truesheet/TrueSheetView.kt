@@ -871,6 +871,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     updateSheetIfNeeded()
   }
 
+  override val footerKeyboardShift: Int
+    get() = viewController.footerKeyboardShift
+
   // ==================== RNScreensEventObserverDelegate ====================
 
   override fun presenterScreenWillDisappear() {

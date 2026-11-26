@@ -100,6 +100,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
                 />
               </ButtonGroup>
               {toggleButton}
+              <Input placeholder="Last input" accessibilityLabel="Last input" />
             </View>
           }
         />

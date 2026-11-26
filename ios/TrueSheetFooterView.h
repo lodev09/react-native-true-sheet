@@ -46,10 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setBottomInset:(CGFloat)bottomInset;
 
 /**
- * Height the footer occupies above the keyboard — its layout height minus
- * the safe-area inset it drops while the keyboard is open.
+ * How far the footer slides up from its layout position to sit above a
+ * keyboard of the given height — 0 for a keyboard that doesn't reach it.
  */
-- (CGFloat)keyboardOcclusionHeight;
+- (CGFloat)keyboardSlideForHeight:(CGFloat)height;
 
 @end
 
