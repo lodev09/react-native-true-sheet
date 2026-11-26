@@ -123,7 +123,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
   __weak UIWindow *_accessibilityWindow;
   NSTimer *_overlayDismissalTimer;
-  NSArray *_appliedAccessibilityFooterElements;
+  BOOL _appliedAccessibilityModal;
+  NSArray *_appliedAccessibilityContentElements;
+  NSArray *_appliedAccessibilityElementsBehind;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -591,27 +593,27 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (NSInteger)currentDetentIndex {
-  UISheetPresentationController *sheet = self.sheet;
-  if (!sheet)
-    return -1;
+  return [self indexForDetentIdentifier:self.sheet.selectedDetentIdentifier];
+}
 
-  UISheetPresentationControllerDetentIdentifier selectedIdentifier = sheet.selectedDetentIdentifier;
-  if (!selectedIdentifier)
+- (NSInteger)indexForDetentIdentifier:(nullable UISheetPresentationControllerDetentIdentifier)identifier {
+  UISheetPresentationController *sheet = self.sheet;
+  if (!sheet || !identifier)
     return -1;
 
   NSInteger index = -1;
   NSArray<UISheetPresentationControllerDetent *> *detents = sheet.detents;
   for (NSInteger i = 0; i < detents.count; i++) {
     if (@available(iOS 16.0, *)) {
-      if ([detents[i].identifier isEqualToString:selectedIdentifier]) {
+      if ([detents[i].identifier isEqualToString:identifier]) {
         index = i;
         break;
       }
     } else {
-      if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierMedium]) {
+      if ([identifier isEqualToString:UISheetPresentationControllerDetentIdentifierMedium]) {
         index = 0;
         break;
-      } else if ([selectedIdentifier isEqualToString:UISheetPresentationControllerDetentIdentifierLarge]) {
+      } else if ([identifier isEqualToString:UISheetPresentationControllerDetentIdentifierLarge]) {
         index = detents.count - 1;
         break;
       }
@@ -667,6 +669,27 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (BOOL)isDimmedAtEveryDetent {
   return self.dimmed && [self.dimmedDetentIndex integerValue] == 0;
+}
+
+// Follows the dim that's applied: our dim view, or UIKit's threshold. Above
+// `largestUndimmedDetentIdentifier` the screen behind the sheet takes no touches.
+// iOS 15 can't set that threshold below the large detent.
+- (BOOL)isDimmedAtCurrentDetent {
+  if (!self.dimmed) {
+    return NO;
+  }
+
+  if ([self useCustomDimming]) {
+    return self.isDimmedAtEveryDetent || [self dimAlphaForIndex:self.currentDetentIndex] > 0;
+  }
+
+  UISheetPresentationControllerDetentIdentifier largestUndimmed = self.sheet.largestUndimmedDetentIdentifier;
+  if (!largestUndimmed) {
+    return YES;
+  }
+
+  NSInteger undimmedIndex = [self indexForDetentIdentifier:largestUndimmed];
+  return undimmedIndex >= 0 && self.currentDetentIndex > undimmedIndex;
 }
 
 // Like the system dim, fades in between the detent below `dimmedDetentIndex` and the dimmed detent.
@@ -845,17 +868,26 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 }
 
-- (void)refreshAccessibilityContainerIfFooterChanged {
-  // Only a dimmed sheet flattens the footer's elements into its own
-  if (!_dimmed || !self.canRefreshAccessibilityContainer) {
+- (void)refreshAccessibilityContainerIfChanged {
+  // The sheet on top owns the window's list, and what it lists behind itself
+  // depends on this sheet's dimming
+  if ([self.presentedViewController isKindOfClass:[TrueSheetViewController class]]) {
+    [(TrueSheetViewController *)self.presentedViewController refreshAccessibilityContainerIfChanged];
     return;
   }
 
-  // Compares by identity, so a footer control that remounts is picked up too
   UIView *contentView = self.accessibilityContentView;
-  if (![contentView isKindOfClass:[TrueSheetContainerView class]] ||
-      [[(TrueSheetContainerView *)contentView accessibilityFooterElements]
-        isEqualToArray:_appliedAccessibilityFooterElements]) {
+  if (!contentView || !self.canRefreshAccessibilityContainer) {
+    return;
+  }
+
+  // A modal sheet flattens the container's elements into its own. Compares by
+  // identity, so a header or footer control that remounts is picked up too.
+  BOOL isAccessibilityModal = self.isDimmedAtCurrentDetent;
+  if (isAccessibilityModal == _appliedAccessibilityModal &&
+      (isAccessibilityModal
+          ? [contentView.accessibilityElements ?: @[] isEqualToArray:_appliedAccessibilityContentElements]
+          : [[self accessibilityElementsBehind] isEqualToArray:_appliedAccessibilityElementsBehind])) {
     return;
   }
 
@@ -881,6 +913,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   return presentingViewController;
 }
 
+// What stays reachable behind a sheet that doesn't block touches: the screen under
+// the bottom sheet, unless a sheet in between dims it. Parent sheets are left out:
+// UIKit tucks them behind the child when it presents (iOS 26+).
+- (NSArray *)accessibilityElementsBehind {
+  UIViewController *presenter = self.presentingViewController;
+  if (![presenter isKindOfClass:[TrueSheetViewController class]]) {
+    return presenter.view ? @[ presenter.view ] : @[];
+  }
+
+  TrueSheetViewController *parent = (TrueSheetViewController *)presenter;
+  return parent.isDimmedAtCurrentDetent ? @[] : [parent accessibilityElementsBehind];
+}
+
 - (void)restoreWindowAccessibilityElements {
   UIWindow *window = _accessibilityWindow;
   if (window) {
@@ -897,6 +942,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
     _accessibilityWindow = nil;
   }
+
+  // Fabric can pool this controller, so don't keep the presenter's views alive
+  _appliedAccessibilityElementsBehind = nil;
+  _appliedAccessibilityContentElements = nil;
 }
 
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden {
@@ -940,12 +989,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)setAccessibilityContentElement:(UIView *)contentView {
-  // A dimmed sheet blocks touches to the screen behind it, so it's modal for
-  // assistive technologies too, footer or not.
-  BOOL isAccessibilityModal = _dimmed;
-  _appliedAccessibilityFooterElements = [contentView isKindOfClass:[TrueSheetContainerView class]]
-                                          ? [(TrueSheetContainerView *)contentView accessibilityFooterElements]
-                                          : @[];
+  // A sheet dimmed at its detent blocks touches to the screen behind it, so
+  // it's modal for assistive technologies too, footer or not.
+  BOOL isAccessibilityModal = self.isDimmedAtCurrentDetent;
+  _appliedAccessibilityModal = isAccessibilityModal;
+  _appliedAccessibilityContentElements = nil;
+  _appliedAccessibilityElementsBehind = isAccessibilityModal ? nil : [self accessibilityElementsBehind];
 
   // At a hard modal boundary XCTest skips nested elements, so flatten the
   // container's children into the array. Otherwise expose the container itself:
@@ -954,7 +1003,8 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // discoverable instead of leaving this snapshot pointing at destroyed views.
   NSMutableArray *accessibilityElements = [[self accessibilityGrabberElements] mutableCopy];
   if (isAccessibilityModal) {
-    NSArray *contentElements = contentView.accessibilityElements;
+    NSArray *contentElements = contentView.accessibilityElements ?: @[];
+    _appliedAccessibilityContentElements = contentElements;
     [accessibilityElements addObjectsFromArray:contentElements.count > 0 ? contentElements : @[ contentView ]];
   } else {
     [accessibilityElements addObject:contentView];
@@ -993,8 +1043,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       }
       objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, [NSValue valueWithNonretainedObject:self],
         OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-      NSArray *sheetElements =
-        isAccessibilityModal ? @[ presentedView ] : @[ presentingViewController.view, presentedView ];
+      NSArray *sheetElements = isAccessibilityModal
+                                 ? @[ presentedView ]
+                                 : [_appliedAccessibilityElementsBehind arrayByAddingObject:presentedView];
       // Overlays render above every sheet. Listed first, since accessibility
       // hit testing takes the first element containing the point.
       window.accessibilityElements =
