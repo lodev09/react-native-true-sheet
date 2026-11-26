@@ -51,6 +51,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CGFloat)keyboardOcclusionHeight;
 
+/**
+ * How far the footer slides up from its layout position to sit above a
+ * keyboard of the given height — 0 for a keyboard that doesn't reach it.
+ */
+- (CGFloat)keyboardSlideForHeight:(CGFloat)height;
+
 @end
 
 NS_ASSUME_NONNULL_END

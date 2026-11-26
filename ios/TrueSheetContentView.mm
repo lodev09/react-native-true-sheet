@@ -218,9 +218,11 @@ using namespace facebook::react;
 // keyboard rise is a transform) so a short scroll view ending above the footer
 // gets no inset. While UIKit stacks the safe area on top of contentInset,
 // take out the inset baked into the footer's height so the total lands on the
-// footer's top edge. Stays constant across keyboard transitions: the footer
-// drops its inset as it rises, and the baked value drops with it. A pinned
-// footer adds only the overlap not already covered by the keyboard inset.
+// footer's top edge. A footer risen above the keyboard covers the scroll view
+// from the keyboard's top edge up, wherever the scroll view ends below it —
+// the keyboard inset takes the part below that edge. The footer drops its
+// inset as it rises, and the baked value drops with it. A pinned footer adds
+// only the overlap not already covered by the keyboard inset.
 - (CGFloat)footerInsetAbove:(CGFloat)keyboardInset {
   if (!_footerInsetAdjustment || !self.footerView || !_detectedScrollView) {
     return 0;
@@ -228,14 +230,23 @@ using namespace facebook::react;
 
   UIView *container = self.footerView.superview;
   UIScrollView *scrollView = _detectedScrollView.scrollView;
-  CGRect scrollFrame = [scrollView convertRect:scrollView.bounds toView:container];
+  CGFloat scrollBottom = CGRectGetMaxY([scrollView convertRect:scrollView.bounds toView:container]);
   CGFloat footerTop = container.bounds.size.height - self.footerView.bounds.size.height;
 
-  CGFloat inset = CGRectGetMaxY(scrollFrame) - footerTop;
+  BOOL footerAvoidsKeyboard = _keyboardObserver.viewController.footerAvoidsKeyboard;
+  CGFloat keyboardHeight = _keyboardObserver.currentHeight;
+  UIWindow *window = container.window;
+  if (footerAvoidsKeyboard && keyboardHeight > 0 && window) {
+    CGPoint keyboardTop = CGPointMake(0, CGRectGetMaxY(window.bounds) - keyboardHeight);
+    scrollBottom = MIN(scrollBottom, [container convertPoint:keyboardTop fromView:window].y);
+    footerTop -= [self.footerView keyboardSlideForHeight:keyboardHeight];
+  }
+
+  CGFloat inset = scrollBottom - footerTop;
   if ([self stackedSafeAreaInset] > 0) {
     inset -= self.footerView.appliedBottomInset;
   }
-  if (!_keyboardObserver.viewController.footerAvoidsKeyboard) {
+  if (!footerAvoidsKeyboard) {
     inset -= keyboardInset;
   }
   return MAX(0, inset);
@@ -247,7 +258,7 @@ using namespace facebook::react;
 }
 
 // Safe to call mid keyboard animation: the target matches the animation's
-// model value (the footer inset doesn't change with the keyboard), so the
+// model value (both insets follow the keyboard's end height), so the
 // early-out in setBottomInset: leaves the animation alone.
 - (void)updateBottomInset {
   if (!_detectedScrollView) {

@@ -387,6 +387,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   fun setFooterKeyboardOptions(keyboardOffset: Float, avoidsKeyboard: Boolean) {
     viewController.footerKeyboardOffset = keyboardOffset.dpToPx().toInt()
     viewController.footerAvoidsKeyboard = avoidsKeyboard
+    viewController.containerView?.footerKeyboardOffset = viewController.footerKeyboardOffset
     viewController.containerView?.footerAvoidsKeyboard = avoidsKeyboard
     viewController.positionFooter()
   }
@@ -398,6 +399,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       it.scrollableBottomInset = viewController.contentBottomInset
       it.footerBottomInset = viewController.contentBottomInset
       it.absoluteFooter = viewController.absoluteFooter
+      it.footerKeyboardOffset = viewController.footerKeyboardOffset
       it.footerAvoidsKeyboard = viewController.footerAvoidsKeyboard
       it.setupScrollable()
     }

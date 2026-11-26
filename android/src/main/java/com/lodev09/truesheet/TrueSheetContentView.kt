@@ -79,6 +79,12 @@ interface TrueSheetContentViewDelegate {
   val footerAvoidsKeyboard: Boolean
 
   /**
+   * How far an absolute footer rises from its layout position to sit above a
+   * keyboard of the given height — 0 while it stays put.
+   */
+  fun footerKeyboardShift(keyboardHeight: Int): Int
+
+  /**
    * A relative footer sits below the content and absorbs the bottom safe-area
    * inset — the scrollable doesn't reach the sheet's bottom edge, so no
    * content inset is applied (mirrors iOS, where UIKit resolves this
@@ -159,6 +165,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var baseBottomInset = 0
   private var keyboardBottomInset = 0
+
+  // How far the scrollable ends above the keyboard's top edge
+  private var keyboardGap = 0
 
   /**
    * Height of the absolute footer the scroll content is padded by (see
@@ -299,18 +308,27 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
   }
 
   // A pinned footer uses its positioned top so overlap follows the sheet's
-  // animation, even before the container reaches its final height. A rising
-  // footer uses its layout top because the keyboard inset carries its rise.
-  // The safe-area inset baked into the footer is already
-  // covered by the safe-area or keyboard inset when one applies — only the
-  // footer's occlusion above it stacks on top. A pinned footer adds only the
-  // overlap not already covered by the safe-area or keyboard inset.
+  // animation, even before the container reaches its final height. A footer
+  // risen above the keyboard covers the scrollable from the keyboard's top
+  // edge up, wherever the scrollable ends below it — the keyboard inset takes
+  // the part below that edge. At rest it uses its layout top. The safe-area
+  // inset baked into the footer is already covered by the safe-area or
+  // keyboard inset when one applies — only the footer's occlusion above it
+  // stacks on top. A pinned footer adds only the overlap not already covered
+  // by the safe-area or keyboard inset.
   private fun footerInsetAbove(safeAreaInset: Int): Int {
     if (scrollableOptions?.contentInsetAdjustment?.footer == false) return 0
     val footerHeight = delegate?.absoluteFooterHeight ?: 0
     if (footerHeight <= 0) return 0
 
     val gap = scrollBottomGap ?: return 0
+
+    val keyboardHeight = keyboardObserver?.currentHeight ?: 0
+    val keyboardShift = delegate?.footerKeyboardShift(keyboardHeight) ?: 0
+    if (keyboardShift > 0) {
+      return maxOf(0, footerHeight + keyboardShift - keyboardHeight - keyboardGap)
+    }
+
     val footerExtent = if (delegate?.footerAvoidsKeyboard == false) {
       val container = parent as? View ?: return 0
       container.height - (delegate?.absoluteFooterTop ?: return 0)
@@ -363,6 +381,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     detectedScrollView = null
     baseBottomInset = 0
     keyboardBottomInset = 0
+    keyboardGap = 0
     footerBottomInset = 0
     appliedKeyboardOffset = 0
   }
@@ -458,7 +477,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       val location = IntArray(2)
       scrollView.getLocationInWindow(location)
       val keyboardTop = ScreenUtils.getRealScreenHeight(reactContext) - keyboardHeight
-      val baseInset = maxOf(0, location[1] + scrollView.height - keyboardTop)
+      val overlap = location[1] + scrollView.height - keyboardTop
+      keyboardGap = maxOf(0, -overlap)
+      val baseInset = maxOf(0, overlap)
       val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
       appliedKeyboardOffset = adjustedInset - baseInset
       if (delegate?.footerAvoidsKeyboard == false) {
@@ -467,6 +488,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       }
       adjustedInset
     } else {
+      keyboardGap = 0
       appliedKeyboardOffset = 0
       0
     }

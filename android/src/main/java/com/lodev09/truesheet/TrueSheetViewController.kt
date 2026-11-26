@@ -1439,11 +1439,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // The footer's absorbed safe-area inset rides below the keyboard's top
-    // edge — its content stays flush with the keyboard without dropping the
-    // inset padding from the layout, which would jump at the transition edges
-    val keyboardShift = if (currentKeyboardInset > 0 && footerAvoidsKeyboard) {
-      maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
+    val keyboardShift = if (footerAvoidsKeyboard) {
+      footerView.keyboardShift(currentKeyboardInset, footerKeyboardOffset)
     } else {
       0
     }

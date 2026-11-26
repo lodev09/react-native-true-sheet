@@ -73,6 +73,13 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.updateContentInset()
     }
 
+  var footerKeyboardOffset: Int = 0
+    set(value) {
+      if (field == value) return
+      field = value
+      contentView?.updateContentInset()
+    }
+
   /**
    * Bottom safe-area inset the footer absorbs as padding — the footer
    * owns the sheet's bottom edge, so its background fills the inset.
@@ -228,6 +235,9 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
 
   override val absoluteFooterTop: Int
     get() = footerView?.y?.toInt() ?: height
+
+  override fun footerKeyboardShift(keyboardHeight: Int): Int =
+    if (absoluteFooter && footerAvoidsKeyboard) footerView?.keyboardShift(keyboardHeight, footerKeyboardOffset) ?: 0 else 0
 
   override val hasRelativeFooter: Boolean
     get() = footerView != null && !absoluteFooter
