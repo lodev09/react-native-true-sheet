@@ -237,6 +237,8 @@ describe('server rendering', () => {
       );
       const content = result.UNSAFE_root.findByProps({ 'data-vaul-drawer': '' });
       expect(content.props.style['--snap-point-height']).toBe(expected);
+      // Already shown: Safari's viewport settling after the first style pass doesn't animate it
+      expect(content.props.style.transition).toBe('none');
     }
   );
 

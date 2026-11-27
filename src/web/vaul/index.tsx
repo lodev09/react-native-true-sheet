@@ -1505,6 +1505,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
             ? ({
                 '--snap-point-height': initialSnapPointOffset,
                 'transform': getSnapPointTransform(direction),
+                // Shown already until hydrated: Safari settles its viewport after the first
+                // style pass, which would animate the CSS offset
+                ...(isHydrated ? null : { transition: 'none' }),
                 ...style,
                 'pointerEvents': 'auto',
               } as React.CSSProperties)
