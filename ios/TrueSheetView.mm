@@ -970,7 +970,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)containerViewDidMountTransaction {
-  [_controller refreshAccessibilityContainerIfFooterChanged];
+  [_controller refreshAccessibilityContainerIfChanged];
 }
 
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize {
@@ -1051,6 +1051,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _controller.activeDetentIndex = index;
   }
   [TrueSheetStateEvents emitDetentChange:_eventEmitter index:index position:position detent:detent];
+  [_controller refreshAccessibilityContainerIfChanged];
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)index
@@ -1211,6 +1212,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     [self->_controller applyActiveDetent];
   }];
   [_controller setupDraggable];
+
+  // setupSheetProps refreshed it before the detents applied a new dim threshold
+  [_controller refreshAccessibilityContainerIfChanged];
 }
 
 /**

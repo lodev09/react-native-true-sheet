@@ -1425,6 +1425,21 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
    */
   override var footerAvoidsKeyboard: Boolean = true
 
+  /**
+   * How far an absolute footer rises from its layout position to sit above
+   * the keyboard — 0 while this sheet doesn't handle the keyboard (e.g. an
+   * input behind a non-dimmed sheet has focus). The footer's absorbed
+   * safe-area inset rides below the keyboard's top edge — its content stays
+   * flush with the keyboard without dropping the inset padding from the
+   * layout, which would jump at the transition edges.
+   */
+  val footerKeyboardShift: Int
+    get() {
+      val footerView = containerView?.footerView ?: return 0
+      if (!absoluteFooter || !footerAvoidsKeyboard || currentKeyboardInset <= 0) return 0
+      return maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
+    }
+
   fun positionFooter() {
     if (!isPresented) return
     val footerView = containerView?.footerView ?: return
@@ -1439,14 +1454,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // The footer's absorbed safe-area inset rides below the keyboard's top
-    // edge — its content stays flush with the keyboard without dropping the
-    // inset padding from the layout, which would jump at the transition edges
-    val keyboardShift = if (currentKeyboardInset > 0 && footerAvoidsKeyboard) {
-      maxOf(0, currentKeyboardInset + footerKeyboardOffset - footerView.bottomInset)
-    } else {
-      0
-    }
+    val keyboardShift = footerKeyboardShift
 
     val footerHeight = footerView.height
     val sheetHeight = sheet.height

@@ -111,10 +111,6 @@ using namespace facebook::react;
   return elements;
 }
 
-- (BOOL)hasAccessibilityFooterElements {
-  return _footerView && _footerView.accessibilityElements.count > 0;
-}
-
 #pragma mark - Layout
 
 - (CGFloat)contentHeight {

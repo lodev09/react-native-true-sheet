@@ -56,14 +56,6 @@ interface TrueSheetContentViewDelegate {
   fun contentViewScrollViewDidChange()
 
   /**
-   * Keyboard occlusion adjustment below the content — positive for an absolute
-   * footer floating over the viewport's bottom edge (extends the caret reveal),
-   * negative for a relative footer sitting behind the keyboard shielding that
-   * much of its overlap (reduces the keyboard padding).
-   */
-  val footerKeyboardOcclusion: Int
-
-  /**
    * Layout height of an absolute footer floating over the content, including
    * its absorbed safe-area inset — 0 for a relative footer.
    */
@@ -77,6 +69,13 @@ interface TrueSheetContentViewDelegate {
    * above it.
    */
   val footerAvoidsKeyboard: Boolean
+
+  /**
+   * How far an absolute footer rises from its layout position to sit above
+   * the keyboard — 0 while it stays put, including while the sheet doesn't
+   * handle the keyboard.
+   */
+  val footerKeyboardShift: Int
 
   /**
    * A relative footer sits below the content and absorbs the bottom safe-area
@@ -159,6 +158,9 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
 
   private var baseBottomInset = 0
   private var keyboardBottomInset = 0
+
+  // Keyboard inset before scrollableOptions.keyboardOffset adjusts it
+  private var keyboardOverlap = 0
 
   /**
    * Height of the absolute footer the scroll content is padded by (see
@@ -298,33 +300,31 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     setScrollContentInset(safeAreaInset + footerBottomInset)
   }
 
-  // A pinned footer uses its positioned top so overlap follows the sheet's
-  // animation, even before the container reaches its final height. A rising
-  // footer uses its layout top because the keyboard inset carries its rise.
-  // The safe-area inset baked into the footer is already
-  // covered by the safe-area or keyboard inset when one applies — only the
-  // footer's occlusion above it stacks on top. A pinned footer adds only the
-  // overlap not already covered by the safe-area or keyboard inset.
+  // A rising footer covers the scrollable from its top down to whatever the
+  // safe-area or keyboard inset already covers. Its top follows the keyboard
+  // through one formula, so the total inset stays continuous as the footer
+  // starts to move. It's derived from the keyboard height rather than the
+  // positioned top, which may lag a frame behind. The keyboard inset counts
+  // before scrollableOptions.keyboardOffset, so the offset still lands in the
+  // total. A pinned footer uses its positioned top so overlap follows the
+  // sheet's animation, even before the container reaches its final height,
+  // and adds only the overlap not already covered by the safe-area or
+  // keyboard inset.
   private fun footerInsetAbove(safeAreaInset: Int): Int {
     if (scrollableOptions?.contentInsetAdjustment?.footer == false) return 0
     val footerHeight = delegate?.absoluteFooterHeight ?: 0
     if (footerHeight <= 0) return 0
 
     val gap = scrollBottomGap ?: return 0
-    val footerExtent = if (delegate?.footerAvoidsKeyboard == false) {
-      val container = parent as? View ?: return 0
-      container.height - (delegate?.absoluteFooterTop ?: return 0)
-    } else {
-      footerHeight
+
+    if (delegate?.footerAvoidsKeyboard != false) {
+      val keyboardShift = delegate?.footerKeyboardShift ?: 0
+      return maxOf(0, footerHeight + keyboardShift - gap - maxOf(baseBottomInset, keyboardOverlap))
     }
-    var inset = footerExtent - gap
-    if (delegate?.footerAvoidsKeyboard == false) {
-      inset -= safeAreaInset
-    } else if (safeAreaInset > 0) {
-      val footerSafeArea = footerHeight - maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
-      inset -= minOf(safeAreaInset, footerSafeArea)
-    }
-    return maxOf(0, inset)
+
+    val container = parent as? View ?: return 0
+    val footerExtent = container.height - (delegate?.absoluteFooterTop ?: return 0)
+    return maxOf(0, footerExtent - gap - safeAreaInset)
   }
 
   private fun measureScrollBottomGap(): Int? {
@@ -363,6 +363,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
     detectedScrollView = null
     baseBottomInset = 0
     keyboardBottomInset = 0
+    keyboardOverlap = 0
     footerBottomInset = 0
     appliedKeyboardOffset = 0
   }
@@ -459,6 +460,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       scrollView.getLocationInWindow(location)
       val keyboardTop = ScreenUtils.getRealScreenHeight(reactContext) - keyboardHeight
       val baseInset = maxOf(0, location[1] + scrollView.height - keyboardTop)
+      keyboardOverlap = baseInset
       val adjustedInset = maxOf(0, baseInset + keyboardOffset.toInt())
       appliedKeyboardOffset = adjustedInset - baseInset
       if (delegate?.footerAvoidsKeyboard == false) {
@@ -467,6 +469,7 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       }
       adjustedInset
     } else {
+      keyboardOverlap = 0
       appliedKeyboardOffset = 0
       0
     }
@@ -515,21 +518,28 @@ class TrueSheetContentView(private val reactContext: ThemedReactContext) : React
       caretBottom = viewTop + focusedView.height
     }
 
-    // An absolute footer floats over the viewport's bottom edge — extend the
-    // caret target so it clears the footer, not just the keyboard. Not needed
-    // while the footer inset is applied (the visible range already ends above
-    // it) or when the footer stays behind the keyboard.
-    val footerOcclusion = if (footerBottomInset > 0 || delegate?.footerAvoidsKeyboard == false) {
-      0
-    } else {
-      maxOf(0, delegate?.footerKeyboardOcclusion ?: 0)
-    }
-
     val offset = keyboardScrollOffset.toInt()
     val appliedInset = maxOf(baseBottomInset, keyboardBottomInset) + footerBottomInset
     val visibleHeight = scrollView.height - scrollView.paddingBottom - appliedInset + appliedKeyboardOffset
     val visibleTop = scrollView.scrollY
     val visibleBottom = scrollView.scrollY + visibleHeight
+
+    // An absolute footer floats over the viewport's bottom edge — extend the
+    // caret target by the part of it over the visible range. None while the
+    // footer inset is applied (the range already ends above it), once the
+    // keyboard covers the footer, or when the footer stays behind the keyboard.
+    val container = parent as? View
+    val footerOcclusion = if (container == null ||
+      delegate?.footerAvoidsKeyboard == false ||
+      (delegate?.absoluteFooterHeight ?: 0) <= 0
+    ) {
+      0
+    } else {
+      val containerLocation = IntArray(2)
+      container.getLocationOnScreen(containerLocation)
+      val footerTop = containerLocation[1] + (delegate?.absoluteFooterTop ?: 0)
+      maxOf(0, scrollViewLocation[1] + visibleHeight - footerTop)
+    }
 
     val targetY = when {
       caretBottom + offset + footerOcclusion > visibleBottom ->

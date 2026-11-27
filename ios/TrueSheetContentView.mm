@@ -126,6 +126,20 @@ using namespace facebook::react;
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextViewTextDidChangeNotification object:nil];
 }
 
+#pragma mark - Accessibility
+
+// Only an accessibility client (VoiceOver, XCTest) asks while walking the sheet, so
+// this tells the controller someone is reading it.
+- (BOOL)isAccessibilityElement {
+  for (UIResponder *responder = self.nextResponder; responder; responder = responder.nextResponder) {
+    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
+      [(TrueSheetViewController *)responder noteAccessibilityQuery];
+      break;
+    }
+  }
+  return [super isAccessibilityElement];
+}
+
 #pragma mark - Layout
 
 - (CGFloat)naturalHeight {
@@ -214,31 +228,46 @@ using namespace facebook::react;
 }
 
 // How much of the absolute footer covers the scroll view — measured from the
-// footer's layout position (pinned to the container's bottom edge; its
-// keyboard rise is a transform) so a short scroll view ending above the footer
-// gets no inset. While UIKit stacks the safe area on top of contentInset,
-// take out the inset baked into the footer's height so the total lands on the
-// footer's top edge. Stays constant across keyboard transitions: the footer
-// drops its inset as it rises, and the baked value drops with it. A pinned
-// footer adds only the overlap not already covered by the keyboard inset.
-- (CGFloat)footerInsetAbove:(CGFloat)keyboardInset {
-  if (!_footerInsetAdjustment || !self.footerView || !_detectedScrollView) {
+// footer's layout position (its keyboard rise is a transform, which center
+// excludes) so a short scroll view ending above the footer gets no inset.
+// While UIKit stacks the safe area on top of contentInset, take out the inset
+// baked into the footer's height so the total lands on the footer's top edge.
+// A footer risen above the keyboard covers the scroll view from the keyboard's
+// top edge up, wherever the scroll view ends below it — the keyboard inset
+// takes the part below that edge. The footer drops its inset as it rises, and
+// the baked value drops with it. A pinned footer adds only the overlap not
+// already covered by the keyboard inset.
+- (CGFloat)footerOverlapAbove:(CGFloat)keyboardInset {
+  if (!self.footerView || !_detectedScrollView) {
     return 0;
   }
 
   UIView *container = self.footerView.superview;
   UIScrollView *scrollView = _detectedScrollView.scrollView;
-  CGRect scrollFrame = [scrollView convertRect:scrollView.bounds toView:container];
-  CGFloat footerTop = container.bounds.size.height - self.footerView.bounds.size.height;
+  CGFloat scrollBottom = CGRectGetMaxY([scrollView convertRect:scrollView.bounds toView:container]);
+  CGFloat footerTop = self.footerView.center.y - self.footerView.bounds.size.height / 2;
 
-  CGFloat inset = CGRectGetMaxY(scrollFrame) - footerTop;
+  BOOL footerAvoidsKeyboard = _keyboardObserver.viewController.footerAvoidsKeyboard;
+  CGFloat keyboardHeight = _keyboardObserver.currentHeight;
+  UIWindow *window = container.window;
+  if (footerAvoidsKeyboard && keyboardHeight > 0 && window) {
+    CGPoint keyboardTop = CGPointMake(0, CGRectGetMaxY(window.bounds) - keyboardHeight);
+    scrollBottom = MIN(scrollBottom, [container convertPoint:keyboardTop fromView:window].y);
+    footerTop -= [self.footerView keyboardSlideForHeight:keyboardHeight];
+  }
+
+  CGFloat inset = scrollBottom - footerTop;
   if ([self stackedSafeAreaInset] > 0) {
     inset -= self.footerView.appliedBottomInset;
   }
-  if (!_keyboardObserver.viewController.footerAvoidsKeyboard) {
+  if (!footerAvoidsKeyboard) {
     inset -= keyboardInset;
   }
   return MAX(0, inset);
+}
+
+- (CGFloat)footerInsetAbove:(CGFloat)keyboardInset {
+  return _footerInsetAdjustment ? [self footerOverlapAbove:keyboardInset] : 0;
 }
 
 - (CGFloat)keyboardInset {
@@ -247,7 +276,7 @@ using namespace facebook::react;
 }
 
 // Safe to call mid keyboard animation: the target matches the animation's
-// model value (the footer inset doesn't change with the keyboard), so the
+// model value (both insets follow the keyboard's end height), so the
 // early-out in setBottomInset: leaves the animation alone.
 - (void)updateBottomInset {
   if (!_detectedScrollView) {
@@ -323,16 +352,15 @@ using namespace facebook::react;
 }
 
 // An absolute footer floats over the viewport's bottom edge — extend the
-// caret target so it clears the footer, not just the keyboard. Not needed
-// while the footer inset is applied (the visible rect already ends above it)
-// or when the footer stays behind the keyboard.
+// caret target by the part of it that covers the scroll view there. Not
+// needed while the footer inset is applied (the visible rect already ends
+// above it) or when the footer stays behind the keyboard.
 - (CGFloat)footerOcclusion {
   TrueSheetViewController *controller = _keyboardObserver.viewController;
-  if (self.footerView && controller.absoluteFooter && controller.footerAvoidsKeyboard &&
-      [self footerInsetAbove:0] <= 0) {
-    return [self.footerView keyboardOcclusionHeight];
+  if (_footerInsetAdjustment || !controller.absoluteFooter || !controller.footerAvoidsKeyboard) {
+    return 0;
   }
-  return 0;
+  return [self footerOverlapAbove:[self keyboardInset]];
 }
 
 // Resolves the user-provided `scrollableHandle` within the content subtree —
