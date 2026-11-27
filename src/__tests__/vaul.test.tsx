@@ -249,6 +249,23 @@ describe('server rendering', () => {
     );
   });
 
+  it('shows the dim of an open sheet until hydrated', () => {
+    isHydrated.mockReturnValue(false);
+    const result = render(
+      <Drawer.Root open snapPoints={[0.5, 1]} activeSnapPoint={0.5} fadeFromIndex={0}>
+        <Drawer.Overlay />
+      </Drawer.Root>,
+      { createNodeMock: () => new MockElement() }
+    );
+    const overlay = result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' });
+    // What style.css needs to show it, without fading it in
+    expect(overlay.props).toMatchObject({
+      'data-vaul-snap-points': 'true',
+      'data-vaul-delayed-snap-points': 'true',
+      'data-vaul-snap-points-overlay': 'true',
+    });
+  });
+
   it('reads no document to scale the background', () => {
     const { useScaleBackground } = jest.requireActual('../web/vaul/use-scale-background');
     // @ts-expect-error the server has no document

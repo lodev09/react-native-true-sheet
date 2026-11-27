@@ -1086,7 +1086,9 @@ export const Overlay = React.forwardRef<
   } = useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
-  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
+  // A sheet rendered in place until hydrated (see TrueSheet.web) is already shown: its dim too
+  const isHydrated = useIsHydrated();
+  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(!isHydrated);
   const onMouseUp = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => onRelease(event),
     [onRelease]

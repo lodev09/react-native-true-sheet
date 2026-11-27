@@ -1230,7 +1230,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
     const opacity = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY));
     if (dimBlur) {
-      return { ...overlayStyle, ...getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark') };
+      const blurStyle = getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark');
+      if (colorScheme !== undefined) return { ...overlayStyle, ...blurStyle };
+      // Until hydrated, the system's color scheme picks the tint, like the default colors in
+      // `serverRenderingCss`
+      const darkTint = getDimBlurStyle(dimBlur, opacity, true).backgroundColor;
+      return {
+        ...overlayStyle,
+        ...blurStyle,
+        colorScheme: 'light dark',
+        backgroundColor: `light-dark(${blurStyle.backgroundColor}, ${darkTint})`,
+      };
     }
     if (dimColor == null && dimOpacity == null) return overlayStyle;
     return {
@@ -1361,7 +1371,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (isHydrated) return getWrapperStyle(isLandscapeOrTablet);
 
     // The window's size is unknown until hydrated: both sizings go in CSS variables, which
-    // `wrapperSizingCss` applies in the window they're for.
+    // `serverRenderingCss` applies in the window they're for.
     const next: Record<string, unknown> = dropShadow ? { filter: dropShadow } : {};
     for (const [isWide, variables] of [
       [false, WRAPPER_VARIABLES],

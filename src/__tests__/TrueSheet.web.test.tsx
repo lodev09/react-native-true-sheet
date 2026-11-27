@@ -488,6 +488,27 @@ describe('web server rendering', () => {
     expect(sheet.color()).not.toContain('var(');
   });
 
+  it('tints a dim blur for the system color scheme until hydrated', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    const props = { ...sheet.props, dimBlur: 'regular' as const };
+    sheet.rerender(<TrueSheet {...props} />);
+    // Drawer.Overlay is the same mock as Drawer.Root: the one styled as the dim
+    const dimStyle = () =>
+      sheet.UNSAFE_getAllByType(Drawer.Overlay).find((node) => node.props.style?.backdropFilter)
+        ?.props.style;
+
+    expect(dimStyle()).toMatchObject({
+      colorScheme: 'light dark',
+      backgroundColor: expect.stringMatching(/^light-dark\(rgba\(252, .+\), rgba\(27, .+\)\)$/),
+    });
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...props} />);
+    expect(dimStyle()?.colorScheme).toBeUndefined();
+    expect(dimStyle()?.backgroundColor).toMatch(/^rgba\(252, /);
+  });
+
   it('moves a sheet rendered in place to the portal once dismissed', () => {
     isHydrated.mockReturnValue(false);
     const sheet = setup(0);
