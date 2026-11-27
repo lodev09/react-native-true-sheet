@@ -49,6 +49,7 @@ interface DrawerContextValue {
   shouldAnimate?: React.RefObject<boolean>;
   initialAnimated: boolean;
   hasPresented: React.RefObject<boolean>;
+  isShown: React.RefObject<boolean>;
   onPositionChangeRef: React.RefObject<((position: number) => void) | undefined>;
   setContentHeight: (height: number) => void;
   detached: boolean;
@@ -88,6 +89,7 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   shouldAnimate: { current: true },
   initialAnimated: true,
   hasPresented: { current: false },
+  isShown: { current: false },
   shouldScaleBackground: false,
   setBackgroundColorOnScale: true,
   noBodyStyles: false,

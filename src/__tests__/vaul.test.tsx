@@ -249,18 +249,67 @@ describe('server rendering', () => {
     );
   });
 
-  it('shows the dim of an open sheet until hydrated', () => {
-    isHydrated.mockReturnValue(false);
-    const result = render(
-      <Drawer.Root open snapPoints={[0.5, 1]} activeSnapPoint={0.5} fadeFromIndex={0}>
-        <Drawer.Overlay />
-      </Drawer.Root>,
-      { createNodeMock: () => new MockElement() }
+  it.each([
+    { activeSnapPoint: 0.5, fadeFromIndex: 0, shown: 'true' },
+    { activeSnapPoint: 1, fadeFromIndex: 0, shown: 'true' },
+    { activeSnapPoint: 0.5, fadeFromIndex: 1, shown: 'false' },
+  ])(
+    'shows the dim of a sheet open at $activeSnapPoint, dimmed from index $fadeFromIndex, until hydrated',
+    ({ activeSnapPoint, fadeFromIndex, shown }) => {
+      isHydrated.mockReturnValue(false);
+      const result = render(
+        <Drawer.Root
+          open
+          snapPoints={[0.5, 1]}
+          activeSnapPoint={activeSnapPoint}
+          fadeFromIndex={fadeFromIndex}
+        >
+          <Drawer.Overlay />
+        </Drawer.Root>,
+        { createNodeMock: () => new MockElement() }
+      );
+      const overlay = result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' });
+      // What style.css needs to show it, without fading it in
+      expect(overlay.props).toMatchObject({
+        'data-vaul-snap-points': 'true',
+        'data-vaul-delayed-snap-points': 'true',
+        'data-vaul-snap-points-overlay': shown,
+      });
+    }
+  );
+
+  it('shows a drawer moved to the portal once hydrated at once, without animating it in again', () => {
+    const wrapper = new MockElement();
+    const drawer = new MockElement();
+    drawer.closest = () => wrapper;
+    const layout = jest.spyOn(wrapper, 'offsetHeight', 'get');
+    // Remounted with another parent, as when TrueSheet.web moves it from in place to the portal
+    const sheet = (parent: string) => (
+      <Drawer.Root
+        open
+        initialAnimated={false}
+        snapPoints={[0.4, 1]}
+        activeSnapPoint={1}
+        fadeFromIndex={0}
+        contentHeight={400}
+      >
+        <Drawer.Overlay key={parent} />
+        <Drawer.Content key={parent} />
+      </Drawer.Root>
     );
-    const overlay = result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' });
-    // What style.css needs to show it, without fading it in
-    expect(overlay.props).toMatchObject({
-      'data-vaul-snap-points': 'true',
+    isHydrated.mockReturnValue(false);
+    const result = render(sheet('in place'), {
+      createNodeMock: ({ props }) =>
+        'data-vaul-drawer' in (props as object) ? drawer : new MockElement(),
+    });
+    isHydrated.mockReturnValue(true);
+    act(() => jest.runOnlyPendingTimers());
+    result.rerender(sheet('portal'));
+
+    // No slide-in: the wrapper isn't reset off-screen first
+    expect(layout).not.toHaveBeenCalled();
+    // Its dim shown at once, above fadeFromIndex too
+    expect(result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' }).props).toMatchObject({
       'data-vaul-delayed-snap-points': 'true',
       'data-vaul-snap-points-overlay': 'true',
     });

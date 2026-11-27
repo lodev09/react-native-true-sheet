@@ -43,7 +43,6 @@ import {
   type TrueSheetPeekContextValue,
 } from './TrueSheetPeek.web';
 import {
-  PORTAL_CONTAINER_ATTRIBUTE,
   usePortalContainer,
   useRegisterSheet,
   useSheetStack,
@@ -180,11 +179,13 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
   // Server-rendered (and hydrating), a sheet presented from the start renders in place: a portal
   // renders nothing on the server, so its content would only appear, animated, once hydrated. It
-  // moves to the portal once dismissed, while it has no content, for its next presentations.
-  const [isRenderedInPlace, setIsRenderedInPlace] = useState(
-    () => !isHydrated && shouldAutoPresent
+  // moves to the portal once hydrated, already shown. Not a form sheet: on a wide window, its size
+  // and position come from the window and its content, which the server doesn't have. Until
+  // hydrated, the other sheets render nothing, as on the server: a portal can't be hydrated.
+  const [isServerRendered] = useState(
+    () => !isHydrated && shouldAutoPresent && presentation !== 'form'
   );
-  const SheetPortal = isRenderedInPlace ? InPlace : Drawer.Portal;
+  const SheetPortal = isHydrated ? Drawer.Portal : isServerRendered ? InPlace : NotHydrated;
   const didInitiallyPresentRef = useRef(shouldAutoPresent);
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
@@ -287,21 +288,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const handlePointerDownOutside = (e: Event) => {
     const target = e.target;
     if (!(target instanceof Node)) return;
-    const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
-    // Sheets rendered in place (see isRenderedInPlace) are outside the container, but stacked like
-    // the others: their wrapper and dim are handled below as if they were in it. Not the sheets of
-    // another provider, in its own container.
-    const isInPlaceSheet =
-      target instanceof Element &&
-      !!target.closest('[data-vaul-detached-wrapper], [data-vaul-overlay]') &&
-      !target.closest(`[${PORTAL_CONTAINER_ATTRIBUTE}]`);
     // Pointer down that landed outside this sheet's portal container (e.g.,
     // in another screen's tree when navigating) should not close the drawer.
-    if (portalContainer && !isInPlaceSheet && !portalContainer.contains(target)) {
+    if (portalContainer && !portalContainer.contains(target)) {
       e.preventDefault();
       return;
     }
     if (!(target instanceof Element)) return;
+    const wrapper = drawerContentRef.current?.closest('[data-vaul-detached-wrapper]');
     if (!wrapper) return;
     // The footer is rendered via vaul's `detachedSiblings` as a sibling of
     // Drawer.Content inside [data-vaul-detached-wrapper], so Radix treats
@@ -862,7 +856,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         settle(resolvePresentRef);
       } else {
         phaseRef.current = 'dismissed';
-        setIsRenderedInPlace(false);
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
         onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
         settle(resolveDismissRef);
@@ -1438,7 +1431,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         detachedRadius={effectiveCornerRadius}
         maxContentHeight={effectiveMaxContentHeight}
         peekHeight={peekHeight}
-        initialAnimated={shouldAutoPresent ? initialDetentAnimated && !isRenderedInPlace : true}
+        initialAnimated={shouldAutoPresent ? initialDetentAnimated && !isServerRendered : true}
         detachedWrapperStyle={wrapperStyle}
         contentHeight={measuredContentHeight}
         keyboardViewport={keyboardViewport}
@@ -1506,6 +1499,8 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 const InPlace = ({ children }: { children?: React.ReactNode; container?: HTMLElement }) => (
   <>{children}</>
 );
+
+const NotHydrated: React.FC<Parameters<typeof InPlace>[0]> = () => null;
 
 const WRAPPER_VARIABLES = {
   maxWidth: '--true-sheet-max-width',
