@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => min_ios_version_supported, :tvos => min_ios_version_supported }
-  s.source       = { :git => "https://github.com/lodev09/react-native-true-sheet.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/lodev09/react-native-true-sheet.git", :tag => "v#{s.version}" }
 
   # tvOS compiles stubs only — sheets are not supported there, but codegen
   # still registers the components so the classes must exist (#722)

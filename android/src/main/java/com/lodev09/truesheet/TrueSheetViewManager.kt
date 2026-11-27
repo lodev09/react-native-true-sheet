@@ -253,6 +253,11 @@ class TrueSheetViewManager :
     // iOS-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "dimBlur")
+  override fun setDimBlur(view: TrueSheetView, tint: String?) {
+    view.setDimBlur(tint)
+  }
+
   @ReactProp(name = "foldOptions")
   override fun setFoldOptions(view: TrueSheetView, options: ReadableMap?) {
     // iOS-specific prop - no-op on Android
@@ -309,11 +314,9 @@ class TrueSheetViewManager :
 
     val keyboardOffset =
       if (options != null && options.hasKey("keyboardOffset")) options.getDouble("keyboardOffset").toFloat() else 0f
-    view.setFooterKeyboardOffset(keyboardOffset)
-
     val avoidKeyboard =
       if (options != null && options.hasKey("avoidKeyboard")) options.getBoolean("avoidKeyboard") else true
-    view.setFooterAvoidsKeyboard(avoidKeyboard)
+    view.setFooterKeyboardOptions(keyboardOffset, avoidKeyboard)
   }
 
   companion object {

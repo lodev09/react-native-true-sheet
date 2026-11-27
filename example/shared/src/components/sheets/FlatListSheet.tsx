@@ -9,7 +9,6 @@ import {
   FOOTER_HEIGHT,
   GAP,
   GRAY,
-  HEADER_HEIGHT,
   LIGHT_GRAY,
   SPACING,
   times,
@@ -27,7 +26,7 @@ interface FlatListSheetProps extends TrueSheetProps {}
 export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, ref) => {
   const testRef = useRef<TrueSheet>(null);
   const scrollRef = useRef<FlatList>(null);
-  const [itemCount, setItemCount] = useState(1);
+  const [itemCount, setItemCount] = useState(4);
   const [showList, setShowList] = useState(true);
 
   const toggleButton = (
@@ -62,7 +61,6 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           </View>
         </Header>
       }
-      headerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet FlatList dismissed!')}
       onDidPresent={() => console.log(`Sheet FlatList presented!`)}
       footer={<Footer text="OPEN BLANK SHEET" onPress={() => testRef.current?.present()} />}
@@ -81,6 +79,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
           contentContainerStyle={styles.content}
           indicatorStyle="white"
           alwaysBounceVertical={false}
+          keyboardShouldPersistTaps="handled"
           ItemSeparatorComponent={Spacer}
           renderItem={({ item }) => (
             <View style={styles.listItem}>
@@ -101,6 +100,7 @@ export const FlatListSheet = forwardRef<TrueSheet, FlatListSheetProps>((props, r
                 />
               </ButtonGroup>
               {toggleButton}
+              <Input placeholder="Last input" accessibilityLabel="Last input" />
             </View>
           }
         />
@@ -177,7 +177,6 @@ const styles = StyleSheet.create({
   },
   search: {
     paddingHorizontal: SPACING,
-    paddingTop: HEADER_HEIGHT + SPACING,
     paddingBottom: GAP / 2,
   },
   listItem: {

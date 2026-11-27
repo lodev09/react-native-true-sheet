@@ -17,4 +17,4 @@ export type {
   Router,
   StackActionHelpers,
   StackRouterOptions,
-} from '@react-navigation/core';
+} from '@react-navigation/native';

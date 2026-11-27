@@ -371,8 +371,9 @@ class TrueSheetCoordinatorLayout(context: Context) :
       !hasRefreshControl &&
       scrollView.scrollY == 0 &&
       !scrollView.canScrollVertically(1)
+    val sheetDraggable = delegate?.findSheetView()?.behavior?.isDraggable != false
 
-    if (cannotScroll || streamSheetDraggable) {
+    if (sheetDraggable && (cannotScroll || streamSheetDraggable)) {
       when (ev.action and MotionEvent.ACTION_MASK) {
         MotionEvent.ACTION_DOWN -> {
           dragging = false

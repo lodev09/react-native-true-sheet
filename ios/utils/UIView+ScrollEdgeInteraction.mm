@@ -65,9 +65,11 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   // UIScrollEdgeElementContainerInteraction requires standard UIKit element
   // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
   // RCTViewComponentView subviews are not recognized, so we add a
-  // non-visible UILabel as an element hint.
-  UILabel *hint = [[UILabel alloc] initWithFrame:self.bounds];
-  hint.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  // non-visible UILabel as an element hint. iOS 27+ ignores full-size empty
+  // label when applying soft effect, so we put 1x1 in the corner instead
+  BOOL isTopEdge = edge == UIRectEdgeTop;
+  UILabel *hint = [[UILabel alloc] initWithFrame:CGRectMake(0, isTopEdge ? CGRectGetHeight(self.bounds) - 1 : 0, 1, 1)];
+  hint.autoresizingMask = isTopEdge ? UIViewAutoresizingFlexibleTopMargin : UIViewAutoresizingNone;
   hint.userInteractionEnabled = NO;
   [self addSubview:hint];
   objc_setAssociatedObject(self, kEdgeEffectHintKey, hint, OBJC_ASSOCIATION_RETAIN_NONATOMIC);

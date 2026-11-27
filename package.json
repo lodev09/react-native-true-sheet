@@ -1,6 +1,6 @@
 {
   "name": "@lodev09/react-native-true-sheet",
-  "version": "4.0.0-beta.31",
+  "version": "4.1.2",
   "description": "The true native bottom sheet experience for your React Native Apps.",
   "source": "./src/index.ts",
   "main": "./lib/module/index.js",
@@ -11,10 +11,26 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
-    "./mock": "./lib/module/mocks/index.js",
-    "./navigation/mock": "./lib/module/mocks/navigation.js",
-    "./navigation/expo-router/mock": "./lib/module/mocks/navigationExpoRouter.js",
-    "./reanimated/mock": "./lib/module/mocks/reanimated.js",
+    "./mock": {
+      "types": "./lib/typescript/src/mocks/index.d.ts",
+      "default": "./lib/module/mocks/index.js"
+    },
+    "./navigation/mock": {
+      "types": "./lib/typescript/src/mocks/navigation.d.ts",
+      "default": "./lib/module/mocks/navigation.js"
+    },
+    "./navigation/expo-router/mock": {
+      "types": "./lib/typescript/src/mocks/navigationExpoRouter.d.ts",
+      "default": "./lib/module/mocks/navigationExpoRouter.js"
+    },
+    "./navigation/reanimated/mock": {
+      "types": "./lib/typescript/src/mocks/navigationReanimated.d.ts",
+      "default": "./lib/module/mocks/navigationReanimated.js"
+    },
+    "./reanimated/mock": {
+      "types": "./lib/typescript/src/mocks/reanimated.d.ts",
+      "default": "./lib/module/mocks/reanimated.js"
+    },
     "./reanimated": {
       "source": "./src/reanimated/index.ts",
       "types": "./lib/typescript/src/reanimated/index.d.ts",
@@ -24,6 +40,11 @@
       "source": "./src/navigation/index.ts",
       "types": "./lib/typescript/src/navigation/index.d.ts",
       "default": "./lib/module/navigation/index.js"
+    },
+    "./navigation/reanimated": {
+      "source": "./src/navigation/reanimated.ts",
+      "types": "./lib/typescript/src/navigation/reanimated.d.ts",
+      "default": "./lib/module/navigation/reanimated.js"
     },
     "./navigation/expo-router": {
       "source": "./src/navigation/expo-router/index.ts",
@@ -39,6 +60,7 @@
     "ios",
     "common",
     "*.podspec",
+    "Package.swift",
     "react-native.config.js",
     "!ios/build",
     "!android/build",
@@ -53,7 +75,7 @@
   "scripts": {
     "bare": "yarn workspace @example/bare",
     "expo": "yarn workspace @example/expo",
-    "expo-58": "yarn workspace @example/expo-58",
+    "expo-57": "yarn workspace @example/expo-57",
     "docs": "yarn workspace docs",
     "test": "jest",
     "typecheck": "tsc",
@@ -139,8 +161,8 @@
     "react": "*",
     "react-dom": "*",
     "react-native": ">=0.82.0",
-    "react-native-reanimated": ">=4",
-    "react-native-worklets": "*",
+    "react-native-reanimated": ">=4.1.0",
+    "react-native-worklets": ">=0.5.0",
     "standard-navigation": ">=0.0.9"
   },
   "peerDependenciesMeta": {
@@ -172,7 +194,7 @@
   "workspaces": [
     "example/bare",
     "example/expo",
-    "example/expo-58",
+    "example/expo-57",
     "example/shared",
     "docs"
   ],
@@ -188,7 +210,7 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/bare/node_modules",
       "<rootDir>/example/expo/node_modules",
-      "<rootDir>/example/expo-58/node_modules",
+      "<rootDir>/example/expo-57/node_modules",
       "<rootDir>/example/shared/node_modules",
       "<rootDir>/lib/",
       "<rootDir>/docs/node_modules",
@@ -296,5 +318,8 @@
         }
       }
     }
+  },
+  "swiftpmConfig": {
+    "name": "RNTrueSheet"
   }
 }

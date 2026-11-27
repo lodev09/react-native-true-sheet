@@ -154,41 +154,59 @@ RCT_EXPORT_MODULE(TrueSheetModule)
         [view cancelPendingPresent];
       }
 
-      // Find the root presented sheet (one without a parent TrueSheet)
+      // Sheets hidden by navigation are still open in JS, so close them too. Among the
+      // rest, find the root presented sheet (one without a parent TrueSheet).
+      NSMutableArray<TrueSheetView *> *sheets = [NSMutableArray array];
       TrueSheetView *rootSheet = nil;
 
       for (TrueSheetView *view in viewRegistry.objectEnumerator) {
+        if (view.isHiddenByNavigation) {
+          [sheets addObject:view];
+          continue;
+        }
+
         // A sheet still animating in counts too — dismissAnimated waits for it to land
-        if (!view.viewController.isPresented && !view.viewController.isBeingPresented) {
+        if (rootSheet || (!view.viewController.isPresented && !view.viewController.isBeingPresented)) {
           continue;
         }
 
         UIViewController *presenter = view.viewController.presentingViewController;
-        BOOL hasParentSheet = [presenter isKindOfClass:[TrueSheetViewController class]];
-
-        if (!hasParentSheet) {
+        if (![presenter isKindOfClass:[TrueSheetViewController class]]) {
           rootSheet = view;
-          break;
         }
       }
 
-      if (!rootSheet) {
-        resolve(nil);
-        return;
+      if (rootSheet) {
+        // Mid-present, the deferred dismiss tracks its own position like a regular dismiss
+        if (rootSheet.viewController.isPresented) {
+          [rootSheet emitDismissedPosition];
+        }
+        [sheets addObject:rootSheet];
       }
 
-      // Mid-present, the deferred dismiss tracks its own position like a regular dismiss
-      if (rootSheet.viewController.isPresented) {
-        [rootSheet emitDismissedPosition];
+      dispatch_group_t group = dispatch_group_create();
+      __block BOOL failed = NO;
+      __block NSError *failure = nil;
+
+      for (TrueSheetView *view in sheets) {
+        dispatch_group_enter(group);
+        [view dismissAnimated:animated
+                   completion:^(BOOL success, NSError *_Nullable error) {
+                     if (!success) {
+                       failed = YES;
+                       failure = error;
+                     }
+                     dispatch_group_leave(group);
+                   }];
       }
-      [rootSheet dismissAnimated:animated
-                      completion:^(BOOL success, NSError *_Nullable error) {
-                        if (success) {
-                          resolve(nil);
-                        } else {
-                          reject(@"DISMISS_FAILED", error.localizedDescription ?: @"Failed to dismiss sheets", error);
-                        }
-                      }];
+
+      dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        if (failed) {
+          reject(@"DISMISS_FAILED", failure.localizedDescription ?: @"Failed to dismiss sheets", failure);
+        } else {
+          resolve(nil);
+        }
+      });
     }
   });
 }

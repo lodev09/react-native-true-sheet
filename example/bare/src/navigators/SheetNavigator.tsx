@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -7,6 +7,7 @@ import {
   createTrueSheetNavigator,
   useTrueSheetNavigation,
 } from '@lodev09/react-native-true-sheet/navigation';
+import '@lodev09/react-native-true-sheet/navigation/reanimated';
 import { Button, DemoContent, Footer, Header } from '@example/shared/components';
 import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
@@ -40,7 +41,31 @@ const HomeScreen = () => {
       <Button text="Open Small Footer Sheet" onPress={() => navigation.navigate('SmallFooter')} />
       <Button text="Open Peek Sheet" onPress={() => navigation.navigate('Peek')} />
       <Button text="Navigate to Test" onPress={() => navigation.navigate('Test')} />
+      <Button
+        text="Open Full Screen Modal"
+        onPress={() => navigation.navigate('SheetHomeStack', { screen: 'FullScreenModal' })}
+      />
       <Button text="Go Back" onPress={() => navigation.goBack()} />
+    </View>
+  );
+};
+
+// Repro: a sheet route opened while a fullScreenModal covers the navigator's base.
+const FullScreenModalScreen = () => {
+  const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
+
+  return (
+    <View style={styles.content}>
+      <View style={styles.heading}>
+        <Text style={styles.title}>Full Screen Modal</Text>
+        <Text style={styles.subtitle}>
+          A fullScreenModal inside the sheet navigator's base screen. Sheets opened from here
+          present over it.
+        </Text>
+      </View>
+      <Button text="Open Details Sheet" onPress={() => navigation.navigate('Details')} />
+      <Button text="Open Settings Sheet" onPress={() => navigation.navigate('Settings')} />
+      <Button text="Close Modal" onPress={() => navigation.goBack()} />
     </View>
   );
 };
@@ -61,6 +86,11 @@ const SheetHomeNavigator = () => {
     >
       <SheetHomeStack.Screen name="Home" component={HomeScreen} />
       <SheetHomeStack.Screen name="Test" component={TestScreenWrapper} />
+      <SheetHomeStack.Screen
+        name="FullScreenModal"
+        component={FullScreenModalScreen}
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+      />
     </SheetHomeStack.Navigator>
   );
 };
@@ -136,7 +166,7 @@ const PeekSheet = () => {
 // plugged into the sheet via `setOptions` instead of the static screen options.
 const ScrollableSheet = () => {
   const navigation = useTrueSheetNavigation<AppStackParamList & SheetStackParamList>();
-  const scrollableRef = useRef<ScrollView>(null);
+  const scrollableRef = useRef<ScrollViewInstance>(null);
 
   useEffect(() => {
     navigation.setOptions({ scrollableRef });
@@ -218,11 +248,6 @@ export const SheetNavigator = () => {
         sheetDragEnd: (e) => {
           console.log(`[SheetNavigator] sheetDragEnd: index=${e.data.index}`);
         },
-        // sheetPositionChange: (e) => {
-        //   console.log(
-        //     `[SheetNavigator] sheetPositionChange: position=${e.data.position.toFixed(0)}, realtime=${e.data.realtime}`
-        //   );
-        // },
         sheetWillFocus: () => {
           console.log('[SheetNavigator] sheetWillFocus');
         },
@@ -257,10 +282,6 @@ export const SheetNavigator = () => {
           backgroundColor: DARK,
           cornerRadius: 16,
           reanimated: true,
-          // positionChangeHandler: (payload) => {
-          //   'worklet';
-          //   console.log(payload.position);
-          // },
         }}
       />
       <SheetStack.Screen

@@ -13,7 +13,6 @@ import type {
   PositionChangeEvent,
   PositionChangeEventPayload,
   WillBlurEvent,
-  WillDismissEvent,
   DismissAttemptEvent,
   WillFocusEvent,
   WillPresentEvent,
@@ -35,15 +34,24 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
 
   const ref = useRef<TrueSheet>(null);
   const isDismissedRef = useRef(false);
+  const isPresentingRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const initialDetentIndexRef = useRef(detentIndex);
 
   useEffect(() => {
     if (closing && !isDismissedRef.current) {
       isDismissedRef.current = true;
-      ref.current?.dismiss();
+
+      // Dismissing a sheet that hasn't started presenting cancels the present without a
+      // didDismiss, so remove the route here or it stays in state, swallowing back actions
+      const removeIfNeverPresented = () => {
+        if (!isPresentingRef.current) {
+          dispatch({ ...TrueSheetActions.remove(), source: routeKey });
+        }
+      };
+      Promise.resolve(ref.current?.dismiss()).then(removeIfNeverPresented, removeIfNeverPresented);
     }
-  }, [closing]);
+  }, [closing, dispatch, routeKey]);
 
   useEffect(() => {
     if (isFirstRenderRef.current) {
@@ -67,17 +75,32 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
     [emit, routeKey]
   );
 
+  // A dismiss already underway (swipe or back press) must not be dismissed again when
+  // navigation marks the route closing before it finishes
+  const onWillDismiss = useCallback(() => {
+    isDismissedRef.current = true;
+    emitEvent('sheetWillDismiss', undefined);
+  }, [emitEvent]);
+
   const onDidDismiss = useCallback(() => {
     emitEvent('sheetDidDismiss', undefined);
     isDismissedRef.current = true;
     dispatch({ ...TrueSheetActions.remove(), source: routeKey });
   }, [emitEvent, dispatch, routeKey]);
 
+  const onWillPresent = useCallback(
+    (e: WillPresentEvent) => {
+      isPresentingRef.current = true;
+      emitEvent('sheetWillPresent', e.nativeEvent);
+    },
+    [emitEvent]
+  );
+
   const eventHandlers = useMemo(
     () => ({
-      onWillPresent: (e: WillPresentEvent) => emitEvent('sheetWillPresent', e.nativeEvent),
+      onWillPresent,
       onDidPresent: (e: DidPresentEvent) => emitEvent('sheetDidPresent', e.nativeEvent),
-      onWillDismiss: (_e: WillDismissEvent) => emitEvent('sheetWillDismiss', undefined),
+      onWillDismiss,
       onDidDismiss,
       onDismissAttempt: (_e: DismissAttemptEvent) => emitEvent('sheetDismissAttempt', undefined),
       onDetentChange: (e: DetentChangeEvent) => emitEvent('sheetDetentChange', e.nativeEvent),
@@ -90,12 +113,13 @@ export const useSheetScreenState = (props: UseSheetScreenStateProps) => {
       onWillBlur: (_e: WillBlurEvent) => emitEvent('sheetWillBlur', undefined),
       onDidBlur: (_e: DidBlurEvent) => emitEvent('sheetDidBlur', undefined),
     }),
-    [emitEvent, onDidDismiss]
+    [emitEvent, onWillPresent, onWillDismiss, onDidDismiss]
   );
 
   return {
     ref,
-    initialDetentIndex: initialDetentIndexRef.current,
+    // Closed before presenting: hold the auto-present back so the sheet never shows
+    initialDetentIndex: closing && !isPresentingRef.current ? -1 : initialDetentIndexRef.current,
     emitEvent,
     eventHandlers,
   };

@@ -10,9 +10,7 @@ interface ButtonGroupProps {
 export const ButtonGroup = ({ children }: ButtonGroupProps) => {
   return (
     <View style={styles.container}>
-      {Children.map(children, (child) => (
-        <View style={styles.item}>{child}</View>
-      ))}
+      {Children.map(children, (child) => child && <View style={styles.item}>{child}</View>)}
     </View>
   );
 };

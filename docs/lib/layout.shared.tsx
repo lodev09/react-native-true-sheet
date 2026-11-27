@@ -18,7 +18,7 @@ export function baseOptions(): BaseLayoutProps {
       { text: 'Docs', url: docsUrl, active: 'none' },
       { text: 'Blog', url: '/blog', active: 'nested-url' },
       { text: 'Example', url: `${site.github}/tree/main/example`, external: true },
-      { text: 'Changelog', url: `${site.github}/blob/main/CHANGELOG.md`, external: true },
+      { text: 'Changelog', url: `${site.github}/releases`, external: true },
     ],
   };
 }

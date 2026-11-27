@@ -90,8 +90,8 @@ type DetentBackground =
 **`BackgroundBlur` values:** `'light'`, `'dark'`, `'default'`, `'extra-light'`, `'regular'`, `'prominent'`, `'system-ultra-thin-material'`, `'system-thin-material'`, `'system-material'`, `'system-thick-material'`, `'system-chrome-material'`, plus `-light` and `-dark` variants of each system material.
 
 `blurOptions` and `BlurOptions` are removed in v4. Use a third-party blur in `background` for custom intensity or other platforms.
-The fallback covers older iOS versions, missing effect setters, and design compatibility mode on iOS 26.
-iOS 27+ ignores `UIDesignRequiresCompatibility`. Before iOS 26, the default is system-material blur.
+The fallback covers older iOS versions, missing effect setters, and design compatibility mode.
+iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later. Before iOS 26, the default is system-material blur.
 
 ## Grabber
 
@@ -148,7 +148,8 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
 |------|------|---------|-----------|-------------|
 | `dimmed` | `boolean` | `true` | 🍎🤖🌐 | Show background dim overlay |
 | `dimColor` | `ColorValue` | `"black"` | 🍎🤖🌐 | Color of the dim overlay |
-| `dimOpacity` | `number` | `0.5` | 🍎🤖🌐 | Opacity of the dim overlay (0–1). `0` is invisible but still blocks touches — use `dimmed={false}` for background interaction. On iOS a custom `dimColor`/`dimOpacity` replaces the system dim with its own layer; stacked sheets each add one, darkening the background |
+| `dimOpacity` | `number` | `0.5` | 🍎🤖🌐 | Opacity of the dim overlay (0–1). `0` is invisible but still blocks touches — use `dimmed={false}` for background interaction. On iOS a custom `dimColor`/`dimOpacity`/`dimBlur` replaces the system dim with its own layer; stacked sheets each add one, darkening the background |
+| `dimBlur` | `BackgroundBlur` | — | 🍎🤖🌐 | Blur the content behind the sheet instead of tinting it, with the matching iOS material tint on every platform (`dimColor` ignored). `dimOpacity` sets blur intensity; the blur follows the sheet position (Web fades it). Android 12+ blurs unless the system turns window blurs off (battery saver, weak GPU, settings), otherwise only tints. Android re-blurs on every redraw — costly over animating content (video, maps) on low-end devices. Ignored when `dimmed={false}` |
 | `dimmedDetentIndex` | `number` | `0` | 🍎🤖🌐 | Detent index at which dimming activates. Set to `1` to keep background interactive at the first detent |
 
 ## Header and Footer
@@ -179,7 +180,7 @@ On iOS, grabber strings only apply when `grabberOptions` is provided (the system
   avoidKeyboard?: boolean            // default: true — absolute footers only, native only
 }
 ```
-- `'relative'`: takes space below the content, included in `'auto'` but **excluded from `'peek'`** (pushed off-screen at peek). Stays in the layout flow behind the keyboard. If content is taller than the sheet (fixed detents), bound it with `flex: 1` on the sheet `style` so the footer stays visible.
+- `'relative'`: takes space below the content, included in `'auto'` but **excluded from `'peek'`** (pushed off-screen at peek). Stays in the layout flow behind the keyboard; with a plugged `scrollableRef`, its covered part adds no space above the keyboard in `'auto'`. If content is taller than the sheet (fixed detents), bound it with `flex: 1` on the sheet `style` so the footer stays visible.
 - `'absolute'`: floats over the content, excluded from `'auto'` but **included in `'peek'`**, and rises above the keyboard. A plugged scrollable is padded by the measured footer height automatically (and the footer then counts toward `'auto'`); for non-scrolling content, add bottom padding yourself so it ends above the footer.
 - `keyboardOffset` adjusts how far an absolute footer rises with the keyboard. Negative values tuck the footer's own bottom padding behind the keyboard.
 - `avoidKeyboard: false` keeps an absolute footer pinned behind the keyboard. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height. The footer keeps its safe-area padding and ignores `keyboardOffset`.

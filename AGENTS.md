@@ -70,6 +70,10 @@ Both platforms: `TrueSheetView` (hidden host) → Controller → `ContainerView`
 2. Create event class in `ios/events/` and `android/.../events/`
 3. Emit from native view
 
+### Adding an iOS source folder
+
+`RNTrueSheet.podspec` (CocoaPods) and `Package.swift` (SwiftPM) both build `ios/` and `common/cpp/`. CocoaPods flattens headers and SwiftPM does not, so add any new folder that holds headers to `headerSearchPaths` in `Package.swift`. CI only builds CocoaPods, so a missing entry breaks SwiftPM apps silently.
+
 ### Updating the AI skill
 
 `skills/truesheet-usage/` is the consumer-facing skill installed via `npx skills add lodev09/react-native-true-sheet`. Whenever docs under `docs/content/docs/next/` change (new prop, event, method, guide, limitation, or troubleshooting entry), update the skill to match in the same PR:

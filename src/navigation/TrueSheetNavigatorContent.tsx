@@ -5,16 +5,20 @@ import type {
   TrueSheetNavigatorContentExtraProps,
   TrueSheetStandardEventMap,
 } from './types';
-import { TrueSheetScreen, type TrueSheetScreenProps } from './screen';
+import { TrueSheetScreen } from './screen';
+import { getReanimatedScreen } from './screen/reanimatedScreen';
 
-let ReanimatedTrueSheetScreen: React.ComponentType<TrueSheetScreenProps> | null = null;
+const warnedRouteNames = new Set<string>();
 
-const getReanimatedScreen = (): React.ComponentType<TrueSheetScreenProps> => {
-  if (!ReanimatedTrueSheetScreen) {
-    ReanimatedTrueSheetScreen =
-      require('./screen/ReanimatedTrueSheetScreen').ReanimatedTrueSheetScreen;
-  }
-  return ReanimatedTrueSheetScreen!;
+const warnMissingReanimatedScreen = (routeName: string) => {
+  if (!__DEV__ || warnedRouteNames.has(routeName)) return;
+  warnedRouteNames.add(routeName);
+  console.warn(
+    `TrueSheet: the screen "${routeName}" sets \`reanimated: true\`, but the reanimated screen isn't enabled. ` +
+      `Import '@lodev09/react-native-true-sheet/navigation/reanimated' once, before the navigator renders ` +
+      '(e.g. at the top of your root layout). ' +
+      'Until then, its `positionChangeHandler` runs on the JS thread.'
+  );
 };
 
 const DEFAULT_DETENTS: ('auto' | number)[] = ['auto'];
@@ -64,28 +68,12 @@ export const TrueSheetNavigatorContent = ({
         } = options;
         const resolvedIndex = clampDetentIndex(route.resizeIndex ?? detentIndex, detents.length);
 
-        if (reanimated) {
-          const ReanimatedScreen = getReanimatedScreen();
-          return (
-            <ReanimatedScreen
-              key={route.key}
-              routeKey={route.key}
-              closing={route.closing}
-              detentIndex={resolvedIndex}
-              resizeKey={route.resizeKey}
-              detents={detents}
-              dispatch={dispatch}
-              emit={emitter.emit}
-              positionChangeHandler={positionChangeHandler}
-              {...sheetProps}
-            >
-              {render()}
-            </ReanimatedScreen>
-          );
-        }
+        const ReanimatedScreen = reanimated ? getReanimatedScreen() : null;
+        if (reanimated && !ReanimatedScreen) warnMissingReanimatedScreen(route.name);
+        const Screen = ReanimatedScreen ?? TrueSheetScreen;
 
         return (
-          <TrueSheetScreen
+          <Screen
             key={route.key}
             routeKey={route.key}
             closing={route.closing}
@@ -98,7 +86,7 @@ export const TrueSheetNavigatorContent = ({
             {...sheetProps}
           >
             {render()}
-          </TrueSheetScreen>
+          </Screen>
         );
       })}
     </>

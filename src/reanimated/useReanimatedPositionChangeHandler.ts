@@ -9,7 +9,7 @@ type PositionChangeHandler = (
 
 export const useReanimatedPositionChangeHandler = (
   handler: PositionChangeHandler,
-  dependencies: DependencyList = []
+  dependencies?: DependencyList
 ) => {
   const { context, doDependenciesDiffer } = useHandler({ onPositionChange: handler }, dependencies);
 
