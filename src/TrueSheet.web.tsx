@@ -178,14 +178,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const colorScheme = isHydrated ? systemColorScheme : undefined;
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
   // Server-rendered (and hydrating), a sheet presented from the start renders in place: a portal
-  // renders nothing on the server, so its content would only appear, animated, once hydrated. It
-  // moves to the portal once hydrated, already shown. Not a form sheet: on a wide window, its size
-  // and position come from the window and its content, which the server doesn't have. Until
-  // hydrated, the other sheets render nothing, as on the server: a portal can't be hydrated.
-  const [isServerRendered] = useState(
+  // renders nothing on the server, so its content would only appear, animated, once hydrated. Once
+  // hydrated, it moves to the portal container, still mounted (see ServerRenderedPortal), and to
+  // the portal itself once dismissed, while it has no content, for its next presentations. Not a
+  // form sheet: on a wide window, its size and position come from the window and its content,
+  // which the server doesn't have. Until hydrated, the other sheets render nothing, as on the
+  // server: a portal can't be hydrated.
+  const [isServerRendered, setIsServerRendered] = useState(
     () => !isHydrated && shouldAutoPresent && presentation !== 'form'
   );
-  const SheetPortal = isHydrated ? Drawer.Portal : isServerRendered ? InPlace : NotHydrated;
+  const SheetPortal: React.ComponentType<SheetPortalProps> = isServerRendered
+    ? ServerRenderedPortal
+    : isHydrated
+      ? Drawer.Portal
+      : NotHydrated;
   const didInitiallyPresentRef = useRef(shouldAutoPresent);
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
@@ -837,7 +843,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // (iOS dismisses from the presenter; Android runs dismissStack first).
       dismissDescendantsRef.current();
       // Mirror native's lazy-mount cancel: dismissed before willPresent, no events
-      if (!didEmitWillPresentRef.current) return undefined;
+      if (!didEmitWillPresentRef.current) {
+        setIsServerRendered(false);
+        return undefined;
+      }
       didEmitWillPresentRef.current = false;
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
       // emitWillDismissEvents (blur fires before dismiss). willPresent is
@@ -856,6 +865,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         settle(resolvePresentRef);
       } else {
         phaseRef.current = 'dismissed';
+        setIsServerRendered(false);
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
         onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
         settle(resolveDismissRef);
@@ -973,13 +983,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
   }, [computeDetentInfo]);
 
-  const { isNested, dismissAbove, descendants } = useSheetStack(
+  const { isNested, dismissAbove, descendants, getAbove } = useSheetStack(
     handleRef,
     drawerContentRef,
     isOpen,
     isFormSheet
   );
   dismissAboveRef.current = dismissAbove;
+  const getSheetsAbove = useCallback(
+    () => getAbove().map((entry) => entry.nodeRef.current),
+    [getAbove]
+  );
   // Captured per render: by the time the dismiss effect runs, this sheet has
   // already been popped from the stack, so `dismissAbove` can't find it.
   dismissDescendantsRef.current = () => {
@@ -1439,7 +1453,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         setActiveSnapPoint={handleSetActiveSnapPoint}
         {...snapPointsProps}
       >
-        <SheetPortal container={portalContainer ?? undefined}>
+        <SheetPortal container={portalContainer ?? undefined} getSheetsAbove={getSheetsAbove}>
           {!isHydrated && (
             <style href="true-sheet-server-rendering" precedence="default">
               {serverRenderingCss}
@@ -1496,11 +1510,82 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 });
 
-const InPlace = ({ children }: { children?: React.ReactNode; container?: HTMLElement }) => (
-  <>{children}</>
-);
+type SheetPortalProps = {
+  children?: React.ReactNode;
+  container?: HTMLElement;
+  // The drawers of the sheets stacked above (only ServerRenderedPortal places itself)
+  getSheetsAbove: () => (HTMLDivElement | null)[];
+};
 
-const NotHydrated: React.FC<Parameters<typeof InPlace>[0]> = () => null;
+// `moveBefore` keeps the moved nodes' state (focus, scroll) where supported
+const moveLayer = (container: HTMLElement, layer: HTMLElement, before: Element | null) => {
+  const parent = container as HTMLElement & {
+    moveBefore?: (node: Node, child: Node | null) => void;
+  };
+  if (parent.moveBefore) {
+    parent.moveBefore(layer, before);
+    return;
+  }
+  const focused = document.activeElement;
+  container.insertBefore(layer, before);
+  if (focused instanceof HTMLElement && layer.contains(focused)) {
+    focused.focus({ preventScroll: true });
+  }
+};
+
+// Rendered in place on the server, where a portal renders nothing. Once hydrated, its layer moves
+// to the portal container, where a portal renders, without remounting what it renders (input,
+// state, effects): React keeps the layer's children in it, wherever it is. It's back in place
+// before React removes it, once the sheet is dismissed (see isServerRendered). Without a
+// provider's container, it stays in place.
+const ServerRenderedPortal = ({ children, container, getSheetsAbove }: SheetPortalProps) => {
+  const isHydrated = useIsHydrated();
+  const placeholderRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const placeholder = placeholderRef.current!;
+    const layer = layerRef.current!;
+    return () => {
+      if (layer.parentNode !== placeholder) placeholder.appendChild(layer);
+    };
+  }, []);
+
+  // A passive effect: the provider attaches its container in a layout effect, after this one
+  useEffect(() => {
+    const layer = layerRef.current!;
+    if (!isHydrated || !container?.isConnected || layer.parentNode === container) return;
+    // Below the sheets stacked above it already in the container, such as a form sheet presented
+    // from the start, which is portaled once hydrated
+    let before: Element | null = null;
+    for (const drawer of getSheetsAbove()) {
+      let node: Element | null = drawer;
+      while (node && node.parentElement !== container) node = node.parentElement;
+      if (!node) continue;
+      // A portaled sheet's dim is the container's child before its wrapper
+      const overlay = node.previousElementSibling;
+      before =
+        node.hasAttribute('data-vaul-detached-wrapper') &&
+        overlay?.hasAttribute('data-vaul-overlay')
+          ? overlay
+          : node;
+      break;
+    }
+    moveLayer(container, layer, before);
+  }, [isHydrated, container, getSheetsAbove]);
+
+  return (
+    <div ref={placeholderRef} style={layerStyle}>
+      <div ref={layerRef} style={layerStyle}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const layerStyle: React.CSSProperties = { display: 'contents' };
+
+const NotHydrated: React.FC<SheetPortalProps> = () => null;
 
 const WRAPPER_VARIABLES = {
   maxWidth: '--true-sheet-max-width',

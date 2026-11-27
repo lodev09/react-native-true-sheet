@@ -280,43 +280,6 @@ describe('server rendering', () => {
     }
   );
 
-  it('shows a drawer moved to the portal once hydrated at once, without animating it in again', () => {
-    const wrapper = new MockElement();
-    const drawer = new MockElement();
-    drawer.closest = () => wrapper;
-    const layout = jest.spyOn(wrapper, 'offsetHeight', 'get');
-    // Remounted with another parent, as when TrueSheet.web moves it from in place to the portal
-    const sheet = (parent: string) => (
-      <Drawer.Root
-        open
-        initialAnimated={false}
-        snapPoints={[0.4, 1]}
-        activeSnapPoint={1}
-        fadeFromIndex={0}
-        contentHeight={400}
-      >
-        <Drawer.Overlay key={parent} />
-        <Drawer.Content key={parent} />
-      </Drawer.Root>
-    );
-    isHydrated.mockReturnValue(false);
-    const result = render(sheet('in place'), {
-      createNodeMock: ({ props }) =>
-        'data-vaul-drawer' in (props as object) ? drawer : new MockElement(),
-    });
-    isHydrated.mockReturnValue(true);
-    act(() => jest.runOnlyPendingTimers());
-    result.rerender(sheet('portal'));
-
-    // No slide-in: the wrapper isn't reset off-screen first
-    expect(layout).not.toHaveBeenCalled();
-    // Its dim shown at once, above fadeFromIndex too
-    expect(result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' }).props).toMatchObject({
-      'data-vaul-delayed-snap-points': 'true',
-      'data-vaul-snap-points-overlay': 'true',
-    });
-  });
-
   it('reads no document to scale the background', () => {
     const { useScaleBackground } = jest.requireActual('../web/vaul/use-scale-background');
     // @ts-expect-error the server has no document

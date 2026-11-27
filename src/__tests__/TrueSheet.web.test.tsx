@@ -1,4 +1,4 @@
-import { createRef } from 'react';
+import { createRef, useEffect } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
@@ -33,6 +33,7 @@ class MockElement {
   getAnimations() {
     return [];
   }
+  appendChild() {}
 }
 
 const backgrounds = [null, '#123456', { color: '#abcdef' }];
@@ -458,15 +459,86 @@ describe('web server rendering', () => {
       '--true-sheet-wide-margin-inline-end': 'auto',
     });
 
-    // In the portal once hydrated, still not animated in: already shown
+    // Still mounted where it is once hydrated (its layer moves, see the next test), not animated in
     isHydrated.mockReturnValue(true);
     sheet.rerender(<TrueSheet {...sheet.props} />);
-    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
     expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(false);
     expect(sizingStyle(sheet)).toBeNull();
     // Sized from the window once hydrated (750 wide in tests)
     expect(wrapperSizing(sheet)).toMatchObject({ maxWidth: 640, marginInlineStart: 'auto' });
     expect(Object.keys(wrapperSizing(sheet)).filter((key) => key.startsWith('--'))).toEqual([]);
+  });
+
+  it('moves a sheet rendered in place to the portal container once hydrated, still mounted', () => {
+    const mounts = jest.fn();
+    const Child = () => {
+      useEffect(() => mounts(), []);
+      return null;
+    };
+    const container = Object.assign(new MockElement(), {
+      children: [],
+      insertBefore: jest.fn(),
+      setAttribute: jest.fn(),
+    });
+    global.document = {
+      createElement: () => container,
+      activeElement: null,
+    } as unknown as Document;
+    // The placeholder in place and the layer in it (display: contents), the layer created first
+    const layers: MockElement[] = [];
+    const createNodeMock = ({ props }: { props: unknown }) => {
+      const node = Object.assign(new MockElement(), { appendChild: jest.fn() });
+      if ((props as { style?: { display?: string } }).style?.display === 'contents') {
+        layers.push(node);
+      }
+      return node;
+    };
+    const tree = () => (
+      <TrueSheetProvider>
+        <TrueSheet initialDetentIndex={0} detents={[0.5]}>
+          <Child />
+        </TrueSheet>
+      </TrueSheetProvider>
+    );
+    isHydrated.mockReturnValue(false);
+    const result = render(tree(), { createNodeMock });
+    expect(container.insertBefore).not.toHaveBeenCalled();
+
+    isHydrated.mockReturnValue(true);
+    result.rerender(tree());
+    const [layer, placeholder] = layers;
+    expect(container.insertBefore).toHaveBeenCalledWith(layer, null);
+    expect(mounts).toHaveBeenCalledTimes(1);
+
+    // Back in its placeholder before React removes it
+    result.unmount();
+    expect(placeholder!.appendChild).toHaveBeenCalledWith(layer);
+    // @ts-expect-error restored for the other tests
+    delete global.document;
+  });
+
+  it('portals a server-rendered sheet once dismissed, for its next presentations', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+
+    fire(() => sheet.ref.current!.dismiss());
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('portals a server-rendered sheet dismissed before it presents', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+
+    fire(() => sheet.ref.current!.dismiss());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
   });
 
   it('renders the default colors of the system color scheme until hydrated', () => {

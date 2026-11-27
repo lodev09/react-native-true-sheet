@@ -308,9 +308,6 @@ export function Root({
   const keyboardIsOpen = React.useRef(false);
   const shouldAnimate = React.useRef(!defaultOpen);
   const hasPresented = React.useRef(false);
-  // Whether the open drawer is shown: a Content or Overlay mounted while it is (moved to a portal,
-  // see TrueSheet.web) shows at once instead of animating in
-  const isShown = React.useRef(false);
   const previousDiffFromInitial = React.useRef(0);
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const drawerHeightRef = React.useRef(drawerRef.current?.getBoundingClientRect().height || 0);
@@ -1037,7 +1034,6 @@ export function Root({
           shouldAnimate,
           initialAnimated,
           hasPresented,
-          isShown,
           handleOnly,
           isOpen,
           isDragging,
@@ -1087,16 +1083,13 @@ export const Overlay = React.forwardRef<
     shouldAnimate,
     activeSnapPointIndex,
     fadeFromIndex,
-    isShown,
   } = useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
-  // A sheet rendered in place until hydrated, then moved to the portal (see TrueSheet.web), is
-  // already shown: its dim too, at or above fadeFromIndex, without fading in. Otherwise
-  // `snapToPoint` drives its opacity inline.
+  // A sheet rendered in place until hydrated (see TrueSheet.web) is already shown: its dim too,
+  // at or above fadeFromIndex. Once hydrated, `snapToPoint` drives its opacity inline.
   const isHydrated = useIsHydrated();
-  const [isShownOnMount] = React.useState(() => !isHydrated || (isOpen && isShown.current));
-  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(isShownOnMount);
+  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(!isHydrated);
   const onMouseUp = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => onRelease(event),
     [onRelease]
@@ -1142,7 +1135,7 @@ export const Overlay = React.forwardRef<
         data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
         data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
         data-vaul-snap-points-overlay={
-          isOpen && (shouldFade || (isShownOnMount && !isBelowFade)) ? 'true' : 'false'
+          isOpen && (shouldFade || (!isHydrated && !isBelowFade)) ? 'true' : 'false'
         }
         data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
         {...rest}
@@ -1209,7 +1202,6 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       shouldAnimate,
       initialAnimated,
       hasPresented,
-      isShown,
       autoFocus,
       onPositionChangeRef,
       setContentHeight,
@@ -1448,11 +1440,9 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
     // record a starting value so the transition actually animates.
     // Start at `false` so a mount with `isOpen=true` (autopresent via
     // `initialDetentIndex`) is detected as a false→true transition and runs
-    // the slide-up animation instead of snapping straight to rest. Not when
-    // the drawer is already shown (remounted in a portal once hydrated).
-    const wasOpenRef = React.useRef(isOpen && isShown.current);
+    // the slide-up animation instead of snapping straight to rest.
+    const wasOpenRef = React.useRef(false);
     React.useEffect(() => {
-      isShown.current = isOpen && !!drawerRef.current;
       if (!drawerRef.current) {
         wasOpenRef.current = isOpen;
         return;
