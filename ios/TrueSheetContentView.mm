@@ -126,20 +126,6 @@ using namespace facebook::react;
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextViewTextDidChangeNotification object:nil];
 }
 
-#pragma mark - Accessibility
-
-// Only an accessibility client (VoiceOver, XCTest) asks while walking the sheet, so
-// this tells the controller someone is reading it.
-- (BOOL)isAccessibilityElement {
-  for (UIResponder *responder = self.nextResponder; responder; responder = responder.nextResponder) {
-    if ([responder isKindOfClass:[TrueSheetViewController class]]) {
-      [(TrueSheetViewController *)responder noteAccessibilityQuery];
-      break;
-    }
-  }
-  return [super isAccessibilityElement];
-}
-
 #pragma mark - Layout
 
 - (CGFloat)naturalHeight {

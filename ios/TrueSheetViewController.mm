@@ -9,7 +9,6 @@
 #import "TrueSheetViewController.h"
 #import "TrueSheetContainerView.h"
 #import "TrueSheetContentView.h"
-#import "TrueSheetOverlayView.h"
 #import "core/TrueSheetBlurView.h"
 #import "core/TrueSheetDetentCalculator.h"
 #import "core/TrueSheetDimView.h"
@@ -37,15 +36,14 @@ static BOOL TrueSheetPositionStateEquals(TrueSheetPositionState a, TrueSheetPosi
   return fabs(a.position - b.position) <= 0.01 && fabs(a.detent - b.detent) <= 0.01 && fabs(a.index - b.index) <= 0.01;
 }
 
-static char TrueSheetAccessibilityWindowOwnerKey;
-static char TrueSheetAccessibilityWindowPreviousElementsKey;
+static char TrueSheetAccessibilityOwnerKey;
+static char TrueSheetAccessibilityHiddenViewsKey;
 
 @interface TrueSheetViewController ()
 
-- (UIViewController *)accessibilityPresentingViewController;
 - (void)setupTransitionTracker;
 - (void)settleAtDetentIndex:(NSInteger)index debug:(NSString *)debug;
-- (void)restoreWindowAccessibilityElements;
+- (void)restoreAccessibilityHiddenViews;
 - (void)setSheetAccessibilityElementsHidden:(BOOL)hidden;
 - (void)setAccessibilityContentElement:(UIView *)contentView;
 - (NSArray *)accessibilityGrabberElements;
@@ -122,13 +120,9 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
   UIView *_anchorView;
 
   __weak UIWindow *_accessibilityWindow;
-  NSTimer *_accessibilityCoverTimer;
-  BOOL _isAccessibilityCovered;
-  CFTimeInterval _lastAccessibilityQueryTime;
-  __weak UIViewController *_presentingCover;
   BOOL _appliedAccessibilityModal;
   NSArray *_appliedAccessibilityContentElements;
-  NSArray *_appliedAccessibilityElementsBehind;
+  NSArray<UIView *> *_appliedAccessibilityHiddenViews;
 
   TrueSheetBlurView *_blurView;
   TrueSheetGrabberView *_grabberView;
@@ -185,26 +179,12 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
     _hingeOffsets = [NSMutableDictionary dictionary];
     _detentCalculator = [[TrueSheetDetentCalculator alloc] init];
     _detentCalculator.delegate = self;
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(overlayWindowDidChange)
-                                                 name:TrueSheetOverlayWindowDidChangeNotification
-                                               object:nil];
-    for (NSNotificationName name in @[
-           UIAccessibilityVoiceOverStatusDidChangeNotification, UIAccessibilitySwitchControlStatusDidChangeNotification
-         ]) {
-      [[NSNotificationCenter defaultCenter] addObserver:self
-                                               selector:@selector(watchAccessibilityCover)
-                                                   name:name
-                                                 object:nil];
-    }
   }
   return self;
 }
 
 - (void)dealloc {
-  [self restoreWindowAccessibilityElements];
-  [_accessibilityCoverTimer invalidate];
+  [self restoreAccessibilityHiddenViews];
   [_transitionLink invalidate];
   _transitionLink = nil;
   [_interactivePositionLink invalidate];
@@ -216,13 +196,6 @@ static char TrueSheetAccessibilityWindowPreviousElementsKey;
 
 - (UISheetPresentationController *)sheet {
   return self.sheetPresentationController;
-}
-
-- (BOOL)isTopmostPresentedController {
-  if (!self.isViewLoaded || self.view.window == nil) {
-    return NO;
-  }
-  return self.presentedViewController == nil;
 }
 
 // YES while a child controller is stacked on top (e.g. a nested sheet) —
@@ -769,7 +742,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
       _parentSheetController = (TrueSheetViewController *)presenter;
       [_parentSheetController.delegate viewControllerWillBlur];
-      [_parentSheetController setAccessibilityContentElement:self.accessibilityContentView ?: self.view];
     }
 
     [self setupDimView];
@@ -867,10 +839,22 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   [self setAccessibilityContentElement:contentView];
 }
 
-// Only the topmost sheet may refresh, or it would steal the window
-// accessibility override from the child presented over it.
+// Even while something is presented over the sheet (e.g. an alert): nothing refreshes
+// once that dismisses, so a footer that remounts meanwhile would stay stale.
 - (BOOL)canRefreshAccessibilityContainer {
-  return _isPresented && !self.isBeingDismissed && self.isTopmostPresentedController;
+  return _isPresented && !self.isBeingDismissed && self.viewIfLoaded.window;
+}
+
+// The sheet presented above this one, directly or over a controller between them. Only a
+// sheet with none above changes what the rest of the window exposes.
+- (nullable TrueSheetViewController *)sheetAbove {
+  for (UIViewController *presented = self.presentedViewController; presented;
+    presented = presented.presentedViewController) {
+    if ([presented isKindOfClass:[TrueSheetViewController class]] && !presented.isBeingDismissed) {
+      return (TrueSheetViewController *)presented;
+    }
+  }
+  return nil;
 }
 
 - (void)refreshAccessibilityContainer {
@@ -880,10 +864,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 }
 
 - (void)refreshAccessibilityContainerIfChanged {
-  // The sheet on top owns the window's list, and what it lists behind itself
-  // depends on this sheet's dimming
-  if ([self.presentedViewController isKindOfClass:[TrueSheetViewController class]]) {
-    [(TrueSheetViewController *)self.presentedViewController refreshAccessibilityContainerIfChanged];
+  // The sheet above hides what it blocks, which depends on this sheet's dimming
+  TrueSheetViewController *sheetAbove = self.sheetAbove;
+  if (sheetAbove) {
+    [sheetAbove refreshAccessibilityContainerIfChanged];
     return;
   }
 
@@ -896,9 +880,9 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   // identity, so a header or footer control that remounts is picked up too.
   BOOL isAccessibilityModal = self.isDimmedAtCurrentDetent;
   if (isAccessibilityModal == _appliedAccessibilityModal &&
-      (isAccessibilityModal
-          ? [contentView.accessibilityElements ?: @[] isEqualToArray:_appliedAccessibilityContentElements]
-          : [[self accessibilityElementsBehind] isEqualToArray:_appliedAccessibilityElementsBehind])) {
+      (!isAccessibilityModal ||
+        [contentView.accessibilityElements ?: @[] isEqualToArray:_appliedAccessibilityContentElements]) &&
+      [[self accessibilityHiddenViews] isEqualToArray:_appliedAccessibilityHiddenViews ?: @[]]) {
     return;
   }
 
@@ -906,60 +890,109 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 }
 
-- (void)overlayWindowDidChange {
-  if (!self.canRefreshAccessibilityContainer) {
-    return;
+// The window's subview that holds the view. XCTest ignores accessibilityElementsHidden on
+// a sheet's presented view, but not on the window's subview that holds it.
+- (nullable UIView *)windowSubviewForView:(nullable UIView *)view {
+  while (view.superview && ![view.superview isKindOfClass:[UIWindow class]]) {
+    view = view.superview;
   }
-
-  [self setupAccessibilityContainer];
-  UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+  return view.superview ? view : nil;
 }
 
-- (UIViewController *)accessibilityPresentingViewController {
-  UIViewController *presentingViewController = self.presentingViewController;
-  while ([presentingViewController isKindOfClass:[TrueSheetViewController class]] &&
-         presentingViewController.presentingViewController) {
-    presentingViewController = presentingViewController.presentingViewController;
+// What this sheet blocks: every sheet in its chain that another sheet is presented directly
+// over, which UIKit tucks behind that one (iOS 26+), and everything behind the highest dimmed
+// sheet, since the dim takes those touches. A controller presented in between (e.g. a page
+// sheet) stays reachable.
+- (NSArray<UIView *> *)accessibilityHiddenViews {
+  NSMutableOrderedSet<UIView *> *views = [NSMutableOrderedSet orderedSet];
+  for (UIViewController *sheet = self; sheet; sheet = sheet.presentingViewController) {
+    UIViewController *presenter = sheet.presentingViewController;
+    if ([sheet isKindOfClass:[TrueSheetViewController class]] &&
+        [presenter isKindOfClass:[TrueSheetViewController class]]) {
+      UIView *container = [self windowSubviewForView:((TrueSheetViewController *)presenter).presentedView];
+      if (container) {
+        [views addObject:container];
+      }
+    }
   }
-  return presentingViewController;
+
+  for (UIViewController *sheet = self; sheet; sheet = sheet.presentingViewController) {
+    if ([sheet isKindOfClass:[TrueSheetViewController class]] &&
+        ((TrueSheetViewController *)sheet).isDimmedAtCurrentDetent) {
+      UIView *container = [self windowSubviewForView:((TrueSheetViewController *)sheet).presentedView];
+      NSArray<UIView *> *subviews = container.superview.subviews;
+      NSUInteger index = [subviews indexOfObject:container];
+      if (container && index != NSNotFound) {
+        [views addObjectsFromArray:[subviews subarrayWithRange:NSMakeRange(0, index)]];
+      }
+      break;
+    }
+  }
+  return views.array;
 }
 
-// What stays reachable behind a sheet that doesn't block touches: the screen under
-// the bottom sheet, unless a sheet in between dims it. Parent sheets are left out:
-// UIKit tucks them behind the child when it presents (iOS 26+).
-- (NSArray *)accessibilityElementsBehind {
-  UIViewController *presenter = self.presentingViewController;
-  if (![presenter isKindOfClass:[TrueSheetViewController class]]) {
-    return presenter.view ? @[ presenter.view ] : @[];
+// UIKit can make a sheet's container modal (e.g. a sheet stacked over another), and a
+// modal container hides its siblings: the screen behind and the overlays and menus over
+// it. Keep every container in the stack nonmodal, and hide what's blocked instead.
+- (void)clearAccessibilityStackModality {
+  for (UIViewController *sheet = self; [sheet isKindOfClass:[TrueSheetViewController class]];
+    sheet = sheet.presentingViewController) {
+    [self windowSubviewForView:((TrueSheetViewController *)sheet).presentedView].accessibilityViewIsModal = NO;
   }
-
-  TrueSheetViewController *parent = (TrueSheetViewController *)presenter;
-  return parent.isDimmedAtCurrentDetent ? @[] : [parent accessibilityElementsBehind];
 }
 
-- (void)restoreWindowAccessibilityElements {
+// Hides the views with accessibilityElementsHidden instead of listing what stays
+// reachable, so anything UIKit adds to the window (context menus, alerts, pickers)
+// stays in the default traversal. The window keeps each view's original value, so
+// a sheet presented over this one takes the hidden views over and restores them.
+- (void)applyAccessibilityHiddenViews:(NSArray<UIView *> *)views inWindow:(UIWindow *)window {
+  NSMapTable<UIView *, NSNumber *> *originals = objc_getAssociatedObject(window, &TrueSheetAccessibilityHiddenViewsKey);
+  if (!originals) {
+    originals = [NSMapTable weakToStrongObjectsMapTable];
+    objc_setAssociatedObject(
+      window, &TrueSheetAccessibilityHiddenViewsKey, originals, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  }
+
+  for (UIView *view in originals.keyEnumerator.allObjects) {
+    if (![views containsObject:view]) {
+      view.accessibilityElementsHidden = [[originals objectForKey:view] boolValue];
+      [originals removeObjectForKey:view];
+    }
+  }
+
+  for (UIView *view in views) {
+    if (![originals objectForKey:view]) {
+      [originals setObject:@(view.accessibilityElementsHidden) forKey:view];
+    }
+    view.accessibilityElementsHidden = YES;
+  }
+
+  objc_setAssociatedObject(window, &TrueSheetAccessibilityOwnerKey, [NSValue valueWithNonretainedObject:self],
+    OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  _accessibilityWindow = window;
+  _appliedAccessibilityHiddenViews = views;
+}
+
+- (void)restoreAccessibilityHiddenViews {
   UIWindow *window = _accessibilityWindow;
   if (window) {
-    // The active sheet may temporarily own window accessibility traversal. Only
-    // restore the previous value when this controller still owns that override.
-    NSValue *ownerValue = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey);
-    if (ownerValue && ownerValue.nonretainedObjectValue == self) {
-      id previousElements = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey);
-      window.accessibilityElements = previousElements == [NSNull null] ? nil : previousElements;
-      objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-      objc_setAssociatedObject(
-        window, &TrueSheetAccessibilityWindowPreviousElementsKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    // Only the sheet that applied them last restores them
+    NSValue *ownerValue = objc_getAssociatedObject(window, &TrueSheetAccessibilityOwnerKey);
+    if (ownerValue.nonretainedObjectValue == self) {
+      NSMapTable<UIView *, NSNumber *> *originals =
+        objc_getAssociatedObject(window, &TrueSheetAccessibilityHiddenViewsKey);
+      for (UIView *view in originals.keyEnumerator.allObjects) {
+        view.accessibilityElementsHidden = [[originals objectForKey:view] boolValue];
+      }
+      objc_setAssociatedObject(window, &TrueSheetAccessibilityHiddenViewsKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+      objc_setAssociatedObject(window, &TrueSheetAccessibilityOwnerKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
     _accessibilityWindow = nil;
   }
 
-  [_accessibilityCoverTimer invalidate];
-  _isAccessibilityCovered = NO;
-  _presentingCover = nil;
-
   // Fabric can pool this controller, so don't keep the presenter's views alive
-  _appliedAccessibilityElementsBehind = nil;
+  _appliedAccessibilityHiddenViews = nil;
   _appliedAccessibilityContentElements = nil;
 }
 
@@ -977,24 +1010,30 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     return @[ _grabberView ];
   }
 
+  if (!self.sheet.prefersGrabberVisible) {
+    return @[];
+  }
+
   // The system grabber is a view UIKit adds to the presented view, beside the one that
   // holds our root view. Expose it so VoiceOver can resize or dismiss with it. It only
   // reports itself as an accessibility element once the app's accessibility runtime
-  // loads (VoiceOver or an XCTest client), which can be after this list is built, so
-  // match it by visibility. UIKit also keeps a transparent bottom grabber there.
+  // loads (VoiceOver or an XCTest client), which can be after this list is built, and
+  // UIKit hides it while something covers the sheet, so match it by shape: the topmost
+  // thin view there. UIKit also keeps a transparent grabber at the bottom.
   UIView *presentedView = self.presentationController.presentedView;
   UIView *contentHost = self.view;
   while (contentHost.superview && contentHost.superview != presentedView) {
     contentHost = contentHost.superview;
   }
 
-  NSMutableArray *elements = [NSMutableArray array];
+  UIView *grabber = nil;
   for (UIView *subview in presentedView.subviews) {
-    if (subview != contentHost && !subview.hidden && subview.alpha > 0) {
-      [elements addObject:subview];
+    if (subview != contentHost && CGRectGetHeight(subview.bounds) < 20 &&
+        (!grabber || CGRectGetMinY(subview.frame) < CGRectGetMinY(grabber.frame))) {
+      grabber = subview;
     }
   }
-  return elements;
+  return grabber ? @[ grabber ] : @[];
 }
 
 - (BOOL)accessibilityPerformEscape {
@@ -1017,7 +1056,6 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   BOOL isAccessibilityModal = self.isDimmedAtCurrentDetent;
   _appliedAccessibilityModal = isAccessibilityModal;
   _appliedAccessibilityContentElements = nil;
-  _appliedAccessibilityElementsBehind = isAccessibilityModal ? nil : [self accessibilityElementsBehind];
 
   // At a hard modal boundary XCTest skips nested elements, so flatten the
   // container's children into the array. Otherwise expose the container itself:
@@ -1053,181 +1091,19 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     }
 
     UIWindow *window = self.view.window;
-    UIViewController *presentingViewController = [self accessibilityPresentingViewController];
-    if (window && presentingViewController.view) {
-      if (!_accessibilityWindow) {
-        _accessibilityWindow = window;
-        id previousElements = objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey);
-        if (!previousElements) {
-          previousElements = window.accessibilityElements ?: [NSNull null];
-          objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowPreviousElementsKey, previousElements,
-            OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        }
+    if (window) {
+      if (!self.sheetAbove) {
+        [self clearAccessibilityStackModality];
+        [self applyAccessibilityHiddenViews:[self accessibilityHiddenViews] inWindow:window];
       }
-      objc_setAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey, [NSValue valueWithNonretainedObject:self],
-        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-      NSArray *sheetElements = isAccessibilityModal
-                                 ? @[ presentedView ]
-                                 : [_appliedAccessibilityElementsBehind arrayByAddingObject:presentedView];
-      // Overlays render above every sheet. Listed first, since accessibility
-      // hit testing takes the first element containing the point.
-      _isAccessibilityCovered = self.isAccessibilityCovered;
-      window.accessibilityElements = _isAccessibilityCovered ? nil
-                                                             : [[TrueSheetOverlayView overlayContainersInWindow:window]
-                                                                 arrayByAddingObjectsFromArray:sheetElements];
-      [self watchAccessibilityCover];
       return;
     }
   }
 
-  [self restoreWindowAccessibilityElements];
+  [self restoreAccessibilityHiddenViews];
 }
 
 #pragma mark - Presentation
-
-- (void)presentViewController:(UIViewController *)viewControllerToPresent
-                     animated:(BOOL)flag
-                   completion:(void (^)(void))completion {
-  // A non-sheet controller (e.g. an action sheet, alert, or image picker) is about
-  // to present over us. Clear our window accessibility override so UIKit's default
-  // traversal surfaces it for XCTest and assistive technologies; we reclaim the
-  // override when it dismisses. Nested sheets claim their own override. UIKit refuses
-  // to present, without calling the completion, while we already present something
-  // (or are about to, e.g. a picker still starting) or are mid-transition, so leave
-  // those requests alone.
-  BOOL willPresent = !self.presentedViewController && !_presentingCover && !self.isBeingPresented &&
-                     !self.isBeingDismissed && self.viewIfLoaded.window;
-  if (willPresent && ![viewControllerToPresent isKindOfClass:[TrueSheetViewController class]]) {
-    self.view.window.accessibilityElements = nil;
-    _isAccessibilityCovered = YES;
-
-    // Some overlays (e.g. PHPickerViewController) present asynchronously, so nothing
-    // shows they cover us until the presentation completes. Count them as covering
-    // until then. Weak, in case UIKit refuses it anyway.
-    _presentingCover = viewControllerToPresent;
-    __weak __typeof(self) weakSelf = self;
-    void (^presentCompletion)(void) = completion;
-    completion = ^{
-      __typeof(self) strongSelf = weakSelf;
-      if (strongSelf && strongSelf->_presentingCover == viewControllerToPresent) {
-        strongSelf->_presentingCover = nil;
-      }
-      if (presentCompletion) {
-        presentCompletion();
-      }
-    };
-    [self watchAccessibilityCover];
-  }
-
-  [super presentViewController:viewControllerToPresent animated:flag completion:completion];
-}
-
-// Something over the sheet that our window override would hide from XCTest: a
-// controller presented over us, or a view UIKit adds straight to the window above
-// our presentation, like a context menu opened from a SwiftUI host, which doesn't
-// present through us. Overlays and sheets presented over us claim their own place.
-- (BOOL)isAccessibilityCovered {
-  if (_presentingCover) {
-    return YES;
-  }
-
-  UIViewController *presented = self.presentedViewController;
-  if (presented && ![presented isKindOfClass:[TrueSheetViewController class]]) {
-    return YES;
-  }
-
-  UIWindow *window = self.view.window;
-  UIView *container = [self windowSubviewContainingView:self.view];
-  UIView *presentedContainer = presented.isViewLoaded ? [self windowSubviewContainingView:presented.view] : nil;
-  NSArray *overlays = [TrueSheetOverlayView overlayContainersInWindow:window];
-  for (UIView *subview in window.subviews.reverseObjectEnumerator) {
-    if (subview == container) {
-      return NO;
-    }
-    if (subview.hidden || subview.alpha == 0 || subview.accessibilityElementsHidden || subview == presentedContainer ||
-        [overlays containsObject:subview]) {
-      continue;
-    }
-    return YES;
-  }
-  return NO;
-}
-
-- (nullable UIView *)windowSubviewContainingView:(nullable UIView *)view {
-  while (view.superview && ![view.superview isKindOfClass:[UIWindow class]]) {
-    view = view.superview;
-  }
-  return view.superview ? view : nil;
-}
-
-// A cover only hides something from an assistive technology or a client that reads
-// the sheet (e.g. XCTest, which can attach after the sheet presents).
-- (BOOL)hasAccessibilityDemand {
-  static const CFTimeInterval kQueryWindow = 10;
-  return UIAccessibilityIsVoiceOverRunning() || UIAccessibilityIsSwitchControlRunning() ||
-         CACurrentMediaTime() - _lastAccessibilityQueryTime < kQueryWindow;
-}
-
-- (void)noteAccessibilityQuery {
-  _lastAccessibilityQueryTime = CACurrentMediaTime();
-  [self watchAccessibilityCover];
-}
-
-// No callback reaches us when a cover comes or goes: a context menu doesn't present
-// through us, and an overlay can dismiss itself (e.g. an image picker) or be swiped
-// away. So poll while we own the window's list and someone reads it or a cover is up,
-// handing it to UIKit's default traversal while covered and reclaiming it once uncovered.
-- (void)watchAccessibilityCover {
-  if (_accessibilityCoverTimer.isValid || !_accessibilityWindow ||
-      (!_isAccessibilityCovered && !self.hasAccessibilityDemand)) {
-    return;
-  }
-
-  __weak __typeof(self) weakSelf = self;
-  _accessibilityCoverTimer = [NSTimer scheduledTimerWithTimeInterval:0.25
-                                                             repeats:YES
-                                                               block:^(NSTimer *timer) {
-                                                                 [weakSelf updateAccessibilityCover];
-                                                               }];
-  _accessibilityCoverTimer.tolerance = 0.1;
-}
-
-- (void)updateAccessibilityCover {
-  UIWindow *window = _accessibilityWindow;
-  NSValue *ownerValue = window ? objc_getAssociatedObject(window, &TrueSheetAccessibilityWindowOwnerKey) : nil;
-  // Once covered, keep watching until we reclaim the list, even if nobody reads it meanwhile
-  if (ownerValue.nonretainedObjectValue != self || (!_isAccessibilityCovered && !self.hasAccessibilityDemand)) {
-    [_accessibilityCoverTimer invalidate];
-    return;
-  }
-
-  BOOL isCovered = self.isAccessibilityCovered;
-  if (isCovered == _isAccessibilityCovered) {
-    return;
-  }
-
-  if (isCovered) {
-    _isAccessibilityCovered = YES;
-    window.accessibilityElements = nil;
-  } else {
-    [self refreshAccessibilityContainer];
-  }
-}
-
-- (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion {
-  [super dismissViewControllerAnimated:flag
-                            completion:^{
-                              if (completion) {
-                                completion();
-                              }
-
-                              // Reclaim the window accessibility override once nothing
-                              // else is presented over us.
-                              if (self.presentedViewController == nil) {
-                                [self refreshAccessibilityContainer];
-                              }
-                            }];
-}
 
 - (void)emitWillDismissEvents {
   if (self.isBeingDismissed && !_isWillDismissEmitted) {
@@ -1248,7 +1124,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)emitDidDismissEvents {
   if (self.isBeingDismissed) {
-    [self restoreWindowAccessibilityElements];
+    [self restoreAccessibilityHiddenViews];
     _isPresented = NO;
     _isWillDismissEmitted = NO;
     _hasObservedBottomInset = NO;
@@ -1271,7 +1147,16 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
-  [self restoreWindowAccessibilityElements];
+  [self restoreAccessibilityHiddenViews];
+
+  // Hand the window back to the sheet under this one, also past a controller between them
+  for (UIViewController *presenter = self.presentingViewController; presenter;
+    presenter = presenter.presentingViewController) {
+    if ([presenter isKindOfClass:[TrueSheetViewController class]]) {
+      [(TrueSheetViewController *)presenter refreshAccessibilityContainer];
+      break;
+    }
+  }
   [self setSheetAccessibilityElementsHidden:YES];
 
   // Dismissing with a child on top only animates the child out — this sheet
@@ -2334,6 +2219,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 
 - (void)setupGrabber {
   BOOL showGrabber = self.grabber && self.draggable;
+  BOOL showedSystemGrabber = self.sheet.prefersGrabberVisible;
 
   if (self.grabberOptions) {
     self.sheet.prefersGrabberVisible = NO;
@@ -2390,6 +2276,11 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
     _grabberView.onDecrement = nil;
   }
 
+  // UIKit adds, shows or hides its own grabber on the sheet's next layout, so run that before
+  // the refresh below looks for it
+  if (self.sheet.prefersGrabberVisible != showedSystemGrabber) {
+    [[self windowSubviewForView:self.presentedView] layoutIfNeeded];
+  }
   [self refreshAccessibilityContainer];
 }
 

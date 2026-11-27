@@ -129,7 +129,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) CGFloat minimizedKeyboardOverlap;
 
-@property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
@@ -152,7 +151,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupAccessibilityContainer;
 - (void)refreshAccessibilityContainer;
 - (void)refreshAccessibilityContainerIfChanged;
-- (void)noteAccessibilityQuery;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;
