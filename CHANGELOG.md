@@ -15,6 +15,10 @@
 - With the keyboard open, an `auto` sheet with a scrollable and an absolute `footer` no longer leaves a gap as tall as the bottom inset between the content and the footer. The content also keeps its distance from the footer when `footerOptions.keyboardOffset` is set. A relative footer, or an absolute one with `avoidKeyboard: false`, no longer leaves empty space above the keyboard while the keyboard covers it. ([#1045](https://github.com/lodev09/react-native-true-sheet/pull/1045), [#1057](https://github.com/lodev09/react-native-true-sheet/pull/1057) by [@cgrossbyte](https://github.com/cgrossbyte) and [@lodev09](https://github.com/lodev09))
 - With the keyboard open, a scrollable that ends above or partly under an absolute `footer` now scrolls its end above the footer, so a focused input near the end no longer stays hidden behind it. A footer moved by `footerOptions.keyboardOffset` or a `footerStyle` `bottom` offset is accounted for, and a footer fully behind the keyboard no longer pushes the focused input higher than needed. ([#1058](https://github.com/lodev09/react-native-true-sheet/pull/1058) by [@lodev09](https://github.com/lodev09))
 
+### 💥 Breaking changes
+
+- Sheet navigator screens with `reanimated: true` now need `import '@lodev09/react-native-true-sheet/navigation/reanimated'` once, before the navigator renders (e.g. at the top of the root layout). Without it, they warn in development and run `positionChangeHandler` on the JS thread. Apps that don't import it no longer bundle `react-native-reanimated` and `react-native-worklets` with the navigator. ([#978](https://github.com/lodev09/react-native-true-sheet/pull/978) by [@simondaigre](https://github.com/simondaigre))
+
 ### 💡 Others
 
 - Documented the iOS 26+ floating sheet layout: iPhone sheets float with side and bottom margins below the full detent, and `UIDesignRequiresCompatibility` is the only opt-out. Added to the troubleshooting page, the Liquid Glass guide, and the `truesheet-usage` skill. ([#1035](https://github.com/lodev09/react-native-true-sheet/pull/1035) by [@lodev09](https://github.com/lodev09))
