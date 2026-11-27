@@ -361,7 +361,7 @@ export type DismissThreshold =
   | 'short';
 
 /**
- * Blur style mapped to native values in IOS.
+ * Blur style mapped to native values in iOS.
  *
  * @platform ios
  */
@@ -481,6 +481,14 @@ export interface TrueSheetProps extends ViewProps {
    * @default 0.5
    */
   dimOpacity?: number;
+
+  /**
+   * Blurs the content behind the sheet instead of tinting it with `dimColor`.
+   * `dimOpacity` sets the blur intensity at full dim (0 to 1).
+   * Android 12+ blurs the app behind the sheet unless the system turns window blurs off; otherwise it only tints.
+   * This is ignored if `dimmed` is set to `false`.
+   */
+  dimBlur?: BackgroundBlur;
 
   /**
    * Initially present the sheet, after mounting, at a given detent index.
@@ -813,12 +821,12 @@ export interface TrueSheetProps extends ViewProps {
 
   /**
    * Called when the detent of the sheet has changed.
-   * Either by dragging or programatically.
+   * Either by dragging or programmatically.
    */
   onDetentChange?: (event: DetentChangeEvent) => void;
 
   /**
-   * Called when the sheet has began dragging.
+   * Called when the sheet has begun dragging.
    * Comes with the detent info.
    */
   onDragBegin?: (event: DragBeginEvent) => void;

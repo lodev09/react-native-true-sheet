@@ -6,9 +6,11 @@ keywords: [bottom sheet peek, bottom sheet collapsed, bottom sheet snap points, 
 
 Building a map-style sheet with a compact summary that expands into full content? The [`"peek"`](../reference/types#sheetdetent) detent collapses the sheet down to just the essentials — no manual height juggling needed.
 
+<Preview label="Peeking" src="/img/previews/peeking.mp4" />
+
 ## The `"peek"` Detent
 
-Add `"peek"` to your [`detents`](../reference/configuration#detents) to get a collapsed size based on the measured [`header`](header) and [`footer`](footer) heights.
+Add `"peek"` to your [`detents`](../reference/configuration#detents) to get a collapsed size based on the measured [`header`](header) height, plus an [absolute footer](footer#floating-footer) if provided — a relative footer is laid out below the content, so it's pushed off-screen at peek and doesn't count.
 
 ```tsx {4-4}
 const App = () => {
@@ -18,7 +20,7 @@ const App = () => {
       initialDetentIndex={0}
       header={<BookingSummary />}
       footer={<SheetActions />}
-      scrollable
+      footerOptions={{ position: 'absolute' }}
     >
       <BookingDetails />
     </TrueSheet>
@@ -26,7 +28,7 @@ const App = () => {
 }
 ```
 
-The peek height automatically follows the measured header and footer sizes. When neither `header` nor `footer` is provided, it falls back to a fixed height of `150`.
+The peek height automatically follows the measured header and footer sizes. When no `header`, absolute `footer`, or peeking content is provided, it falls back to a fixed height of `150`.
 
 ## Peeking Part of the Content
 
@@ -96,7 +98,7 @@ By default ([`insetAdjustment="automatic"`](../reference/configuration#insetadju
 
 ## Resizing
 
-`"peek"` works like any other detent — resize to it programmatically or listen for changes. See [Resizing Programmatically](resizing).
+`"peek"` works like any other detent — resize to it programmatically or listen for changes. See [Detents](detents#resizing-programmatically).
 
 ```tsx
 sheet.current?.resize(0) // collapse back to peek

@@ -155,11 +155,13 @@ const MapScreenInner = ({
   return (
     <View style={styles.container}>
       <MapComponent style={styles.map} />
-      <View pointerEvents="none" style={styles.logContainer}>
-        {logs.map((entry) => (
-          <LogLine key={entry.id} text={entry.text} />
-        ))}
-      </View>
+      {__DEV__ && (
+        <View pointerEvents="none" style={styles.logContainer}>
+          {logs.map((entry) => (
+            <LogLine key={entry.id} text={entry.text} />
+          ))}
+        </View>
+      )}
       <AnimatedButton
         activeOpacity={0.6}
         style={[styles.floatingControl, floatingControlStyles]}
@@ -172,7 +174,6 @@ const MapScreenInner = ({
         footer={
           <Footer
             onTouchStart={(e) => log(`footer touchStart y:${Math.round(e.nativeEvent.pageY)}`)}
-            // onTouchMove={(e) => log(`footer touchMove y:${Math.round(e.nativeEvent.pageY)}`)}
             onPressIn={() => log('footer pressIn')}
             onPressOut={() => log('footer pressOut')}
             onPress={() => log('footer pressed')}
@@ -184,17 +185,9 @@ const MapScreenInner = ({
         maxContentWidth={maxContentWidth}
         dimmedDetentIndex={1}
         detentBackgrounds={[null, null, BLUE]}
-        backgroundStyle={{
-          backgroundColor: `${BLUE}33`,
-        }}
         style={styles.sheet}
         detached
         dismissible={false}
-        // onLayout={(e: LayoutChangeEvent) => {
-        //   log(
-        //     `layout ${Math.round(e.nativeEvent.layout.width)}×${Math.round(e.nativeEvent.layout.height)}`
-        //   );
-        // }}
         onWillPresent={(e: WillPresentEvent) => {
           log(
             `willPresent i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
@@ -220,22 +213,11 @@ const MapScreenInner = ({
             `dragBegin i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
-        // onDragChange={(e: DragChangeEvent) => {
-        //   log(
-        //     `dragChange i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
-        //   );
-        // }}
         onDragEnd={(e: DragEndEvent) => {
           log(
             `dragEnd i:${e.nativeEvent.index} d:${e.nativeEvent.detent} y:${Math.round(e.nativeEvent.position)}`
           );
         }}
-        // onPositionChange={(e: PositionChangeEvent) => {
-        //   'worklet';
-        //   runOnJS(log)(
-        //     `position i:${e.nativeEvent.index} d:${e.nativeEvent.detent.toFixed(2)} y:${Math.round(e.nativeEvent.position)} rt:${e.nativeEvent.realtime}`
-        //   );
-        // }}
         onWillDismiss={() => log('willDismiss')}
         onDidDismiss={() => log('didDismiss')}
         header={<Header />}

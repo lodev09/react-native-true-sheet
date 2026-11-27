@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 import type { TrueSheetProps, PositionChangeEventPayload } from '../TrueSheet.types';
+import { TrueSheetBackground } from '../TrueSheetBackground';
 
 interface TrueSheetState {
   shouldRenderNativeView: boolean;
@@ -69,8 +70,15 @@ export class ReanimatedTrueSheet extends React.Component<TrueSheetProps, TrueShe
   }
 
   render() {
-    const { children, style } = this.props;
-    return React.createElement(View, { style }, this.renderHeader(), children, this.renderFooter());
+    const { children, style, background, backgroundStyle } = this.props;
+    return React.createElement(
+      View,
+      { style },
+      React.createElement(TrueSheetBackground, { background, backgroundStyle }),
+      this.renderHeader(),
+      children,
+      this.renderFooter()
+    );
   }
 }
 

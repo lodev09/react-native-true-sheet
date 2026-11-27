@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.13)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(LIB_LITERAL TrueSheetSpec)
 set(LIB_TARGET_NAME react_codegen_${LIB_LITERAL})
@@ -41,18 +40,7 @@ target_include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
-  target_compile_reactnative_options(${LIB_TARGET_NAME} PUBLIC)
-else()
-  target_compile_options(
-    ${LIB_TARGET_NAME}
-    PRIVATE
-    -fexceptions
-    -frtti
-    -std=c++20
-    -Wall
-  )
-endif()
+target_compile_reactnative_options(${LIB_TARGET_NAME} PUBLIC)
 
 target_compile_options(
   ${LIB_TARGET_NAME}

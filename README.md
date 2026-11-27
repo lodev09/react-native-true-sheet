@@ -2,56 +2,48 @@
 
 [![CI](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml/badge.svg)](https://github.com/lodev09/react-native-true-sheet/actions/workflows/checks.yml)
 [![NPM Downloads](https://img.shields.io/npm/d18m/%40lodev09%2Freact-native-true-sheet)](https://www.npmjs.com/package/@lodev09/react-native-true-sheet)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lodev09/react-native-true-sheet)
 
 The true native bottom sheet experience for your React Native Apps. 💩
 
-<img alt="React Native True Sheet - iPad" src="docs/public/img/preview-ipad.gif" width="744" /><br>
-<img alt="React Native True Sheet - IOS" src="docs/public/img/preview-ios.gif" width="248" height="500" /><img alt="React Native True Sheet - Android" src="docs/public/img/preview-android.gif" width="248" height="500" /><img alt="React Native True Sheet - Web" src="docs/public/img/preview-web.gif" width="248" height="500" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-ios-dark.gif" />
+  <img alt="React Native True Sheet - iOS" src="docs/public/img/previews/preview-ios-light.gif" height="439" />
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-android-dark.gif" />
+  <img alt="React Native True Sheet - Android" src="docs/public/img/previews/preview-android-light.gif" height="439" />
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/img/previews/preview-web-dark.gif" />
+  <img alt="React Native True Sheet - Web" src="docs/public/img/previews/preview-web-light.gif" height="439" />
+</picture>
 
 ## Features
 
 * ⚡ **Powered by Fabric** - Built on React Native's new architecture for maximum performance
 * 🚀 **Fully Native** - Implemented in the native realm, zero JS hacks
 * ♿ **Accessible** - Native accessibility and screen reader support out of the box
-* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#ref-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
+* 🔄 **Flexible API** - Use [imperative methods](https://sheet.lodev09.com/reference/methods#component-methods) or [lifecycle events](https://sheet.lodev09.com/reference/events)
 * ⌨️ **Keyboard Handling** - Built-in [keyboard handling](https://sheet.lodev09.com/guides/keyboard) with automatic adjustment
 * 📐 **Side Sheets** - Native [side sheet](https://sheet.lodev09.com/guides/side-sheets) support for iPad and Android tablets
+* 🎨 **Backgrounds** - Colors, blur, glass tints, and [per-detent backgrounds](https://sheet.lodev09.com/guides/backgrounds) on all platforms
+* 🍞 **Overlays** - Render toasts and dialogs [above your sheets](https://sheet.lodev09.com/guides/overlays) with `TrueSheetOverlay`
+* 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone (iOS 27.1+)
 * 🪟 **Liquid Glass** - [iOS 26+ Liquid Glass](https://sheet.lodev09.com/guides/liquid-glass) support out of the box, featured in [Expo Blog](https://expo.dev/blog/how-to-create-apple-maps-style-liquid-glass-sheets)
 * 🐎 **Reanimated** - First-class support for [react-native-reanimated](https://sheet.lodev09.com/guides/reanimated)
-* 🧭 **React Navigation** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) for seamless navigation integration
+* 🧭 **React Navigation & Expo Router** - Built-in [sheet navigator](https://sheet.lodev09.com/guides/navigation) and [Expo Router `Sheet` layout](https://sheet.lodev09.com/guides/navigation#expo-router)
 * 🌐 **Web Support** - Full [web support](https://sheet.lodev09.com/guides/web) out of the box
 
-## 🎉 What's New in v4
+## 🎉 True Sheet 4.0 is here!
 
 > [!TIP]
-> ✨ **v4 is in beta!** It rewrites the layout engine — the sheet now lays out synchronously per detent, so the container is sized to the sheet's visible height and tracks it in realtime while dragging.
-
-* 📏 **Synchronous layout** - Content resizes in the same frame as the sheet, no more lag
-* 📐 **`auto` detent with scrollables** - The sheet now sizes itself to a `ScrollView`/`FlatList`'s content height
-* 📜 **`scrollableRef`** - Pass a `ScrollView`/`FlatList` ref to wire nested scrolling, keyboard insets, and `auto` detent sizing
-* 🦶 **Relative footers** - Footers take up space below the content by default
-* 🧭 **Expo Router** - First-class support via the `Sheet` layout from `/navigation/expo-router`
-* 🍞 **`TrueSheetOverlay`** - Render toasts, dialogs, and other [overlays above your sheets](https://sheet.lodev09.com/guides/overlays) — no more `FullWindowOverlay`/`Modal` workarounds
-* 🔍 **Element inspector** - React Native's dev menu inspector now works inside a presented sheet
-* 🎨 **Dim color and opacity** - [Customize the dim](https://sheet.lodev09.com/guides/dimming#dim-color-and-opacity) behind the sheet with `dimColor` and `dimOpacity`
-* 📱 **Foldables** - [Rest the sheet on the hinge](https://sheet.lodev09.com/guides/foldables) of a half-folded iPhone with `foldOptions` (iOS 27.1+)
-
-```sh
-npx expo install @lodev09/react-native-true-sheet@beta
-```
-
-See the [Migration Guide](docs/docs/migration.mdx) to upgrade. **v3 is still supported** for React Native 0.81-0.86 (Expo SDK 54-57) and remains the `latest` release on npm.
+> v4 rewrites the layout engine — the sheet now lays out synchronously per detent and tracks its visible height in realtime while dragging. Read the [announcement](https://sheet.lodev09.com/blog/release-4-0) and see the [Migration Guide](https://sheet.lodev09.com/migration) to upgrade.
 
 ## Installation
 
-> [!IMPORTANT]
-> **Version 3.0+ requires React Native's New Architecture (Fabric)**
-> For the old architecture, use version 2.x. See the [Migration Guide](https://sheet.lodev09.com/migration) for upgrading.
-
 ### Prerequisites
 
-- React Native 0.82+ (0.81+ on v3)
+- React Native 0.82+
 - New Architecture enabled
 - Xcode 26.1+
 
@@ -76,17 +68,17 @@ yarn add @lodev09/react-native-true-sheet
 cd ios && pod install
 ```
 
-These install v3. For v4, append `@beta` — see [🎉 What's New in v4](#-whats-new-in-v4).
+On apps using React Native's Swift Package Manager setup (React Native 0.88+), run `npx react-native spm` instead of `pod install`.
 
 ## Documentation
 
 - [Example](example)
 - [Configuration](https://sheet.lodev09.com/reference/configuration)
 - [Lifecycle Events](https://sheet.lodev09.com/reference/events)
-- [React Navigation](https://sheet.lodev09.com/guides/navigation)
+- [React Navigation & Expo Router](https://sheet.lodev09.com/guides/navigation)
 - [Troubleshooting](https://sheet.lodev09.com/troubleshooting)
 - [Testing with Jest](https://sheet.lodev09.com/guides/jest)
-- [Migrating to v3](https://sheet.lodev09.com/migration-v3)
+- [Migrating to v4](https://sheet.lodev09.com/migration)
 
 ## Usage
 

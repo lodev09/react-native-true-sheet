@@ -15,7 +15,7 @@ description: >-
 
 Use this skill to produce correct, idiomatic code for apps that consume `@lodev09/react-native-true-sheet` (v4). It covers choosing the right integration pattern, applying the public API correctly, and avoiding platform-specific pitfalls.
 
-Requires React Native >= 0.82 (Expo SDK 55+) with the New Architecture.
+Requires React Native >= 0.82 (Expo SDK 55+) with the New Architecture. On iOS it links through CocoaPods (`pod install`) or React Native's Swift Package Manager setup (`npx react-native spm`, RN 0.88+).
 
 ## Quick Start
 
@@ -193,7 +193,7 @@ const scrollableRef = useRef<ScrollView>(null)
 - Both are **relative** by default: header takes space above the content, footer below it, and both count toward the `'auto'` detent.
 - The footer **absorbs the bottom safe-area inset** natively — remove manual `paddingBottom: insets.bottom` from footer content or it doubles up. Set the footer background via `footerStyle` so it fills the inset.
 - A relative footer is laid out below the content — with fixed detents, bound the content with `flex: 1` (sheet `style`) so the footer stays visible.
-- To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard (opt out with `avoidKeyboard: false`); a relative one stays in the layout flow behind it.
+- To float them over the content instead (excluded from `'auto'` height), use `headerOptions={{ position: 'absolute' }}` / `footerOptions={{ position: 'absolute' }}`. An absolute footer rises above the keyboard (opt out with `avoidKeyboard: false`); a relative one stays in the layout flow behind it (with a plugged `scrollableRef`, its covered part adds no space above the keyboard in `'auto'`).
 - An absolute footer covers the bottom of a plugged scrollable — the scroll content is padded by the measured footer height automatically (default `contentInsetAdjustment: 'automatic'`) and the footer counts toward `'auto'`, so don't hard-code `paddingBottom: FOOTER_HEIGHT`. Use `'safe-area'` to let content scroll under the footer.
 - With `avoidKeyboard: false`, only the footer portion above the keyboard adds scroll padding and contributes to the expanded `'auto'` height. Footer inset adjustment must be enabled.
 
@@ -262,6 +262,9 @@ Renders children in a native layer above every presented sheet. Show/hide by con
 
 Don't try to block dismissal from a callback — native can't wait on JS. Toggle `dismissible` from state; blocked drags and back/escape fire `onDismissAttempt` (dim taps don't), then `dismiss()` programmatically.
 
+- `draggable={false}` alone still dismisses on a dim tap — use `dismissible={false}` to block both
+- Sheet navigator: `navigation.setOptions({ dismissible: !isDirty })`, listen for `sheetDismissAttempt`, close with `navigation.goBack()`
+
 ### Backgrounds
 
 ```tsx
@@ -309,6 +312,9 @@ Content mounts on first `present()` by default. If it settles asynchronously (da
 
 // Invisible dim that still blocks touches and dismisses on tap
 <TrueSheet detents={['auto']} dimOpacity={0} />
+
+// Blur the background instead of tinting it (dimOpacity = blur intensity, dimColor ignored)
+<TrueSheet detents={['auto']} dimBlur="system-ultra-thin-material-dark" dimOpacity={0.4} />
 ```
 
 ### Resize programmatically
@@ -338,7 +344,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 9. **Use `flexGrow: 1`** (not `flex: 1`) on `GestureHandlerRootView` inside the sheet on Android — unless the sheet itself has `style={{ flex: 1 }}`.
 10. **Dismiss sheets before closing Modals** on iOS — React Native has a bug where dismissing a Modal while a sheet is visible causes a blank screen.
 11. **Use `header`/`footer` props** for fixed chrome — don't reach for absolute positioning. Float them with `headerOptions`/`footerOptions` `position: 'absolute'` when they should overlay content.
-12. **Background effects**: on supported iOS 26.1+, blur takes precedence over color, then the default is Liquid Glass. Use `backgroundColor="transparent"` for a clear effect. Tint glass/blur or paint an exact color with `backgroundStyle.backgroundColor`. Missing effect setters or design compatibility mode on iOS 26 use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility`. For custom intensity, use a third-party blur in `background`; `blurOptions` is removed.
+12. **Background effects**: on supported iOS 26.1+, blur takes precedence over color, then the default is Liquid Glass. Use `backgroundColor="transparent"` for a clear effect. Tint glass/blur or paint an exact color with `backgroundStyle.backgroundColor`. Missing effect setters or design compatibility mode use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later. For custom intensity, use a third-party blur in `background`; `blurOptions` is removed.
 13. **Native stacks go in the base screen, not in sheet screens** (Sheet Navigator / Expo Router). The first screen is a regular view and can host `createNativeStackNavigator` (that's how you wrap an app). A sheet screen can't — Android crashes with `ScreenContainer is not attached under ReactRootView`. For multi-step flows, make each step its own sheet screen.
 
 ## Platform Differences at a Glance
@@ -357,6 +363,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | Scroll edge effects | iOS 26+ | No | No |
 | `grabberOptions` | Yes | Yes | No |
 | `dimColor` / `dimOpacity` | Custom dim layer replaces the system dim; stacked sheets each add one | Yes | Yes |
+| `dimBlur` | Yes, intensity follows the sheet | Android 12+ when system window blurs are on, tint only otherwise | Fades with the sheet |
 | `placement` / side sheets | System-controlled margins; `'automatic'` vs `'center'` differ on iOS 27+ | `placementOffset` prop | `placementOffset` prop |
 | `presentation` | iOS 17+ (iPad) | N/A | Landscape/tablet |
 | `foldOptions` | iOS 27.1+ foldables (tabletop) | No | No |
@@ -365,7 +372,7 @@ await sheet.current?.resize(2) // expands to full (index 2)
 | `dismissThreshold` | No (system-controlled) | Yes | Yes |
 | `lazy={false}` (pre-mount content) | Yes | Yes | No |
 | Edge-to-edge | N/A | Auto-detected | N/A |
-| Keyboard handling | Built-in | Built-in | Fits above the soft keyboard |
+| Keyboard handling | Built-in | Built-in (needs `adjustResize`) | Fits above the soft keyboard |
 
 ## Events
 
@@ -377,7 +384,7 @@ The most commonly used events:
 | `onDidPresent` | Sheet finished presenting | `{ index, position, detent }` |
 | `onDidDismiss` | Sheet finished dismissing | — |
 | `onDismissAttempt` | User tried to dismiss while `dismissible={false}` | — |
-| `onDetentChange` | User dragged or `resize()` changed the detent | `{ index, position, detent }` |
+| `onDetentChange` | A drag, `resize()`, or a `detents` change moved the sheet to another detent or index | `{ index, position, detent }` |
 | `onPositionChange` | Continuous position updates during drag/animation | `{ index, position, detent, realtime }` |
 
 For the full event list (drag events, focus/blur events, will/did lifecycle pairs, `onBackPress`), see the [API reference](./references/api.md#events).

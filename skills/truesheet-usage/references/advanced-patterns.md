@@ -163,7 +163,7 @@ Also available as `screenListeners` on the navigator or `listeners` on a screen.
 
 ### Navigating from sheets
 
-Sheets remain visible when presenting screens on top — `navigation.navigate('SomeScreen')` works directly, no dismissing first. This requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.25.2.patch) (see [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415)). On Expo SDK 56+ EAS builds the patch is silently dropped — see [Troubleshooting](./troubleshooting.md#patched-react-native-screens-not-applied-on-eas).
+Sheets remain visible when presenting screens on top — `navigation.navigate('SomeScreen')` works directly, no dismissing first. This requires a [patch to react-native-screens](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.26.2.patch) (see [PR #3415](https://github.com/software-mansion/react-native-screens/pull/3415)). On Expo SDK 56+ EAS builds the patch is silently dropped — see [Troubleshooting](./troubleshooting.md#patched-react-native-screens-not-applied-on-eas).
 
 ### Web caveat
 
@@ -451,7 +451,7 @@ On iOS 26.0 or devices without the effect setters, a transparent color cannot re
 
 ### iOS background effects
 
-Native effects need iOS 26.1+, the effect setters on the sheet and its detents, and no design compatibility mode (iOS 26 only; iOS 27+ ignores `UIDesignRequiresCompatibility`).
+Native effects need iOS 26.1+, the effect setters on the sheet and its detents, and no design compatibility mode (iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later).
 
 | Input | Native effects | Fallback |
 |-------|----------------|----------|
@@ -490,7 +490,7 @@ Tinted glass is not supported per detent. On iOS 26+, detents with a `detentBack
 ```
 
 Or via Expo config: `expo.ios.infoPlist.UIDesignRequiresCompatibility: true`. This disables Liquid Glass for the entire app on iOS 26.
-iOS 27+ ignores this key. Use `backgroundColor` or `backgroundBlur` for individual sheets.
+iOS 27+ ignores this key in apps built with the iOS 27 SDK or later. Use `backgroundColor` or `backgroundBlur` for individual sheets.
 
 ---
 
@@ -665,7 +665,7 @@ Only `backgroundColor` is supported in `backgroundStyle`. See [Custom blur](#cus
 
 Remove `blurOptions` and `BlurOptions`. For custom intensity, use a third-party blur in `background`.
 The built-in blur ignores touches, so the iOS 18 `interaction: false` workaround is no longer needed.
-Missing effect setters and design compatibility mode on iOS 26 use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility`.
+Missing effect setters and design compatibility mode use the fallback. iOS 27+ ignores `UIDesignRequiresCompatibility` only in apps built with the iOS 27 SDK or later.
 On iOS 26.0, color/blur still sits above glass.
 
 ### 7. `anchor` → `placement`
@@ -683,12 +683,11 @@ On iOS 26.0, color/blur still sits above glass.
 ### New in v4
 
 - `detentBackgrounds` — color/blur entries by detent index. Native iOS 26.1+ transitions, midpoint cross-fades elsewhere. Android/Web inherit the sheet background for blur entries. See [configuration](configuration.md#per-detent-backgrounds).
-
 - `'auto'` detent works with scrollables
-- `'peek'` detent + `TrueSheetPeek` component
 - `headerOptions` (floating header)
 - `footerOptions={{ position: 'absolute', avoidKeyboard: false }}` keeps native absolute footers behind the keyboard. The default is `true`. With footer inset adjustment enabled, only the uncovered portion adds scroll padding and contributes to the expanded `'auto'` height.
-- `accessibilityOptions`
+- `scrollableOptions.keyboardOffset` — adjust the scrollable's keyboard bottom inset; pass a negative value to cancel your own bottom padding
+- `onDismissAttempt` — fires when the user tries to dismiss a `dismissible={false}` sheet; confirm, then call `dismiss()`
 - `dimColor` / `dimOpacity` — customize the dim. On iOS they replace the system dim with a custom layer
 - `TrueSheetOverlay` — toasts/dialogs above sheets, replaces the `FullWindowOverlay`/`Modal` workaround
 - `foldOptions` — iOS 27.1+ foldables: rest the sheet on the hinge in tabletop. See [Foldables](#foldables-ios-271)

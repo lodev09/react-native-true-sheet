@@ -1,6 +1,8 @@
 ---
 name: e2e
 description: End-to-end test TrueSheet on the iOS simulator, the Android emulator, and mobile web (Safari / Chrome) — build and install the bare example or serve the expo example on web, drive the repro screens with argent, A/B against HEAD, and collect hard evidence (per-frame pixel and dim tracking, onPositionChange realtime/settle logs, live prop overrides including mid-gesture, temporary native logs, forced timing races, crash triage, live viewport readouts on web). Use when asked to build and e2e on iOS, Android, or web, verify or review a change in ios/, android/, or the web sheet (src/web, *.web.tsx), reproduce a visual glitch (sheet, footer, or dim jumps, flicker, wrong height), check position or detent events, check web keyboard or visual-viewport behavior, test prop-update timing around present/dismiss/cancelled swipes, reproduce a race or crash, or decide whether a bug is a regression vs HEAD.
+metadata:
+  internal: true
 ---
 
 # E2E
@@ -42,13 +44,21 @@ A branch that adds a codegen prop fails with "no member named X in TrueSheetView
 
 ### Android
 
+Boot the emulator yourself with the hardware GPU, as a background command with the max timeout:
+
+```sh
+~/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro_XL -gpu host -noaudio -no-boot-anim
+```
+
+argent `boot-device` passes `-gpu auto`, which on macOS falls back to SwiftShader (software rendering): the map and sheet animations drop frames. Check with `adb shell dumpsys SurfaceFlinger | grep GLES` — it should not say SwiftShader. If an emulator is already running on SwiftShader, `adb emu kill` it and boot again with the command above.
+
 ```sh
 cd example/bare/android && ./gradlew app:installDebug -PreactNativeArchitectures=arm64-v8a
 ```
 
 Builds and installs in one step (a library-only incremental rebuild is about 10 s). The APK is `example/bare/android/app/build/outputs/apk/debug/app-debug.apk` — copy it per variant for A/B (§4).
 
-- Run one Gradle build at a time: every example compiles the library into the shared root `android/build`, so parallel builds (or switching between bare and expo-58) leave stale codegen (`NoClassDefFoundError ...TrueSheetViewManagerInterface`). Recover with `rm -rf android/build` and a single rebuild.
+- Run one Gradle build at a time: every example compiles the library into the shared root `android/build`, so parallel builds (or switching between bare and expo) leave stale codegen (`NoClassDefFoundError ...TrueSheetViewManagerInterface`). Recover with `rm -rf android/build` and a single rebuild.
 - Metro on another port (8081 taken): `adb reverse` is not enough, the emulator dials `10.0.2.2:8081` and loads the other project's bundle (redbox "Cannot read property 'EventEmitter' of undefined"). Point the app at the new port, relaunch, and pass `port: 8082` to the argent debugger tools. When done, delete it (`adb shell run-as truesheet.example rm shared_prefs/truesheet.example_preferences.xml`).
 
   ```sh
@@ -69,6 +79,7 @@ Launch (or `/` on web) lands on MapScreen with the `main` ReanimatedTrueSheet (`
 | FlatList → "Switch to View/List"                      | Prop + size change in one commit (`scrollableHandle` flips with the content) — the coalesced deferred-update path         | Main sheet → FlatList        |
 | FlatList → Add/Remove Item                            | Size-only change                                                                                                          | Same sheet                   |
 | FlatList → "OPEN BLANK SHEET"                         | Stacked child sheet (0.3 detent)                                                                                          | Footer button                |
+| Blank sheet → prop change + next-tick dismiss         | Parent translation racing a dismiss (#1014, recipe in §3 races): the parent must return to rest and stay draggable        | Footer button, then hooks    |
 | Main → Add/Remove Content                             | Size-only change; the floating button follows `animatedPosition`                                                          | Main sheet buttons           |
 | ScrollView → Show ScrollView / Toggle ListView        | Late scrollable mount and remount, scroll edge effects                                                                    | Main sheet → ScrollView      |
 | Sheet Navigator → Details / Scrollable / Small Footer | `setOptions` footer and `scrollableRef`, `resize(1)`, stacked Settings + `pop()`                                          | Main sheet → Sheet Navigator |
@@ -82,7 +93,7 @@ RN deep-diffs props: a parent re-render sends a native props update only when a 
 
 - **Runtime hooks** — [references/runtime-hooks.md](references/runtime-hooks.md). Install `scripts/sheet-hooks.js` through `debugger-evaluate` to log every sheet's `onPositionChange` (position, `realtime`, index), override any prop live, change a prop on each drag event, and call `present`/`dismiss`/`resize` with precise timing. iOS and Android only.
 - **Frame analysis** — [references/frame-analysis.md](references/frame-analysis.md). Record with `screen-recording-start` (`trimStatic: false`, `showTouches: false`), then `scripts/track_column.py` prints a pixel column's tracked edge per frame, and an ffmpeg one-liner prints a region's mean luma per frame (dim). A pinned element that prints one value for the whole run did not move; a 1-frame jump shows up as its own line.
-- **Native debugging** — [references/native-debugging.md](references/native-debugging.md). Temporary `[TSDBG]` logs (`RCTLogWarn` on iOS, `Log.d` on Android), forcing timing races (blocked JS + `adb` input, heavy renders), and crash triage per platform.
+- **Native debugging** — [references/native-debugging.md](references/native-debugging.md). Temporary `[TSDBG]` logs (`RCTLogWarn` on iOS, `Log.d` on Android), forcing timing races (blocked JS + `adb` input, heavy renders, Android animator scale 0), and crash triage per platform.
 - **Web** — [references/web.md](references/web.md). A temporary live readout of the viewport and drawer geometry read through `describe`, plus measured Safari/Chrome keyboard and viewport facts.
 
 ## 4. A/B against HEAD

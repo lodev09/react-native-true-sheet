@@ -34,16 +34,13 @@ export const ReanimatedTrueSheetScreen = ({
     emit,
   });
 
-  const reanimatedPositionChangeHandler = useReanimatedPositionChangeHandler(
-    (payload) => {
-      'worklet';
-      positionChangeHandler?.(payload);
-      scheduleOnRN(onPositionChange, {
-        nativeEvent: payload,
-      } as PositionChangeEvent);
-    },
-    [onPositionChange, positionChangeHandler]
-  );
+  const reanimatedPositionChangeHandler = useReanimatedPositionChangeHandler((payload) => {
+    'worklet';
+    positionChangeHandler?.(payload);
+    scheduleOnRN(onPositionChange, {
+      nativeEvent: payload,
+    } as PositionChangeEvent);
+  });
 
   return (
     <AnimatedTrueSheet

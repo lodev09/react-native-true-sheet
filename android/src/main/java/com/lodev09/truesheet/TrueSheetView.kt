@@ -19,6 +19,7 @@ import com.lodev09.truesheet.core.AccessibilityOptions
 import com.lodev09.truesheet.core.GrabberOptions
 import com.lodev09.truesheet.core.RNScreensEventObserver
 import com.lodev09.truesheet.core.RNScreensEventObserverDelegate
+import com.lodev09.truesheet.core.TrueSheetBlurStyle
 import com.lodev09.truesheet.core.TrueSheetDismissThreshold
 import com.lodev09.truesheet.core.TrueSheetStackManager
 import com.lodev09.truesheet.events.*
@@ -47,6 +48,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
   var initialDetentIndex: Int = -1
   var initialDetentAnimated: Boolean = true
   private var didInitiallyPresent: Boolean = false
+  private var isInitialPresentScheduled: Boolean = false
 
   private var lastContainerWidth: Int = 0
   private var lastContainerHeight: Int = 0
@@ -134,12 +136,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (initialDetentIndex < 0 || didInitiallyPresent || !isAttachedToWindow) return
 
     didInitiallyPresent = true
+    isInitialPresentScheduled = true
     post {
       // The view may have been dropped (flag reset) or detached before this
       // ran — roll back so a later attach retries instead of presenting a
-      // sheet with no live host.
-      if (!didInitiallyPresent) return@post
-      if (!isAttachedToWindow) {
+      // sheet with no live host. Same when initialDetentIndex was withdrawn.
+      // A dismiss() meanwhile cancels it.
+      if (!didInitiallyPresent || !isInitialPresentScheduled) return@post
+      isInitialPresentScheduled = false
+      if (!isAttachedToWindow || initialDetentIndex < 0) {
         didInitiallyPresent = false
         return@post
       }
@@ -208,6 +213,7 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     cleanupScreenEventObserver()
     didInitiallyPresent = false
+    isInitialPresentScheduled = false
     cancelPendingPresent()
 
     viewController.dismissPromise = { viewController.delegate = null }
@@ -285,6 +291,15 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     }
   }
 
+  fun setDimBlur(tint: String?) {
+    val resolved = TrueSheetBlurStyle.fromString(tint)
+    if (viewController.dimBlur == resolved) return
+    viewController.dimBlur = resolved
+    if (viewController.isPresented) {
+      viewController.updateDimAmount()
+    }
+  }
+
   fun setDimmedDetentIndex(index: Int) {
     if (viewController.dimmedDetentIndex == index) return
     viewController.dimmedDetentIndex = index
@@ -355,6 +370,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     if (viewController.scrollableHandle == handle) return
     viewController.scrollableHandle = handle
     setupScrollable()
+    // BottomSheetBehavior only looks for its nested scrolling child in onLayoutChild, and
+    // nothing else is sure to lay the sheet out after a handle that arrives once it is presented.
+    viewController.sheetView?.requestLayout()
   }
 
   fun setAbsoluteHeader(absolute: Boolean) {
@@ -365,14 +383,11 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     viewController.absoluteFooter = absolute
   }
 
-  fun setFooterKeyboardOffset(offset: Float) {
-    viewController.footerKeyboardOffset = offset.dpToPx().toInt()
-    viewController.positionFooter()
-  }
-
-  fun setFooterAvoidsKeyboard(avoids: Boolean) {
-    viewController.footerAvoidsKeyboard = avoids
-    viewController.containerView?.footerAvoidsKeyboard = avoids
+  // The auto detent follows on the post-transaction refresh (see finalizeUpdates)
+  fun setFooterKeyboardOptions(keyboardOffset: Float, avoidsKeyboard: Boolean) {
+    viewController.footerKeyboardOffset = keyboardOffset.dpToPx().toInt()
+    viewController.footerAvoidsKeyboard = avoidsKeyboard
+    viewController.containerView?.footerAvoidsKeyboard = avoidsKeyboard
     viewController.positionFooter()
   }
 
@@ -469,7 +484,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       pendingPresentParent = parentSheet
       // A cancelled request's callback can still land (a timer below API 30) — only the latest may present
       val generation = ++pendingPresentGeneration
-      KeyboardUtils.dismiss(this) {
+      // Wait on the coordinator, which sits on the activity root: this host view can be inside a screen that
+      // stops insets animation dispatch (a react-native-screens form sheet), so its callback would never end
+      val keyboardHideTarget = rootContainerView?.let { viewController.coordinatorLayout } ?: this
+      KeyboardUtils.dismiss(keyboardHideTarget) {
         post {
           if (generation != pendingPresentGeneration) return@post
           val callback = pendingPresentCallback ?: return@post
@@ -529,8 +547,13 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
   @UiThread
   fun dismiss(animated: Boolean = true, promiseCallback: () -> Unit) {
-    // Dismissing before a deferred present starts cancels it — nothing was presented
-    if (cancelPendingPresent()) {
+    // Cancels a scheduled initialDetentIndex present, along with a present() waiting on the keyboard
+    val hadInitialPresentScheduled = isInitialPresentScheduled
+    isInitialPresentScheduled = false
+
+    // Dismissing before a deferred present starts cancels it — nothing was presented.
+    // A sheet already open with a scheduled initialDetentIndex present still dismisses below.
+    if (cancelPendingPresent() || (hadInitialPresentScheduled && !viewController.isPresented)) {
       promiseCallback()
       return
     }
@@ -746,6 +769,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
 
     TrueSheetStackManager.unregisterSheet(this)
 
+    // A parent dismissed during this slide-out (e.g. back pressed again) keeps its own slide-out,
+    // which already drops this sheet's dim; resetting it would pull it back up
+    if (parent?.viewController?.isBeingDismissed == true) return
+
     // The sheets below stop blending this sheet's dim
     parent?.viewController?.takeIf { it.isPresented }?.updateDimAmount()
 
@@ -843,6 +870,9 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
     // Peek content height affects peek detents
     updateSheetIfNeeded()
   }
+
+  override val footerKeyboardShift: Int
+    get() = viewController.footerKeyboardShift
 
   // ==================== RNScreensEventObserverDelegate ====================
 

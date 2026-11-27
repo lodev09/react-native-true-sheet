@@ -10,9 +10,9 @@ tags: [release, fabric, new-architecture]
 
 We're thrilled to announce the biggest update yet! True Sheet has been **completely rebuilt from the ground up** for React Native's New Architecture (Fabric). This isn't just an update — it's a whole new level of performance and native experience.
 
-<div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-  <img alt="React Native True Sheet - iOS" src="/img/preview-ios.gif" width="300" />
-  <img alt="React Native True Sheet - Android" src="/img/preview-android.gif" width="300" />
+<div className="flex flex-wrap gap-4">
+  <Preview label="TrueSheet on iOS" src="/img/previews/preview-ios.mp4" height={500} />
+  <Preview label="TrueSheet on Android" src="/img/previews/preview-android.mp4" device="android" height={500} />
 </div>
 
 ## Powered by Fabric
@@ -40,7 +40,7 @@ Say goodbye to `scrollRef`! Scroll views are now **automatically detected** on i
 </TrueSheet>
 ```
 
-See the [Scrolling guide](/guides/scrolling) for more details.
+See the [Scrolling guide](/v3/guides/scrolling) for more details.
 
 ### Native Header and Footer
 
@@ -132,7 +132,7 @@ Need a static sheet? Disable dragging entirely:
 </TrueSheet>
 ```
 
-See the [Resizing guide](/guides/resizing) for programmatic control.
+See the [Detents guide](/guides/detents#resizing-programmatically) for programmatic control.
 
 ### Dimming Control
 
@@ -173,7 +173,7 @@ See the [Global Methods guide](/guides/global-methods) for more details.
 Navigate to other screens from within a sheet without any issues! The sheet will remain visible in the background when presenting modals on top.
 
 :::note
-This requires changes to `react-native-screens`. There is a [pending PR](https://github.com/software-mansion/react-native-screens/pull/3415) that adds support for this. In the meantime, you can apply the patch from the [example app](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch).
+This requires changes to `react-native-screens`. There is a [pending PR](https://github.com/software-mansion/react-native-screens/pull/3415) that adds support for this. In the meantime, you can apply the patch from the [example app](https://github.com/lodev09/react-native-true-sheet/blob/220a46cc9e433fec691144b1c2989bb0638fa96a/.yarn/patches/react-native-screens-npm-4.18.0-fa7de65975.patch).
 :::
 
 See the [React Navigation guide](/guides/navigation) for more details.
@@ -187,7 +187,7 @@ Heads up! Version 3 includes some breaking changes:
 - **Detent Values** — Use fractional values (`0.5`) instead of percentage strings (`"50%"`)
 - **Removed Props** — `scrollRef`, `grabberProps`, `contentContainerStyle`
 
-Check out the [Migration Guide](/migration) for the full list and step-by-step upgrade instructions.
+Check out the [Migration Guide](/migration-v3) for the full list and step-by-step upgrade instructions.
 
 ## Get Started
 

@@ -53,13 +53,13 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
   private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
   private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
   private var activityRootView: View? = null
+  private var hasTrackedKeyboard = false
 
   fun start() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       setupAnimationCallback()
-    } else {
-      setupLegacyListener()
     }
+    setupGlobalLayoutListener()
     setupFocusChangeListener()
   }
 
@@ -87,6 +87,7 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     val newHeight = (from + (to - from) * fraction).toInt()
     if (currentHeight != newHeight) {
       currentHeight = newHeight
+      if (newHeight > 0) hasTrackedKeyboard = true
       delegate?.keyboardDidChangeHeight(newHeight)
     }
   }
@@ -146,49 +147,72 @@ class TrueSheetKeyboardObserver(private val targetView: View, private val reactC
     )
   }
 
-  private fun setupLegacyListener() {
+  private fun setupGlobalLayoutListener() {
     // Ensure we don't add duplicate listeners
     if (globalLayoutListener != null) return
 
     val rootView = targetView.rootView ?: return
     activityRootView = rootView
 
-    globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-      val rect = Rect()
-      rootView.getWindowVisibleDisplayFrame(rect)
-
-      val screenHeight = rootView.height
-      val keyboardHeight = screenHeight - rect.bottom
-
-      val newHeight = if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0
-
-      // Skip if already at this height
-      if (targetHeight == newHeight) return@OnGlobalLayoutListener
-
-      val previousHeight = currentHeight
-      targetHeight = newHeight
-      isHiding = newHeight < previousHeight
-
-      isTransitioning = true
-      if (newHeight > previousHeight) {
-        delegate?.keyboardWillShow(newHeight)
-      } else if (isHiding) {
-        delegate?.keyboardWillHide()
+    globalLayoutListener = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      // An animated change lays out with its final inset before onStart, so check after the frame
+      ViewTreeObserver.OnGlobalLayoutListener {
+        if (hasUnanimatedChange()) targetView.post(unanimatedChangeCheck)
       }
+    } else {
+      ViewTreeObserver.OnGlobalLayoutListener {
+        val rect = Rect()
+        rootView.getWindowVisibleDisplayFrame(rect)
 
-      // On legacy API, keyboard has already animated - just update immediately
-      updateHeight(previousHeight, newHeight, 1f)
-      isTransitioning = false
+        val screenHeight = rootView.height
+        val keyboardHeight = screenHeight - rect.bottom
 
-      if (isHiding && newHeight == 0) {
-        delegate?.keyboardDidHide()
-        isHiding = false
-      } else if (newHeight > 0) {
-        delegate?.keyboardDidShow(newHeight)
+        applyHeight(if (keyboardHeight > screenHeight * 0.15) keyboardHeight else 0)
       }
     }
 
     rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
+  }
+
+  // The keyboard can come or go without an insets animation: an input method that shows no keyboard
+  // hides it, and a cancelled back gesture ends its hide animation on a 0 inset while the keyboard stays.
+  // A keyboard already up before this observer tracked one is left alone.
+  private fun hasUnanimatedChange(): Boolean {
+    if (isTransitioning) return false
+    val keyboardHeight = getKeyboardHeight()
+    return if (currentHeight > 0) keyboardHeight == 0 else keyboardHeight > 0 && hasTrackedKeyboard
+  }
+
+  // A check posted while the view is attached can still run after stop()
+  private val unanimatedChangeCheck = Runnable {
+    if (globalLayoutListener != null && hasUnanimatedChange()) applyHeight(getKeyboardHeight())
+  }
+
+  private fun applyHeight(newHeight: Int) {
+    // Skip if already at this height
+    if (targetHeight == newHeight) return
+
+    val previousHeight = currentHeight
+    targetHeight = newHeight
+    isHiding = newHeight < previousHeight
+
+    isTransitioning = true
+    if (newHeight > previousHeight) {
+      delegate?.keyboardWillShow(newHeight)
+    } else if (isHiding) {
+      delegate?.keyboardWillHide()
+    }
+
+    // The keyboard has already moved - just update immediately
+    updateHeight(previousHeight, newHeight, 1f)
+    isTransitioning = false
+
+    if (isHiding && newHeight == 0) {
+      delegate?.keyboardDidHide()
+      isHiding = false
+    } else if (newHeight > 0) {
+      delegate?.keyboardDidShow(newHeight)
+    }
   }
 
   private fun setupFocusChangeListener() {

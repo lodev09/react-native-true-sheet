@@ -35,6 +35,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <React/RCTUtils.h>
+#import <React/UIView+React.h>
 #import <react/renderer/core/State.h>
 
 using namespace facebook::react;
@@ -74,6 +75,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   BOOL _isSheetUpdatePending;
   BOOL _pendingLayoutUpdate;
   BOOL _didInitiallyPresent;
+  BOOL _isInitialPresentScheduled;
   BOOL _dismissedByNavigation;
   BOOL _pendingNavigationRepresent;
   BOOL _pendingMountEvent;
@@ -119,10 +121,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   if (!self.window)
     return;
 
-  if (self.tag > 0) {
-    [TrueSheetModule registerView:self withTag:@(self.tag)];
-  }
-
   if (_pendingNavigationRepresent && !_controller.isPresented) {
     _pendingNavigationRepresent = NO;
     [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
@@ -132,11 +130,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [self presentInitialIfNeeded];
 }
 
+// A host mounted under a full-screen modal never gets didMoveToWindow, and its
+// props can land before it's inserted (no superview yet), so retry on insert.
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+
+  if (!self.window && [self presentationWindow]) {
+    [self presentInitialIfNeeded];
+  }
+}
+
 // JS holds initialDetentIndex back one commit so effect-driven content (e.g. a
 // navigation footer set via setOptions) commits together with it — by the time
 // the prop lands the tree is final and the sheet presents at its final height.
-// Called from didMoveToWindow (re-attach) and finalizeUpdates (the prop
-// arriving after attach, which didMoveToWindow won't re-fire for).
+// Called from didMoveToWindow (re-attach), didMoveToSuperview (insert under a
+// full-screen modal) and finalizeUpdates (the prop arriving after attach, which
+// didMoveToWindow won't re-fire for).
 - (void)presentInitialIfNeeded {
   if (_initialDetentIndex < 0 || _didInitiallyPresent)
     return;
@@ -144,7 +153,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   UIViewController *vc = [self findPresentingViewController];
 
   // Only present if the view controller is in the same window
-  if (!vc || vc.view.window != self.window) {
+  if (!vc || vc.view.window != [self presentationWindow]) {
     // Animate next time when sheet finally moves to the correct window
     _initialDetentAnimated = YES;
     return;
@@ -152,25 +161,45 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   // A sheet still animating out of the presenter (e.g. our own controller,
   // recycled mid-dismissal) blocks presentation — retry once its transition ends.
+  // Scheduled like the deferred present below, so a dismiss() meanwhile cancels it.
   UIViewController *dismissing = vc.presentedViewController;
   if (dismissing && dismissing.isBeingDismissed) {
     _initialDetentAnimated = YES;
+    _didInitiallyPresent = YES;
+    _isInitialPresentScheduled = YES;
 
     __weak __typeof(self) weakSelf = self;
     TrueSheetRunAfterTransition(dismissing, ^{
-      [weakSelf presentInitialIfNeeded];
+      __typeof(self) strongSelf = weakSelf;
+      if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+        return;
+      strongSelf->_isInitialPresentScheduled = NO;
+      strongSelf->_didInitiallyPresent = NO;
+      [strongSelf presentInitialIfNeeded];
     });
     return;
   }
 
   _didInitiallyPresent = YES;
+  _isInitialPresentScheduled = YES;
 
   // Deferred a runloop turn so sibling mounts from the current transaction
   // (e.g. a footer committed alongside the prop) land before measuring.
+  // A dismiss() meanwhile cancels it.
   __weak __typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
     __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf || strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
+    if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
+      return;
+    strongSelf->_isInitialPresentScheduled = NO;
+
+    // initialDetentIndex withdrawn meanwhile — present again if it comes back
+    if (strongSelf->_initialDetentIndex < 0) {
+      strongSelf->_didInitiallyPresent = NO;
+      return;
+    }
+
+    if (strongSelf->_controller.isPresented || strongSelf->_controller.isBeingPresented)
       return;
 
     [strongSelf presentAtIndex:strongSelf->_initialDetentIndex
@@ -325,6 +354,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.dimOpacity = newProps.dimOpacity < 0 ? nil : @(newProps.dimOpacity);
   _controller.dimColor = RCTUIColorFromSharedColor(newProps.dimColor);
 
+  auto dimBlur = TrueSheetViewBackgroundBlur::None;
+  fromRawValue(parserContext, RawValue(toString(newProps.dimBlur)), dimBlur);
+  _controller.dimBlur = dimBlur;
+
   if (newProps.dimmedDetentIndex >= 0) {
     _controller.dimmedDetentIndex = @(newProps.dimmedDetentIndex);
   }
@@ -357,6 +390,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.absoluteFooter = newProps.footerOptions.footerPosition == TrueSheetViewFooterPosition::Absolute;
   _controller.footerInsetAdjustment =
     options.footerInsetAdjustment && _controller.absoluteFooter && _scrollableHandle > 0;
+  _controller.footerKeyboardAdjustment =
+    _controller.absoluteFooter ? _controller.footerInsetAdjustment : _scrollableHandle > 0;
 
   CGFloat footerKeyboardOffset = newProps.footerOptions.keyboardOffset;
   BOOL footerAvoidsKeyboard = newProps.footerOptions.avoidKeyboard;
@@ -365,6 +400,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _controller.footerKeyboardOffset = footerKeyboardOffset;
     _controller.footerAvoidsKeyboard = footerAvoidsKeyboard;
     [_containerView updateFooterKeyboardOffset];
+    // The auto detent follows where the footer sits above the keyboard
+    if (_controller.keyboardHeight > 0) {
+      [self setupSheetDetentsForSizeChange];
+    }
   }
 
   _insetAdjustment = newProps.insetAdjustment;
@@ -423,6 +462,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   if (!(updateMask & RNComponentViewUpdateMaskProps) || !_controller)
     return;
 
+  // Registered on mount, not on window attach: a host mounted under a
+  // full-screen modal has no window yet but must still answer dismiss().
+  if (self.tag > 0) {
+    [TrueSheetModule registerView:self withTag:@(self.tag)];
+  }
+
   [self setupScrollable];
 
   if (_controller.isPresented) {
@@ -432,7 +477,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
-    if (self.window) {
+    if ([self presentationWindow]) {
       [self presentInitialIfNeeded];
     }
   }
@@ -456,7 +501,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
       strongSelf->_controller.delegate = strongSelf;
       strongSelf->_controller.activeDetentIndex = -1;
-      if (strongSelf.window) {
+      if ([strongSelf presentationWindow]) {
         [strongSelf presentInitialIfNeeded];
       }
     });
@@ -466,6 +511,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
+  _isInitialPresentScheduled = NO;
   _dismissedByNavigation = NO;
   _pendingNavigationRepresent = NO;
 }
@@ -565,11 +611,13 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     return;
   }
 
-  // Reset navigation dismiss flag when presenting (handles view recycling edge cases)
-  _dismissedByNavigation = NO;
-
   UIViewController *presentingViewController = [self findPresentingViewController];
   if (!presentingViewController) {
+    if (!self.window) {
+      RCTLogWarn(
+        @"TrueSheet: sheet is not in a window. Present it once its screen is visible, or use initialDetentIndex.");
+    }
+
     NSError *error = [NSError errorWithDomain:@"com.lodev09.TrueSheet"
                                          code:1001
                                      userInfo:@{NSLocalizedDescriptionKey : @"No presenting view controller found"}];
@@ -608,6 +656,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
                       }];
     return;
   }
+
+  // Reset navigation dismiss flag when presenting (handles view recycling edge cases).
+  // Not before a deferred present: until it runs, the sheet is still hidden by navigation.
+  _dismissedByNavigation = NO;
 
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
@@ -683,6 +735,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   return _controller;
 }
 
+// Gone or still animating out. A sheet still animating in isn't hidden yet.
+- (BOOL)isHiddenByNavigation {
+  return _dismissedByNavigation &&
+         (_controller.isBeingDismissed || (!_controller.isPresented && !_controller.isBeingPresented));
+}
+
 - (void)emitDismissedPosition {
   [TrueSheetStateEvents emitPositionChange:_eventEmitter
                                      index:-1
@@ -709,8 +767,37 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)dismissAnimated:(BOOL)animated completion:(nullable TrueSheetCompletionBlock)completion {
+  // Cancels a scheduled initialDetentIndex present on every path below
+  BOOL hadInitialPresentScheduled = _isInitialPresentScheduled;
+  _isInitialPresentScheduled = NO;
+
+  // JS still sees a sheet hidden by navigation as open, so turn the hide into a real dismissal.
+  if (self.isHiddenByNavigation) {
+    _dismissedByNavigation = NO;
+    [TrueSheetLifecycleEvents emitWillDismiss:_eventEmitter];
+
+    // Still animating out: viewControllerDidDismiss emits didDismiss when it lands, then resolve.
+    if (_controller.isBeingDismissed) {
+      TrueSheetRunAfterTransition(_controller, ^{
+        if (completion) {
+          completion(YES, nil);
+        }
+      });
+      return;
+    }
+
+    [self cancelPendingPresent];
+    [self viewControllerDidDismiss];
+    if (completion) {
+      completion(YES, nil);
+    }
+    return;
+  }
+
   // Dismissing before a deferred present starts cancels it — nothing was presented.
-  if ([self cancelPendingPresent]) {
+  // A sheet already open with a scheduled initialDetentIndex present still dismisses below.
+  if ([self cancelPendingPresent] ||
+      (hadInitialPresentScheduled && !_controller.isPresented && !_controller.isBeingPresented)) {
     if (completion) {
       completion(YES, nil);
     }
@@ -881,7 +968,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)containerViewDidMountTransaction {
-  [_controller refreshAccessibilityContainerIfFooterChanged];
+  [_controller refreshAccessibilityContainerIfChanged];
 }
 
 - (void)containerViewPeekDidChangeSize:(CGSize)newSize {
@@ -962,6 +1049,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     _controller.activeDetentIndex = index;
   }
   [TrueSheetStateEvents emitDetentChange:_eventEmitter index:index position:position detent:detent];
+  [_controller refreshAccessibilityContainerIfChanged];
 }
 
 - (void)viewControllerDidChangePosition:(CGFloat)index
@@ -1007,9 +1095,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 - (void)presenterScreenWillAppear {
   if (_dismissedByNavigation && !_controller.isPresented && !_controller.isBeingPresented) {
-    _dismissedByNavigation = NO;
-
-    if (self.window) {
+    if ([self presentationWindow]) {
       [self presentAtIndex:_controller.activeDetentIndex animated:YES completion:nil];
     } else {
       _pendingNavigationRepresent = YES;
@@ -1028,6 +1114,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 - (void)presenterInteractiveDismissDidEnd:(BOOL)cancelled duration:(NSTimeInterval)duration {
   if (cancelled) {
     [_controller cancelInteractiveDismissWithDuration:duration];
+    return;
+  }
+
+  // Only a sheet on screen or still animating in is hidden by navigation; a closed one has nothing to hide.
+  if ((!_controller.isPresented && !_controller.isBeingPresented) || _controller.isBeingDismissed) {
+    [_controller finishInteractiveDismissWithDuration:duration completion:nil];
     return;
   }
 
@@ -1108,13 +1200,44 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     [self->_controller applyActiveDetent];
   }];
   [_controller setupDraggable];
+
+  // setupSheetProps refreshed it before the detents applied a new dim threshold
+  [_controller refreshAccessibilityContainerIfChanged];
+}
+
+/**
+ * The window this sheet presents in. A full-screen modal takes the views under
+ * it out of the window. A sheet hosted beside the stack that presented it (e.g. a
+ * sheet navigator's sheet, next to its base screen) still sits above that stack,
+ * so it presents in the modal's window. A sheet inside that stack waits for its
+ * screen to come back.
+ */
+- (nullable UIWindow *)presentationWindow {
+  if (self.window)
+    return self.window;
+
+  UIView *rootView = self;
+  while (rootView.superview) {
+    rootView = rootView.superview;
+  }
+
+  // A detached view controller's root view still responds through its controller
+  UIResponder *responder = rootView.nextResponder;
+  if (![responder isKindOfClass:[UIViewController class]])
+    return nil;
+
+  // react-native-screens keeps a presented screen's reactSuperview on its stack
+  UIViewController *modal = ((UIViewController *)responder).presentedViewController;
+  UIView *presentingStack = modal.viewIfLoaded.reactSuperview;
+  if (modal.isBeingDismissed || ![presentingStack isDescendantOfView:rootView] ||
+      [self isDescendantOfView:presentingStack])
+    return nil;
+
+  return modal.view.window;
 }
 
 - (UIViewController *)findPresentingViewController {
-  if (!self.window)
-    return nil;
-
-  UIViewController *rootViewController = self.window.rootViewController;
+  UIViewController *rootViewController = [self presentationWindow].rootViewController;
   if (!rootViewController)
     return nil;
 

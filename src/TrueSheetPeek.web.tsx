@@ -27,10 +27,17 @@ export const TrueSheetPeekContext = createContext<TrueSheetPeekContextValue | nu
 export const measurePeekContentHeight = (
   peekElement: HTMLElement,
   contentElement: HTMLElement
-): number =>
-  Math.round(
-    peekElement.getBoundingClientRect().bottom - contentElement.getBoundingClientRect().top
-  );
+): number => {
+  let bottom =
+    peekElement.getBoundingClientRect().bottom - contentElement.getBoundingClientRect().top;
+
+  // Measure at rest: a scrolled scroller in between moves the peek up by its scrollTop.
+  for (let el = peekElement.parentElement; el && el !== contentElement; el = el.parentElement) {
+    bottom += el.scrollTop;
+  }
+
+  return Math.round(bottom);
+};
 
 /**
  * Wrapper component that marks its children as the sheet's peek content.

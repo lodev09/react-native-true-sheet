@@ -14,6 +14,10 @@
 #if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
 #import <RNScreens/RNSDismissibleModalProtocol.h>
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 1
+// SwiftPM does not flatten headers: react-native-screens is exposed under its package paths
+#elif __has_include(<RNScreens/ios/integrations/RNSDismissibleModalProtocol.h>)
+#import <RNScreens/ios/integrations/RNSDismissibleModalProtocol.h>
+#define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 1
 #else
 #define RNS_DISMISSIBLE_MODAL_PROTOCOL_AVAILABLE 0
 #endif
@@ -70,6 +74,13 @@ NS_ASSUME_NONNULL_BEGIN
  * toward the auto detent like a relative one, so the content ends above it.
  */
 @property (nonatomic, assign) BOOL footerInsetAdjustment;
+
+/**
+ * YES while the auto detent follows the footer's overlap with the keyboard:
+ * an absolute footer padding the plugged scrollable, or a relative footer
+ * with a plugged scrollable. Plain content keeps UIKit's keyboard sizing.
+ */
+@property (nonatomic, assign) BOOL footerKeyboardAdjustment;
 @property (nonatomic, strong, nullable) NSNumber *peekContentHeight;
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, strong, nullable) NSNumber *cornerRadius;
@@ -80,6 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL dimmed;
 @property (nonatomic, strong, nullable) UIColor *dimColor;
 @property (nonatomic, strong, nullable) NSNumber *dimOpacity;
+@property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur dimBlur;
 @property (nonatomic, strong, nullable) NSNumber *dimmedDetentIndex;
 @property (nonatomic, assign) facebook::react::TrueSheetViewBackgroundBlur backgroundBlur;
 @property (nonatomic, assign) facebook::react::TrueSheetViewPresentation presentation;
@@ -117,7 +129,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) CGFloat minimizedKeyboardOverlap;
 
-@property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 
@@ -139,7 +150,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setupAccessibilityContainer;
 - (void)refreshAccessibilityContainer;
-- (void)refreshAccessibilityContainerIfFooterChanged;
+- (void)refreshAccessibilityContainerIfChanged;
 
 - (void)applyActiveDetent;
 - (void)setupActiveDetentWithIndex:(NSInteger)index;

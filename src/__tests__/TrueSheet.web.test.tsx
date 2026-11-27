@@ -2,7 +2,7 @@ import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
-import type { TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
+import type { SheetDetent, TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
 
 jest.mock('../web/vaul', () => {
@@ -164,7 +164,7 @@ describe('web present and dismiss', () => {
     expect(sheet.events).toEqual(['presented', 'dismissed']);
   });
 
-  it('dismisses an auto-presented sheet once it lands when dismissed before willPresent', async () => {
+  it('cancels an auto-present when dismissed before willPresent', async () => {
     const sheet = setup(0);
     const events: string[] = [];
     const log = (event: string) => () => {
@@ -186,8 +186,82 @@ describe('web present and dismiss', () => {
     await act(async () => {
       jest.runOnlyPendingTimers();
     });
-    expect(events).toEqual(['willPresent', 'didPresent', 'willDismiss', 'didDismiss', 'dismissed']);
+    expect(events).toEqual(['dismissed']);
     expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+
+  it('presents again after a canceled auto-present when the close and reopen batch', async () => {
+    const sheet = setup(0);
+    const events: string[] = [];
+    const log = (event: string) => () => {
+      events.push(event);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onWillDismiss={log('willDismiss')}
+        onDidDismiss={log('didDismiss')}
+      />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss().then(log('dismissed'));
+      // The pending frame runs before React commits the close
+      jest.runOnlyPendingTimers();
+      sheet.ref.current!.present(1).then(log('presented'));
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(events).toEqual(['dismissed', 'willPresent', 'didPresent', 'presented']);
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(true);
+  });
+
+  it('emits willPresent with the reopened detent when the close and reopen batch', async () => {
+    const sheet = setup(0);
+    const onWillPresent = jest.fn();
+    const onDidPresent = jest.fn();
+    sheet.rerender(
+      <TrueSheet {...sheet.props} onWillPresent={onWillPresent} onDidPresent={onDidPresent} />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss();
+      sheet.ref.current!.present(1);
+      // The pending frame runs before React commits the reopen
+      jest.runOnlyPendingTimers();
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(onWillPresent).toHaveBeenCalledTimes(1);
+    expect(onWillPresent.mock.calls[0]![0].nativeEvent.index).toBe(1);
+    expect(onDidPresent.mock.calls[0]![0].nativeEvent.index).toBe(1);
+  });
+
+  it('treats a batched reopen at another detent as a present, not a resize', async () => {
+    const sheet = setup(0);
+    const events: string[] = [];
+    const log = (event: string) => (e: { nativeEvent: { index: number } }) => {
+      events.push(`${event}:${e.nativeEvent.index}`);
+    };
+    sheet.rerender(
+      <TrueSheet
+        {...sheet.props}
+        onWillPresent={log('willPresent')}
+        onDidPresent={log('didPresent')}
+        onDetentChange={log('detentChange')}
+      />
+    );
+    await act(async () => {
+      sheet.ref.current!.dismiss();
+      sheet.ref.current!.present(1);
+    });
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    await act(() => sheet.ref.current!.resize(2));
+    expect(events).toEqual(['willPresent:1', 'didPresent:1', 'detentChange:2']);
   });
 
   it('ignores present while presented or dismissing, and dismiss while dismissed', async () => {
@@ -242,6 +316,44 @@ describe('web present and dismiss', () => {
       await methods.dismissAll();
     });
     expect(result.UNSAFE_getByType(Drawer.Root).props.open).toBe(false);
+  });
+});
+
+describe('web detents change', () => {
+  it('keeps the active detent, falls back to its index, and reports changes', async () => {
+    const ref = createRef<TrueSheetMethods>();
+    const onDetentChange = jest.fn();
+    const colors: Record<string, string> = { peek: '#111111', 0.45: '#454545', 1: '#ffffff' };
+    const sheet = (detents: SheetDetent[]) => (
+      <TrueSheet
+        ref={ref}
+        initialDetentIndex={0}
+        detents={detents}
+        detentBackgrounds={detents.map((detent) => colors[detent] ?? null)}
+        onDetentChange={onDetentChange}
+      />
+    );
+    const result = render(sheet([0.45, 1]), { createNodeMock: () => new MockElement() });
+    const update = (detents: SheetDetent[]) => result.rerender(sheet(detents));
+    const snap = () => result.UNSAFE_getByType(Drawer.Root).props.activeSnapPoint;
+    const color = () =>
+      result.UNSAFE_root.findByProps({ 'aria-hidden': true }).props.style.backgroundColor;
+    act(() => jest.runOnlyPendingTimers());
+
+    update(['peek', 0.45, 1]);
+    expect(snap()).toBe(0.45);
+    expect(color()).toBe('#454545');
+    update([0.45, 1]);
+    expect(snap()).toBe(0.45);
+    expect(color()).toBe('#454545');
+    await act(() => ref.current!.resize(1));
+    update(['peek', 0.45, 1]);
+    expect(snap()).toBe(1);
+    update(['peek', 0.45]);
+    expect(snap()).toBe(0.45);
+    update(['peek', 0.5]);
+    expect(snap()).toBe(0.5);
+    expect(onDetentChange.mock.calls.map(([e]) => e.nativeEvent.index)).toEqual([1, 0, 1, 2, 1, 1]);
   });
 });
 

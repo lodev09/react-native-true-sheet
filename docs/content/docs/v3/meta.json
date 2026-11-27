@@ -1,0 +1,14 @@
+{
+  "title": "3.11.18",
+  "description": "Legacy",
+  "root": "version",
+  "pages": [
+    "intro",
+    "install",
+    "usage",
+    "migration",
+    "guides",
+    "reference",
+    "troubleshooting"
+  ]
+}

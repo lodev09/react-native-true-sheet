@@ -12,12 +12,16 @@ Common issues and fixes when using TrueSheet, organized by symptom.
 - [Sheet snaps without animation on keyboard dismiss (iOS, RN 0.83–0.85)](#sheet-snaps-without-animation-on-keyboard-dismiss-ios-rn-083085)
 - [Gesture handler not working (Android)](#gesture-handler-not-working-android)
 - [initialDetentIndex sheet covers or misses a deep-linked screen (iOS)](#initialdetentindex-sheet-covers-or-misses-a-deep-linked-screen-ios)
+- [Sheet route shows briefly before a redirect (Web)](#sheet-route-shows-briefly-before-a-redirect-web)
 - [Large title doesn't collapse on scroll (iOS)](#large-title-doesnt-collapse-on-scroll-ios)
+- [Sheet floats with side and bottom margins (iOS 26+)](#sheet-floats-with-side-and-bottom-margins-ios-26)
+- [Sheet pushed off-screen when the keyboard opens (Android)](#sheet-pushed-off-screen-when-the-keyboard-opens-android)
 - [Gap above the keyboard](#gap-above-the-keyboard)
 - [Doubled bottom padding in footer or scroll content](#doubled-bottom-padding-in-footer-or-scroll-content)
 - [Last scroll item hidden behind an absolute footer](#last-scroll-item-hidden-behind-an-absolute-footer)
 - [Overlays render behind the sheet](#overlays-render-behind-the-sheet)
 - [Sheet screen crashes: ScreenContainer is not attached under ReactRootView (Android)](#sheet-screen-crashes-screencontainer-is-not-attached-under-reactrootview-android)
+- [Sheet lands on the wrong detent after changing detents](#sheet-lands-on-the-wrong-detent-after-changing-detents)
 - ['auto' detent is too short or wrong on first present](#auto-detent-is-too-short-or-wrong-on-first-present)
 - [@expo/ui Host opens small, then grows](#expoui-host-opens-small-then-grows)
 - [Keyboard hides input](#keyboard-hides-input)
@@ -102,7 +106,7 @@ setModalVisible(false)
 
 **Cause:** RN 0.83 made `canBecomeFirstResponder` return `YES` on every `RCTViewComponentView`, disrupting `UISheetPresentationController`'s keyboard avoidance animation. Fixed upstream in RN 0.86.
 
-**Fix:** Apply the [react-native patch](https://github.com/lodev09/react-native-true-sheet/blob/main/.yarn/patches/react-native-npm-0.85.3.patch) that gates it behind the `enableImperativeFocus` feature flag. Remove the patch once on 0.86+.
+**Fix:** Apply the [react-native patch](https://github.com/lodev09/react-native-true-sheet/blob/v3/.yarn/patches/react-native-npm-0.85.3.patch) that gates it behind the `enableImperativeFocus` feature flag. Remove the patch once on 0.86+.
 
 ## Gesture handler not working (Android)
 
@@ -130,6 +134,14 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 
 **Fix:** Hold `initialDetentIndex` at `-1` until the screen is focused, then flip it to `0` — don't call `present()` on focus. See [Deep linking](./advanced-patterns.md#deep-linking).
 
+## Sheet route shows briefly before a redirect (Web)
+
+**Symptom:** On web, a sheet-navigator route that redirects or calls `router.back()` on its first render shows its sheet for a moment before it closes.
+
+**Cause:** Expo Router loads web routes lazily by default (`asyncRoutes`), so the route's screen renders only after its sheet has opened.
+
+**Fix:** Redirect before navigating to the sheet route, or turn off async routes for web: `['expo-router', { asyncRoutes: { web: false } }]` in the app config plugins. Every route then ships in the initial web bundle.
+
 ## Large title doesn't collapse on scroll (iOS)
 
 **Symptom:** With a native stack's `headerLargeTitleEnabled`, the large title stays expanded while the screen scrolls.
@@ -137,6 +149,29 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** iOS tracks the scroll view through the screen's first child. A `TrueSheet` rendered before the scroll view takes that spot.
 
 **Fix:** Render `<TrueSheet>` after the scroll view.
+
+## Sheet floats with side and bottom margins (iOS 26+)
+
+**Symptom:** On iPhone, the sheet floats as an inset card at partial detents (e.g. `0.6`) and only attaches to the screen edges at `1`.
+
+**Cause:** The Liquid Glass sheet layout from `UISheetPresentationController`. No public API changes it. `presentation`, `placement`, `maxContentWidth`, and `insetAdjustment` have no effect.
+
+**Fix:** Opt out of Liquid Glass app-wide with `UIDesignRequiresCompatibility` (see [Liquid Glass](./advanced-patterns.md#liquid-glass-ios-26)). `backgroundColor`/`backgroundBlur` only replace the effect, the sheet still floats. iOS 27+ ignores the key in apps built with the iOS 27 SDK or later.
+
+## Sheet pushed off-screen when the keyboard opens (Android)
+
+**Symptom:** Focusing an input low in the sheet (e.g. in the footer) pushes the sheet's top and header off-screen and leaves a gap above the keyboard.
+
+**Cause:** The activity uses `android:windowSoftInputMode="adjustPan"` (Expo: `softwareKeyboardLayoutMode: 'pan'`). Android pans the whole window on top of the sheet's own keyboard handling.
+
+**Fix:** Use `adjustResize` (the React Native and Expo default). If the rest of the app needs `adjustPan`, switch while the sheet is presented, e.g. with `react-native-keyboard-controller`:
+
+```tsx
+<TrueSheet
+  onWillPresent={() => KeyboardController.setInputMode(AndroidSoftInputModes.SOFT_INPUT_ADJUST_RESIZE)}
+  onDidDismiss={() => KeyboardController.setDefaultMode()}
+>
+```
 
 ## Gap above the keyboard
 
@@ -180,6 +215,25 @@ Use `flexGrow: 1` instead of `flex: 1` — the sheet's content wraps its natural
 **Cause:** A `react-native-screens` container (native stack, bottom tabs, drawer) is rendered inside a sheet screen or overlay. Sheets and overlays render outside the app's root view, where `react-native-screens` can't attach.
 
 **Fix:** Keep native stacks in the base screen (the first screen is a regular view, so wrapping your app there works). Don't nest them in sheet screens or overlays. For multi-step flows inside a sheet, make each step its own sheet screen (Expo Router: sibling routes under the `Sheet` layout, no nested `_layout.tsx` with `<Stack>`). See [Advanced Patterns: Nesting navigators](./advanced-patterns.md#nesting-navigators).
+
+## Sheet lands on the wrong detent after changing detents
+
+**Symptom:** After changing `detents` while the sheet is presented, a `resize()` lands on the wrong detent, or `detentBackgrounds`/`dimmedDetentIndex` apply to the wrong one.
+
+**Cause:** The sheet keeps its detent through a `detents` change (its index may shift). A `resize()` or `present()` called right after the change can reach the native sheet first and run against the old detents — on Android even from an effect. Index-based props don't follow along.
+
+**Fix:** Defer the call so the new detents land first, and change index-based props with `detents`:
+
+```tsx
+const detents: SheetDetent[] = hasPeek ? ['peek', 0.45, 1] : [0.45, 1]
+
+const showPlace = () => {
+  setHasPeek(true)
+  setTimeout(() => sheet.current?.resize(2))
+}
+
+return <TrueSheet ref={sheet} detents={detents} dimmedDetentIndex={detents.indexOf(1)} />
+```
 
 ## 'auto' detent is too short or wrong on first present
 

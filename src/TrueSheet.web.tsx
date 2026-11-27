@@ -63,6 +63,7 @@ import {
   DEFAULT_GRABBER_WIDTH,
   DEFAULT_MAX_WIDTH,
 } from './web/constants';
+import { getDimBlurStyle } from './web/blur';
 import { getDOMElement } from './web/dom';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
@@ -105,6 +106,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     dimmed = true,
     dimColor,
     dimOpacity,
+    dimBlur,
     dimmedDetentIndex = 0,
     initialDetentIndex = -1,
     header,
@@ -179,10 +181,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Whether willPresent fired for the current open cycle — a present undone
   // before it fires has nothing to pair a dismiss with.
   const didEmitWillPresentRef = useRef(false);
-  // Whether the current open cycle came from initialDetentIndex. Native mounts those
-  // eagerly, so a dismiss before willPresent lands after the present instead of cancelling it.
-  const isAutoPresentRef = useRef(shouldAutoPresent);
-  const shouldDismissOnPresentRef = useRef(false);
+  // Bumped per present() so its lifecycle waits for that present's detent to commit
+  const [presentRequest, setPresentRequest] = useState(0);
+  const presentRequestRef = useRef(0);
+  const committedPresentRequestRef = useRef(0);
   const [displayedBackgroundIndex, setDisplayedBackgroundIndex] = useState(
     shouldAutoPresent ? initialDetentIndex : 0
   );
@@ -196,12 +198,30 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
   );
 
-  // Keep activeSnapPoint valid if detents change (e.g., prop updates).
+  // Detents added or removed around the active detent keep the sheet there;
+  // removing the detent itself falls back to the same index, like native.
+  const prevValidDetentsRef = useRef(validDetents);
   useEffect(() => {
+    const prevDetents = prevValidDetentsRef.current;
+    prevValidDetentsRef.current = validDetents;
     if (validDetents.length === 0) return;
+    // A new array with the same detents (e.g. inline) changes nothing
+    if (
+      prevDetents.length === validDetents.length &&
+      prevDetents.every((detent, index) => detent === validDetents[index])
+    ) {
+      return;
+    }
+    const indexInDetents = (index: number) => {
+      const newIndex = validDetents.indexOf(prevDetents[index]!);
+      return newIndex >= 0 ? newIndex : Math.min(Math.max(index, 0), validDetents.length - 1);
+    };
     setActiveSnapPoint((current) =>
-      current != null && validDetents.includes(current) ? current : validDetents[0]!
+      current != null && validDetents.includes(current)
+        ? current
+        : validDetents[indexInDetents(current != null ? prevDetents.indexOf(current) : -1)]!
     );
+    setDisplayedBackgroundIndex(indexInDetents);
   }, [validDetents]);
 
   const validDetentsRef = useRef(validDetents);
@@ -221,13 +241,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissSheet = useCallback((): Promise<void> | null => {
     if (phaseRef.current === 'dismissed' || phaseRef.current === 'dismissing') return null;
     settle(resolvePresentRef);
-    if (didEmitWillPresentRef.current) {
-      setIsOpen(false);
-    } else if (isAutoPresentRef.current) {
-      shouldDismissOnPresentRef.current = true;
-    } else {
-      // Mirror native's lazy-mount cancel: nothing shown yet, nothing to animate out
-      setIsOpen(false);
+    setIsOpen(false);
+    // Mirror native: a dismiss before willPresent cancels the present, initialDetentIndex
+    // included — nothing shown yet, nothing to animate out
+    if (!didEmitWillPresentRef.current) {
       phaseRef.current = 'dismissed';
       return Promise.resolve();
     }
@@ -284,7 +301,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const dismissAboveRef = useRef<(animated?: boolean) => Promise<void>>(async () => {});
   const dismissDescendantsRef = useRef<() => void>(() => {});
 
-  const presentSheet = useCallback(async (index: number, auto: boolean) => {
+  const presentSheet = useCallback(async (index: number) => {
     const detent = validDetentsRef.current[index];
     if (detent === undefined) {
       throw new Error(
@@ -296,8 +313,9 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       return;
     }
     phaseRef.current = 'presenting';
-    isAutoPresentRef.current = auto;
     isPresentingRef.current = true;
+    presentRequestRef.current += 1;
+    setPresentRequest(presentRequestRef.current);
     setDisplayedBackgroundIndex(index);
     setActiveSnapPoint(detent);
     setIsOpen(true);
@@ -308,7 +326,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   const methods = useMemo<TrueSheetMethods>(
     () => ({
-      present: (index = 0) => presentSheet(index, false),
+      present: (index = 0) => presentSheet(index),
       dismiss: async () => {
         const dismissal = dismissSheet();
         if (!dismissal) {
@@ -343,7 +361,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     if (!shouldAutoPresent || didInitiallyPresentRef.current) return;
     didInitiallyPresentRef.current = true;
     if (phaseRef.current === 'dismissed') {
-      presentSheet(initialDetentIndex, true);
+      presentSheet(initialDetentIndex);
     }
   }, [initialDetentIndex, shouldAutoPresent, presentSheet]);
 
@@ -588,6 +606,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragEndRef.current = onDragEnd;
     onPositionChangeRef.current = onPositionChange;
     activeSnapPointRef.current = activeSnapPoint;
+    committedPresentRequestRef.current = presentRequest;
   });
 
   // Detent geometry — target top-Y (`positions`) and height ratio (`values`)
@@ -813,10 +832,6 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         onDidPresentRef.current?.({ nativeEvent: computeDetentInfo() } as DidPresentEvent);
         onDidFocusRef.current?.({ nativeEvent: null } as DidFocusEvent);
         settle(resolvePresentRef);
-        if (shouldDismissOnPresentRef.current) {
-          shouldDismissOnPresentRef.current = false;
-          setIsOpen(false);
-        }
       } else {
         phaseRef.current = 'dismissed';
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
@@ -831,11 +846,20 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     const start = () => {
       if (canceled) return;
       const drawer = drawerContentRef.current;
-      if (!drawer || !drawer.isConnected) {
-        // Drawer hasn't mounted yet (Radix Presence defers the portal mount
-        // past the first effect pass), or its subtree isn't attached to the
-        // document yet (autopresent commits the portal before the app tree
-        // attaches, so nothing is measurable). Poll until it's live.
+      // Drawer hasn't mounted yet (Radix Presence defers the portal mount
+      // past the first effect pass), or its subtree isn't attached to the
+      // document yet (autopresent commits the portal before the app tree
+      // attaches, so nothing is measurable). Poll until it's live.
+      // Also poll while a dismiss before willPresent has canceled the present
+      // but its close hasn't committed: the commit cleans this up, or a
+      // present() batched with the close reuses this cycle once its detent commits.
+      if (
+        !drawer ||
+        !drawer.isConnected ||
+        (present &&
+          (phaseRef.current !== 'presenting' ||
+            committedPresentRequestRef.current !== presentRequestRef.current))
+      ) {
         rafId = window.requestAnimationFrame(start);
         return;
       }
@@ -887,16 +911,30 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [isOpen, computeDetentInfo]);
 
-  // Fire onDetentChange only while open→open. Present/dismiss have their own
-  // events and carry detent info via onDidPresent, so we skip those edges.
-  const detentChangeStateRef = useRef({ isOpen, activeSnapPoint });
+  // Fire onDetentChange only while open→open, whenever the detent or its index
+  // changes — including detents added or removed around the active one.
+  // Present/dismiss have their own events and carry detent info via
+  // onDidPresent, so we skip those edges.
+  const activeDetentIndex = activeSnapPoint != null ? validDetents.indexOf(activeSnapPoint) : -1;
+  const detentChangeStateRef = useRef({
+    isOpen,
+    activeSnapPoint,
+    activeDetentIndex,
+    presentRequest,
+  });
   useEffect(() => {
+    // A removed active detent reads -1 until its fallback lands
+    if (isOpen && activeDetentIndex < 0) return;
     const prev = detentChangeStateRef.current;
-    detentChangeStateRef.current = { isOpen, activeSnapPoint };
-    if (!prev.isOpen || !isOpen) return;
-    if (prev.activeSnapPoint === activeSnapPoint) return;
+    detentChangeStateRef.current = { isOpen, activeSnapPoint, activeDetentIndex, presentRequest };
+    // A present() batched with a canceled present's close keeps the sheet open,
+    // but its detent belongs to the new presentation, not a resize
+    if (!prev.isOpen || !isOpen || prev.presentRequest !== presentRequest) return;
+    if (prev.activeSnapPoint === activeSnapPoint && prev.activeDetentIndex === activeDetentIndex) {
+      return;
+    }
     onDetentChangeRef.current?.({ nativeEvent: computeDetentInfo() } as DetentChangeEvent);
-  }, [isOpen, activeSnapPoint, computeDetentInfo]);
+  }, [isOpen, activeSnapPoint, activeDetentIndex, presentRequest, computeDetentInfo]);
 
   // Vaul's `onDrag` fires once per pointermove while dragging; the first tick
   // after an idle gap marks the drag boundary, so track it via a ref.
@@ -1161,13 +1199,16 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
 
   // Vaul fades the overlay through its opacity, so the dim opacity goes into the color
   const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
+    const opacity = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY));
+    if (dimBlur) {
+      return { ...overlayStyle, ...getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark') };
+    }
     if (dimColor == null && dimOpacity == null) return overlayStyle;
-    const percentage = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY)) * 100;
     return {
       ...overlayStyle,
-      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${percentage}%, transparent)`,
+      backgroundColor: `color-mix(in srgb, ${String(dimColor ?? 'black')} ${opacity * 100}%, transparent)`,
     };
-  }, [dimColor, dimOpacity]);
+  }, [dimColor, dimOpacity, dimBlur, colorScheme]);
 
   const mergedContentStyle = useMemo<React.CSSProperties>(
     () => ({

@@ -6,7 +6,7 @@ keywords: [bottom sheet on mount, bottom sheet initialIndex]
 
 Sometimes, you may want to present the sheet directly during mount. For example, you might want to present the sheet when a screen is opened through a deep link.
 
-<img alt="onmount" src="/img/guides/onmount.gif" width="300"/>
+<Preview label="Present on mount" src="/img/previews/onmount.mp4" />
 
 ## How?
 
@@ -33,5 +33,5 @@ You may want to disable the present animation. To do this, simply set [`initialD
 ### Deep Linking on iOS
 
 :::warning[iOS Limitation]
-`initialDetentIndex` may not work when deep linking to a modal screen from a cold start. See [troubleshooting](../troubleshooting#initial-present-and-deep-linking) for workaround.
+When a deep link opens another screen over the sheet's screen on a cold start, the sheet may present on top of it or not at all. See [Deep Linking](deep-linking) for the workaround.
 :::

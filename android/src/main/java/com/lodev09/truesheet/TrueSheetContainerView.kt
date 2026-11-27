@@ -14,6 +14,9 @@ interface TrueSheetContainerViewDelegate {
   fun containerViewFooterDidChangeSize(width: Int, height: Int)
   fun containerViewFooterDidLayout()
   fun containerViewPeekDidChangeSize(width: Int, height: Int)
+
+  // See TrueSheetViewController.footerKeyboardShift
+  val footerKeyboardShift: Int
 }
 
 /**
@@ -220,14 +223,14 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     delegate?.containerViewContentDidChangeSize(width, height)
   }
 
-  override val footerKeyboardOcclusion: Int
-    get() = if (absoluteFooter) footerView?.keyboardOcclusionHeight ?: 0 else -(footerView?.height ?: 0)
-
   override val absoluteFooterHeight: Int
     get() = if (absoluteFooter) footerView?.height ?: 0 else 0
 
   override val absoluteFooterTop: Int
     get() = footerView?.y?.toInt() ?: height
+
+  override val footerKeyboardShift: Int
+    get() = delegate?.footerKeyboardShift ?: 0
 
   override val hasRelativeFooter: Boolean
     get() = footerView != null && !absoluteFooter

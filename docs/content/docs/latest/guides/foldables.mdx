@@ -1,0 +1,141 @@
+---
+title: Foldables
+description: Rest the bottom sheet on the hinge of a half-folded device, and keep it off the fold.
+keywords: [bottom sheet foldable, bottom sheet hinge, tabletop mode, iPhone Duo, bottom sheet fold, half-folded]
+---
+
+Foldables like the iPhone Duo can stand half-open on a table, with the screen split by the hinge. A sheet that spans the hinge is hard to use there. With [`foldOptions`](../reference/configuration#foldoptions), the sheet can rest right on the hinge and fill the panel below it, like a media player on a laptop-style screen.
+
+:::info
+Requires iOS 27.1+ on a foldable. On other devices, platforms, and iOS versions, `foldOptions` has no effect.
+:::
+
+<Preview label="Sheet resting on the hinge of a half-folded iPhone Duo" src="/img/previews/foldables.mp4" device="duo" />
+
+## Postures
+
+A foldable can be in one of these postures. `foldOptions` only acts in **tabletop**.
+
+| Posture | Fold | Sheet behavior |
+| - | - | - |
+| Closed | none (cover screen) | Like a phone |
+| Flat | inactive | Like a tablet, the sheet spans the whole screen |
+| Book | vertical, half-open | iOS docks the sheet to one panel — see [Book Posture](#book-posture) |
+| **Tabletop** | horizontal, half-open | The hinge splits the screen into a top and a bottom panel |
+
+## Resting on the Hinge
+
+Set [`hingeDetentIndex`](../reference/types#foldoptions) to the detent that should rest on the hinge. In tabletop, that detent resolves to the height of the bottom panel. In any other posture, it keeps its own value, so it doubles as the fallback.
+
+```tsx {5}
+export const App = () => {
+  return (
+    <TrueSheet
+      detents={[0.5, 1]}
+      foldOptions={{ hingeDetentIndex: 0 }}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+Here the sheet opens at `0.5` on a flat screen. Half-fold the device and detent `0` moves onto the hinge. The other detents keep their values, so the sheet can still expand past the hinge to `1`. They also keep their order: a lower detent never rises above the hinge detent, and a higher one never drops below it.
+
+## Keeping the Sheet Off the Hinge
+
+Set [`hingeBehavior`](../reference/types#foldoptions) to `'avoid'` to cap every detent at the hinge. The sheet never crosses it, even at its tallest detent.
+
+```tsx {5}
+export const App = () => {
+  return (
+    <TrueSheet
+      detents={['auto', 1]}
+      foldOptions={{ hingeBehavior: 'avoid' }}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+:::note
+Detents that reach above the hinge collapse onto it, so they all stop at the same height. `'avoid'` works best with one detent above the hinge.
+:::
+
+## Snapping to the Hinge
+
+`'avoid'` keeps the sheet where it is when the device folds. A sheet resting low stays low. Set `hingeBehavior` to `'snap'` to also move the sheet to `hingeDetentIndex` when the device enters tabletop, and back to its previous detent when it leaves. If the user moves the sheet off the hinge while folded, it stays where they put it.
+
+```tsx {5-8}
+export const NowPlaying = () => {
+  return (
+    <TrueSheet
+      detents={['peek', 0.6, 1]}
+      foldOptions={{
+        hingeDetentIndex: 1,
+        hingeBehavior: 'snap',
+      }}
+    >
+      <TrueSheetPeek>
+        <MiniPlayer />
+      </TrueSheetPeek>
+      <PlayerControls />
+    </TrueSheet>
+  )
+}
+```
+
+On a flat screen this is a mini player at `peek`. Half-fold the device and the full controls fill the bottom panel. Unfold it and the sheet goes back to the mini player.
+
+| `hingeBehavior` | Crosses the hinge | Moves on fold |
+| - | - | - |
+| `'none'` | Yes | No |
+| `'avoid'` | No | No |
+| `'snap'` | No | Yes, to `hingeDetentIndex` and back |
+
+The usual [`onDetentChange`](../reference/events#ondetentchange) and [`onPositionChange`](../reference/events#onpositionchange) events fire when the sheet moves for the hinge.
+
+## Book Posture
+
+With a vertical fold, iOS already keeps the sheet on one panel, so `foldOptions` has nothing to do there. Use [`placement`](../reference/configuration#placement) to pick the panel. `'automatic'` and `'center'` dock to the leading panel.
+
+```tsx {4}
+export const App = () => {
+  return (
+    <TrueSheet
+      placement="trailing"
+      foldOptions={{ hingeBehavior: 'avoid' }}
+    >
+      <View />
+    </TrueSheet>
+  )
+}
+```
+
+## Navigation
+
+`foldOptions` is a screen option in the [Sheet Navigator](navigation) and the Expo Router `Sheet` layout, like any other prop.
+
+```tsx {5-8}
+<Sheet.Screen
+  name="Player"
+  component={PlayerScreen}
+  options={{
+    detents: ['peek', 0.6, 1],
+    foldOptions: { hingeDetentIndex: 1, hingeBehavior: 'snap' },
+  }}
+/>
+```
+
+## Testing on the Simulator
+
+Use the **iPhone Duo** simulator on iOS 27.1+.
+
+1. Unfold the device, then rotate it so the UI is in portrait. The fold is now horizontal.
+2. Present your sheet.
+3. Half-fold the device to enter tabletop. Unfold it to leave.
+
+:::tip
+The example app's **TrueSheet View** sheet uses `foldOptions` with `hingeBehavior: 'snap'`.
+:::
