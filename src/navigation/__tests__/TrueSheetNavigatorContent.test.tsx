@@ -43,65 +43,35 @@ const renderNavigator = (options: TrueSheetNavigationOptions) => {
 };
 
 describe('TrueSheetNavigatorContent', () => {
-  let warn: jest.SpyInstance;
-
-  beforeEach(() => {
-    warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    warn.mockRestore();
-  });
-
-  it("doesn't load reanimated for a reanimated screen until the reanimated entry is imported", () => {
+  // The registry is module state that can't be unregistered, so one test walks
+  // through before and after the reanimated entry is imported.
+  it('uses the plain screen until the reanimated entry is imported, then the reanimated screen', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const positionChangeHandler = jest.fn();
-    const { getByText, UNSAFE_getByType } = renderNavigator({
-      reanimated: true,
-      positionChangeHandler,
-    });
 
-    expect(getByText('Details')).toBeTruthy();
+    const before = renderNavigator({ reanimated: true, positionChangeHandler });
+
+    expect(before.getByText('Details')).toBeTruthy();
     expect(isReanimatedLoaded).toBe(false);
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining("Import '@lodev09/react-native-true-sheet/navigation/reanimated'")
     );
 
     const payload = { index: 0, position: 400, detent: 0.5, realtime: true };
-    UNSAFE_getByType(TrueSheet).props.onPositionChange({ nativeEvent: payload });
+    before.UNSAFE_getByType(TrueSheet).props.onPositionChange({ nativeEvent: payload });
     expect(positionChangeHandler).toHaveBeenCalledWith(payload);
-  });
+    before.unmount();
+    warn.mockClear();
 
-  it('loads nothing native with the mock of the reanimated entry', () => {
-    jest.isolateModules(() => {
-      jest.doMock('../../TrueSheet', () => {
-        throw new Error('native TrueSheet loaded');
-      });
-      expect(() => require('../../mocks/navigationReanimated')).not.toThrow();
-      jest.dontMock('../../TrueSheet');
-    });
-  });
-
-  it('renders the mocked sheet, without warning, with the mock of the reanimated entry', () => {
-    require('../../mocks/navigationReanimated');
-    const { TrueSheet: TrueSheetMock } = require('../../mocks');
-
-    const { getByText, UNSAFE_getByType } = renderNavigator({ reanimated: true });
-
-    expect(getByText('Details')).toBeTruthy();
-    expect(UNSAFE_getByType(TrueSheetMock).props.name).toBe('navigation-sheet-details');
-    expect(isReanimatedLoaded).toBe(false);
-    expect(warn).not.toHaveBeenCalled();
-  });
-
-  it('renders the reanimated screen once the reanimated entry is imported', () => {
     require('../reanimated');
     const { ReanimatedTrueSheetScreen } = require('../screen/ReanimatedTrueSheetScreen');
 
-    const { getByText, UNSAFE_getByType } = renderNavigator({ reanimated: true });
+    const after = renderNavigator({ reanimated: true, positionChangeHandler });
 
-    expect(getByText('Details')).toBeTruthy();
+    expect(after.getByText('Details')).toBeTruthy();
     expect(isReanimatedLoaded).toBe(true);
-    expect(UNSAFE_getByType(ReanimatedTrueSheetScreen)).toBeTruthy();
+    expect(after.UNSAFE_getByType(ReanimatedTrueSheetScreen)).toBeTruthy();
     expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

@@ -70,28 +70,10 @@ export const TrueSheetNavigatorContent = ({
 
         const ReanimatedScreen = reanimated ? getReanimatedScreen() : null;
         if (reanimated && !ReanimatedScreen) warnMissingReanimatedScreen(route.name);
-
-        if (ReanimatedScreen) {
-          return (
-            <ReanimatedScreen
-              key={route.key}
-              routeKey={route.key}
-              closing={route.closing}
-              detentIndex={resolvedIndex}
-              resizeKey={route.resizeKey}
-              detents={detents}
-              dispatch={dispatch}
-              emit={emitter.emit}
-              positionChangeHandler={positionChangeHandler}
-              {...sheetProps}
-            >
-              {render()}
-            </ReanimatedScreen>
-          );
-        }
+        const Screen = ReanimatedScreen ?? TrueSheetScreen;
 
         return (
-          <TrueSheetScreen
+          <Screen
             key={route.key}
             routeKey={route.key}
             closing={route.closing}
@@ -104,7 +86,7 @@ export const TrueSheetNavigatorContent = ({
             {...sheetProps}
           >
             {render()}
-          </TrueSheetScreen>
+          </Screen>
         );
       })}
     </>

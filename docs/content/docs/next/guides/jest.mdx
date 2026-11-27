@@ -86,7 +86,7 @@ The `transformIgnorePatterns` config is required because the mock files use ESM 
 
 ### Navigation Reanimated Module (`/navigation/reanimated/mock`)
 
-- For tests that render the real navigator: registers a screen rendering the mocked `TrueSheet`, so screens with `reanimated: true` render without loading reanimated or the native sheet, and without the warning that the integration isn't enabled. With `/navigation` (or `/navigation/expo-router`) mocked too, the navigator renders no sheets and this mock has no effect.
+- No-op, so a tested root layout that imports `/navigation/reanimated` doesn't load reanimated or the native sheet. Use it with the `/navigation` (or `/navigation/expo-router`) mock.
 
 ## Testing Static Methods
 
