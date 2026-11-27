@@ -213,17 +213,22 @@ export function useSheetStack(
     [stack, stackIndex]
   );
 
+  // The sheets stacked above, from the live stack (not this render's)
+  const getAbove = useCallback(() => {
+    if (!ctx) return EMPTY_STACK;
+    const snapshot = ctx.getStackSnapshot();
+    const idx = snapshot.findIndex((e) => e.ref === ref);
+    return idx < 0 ? EMPTY_STACK : snapshot.slice(idx + 1);
+  }, [ctx, ref]);
+
   const dismissAbove = useCallback(
     async (animated?: boolean) => {
-      if (!ctx) return;
-      const snapshot = ctx.getStackSnapshot();
-      const idx = snapshot.findIndex((e) => e.ref === ref);
-      if (idx < 0) return;
-      const above = snapshot.slice(idx + 1);
-      await Promise.all([...above].reverse().map((e) => e.ref.current?.dismissQuietly(animated)));
+      await Promise.all(
+        [...getAbove()].reverse().map((e) => e.ref.current?.dismissQuietly(animated))
+      );
     },
-    [ctx, ref]
+    [getAbove]
   );
 
-  return { descendants, isNested, dismissAbove };
+  return { descendants, isNested, dismissAbove, getAbove };
 }
