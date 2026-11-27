@@ -8,6 +8,14 @@
   initial-value: 0px;
 }
 
+/* The viewport's height of the snap offsets written in CSS until hydrated
+   (getSnapPointCssOffset): the dynamic one where supported, else 100vh. */
+@supports (height: 100dvh) {
+  [data-vaul-drawer] {
+    --vaul-viewport-height: 100dvh;
+  }
+}
+
 [data-vaul-drawer] {
   touch-action: none;
   will-change: transform;

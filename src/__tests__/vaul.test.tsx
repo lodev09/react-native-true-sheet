@@ -2,6 +2,7 @@ import { act, render, renderHook } from '@testing-library/react-native';
 import { Drawer } from '../web/vaul';
 import { useSnapPoints } from '../web/vaul/use-snap-points';
 import type { KeyboardViewport } from '../web/vaul/types';
+import { useIsHydrated } from '../web/hydration';
 
 jest.mock('../web/vaul/style.css', () => ({}));
 jest.mock('../web/vaul/use-prevent-scroll', () => ({ usePreventScroll: () => {} }));
@@ -16,6 +17,7 @@ jest.mock('@radix-ui/react-dialog', () => {
   );
   return { Content, Root: ({ children }: { children: React.ReactNode }) => children };
 });
+jest.mock('../web/hydration', () => ({ useIsHydrated: jest.fn(() => true) }));
 jest.mock('@radix-ui/react-presence', () => ({
   Presence: ({ children }: { children: React.ReactNode }) => children,
 }));
@@ -169,5 +171,119 @@ describe('keyboard viewport', () => {
 
     rerender({ ...props, keyboardViewport: { top: 100, height: 600, layoutHeight: 1000 } });
     expect(result.current.snapPointsOffset).toEqual([200, 0, 300]);
+  });
+});
+
+describe('server rendering', () => {
+  const isHydrated = useIsHydrated as jest.Mock;
+
+  afterEach(() => {
+    isHydrated.mockReturnValue(true);
+  });
+
+  it.each([
+    {
+      direction: 'bottom',
+      snapPoint: 0.5,
+      expected:
+        'calc((var(--vaul-viewport-height, 100vh) - 0px) - min((var(--vaul-viewport-height, 100vh) - 0px) * 0.5, (var(--vaul-viewport-height, 100vh) - 0px)))',
+    },
+    {
+      direction: 'top',
+      snapPoint: 0.5,
+      detachedOffset: 16,
+      expected:
+        'calc(min((var(--vaul-viewport-height, 100vh) - 16px) * 0.5, (var(--vaul-viewport-height, 100vh) - 16px)) - (var(--vaul-viewport-height, 100vh) - 16px))',
+    },
+    {
+      direction: 'bottom',
+      snapPoint: 'auto',
+      maxContentHeight: 500,
+      expected:
+        'calc((var(--vaul-viewport-height, 100vh) - 0px) - min((var(--vaul-viewport-height, 100vh) - 0px) * 0.5, min((var(--vaul-viewport-height, 100vh) - 0px), 500px)))',
+    },
+    {
+      direction: 'bottom',
+      snapPoint: 'peek',
+      expected:
+        'calc((var(--vaul-viewport-height, 100vh) - 0px) - min(200px, (var(--vaul-viewport-height, 100vh) - 0px)))',
+      peekHeight: 200,
+    },
+    {
+      direction: 'right',
+      snapPoint: 0.5,
+      expected: 'calc(100vw - min(100vw * 0.5, 100vw))',
+    },
+  ] as const)(
+    'offsets a $snapPoint snap point ($direction) in CSS until hydrated',
+    ({ direction, snapPoint, expected, ...props }) => {
+      isHydrated.mockReturnValue(false);
+      const detachedOffset = 'detachedOffset' in props ? props.detachedOffset : undefined;
+      const result = render(
+        <Drawer.Root
+          open
+          direction={direction}
+          detached={detachedOffset != null}
+          detachedOffset={detachedOffset}
+          maxContentHeight={'maxContentHeight' in props ? props.maxContentHeight : undefined}
+          peekHeight={'peekHeight' in props ? props.peekHeight : undefined}
+          snapPoints={[snapPoint, 1]}
+          activeSnapPoint={snapPoint}
+          fadeFromIndex={0}
+        >
+          <Drawer.Content />
+        </Drawer.Root>,
+        { createNodeMock: () => new MockElement() }
+      );
+      const content = result.UNSAFE_root.findByProps({ 'data-vaul-drawer': '' });
+      expect(content.props.style['--snap-point-height']).toBe(expected);
+      // Already shown: Safari's viewport settling after the first style pass doesn't animate it
+      expect(content.props.style.transition).toBe('none');
+    }
+  );
+
+  it('uses the dynamic viewport height in CSS where supported only', () => {
+    const css = jest
+      .requireActual<typeof import('fs')>('fs')
+      .readFileSync(require.resolve('../web/vaul/style.css'), 'utf8');
+    expect(css).toMatch(
+      /@supports \(height: 100dvh\) \{\s*\[data-vaul-drawer\] \{\s*--vaul-viewport-height: 100dvh;/
+    );
+  });
+
+  it.each([
+    { activeSnapPoint: 0.5, fadeFromIndex: 0, shown: 'true' },
+    { activeSnapPoint: 1, fadeFromIndex: 0, shown: 'true' },
+    { activeSnapPoint: 0.5, fadeFromIndex: 1, shown: 'false' },
+  ])(
+    'shows the dim of a sheet open at $activeSnapPoint, dimmed from index $fadeFromIndex, until hydrated',
+    ({ activeSnapPoint, fadeFromIndex, shown }) => {
+      isHydrated.mockReturnValue(false);
+      const result = render(
+        <Drawer.Root
+          open
+          snapPoints={[0.5, 1]}
+          activeSnapPoint={activeSnapPoint}
+          fadeFromIndex={fadeFromIndex}
+        >
+          <Drawer.Overlay />
+        </Drawer.Root>,
+        { createNodeMock: () => new MockElement() }
+      );
+      const overlay = result.UNSAFE_root.findByProps({ 'data-vaul-overlay': '' });
+      // What style.css needs to show it, without fading it in
+      expect(overlay.props).toMatchObject({
+        'data-vaul-snap-points': 'true',
+        'data-vaul-delayed-snap-points': 'true',
+        'data-vaul-snap-points-overlay': shown,
+      });
+    }
+  );
+
+  it('reads no document to scale the background', () => {
+    const { useScaleBackground } = jest.requireActual('../web/vaul/use-scale-background');
+    // @ts-expect-error the server has no document
+    delete global.document;
+    expect(() => renderHook(() => useScaleBackground())).not.toThrow();
   });
 });
