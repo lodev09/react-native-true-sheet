@@ -18,6 +18,7 @@ import {
   DARK_GRAY,
   GAP,
   GRAY,
+  HAS_SCROLL_EDGE_EFFECTS,
   HEADER_HEIGHT,
   LIGHT_GRAY,
   SPACING,
@@ -125,14 +126,15 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
       }}
       backgroundColor={Platform.select({ android: DARK })}
       header={<Header />}
+      headerStyle={styles.bar}
       headerOptions={{ position: 'absolute' }}
       footer={
-        // The footer background is transparent on iOS, so it follows the theme
-        <Footer themed={Platform.OS === 'ios'}>
+        // The footer is transparent with scroll edge effects, so it follows the theme
+        <Footer themed={HAS_SCROLL_EDGE_EFFECTS}>
           <FooterPill text="Toggle ListView" onPress={() => setShowList(!showList)} />
         </Footer>
       }
-      footerStyle={styles.footer}
+      footerStyle={styles.bar}
       footerOptions={{ position: 'absolute' }}
       onDidDismiss={() => console.log('Sheet ScrollView dismissed!')}
       onDidPresent={() => console.log(`Sheet ScrollView presented!`)}
@@ -184,11 +186,9 @@ const styles = StyleSheet.create({
     paddingTop: HEADER_HEIGHT + SPACING,
     gap: GAP,
   },
-  footer: {
-    backgroundColor: Platform.select({
-      default: DARK_GRAY,
-      ios: undefined,
-    }),
+  // Transparent where the scroll edge effect shows through
+  bar: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK_GRAY,
   },
   carousel: {
     gap: GAP,

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Platform, type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
+import { type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -9,7 +9,16 @@ import {
 } from '@lodev09/react-native-true-sheet/navigation';
 import '@lodev09/react-native-true-sheet/navigation/reanimated';
 import { Button, DemoContent, Footer, Header } from '@example/shared/components';
-import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING } from '@example/shared/utils';
+import {
+  BLUE,
+  DARK,
+  DARK_BLUE,
+  DARK_GRAY,
+  GAP,
+  HAS_SCROLL_EDGE_EFFECTS,
+  LIGHT_GRAY,
+  SPACING,
+} from '@example/shared/utils';
 import type { AppStackParamList, SheetHomeStackParamList, SheetStackParamList } from '../types';
 import {
   NotificationsSheetContent,
@@ -311,9 +320,10 @@ export const SheetNavigator = () => {
           cornerRadius: 16,
           style: styles.scrollableSheet,
           header: <Header />,
+          headerStyle: styles.scrollableBar,
           headerOptions: { position: 'absolute' },
           footer: <Footer />,
-          footerStyle: styles.scrollableFooter,
+          footerStyle: styles.scrollableBar,
           footerOptions: { position: 'absolute' },
           scrollableOptions: {
             topScrollEdgeEffect: 'soft',
@@ -390,9 +400,9 @@ const styles = StyleSheet.create({
   peekSheet: {
     flex: 1,
   },
-  // Transparent on iOS so the scroll edge effect shows through
-  scrollableFooter: {
-    backgroundColor: Platform.select({ default: DARK_GRAY, ios: undefined }),
+  // Transparent where the scroll edge effect shows through
+  scrollableBar: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK_GRAY,
   },
   smallFooter: {
     justifyContent: 'center',

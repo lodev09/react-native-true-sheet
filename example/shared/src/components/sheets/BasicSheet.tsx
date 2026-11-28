@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState, type Ref, useImperativeHandle } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -26,6 +26,7 @@ import {
   DARK_BLUE,
   DARK_GRAY,
   GAP,
+  HAS_SCROLL_EDGE_EFFECTS,
   HEADER_HEIGHT,
   LIGHT_GRAY,
   SPACING,
@@ -55,11 +56,6 @@ const spring = <T extends ComplexAnimationBuilder<any>>(animation: T) =>
     .stiffness(SPRING_CONFIG.stiffness!)
     .mass(SPRING_CONFIG.mass!)
     .overshootClamping(SPRING_CONFIG.overshootClamping ? 1 : 0);
-
-// Scroll edge effects need iOS 26+. Elsewhere, the child's absolute bars keep a
-// background so content scrolling under them doesn't show through.
-const HAS_SCROLL_EDGE_EFFECTS =
-  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 26;
 
 const DETENTS: SheetDetent[] = ['peek', 'auto', 1];
 const DETENT_BACKGROUNDS: (DetentBackground | null)[] = [null, { blur: 'system-material' }, BLUE];
@@ -292,10 +288,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
             <Input ref={childInputRef} />
           </Header>
         }
-        headerStyle={HAS_SCROLL_EDGE_EFFECTS ? undefined : styles.childHeader}
+        headerStyle={styles.childBar}
         headerOptions={{ position: 'absolute' }}
         footer={<Footer />}
-        footerStyle={HAS_SCROLL_EDGE_EFFECTS ? undefined : styles.footer}
+        footerStyle={styles.childBar}
         footerOptions={{ position: 'absolute' }}
         // Auto + scrollable + absolute footer, with the keyboard rising during present:
         // the footer drops its safe-area inset mid-present (sheet must not overshoot)
@@ -334,8 +330,9 @@ const styles = StyleSheet.create({
   childSheet: {
     flex: 1,
   },
-  childHeader: {
-    backgroundColor: DARK,
+  // Transparent where the scroll edge effect shows through
+  childBar: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK_GRAY,
   },
   // Clear the absolute header so content starts below it and scrolls under it
   childScrollContent: {

@@ -2,7 +2,7 @@ import { forwardRef, useRef, type Ref, useImperativeHandle, useState } from 'rea
 import { Alert, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { TrueSheet, type TrueSheetProps } from '@lodev09/react-native-true-sheet';
 
-import { DARK, GAP, SPACING } from '../../utils';
+import { DARK, GAP, HAS_SCROLL_EDGE_EFFECTS, SPACING } from '../../utils';
 import { Input } from '../Input';
 import { Button } from '../Button';
 import { Header } from '../Header';
@@ -206,7 +206,9 @@ const styles = StyleSheet.create({
     padding: SPACING,
     gap: GAP,
   },
+  // Transparent where the scroll edge effect shows through
   footer: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK,
     flexDirection: 'row',
     padding: SPACING,
     gap: GAP,

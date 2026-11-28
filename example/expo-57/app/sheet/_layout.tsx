@@ -1,8 +1,8 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Sheet } from '@lodev09/react-native-true-sheet/navigation/expo-router';
 
 import { Footer, Header } from '@example/shared/components';
-import { DARK, DARK_GRAY } from '@example/shared/utils';
+import { DARK, DARK_GRAY, HAS_SCROLL_EDGE_EFFECTS } from '@example/shared/utils';
 import { TrueSheetProvider } from '@lodev09/react-native-true-sheet';
 
 export const unstable_settings = {
@@ -93,9 +93,10 @@ export default function SheetStackLayout() {
             cornerRadius: 16,
             style: styles.scrollableSheet,
             header: <Header />,
+            headerStyle: styles.scrollableBar,
             headerOptions: { position: 'absolute' },
             footer: <Footer />,
-            footerStyle: styles.scrollableFooter,
+            footerStyle: styles.scrollableBar,
             footerOptions: { position: 'absolute' },
             scrollableOptions: {
               topScrollEdgeEffect: 'soft',
@@ -133,8 +134,8 @@ const styles = StyleSheet.create({
   peekSheet: {
     flex: 1,
   },
-  // Transparent on iOS so the scroll edge effect shows through
-  scrollableFooter: {
-    backgroundColor: Platform.select({ default: DARK_GRAY, ios: undefined }),
+  // Transparent where the scroll edge effect shows through
+  scrollableBar: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK_GRAY,
   },
 });
