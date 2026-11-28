@@ -166,6 +166,7 @@ export interface NativeProps extends ViewProps {
   footerOptions?: FooterOptionsType;
   foldOptions?: FoldOptionsType;
   presentation?: CodegenTypes.WithDefault<'page' | 'form', 'page'>;
+  zoomSourceTestID?: string;
 
   // Event handlers
   onMount?: CodegenTypes.DirectEventHandler<null>;

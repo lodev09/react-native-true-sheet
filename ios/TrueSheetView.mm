@@ -66,6 +66,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   RCTSurfaceTouchHandler *_touchHandler;
   TrueSheetViewShadowNode::ConcreteState::Shared _state;
   UIView *_snapshotView;
+  NSString *_zoomSourceTestID;
   CGSize _lastStateSize;
   NSInteger _initialDetentIndex;
   TrueSheetViewInsetAdjustment _insetAdjustment;
@@ -138,6 +139,40 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   if (!self.window && [self presentationWindow]) {
     [self presentInitialIfNeeded];
+  }
+}
+
+- (nullable UIView *)findViewWithTestID:(NSString *)testID inView:(UIView *)root {
+  NSMutableArray<UIView *> *queue = [NSMutableArray arrayWithObject:root];
+  while (queue.count > 0) {
+    UIView *view = queue.firstObject;
+    [queue removeObjectAtIndex:0];
+    if ([view.accessibilityIdentifier isEqualToString:testID]) {
+      return view;
+    }
+    [queue addObjectsFromArray:view.subviews];
+  }
+  return nil;
+}
+
+- (void)applyZoomTransitionInWindow:(nullable UIWindow *)window {
+  if (@available(iOS 18.0, *)) {
+    // With a transition set, the automatic style resolves to full screen and the next presentation loses its sheet.
+    _controller.modalPresentationStyle = UIModalPresentationPageSheet;
+    UIView *sourceView = nil;
+    if (_zoomSourceTestID && window) {
+      sourceView = [self findViewWithTestID:_zoomSourceTestID inView:window];
+    }
+    if (sourceView == nil) {
+      _controller.preferredTransition = nil;
+      return;
+    }
+    __weak UIView *weakSourceView = sourceView;
+    _controller.preferredTransition =
+      [UIViewControllerTransition zoomWithOptions:nil
+                               sourceViewProvider:^UIView *(UIZoomTransitionSourceViewProviderContext *context) {
+                                 return weakSourceView;
+                               }];
   }
 }
 
@@ -356,6 +391,8 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   _controller.accessibilityOptions = newProps.accessibilityOptions;
 
   _controller.presentation = newProps.presentation;
+  _zoomSourceTestID =
+    newProps.zoomSourceTestID.empty() ? nil : [NSString stringWithUTF8String:newProps.zoomSourceTestID.c_str()];
   _controller.dismissible = newProps.dismissible;
   _controller.draggable = newProps.draggable;
   _controller.dimmed = newProps.dimmed;
@@ -717,6 +754,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
   UIWindow *window = presentingViewController.view.window;
+  [self applyZoomTransitionInWindow:window];
   // Wider than isBeingPresented: UIKit can queue the transition past this call,
   // and clears isBeingPresented at viewDidAppear, before didPresent applies what was parked.
   _isPresenting = YES;

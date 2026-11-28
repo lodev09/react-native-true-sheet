@@ -531,6 +531,24 @@ Controls the sheet presentation style on iPad and web (landscape/tablet).
 | - | - | - | - | - |
 | `'page' \| 'form'` | `'page'` | **_17+_** | | ✅ |
 
+## `zoomSourceTestID`
+
+The `testID` of a view the sheet zooms out of when presented, and back into when dismissed, using UIKit's zoom transition. The view is looked up when the sheet presents. When no view with that `testID` is on screen, the sheet presents with the default transition.
+
+| Type | Default | 🍎 | 🤖 | 🌐 |
+| - | - | - | - | - |
+| `string` | | **_18+_** | | |
+
+```tsx
+<Pressable testID="add-button" onPress={() => sheet.current?.present()}>
+  <Text>Add</Text>
+</Pressable>
+
+<TrueSheet ref={sheet} zoomSourceTestID="add-button">
+  <View />
+</TrueSheet>
+```
+
 ## `insetAdjustment`
 
 Controls how the bottom safe area inset affects detent heights.

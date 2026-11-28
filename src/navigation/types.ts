@@ -225,6 +225,7 @@ export type TrueSheetNavigationSheetProps = Pick<
   | 'maxContentHeight'
   | 'maxContentWidth'
   | 'presentation'
+  | 'zoomSourceTestID'
   | 'style'
   | 'header'
   | 'headerStyle'

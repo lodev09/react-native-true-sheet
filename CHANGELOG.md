@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🎉 New features
+
+- **iOS**: Added `zoomSourceTestID`, which presents the sheet zooming out of the view with that `testID` and dismisses it back into the view, using UIKit's zoom transition on iOS 18 and later. ([#1069](https://github.com/lodev09/react-native-true-sheet/pull/1069) by [@yasharAyari](https://github.com/yasharAyari))
+
 ### 🐛 Bug fixes
 
 - **iOS**: VoiceOver no longer reaches the screen behind a dimmed sheet that has a `footer`. At detents below `dimmedDetentIndex`, where that screen still takes touches, VoiceOver now reaches it, footer or not. ([#1027](https://github.com/lodev09/react-native-true-sheet/pull/1027) by [@rendis](https://github.com/rendis) and [@lodev09](https://github.com/lodev09))

@@ -273,6 +273,11 @@ class TrueSheetViewManager :
     // iOS/web-specific prop - no-op on Android
   }
 
+  @ReactProp(name = "zoomSourceTestID")
+  override fun setZoomSourceTestID(view: TrueSheetView, value: String?) {
+    // iOS-only prop - no-op on Android
+  }
+
   @ReactProp(name = "elevation", defaultDouble = -1.0)
   override fun setElevation(view: TrueSheetView, elevation: Double) {
     view.setSheetElevation(elevation.toFloat())
