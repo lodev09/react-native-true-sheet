@@ -1100,6 +1100,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [self updateStateWithSize:size];
 }
 
+// Layouts during a drag measure the keyboard against UIKit's in-flight sheet
+// transform, leaving the footer's keyboard slide off by a point or so.
+- (void)viewControllerDidSettle {
+  [_containerView updateFooterKeyboardOffset];
+}
+
 - (void)viewControllerSafeAreaInsetsDidChange {
   [self refreshFooterBottomInset];
   [_containerView updateFooterKeyboardOffset];

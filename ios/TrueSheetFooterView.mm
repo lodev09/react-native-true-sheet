@@ -9,6 +9,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "TrueSheetFooterView.h"
+#import <React/RCTUtils.h>
 #import <react/renderer/components/TrueSheetSpec/EventEmitters.h>
 #import <react/renderer/components/TrueSheetSpec/Props.h>
 #import <react/renderer/components/TrueSheetSpec/RCTComponentViewHelpers.h>
@@ -244,7 +245,10 @@ using namespace facebook::react;
   CGPoint keyboardTopInWindow = CGPointMake(CGRectGetMidX(window.bounds), CGRectGetMaxY(window.bounds) - height);
   CGFloat keyboardTop = [self.superview convertPoint:keyboardTopInWindow fromView:window].y;
   CGFloat keyboardOffset = self.keyboardObserver.viewController.footerKeyboardOffset;
-  return MAX(0, footerBottom - keyboardTop + keyboardOffset);
+  // Snap to the layout's pixel grid — a scaled sheet places the keyboard edge a
+  // fraction of a pixel off, and a footer risen that sliver over content ending
+  // at its top makes UIKit draw the bottom scroll edge effect.
+  return MAX(0, RCTRoundPixelValue(footerBottom - keyboardTop + keyboardOffset));
 }
 
 // Yoga owns the footer's frame (pinned to the container's bottom edge), so the

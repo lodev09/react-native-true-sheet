@@ -20,7 +20,18 @@ import {
   type TrueSheetProps,
 } from '@lodev09/react-native-true-sheet';
 
-import { BLUE, DARK, DARK_BLUE, DARK_GRAY, GAP, LIGHT_GRAY, SPACING, times } from '../../utils';
+import {
+  BLUE,
+  DARK,
+  DARK_BLUE,
+  DARK_GRAY,
+  GAP,
+  HAS_SCROLL_EDGE_EFFECTS,
+  HEADER_HEIGHT,
+  LIGHT_GRAY,
+  SPACING,
+  times,
+} from '../../utils';
 import { DemoContent } from '../DemoContent';
 import { Footer } from '../Footer';
 import { Button } from '../Button';
@@ -269,9 +280,18 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         dimColor="#ff0000"
         dimOpacity={0.4}
         backgroundColor={DARK}
+        style={styles.childSheet}
         scrollableRef={childScrollRef}
+        scrollableOptions={{ topScrollEdgeEffect: 'soft', bottomScrollEdgeEffect: 'soft' }}
+        header={
+          <Header>
+            <Input ref={childInputRef} />
+          </Header>
+        }
+        headerStyle={styles.childBar}
+        headerOptions={{ position: 'absolute' }}
         footer={<Footer />}
-        footerStyle={styles.footer}
+        footerStyle={styles.childBar}
         footerOptions={{ position: 'absolute' }}
         // Auto + scrollable + absolute footer, with the keyboard rising during present:
         // the footer drops its safe-area inset mid-present (sheet must not overshoot)
@@ -280,9 +300,8 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         <ScrollView
           ref={childScrollRef}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.childContent}
+          contentContainerStyle={[styles.childContent, styles.childScrollContent]}
         >
-          <Input ref={childInputRef} />
           {onNavigateToModal && <Button text="Modal" onPress={onNavigateToModal} />}
           <Button text="Dismiss All" onPress={() => dismissAll()} />
           <Button text="Dismiss Stack" onPress={() => dismissStack('main')} />
@@ -305,6 +324,19 @@ const styles = StyleSheet.create({
   childContent: {
     padding: SPACING,
     gap: GAP,
+  },
+  // Auto still sizes to the content; the scroll view fills the sheet under the
+  // absolute footer so its scroll edge effect can reach the footer's bottom
+  childSheet: {
+    flex: 1,
+  },
+  // Transparent where the scroll edge effect shows through
+  childBar: {
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK_GRAY,
+  },
+  // Clear the absolute header so content starts below it and scrolls under it
+  childScrollContent: {
+    paddingTop: HEADER_HEIGHT + SPACING,
   },
   toastOverlay: {
     alignItems: 'center',

@@ -1510,6 +1510,7 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   }
 
   [self emitChangePositionDelegateWithPosition:self.currentPosition realtime:NO debug:debug];
+  [self.delegate viewControllerDidSettle];
 }
 
 #pragma mark - Interactive Navigation Dismiss

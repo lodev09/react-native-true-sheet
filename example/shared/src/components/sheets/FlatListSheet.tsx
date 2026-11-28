@@ -9,6 +9,7 @@ import {
   FOOTER_HEIGHT,
   GAP,
   GRAY,
+  HAS_SCROLL_EDGE_EFFECTS,
   LIGHT_GRAY,
   SPACING,
   times,
@@ -140,9 +141,10 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
+  // Transparent where the scroll edge effect shows through
   footer: {
-    backgroundColor: DARK,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    backgroundColor: HAS_SCROLL_EDGE_EFFECTS ? undefined : DARK,
+    borderTopWidth: HAS_SCROLL_EDGE_EFFECTS ? 0 : StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   heading: {
