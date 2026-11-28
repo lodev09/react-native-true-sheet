@@ -516,6 +516,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   [self cancelPendingPresent];
 
+  // A delegate detached above drops the didPresent that would clear it
+  _isPresenting = NO;
+  _pendingDetents = nil;
+
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
   _isInitialPresentScheduled = NO;
@@ -635,18 +639,23 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // A controller still animating out of the presenter (e.g. a navigation modal
-  // closing) makes UIKit queue this presentation, so everything measured below
-  // goes stale before it starts. Present once that transition ends.
+  // closing), or a presenter still animating in (e.g. a Modal opening), makes
+  // UIKit queue this presentation and refuse another one meanwhile, so everything
+  // measured below goes stale before it starts. Present once that transition ends.
   UIViewController *dismissing = presentingViewController.presentedViewController;
-  id<UIViewControllerTransitionCoordinator> dismissCoordinator =
-    dismissing.isBeingDismissed ? dismissing.transitionCoordinator : nil;
-  if (dismissCoordinator) {
+  id<UIViewControllerTransitionCoordinator> blockingCoordinator = nil;
+  if (dismissing.isBeingDismissed) {
+    blockingCoordinator = dismissing.transitionCoordinator;
+  } else if (presentingViewController.isBeingPresented) {
+    blockingCoordinator = presentingViewController.transitionCoordinator;
+  }
+  if (blockingCoordinator) {
     _isPresentPending = YES;
     _pendingPresentCompletion = completion;
     NSUInteger generation = ++_pendingPresentGeneration;
 
     __weak __typeof(self) weakSelf = self;
-    [dismissCoordinator
+    [blockingCoordinator
       animateAlongsideTransition:nil
                       completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
                         dispatch_async(dispatch_get_main_queue(), ^{
