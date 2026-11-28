@@ -2041,7 +2041,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNTrueSheet (4.2.0-beta.0):
+  - RNTrueSheet (4.2.0-beta.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2527,7 +2527,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: e19fcf39b0212e0eb8bc7ca1e645500eb492f6be
   RNReanimated: 3018727dbf272754d0f31ef73f619e49ade7baf0
   RNScreens: 6d0d3b7819284dbf9f222899eb819f069fce4b8b
-  RNTrueSheet: 755e7535b35d39d78d05f5fc338780d717b26069
+  RNTrueSheet: bc64046c100d512d1e5e0b38e384d9fef138fda1
   RNWorklets: 488806637a21eb17812a48dadca7cb8c698c8cfd
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
