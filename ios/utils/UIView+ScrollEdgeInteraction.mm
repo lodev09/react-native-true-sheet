@@ -14,6 +14,17 @@
 
 static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
 
+// UIKit sizes the effect to 60pt past the element edge facing the scroll edge.
+// Sitting the hint this far in from the container's inner edge ends the effect
+// 12pt past the container, like a native bar, at any container height.
+static const CGFloat kEdgeEffectHintInset = 48;
+
+static CGRect EdgeEffectHintFrame(CGRect bounds, BOOL isTopEdge) {
+  CGFloat height = CGRectGetHeight(bounds);
+  CGFloat y = isTopEdge ? MAX(0, height - kEdgeEffectHintInset) : MAX(0, MIN(height, kEdgeEffectHintInset) - 1);
+  return CGRectMake(0, y, 1, 1);
+}
+
 @implementation UIView (ScrollEdgeInteraction)
 
 - (void)cleanupEdgeInteraction API_AVAILABLE(ios(26.0)) {
@@ -50,6 +61,10 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   }
 
 #if RNTS_IPHONE_OS_VERSION_AVAILABLE(26_0)
+  BOOL isTopEdge = edge == UIRectEdgeTop;
+  UILabel *existingHint = objc_getAssociatedObject(self, kEdgeEffectHintKey);
+  existingHint.frame = EdgeEffectHintFrame(self.bounds, isTopEdge);
+
   // Update in place — this re-runs on every footer/header size change, and
   // tearing the interaction down mid keyboard animation flashes the edge
   // effect at the footer's final position.
@@ -65,11 +80,9 @@ static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
   // UIScrollEdgeElementContainerInteraction requires standard UIKit element
   // descendants (UILabel, UIControl, etc.) to trigger the edge effect.
   // RCTViewComponentView subviews are not recognized, so we add a
-  // non-visible UILabel as an element hint. iOS 27+ ignores full-size empty
-  // label when applying soft effect, so we put 1x1 in the corner instead
-  BOOL isTopEdge = edge == UIRectEdgeTop;
-  UILabel *hint = [[UILabel alloc] initWithFrame:CGRectMake(0, isTopEdge ? CGRectGetHeight(self.bounds) - 1 : 0, 1, 1)];
-  hint.autoresizingMask = isTopEdge ? UIViewAutoresizingFlexibleTopMargin : UIViewAutoresizingNone;
+  // non-visible UILabel as an element hint. iOS 27+ ignores a full-size empty
+  // label when applying the soft effect, so the hint is 1x1.
+  UILabel *hint = [[UILabel alloc] initWithFrame:EdgeEffectHintFrame(self.bounds, isTopEdge)];
   hint.userInteractionEnabled = NO;
   [self addSubview:hint];
   objc_setAssociatedObject(self, kEdgeEffectHintKey, hint, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
