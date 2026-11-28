@@ -463,17 +463,20 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
 // re-resolves alongside the keyboard animation. A rising one only refreshes
 // the snapshot UIKit's own keyboard resize resolves from — an invalidation
 // there runs a second animation that drags the footer off the keyboard.
+// A keyboard rising while presenting (e.g. focus in onWillPresent) only
+// refreshes the snapshot too, so the transition lands at the keyboard's
+// detent instead of overshooting it.
 - (void)setKeyboardHeight:(CGFloat)keyboardHeight {
   if (_keyboardHeight == keyboardHeight) {
     return;
   }
   _keyboardHeight = keyboardHeight;
 
-  if (!_footerKeyboardAdjustment || !self.isPresented) {
+  if (!_footerKeyboardAdjustment) {
     return;
   }
 
-  if (_absoluteFooter && _footerAvoidsKeyboard) {
+  if (!self.isPresented || (_absoluteFooter && _footerAvoidsKeyboard)) {
     [self refreshDetentHeights];
   } else {
     [self setupSheetDetentsForSizeChange];
