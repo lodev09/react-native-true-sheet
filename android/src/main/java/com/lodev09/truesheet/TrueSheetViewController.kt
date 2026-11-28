@@ -1113,6 +1113,8 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     // Restore isHideable to actual value after present animation
     behavior?.isHideable = dismissible
 
+    containerView?.layoutFocusedViewInPlace()
+
     val (index, position, detent) = getDetentInfoWithValue(currentDetentIndex)
     parentSheetView?.viewControllerDidBlur()
     delegate?.viewControllerDidPresent(index, position, detent)

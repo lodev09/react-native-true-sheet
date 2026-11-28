@@ -114,6 +114,42 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     clipToPadding = false
   }
 
+  /**
+   * Attaching a view to a window clears its laid-out state (View.isLaidOut), and React Native lays a view out
+   * again only when its frame changes. Content attached with a presented sheet, or a row that
+   * removeClippedSubviews brings back, keeps its frame and stays not laid out. Autofill skips a focused view
+   * that is not laid out, and a manual autofill request skips the children of such a group, so lay the
+   * content out in place before a focus change reaches autofill.
+   */
+  override fun requestChildFocus(child: View?, focused: View?) {
+    layoutInPlaceIfNeeded(this)
+    super.requestChildFocus(child, focused)
+  }
+
+  // Skips a view React Native has not sized yet: laid out at zero size, a focused view loses focus
+  private fun layoutInPlaceIfNeeded(view: View) {
+    if (!view.isLaidOut && view.width > 0 && view.height > 0) {
+      view.layout(view.left, view.top, view.right, view.bottom)
+    }
+
+    if (view is ViewGroup) {
+      for (index in 0 until view.childCount) {
+        layoutInPlaceIfNeeded(view.getChildAt(index))
+      }
+    }
+  }
+
+  /**
+   * Android also defers a focused view's autofill until its next layout while the view is not visible, as
+   * when a field gains focus while the sheet slides in. Called once the sheet is presented.
+   */
+  fun layoutFocusedViewInPlace() {
+    val focused = findFocus() ?: return
+    if (focused.width > 0 && focused.height > 0) {
+      focused.layout(focused.left, focused.top, focused.right, focused.bottom)
+    }
+  }
+
   fun setupScrollable() {
     contentView?.setupScrollable()
   }
