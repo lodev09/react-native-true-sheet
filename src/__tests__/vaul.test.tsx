@@ -174,6 +174,28 @@ describe('keyboard viewport', () => {
   });
 });
 
+describe('whole pixel offsets', () => {
+  it.each([
+    { direction: 'bottom', expected: [469, 0] },
+    { direction: 'top', expected: [-468, 0] },
+    { direction: 'right', expected: [469, 0] },
+    { direction: 'left', expected: [-468, 0] },
+  ] as const)('rounds a fraction of the window ($direction)', ({ direction, expected }) => {
+    Object.assign(window, { innerHeight: 937, innerWidth: 937 });
+    const { result } = renderHook(() =>
+      useSnapPoints({
+        drawerRef: { current: new MockElement() as unknown as HTMLDivElement },
+        overlayRef: { current: null },
+        snapPoints: [0.5, 1],
+        onSnapPointChange: jest.fn(),
+        direction,
+        isOpen: true,
+      })
+    );
+    expect(result.current.snapPointsOffset).toEqual(expected);
+  });
+});
+
 describe('server rendering', () => {
   const isHydrated = useIsHydrated as jest.Mock;
 
@@ -241,6 +263,24 @@ describe('server rendering', () => {
       expect(content.props.style.transition).toBe('none');
     }
   );
+
+  it('replaces the CSS offset with whole pixels once mounted', () => {
+    isHydrated.mockReturnValue(false);
+    Object.assign(window, { innerHeight: 937 });
+    const drawer = new MockElement();
+    const result = render(
+      <Drawer.Root open snapPoints={[0.5, 1]} activeSnapPoint={0.5} fadeFromIndex={0}>
+        <Drawer.Content />
+      </Drawer.Root>,
+      {
+        createNodeMock: ({ props }) =>
+          'data-vaul-drawer' in (props as object) ? drawer : new MockElement(),
+      }
+    );
+    const content = result.UNSAFE_root.findByProps({ 'data-vaul-drawer': '' });
+    expect(content.props.style['--snap-point-height']).toMatch(/^calc\(/);
+    expect(drawer.style['--snap-point-height']).toBe('469px');
+  });
 
   it('uses the dynamic viewport height in CSS where supported only', () => {
     const css = jest

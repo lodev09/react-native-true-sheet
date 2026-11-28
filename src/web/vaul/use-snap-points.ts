@@ -150,7 +150,11 @@ export function useSnapPoints({
           const height = Math.min(rawHeight, ceiling);
 
           if (windowDimensions) {
-            return direction === 'bottom' ? effectiveHeight - height : -effectiveHeight + height;
+            // Whole pixels: the drawer has a layer of its own (`will-change: transform`), drawn
+            // between two pixels at a fractional offset, which blurs its text on a 1x screen.
+            return Math.round(
+              direction === 'bottom' ? effectiveHeight - height : -effectiveHeight + height
+            );
           }
 
           return height;
@@ -163,7 +167,9 @@ export function useSnapPoints({
         const width = Math.min(rawWidth, containerSize.width);
 
         if (windowDimensions) {
-          return direction === 'right' ? containerSize.width - width : -containerSize.width + width;
+          return Math.round(
+            direction === 'right' ? containerSize.width - width : -containerSize.width + width
+          );
         }
 
         return width;
