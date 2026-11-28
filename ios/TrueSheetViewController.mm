@@ -786,8 +786,10 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
       [self.delegate viewControllerDidPresentAtIndex:index position:self.currentPosition detent:detent];
       [self.delegate viewControllerDidFocus];
 
-      [self->_grabberView updateAccessibilityValueWithIndex:index detentCount:self->_detents.count];
-      [self settleAtDetentIndex:index debug:@"did present"];
+      // didPresent applies detents changed while presenting, which can remap the index
+      NSInteger settledIndex = [self currentDetentIndex];
+      [self->_grabberView updateAccessibilityValueWithIndex:settledIndex detentCount:self->_detents.count];
+      [self settleAtDetentIndex:settledIndex debug:@"did present"];
 
       // Apply a posture change that happened while presenting
       [self updateHingeState];

@@ -82,6 +82,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
   BOOL _isPresentPending;
+  BOOL _isPresenting;
   NSUInteger _pendingPresentGeneration;
   TrueSheetCompletionBlock _pendingPresentCompletion;
   NSArray *_pendingDetents;
@@ -160,16 +161,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // A sheet still animating out of the presenter (e.g. our own controller,
-  // recycled mid-dismissal) blocks presentation — retry once its transition ends.
-  // Scheduled like the deferred present below, so a dismiss() meanwhile cancels it.
+  // recycled mid-dismissal), or a presenter still animating in (e.g. a Modal
+  // opening), blocks presentation — retry once its transition ends, with the
+  // initialDetentIndex current by then. Scheduled like the deferred present
+  // below, so a dismiss() meanwhile cancels it.
   UIViewController *dismissing = vc.presentedViewController;
-  if (dismissing && dismissing.isBeingDismissed) {
-    _initialDetentAnimated = YES;
+  UIViewController *transitioning = dismissing.isBeingDismissed ? dismissing : vc.isBeingPresented ? vc : nil;
+  if (transitioning) {
+    // An opening presenter brings the sheet in with it, so keep the caller's choice
+    if (dismissing.isBeingDismissed) {
+      _initialDetentAnimated = YES;
+    }
     _didInitiallyPresent = YES;
     _isInitialPresentScheduled = YES;
 
     __weak __typeof(self) weakSelf = self;
-    TrueSheetRunAfterTransition(dismissing, ^{
+    TrueSheetRunAfterTransition(transitioning, ^{
       __typeof(self) strongSelf = weakSelf;
       if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
         return;
@@ -273,10 +280,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     }
   }
 
-  if (_controller.isBeingPresented) {
+  if (_isPresenting) {
     _pendingDetents = detents;
   } else {
     _controller.detents = detents;
+    _pendingDetents = nil;
   }
 
   // Background color
@@ -475,11 +483,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   [self setupScrollable];
 
-  if (_controller.isPresented) {
+  if (_isPresenting) {
+    _pendingPropsUpdate = YES;
+  } else if (_controller.isPresented) {
     _pendingPropsUpdate = YES;
     [self setupSheetDetentsForSizeChange];
-  } else if (_controller.isBeingPresented) {
-    _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
     if ([self presentationWindow]) {
@@ -513,6 +521,10 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   [self cancelPendingPresent];
+
+  // A delegate detached above drops the didPresent that would clear it
+  _isPresenting = NO;
+  _pendingDetents = nil;
 
   _lastStateSize = CGSizeZero;
   _didInitiallyPresent = NO;
@@ -633,18 +645,23 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // A controller still animating out of the presenter (e.g. a navigation modal
-  // closing) makes UIKit queue this presentation, so everything measured below
-  // goes stale before it starts. Present once that transition ends.
+  // closing), or a presenter still animating in (e.g. a Modal opening), makes
+  // UIKit queue this presentation and refuse another one meanwhile, so everything
+  // measured below goes stale before it starts. Present once that transition ends.
   UIViewController *dismissing = presentingViewController.presentedViewController;
-  id<UIViewControllerTransitionCoordinator> dismissCoordinator =
-    dismissing.isBeingDismissed ? dismissing.transitionCoordinator : nil;
-  if (dismissCoordinator) {
+  id<UIViewControllerTransitionCoordinator> blockingCoordinator = nil;
+  if (dismissing.isBeingDismissed) {
+    blockingCoordinator = dismissing.transitionCoordinator;
+  } else if (presentingViewController.isBeingPresented) {
+    blockingCoordinator = presentingViewController.transitionCoordinator;
+  }
+  if (blockingCoordinator) {
     _isPresentPending = YES;
     _pendingPresentCompletion = completion;
     NSUInteger generation = ++_pendingPresentGeneration;
 
     __weak __typeof(self) weakSelf = self;
-    [dismissCoordinator
+    [blockingCoordinator
       animateAlongsideTransition:nil
                       completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
                         dispatch_async(dispatch_get_main_queue(), ^{
@@ -665,6 +682,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   // Reset navigation dismiss flag when presenting (handles view recycling edge cases).
   // Not before a deferred present: until it runs, the sheet is still hidden by navigation.
   _dismissedByNavigation = NO;
+
+  // Parked by a presentation that never reached didPresent
+  if (_pendingDetents) {
+    _controller.detents = _pendingDetents;
+    _pendingDetents = nil;
+  }
 
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
@@ -694,6 +717,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
   UIWindow *window = presentingViewController.view.window;
+  // Wider than isBeingPresented: UIKit can queue the transition past this call,
+  // and clears isBeingPresented at viewDidAppear, before didPresent applies what was parked.
+  _isPresenting = YES;
   [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{
@@ -901,7 +927,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   // Retargeting the in-flight presentation makes UIKit snap the whole stack
   // (including the sheet behind) instead of animating. Defer to didPresent —
   // presentAtIndex measured synchronously, so this is usually a no-op.
-  if (_controller.isBeingPresented) {
+  if (_isPresenting) {
     _pendingSizeChange = YES;
     return;
   }
@@ -998,6 +1024,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
+  _isPresenting = NO;
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 
   if (_pendingPropsUpdate) {
@@ -1043,6 +1070,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)viewControllerDidDismiss {
+  _isPresenting = NO;
   [_containerView cleanupKeyboardObserver];
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
