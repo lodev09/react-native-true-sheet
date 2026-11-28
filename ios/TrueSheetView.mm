@@ -82,6 +82,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   BOOL _pendingSizeChange;
   BOOL _pendingPropsUpdate;
   BOOL _isPresentPending;
+  BOOL _isPresenting;
   NSUInteger _pendingPresentGeneration;
   TrueSheetCompletionBlock _pendingPresentCompletion;
   NSArray *_pendingDetents;
@@ -273,10 +274,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     }
   }
 
-  if (_controller.isBeingPresented) {
+  if (_isPresenting) {
     _pendingDetents = detents;
   } else {
     _controller.detents = detents;
+    _pendingDetents = nil;
   }
 
   // Background color
@@ -475,11 +477,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   [self setupScrollable];
 
-  if (_controller.isPresented) {
+  if (_isPresenting) {
+    _pendingPropsUpdate = YES;
+  } else if (_controller.isPresented) {
     _pendingPropsUpdate = YES;
     [self setupSheetDetentsForSizeChange];
-  } else if (_controller.isBeingPresented) {
-    _pendingPropsUpdate = YES;
   } else if (_initialDetentIndex >= 0) {
     _pendingLayoutUpdate = NO;
     if ([self presentationWindow]) {
@@ -666,6 +668,12 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   // Not before a deferred present: until it runs, the sheet is still hidden by navigation.
   _dismissedByNavigation = NO;
 
+  // Parked by a presentation that never reached didPresent
+  if (_pendingDetents) {
+    _controller.detents = _pendingDetents;
+    _pendingDetents = nil;
+  }
+
   [_controller setupAnchorViewInView:presentingViewController.view];
   [_controller setupSheetSizing];
   [_controller setupSheetProps];
@@ -694,6 +702,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   [_screensEventObserver startObservingWithState:_state.get()->getData()];
 
   UIWindow *window = presentingViewController.view.window;
+  // Wider than isBeingPresented: UIKit can queue the transition past this call,
+  // and clears isBeingPresented at viewDidAppear, before didPresent applies what was parked.
+  _isPresenting = YES;
   [presentingViewController presentViewController:_controller
                                          animated:animated
                                        completion:^{
@@ -901,7 +912,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   // Retargeting the in-flight presentation makes UIKit snap the whole stack
   // (including the sheet behind) instead of animating. Defer to didPresent —
   // presentAtIndex measured synchronously, so this is usually a no-op.
-  if (_controller.isBeingPresented) {
+  if (_isPresenting) {
     _pendingSizeChange = YES;
     return;
   }
@@ -998,6 +1009,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)viewControllerDidPresentAtIndex:(NSInteger)index position:(CGFloat)position detent:(CGFloat)detent {
+  _isPresenting = NO;
   [TrueSheetLifecycleEvents emitDidPresent:_eventEmitter index:index position:position detent:detent];
 
   if (_pendingPropsUpdate) {
@@ -1043,6 +1055,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 }
 
 - (void)viewControllerDidDismiss {
+  _isPresenting = NO;
   [_containerView cleanupKeyboardObserver];
   if (!_dismissedByNavigation) {
     _dismissedByNavigation = NO;
