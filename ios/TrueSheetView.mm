@@ -161,16 +161,22 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 
   // A sheet still animating out of the presenter (e.g. our own controller,
-  // recycled mid-dismissal) blocks presentation — retry once its transition ends.
-  // Scheduled like the deferred present below, so a dismiss() meanwhile cancels it.
+  // recycled mid-dismissal), or a presenter still animating in (e.g. a Modal
+  // opening), blocks presentation — retry once its transition ends, with the
+  // initialDetentIndex current by then. Scheduled like the deferred present
+  // below, so a dismiss() meanwhile cancels it.
   UIViewController *dismissing = vc.presentedViewController;
-  if (dismissing && dismissing.isBeingDismissed) {
-    _initialDetentAnimated = YES;
+  UIViewController *transitioning = dismissing.isBeingDismissed ? dismissing : vc.isBeingPresented ? vc : nil;
+  if (transitioning) {
+    // An opening presenter brings the sheet in with it, so keep the caller's choice
+    if (dismissing.isBeingDismissed) {
+      _initialDetentAnimated = YES;
+    }
     _didInitiallyPresent = YES;
     _isInitialPresentScheduled = YES;
 
     __weak __typeof(self) weakSelf = self;
-    TrueSheetRunAfterTransition(dismissing, ^{
+    TrueSheetRunAfterTransition(transitioning, ^{
       __typeof(self) strongSelf = weakSelf;
       if (!strongSelf || !strongSelf->_isInitialPresentScheduled)
         return;
