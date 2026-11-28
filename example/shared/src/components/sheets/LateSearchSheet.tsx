@@ -23,10 +23,7 @@ export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
     loadTimeout.current = setTimeout(() => setLoaded(true), LOAD_DELAY_MS);
   };
 
-  const reset = () => {
-    clearTimeout(loadTimeout.current);
-    setLoaded(false);
-  };
+  const cancelLoad = () => clearTimeout(loadTimeout.current);
 
   useEffect(() => () => clearTimeout(loadTimeout.current), []);
 
@@ -43,7 +40,8 @@ export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
       scrollableRef={scrollViewRef}
       style={styles.sheet}
       onWillPresent={load}
-      onDidDismiss={reset}
+      onWillDismiss={cancelLoad}
+      onDidDismiss={() => setLoaded(false)}
     >
       <View style={styles.header}>
         <Text style={styles.title}>Late Search</Text>

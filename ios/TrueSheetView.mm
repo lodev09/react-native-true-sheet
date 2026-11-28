@@ -941,12 +941,13 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     if (!self->_containerView || !self->_controller.isPresented || self->_controller.isBeingDismissed)
       return;
 
+    // First, so the peek and footer measurements below see queued content
+    [self layoutPendingContent];
+
     // Refresh here (not just on peek size events) since the peek's offset
     // within the content can change without its own size changing.
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
     [self refreshFooterBottomInset];
-
-    [self layoutPendingContent];
 
     // Size first: the props rebuild refreshes the heights itself, hiding the
     // change from the controller and skipping its post-resize settle.
@@ -1001,6 +1002,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   if (_pendingPropsUpdate) {
     _pendingPropsUpdate = NO;
+    [self layoutPendingContent];
     [self applySheetPropsUpdate];
   }
 
@@ -1197,6 +1199,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 }
 
+// Callers run layoutPendingContent first.
 - (void)applySheetPropsUpdate {
   BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
   _pendingLayoutUpdate = NO;
@@ -1212,7 +1215,6 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   [_controller setupSheetSizing];
 
-  [self layoutPendingContent];
   [_controller.sheetPresentationController animateChanges:^{
     [self->_controller setupSheetProps];
     if (pendingLayoutUpdate) {
