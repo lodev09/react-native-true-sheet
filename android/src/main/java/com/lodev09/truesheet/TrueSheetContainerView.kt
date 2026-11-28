@@ -108,49 +108,33 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
       contentView?.bottomInset = value
     }
 
-  // Set on attach until the next layout lays out the content attached with the container
-  private var isContentLayoutPending = false
-
   init {
     // Allow footer to position outside container bounds
     clipChildren = false
     clipToPadding = false
   }
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    isContentLayoutPending = true
-  }
-
-  override fun onLayout(
-    changed: Boolean,
-    left: Int,
-    top: Int,
-    right: Int,
-    bottom: Int
-  ) {
-    super.onLayout(changed, left, top, right, bottom)
-
-    if (isContentLayoutPending) {
-      isContentLayoutPending = false
-      layoutDescendantsNotLaidOut(this)
-    }
-  }
-
   /**
-   * Attaching a view to a window clears its laid-out state (View.isLaidOut), and React Native lays a view
-   * out again only when its frame changes, so the content laid out before the sheet was presented stays
-   * not laid out. Android's autofill skips such views: a focused text field starts no autofill session.
+   * Attaching a view to a window clears its laid-out state (View.isLaidOut), and React Native lays a view out
+   * again only when its frame changes. Content attached with a presented sheet, or a row that
+   * removeClippedSubviews brings back, keeps its frame and stays not laid out. Autofill skips a focused view
+   * that is not laid out, and a manual autofill request skips the children of such a group, so lay the
+   * content out in place before a focus change reaches autofill.
    */
-  private fun layoutDescendantsNotLaidOut(group: ViewGroup) {
-    for (index in 0 until group.childCount) {
-      val child = group.getChildAt(index)
-      if (!child.isLaidOut) {
-        child.layout(child.left, child.top, child.right, child.bottom)
-      }
+  override fun requestChildFocus(child: View?, focused: View?) {
+    layoutInPlaceIfNeeded(this)
+    super.requestChildFocus(child, focused)
+  }
 
-      if (child is ViewGroup) {
-        layoutDescendantsNotLaidOut(child)
+  // Skips a view React Native has not sized yet: laid out at zero size, a focused view loses focus
+  private fun layoutInPlaceIfNeeded(view: View) {
+    if (!view.isLaidOut && view.width > 0 && view.height > 0) {
+      view.layout(view.left, view.top, view.right, view.bottom)
+    }
+
+    if (view is ViewGroup) {
+      for (index in 0 until view.childCount) {
+        layoutInPlaceIfNeeded(view.getChildAt(index))
       }
     }
   }
