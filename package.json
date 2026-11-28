@@ -23,6 +23,10 @@
       "types": "./lib/typescript/src/mocks/navigationExpoRouter.d.ts",
       "default": "./lib/module/mocks/navigationExpoRouter.js"
     },
+    "./navigation/reanimated/mock": {
+      "types": "./lib/typescript/src/mocks/navigationReanimated.d.ts",
+      "default": "./lib/module/mocks/navigationReanimated.js"
+    },
     "./reanimated/mock": {
       "types": "./lib/typescript/src/mocks/reanimated.d.ts",
       "default": "./lib/module/mocks/reanimated.js"
@@ -36,6 +40,11 @@
       "source": "./src/navigation/index.ts",
       "types": "./lib/typescript/src/navigation/index.d.ts",
       "default": "./lib/module/navigation/index.js"
+    },
+    "./navigation/reanimated": {
+      "source": "./src/navigation/reanimated.ts",
+      "types": "./lib/typescript/src/navigation/reanimated.d.ts",
+      "default": "./lib/module/navigation/reanimated.js"
     },
     "./navigation/expo-router": {
       "source": "./src/navigation/expo-router/index.ts",

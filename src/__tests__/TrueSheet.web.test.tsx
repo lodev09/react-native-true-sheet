@@ -1,9 +1,10 @@
-import { createRef } from 'react';
+import { createRef, useEffect } from 'react';
 import { act, render } from '@testing-library/react-native';
 import { TrueSheet } from '../TrueSheet.web';
 import { TrueSheetProvider, useTrueSheet } from '../TrueSheetProvider.web';
 import type { SheetDetent, TrueSheetMethods, TrueSheetStaticMethods } from '../TrueSheet.types';
 import { Drawer } from '../web/vaul';
+import { useIsHydrated } from '../web/hydration';
 
 jest.mock('../web/vaul', () => {
   const React = require('react');
@@ -12,8 +13,12 @@ jest.mock('../web/vaul', () => {
   );
   const Root = ({ children, ...props }: { children: React.ReactNode }) =>
     React.createElement('div', props, children);
-  return { Drawer: { Root, Content, Portal: Root, Overlay: Root, Title: Root, Handle: Root } };
+  const Portal = ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', null, children);
+  return { Drawer: { Root, Content, Portal, Overlay: Root, Title: Root, Handle: Root } };
 });
+
+jest.mock('../web/hydration', () => ({ useIsHydrated: jest.fn(() => true) }));
 
 jest.mock('../web/layout', () => ({
   observeSheetLayout: () => ({ disconnect: jest.fn() }),
@@ -28,6 +33,7 @@ class MockElement {
   getAnimations() {
     return [];
   }
+  appendChild() {}
 }
 
 const backgrounds = [null, '#123456', { color: '#abcdef' }];
@@ -426,5 +432,182 @@ describe('web detent backgrounds', () => {
     sheet.rerender(<TrueSheet {...sheet.props} />);
     fire(() => sheet.ref.current!.present(1));
     expect(sheet.color()).toBe('#123456');
+  });
+});
+
+describe('web server rendering', () => {
+  const isHydrated = useIsHydrated as jest.Mock;
+  const wrapperSizing = (sheet: ReturnType<typeof setup>) =>
+    sheet.UNSAFE_getByType(Drawer.Root).props.detachedWrapperStyle;
+  const sizingStyle = (sheet: ReturnType<typeof setup>) =>
+    sheet.UNSAFE_queryByProps({ href: 'true-sheet-server-rendering' });
+
+  afterEach(() => {
+    isHydrated.mockReturnValue(true);
+  });
+
+  it('renders a sheet presented from the start in place until hydrated, without animating it in', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(false);
+    expect(sizingStyle(sheet)).not.toBeNull();
+    expect(wrapperSizing(sheet)).toMatchObject({
+      '--true-sheet-wide-max-width': '640px',
+      '--true-sheet-wide-margin-inline-start': 'auto',
+      '--true-sheet-wide-margin-inline-end': 'auto',
+    });
+
+    // Still mounted where it is once hydrated (its layer moves, see the next test), not animated in
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(false);
+    expect(sizingStyle(sheet)).toBeNull();
+    // Sized from the window once hydrated (750 wide in tests)
+    expect(wrapperSizing(sheet)).toMatchObject({ maxWidth: 640, marginInlineStart: 'auto' });
+    expect(Object.keys(wrapperSizing(sheet)).filter((key) => key.startsWith('--'))).toEqual([]);
+  });
+
+  it('moves a sheet rendered in place to the portal container once hydrated, still mounted', () => {
+    const mounts = jest.fn();
+    const Child = () => {
+      useEffect(() => mounts(), []);
+      return null;
+    };
+    const container = Object.assign(new MockElement(), {
+      children: [],
+      insertBefore: jest.fn(),
+      setAttribute: jest.fn(),
+    });
+    global.document = {
+      createElement: () => container,
+      activeElement: null,
+    } as unknown as Document;
+    // The placeholder in place and the layer in it (display: contents), the layer created first
+    const layers: MockElement[] = [];
+    const createNodeMock = ({ props }: { props: unknown }) => {
+      const node = Object.assign(new MockElement(), { appendChild: jest.fn() });
+      if ((props as { style?: { display?: string } }).style?.display === 'contents') {
+        layers.push(node);
+      }
+      return node;
+    };
+    const tree = () => (
+      <TrueSheetProvider>
+        <TrueSheet initialDetentIndex={0} detents={[0.5]}>
+          <Child />
+        </TrueSheet>
+      </TrueSheetProvider>
+    );
+    isHydrated.mockReturnValue(false);
+    const result = render(tree(), { createNodeMock });
+    expect(container.insertBefore).not.toHaveBeenCalled();
+
+    isHydrated.mockReturnValue(true);
+    result.rerender(tree());
+    const [layer, placeholder] = layers;
+    expect(container.insertBefore).toHaveBeenCalledWith(layer, null);
+    expect(mounts).toHaveBeenCalledTimes(1);
+
+    // Back in its placeholder before React removes it
+    result.unmount();
+    expect(placeholder!.appendChild).toHaveBeenCalledWith(layer);
+    // @ts-expect-error restored for the other tests
+    delete global.document;
+  });
+
+  it('portals a server-rendered sheet once dismissed, for its next presentations', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+
+    fire(() => sheet.ref.current!.dismiss());
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('portals a server-rendered sheet dismissed before it presents', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+
+    fire(() => sheet.ref.current!.dismiss());
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('renders the default colors of the system color scheme until hydrated', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    const props = { ...sheet.props, backgroundColor: undefined };
+    sheet.rerender(<TrueSheet {...props} />);
+
+    // Drawer.Handle is the same mock as Drawer.Root: the one styled as the grabber
+    const grabber = sheet
+      .UNSAFE_getAllByType(Drawer.Handle)
+      .find((node) => node.props.style?.transform === 'translateX(-50%)');
+    expect(grabber?.props.style.backgroundColor).toBe('var(--true-sheet-default-grabber-color)');
+    expect(sheet.color()).toBe('var(--true-sheet-default-background)');
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...props} />);
+    expect(sheet.color()).not.toContain('var(');
+  });
+
+  it('renders a form sheet presented from the start once hydrated, in the portal, animated in', () => {
+    isHydrated.mockReturnValue(false);
+    const props = { initialDetentIndex: 0, detents: [0.5], presentation: 'form' as const };
+    const result = render(<TrueSheet {...props} />, { createNodeMock: () => new MockElement() });
+    // Nothing until hydrated, as on the server: a portal can't be hydrated
+    expect(result.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+    expect(result.UNSAFE_queryByType(Drawer.Content)).toBeNull();
+
+    isHydrated.mockReturnValue(true);
+    result.rerender(<TrueSheet {...props} />);
+    expect(result.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+    expect(result.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(true);
+  });
+
+  it('tints a dim blur for the system color scheme until hydrated', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(0);
+    const props = { ...sheet.props, dimBlur: 'regular' as const };
+    sheet.rerender(<TrueSheet {...props} />);
+    // Drawer.Overlay is the same mock as Drawer.Root: the one styled as the dim
+    const dimStyle = () =>
+      sheet.UNSAFE_getAllByType(Drawer.Overlay).find((node) => node.props.style?.backdropFilter)
+        ?.props.style;
+
+    expect(dimStyle()).toMatchObject({
+      colorScheme: 'light dark',
+      backgroundColor: expect.stringMatching(/^light-dark\(rgba\(252, .+\), rgba\(27, .+\)\)$/),
+    });
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...props} />);
+    expect(dimStyle()?.colorScheme).toBeUndefined();
+    expect(dimStyle()?.backgroundColor).toMatch(/^rgba\(252, /);
+  });
+
+  it('portals a sheet presented later once hydrated', () => {
+    isHydrated.mockReturnValue(false);
+    const sheet = setup(-1);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).toBeNull();
+
+    isHydrated.mockReturnValue(true);
+    sheet.rerender(<TrueSheet {...sheet.props} />);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+  });
+
+  it('portals and animates a sheet presented from the start in a client-rendered app', () => {
+    const sheet = setup(0);
+    expect(sheet.UNSAFE_queryByType(Drawer.Portal)).not.toBeNull();
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.initialAnimated).toBe(true);
+    expect(sizingStyle(sheet)).toBeNull();
   });
 });

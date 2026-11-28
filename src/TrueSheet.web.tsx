@@ -65,6 +65,7 @@ import {
 } from './web/constants';
 import { getDimBlurStyle } from './web/blur';
 import { getDOMElement } from './web/dom';
+import { useIsHydrated } from './web/hydration';
 import { TrueSheetBackground } from './TrueSheetBackground';
 import { getDetentBackgroundIndex, normalizeDetentBackground } from './detentBackgrounds';
 import { revealFocusedElement, useKeyboardViewport } from './web/keyboard';
@@ -156,7 +157,14 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     };
   }, [validDetents, dimmedDetentIndex]);
 
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  // Until hydrated, the window as the server rendered it (0×0, light): the real one would make the
+  // first render differ from the server's HTML. The wrapper's sizing and the default colors follow
+  // the real window through CSS meanwhile (see `serverRenderingCss`).
+  const isHydrated = useIsHydrated();
+  const windowDimensions = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = isHydrated
+    ? windowDimensions
+    : SERVER_WINDOW;
   const isLandscapeOrTablet = windowWidth >= 600 || windowWidth > windowHeight;
   const isFormSheet = isLandscapeOrTablet && presentation === 'form';
 
@@ -166,8 +174,24 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // is explicitly set.
   const effectiveDetached = isFormSheet || detached;
 
-  const colorScheme = useColorScheme();
+  const systemColorScheme = useColorScheme();
+  const colorScheme = isHydrated ? systemColorScheme : undefined;
   const shouldAutoPresent = initialDetentIndex >= 0 && initialDetentIndex < validDetents.length;
+  // Server-rendered (and hydrating), a sheet presented from the start renders in place: a portal
+  // renders nothing on the server, so its content would only appear, animated, once hydrated. Once
+  // hydrated, it moves to the portal container, still mounted (see ServerRenderedPortal), and to
+  // the portal itself once dismissed, while it has no content, for its next presentations. Not a
+  // form sheet: on a wide window, its size and position come from the window and its content,
+  // which the server doesn't have. Until hydrated, the other sheets render nothing, as on the
+  // server: a portal can't be hydrated.
+  const [isServerRendered, setIsServerRendered] = useState(
+    () => !isHydrated && shouldAutoPresent && presentation !== 'form'
+  );
+  const SheetPortal: React.ComponentType<SheetPortalProps> = isServerRendered
+    ? ServerRenderedPortal
+    : isHydrated
+      ? Drawer.Portal
+      : NotHydrated;
   const didInitiallyPresentRef = useRef(shouldAutoPresent);
   const [isOpen, setIsOpen] = useState(shouldAutoPresent);
   const isOpenRef = useRef(isOpen);
@@ -193,7 +217,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       detentBackgrounds?.[Math.min(displayedBackgroundIndex, validDetents.length - 1)]
     )?.color ??
     backgroundColorProp ??
-    (colorScheme === 'dark' ? COLOR_SURFACE_CONTAINER_LOW_DARK : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
+    (colorScheme === undefined
+      ? `var(${DEFAULT_BACKGROUND_VARIABLE})`
+      : colorScheme === 'dark'
+        ? COLOR_SURFACE_CONTAINER_LOW_DARK
+        : COLOR_SURFACE_CONTAINER_LOW_LIGHT);
   const [activeSnapPoint, setActiveSnapPoint] = useState<SheetDetent | null>(
     () => validDetents[shouldAutoPresent ? initialDetentIndex : 0] ?? null
   );
@@ -815,7 +843,10 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
       // (iOS dismisses from the presenter; Android runs dismissStack first).
       dismissDescendantsRef.current();
       // Mirror native's lazy-mount cancel: dismissed before willPresent, no events
-      if (!didEmitWillPresentRef.current) return undefined;
+      if (!didEmitWillPresentRef.current) {
+        setIsServerRendered(false);
+        return undefined;
+      }
       didEmitWillPresentRef.current = false;
       // Pair willBlur with willDismiss on dismiss — mirrors native iOS
       // emitWillDismissEvents (blur fires before dismiss). willPresent is
@@ -834,6 +865,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         settle(resolvePresentRef);
       } else {
         phaseRef.current = 'dismissed';
+        setIsServerRendered(false);
         onDidBlurRef.current?.({ nativeEvent: null } as DidBlurEvent);
         onDidDismissRef.current?.({ nativeEvent: null } as DidDismissEvent);
         settle(resolveDismissRef);
@@ -951,13 +983,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
     onDragEndRef.current?.({ nativeEvent: computeDetentInfo(true) } as DragEndEvent);
   }, [computeDetentInfo]);
 
-  const { isNested, dismissAbove, descendants } = useSheetStack(
+  const { isNested, dismissAbove, descendants, getAbove } = useSheetStack(
     handleRef,
     drawerContentRef,
     isOpen,
     isFormSheet
   );
   dismissAboveRef.current = dismissAbove;
+  const getSheetsAbove = useCallback(
+    () => getAbove().map((entry) => entry.nodeRef.current),
+    [getAbove]
+  );
   // Captured per render: by the time the dismiss effect runs, this sheet has
   // already been popped from the stack, so `dismissAbove` can't find it.
   dismissDescendantsRef.current = () => {
@@ -1201,7 +1237,17 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   const resolvedOverlayStyle = useMemo<React.CSSProperties>(() => {
     const opacity = Math.min(1, Math.max(0, dimOpacity ?? DEFAULT_DIM_OPACITY));
     if (dimBlur) {
-      return { ...overlayStyle, ...getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark') };
+      const blurStyle = getDimBlurStyle(dimBlur, opacity, colorScheme === 'dark');
+      if (colorScheme !== undefined) return { ...overlayStyle, ...blurStyle };
+      // Until hydrated, the system's color scheme picks the tint, like the default colors in
+      // `serverRenderingCss`
+      const darkTint = getDimBlurStyle(dimBlur, opacity, true).backgroundColor;
+      return {
+        ...overlayStyle,
+        ...blurStyle,
+        colorScheme: 'light dark',
+        backgroundColor: `light-dark(${blurStyle.backgroundColor}, ${darkTint})`,
+      };
     }
     if (dimColor == null && dimOpacity == null) return overlayStyle;
     return {
@@ -1251,7 +1297,11 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   );
 
   const defaultGrabberColor =
-    colorScheme === 'dark' ? DEFAULT_GRABBER_COLOR_DARK : DEFAULT_GRABBER_COLOR_LIGHT;
+    colorScheme === undefined
+      ? `var(${DEFAULT_GRABBER_COLOR_VARIABLE})`
+      : colorScheme === 'dark'
+        ? DEFAULT_GRABBER_COLOR_DARK
+        : DEFAULT_GRABBER_COLOR_LIGHT;
 
   const grabberHeight = grabberOptions?.height ?? DEFAULT_GRABBER_HEIGHT;
 
@@ -1288,47 +1338,67 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
   // Detached without a width constraint applies placementOffset on both edges so
   // the floating card breathes from the viewport sides.
   const wrapperStyle = useMemo<React.CSSProperties | undefined>(() => {
-    // Mobile portrait ignores width sizing entirely (matches iOS/Android:
-    // both apply `maxContentWidth` only when not on a portrait phone).
-    // `detached` + `detachedOffset` are still respected via the wrapper.
-    const maxWidth = isLandscapeOrTablet
-      ? presentation === 'form'
-        ? DEFAULT_FORM_SHEET_WIDTH
-        : (maxContentWidth ?? DEFAULT_MAX_WIDTH)
-      : undefined;
+    const getWrapperStyle = (isWide: boolean) => {
+      const isWideFormSheet = isWide && presentation === 'form';
+      // Mobile portrait ignores width sizing entirely (matches iOS/Android:
+      // both apply `maxContentWidth` only when not on a portrait phone).
+      // `detached` + `detachedOffset` are still respected via the wrapper.
+      const maxWidth = isWide
+        ? presentation === 'form'
+          ? DEFAULT_FORM_SHEET_WIDTH
+          : (maxContentWidth ?? DEFAULT_MAX_WIDTH)
+        : undefined;
 
-    const needsMargins = maxWidth != null || effectiveDetached;
-    if (!needsMargins && !dropShadow) return undefined;
+      const needsMargins = maxWidth != null || isWideFormSheet || detached;
+      if (!needsMargins && !dropShadow) return undefined;
 
-    const next: React.CSSProperties = {};
-    if (dropShadow) next.filter = dropShadow;
-    if (!needsMargins) return next;
+      const next: React.CSSProperties = {};
+      if (dropShadow) next.filter = dropShadow;
+      if (!needsMargins) return next;
 
-    let marginInlineStart: number | string;
-    let marginInlineEnd: number | string;
-    if (isFormSheet) {
-      marginInlineStart = 'auto';
-      marginInlineEnd = 'auto';
-    } else if (maxWidth == null) {
-      marginInlineStart = placementOffset;
-      marginInlineEnd = placementOffset;
-    } else {
-      marginInlineStart = placement === 'leading' ? placementOffset : 'auto';
-      marginInlineEnd = placement === 'trailing' ? placementOffset : 'auto';
+      let marginInlineStart: number | string;
+      let marginInlineEnd: number | string;
+      if (isWideFormSheet) {
+        marginInlineStart = 'auto';
+        marginInlineEnd = 'auto';
+      } else if (maxWidth == null) {
+        marginInlineStart = placementOffset;
+        marginInlineEnd = placementOffset;
+      } else {
+        marginInlineStart = placement === 'leading' ? placementOffset : 'auto';
+        marginInlineEnd = placement === 'trailing' ? placementOffset : 'auto';
+      }
+
+      if (maxWidth != null) next.maxWidth = maxWidth;
+      next.marginInlineStart = marginInlineStart;
+      next.marginInlineEnd = marginInlineEnd;
+      return next;
+    };
+
+    if (isHydrated) return getWrapperStyle(isLandscapeOrTablet);
+
+    // The window's size is unknown until hydrated: both sizings go in CSS variables, which
+    // `serverRenderingCss` applies in the window they're for.
+    const next: Record<string, unknown> = dropShadow ? { filter: dropShadow } : {};
+    for (const [isWide, variables] of [
+      [false, WRAPPER_VARIABLES],
+      [true, WIDE_WRAPPER_VARIABLES],
+    ] as const) {
+      const sizing = getWrapperStyle(isWide) ?? {};
+      for (const [key, variable] of Object.entries(variables)) {
+        const value = sizing[key as keyof typeof variables];
+        if (value != null) next[variable] = typeof value === 'number' ? `${value}px` : value;
+      }
     }
-
-    if (maxWidth != null) next.maxWidth = maxWidth;
-    next.marginInlineStart = marginInlineStart;
-    next.marginInlineEnd = marginInlineEnd;
-    return next;
+    return next as React.CSSProperties;
   }, [
+    isHydrated,
     isLandscapeOrTablet,
-    isFormSheet,
     maxContentWidth,
     presentation,
     placement,
     placementOffset,
-    effectiveDetached,
+    detached,
     dropShadow,
   ]);
 
@@ -1375,7 +1445,7 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         detachedRadius={effectiveCornerRadius}
         maxContentHeight={effectiveMaxContentHeight}
         peekHeight={peekHeight}
-        initialAnimated={shouldAutoPresent ? initialDetentAnimated : true}
+        initialAnimated={shouldAutoPresent ? initialDetentAnimated && !isServerRendered : true}
         detachedWrapperStyle={wrapperStyle}
         contentHeight={measuredContentHeight}
         keyboardViewport={keyboardViewport}
@@ -1383,7 +1453,12 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
         setActiveSnapPoint={handleSetActiveSnapPoint}
         {...snapPointsProps}
       >
-        <Drawer.Portal container={portalContainer ?? undefined}>
+        <SheetPortal container={portalContainer ?? undefined} getSheetsAbove={getSheetsAbove}>
+          {!isHydrated && (
+            <style href="true-sheet-server-rendering" precedence="default">
+              {serverRenderingCss}
+            </style>
+          )}
           <Drawer.Overlay style={resolvedOverlayStyle} />
           <Drawer.Content
             ref={handleDrawerRef}
@@ -1429,11 +1504,132 @@ const TrueSheetComponent = forwardRef<TrueSheetMethods, TrueSheetProps>((props, 
               )}
             </div>
           </Drawer.Content>
-        </Drawer.Portal>
+        </SheetPortal>
       </Drawer.Root>
     </TrueSheetPeekContext.Provider>
   );
 });
+
+type SheetPortalProps = {
+  children?: React.ReactNode;
+  container?: HTMLElement;
+  // The drawers of the sheets stacked above (only ServerRenderedPortal places itself)
+  getSheetsAbove: () => (HTMLDivElement | null)[];
+};
+
+// `moveBefore` keeps the moved nodes' state (focus, scroll) where supported
+const moveLayer = (container: HTMLElement, layer: HTMLElement, before: Element | null) => {
+  const parent = container as HTMLElement & {
+    moveBefore?: (node: Node, child: Node | null) => void;
+  };
+  if (parent.moveBefore) {
+    parent.moveBefore(layer, before);
+    return;
+  }
+  const focused = document.activeElement;
+  container.insertBefore(layer, before);
+  if (focused instanceof HTMLElement && layer.contains(focused)) {
+    focused.focus({ preventScroll: true });
+  }
+};
+
+// Rendered in place on the server, where a portal renders nothing. Once hydrated, its layer moves
+// to the portal container, where a portal renders, without remounting what it renders (input,
+// state, effects): React keeps the layer's children in it, wherever it is. It's back in place
+// before React removes it, once the sheet is dismissed (see isServerRendered). Without a
+// provider's container, it stays in place.
+const ServerRenderedPortal = ({ children, container, getSheetsAbove }: SheetPortalProps) => {
+  const isHydrated = useIsHydrated();
+  const placeholderRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const placeholder = placeholderRef.current!;
+    const layer = layerRef.current!;
+    return () => {
+      if (layer.parentNode !== placeholder) placeholder.appendChild(layer);
+    };
+  }, []);
+
+  // A passive effect: the provider attaches its container in a layout effect, after this one
+  useEffect(() => {
+    const layer = layerRef.current!;
+    if (!isHydrated || !container?.isConnected || layer.parentNode === container) return;
+    // Below the sheets stacked above it already in the container, such as a form sheet presented
+    // from the start, which is portaled once hydrated
+    let before: Element | null = null;
+    for (const drawer of getSheetsAbove()) {
+      let node: Element | null = drawer;
+      while (node && node.parentElement !== container) node = node.parentElement;
+      if (!node) continue;
+      // A portaled sheet's dim is the container's child before its wrapper
+      const overlay = node.previousElementSibling;
+      before =
+        node.hasAttribute('data-vaul-detached-wrapper') &&
+        overlay?.hasAttribute('data-vaul-overlay')
+          ? overlay
+          : node;
+      break;
+    }
+    moveLayer(container, layer, before);
+  }, [isHydrated, container, getSheetsAbove]);
+
+  return (
+    <div ref={placeholderRef} style={layerStyle}>
+      <div ref={layerRef} style={layerStyle}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const layerStyle: React.CSSProperties = { display: 'contents' };
+
+const NotHydrated: React.FC<SheetPortalProps> = () => null;
+
+const WRAPPER_VARIABLES = {
+  maxWidth: '--true-sheet-max-width',
+  marginInlineStart: '--true-sheet-margin-inline-start',
+  marginInlineEnd: '--true-sheet-margin-inline-end',
+} as const;
+
+const WIDE_WRAPPER_VARIABLES = {
+  maxWidth: '--true-sheet-wide-max-width',
+  marginInlineStart: '--true-sheet-wide-margin-inline-start',
+  marginInlineEnd: '--true-sheet-wide-margin-inline-end',
+} as const;
+
+const getWrapperSizingRule = (
+  variables: typeof WRAPPER_VARIABLES | typeof WIDE_WRAPPER_VARIABLES
+) =>
+  `[data-vaul-detached-wrapper] {
+  max-width: var(${variables.maxWidth}, none);
+  margin-inline-start: var(${variables.marginInlineStart}, 0);
+  margin-inline-end: var(${variables.marginInlineEnd}, 0);
+}`;
+
+const SERVER_WINDOW = { width: 0, height: 0 };
+
+const DEFAULT_BACKGROUND_VARIABLE = '--true-sheet-default-background';
+const DEFAULT_GRABBER_COLOR_VARIABLE = '--true-sheet-default-grabber-color';
+
+// Until hydrated: the wrapper's sizing (see wrapperStyle), the wide one for the same window as
+// `isLandscapeOrTablet`, and the default colors of the color scheme. Without the wrapper's
+// variables (once hydrated), it's the wrapper's default sizing.
+const serverRenderingCss = `${getWrapperSizingRule(WRAPPER_VARIABLES)}
+@media (min-width: 600px), (orientation: landscape) {
+${getWrapperSizingRule(WIDE_WRAPPER_VARIABLES)}
+}
+:root {
+  ${DEFAULT_BACKGROUND_VARIABLE}: ${COLOR_SURFACE_CONTAINER_LOW_LIGHT};
+  ${DEFAULT_GRABBER_COLOR_VARIABLE}: ${DEFAULT_GRABBER_COLOR_LIGHT};
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    ${DEFAULT_BACKGROUND_VARIABLE}: ${COLOR_SURFACE_CONTAINER_LOW_DARK};
+    ${DEFAULT_GRABBER_COLOR_VARIABLE}: ${DEFAULT_GRABBER_COLOR_DARK};
+  }
+}`;
 
 const DEFAULT_DIM_OPACITY = 0.5;
 

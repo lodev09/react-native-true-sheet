@@ -191,14 +191,16 @@ All [TrueSheet props](../reference/configuration) are available as screen option
 | Option | Type | Description |
 |--------|------|-------------|
 | `detentIndex` | `number` | The detent index to present at. Defaults to `0`. |
-| `reanimated` | `boolean` | Enable worklet-based position events for this screen. |
+| `reanimated` | `boolean` | Enable worklet-based position events for this screen. Requires the [reanimated integration](#reanimated-integration) import. |
 | `positionChangeHandler` | `function` | A callback that receives position change events. When `reanimated` is enabled, this must be a worklet function. |
 
 ### Reanimated Integration
 
-Enable worklet-based position events for smooth UI thread animations:
+Enable worklet-based position events for smooth UI thread animations. Import the navigator's reanimated integration once, before the navigator renders (e.g. at the top of your root layout, or of the file that creates the navigator):
 
 ```tsx
+import '@lodev09/react-native-true-sheet/navigation/reanimated';
+
 // In your navigator
 <Sheet.Screen
   name="Details"
@@ -215,7 +217,9 @@ Enable worklet-based position events for smooth UI thread animations:
 ```
 
 :::note
-When `reanimated: true` is set, `react-native-reanimated` must be installed and `positionChangeHandler` must be a worklet function. The integration is lazy-loaded, so screens without `reanimated: true` don't require reanimated.
+`react-native-reanimated` must be installed and `positionChangeHandler` must be a worklet. Without the import, a `reanimated: true` screen warns in development and runs `positionChangeHandler` on the JS thread. Apps that don't import it don't bundle reanimated for the navigator.
+
+If the import runs after the navigator renders (e.g. from a lazily loaded route), its `reanimated: true` screens remount on their next render: a presented sheet presents again and fires its events again.
 :::
 
 ### Dynamic Header & Footer

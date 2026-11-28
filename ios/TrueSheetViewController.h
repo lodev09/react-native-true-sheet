@@ -129,7 +129,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) CGFloat minimizedKeyboardOverlap;
 
-@property (nonatomic, readonly) BOOL isTopmostPresentedController;
 @property (nonatomic, readonly) BOOL isStackedBehindChild;
 @property (nonatomic, weak, nullable) UIView *accessibilityContentView;
 

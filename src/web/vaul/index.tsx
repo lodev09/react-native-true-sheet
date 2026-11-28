@@ -34,6 +34,7 @@ import { useControllableState } from './use-controllable-state';
 import { usePositionFixed } from './use-position-fixed';
 import { isInput, isScrollable, usePreventScroll } from './use-prevent-scroll';
 import { useScaleBackground } from './use-scale-background';
+import { useIsHydrated } from '../hydration';
 import { useSnapPoints } from './use-snap-points';
 
 export interface WithFadeFromProps {
@@ -339,6 +340,7 @@ export function Root({
     setActiveSnapPoint,
     onRelease: onReleaseSnapPoints,
     snapPointsOffset,
+    getSnapPointCssOffsetAt,
     onDrag: onDragSnapPoints,
     shouldFade,
     getPercentageDragged: getSnapPointsPercentageDragged,
@@ -1043,6 +1045,7 @@ export function Root({
           keyboardIsOpen,
           modal,
           snapPointsOffset,
+          getSnapPointCssOffsetAt,
           activeSnapPointIndex,
           fadeFromIndex,
           direction,
@@ -1083,7 +1086,10 @@ export const Overlay = React.forwardRef<
   } = useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
-  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
+  // A sheet rendered in place until hydrated (see TrueSheet.web) is already shown: its dim too,
+  // at or above fadeFromIndex. Once hydrated, `snapToPoint` drives its opacity inline.
+  const isHydrated = useIsHydrated();
+  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(!isHydrated);
   const onMouseUp = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => onRelease(event),
     [onRelease]
@@ -1128,7 +1134,9 @@ export const Overlay = React.forwardRef<
         data-vaul-overlay=""
         data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
         data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
-        data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
+        data-vaul-snap-points-overlay={
+          isOpen && (shouldFade || (!isHydrated && !isBelowFade)) ? 'true' : 'false'
+        }
         data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
         {...rest}
         style={overlayStyle(style, !!isBelowFade)}
@@ -1178,6 +1186,7 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
       onTouchRelease,
       keyboardIsOpen,
       snapPointsOffset,
+      getSnapPointCssOffsetAt,
       activeSnapPointIndex,
       fadeFromIndex,
       modal,
@@ -1462,7 +1471,14 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
 
     // Subsequent snap writes belong to useSnapPoints. A React style update on
     // release would overwrite the live drag value before its transition starts.
-    const initialSnapPointOffset = React.useRef(snapPointsOffset?.[activeSnapPointIndex ?? 0] ?? 0);
+    // On the server and while hydrating (a sheet rendered in place, see TrueSheet.web), the window
+    // is unknown: the offset in CSS instead, the same on both.
+    const isHydrated = useIsHydrated();
+    const [initialSnapPointOffset] = React.useState(() =>
+      isHydrated
+        ? `${snapPointsOffset?.[activeSnapPointIndex ?? 0] ?? 0}px`
+        : getSnapPointCssOffsetAt(activeSnapPointIndex ?? 0)
+    );
     const contentNode = (
       <DialogPrimitive.Content
         data-vaul-drawer-direction={direction}
@@ -1477,8 +1493,11 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(
         style={
           snapPointsOffset && snapPointsOffset.length > 0
             ? ({
-                '--snap-point-height': `${initialSnapPointOffset.current}px`,
+                '--snap-point-height': initialSnapPointOffset,
                 'transform': getSnapPointTransform(direction),
+                // Shown already until hydrated: Safari settles its viewport after the first
+                // style pass, which would animate the CSS offset
+                ...(isHydrated ? null : { transition: 'none' }),
                 ...style,
                 'pointerEvents': 'auto',
               } as React.CSSProperties)

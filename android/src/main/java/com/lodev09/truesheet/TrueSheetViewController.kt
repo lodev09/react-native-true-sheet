@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
@@ -425,7 +426,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     get() = keyboardInset > 0
 
   // The detent JS last heard about — the keyboard expansion is never reported
-  private val knownDetentIndex: Int
+  val knownDetentIndex: Int
     get() = if (detentIndexBeforeKeyboard >= 0) detentIndexBeforeKeyboard else currentDetentIndex
 
   fun isFocusedViewWithinSheet(): Boolean {
@@ -516,6 +517,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     containerView?.cleanupKeyboardHandler()
     coordinatorLayout = null
     sheetView = null
+    laidOutSheetFrame.setEmpty()
 
     interactionState = InteractionState.Idle
     hasPendingSizeChange = false
@@ -570,11 +572,23 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
   // MARK: - TrueSheetCoordinatorLayout.Delegate
   // =============================================================================
 
+  private val laidOutSheetFrame = Rect()
+
   override fun coordinatorLayoutDidLayout(changed: Boolean) {
     if (changed) invalidateScreenMetrics()
 
     if (isPresented && changed) {
       setupSheetDetentsForSizeChange()
+    }
+
+    // A layout can move the sheet without a settle (e.g. a placement change), uncovering
+    // or covering the sheets below it
+    sheetView?.let { sheet ->
+      val frame = Rect(sheet.left, sheet.top, sheet.right, sheet.bottom)
+      if (frame != laidOutSheetFrame) {
+        laidOutSheetFrame.set(frame)
+        if (isPresentFinished && !isBeingDismissed) TrueSheetStackManager.updateBackgroundAccessibility()
+      }
     }
 
     if (hasPendingConfigurationChange) {
@@ -1696,6 +1710,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerWillBlur()
     delegate?.viewControllerWillDismiss()
     parentSheetView?.viewControllerWillFocus()
+    TrueSheetStackManager.updateBackgroundAccessibility()
 
     // Dismissed mid-present: finishPresent() won't run. Stop blocking touches, and settle the
     // pending present well before didDismiss so JS clears isPresenting and unmounts the lazy native view
@@ -1886,7 +1901,11 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
         val effectiveTop = sheet.top + sheet.translationY.toInt()
         emitChangePositionDelegate(effectiveTop)
       }
-      .withEndAction { onEnd?.invoke() }
+      .withEndAction {
+        // Riding down behind a child (or back up) changes which sheets cover which
+        TrueSheetStackManager.updateBackgroundAccessibility()
+        onEnd?.invoke()
+      }
       .start()
   }
 
