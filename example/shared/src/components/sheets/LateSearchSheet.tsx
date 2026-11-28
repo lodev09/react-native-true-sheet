@@ -9,8 +9,9 @@ const LOAD_DELAY_MS = 1000;
 
 /**
  * iOS: a search field and a results list mount when results load after the
- * sheet starts presenting. The list is the sheet's new scrollable. The field's
- * placeholder must appear in place rather than grow from its top-left corner.
+ * sheet presents, and the sheet expands to show them. The list is the sheet's
+ * new scrollable. The new views must appear in place rather than grow from a
+ * zero frame (the field's placeholder sliding in from its top-left corner).
  */
 export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -28,6 +29,10 @@ export const LateSearchSheet = forwardRef<TrueSheet>((_, ref) => {
   };
 
   useEffect(() => () => clearTimeout(loadTimeout.current), []);
+
+  useEffect(() => {
+    if (loaded) TrueSheet.resize('late-search', 1);
+  }, [loaded]);
 
   return (
     <TrueSheet

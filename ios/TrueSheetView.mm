@@ -440,6 +440,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   _lastStateSize = size;
 
+  // Every animated size change lands here: resize(), the grabber, the keyboard, the hinge
+  if ([UIView inheritedAnimationDuration] > 0) {
+    [self layoutPendingContent];
+  }
+
   auto stateData = _state->getData();
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
@@ -1135,11 +1140,17 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 #pragma mark - Private Helpers
 
-// UIKit lays the sheet out inside animateChanges:. A view mounted since the last
-// layout pass would get its first layout there, and its subviews (a text field's
-// placeholder, say) would grow in from a zero frame.
+// UIKit lays the sheet out inside animateChanges:, and a size change there mounts
+// synchronously (updateStateWithSize). A view mounted since the last layout pass,
+// or one from a commit still queued for the main thread, would get its first
+// layout inside the animation and grow in from a zero frame.
 - (void)layoutPendingContent {
   [UIView performWithoutAnimation:^{
+    // An immediate state update mounts every commit still queued for the main thread
+    if (self->_state) {
+      auto stateData = self->_state->getData();
+      self->_state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
+    }
     [self->_containerView layoutIfNeeded];
   }];
 }
