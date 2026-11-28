@@ -222,6 +222,7 @@ Like any scroll view, a plugged scrollable needs a bounded height for fixed dete
 | `placementOffset` | `number` | `16` | 🤖🌐 | Edge margin when placement is leading/trailing |
 | `foldOptions` | `FoldOptions` | — | 🍎 | Foldable tabletop behavior (iOS 27.1+). Book posture is system-handled via `placement` |
 | `presentation` | `'page' \| 'form'` | `'page'` | 🍎🌐 | iPad/web (landscape/tablet) presentation. `'form'` is absolute and ignores `maxContentWidth`. iOS 17+ |
+| `zoomSourceTestID` | `string` | — | 🍎 | `testID` of a view the sheet zooms out of on present and back into on dismiss. Default transition when no such view is on screen. iOS 18+ |
 | `insetAdjustment` | `'automatic' \| 'never'` | `'automatic'` | 🍎🤖 | Bottom safe-area handling. `'never'` keeps the layout as-is for precise sizing |
 
 **`FoldOptions`:** (tabletop = half-open with a horizontal fold)

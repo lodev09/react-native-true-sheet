@@ -631,6 +631,14 @@ export interface TrueSheetProps extends ViewProps {
   presentation?: 'page' | 'form';
 
   /**
+   * The `testID` of a view the sheet zooms out of when presented, and back into when dismissed.
+   * Presents with the default transition when no view with that `testID` is on screen.
+   *
+   * @platform ios 18+
+   */
+  zoomSourceTestID?: string;
+
+  /**
    * The blur effect style on iOS.
    * Takes precedence over `backgroundColor`.
    * Use `backgroundStyle.backgroundColor` to tint the blur.

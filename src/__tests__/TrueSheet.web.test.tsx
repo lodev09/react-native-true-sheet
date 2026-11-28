@@ -611,3 +611,24 @@ describe('web server rendering', () => {
     expect(sizingStyle(sheet)).toBeNull();
   });
 });
+
+describe('web zoomSourceTestID', () => {
+  it('ignores the iOS-only prop without forwarding it or warning', () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const sheet = setup(-1);
+    sheet.rerender(<TrueSheet {...sheet.props} zoomSourceTestID="add-button" />);
+    fire(() => sheet.ref.current!.present(1));
+    act(() => jest.runOnlyPendingTimers());
+    expect(sheet.UNSAFE_getByType(Drawer.Root).props.open).toBe(true);
+    fire(() => sheet.ref.current!.dismiss());
+    act(() => jest.runOnlyPendingTimers());
+
+    const forwarded = sheet.UNSAFE_root.findAll(
+      (node: typeof sheet.UNSAFE_root) =>
+        node.type !== TrueSheet && node.props.zoomSourceTestID !== undefined
+    );
+    expect(forwarded).toHaveLength(0);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+});
