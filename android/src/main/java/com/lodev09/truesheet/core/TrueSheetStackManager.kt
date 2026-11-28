@@ -153,7 +153,7 @@ object TrueSheetStackManager {
   /**
    * Hides what sheets block from accessibility, mirroring BottomSheetDialog behavior. Sheets
    * live in the same window as the app content, so without this TalkBack can traverse behind
-   * them. Hides a sheet tucked behind the one presented over it, and in each root container
+   * them. Hides a sheet covered by one presented over it, and in each root container
    * everything behind its topmost dimmed sheet. Views above it stay reachable, and so do
    * overlays, which draw above every sheet from any index.
    *
@@ -168,12 +168,9 @@ object TrueSheetStackManager {
       }
       val hiddenViews = HashSet<View>()
 
-      // An expanded parent stays in place above its child, still visible and touchable
-      for (sheet in activeSheets) {
-        val parent = sheet.viewController.parentSheetView?.takeIf { it in activeSheets } ?: continue
-        if (!parent.viewController.isExpanded || sheet.viewController.isExpanded) {
-          parent.viewController.coordinatorLayout?.let { hiddenViews.add(it) }
-        }
+      for ((index, sheet) in activeSheets.withIndex()) {
+        val sheetsAbove = activeSheets.drop(index + 1).filter { it.rootContainerView == sheet.rootContainerView }
+        if (sheet.isCoveredBy(sheetsAbove)) sheet.viewController.coordinatorLayout?.let { hiddenViews.add(it) }
       }
 
       val roots = HashSet<ViewGroup>()
@@ -199,6 +196,35 @@ object TrueSheetStackManager {
       }
     }
   }
+
+  /**
+   * Whether [sheetsAbove] together hide this sheet from view. Sheets reach the bottom, so one
+   * whose top is no lower hides the columns it spans whole; the sheet is covered once those
+   * spans leave no gap across its width. Tops are the detent tops plus the stack translation,
+   * which a parent rides down behind its child by (unless expanded).
+   */
+  private fun TrueSheetView.isCoveredBy(sheetsAbove: List<TrueSheetView>): Boolean {
+    val sheet = viewController.sheetView ?: return false
+    // Not laid out yet
+    if (sheet.right <= sheet.left) return false
+
+    val top = stackedSheetTop
+    val spans = sheetsAbove
+      .filter { it.stackedSheetTop <= top }
+      .mapNotNull { it.viewController.sheetView }
+      .sortedBy { it.left }
+
+    var coveredTo = sheet.left
+    for (span in spans) {
+      if (span.left > coveredTo) return false
+      coveredTo = maxOf(coveredTo, span.right)
+      if (coveredTo >= sheet.right) return true
+    }
+    return false
+  }
+
+  private val TrueSheetView.stackedSheetTop: Int
+    get() = viewController.run { detentCalculator.getSheetTopForDetentIndex(currentDetentIndex) + currentTranslationY }
 
   private val blurredViews = HashMap<View, Float>()
   private var crossWindowBlurEnabled: Boolean? = null
