@@ -14,14 +14,19 @@
 
 static const void *kEdgeEffectHintKey = &kEdgeEffectHintKey;
 
-// UIKit sizes the effect to 60pt past the element edge facing the scroll edge.
-// Sitting the hint this far in from the container's inner edge ends the effect
-// 12pt past the container, like a native bar, at any container height.
+// UIKit ends the effect 60pt from the hint's outer edge (toward the sheet's
+// edge). A hint this far in from the container's inner edge ends it 12pt past
+// the container, like a native bar.
 static const CGFloat kEdgeEffectHintInset = 48;
 
+// UIKit clips the hint to the container and ignores one outside it, so the
+// effect can't end closer than 60pt from the container's outer edge. A
+// container shorter than the inset gets the hint at its outer edge, the
+// closest UIKit allows: the effect reaches 60pt minus its height past it.
 static CGRect EdgeEffectHintFrame(CGRect bounds, BOOL isTopEdge) {
   CGFloat height = CGRectGetHeight(bounds);
-  CGFloat y = isTopEdge ? MAX(0, height - kEdgeEffectHintInset) : MAX(0, MIN(height, kEdgeEffectHintInset) - 1);
+  CGFloat inset = MIN(kEdgeEffectHintInset, height);
+  CGFloat y = isTopEdge ? height - inset : MAX(0, inset - 1);
   return CGRectMake(0, y, 1, 1);
 }
 

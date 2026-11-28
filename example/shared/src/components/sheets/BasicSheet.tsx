@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState, type Ref, useImperativeHandle } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -55,6 +55,11 @@ const spring = <T extends ComplexAnimationBuilder<any>>(animation: T) =>
     .stiffness(SPRING_CONFIG.stiffness!)
     .mass(SPRING_CONFIG.mass!)
     .overshootClamping(SPRING_CONFIG.overshootClamping ? 1 : 0);
+
+// Scroll edge effects need iOS 26+. Elsewhere, the child's absolute bars keep a
+// background so content scrolling under them doesn't show through.
+const HAS_SCROLL_EDGE_EFFECTS =
+  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 26;
 
 const DETENTS: SheetDetent[] = ['peek', 'auto', 1];
 const DETENT_BACKGROUNDS: (DetentBackground | null)[] = [null, { blur: 'system-material' }, BLUE];
@@ -287,8 +292,10 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
             <Input ref={childInputRef} />
           </Header>
         }
+        headerStyle={HAS_SCROLL_EDGE_EFFECTS ? undefined : styles.childHeader}
         headerOptions={{ position: 'absolute' }}
         footer={<Footer />}
+        footerStyle={HAS_SCROLL_EDGE_EFFECTS ? undefined : styles.footer}
         footerOptions={{ position: 'absolute' }}
         // Auto + scrollable + absolute footer, with the keyboard rising during present:
         // the footer drops its safe-area inset mid-present (sheet must not overshoot)
@@ -326,6 +333,9 @@ const styles = StyleSheet.create({
   // absolute footer so its scroll edge effect can reach the footer's bottom
   childSheet: {
     flex: 1,
+  },
+  childHeader: {
+    backgroundColor: DARK,
   },
   // Clear the absolute header so content starts below it and scrolls under it
   childScrollContent: {
