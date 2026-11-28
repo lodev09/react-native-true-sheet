@@ -139,6 +139,17 @@ class TrueSheetContainerView(reactContext: ThemedReactContext) :
     }
   }
 
+  /**
+   * Android also defers a focused view's autofill until its next layout while the view is not visible, as
+   * when a field gains focus while the sheet slides in. Called once the sheet is presented.
+   */
+  fun layoutFocusedViewInPlace() {
+    val focused = findFocus() ?: return
+    if (focused.width > 0 && focused.height > 0) {
+      focused.layout(focused.left, focused.top, focused.right, focused.bottom)
+    }
+  }
+
   fun setupScrollable() {
     contentView?.setupScrollable()
   }
