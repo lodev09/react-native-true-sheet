@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
                                realtime:(BOOL)realtime;
 - (void)viewControllerDidChangeSize:(CGSize)size;
 - (void)viewControllerSafeAreaInsetsDidChange;
+- (void)viewControllerDidSettle;
 - (void)viewControllerWillFocus;
 - (void)viewControllerDidFocus;
 - (void)viewControllerWillBlur;

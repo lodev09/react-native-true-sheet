@@ -279,6 +279,7 @@ export const BasicSheet = forwardRef((props: BasicSheetProps, ref: Ref<TrueSheet
         dimColor="#ff0000"
         dimOpacity={0.4}
         backgroundColor={DARK}
+        style={styles.childSheet}
         scrollableRef={childScrollRef}
         scrollableOptions={{ topScrollEdgeEffect: 'soft', bottomScrollEdgeEffect: 'soft' }}
         header={
@@ -320,6 +321,11 @@ const styles = StyleSheet.create({
   childContent: {
     padding: SPACING,
     gap: GAP,
+  },
+  // Auto still sizes to the content; the scroll view fills the sheet under the
+  // absolute footer so its scroll edge effect can reach the footer's bottom
+  childSheet: {
+    flex: 1,
   },
   // Clear the absolute header so content starts below it and scrolls under it
   childScrollContent: {
