@@ -1932,7 +1932,12 @@ static BOOL TrueSheetIsPhoneIdiom(void) {
   _configuredDetents = [self.detents copy];
 
   if ([self useCustomDimming]) {
-    sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
+    if (@available(iOS 16.0, *)) {
+      sheet.largestUndimmedDetentIdentifier = sheet.detents.lastObject.identifier;
+    } else {
+      // iOS 15 sheets only use the medium and large system detents, so large leaves them all undimmed
+      sheet.largestUndimmedDetentIdentifier = UISheetPresentationControllerDetentIdentifierLarge;
+    }
   } else if ([self isDimmedAtEveryDetent]) {
     sheet.largestUndimmedDetentIdentifier = nil;
   } else {
