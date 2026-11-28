@@ -151,9 +151,11 @@ object TrueSheetStackManager {
   private val savedBackgroundImportance = HashMap<View, Int>()
 
   /**
-   * Hides views behind the topmost dimmed (modal) sheet from accessibility,
-   * mirroring BottomSheetDialog behavior. Sheets live in the same window as
-   * the app content, so without this TalkBack can traverse behind the sheet.
+   * Hides what sheets block from accessibility, mirroring BottomSheetDialog behavior. Sheets
+   * live in the same window as the app content, so without this TalkBack can traverse behind
+   * them. Hides a sheet tucked behind the one presented over it, and in each root container
+   * everything behind its topmost dimmed sheet. Views above it stay reachable, and so do
+   * overlays, which draw above every sheet from any index.
    *
    * Derived from the current stack state and idempotent — call whenever a
    * sheet presents, dismisses, settles, or changes its dim state.
@@ -161,33 +163,39 @@ object TrueSheetStackManager {
   @JvmStatic
   fun updateBackgroundAccessibility() {
     synchronized(presentedSheetStack) {
-      val topDimmedIndex = presentedSheetStack.indexOfLast {
-        it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed && isDimmedAtCurrentDetent }
+      val activeSheets = presentedSheetStack.filter {
+        it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed }
       }
-      val topDimmed = presentedSheetStack.getOrNull(topDimmedIndex)
-      val root = topDimmed?.viewController?.coordinatorLayout?.parent as? ViewGroup
+      val hiddenViews = HashSet<View>()
 
-      if (root == null) {
-        restoreBackgroundAccessibility()
-        return
+      // An expanded parent stays in place above its child, still visible and touchable
+      for (sheet in activeSheets) {
+        val parent = sheet.viewController.parentSheetView?.takeIf { it in activeSheets } ?: continue
+        if (!parent.viewController.isExpanded || sheet.viewController.isExpanded) {
+          parent.viewController.coordinatorLayout?.let { hiddenViews.add(it) }
+        }
       }
 
-      // The dimmed sheet, any sheets above it, and overlays (rendered above every sheet) stay accessible
-      val accessibleCoordinators = presentedSheetStack
-        .subList(topDimmedIndex, presentedSheetStack.size)
-        .mapNotNull { it.viewController.coordinatorLayout }
-        .toSet()
+      val roots = HashSet<ViewGroup>()
+      for (sheet in activeSheets.asReversed()) {
+        if (!sheet.viewController.isDimmedAtCurrentDetent) continue
+        val coordinator = sheet.viewController.coordinatorLayout ?: continue
+        val root = coordinator.parent as? ViewGroup ?: continue
+        if (!roots.add(root)) continue
 
-      for (i in 0 until root.childCount) {
-        val child = root.getChildAt(i)
-        if (child in accessibleCoordinators || child is TrueSheetOverlayRootView) {
-          savedBackgroundImportance.remove(child)?.let { child.importantForAccessibility = it }
-          continue
+        for (i in 0 until root.indexOfChild(coordinator)) {
+          val child = root.getChildAt(i)
+          if (child !is TrueSheetOverlayRootView) hiddenViews.add(child)
         }
-        if (!savedBackgroundImportance.containsKey(child)) {
-          savedBackgroundImportance[child] = child.importantForAccessibility
-        }
-        child.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+      }
+
+      // Also restores views that left their root, or whose root no longer has a dimmed sheet
+      savedBackgroundImportance.keys.filter { it !in hiddenViews }.forEach {
+        it.importantForAccessibility = savedBackgroundImportance.remove(it)!!
+      }
+      for (view in hiddenViews) {
+        savedBackgroundImportance.getOrPut(view) { view.importantForAccessibility }
+        view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
       }
     }
   }
@@ -251,13 +259,6 @@ object TrueSheetStackManager {
         blurredViews[view] = radius
       }
     }
-  }
-
-  private fun restoreBackgroundAccessibility() {
-    savedBackgroundImportance.forEach { (view, importance) ->
-      view.importantForAccessibility = importance
-    }
-    savedBackgroundImportance.clear()
   }
 
   /**

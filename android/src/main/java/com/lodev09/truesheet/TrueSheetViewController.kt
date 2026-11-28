@@ -1696,6 +1696,7 @@ class TrueSheetViewController(private val reactContext: ThemedReactContext) :
     delegate?.viewControllerWillBlur()
     delegate?.viewControllerWillDismiss()
     parentSheetView?.viewControllerWillFocus()
+    TrueSheetStackManager.updateBackgroundAccessibility()
 
     // Dismissed mid-present: finishPresent() won't run. Stop blocking touches, and settle the
     // pending present well before didDismiss so JS clears isPresenting and unmounts the lazy native view

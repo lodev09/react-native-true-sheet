@@ -234,6 +234,10 @@ class TrueSheetView(private val reactContext: ThemedReactContext) :
       viewController.setupBackground()
       viewController.sheetView?.setupBackground()
       viewController.sheetView?.setupGrabber()
+      viewController.sheetView?.updateGrabberAccessibilityValue(
+        viewController.currentDetentIndex,
+        viewController.detents.size
+      )
       viewController.sheetView?.updateGravity()
       viewController.updateBehaviorMaxWidth()
       updateSheetIfNeeded()
