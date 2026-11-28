@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -104,6 +104,12 @@ export const ScrollViewSheet = forwardRef<TrueSheet, ScrollViewSheetProps>((prop
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 2000);
   }, []);
+
+  // iOS: the list mounts as the sheet expands. Its views must appear in place,
+  // not grow in from a zero frame inside the resize animation.
+  useEffect(() => {
+    if (showList) TrueSheet.resize('scrollview', 1);
+  }, [showList]);
 
   return (
     <TrueSheet

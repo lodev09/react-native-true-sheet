@@ -440,6 +440,11 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   _lastStateSize = size;
 
+  // Every animated size change lands here: resize(), the grabber, the keyboard, the hinge
+  if ([UIView inheritedAnimationDuration] > 0) {
+    [self layoutPendingContent];
+  }
+
   auto stateData = _state->getData();
   stateData.containerWidth = static_cast<float>(size.width);
   stateData.containerHeight = static_cast<float>(size.height);
@@ -936,6 +941,9 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
     if (!self->_containerView || !self->_controller.isPresented || self->_controller.isBeingDismissed)
       return;
 
+    // First, so the peek and footer measurements below see queued content
+    [self layoutPendingContent];
+
     // Refresh here (not just on peek size events) since the peek's offset
     // within the content can change without its own size changing.
     self->_controller.peekContentHeight = @([self->_containerView peekContentHeight]);
@@ -994,6 +1002,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
   if (_pendingPropsUpdate) {
     _pendingPropsUpdate = NO;
+    [self layoutPendingContent];
     [self applySheetPropsUpdate];
   }
 
@@ -1133,6 +1142,21 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
 
 #pragma mark - Private Helpers
 
+// UIKit lays the sheet out inside animateChanges:, and a size change there mounts
+// synchronously (updateStateWithSize). A view mounted since the last layout pass,
+// or one from a commit still queued for the main thread, would get its first
+// layout inside the animation and grow in from a zero frame.
+- (void)layoutPendingContent {
+  [UIView performWithoutAnimation:^{
+    // An immediate state update mounts every commit still queued for the main thread
+    if (self->_state) {
+      auto stateData = self->_state->getData();
+      self->_state->updateState(std::move(stateData), facebook::react::EventQueue::UpdateMode::unstable_Immediate);
+    }
+    [self->_containerView layoutIfNeeded];
+  }];
+}
+
 - (void)setupScrollable {
   if (!_containerView)
     return;
@@ -1175,6 +1199,7 @@ static void TrueSheetRunAfterTransition(UIViewController *controller, dispatch_b
   }
 }
 
+// Callers run layoutPendingContent first.
 - (void)applySheetPropsUpdate {
   BOOL pendingLayoutUpdate = _pendingLayoutUpdate;
   _pendingLayoutUpdate = NO;
