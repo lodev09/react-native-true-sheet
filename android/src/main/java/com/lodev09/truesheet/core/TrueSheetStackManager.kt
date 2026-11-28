@@ -151,9 +151,11 @@ object TrueSheetStackManager {
   private val savedBackgroundImportance = HashMap<View, Int>()
 
   /**
-   * Hides views behind the topmost dimmed (modal) sheet from accessibility,
-   * mirroring BottomSheetDialog behavior. Sheets live in the same window as
-   * the app content, so without this TalkBack can traverse behind the sheet.
+   * Hides what sheets block from accessibility, mirroring BottomSheetDialog behavior. Sheets
+   * live in the same window as the app content, so without this TalkBack can traverse behind
+   * them. Hides a sheet covered by one presented over it, and in each root container
+   * everything behind its topmost dimmed sheet. Views above it stay reachable, and so do
+   * overlays, which draw above every sheet from any index.
    *
    * Derived from the current stack state and idempotent — call whenever a
    * sheet presents, dismisses, settles, or changes its dim state.
@@ -161,36 +163,68 @@ object TrueSheetStackManager {
   @JvmStatic
   fun updateBackgroundAccessibility() {
     synchronized(presentedSheetStack) {
-      val topDimmedIndex = presentedSheetStack.indexOfLast {
-        it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed && isDimmedAtCurrentDetent }
+      val activeSheets = presentedSheetStack.filter {
+        it.viewController.run { isPresented && isSheetVisible && !isBeingDismissed }
       }
-      val topDimmed = presentedSheetStack.getOrNull(topDimmedIndex)
-      val root = topDimmed?.viewController?.coordinatorLayout?.parent as? ViewGroup
+      val hiddenViews = HashSet<View>()
 
-      if (root == null) {
-        restoreBackgroundAccessibility()
-        return
+      for ((index, sheet) in activeSheets.withIndex()) {
+        val sheetsAbove = activeSheets.drop(index + 1).filter { it.rootContainerView == sheet.rootContainerView }
+        if (sheet.isCoveredBy(sheetsAbove)) sheet.viewController.coordinatorLayout?.let { hiddenViews.add(it) }
       }
 
-      // The dimmed sheet, any sheets above it, and overlays (rendered above every sheet) stay accessible
-      val accessibleCoordinators = presentedSheetStack
-        .subList(topDimmedIndex, presentedSheetStack.size)
-        .mapNotNull { it.viewController.coordinatorLayout }
-        .toSet()
+      val roots = HashSet<ViewGroup>()
+      for (sheet in activeSheets.asReversed()) {
+        if (!sheet.viewController.isDimmedAtCurrentDetent) continue
+        val coordinator = sheet.viewController.coordinatorLayout ?: continue
+        val root = coordinator.parent as? ViewGroup ?: continue
+        if (!roots.add(root)) continue
 
-      for (i in 0 until root.childCount) {
-        val child = root.getChildAt(i)
-        if (child in accessibleCoordinators || child is TrueSheetOverlayRootView) {
-          savedBackgroundImportance.remove(child)?.let { child.importantForAccessibility = it }
-          continue
+        for (i in 0 until root.indexOfChild(coordinator)) {
+          val child = root.getChildAt(i)
+          if (child !is TrueSheetOverlayRootView) hiddenViews.add(child)
         }
-        if (!savedBackgroundImportance.containsKey(child)) {
-          savedBackgroundImportance[child] = child.importantForAccessibility
-        }
-        child.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+      }
+
+      // Also restores views that left their root, or whose root no longer has a dimmed sheet
+      savedBackgroundImportance.keys.filter { it !in hiddenViews }.forEach {
+        it.importantForAccessibility = savedBackgroundImportance.remove(it)!!
+      }
+      for (view in hiddenViews) {
+        savedBackgroundImportance.getOrPut(view) { view.importantForAccessibility }
+        view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
       }
     }
   }
+
+  /**
+   * Whether [sheetsAbove] together hide this sheet from view. Sheets reach the bottom, so one
+   * whose top is no lower hides the columns it spans whole; the sheet is covered once those
+   * spans leave no gap across its width. Tops are the detent tops plus the stack translation,
+   * which a parent rides down behind its child by (unless expanded).
+   */
+  private fun TrueSheetView.isCoveredBy(sheetsAbove: List<TrueSheetView>): Boolean {
+    val sheet = viewController.sheetView ?: return false
+    // Not laid out yet
+    if (sheet.right <= sheet.left) return false
+
+    val top = stackedSheetTop
+    val spans = sheetsAbove
+      .filter { it.stackedSheetTop <= top }
+      .mapNotNull { it.viewController.sheetView }
+      .sortedBy { it.left }
+
+    var coveredTo = sheet.left
+    for (span in spans) {
+      if (span.left > coveredTo) return false
+      coveredTo = maxOf(coveredTo, span.right)
+      if (coveredTo >= sheet.right) return true
+    }
+    return false
+  }
+
+  private val TrueSheetView.stackedSheetTop: Int
+    get() = viewController.run { detentCalculator.getSheetTopForDetentIndex(currentDetentIndex) + currentTranslationY }
 
   private val blurredViews = HashMap<View, Float>()
   private var crossWindowBlurEnabled: Boolean? = null
@@ -251,13 +285,6 @@ object TrueSheetStackManager {
         blurredViews[view] = radius
       }
     }
-  }
-
-  private fun restoreBackgroundAccessibility() {
-    savedBackgroundImportance.forEach { (view, importance) ->
-      view.importantForAccessibility = importance
-    }
-    savedBackgroundImportance.clear()
   }
 
   /**

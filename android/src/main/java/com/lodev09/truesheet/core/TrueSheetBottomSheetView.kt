@@ -65,6 +65,8 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
 
   var delegate: TrueSheetBottomSheetViewDelegate? = null
 
+  private var grabberConfig: Triple<GrabberOptions?, AccessibilityOptions?, Boolean>? = null
+
   // Behavior reference (set after adding to CoordinatorLayout)
   @Suppress("UNCHECKED_CAST")
   val behavior: TrueSheetBottomSheetBehavior<TrueSheetBottomSheetView>?
@@ -192,19 +194,29 @@ class TrueSheetBottomSheetView(private val reactContext: ThemedReactContext) : F
   // =============================================================================
 
   fun setupGrabber() {
-    findViewWithTag<View>(GRABBER_TAG)?.let { removeView(it) }
+    val isEnabled = delegate?.grabber ?: true
+    val isDraggable = delegate?.draggable ?: true
+    val config = if (isEnabled && isDraggable) {
+      Triple(delegate?.grabberOptions, delegate?.accessibilityOptions, reactContext.isDarkMode)
+    } else {
+      null
+    }
+
+    // Rebuilding drops TalkBack focus from the grabber, so keep it while nothing it's built from changed
+    val oldGrabber = findViewWithTag<View>(GRABBER_TAG)
+    if (oldGrabber != null && config == grabberConfig) return
+    grabberConfig = config
+    oldGrabber?.let { removeView(it) }
 
     // Content view is the controller, added before the grabber (delegate is the controller)
     val contentView = delegate as? View
 
-    val isEnabled = delegate?.grabber ?: true
-    val isDraggable = delegate?.draggable ?: true
-    if (!isEnabled || !isDraggable) {
+    if (config == null) {
       contentView?.accessibilityTraversalAfter = View.NO_ID
       return
     }
 
-    val grabberView = TrueSheetGrabberView(reactContext, delegate?.grabberOptions, delegate?.accessibilityOptions).apply {
+    val grabberView = TrueSheetGrabberView(reactContext, config.first, config.second).apply {
       tag = GRABBER_TAG
       id = View.generateViewId()
       onAccessibilityIncrement = { delegate?.bottomSheetViewDidAccessibilityIncrement() }
